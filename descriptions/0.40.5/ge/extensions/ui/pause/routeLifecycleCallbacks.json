@@ -1,112 +1,220 @@
 {
   "path": "lua/ge/extensions/ui/pause/routeLifecycleCallbacks.lua",
-  "module": "Callbacks de cycle de vie des routes « pause.* » du nouveau menu pause (routeur UI Vue). Le routeur appelle ces hooks quand l'utilisateur entre, monte, ou quitte une route de pause, de configuration véhicule, de grande carte ou de mode photo. Le module construit les données de mise en page (onglets du haut, titre, fil d'Ariane, contenu principal/latéral/panneaux, rail) en déléguant aux fournisseurs ui_pause_providers_routeData_*, gère la demande de pause de la simulation, la caméra de pause (ui_pause_camera) et les sessions du mode photo.",
+  "module": "Lifecycle callbacks of the \"pause.*\" routes of the new pause menu (Vue UI router). The router calls these hooks when the user enters, mounts, or leaves a pause, vehicle configuration, big map or photo mode route. The module builds the layout data (top tabs, title, breadcrumb, main/side content/panels, rail) by delegating to the ui_pause_providers_routeData_* providers, handles the simulation pause request, the pause camera (ui_pause_camera) and photo mode sessions.",
   "notes": [
-    "Aucune fonction n'est destinée à être appelée à la main : toutes sont des hooks appelés par le routeur avec (context, toRoute, fromRoute, data), où data est la table que le hook remplit (data.layoutMenu, data.pause, data.photomode).",
-    "Lors de onPauseEnter, le contenu de route n'est pas calculé (includeRouteContent = false) ; il l'est dans onPauseMount (true).",
-    "La simulation est mise en pause (simTimeAuthority.pushPauseRequest, id « ui_pause_home_tab ») pour pause, pause.system, pause.manageVehicles et pause.options ; elle ne l'est pas pour la configuration combinée (sauf routes non listées), tuning, debug, paint, météo, simulation, replay et photomode.",
-    "Les onglets du haut dépendent du mode : career (Progression si dispo, Historique), sinon Véhicule et Environnement (filtrés par gameplay_discover_firstDrive_capabilities pendant la première conduite), Multijoueur si MP existe en freeroam, puis onglets de mods via ui_pause_actions.getVisibleModTabs().",
-    "onPauseEnter appelle dump(\"not a pause route\") pour les routes hors pause (reste de debug laissé dans le code).",
-    "attachPhotomodeRouteData contient un TODO : contournement pour fournir des données fraîches du mode photo à l'entrée, car onMount peut arriver en retard."
+    "No function is meant to be called by hand: all are hooks called by the router with (context, toRoute, fromRoute, data), where data is the table the hook fills (data.layoutMenu, data.pause, data.photomode).",
+    "In onPauseEnter, the route content is not computed (includeRouteContent = false); it is in onPauseMount (true).",
+    "The simulation is paused (simTimeAuthority.pushPauseRequest, id \"ui_pause_home_tab\") for pause, pause.system, pause.manageVehicles and pause.options; it is not paused for combined configuration (except unlisted routes), tuning, debug, paint, weather, simulation, replay and photomode.",
+    "The top tabs depend on the mode: career (Progression if available, History), otherwise Vehicle and Environment (filtered by gameplay_discover_firstDrive_capabilities during the first drive), Multiplayer if MP exists in freeroam, then mod tabs via ui_pause_actions.getVisibleModTabs().",
+    "onPauseEnter calls dump(\"not a pause route\") for non-pause routes (leftover debug left in the code).",
+    "attachPhotomodeRouteData contains a TODO: workaround to provide fresh photo mode data on enter, because onMount can arrive late."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant ce module : ui_pause_actions, fournisseurs routeData (system, home, career, vehicle, environment, multiplayer, gamemodes, photomode), ui_pause_providers_trafficControls, ui_pause_providers_vehicleTabInteractions, ui_pause_photomode, ui_pause_vehicleConfigurationOccupants."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before this module: ui_pause_actions, routeData providers (system, home, career, vehicle, environment, multiplayer, gamemodes, photomode), ui_pause_providers_trafficControls, ui_pause_providers_vehicleTabInteractions, ui_pause_photomode, ui_pause_vehicleConfigurationOccupants."
+    }
   },
   "functions": {
     "onPauseEnter": {
-      "desc": "Hook d'entrée dans une route pause.*. Ignore les routes hors pause. Prévient vehicleTabInteractions, remplit data.layoutMenu et data.pause sans contenu de route, met à jour la demande de pause de simulation, et démarre ui_pause_camera sur la route « pause » racine.",
+      "desc": "Entry hook for a pause.* route. Ignores non-pause routes. Notifies vehicleTabInteractions, fills data.layoutMenu and data.pause without route content, updates the simulation pause request, and starts ui_pause_camera on the root \"pause\" route.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause (mode, isFirstDriveActive, isMultiseatActive…)"},
-        "toRoute": {"type": "table", "desc": "Route cible (name, params)"},
-        "fromRoute": {"type": "table|nil", "desc": "Route quittée"},
-        "data": {"type": "table", "desc": "Table de données à remplir pour l'UI"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context (mode, isFirstDriveActive, isMultiseatActive...)"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route (name, params)"
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Route being left"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data table to fill for the UI"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onPauseMount": {
-      "desc": "Hook appelé quand le composant de la route est monté. Remplit data.layoutMenu avec le contenu complet de la route, met à jour la pause de simulation et appelle ui_pause_camera.beginPauseSession().",
+      "desc": "Hook called when the route component is mounted. Fills data.layoutMenu with the full route content, updates the simulation pause and calls ui_pause_camera.beginPauseSession().",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause"},
-        "toRoute": {"type": "table", "desc": "Route montée"},
-        "fromRoute": {"type": "table|nil", "desc": "Route précédente"},
-        "data": {"type": "table", "desc": "Table de données à remplir"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Mounted route"
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Previous route"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data table to fill"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onPauseLeave": {
-      "desc": "Hook de sortie d'une route pause. Prévient vehicleTabInteractions, ajuste la demande de pause selon la route cible, arrête ui_pause_camera si on quitte « pause », et termine la session de caméra (endPauseSession) si on sort complètement des routes pause.",
+      "desc": "Exit hook of a pause route. Notifies vehicleTabInteractions, adjusts the pause request according to the target route, stops ui_pause_camera if leaving \"pause\", and ends the camera session (endPauseSession) if leaving the pause routes entirely.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause"},
-        "toRoute": {"type": "table", "desc": "Route cible"},
-        "fromRoute": {"type": "table", "desc": "Route quittée"},
-        "data": {"type": "table", "desc": "Données de navigation"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route"
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Route being left"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Navigation data"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleConfigurationLeave": {
-      "desc": "Sortie d'une route de configuration véhicule : appelle onPauseLeave ; si la route cible n'est pas elle-même une route de configuration, termine la session ui_pause_vehicleConfigurationOccupants, la vue solo de render_splitScreen et vide core_vehicle_configTarget (raison « routeLeave »).",
+      "desc": "Exit of a vehicle configuration route: calls onPauseLeave; if the target route is not itself a configuration route, ends the ui_pause_vehicleConfigurationOccupants session, the render_splitScreen solo view and clears core_vehicle_configTarget (reason \"routeLeave\").",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause"},
-        "toRoute": {"type": "table", "desc": "Route cible"},
-        "fromRoute": {"type": "table", "desc": "Route quittée"},
-        "data": {"type": "table", "desc": "Données de navigation"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route"
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Route being left"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Navigation data"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onVehicleConfigTargetChanged": {
-      "desc": "Hook émis quand la cible de configuration change. Ne fait quelque chose que si la cible disparaît (current nil) avec la raison « vehicleDestroyed » : ferme la vue solo et, si la route courante est une route de configuration, revient à la route de retour (previous.returnRoute ou « pause.vehicle »).",
+      "desc": "Hook emitted when the configuration target changes. Does something only if the target disappears (current nil) with the reason \"vehicleDestroyed\": closes the solo view and, if the current route is a configuration route, returns to the return route (previous.returnRoute or \"pause.vehicle\").",
       "params": {
-        "current": {"type": "table|nil", "desc": "Nouvelle cible"},
-        "previous": {"type": "table|nil", "desc": "Ancienne cible (returnRoute)"},
-        "reason": {"type": "string", "desc": "Raison du changement, par exemple vehicleDestroyed"}
+        "current": {
+          "type": "table|nil",
+          "desc": "New target"
+        },
+        "previous": {
+          "type": "table|nil",
+          "desc": "Previous target (returnRoute)"
+        },
+        "reason": {
+          "type": "string",
+          "desc": "Reason for the change, for example vehicleDestroyed"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onPauseBigmapLeave": {
-      "desc": "Sortie de la route de grande carte : ferme la carte (freeroam_vueBigMap.exitBigMap, sinon freeroam_bigMapMode.exitBigMap(true)) puis appelle onPauseLeave.",
+      "desc": "Exit of the big map route: closes the map (freeroam_vueBigMap.exitBigMap, otherwise freeroam_bigMapMode.exitBigMap(true)) then calls onPauseLeave.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause"},
-        "toRoute": {"type": "table", "desc": "Route cible"},
-        "fromRoute": {"type": "table", "desc": "Route quittée"},
-        "data": {"type": "table", "desc": "Données de navigation"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route"
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Route being left"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Navigation data"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onPhotomodeEnter": {
-      "desc": "Entrée dans une route pause.photomode : appelle onPauseEnter, ui_pause_photomode.beginPhotomodeSession(), rattache les données du mode photo (data.photomode) puis ui_pause_photomode.onPhotomodeRouteEnter(nomRoute).",
+      "desc": "Entry into a pause.photomode route: calls onPauseEnter, ui_pause_photomode.beginPhotomodeSession(), attaches the photo mode data (data.photomode) then ui_pause_photomode.onPhotomodeRouteEnter(routeName).",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause"},
-        "toRoute": {"type": "table", "desc": "Route cible"},
-        "fromRoute": {"type": "table|nil", "desc": "Route précédente"},
-        "data": {"type": "table", "desc": "Données à remplir"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route"
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Previous route"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data to fill"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onPhotomodeMount": {
-      "desc": "Montage d'une route du mode photo : appelle onPauseMount puis copie les données photomode vers data.photomode.",
+      "desc": "Mounting of a photo mode route: calls onPauseMount then copies the photomode data to data.photomode.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause"},
-        "toRoute": {"type": "table", "desc": "Route montée"},
-        "fromRoute": {"type": "table|nil", "desc": "Route précédente"},
-        "data": {"type": "table", "desc": "Données à remplir"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Mounted route"
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Previous route"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data to fill"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onPhotomodeLeave": {
-      "desc": "Sortie d'une route du mode photo. Si la cible est encore une route pause.photomode.*, appelle seulement onPauseLeave. Sinon notifie ui_pause_photomode.onPhotomodeRouteLeave, termine la session (endPhotomodeSession) puis appelle onPauseLeave.",
+      "desc": "Exit of a photo mode route. If the target is still a pause.photomode.* route, only calls onPauseLeave. Otherwise notifies ui_pause_photomode.onPhotomodeRouteLeave, ends the session (endPhotomodeSession) then calls onPauseLeave.",
       "params": {
-        "context": {"type": "table", "desc": "Contexte de pause"},
-        "toRoute": {"type": "table", "desc": "Route cible"},
-        "fromRoute": {"type": "table", "desc": "Route quittée"},
-        "data": {"type": "table", "desc": "Données de navigation"}
+        "context": {
+          "type": "table",
+          "desc": "Pause context"
+        },
+        "toRoute": {
+          "type": "table",
+          "desc": "Target route"
+        },
+        "fromRoute": {
+          "type": "table",
+          "desc": "Route being left"
+        },
+        "data": {
+          "type": "table",
+          "desc": "Navigation data"
+        }
       },
       "returns": [],
       "internal": true

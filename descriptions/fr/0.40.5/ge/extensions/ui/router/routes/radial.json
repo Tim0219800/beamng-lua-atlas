@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/radial.lua",
+  "module": "Routes du menu radial (Vue). La racine « radial » appelle core_quickAccess.endRouteHandoff à l'entrée (fin du transfert de route en cours, réaffiche le menu) et a un retour géré par `radialBackHandler`. Enfant : mirrors (réglage des rétroviseurs, retour vers radial).",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{screenId = \"radial\", onEnter = \"core_quickAccess.endRouteHandoff\", back = handler radialBackHandler, ui = Vue, infoBar par défaut, topBar masquée}"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "mirrors (screenId radial.mirrors, titre ui.mirrors.name, backTarget radial)."
+    }
+  }
+}

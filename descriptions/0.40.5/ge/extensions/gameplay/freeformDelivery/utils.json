@@ -1,130 +1,283 @@
 {
   "path": "lua/ge/extensions/gameplay/freeformDelivery/utils.lua",
-  "module": "Fonctions utilitaires partagées par les sous-modules de la livraison libre : cache de positions de véhicules, recherche d'objets de site (lieux, zones, places de parking), tests de présence d'un véhicule dans une zone cible, résolution de chemins, formatage du temps et accès au joueur (véhicule ou à pied).",
+  "module": "Utility functions shared by the freeform delivery submodules: vehicle position cache, site object lookup (locations, zones, parking spots), tests for a vehicle's presence in a target area, path resolution, time formatting and player access (vehicle or on foot).",
   "notes": [
-    "Le cache de positions n'est jamais invalidé automatiquement : getCachedVehiclePosition ne recalcule que si l'entrée n'existe pas ; il faut appeler updateVehicleCache / updateVehicleCacheList régulièrement pour le rafraîchir.",
-    "Le vec3 renvoyé par getCachedVehiclePosition est le vec3 du cache : ne pas le modifier.",
-    "checkParking est appelé avec une tolérance de 0.8 (valeur fixe dans le code).",
-    "findSiteObject cherche d'abord par nom (byName) puis par indice numérique (objects[tonumber(siteId)]) ; sites doit contenir locations, zones et parkingSpots."
+    "The position cache is never invalidated automatically: getCachedVehiclePosition only recomputes if the entry does not exist; updateVehicleCache / updateVehicleCacheList must be called regularly to refresh it.",
+    "The vec3 returned by getCachedVehiclePosition is the cache's vec3: do not modify it.",
+    "checkParking is called with a tolerance of 0.8 (fixed value in the code).",
+    "findSiteObject searches first by name (byName) then by numeric index (objects[tonumber(siteId)]); sites must contain locations, zones and parkingSpots."
   ],
   "functions": {
     "updateVehicleCache": {
-      "desc": "Met à jour la position en cache d'un véhicule (sans allocation) et la marque valide.",
-      "params": {"veh": {"type": "table", "desc": "Objet véhicule (getID, getPositionXYZ)."}},
+      "desc": "Updates a vehicle's cached position (without allocation) and marks it valid.",
+      "params": {
+        "veh": {
+          "type": "table",
+          "desc": "Vehicle object (getID, getPositionXYZ)."
+        }
+      },
       "internal": false
     },
     "updateVehicleCacheList": {
-      "desc": "Met à jour le cache pour chaque véhicule d'une liste.",
-      "params": {"vehicles": {"type": "table[]", "desc": "Liste d'objets véhicule."}},
+      "desc": "Updates the cache for each vehicle of a list.",
+      "params": {
+        "vehicles": {
+          "type": "table[]",
+          "desc": "List of vehicle objects."
+        }
+      },
       "internal": false
     },
     "getCachedVehiclePosition": {
-      "desc": "Renvoie la position en cache d'un véhicule (la calcule au premier appel).",
-      "params": {"veh": {"type": "table", "desc": "Objet véhicule."}},
-      "returns": [{"type": "vec3|nil", "desc": "Position partagée, ne pas modifier ; nil si veh invalide."}],
+      "desc": "Returns a vehicle's cached position (computes it on the first call).",
+      "params": {
+        "veh": {
+          "type": "table",
+          "desc": "Vehicle object."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Shared position, do not modify; nil if veh is invalid."
+        }
+      ],
       "internal": false
     },
     "clearVehicleCache": {
-      "desc": "Vide tout le cache de positions.",
+      "desc": "Clears the entire position cache.",
       "internal": false
     },
     "formatTime": {
-      "desc": "Formate une durée en secondes en H:MM:SS (si au moins une heure) ou M:SS.",
-      "params": {"seconds": {"type": "number", "desc": "Durée en secondes."}},
-      "returns": [{"type": "string", "desc": "Chaîne formatée."}],
+      "desc": "Formats a duration in seconds as H:MM:SS (if at least one hour) or M:SS.",
+      "params": {
+        "seconds": {
+          "type": "number",
+          "desc": "Duration in seconds."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Formatted string."
+        }
+      ],
       "internal": false
     },
     "findSiteObject": {
-      "desc": "Retrouve un objet de site (lieu, zone ou place de parking) par type et identifiant.",
+      "desc": "Finds a site object (location, zone or parking spot) by type and identifier.",
       "params": {
-        "sites": {"type": "table|nil", "desc": "Table de sites avec locations, zones, parkingSpots (chacun avec byName et objects)."},
-        "siteType": {"type": "string", "desc": "\"location\", \"zone\" ou \"parkingSpot\"."},
-        "siteId": {"type": "string|integer", "desc": "Nom ou indice de l'objet."}
+        "sites": {
+          "type": "table|nil",
+          "desc": "Sites table with locations, zones, parkingSpots (each with byName and objects)."
+        },
+        "siteType": {
+          "type": "string",
+          "desc": "\"location\", \"zone\" or \"parkingSpot\"."
+        },
+        "siteId": {
+          "type": "string|integer",
+          "desc": "Name or index of the object."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Objet de site ou nil."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Site object or nil."
+        }
+      ],
       "internal": false
     },
     "getVehicleIds": {
-      "desc": "Normalise un goal : renvoie goal.vehicleIds, ou {goal.vehicleId}, ou un tableau vide.",
-      "params": {"goal": {"type": "table", "desc": "Objectif de livraison."}},
-      "returns": [{"type": "string[]", "desc": "Liste d'ID de véhicules de livraison."}],
+      "desc": "Normalizes a goal: returns goal.vehicleIds, or {goal.vehicleId}, or an empty array.",
+      "params": {
+        "goal": {
+          "type": "table",
+          "desc": "Delivery goal."
+        }
+      },
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "List of delivery vehicle IDs."
+        }
+      ],
       "internal": false
     },
     "checkVehicleInParkingSpot": {
-      "desc": "Teste si un véhicule est garé dans une place via parkingSpot:checkParking(vehId, 0.8).",
+      "desc": "Tests whether a vehicle is parked in a spot via parkingSpot:checkParking(vehId, 0.8).",
       "params": {
-        "veh": {"type": "table", "desc": "Objet véhicule."},
-        "parkingSpot": {"type": "table", "desc": "Objet place de parking."}
+        "veh": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "parkingSpot": {
+          "type": "table",
+          "desc": "Parking spot object."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "Résultat de checkParking, false si argument manquant."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Result of checkParking, false if an argument is missing."
+        }
+      ],
       "internal": false
     },
     "checkVehicleInArea": {
-      "desc": "Test unifié de présence : lieu (distance <= radius), zone (containsVehicle) ou place de parking.",
+      "desc": "Unified presence test: location (distance <= radius), zone (containsVehicle) or parking spot.",
       "params": {
-        "veh": {"type": "table", "desc": "Objet véhicule."},
-        "siteObj": {"type": "table", "desc": "Objet de site."},
-        "areaType": {"type": "string", "desc": "\"location\", \"zone\" ou \"parkingSpot\"."}
+        "veh": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "siteObj": {
+          "type": "table",
+          "desc": "Site object."
+        },
+        "areaType": {
+          "type": "string",
+          "desc": "\"location\", \"zone\" or \"parkingSpot\"."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le véhicule est dans la zone."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the vehicle is in the area."
+        }
+      ],
       "internal": false
     },
     "resolvePath": {
-      "desc": "Résout un chemin relatif par rapport au dossier d'un fichier de base. Un chemin commençant par '/' est renvoyé tel quel.",
+      "desc": "Resolves a relative path against the folder of a base file. A path starting with '/' is returned as is.",
       "params": {
-        "basePath": {"type": "string", "desc": "Chemin du fichier de référence."},
-        "relativePath": {"type": "string|nil", "desc": "Chemin à résoudre."}
+        "basePath": {
+          "type": "string",
+          "desc": "Path of the reference file."
+        },
+        "relativePath": {
+          "type": "string|nil",
+          "desc": "Path to resolve."
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Chemin résolu, nil si relativePath est nil ou dossier introuvable."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Resolved path, nil if relativePath is nil or folder not found."
+        }
+      ],
       "internal": false
     },
     "findTargetArea": {
-      "desc": "Cherche une zone cible par id dans delivery.targetAreas.",
+      "desc": "Finds a target area by id in delivery.targetAreas.",
       "params": {
-        "delivery": {"type": "table", "desc": "Données de livraison."},
-        "areaId": {"type": "string", "desc": "ID de la zone cible."}
+        "delivery": {
+          "type": "table",
+          "desc": "Delivery data."
+        },
+        "areaId": {
+          "type": "string",
+          "desc": "ID of the target area."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Zone cible ou nil."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Target area or nil."
+        }
+      ],
       "internal": false
     },
     "findVehicle": {
-      "desc": "Cherche la définition d'un véhicule par id dans delivery.vehicles.",
+      "desc": "Finds a vehicle's definition by id in delivery.vehicles.",
       "params": {
-        "delivery": {"type": "table", "desc": "Données de livraison."},
-        "vehicleId": {"type": "string", "desc": "ID du véhicule de livraison."}
+        "delivery": {
+          "type": "table",
+          "desc": "Delivery data."
+        },
+        "vehicleId": {
+          "type": "string",
+          "desc": "ID of the delivery vehicle."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Définition du véhicule ou nil."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Vehicle definition or nil."
+        }
+      ],
       "internal": false
     },
     "getVehicleObjectByDeliveryId": {
-      "desc": "Convertit un ID de véhicule de livraison en objet véhicule (via gameplay_freeformDelivery_setup.getVehicleId puis Sim.upcast).",
-      "params": {"vehicleId": {"type": "string", "desc": "ID du véhicule de livraison."}},
-      "returns": [{"type": "table|nil", "desc": "Objet véhicule upcasté ou nil."}],
+      "desc": "Converts a delivery vehicle ID into a vehicle object (via gameplay_freeformDelivery_setup.getVehicleId then Sim.upcast).",
+      "params": {
+        "vehicleId": {
+          "type": "string",
+          "desc": "ID of the delivery vehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Upcast vehicle object or nil."
+        }
+      ],
       "internal": false
     },
     "getVehiclePositionByDeliveryId": {
-      "desc": "Position en cache du véhicule désigné par son ID de livraison.",
-      "params": {"vehicleId": {"type": "string", "desc": "ID du véhicule de livraison."}},
-      "returns": [{"type": "vec3|nil", "desc": "Position en cache ou nil."}],
+      "desc": "Cached position of the vehicle designated by its delivery ID.",
+      "params": {
+        "vehicleId": {
+          "type": "string",
+          "desc": "ID of the delivery vehicle."
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Cached position or nil."
+        }
+      ],
       "internal": false
     },
     "getPlayerVehicle": {
-      "desc": "Renvoie le véhicule du joueur 0 (upcasté).",
-      "returns": [{"type": "table|nil", "desc": "Objet véhicule ou nil."}],
+      "desc": "Returns player 0's vehicle (upcast).",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Vehicle object or nil."
+        }
+      ],
       "internal": false
     },
     "getPlayerPosition": {
-      "desc": "Position du joueur : position en cache de son véhicule, sinon position du personnage s'il marche (gameplay_walk).",
-      "returns": [{"type": "vec3|nil", "desc": "Position ou nil."}],
+      "desc": "Player position: cached position of their vehicle, otherwise the position of the character if walking (gameplay_walk).",
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Position or nil."
+        }
+      ],
       "internal": false
     },
     "getParkingInfo": {
-      "desc": "Détaille le stationnement d'un véhicule dans une place : nombre de coins dans la place (0 à 4), validité et taille de la place.",
+      "desc": "Details a vehicle's parking in a spot: number of corners in the spot (0 to 4), validity and spot size.",
       "params": {
-        "veh": {"type": "table", "desc": "Objet véhicule."},
-        "parkingSpot": {"type": "table", "desc": "Objet place de parking."}
+        "veh": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "parkingSpot": {
+          "type": "table",
+          "desc": "Parking spot object."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "{valid, cornerCount, corners, spotSize={x,y,z}} ; nil si aucun coin n'est dans la place."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{valid, cornerCount, corners, spotSize={x,y,z}}; nil if no corner is in the spot."
+        }
+      ],
       "internal": false
     }
   }

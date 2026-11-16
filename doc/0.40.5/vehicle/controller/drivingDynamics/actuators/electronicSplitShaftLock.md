@@ -1,103 +1,103 @@
 # `controller_drivingDynamics_actuators_electronicSplitShaftLock`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/actuators/electronicSplitShaftLock.lua` · VM : Véhicule · 257 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/actuators/electronicSplitShaftLock.lua` · VM: Vehicle · 257 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/actuators/electronicSplitShaftLock` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/actuators/electronicSplitShaftLock` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Actionneur de la Driving Dynamics Suite : verrouillage électronique d'un arbre de répartition (split shaft, embrayage de transfert type Haldex). À chaque étape physique intermédiaire, il compare la vitesse d'entrée à celle de la sortie secondaire (`secondaryOutputAVName`) ; un PID règle le rapport d'embrayage `clutchRatio` (0..1) de l'arbre pour réduire l'écart. Le verrouillage est coupé au freinage ou sans accélérateur (sauf freinage du pied gauche), figé pendant un changement de rapport, avec un minimum possible, et nul au frein de stationnement. Ordre d'appel : `defaultOrder = 80`.
+Driving Dynamics Suite actuator: electronic locking of a split shaft (Haldex-type transfer clutch). At each intermediate physics step, it compares the input speed to that of the secondary output (`secondaryOutputAVName`); a PID sets the shaft's clutch ratio `clutchRatio` (0..1) to reduce the difference. The locking is cut when braking or without throttle (except left-foot braking), frozen during a gear change, with a possible minimum, and zero with the parking brake. Call order: `defaultOrder = 80`.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `avDiffThreshold` (4 rad/s), `avThreshold` (1 rad/s), `minimumLock` (0), `clutchPIDkP` (0.1), `clutchPIDkI` (1), `clutchPIDkD` (0), `applyMinimumLockOnlyWithThrottle` (true), `name`. Lue par initSecondStage : `splitShaftName`.
-- Seuils internes : frein considéré actif au-dessus de 0.1 ; accélérateur considéré relâché à 0 ou moins.
-- Le rapport final est clamp(clutchRatio, overrideMin, overrideMax) ; le commentaire du code précise que selon la disposition du groupe motopropulseur c'est le min ou le max de l'override qui compte.
-- Sans CMU enregistré, initSecondStage appelle shutdown ; si l'arbre est introuvable le système reste inactif. `electrics.values.brake`, `throttle`, `parkingbrake` sont lus sans valeur par défaut.
-- `shutdown` retire updateGFX et updateWheelsIntermediate (nil).
+- jbeam keys read by init: `avDiffThreshold` (4 rad/s), `avThreshold` (1 rad/s), `minimumLock` (0), `clutchPIDkP` (0.1), `clutchPIDkI` (1), `clutchPIDkD` (0), `applyMinimumLockOnlyWithThrottle` (true), `name`. Read by initSecondStage: `splitShaftName`.
+- Internal thresholds: brake considered active above 0.1; throttle considered released at 0 or less.
+- The final ratio is clamp(clutchRatio, overrideMin, overrideMax); the code comment states that depending on the powertrain layout, it is either the min or the max of the override that matters.
+- Without a registered CMU, initSecondStage calls shutdown; if the shaft is not found, the system stays inactive. `electrics.values.brake`, `throttle`, `parkingbrake` are read without a default value.
+- `shutdown` removes updateGFX and updateWheelsIntermediate (nil).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.getConfig()` | Renvoie une copie des paramètres. | 229 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.init(jbeamData)` | Lit les paramètres jbeam et crée le PID d'embrayage. *(interne)* | 146 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.initSecondStage(jbeamData)` | Retrouve l'arbre de répartition (`splitShaftName`) et active le système. *(interne)* | 175 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.registerCMU(cmu)` | Appelée par le CMU pour donner une référence vers lui. *(interne)* | 203 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.reset()` | Remet isActing et les bornes d'override à leur valeur initiale. *(interne)* | 140 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.resetOverride()` | Remet les bornes d'override à 0 et 1. | 46 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.sendConfigData()` | Envoie les paramètres au CMU dans un paquet de debug config. *(interne)* | 233 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.setConfig(configTable)` | Remplace toute la table de paramètres. *(interne)* | 225 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.setDebugMode(debugEnabled)` | Active ou désactive l'envoi de paquets de debug. *(interne)* | 197 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.setParameters(parameters)` | Modifie à chaud avDiffThreshold, avThreshold, minimumLock, isEnabled et clutchPIDkP/kI/kD (via CMU.applyParameter). | 207 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.shutdown()` | Arrête l'actionneur. *(interne)* | 133 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.updateGFX(dt)` | Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU. *(interne)* | 106 |
-| `controller_drivingDynamics_actuators_electronicSplitShaftLock.updateWheelsIntermediate(dt)` | Étape physique intermédiaire : calcule le rapport d'embrayage (PID, conditions de conduite, override) et l'écrit dans `clutchRatio` de l'arbre de répartition. *(interne)* | 51 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.getConfig()` | Returns a copy of the parameters. | 229 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.init(jbeamData)` | Reads the jbeam parameters and creates the clutch PID. *(internal)* | 146 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.initSecondStage(jbeamData)` | Finds the split shaft (`splitShaftName`) and enables the system. *(internal)* | 175 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.registerCMU(cmu)` | Called by the CMU to give it a reference to itself. *(internal)* | 203 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.reset()` | Resets isActing and the override bounds to their initial value. *(internal)* | 140 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.resetOverride()` | Resets the override bounds to 0 and 1. | 46 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.sendConfigData()` | Sends the parameters to the CMU in a config debug packet. *(internal)* | 233 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.setConfig(configTable)` | Replaces the whole parameter table. *(internal)* | 225 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.setDebugMode(debugEnabled)` | Enables or disables sending debug packets. *(internal)* | 197 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.setParameters(parameters)` | Changes avDiffThreshold, avThreshold, minimumLock, isEnabled and clutchPIDkP/kI/kD at runtime (via CMU.applyParameter). | 207 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.shutdown()` | Stops the actuator. *(internal)* | 133 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.updateGFX(dt)` | Every frame: nothing useful. Debug variant: sends the values to the CMU. *(internal)* | 106 |
+| `controller_drivingDynamics_actuators_electronicSplitShaftLock.updateWheelsIntermediate(dt)` | Intermediate physics step: computes the clutch ratio (PID, driving conditions, override) and writes it to the split shaft's `clutchRatio`. *(internal)* | 51 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.getConfig()`
 
-Renvoie une copie des paramètres.
+Returns a copy of the parameters.
 
-- **renvoie** : table Copie profonde.
+- **returns**: table Deep copy.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.init(jbeamData)`
 
-Lit les paramètres jbeam et crée le PID d'embrayage.
+Reads the jbeam parameters and creates the clutch PID.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.initSecondStage(jbeamData)`
 
-Retrouve l'arbre de répartition (`splitShaftName`) et active le système.
+Finds the split shaft (`splitShaftName`) and enables the system.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.registerCMU(cmu)`
 
-Appelée par le CMU pour donner une référence vers lui.
+Called by the CMU to give it a reference to itself.
 
-- `cmu` (*table*) : Module CMU.
+- `cmu` (*table*) : CMU module.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.setConfig(configTable)`
 
-Remplace toute la table de paramètres.
+Replaces the whole parameter table.
 
-- `configTable` (*table*) : Nouveaux paramètres.
+- `configTable` (*table*) : New parameters.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.setDebugMode(debugEnabled)`
 
-Active ou désactive l'envoi de paquets de debug.
+Enables or disables sending debug packets.
 
-- `debugEnabled` (*boolean*) : true pour envoyer.
+- `debugEnabled` (*boolean*) : true to send.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.setParameters(parameters)`
 
-Modifie à chaud avDiffThreshold, avThreshold, minimumLock, isEnabled et clutchPIDkP/kI/kD (via CMU.applyParameter).
+Changes avDiffThreshold, avThreshold, minimumLock, isEnabled and clutchPIDkP/kI/kD at runtime (via CMU.applyParameter).
 
-- `parameters` (*table*) : Table des paramètres à changer.
+- `parameters` (*table*) : Table of parameters to change.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.updateGFX(dt)`
 
-Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU.
+Every frame: nothing useful. Debug variant: sends the values to the CMU.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
 #### `controller_drivingDynamics_actuators_electronicSplitShaftLock.updateWheelsIntermediate(dt)`
 
-Étape physique intermédiaire : calcule le rapport d'embrayage (PID, conditions de conduite, override) et l'écrit dans `clutchRatio` de l'arbre de répartition.
+Intermediate physics step: computes the clutch ratio (PID, driving conditions, override) and writes it to the split shaft's `clutchRatio`.
 
-- `dt` (*number*) : Pas en secondes.
+- `dt` (*number*) : Step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `defaultOrder` | number | 80. |
-| `isActing` | boolean | true si le rapport d'embrayage dépasse 0.01. |
-| `isActive` | boolean | true si l'arbre de répartition a été trouvé. |
-| `overrideMax` | number | Borne haute du rapport d'embrayage (1 par défaut). |
-| `overrideMin` | number | Borne basse du rapport d'embrayage (0 par défaut). |
+| `isActing` | boolean | true if the clutch ratio exceeds 0.01. |
+| `isActive` | boolean | true if the split shaft was found. |
+| `overrideMax` | number | Upper bound of the clutch ratio (1 by default). |
+| `overrideMin` | number | Lower bound of the clutch ratio (0 by default). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/actuators/electronicSplitShaftLock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/actuators/electronicSplitShaftLock.lua`.*

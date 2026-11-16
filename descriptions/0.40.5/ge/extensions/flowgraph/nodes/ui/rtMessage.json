@@ -1,22 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/rtMessage.lua",
-  "module": "Nœud flowgraph « RT Message » (catégorie repeat_instant, tags ui/text) : affiche un message en temps réel (hook 'ScenarioRealtimeDisplay'). Entrées : « message » (any ou table translationObject {txt, context}), « clear » (impulsion). Le message doit être effacé manuellement ; il est aussi effacé à l'arrêt du graphe.",
+  "module": "Flowgraph node \"RT Message\" (category repeat_instant, tags ui/text): displays a real-time message ('ScenarioRealtimeDisplay' hook). Inputs: \"message\" (any or translationObject table {txt, context}), \"clear\" (pulse). The message must be cleared manually; it is also cleared when the graph stops.",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStopped": {
-          "desc": "Efface le message temps réel.",
+          "desc": "Clears the real-time message.",
           "internal": true
         },
         "init": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "work": {
-          "desc": "Efface ou affiche le message selon 'clear' et le flux d'entrée.",
+          "desc": "Clears or displays the message depending on 'clear' and the input flow.",
           "internal": true
         }
       }

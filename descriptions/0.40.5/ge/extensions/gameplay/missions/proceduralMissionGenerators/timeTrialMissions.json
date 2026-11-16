@@ -1,20 +1,30 @@
 {
   "path": "lua/ge/extensions/gameplay/missions/proceduralMissionGenerators/timeTrialMissions.lua",
-  "module": "Générateur procédural de missions « generatedTimeTrial » à partir des courses rapides (quickraces) de chaque niveau. Il charge scenario_quickRaceLoader, parcourt les pistes, convertit celles qui n'ont pas de fichier .race.json (via gameplay/race/path:fromTrack) en fichier de cache dans gameplay/temp/timeTrials/, puis crée une mission avec le fichier de course, les préfabs (normaux, aller, retour), l'aperçu et le déclencheur placé sur la position de départ par défaut.",
+  "module": "Procedural mission generator for \"generatedTimeTrial\" based on each level's quick races (quickraces). It loads scenario_quickRaceLoader, iterates over the tracks, converts those without a .race.json file (via gameplay/race/path:fromTrack) into a cache file in gameplay/temp/timeTrials/, then creates a mission with the race file, the prefabs (normal, forward, reverse), the preview and the trigger placed on the default start position.",
   "usage": "local missions = gameplay_missions_proceduralMissionGenerators_timeTrialMissions.generate({'gridmap_v2'})",
   "notes": [
-    "Les missions ont l'id « <niveau>/timeTrials/<trackName>-procedural », missionType « generatedTimeTrial », startCondition {type='vehicleDriven'}, une seule étoile justFinish, showInCareer=false et showInFreeroam=true.",
-    "Pistes ignorées : race.ignoreAsMission, cache invalide, race.hideMission, ou aucune position de départ correspondant à defaultStartPosition (la mission n'est alors pas ajoutée).",
-    "Le cache est écrit sur disque (jsonWriteFile) au premier passage ; une conversion échouée écrit {invalid=true} pour ne pas réessayer. Supprimer le fichier de cache force une nouvelle conversion.",
-    "Les préfabs non trouvés sont cherchés dans levels/<niveau>/<chemin>.prefab(.json) ; ceux qui n'existent pas sont supprimés de la liste. Les préfabs automatiques <trackName>, <trackName>_reverse, <trackName>_forward dans levels/<niveau>/quickrace/ sont ajoutés s'ils existent.",
-    "Le bloc `enableConversion` (variable locale fixée à false) permettrait de convertir ces missions procédurales en vraies missions timeTrial sur disque via saveMission ; il est inactif. `hiddenFiles` n'est jamais rempli (code commenté), donc le compteur de missions masquées reste à 0 malgré le log final.",
-    "Les tables renvoyées par generate ne sont pas sauvegardées : elles servent à la liste de missions en mémoire."
+    "The missions have the id \"<level>/timeTrials/<trackName>-procedural\", missionType \"generatedTimeTrial\", startCondition {type='vehicleDriven'}, a single justFinish star, showInCareer=false and showInFreeroam=true.",
+    "Ignored tracks: race.ignoreAsMission, invalid cache, race.hideMission, or no start position matching defaultStartPosition (the mission is then not added).",
+    "The cache is written to disk (jsonWriteFile) on the first pass; a failed conversion writes {invalid=true} so it is not retried. Deleting the cache file forces a new conversion.",
+    "Prefabs not found are searched in levels/<level>/<path>.prefab(.json); those that do not exist are removed from the list. The automatic prefabs <trackName>, <trackName>_reverse, <trackName>_forward in levels/<level>/quickrace/ are added if they exist.",
+    "The `enableConversion` block (a local variable set to false) would allow converting these procedural missions into real timeTrial missions on disk via saveMission; it is inactive. `hiddenFiles` is never filled (commented-out code), so the hidden missions counter stays at 0 despite the final log.",
+    "The tables returned by generate are not saved: they serve as the in-memory mission list."
   ],
   "functions": {
     "generate": {
-      "desc": "Génère les missions « generatedTimeTrial » pour un ou plusieurs niveaux (tous si nil) à partir de scenario_quickRaceLoader.getQuickraceList. Écrit des fichiers de cache pour les pistes à convertir et journalise le nombre de missions masquées.",
-      "params": {"levelIdentifier": {"type": "string|table|nil", "desc": "Nom de niveau ou liste de noms ; nil = tous les niveaux."}},
-      "returns": [{"type": "table", "desc": "Liste de définitions de missions."}]
+      "desc": "Generates the \"generatedTimeTrial\" missions for one or more levels (all if nil) from scenario_quickRaceLoader.getQuickraceList. Writes cache files for the tracks to convert and logs the number of hidden missions.",
+      "params": {
+        "levelIdentifier": {
+          "type": "string|table|nil",
+          "desc": "Level name or list of names; nil = all levels."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of mission definitions."
+        }
+      ]
     }
   }
 }

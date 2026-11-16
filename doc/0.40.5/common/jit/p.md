@@ -1,41 +1,41 @@
 # `jit_p`
 
-*Fichier : `lua/common/jit/p.lua` · VM : Commun (GE + véhicule) · 310 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jit/p.lua` · VM: Common (GE + vehicle) · 310 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jit/p")`
+**Access:** `require("jit/p")`
 
-Module jit.p de LuaJIT (auteur Mike Pall, licence MIT, copyright 2005-2026) : interface simple au profileur à faible surcharge intégré à LuaJIT (jit.profile). Il échantillonne la pile d'appel et produit un rapport (fonctions, module:ligne, états de la VM, zones, annotations de source ou format brut pour flame graphs). Dans BeamNG la copie est adaptée (opérateurs != et += de la syntaxe étendue du jeu). L'option de mode est une chaîne de lettres : f/F/l (format de pile), nombre = profondeur, s (split), p (chemins), v (états VM), z (zones), r (compte brut), a/A (annotations), G (sortie pour graphes), m<n> (pourcentage minimal, 3 par défaut), i<n> (intervalle en ms, 10 par défaut).
+LuaJIT's jit.p module (author Mike Pall, MIT license, copyright 2005-2026): simple interface to the low-overhead profiler built into LuaJIT (jit.profile). It samples the call stack and produces a report (functions, module:line, VM states, zones, source annotations or raw format for flame graphs). In BeamNG the copy is adapted (the != and += operators of the game's extended syntax). The mode option is a string of letters: f/F/l (stack format), number = depth, s (split), p (paths), v (VM states), z (zones), r (raw count), a/A (annotations), G (output for graphs), m<n> (minimum percentage, 3 by default), i<n> (interval in ms, 10 by default).
 
-## Exemple
+## Example
 
 ```lua
 local p = require('jit/p')
-p.start('f')   -- mode par défaut
--- ... code à profiler ...
-p.stop()       -- écrit le rapport sur stdout (ou sur LUAJIT_PROFILEFILE)
+p.start('f')   -- default mode
+-- ... code to profile ...
+p.stop()       -- writes the report to stdout (or to LUAJIT_PROFILEFILE)
 ```
 
-## Remarques
+## Notes
 
-- La sortie va dans outfile, sinon dans la variable d'environnement LUAJIT_PROFILEFILE, sinon stdout ; '-' force stdout.
-- Un profil actif est aussi terminé automatiquement par le __gc d'un proxy newproxy(true) quand le module est ramassé.
-- Le mode 'z' charge jit.zone à la demande.
+- Output goes to outfile, otherwise to the LUAJIT_PROFILEFILE environment variable, otherwise stdout; '-' forces stdout.
+- An active profile is also terminated automatically by the __gc of a newproxy(true) proxy when the module is garbage-collected.
+- The 'z' mode loads jit.zone on demand.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jit_p.start(mode, outfile)` | Démarre le profileur avec la chaîne de mode donnée. Prévu pour l'option -jp de la ligne de commande LuaJIT. | 294 |
-| `jit_p.stop()` | Arrête le profileur et écrit le résultat (« [No samples collected] » s'il n'y a aucun échantillon). Ferme le fichier de sortie s'il n'est pas stdout. | 224 |
+| `jit_p.start(mode, outfile)` | Starts the profiler with the given mode string. Intended for the -jp option of the LuaJIT command line. | 294 |
+| `jit_p.stop()` | Stops the profiler and writes the result ("[No samples collected]" if there are no samples). Closes the output file if it is not stdout. | 224 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jit_p.start(mode, outfile)`
 
-Démarre le profileur avec la chaîne de mode donnée. Prévu pour l'option -jp de la ligne de commande LuaJIT.
+Starts the profiler with the given mode string. Intended for the -jp option of the LuaJIT command line.
 
-- `mode` (*string|nil*) : Chaîne de lettres/nombres (voir module) ; « f » par défaut.
-- `outfile` (*string|nil*) : Fichier de sortie ; défaut LUAJIT_PROFILEFILE ou stdout ; '-' = stdout.
+- `mode` (*string|nil*) : String of letters/numbers (see module); "f" by default.
+- `outfile` (*string|nil*) : Output file; default LUAJIT_PROFILEFILE or stdout; '-' = stdout.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jit/p.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jit/p.lua`.*

@@ -7,7 +7,7 @@ docs_dir: doc
 use_directory_urls: false
 theme:
   name: material
-  language: fr
+  language: en
   features:
     - navigation.indexes
     - navigation.top
@@ -44,3 +44,9 @@ nav:
       - Index: 0.40.5/index.md
       - Hooks: 0.40.5/hooks.md
       - C++ objects: 0.40.5/cpp.md
+  - Français:
+      - Accueil: fr/index.md
+      - 0.40.5:
+          - Index: fr/0.40.5/index.md
+          - Hooks: fr/0.40.5/hooks.md
+          - Objets C++: fr/0.40.5/cpp.md

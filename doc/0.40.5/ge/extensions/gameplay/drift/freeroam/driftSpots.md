@@ -1,132 +1,132 @@
 # `gameplay_drift_freeroam_driftSpots`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/freeroam/driftSpots.lua` · VM : Game Engine (GE) · 532 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/freeroam/driftSpots.lua` · VM: Game Engine (GE) · 532 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_freeroam_driftSpots` : `extensions.load("gameplay_drift_freeroam_driftSpots")`, puis la globale `gameplay_drift_freeroam_driftSpots`
+**Access:** extension `gameplay_drift_freeroam_driftSpots`: `extensions.load("gameplay_drift_freeroam_driftSpots")`, then the global `gameplay_drift_freeroam_driftSpots`
 
-Gère les spots de drift du roaming libre (et de la carrière) : zones de départ/arrivée sous forme de lignes (lineOne/lineTwo), à traverser en drift. Il détecte le départ (le joueur drifte dans le rectangle d'une ligne, dans le sens de startDir), passe en contexte inFreeroamChallenge, configure les limites (gameplay_drift_bounds) et le trajet (gameplay_drift_destination), puis détecte la fin propre (ligne d'arrivée franchie à contresens de sa startDir) ou impropre (contresens, hors route, arrêt, remise en place du véhicule). Enregistre le score (10 meilleurs), valide les objectifs et expose les spots comme POI sur la carte.
+Manages the drift spots of free roaming (and of career): start/finish zones as lines (lineOne/lineTwo), to be crossed while drifting. It detects the start (the player drifts in a line's rectangle, in the direction of startDir), switches to the inFreeroamChallenge context, configures the bounds (gameplay_drift_bounds) and the route (gameplay_drift_destination), then detects a clean end (finish line crossed against its startDir) or an unclean one (wrong way, off road, stop, vehicle reset). Records the score (top 10), validates the objectives and exposes the spots as POIs on the map.
 
-## Remarques
+## Notes
 
-- Réglages : maxWrongWayDist 5 m, maxDistToIntendedRoad 30 m, phase de conclusion 2.5 s, arrêt (vitesse < 2 m/s) pendant plus de 1 s = abandon (reason stopped).
-- Raisons d'échec : wrongWay, outOfBounds, stopped, vehReset (clés de traduction missions.drift.display.endReason.*).
-- lineTwo est parcourue en sens inverse : le trajet est chargé avec reverse = (line.name == "lineTwo"). La ligne d'arrivée est la ligne correspondante (lineOne <-> lineTwo) du même spot.
-- Ne garde que 10 scores par spot ; les objectifs atteints donnent des récompenses, versées en carrière via career_modules_playerAttributes.
-- Les spots ne sont proposés comme POI que si la carrière est active ou si le réglage enableDriftInFreeroam est vrai. Ignoré en multiseat et pendant un gamemode multijoueur.
-- Hooks émis : onDriftSpotStarted({lineId}), onDriftSpotFinishLineCrossed(), onDriftSpotCompleted({duration, score, newRecord}), onDriftSpotFailed({reason, concludingPhaseDuration, lineId}), onFreeroamDriftZoneNewHighscore(), onDriftSpotForcedEnd({lineId}).
-- Bug : dans onDriftCompletedScored, le champ done du message « New Highscore! » utilise la variable `completed`, qui n'existe pas dans cette portée (nil global).
-- Bug mineur : dans onUpdate, un return anticipé (pas de position de véhicule) saute profiler:finish(false) quand le debug général est actif.
-- findNearestStartLine est défini mais jamais appelé (code mort).
+- Settings: maxWrongWayDist 5 m, maxDistToIntendedRoad 30 m, concluding phase 2.5 s, stopping (speed < 2 m/s) for more than 1 s = abandonment (reason stopped).
+- Failure reasons: wrongWay, outOfBounds, stopped, vehReset (translation keys missions.drift.display.endReason.*).
+- lineTwo is driven in the opposite direction: the route is loaded with reverse = (line.name == "lineTwo"). The finish line is the corresponding line (lineOne <-> lineTwo) of the same spot.
+- Keeps only 10 scores per spot; achieved objectives give rewards, paid out in career via career_modules_playerAttributes.
+- The spots are only offered as POIs if career is active or if the enableDriftInFreeroam setting is true. Ignored in multiseat and during a multiplayer gamemode.
+- Emitted hooks: onDriftSpotStarted({lineId}), onDriftSpotFinishLineCrossed(), onDriftSpotCompleted({duration, score, newRecord}), onDriftSpotFailed({reason, concludingPhaseDuration, lineId}), onFreeroamDriftZoneNewHighscore(), onDriftSpotForcedEnd({lineId}).
+- Bug: in onDriftCompletedScored, the done field of the "New Highscore!" message uses the variable `completed`, which does not exist in this scope (global nil).
+- Minor bug: in onUpdate, an early return (no vehicle position) skips profiler:finish(false) when general debug is active.
+- findNearestStartLine is defined but never called (dead code).
 
-**Dépendances (chargées avant) :** `gameplay_drift_general`, `gameplay_drift_drift`, `gameplay_drift_scoring`, `gameplay_drift_saveLoad`
+**Dependencies (loaded first):** `gameplay_drift_general`, `gameplay_drift_drift`, `gameplay_drift_scoring`, `gameplay_drift_saveLoad`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_freeroam_driftSpots.detectStart(lineId)` | Teste si le joueur démarre un spot par la ligne indiquée : il doit être dans le rectangle de la ligne, rouler dans le sens de startDir (produit scalaire > 0) et être en train de drifter. Si oui, lance le spot (contexte inFreeroamChallenge, limites, trajet, hook onDriftSpotStarted, tasklist). Sans effet si déjà dans un défi, en multiseat ou en gamemode multijoueur. Logge une erreur si l'id de ligne est inconnu. | 244 |
-| `gameplay_drift_freeroam_driftSpots.getDriftDebugInfo()` | Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift. | 379 |
-| `gameplay_drift_freeroam_driftSpots.getGC()` | Renvoie la quantité de garbage mesurée par le profileur (0 hors debug). | 387 |
-| `gameplay_drift_freeroam_driftSpots.getIsInFreeroamChallenge()` | Indique si un spot de drift est en cours. | 391 |
-| `gameplay_drift_freeroam_driftSpots.getIsInTheConcludingPhase()` | Indique si le spot est dans sa phase de conclusion (réussite ou échec), pendant laquelle le drift est gelé. | 383 |
-| `gameplay_drift_freeroam_driftSpots.onClientEndMission()` | Hook : fin de niveau ; nettoie la tasklist et l'état du spot en cours. *(interne)* *(hook)* | 482 |
-| `gameplay_drift_freeroam_driftSpots.onClientStartMission()` | Hook : démarrage de niveau ; vide le cache de gameplay_drift_saveLoad et reconstruit les lignes. *(interne)* *(hook)* | 491 |
-| `gameplay_drift_freeroam_driftSpots.onDeserialized(data)` | Hook : si un spot était en cours avant le rechargement, émet onDriftSpotForcedEnd puis le termine. *(interne)* *(hook)* | 497 |
-| `gameplay_drift_freeroam_driftSpots.onDriftCompletedScored()` | Hook : à la fin d'une chaîne de drifts scorée, met à jour la tasklist des objectifs et affiche « New Highscore! » (une fois par spot) si le record est battu. *(interne)* *(hook)* | 446 |
-| `gameplay_drift_freeroam_driftSpots.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook : recharge les lignes du niveau puis ajoute un POI par ligne (marqueur de ligne de drift) ; lineOne ajoute aussi un marqueur de grande carte avec nom, aperçu, meilleur score et position de téléportation. *(interne)* *(hook)* | 409 |
-| `gameplay_drift_freeroam_driftSpots.onMultiplayerGamemodeStarted()` | Hook : un gamemode multijoueur démarre ; force la fin d'un spot en cours (onDriftSpotForcedEnd), désactive les spots et vide les POI. *(interne)* *(hook)* | 468 |
-| `gameplay_drift_freeroam_driftSpots.onMultiplayerGamemodeStopped()` | Hook : fin du gamemode multijoueur ; réactive les spots et vide les POI. *(interne)* *(hook)* | 477 |
-| `gameplay_drift_freeroam_driftSpots.onSerialize()` | Hook : sauvegarde isInFreeroamChallenge et activeLine avant un rechargement Lua. *(interne)* *(hook)* | 504 |
-| `gameplay_drift_freeroam_driftSpots.onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame : met à jour position/vitesse du joueur puis, pendant un spot, vérifie la fin propre et les fins impropres. *(interne)* *(hook)* | 358 |
-| `gameplay_drift_freeroam_driftSpots.onVehicleResetted(id)` | Hook : si le véhicule remis en place est celui du drift pendant un spot, termine le spot en échec (reason vehReset). *(interne)* *(hook)* | 395 |
+| `gameplay_drift_freeroam_driftSpots.detectStart(lineId)` | Tests whether the player starts a spot through the given line: they must be in the line's rectangle, drive in the direction of startDir (dot product > 0) and be drifting. If so, starts the spot (inFreeroamChallenge context, bounds, route, onDriftSpotStarted hook, tasklist). No effect if already in a challenge, in multiseat or in a multiplayer gamemode. Logs an error if the line id is unknown. | 244 |
+| `gameplay_drift_freeroam_driftSpots.getDriftDebugInfo()` | Returns {default=false, canBeChanged=true} for the drift debug window. | 379 |
+| `gameplay_drift_freeroam_driftSpots.getGC()` | Returns the amount of garbage measured by the profiler (0 outside debug). | 387 |
+| `gameplay_drift_freeroam_driftSpots.getIsInFreeroamChallenge()` | Indicates whether a drift spot is in progress. | 391 |
+| `gameplay_drift_freeroam_driftSpots.getIsInTheConcludingPhase()` | Indicates whether the spot is in its concluding phase (success or failure), during which the drift is frozen. | 383 |
+| `gameplay_drift_freeroam_driftSpots.onClientEndMission()` | Hook: level end; cleans up the tasklist and the state of the current spot. *(internal)* *(hook)* | 482 |
+| `gameplay_drift_freeroam_driftSpots.onClientStartMission()` | Hook: level start; empties the gameplay_drift_saveLoad cache and rebuilds the lines. *(internal)* *(hook)* | 491 |
+| `gameplay_drift_freeroam_driftSpots.onDeserialized(data)` | Hook: if a spot was in progress before the reload, emits onDriftSpotForcedEnd then ends it. *(internal)* *(hook)* | 497 |
+| `gameplay_drift_freeroam_driftSpots.onDriftCompletedScored()` | Hook: at the end of a scored drift chain, updates the objectives tasklist and shows "New Highscore!" (once per spot) if the record is beaten. *(internal)* *(hook)* | 446 |
+| `gameplay_drift_freeroam_driftSpots.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook: reloads the level's lines then adds one POI per line (drift line marker); lineOne also adds a big map marker with name, preview, best score and teleport position. *(internal)* *(hook)* | 409 |
+| `gameplay_drift_freeroam_driftSpots.onMultiplayerGamemodeStarted()` | Hook: a multiplayer gamemode starts; forces the end of a spot in progress (onDriftSpotForcedEnd), disables the spots and empties the POIs. *(internal)* *(hook)* | 468 |
+| `gameplay_drift_freeroam_driftSpots.onMultiplayerGamemodeStopped()` | Hook: end of the multiplayer gamemode; re-enables the spots and empties the POIs. *(internal)* *(hook)* | 477 |
+| `gameplay_drift_freeroam_driftSpots.onSerialize()` | Hook: saves isInFreeroamChallenge and activeLine before a Lua reload. *(internal)* *(hook)* | 504 |
+| `gameplay_drift_freeroam_driftSpots.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: updates the player's position/speed then, during a spot, checks the clean end and the unclean ends. *(internal)* *(hook)* | 358 |
+| `gameplay_drift_freeroam_driftSpots.onVehicleResetted(id)` | Hook: if the vehicle put back in place is the drift vehicle during a spot, ends the spot as a failure (reason vehReset). *(internal)* *(hook)* | 395 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_freeroam_driftSpots.detectStart(lineId)`
 
-Teste si le joueur démarre un spot par la ligne indiquée : il doit être dans le rectangle de la ligne, rouler dans le sens de startDir (produit scalaire > 0) et être en train de drifter. Si oui, lance le spot (contexte inFreeroamChallenge, limites, trajet, hook onDriftSpotStarted, tasklist). Sans effet si déjà dans un défi, en multiseat ou en gamemode multijoueur. Logge une erreur si l'id de ligne est inconnu.
+Tests whether the player starts a spot through the given line: they must be in the line's rectangle, drive in the direction of startDir (dot product > 0) and be drifting. If so, starts the spot (inFreeroamChallenge context, bounds, route, onDriftSpotStarted hook, tasklist). No effect if already in a challenge, in multiseat or in a multiplayer gamemode. Logs an error if the line id is unknown.
 
-- `lineId` (*string*) : Id de ligne de la forme spotId..lineName (clé de la table lines).
+- `lineId` (*string*) : Line id of the form spotId..lineName (key of the lines table).
 
 #### `gameplay_drift_freeroam_driftSpots.getDriftDebugInfo()`
 
-Renvoie {default=false, canBeChanged=true} pour la fenêtre de debug drift.
+Returns {default=false, canBeChanged=true} for the drift debug window.
 
-- **renvoie** : table {default = false, canBeChanged = true}
+- **returns**: table {default = false, canBeChanged = true}
 
 #### `gameplay_drift_freeroam_driftSpots.getGC()`
 
-Renvoie la quantité de garbage mesurée par le profileur (0 hors debug).
+Returns the amount of garbage measured by the profiler (0 outside debug).
 
-- **renvoie** : number Garbage de la section « Drift driftSpots ».
+- **returns**: number Garbage of the "Drift driftSpots" section.
 
 #### `gameplay_drift_freeroam_driftSpots.getIsInFreeroamChallenge()`
 
-Indique si un spot de drift est en cours.
+Indicates whether a drift spot is in progress.
 
-- **renvoie** : boolean true pendant un défi de spot.
+- **returns**: boolean true during a spot challenge.
 
 #### `gameplay_drift_freeroam_driftSpots.getIsInTheConcludingPhase()`
 
-Indique si le spot est dans sa phase de conclusion (réussite ou échec), pendant laquelle le drift est gelé.
+Indicates whether the spot is in its concluding phase (success or failure), during which the drift is frozen.
 
-- **renvoie** : boolean true pendant les ~2.5 s de conclusion.
+- **returns**: boolean true during the ~2.5 s of conclusion.
 
 #### `gameplay_drift_freeroam_driftSpots.onDeserialized(data)`
 
-Hook : si un spot était en cours avant le rechargement, émet onDriftSpotForcedEnd puis le termine.
+Hook: if a spot was in progress before the reload, emits onDriftSpotForcedEnd then ends it.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `gameplay_drift_freeroam_driftSpots.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook : recharge les lignes du niveau puis ajoute un POI par ligne (marqueur de ligne de drift) ; lineOne ajoute aussi un marqueur de grande carte avec nom, aperçu, meilleur score et position de téléportation.
+Hook: reloads the level's lines then adds one POI per line (drift line marker); lineOne also adds a big map marker with name, preview, best score and teleport position.
 
-- `levelIdentifier` (*string*) : Identifiant du niveau (inutilisé).
-- `elements` (*table*) : Liste de POI bruts à compléter.
+- `levelIdentifier` (*string*) : Level identifier (unused).
+- `elements` (*table*) : List of raw POIs to fill.
 
 #### `gameplay_drift_freeroam_driftSpots.onSerialize()`
 
-Hook : sauvegarde isInFreeroamChallenge et activeLine avant un rechargement Lua.
+Hook: saves isInFreeroamChallenge and activeLine before a Lua reload.
 
-- **renvoie** : table {isInFreeroamChallenge, activeLine}
+- **returns**: table {isInFreeroamChallenge, activeLine}
 
 #### `gameplay_drift_freeroam_driftSpots.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque frame : met à jour position/vitesse du joueur puis, pendant un spot, vérifie la fin propre et les fins impropres.
+Called every frame: updates the player's position/speed then, during a spot, checks the clean end and the unclean ends.
 
-- `dtReal` (*number*) : Delta temps réel (inutilisé).
-- `dtSim` (*number*) : Delta temps simulé, utilisé pour le chrono d'arrêt.
-- `dtRaw` (*number*) : Delta temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta (unused).
+- `dtSim` (*number*) : Simulated time delta, used for the stop timer.
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `gameplay_drift_freeroam_driftSpots.onVehicleResetted(id)`
 
-Hook : si le véhicule remis en place est celui du drift pendant un spot, termine le spot en échec (reason vehReset).
+Hook: if the vehicle put back in place is the drift vehicle during a spot, ends the spot as a failure (reason vehReset).
 
-- `id` (*integer*) : Id du véhicule.
+- `id` (*integer*) : Vehicle id.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | gameplay_drift_general, gameplay_drift_drift, gameplay_drift_scoring, gameplay_drift_saveLoad. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onDriftSpotCompleted` — écouté par 1 module(s)
-- `onDriftSpotFailed` — écouté par 2 module(s)
-- `onDriftSpotFinishLineCrossed` — écouté par 1 module(s)
+- `onDriftSpotCompleted` — listened to by 1 module(s)
+- `onDriftSpotFailed` — listened to by 2 module(s)
+- `onDriftSpotFinishLineCrossed` — listened to by 1 module(s)
 - `onDriftSpotForcedEnd`
-- `onDriftSpotStarted` — écouté par 1 module(s)
-- `onFreeroamDriftZoneNewHighscore` — écouté par 1 module(s)
+- `onDriftSpotStarted` — listened to by 1 module(s)
+- `onFreeroamDriftZoneNewHighscore` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`, `SetTasklistTask`
+**UI events (guihooks.trigger):** `ClearTasklist`, `SetTasklistTask`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/freeroam/driftSpots.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/freeroam/driftSpots.lua`.*

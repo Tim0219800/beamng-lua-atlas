@@ -1,12 +1,12 @@
 # `editor_raceEditor`
 
-*Fichier : `lua/ge/extensions/editor/raceEditor.lua` · VM : Game Engine (GE) · 569 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/raceEditor.lua` · VM: Game Engine (GE) · 569 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_raceEditor` : `extensions.load("editor_raceEditor")`, puis la globale `editor_raceEditor`
+**Access:** extension `editor_raceEditor`: `extensions.load("editor_raceEditor")`, then the global `editor_raceEditor`
 
-Fenêtre principale « Race Tool » de l'éditeur de courses/chemins (menu Gameplay > Race/Path Editor, mode d'édition « Edit Races »). Elle gère le fichier de course courant (*.race.json, dossier par défaut /gameplay/races/) : charger, sauvegarder, nouvelle course, copie depuis un Time Trials de scénario, liste de toutes les courses. Elle héberge les sous-fenêtres (pathnodes, segments, startPositions, trackLayout, timeTrials, tools) et une fenêtre « Race Test » (testing). Les chargements passent par l'historique d'édition (annuler/rétablir). Le chemin courant est un objet gameplay/race/path.
+Main "Race Tool" window of the race/path editor (menu Gameplay > Race/Path Editor, edit mode "Edit Races"). It manages the current race file (*.race.json, default folder /gameplay/races/): load, save, new race, copy from a scenario Time Trials, list of all races. It hosts the sub-windows (pathnodes, segments, startPositions, trackLayout, timeTrials, tools) and a "Race Test" window (testing). Loads go through the edit history (undo/redo). The current path is a gameplay/race/path object.
 
-## Exemple
+## Example
 
 ```lua
 local race = editor_raceEditor.getCurrentPath()
@@ -14,125 +14,125 @@ editor_raceEditor.saveRace(race, '/gameplay/races/maCourse.race.json')
 editor_raceEditor.loadRace('/gameplay/races/maCourse.race.json')
 ```
 
-## Remarques
+## Notes
 
-- Préférences enregistrées (catégorie raceEditor.general) : directionalNodes (true par défaut), showAiRoute, showCustomFields, useSimpleDrag.
-- Le sous-module pacenotes est commenté dans la liste des fenêtres (non chargé). Ordre des fenêtres : 1 pathnodes, 2 segments, 3 startPositions, 4 trackLayout, 5 timeTrials, 6 tools.
-- loadRace renvoie currentPath au moment de l'appel : comme le remplacement est fait plus tard par l'action d'historique (setRaceRedo), la valeur renvoyée peut être l'ancien chemin et non le chemin chargé.
-- Dans setRaceRedo/setRaceUndo, la boucle « for _, window in ipairs(windows) » appelle currentWindow et non window : seule la fenêtre courante est mise à jour, N fois.
-- Un dialogue « All Races » cherche tous les *.race.json de tout le système de fichiers virtuel (peut prendre quelques secondes).
+- Registered preferences (category raceEditor.general): directionalNodes (true by default), showAiRoute, showCustomFields, useSimpleDrag.
+- The pacenotes sub-module is commented out in the window list (not loaded). Window order: 1 pathnodes, 2 segments, 3 startPositions, 4 trackLayout, 5 timeTrials, 6 tools.
+- loadRace returns currentPath as of the call: since the replacement is done later by the history action (setRaceRedo), the returned value may be the old path and not the loaded one.
+- In setRaceRedo/setRaceUndo, the loop "for _, window in ipairs(windows)" calls currentWindow and not window: only the current window is updated, N times.
+- An "All Races" dialog searches all *.race.json files across the whole virtual file system (may take a few seconds).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_raceEditor.allowGizmo()` | Indique si le gizmo d'édition est autorisé : vrai quand le mode d'édition courant est « Edit Races ». | 551 |
-| `editor_raceEditor.calculateAiRoute()` | Appelle autoConfig() puis getAiPath() sur le chemin courant pour recalculer la route IA (et la distance aiPathDistance). | 28 |
-| `editor_raceEditor.changedFromExternal()` | À appeler quand le chemin courant a été modifié hors de la fenêtre : redonne le chemin à la sous-fenêtre active (setPath). | 555 |
-| `editor_raceEditor.getCurrentFilename()` | Renvoie le chemin complet du fichier de course courant (dossier + nom). | 552 |
-| `editor_raceEditor.getCurrentPath()` | Renvoie l'objet gameplay/race/path en cours d'édition. | 553 |
-| `editor_raceEditor.getToolsWindow()` | Renvoie la sous-fenêtre « tools » de l'éditeur de course. | 567 |
-| `editor_raceEditor.isVisible()` | Indique si la fenêtre « Race Tool » est affichée. | 554 |
-| `editor_raceEditor.loadRace(filename)` | Lit un fichier .race.json, construit un nouveau chemin (onDeserialized), recalcule la route IA et valide une action d'historique « Set path to <nom> » pour le remplacer. Ne fait rien si filename est nil ; logue une erreur si le fichier est introuvable. | 79 |
-| `editor_raceEditor.onDeserialized(data)` | Appelé après un rechargement Lua avec l'état sauvegardé ; restaure le chemin, le nom et le dossier du fichier, puis recalcule la route IA. *(interne)* *(hook)* | 520 |
-| `editor_raceEditor.onEditorGui()` | Appelé à chaque frame. Dessine la fenêtre Race Tool (menu File, listes, onglets des sous-fenêtres) et repasse en mode objectSelect si la fenêtre est masquée. *(interne)* *(hook)* | 254 |
-| `editor_raceEditor.onEditorInitialized()` | Déclare le mode d'édition raceEditMode, enregistre la fenêtre (500x500) et l'entrée de menu, puis instancie les sous-fenêtres et la fenêtre de test. *(interne)* *(hook)* | 471 |
-| `editor_raceEditor.onEditorRegisterPreferences(prefsRegistry)` | Déclare la catégorie de préférences raceEditor (directionalNodes, showAiRoute, showCustomFields, useSimpleDrag). *(interne)* *(hook)* | 535 |
-| `editor_raceEditor.onEditorToolWindowHide(windowName)` | Si la fenêtre masquée est raceEditorTool, repasse en mode objectSelect. *(interne)* *(hook)* | 499 |
-| `editor_raceEditor.onSerialize()` | Appelé avant un rechargement Lua ; sérialise le chemin courant et le dernier dossier/nom de fichier. *(interne)* *(hook)* | 511 |
-| `editor_raceEditor.onUpdate(dtReal, dtSim, dtRaw)` | Hook de mise à jour ; dessine la fenêtre « Race Test » (testingWindow:draw(dtSim)) quand elle est ouverte. *(interne)* *(hook)* | 113 |
-| `editor_raceEditor.onWindowGotFocus(windowName)` | Si la fenêtre qui prend le focus est raceEditorTool, active le mode d'édition raceEditMode. *(interne)* *(hook)* | 505 |
-| `editor_raceEditor.saveRace(race, savePath)` | Sérialise une course et l'écrit en JSON (jsonWriteFile, joli format). Met à jour le dossier et le nom de fichier mémorisés. | 67 |
-| `editor_raceEditor.setupRace()` | Ouvre la fenêtre « Race Test », lui donne le chemin courant et prépare la course de test (testingWindow:setupRace). | 106 |
-| `editor_raceEditor.show()` | Vide la sélection, affiche la fenêtre Race Tool et active le mode d'édition raceEditMode. | 447 |
+| `editor_raceEditor.allowGizmo()` | Returns whether the edit gizmo is allowed: true when the current edit mode is "Edit Races". | 551 |
+| `editor_raceEditor.calculateAiRoute()` | Calls autoConfig() then getAiPath() on the current path to recompute the AI route (and the aiPathDistance distance). | 28 |
+| `editor_raceEditor.changedFromExternal()` | Call when the current path was modified outside the window: gives the path back to the active sub-window (setPath). | 555 |
+| `editor_raceEditor.getCurrentFilename()` | Returns the full path of the current race file (folder + name). | 552 |
+| `editor_raceEditor.getCurrentPath()` | Returns the gameplay/race/path object being edited. | 553 |
+| `editor_raceEditor.getToolsWindow()` | Returns the race editor's "tools" sub-window. | 567 |
+| `editor_raceEditor.isVisible()` | Returns whether the "Race Tool" window is displayed. | 554 |
+| `editor_raceEditor.loadRace(filename)` | Reads a .race.json file, builds a new path (onDeserialized), recomputes the AI route and commits a "Set path to <name>" history action to replace it. Does nothing if filename is nil; logs an error if the file is not found. | 79 |
+| `editor_raceEditor.onDeserialized(data)` | Called after a Lua reload with the saved state; restores the path, the file name and folder, then recomputes the AI route. *(internal)* *(hook)* | 520 |
+| `editor_raceEditor.onEditorGui()` | Called every frame. Draws the Race Tool window (File menu, lists, sub-window tabs) and switches back to objectSelect mode if the window is hidden. *(internal)* *(hook)* | 254 |
+| `editor_raceEditor.onEditorInitialized()` | Declares the raceEditMode edit mode, registers the window (500x500) and the menu entry, then instantiates the sub-windows and the test window. *(internal)* *(hook)* | 471 |
+| `editor_raceEditor.onEditorRegisterPreferences(prefsRegistry)` | Declares the raceEditor preferences category (directionalNodes, showAiRoute, showCustomFields, useSimpleDrag). *(internal)* *(hook)* | 535 |
+| `editor_raceEditor.onEditorToolWindowHide(windowName)` | If the hidden window is raceEditorTool, switches back to objectSelect mode. *(internal)* *(hook)* | 499 |
+| `editor_raceEditor.onSerialize()` | Called before a Lua reload; serializes the current path and the last folder/file name. *(internal)* *(hook)* | 511 |
+| `editor_raceEditor.onUpdate(dtReal, dtSim, dtRaw)` | Update hook; draws the "Race Test" window (testingWindow:draw(dtSim)) when it is open. *(internal)* *(hook)* | 113 |
+| `editor_raceEditor.onWindowGotFocus(windowName)` | If the window gaining focus is raceEditorTool, activates the raceEditMode edit mode. *(internal)* *(hook)* | 505 |
+| `editor_raceEditor.saveRace(race, savePath)` | Serializes a race and writes it as JSON (jsonWriteFile, pretty format). Updates the remembered folder and file name. | 67 |
+| `editor_raceEditor.setupRace()` | Opens the "Race Test" window, gives it the current path and prepares the test race (testingWindow:setupRace). | 106 |
+| `editor_raceEditor.show()` | Clears the selection, shows the Race Tool window and activates the raceEditMode edit mode. | 447 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_raceEditor.allowGizmo()`
 
-Indique si le gizmo d'édition est autorisé : vrai quand le mode d'édition courant est « Edit Races ».
+Returns whether the edit gizmo is allowed: true when the current edit mode is "Edit Races".
 
-- **renvoie** : boolean true si le mode d'édition courant est celui de l'éditeur de course.
+- **returns**: boolean true if the current edit mode is the race editor's.
 
 #### `editor_raceEditor.getCurrentFilename()`
 
-Renvoie le chemin complet du fichier de course courant (dossier + nom).
+Returns the full path of the current race file (folder + name).
 
-- **renvoie** : string Par défaut « /gameplay/races/NewRace.race.json ».
+- **returns**: string Default "/gameplay/races/NewRace.race.json".
 
 #### `editor_raceEditor.getCurrentPath()`
 
-Renvoie l'objet gameplay/race/path en cours d'édition.
+Returns the gameplay/race/path object being edited.
 
-- **renvoie** : table Objet chemin de course (pathnodes, segments, startPositions…).
+- **returns**: table Race path object (pathnodes, segments, startPositions...).
 
 #### `editor_raceEditor.getToolsWindow()`
 
-Renvoie la sous-fenêtre « tools » de l'éditeur de course.
+Returns the race editor's "tools" sub-window.
 
-- **renvoie** : table Instance du module raceEditor/tools.
+- **returns**: table Instance of the raceEditor/tools module.
 
 #### `editor_raceEditor.isVisible()`
 
-Indique si la fenêtre « Race Tool » est affichée.
+Returns whether the "Race Tool" window is displayed.
 
-- **renvoie** : boolean Visibilité de la fenêtre raceEditorTool.
+- **returns**: boolean Visibility of the raceEditorTool window.
 
 #### `editor_raceEditor.loadRace(filename)`
 
-Lit un fichier .race.json, construit un nouveau chemin (onDeserialized), recalcule la route IA et valide une action d'historique « Set path to <nom> » pour le remplacer. Ne fait rien si filename est nil ; logue une erreur si le fichier est introuvable.
+Reads a .race.json file, builds a new path (onDeserialized), recomputes the AI route and commits a "Set path to <name>" history action to replace it. Does nothing if filename is nil; logs an error if the file is not found.
 
-- `filename` (*string|nil*) : Chemin du fichier .race.json.
-- **renvoie** : table|nil currentPath (voir notes : peut être l'ancien chemin).
+- `filename` (*string|nil*) : Path of the .race.json file.
+- **returns**: table|nil currentPath (see notes: may be the old path).
 
 #### `editor_raceEditor.onDeserialized(data)`
 
-Appelé après un rechargement Lua avec l'état sauvegardé ; restaure le chemin, le nom et le dossier du fichier, puis recalcule la route IA.
+Called after a Lua reload with the saved state; restores the path, the file name and folder, then recomputes the AI route.
 
-- `data` (*table|nil*) : Table de onSerialize : path, previousFilepath, previousFilename.
+- `data` (*table|nil*) : onSerialize table: path, previousFilepath, previousFilename.
 
 #### `editor_raceEditor.onEditorRegisterPreferences(prefsRegistry)`
 
-Déclare la catégorie de préférences raceEditor (directionalNodes, showAiRoute, showCustomFields, useSimpleDrag).
+Declares the raceEditor preferences category (directionalNodes, showAiRoute, showCustomFields, useSimpleDrag).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_raceEditor.onEditorToolWindowHide(windowName)`
 
-Si la fenêtre masquée est raceEditorTool, repasse en mode objectSelect.
+If the hidden window is raceEditorTool, switches back to objectSelect mode.
 
-- `windowName` (*string*) : Nom de la fenêtre masquée.
+- `windowName` (*string*) : Name of the hidden window.
 
 #### `editor_raceEditor.onSerialize()`
 
-Appelé avant un rechargement Lua ; sérialise le chemin courant et le dernier dossier/nom de fichier.
+Called before a Lua reload; serializes the current path and the last folder/file name.
 
-- **renvoie** : table {path, previousFilepath, previousFilename}.
+- **returns**: table {path, previousFilepath, previousFilename}.
 
 #### `editor_raceEditor.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de mise à jour ; dessine la fenêtre « Race Test » (testingWindow:draw(dtSim)) quand elle est ouverte.
+Update hook; draws the "Race Test" window (testingWindow:draw(dtSim)) when it is open.
 
-- `dtReal` (*number*) : Delta temps réel (non utilisé).
-- `dtSim` (*number*) : Delta temps de simulation passé à la fenêtre de test.
-- `dtRaw` (*number*) : Delta temps brut (non utilisé).
+- `dtReal` (*number*) : Real-time delta (unused).
+- `dtSim` (*number*) : Simulation time delta passed to the test window.
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `editor_raceEditor.onWindowGotFocus(windowName)`
 
-Si la fenêtre qui prend le focus est raceEditorTool, active le mode d'édition raceEditMode.
+If the window gaining focus is raceEditorTool, activates the raceEditMode edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_raceEditor.saveRace(race, savePath)`
 
-Sérialise une course et l'écrit en JSON (jsonWriteFile, joli format). Met à jour le dossier et le nom de fichier mémorisés.
+Serializes a race and writes it as JSON (jsonWriteFile, pretty format). Updates the remembered folder and file name.
 
-- `race` (*table|nil*) : Chemin de course à sauvegarder ; si nil, utilise le chemin courant.
-- `savePath` (*string*) : Chemin complet du fichier de sortie.
+- `race` (*table|nil*) : Race path to save; if nil, uses the current path.
+- `savePath` (*string*) : Full path of the output file.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/raceEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/raceEditor.lua`.*

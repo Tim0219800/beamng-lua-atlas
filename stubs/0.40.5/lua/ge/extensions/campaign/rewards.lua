@@ -2,46 +2,46 @@
 -- tim19Atlas stub generated from lua/ge/extensions/campaign/rewards.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Calcul et attribution des récompenses de scénario de la campagne. À partir de scenarioData.onEvent.onSucceed (ou onFail), getRewards sélectionne les récompenses ; processRewards les ajoute à l'inventaire (core_inventory.addItem avec la clé « $$$_ »..type) et renvoie ce qui a été gagné ainsi que les choix à faire par le joueur (clé « choices »). processUserSelection applique le choix du joueur et envoie les autres options au concessionnaire (campaign_dealer.addToStock).
---- Accès : extension `campaign_rewards` : `extensions.load("campaign_rewards")`, puis la globale `campaign_rewards`
+--- Computation and granting of campaign scenario rewards. From scenarioData.onEvent.onSucceed (or onFail), getRewards selects the rewards; processRewards adds them to the inventory (core_inventory.addItem with the key "$$$_"..type) and returns what was won as well as the choices to be made by the player ("choices" key). processUserSelection applies the player's choice and sends the other options to the dealer (campaign_dealer.addToStock).
+--- Access: extension `campaign_rewards`: `extensions.load("campaign_rewards")`, then the global `campaign_rewards`
 ---@class campaign_rewards
----@field pendingUserChoices table<string, table> Choix en attente par clé de scénario, remplis par processRewards.
+---@field pendingUserChoices table<string, table> Pending choices by scenario key, filled by processRewards.
 campaign_rewards = {}
 
---- Retourne la table des récompenses du scénario : onSucceed si le résultat n'est pas échoué, sinon onFail. Inclut la récompense de la médaille obtenue et toutes les clés qui ne sont pas des médailles.
----Source : lua/ge/extensions/campaign/rewards.lua:17
----@param scenarioKey string Identifiant du scénario (non utilisé dans le calcul).
----@param scenarioData table Données du scénario avec onEvent.onSucceed / onFail.
----@param scenarioResult table Résultat ; le champ failed est lu.
----@param medal string|nil Médaille obtenue.
----@return table|nil  Récompenses, ou nil s'il n'y en a pas.
+--- Returns the scenario's rewards table: onSucceed if the result is not failed, otherwise onFail. Includes the reward for the medal obtained and all keys that are not medals.
+---Source: lua/ge/extensions/campaign/rewards.lua:17
+---@param scenarioKey string Scenario identifier (not used in the computation).
+---@param scenarioData table Scenario data with onEvent.onSucceed / onFail.
+---@param scenarioResult table Result; the failed field is read.
+---@param medal string|nil Medal obtained.
+---@return table|nil  Rewards, or nil if there are none.
 function campaign_rewards.getRewards(scenarioKey, scenarioData, scenarioResult, medal) end
 
---- Fonction prévue pour lire les récompenses d'un événement ; son corps est entièrement commenté dans cette version.
----Source : lua/ge/extensions/campaign/rewards.lua:119
----@param scenarioData table Données du scénario.
----@param eventName string Nom de l'événement.
----@return nil  Toujours nil.
+--- Function intended to read the rewards of an event; its body is entirely commented out in this version.
+---Source: lua/ge/extensions/campaign/rewards.lua:119
+---@param scenarioData table Scenario data.
+---@param eventName string Event name.
+---@return nil  Always nil.
 function campaign_rewards.getScenarioReward(scenarioData, eventName) end
 
---- Appelle callback(clé, valeur) pour chaque entrée de players[player] (table globale non définie dans ce fichier).
----Source : lua/ge/extensions/campaign/rewards.lua:10
----@param player any Clé du joueur dans la table globale players.
----@param callback function Reçoit (clé, valeur).
+--- Calls callback(key, value) for each entry of players[player] (global table not defined in this file).
+---Source: lua/ge/extensions/campaign/rewards.lua:10
+---@param player any Player key in the global table players.
+---@param callback function Receives (key, value).
 function campaign_rewards.iterateRewardsConst(player, callback) end
 
---- Ajoute les récompenses à l'inventaire, mémorise les choix en attente, et retourne une table fusionnant ce qui est gagné (nombres cumulés ou listes) et les choix proposés.
----Source : lua/ge/extensions/campaign/rewards.lua:53
----@param scenarioKey string Identifiant du scénario.
----@param scenarioData table Données du scénario.
----@param scenarioResult table Résultat du scénario.
----@param medal string|nil Médaille obtenue.
----@return table  Récompenses gagnées plus éventuel champ « choices ».
+--- Adds the rewards to the inventory, stores the pending choices, and returns a table merging what is won (accumulated numbers or lists) and the proposed choices.
+---Source: lua/ge/extensions/campaign/rewards.lua:53
+---@param scenarioKey string Scenario identifier.
+---@param scenarioData table Scenario data.
+---@param scenarioResult table Scenario result.
+---@param medal string|nil Medal obtained.
+---@return table  Rewards won plus an optional "choices" field.
 function campaign_rewards.processRewards(scenarioKey, scenarioData, scenarioResult, medal) end
 
---- Applique le choix du joueur : ajoute l'élément choisi à l'inventaire et envoie toutes les autres options de la liste au concessionnaire.
----Source : lua/ge/extensions/campaign/rewards.lua:97
----@param scenarioKey string Scénario dont des choix sont en attente.
----@param selectionIndex integer Index (à partir de 1) de l'option retenue.
+--- Applies the player's choice: adds the chosen item to the inventory and sends all the other options of the list to the dealer.
+---Source: lua/ge/extensions/campaign/rewards.lua:97
+---@param scenarioKey string Scenario with pending choices.
+---@param selectionIndex integer Index (1-based) of the selected option.
 function campaign_rewards.processUserSelection(scenarioKey, selectionIndex) end
 

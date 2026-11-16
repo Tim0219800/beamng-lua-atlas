@@ -1,15 +1,24 @@
 {
   "path": "lua/ge/extensions/editor/aiTests.lua",
-  "module": "Outil de l'éditeur « Vehicle AI Path/Plan Debug » (menu Debug des fenêtres de l'éditeur). Deux onglets : « Route » permet de définir un départ, une arrivée et des waypoints (marqueurs déplaçables, ou position du véhicule joueur / de la caméra), calcule la route sur le navgraph (gameplay/route/route), l'affiche avec debugDrawer et peut l'envoyer aux ground markers ; « AI Vehicles » permet de sélectionner des véhicules IA, régler leurs paramètres (aggression, turnForceCoef, awarenessForceCoef, edgeDist, lookAheadKv, staticFrictionCoefMult), puis lancer, arrêter, replacer ou recharger tous les véhicules sur la route courante ou un chemin aléatoire de 2000 m. Utile pour comparer le comportement de l'IA avec des réglages différents.",
+  "module": "Editor tool \"Vehicle AI Path/Plan Debug\" (Debug menu of the editor windows). Two tabs: \"Route\" lets you define a start, an end and waypoints (draggable markers, or the player vehicle's / camera's position), computes the route on the navgraph (gameplay/route/route), displays it with debugDrawer and can send it to the ground markers; \"AI Vehicles\" lets you select AI vehicles, adjust their parameters (aggression, turnForceCoef, awarenessForceCoef, edgeDist, lookAheadKv, staticFrictionCoefMult), then launch, stop, reposition or reload all the vehicles on the current route or a random 2000 m path. Useful to compare the AI's behavior with different settings.",
   "notes": [
-    "Désactiver les collisions dynamiques (case Enable Dynamic Collisions) rend les véhicules « fantômes » pour comparer les trajectoires ; elles sont réactivées à la fermeture de l'éditeur (onEditorDeactivated).",
-    "Au lancement, chaque véhicule reçoit ai.driveUsingPath({wpTargetList = ..., avoidCars = 'off'}), ai.setAggression, ai.setParameters et le mode de debug de trajectoire.",
-    "Dans tabParams, la branche `elseif type(p[0]) == \"boolean\"` teste p[0] au lieu de p[1][0] ; comme tous les paramètres sont des nombres, elle n'est jamais utilisée.",
-    "Les fonctions de l'outil sont toutes locales : seuls les trois hooks de l'éditeur sont exportés."
+    "Disabling dynamic collisions (Enable Dynamic Collisions checkbox) makes the vehicles \"ghosts\" to compare trajectories; they are re-enabled when the editor is closed (onEditorDeactivated).",
+    "On launch, each vehicle receives ai.driveUsingPath({wpTargetList = ..., avoidCars = 'off'}), ai.setAggression, ai.setParameters and the path debug mode.",
+    "In tabParams, the branch `elseif type(p[0]) == \"boolean\"` tests p[0] instead of p[1][0]; since all parameters are numbers, it is never used.",
+    "The tool's functions are all local: only the three editor hooks are exported."
   ],
   "functions": {
-    "onEditorGui": {"desc": "Hook de dessin de l'éditeur : affiche la fenêtre à onglets Route / AI Vehicles.", "internal": true},
-    "onEditorDeactivated": {"desc": "Hook émis quand l'éditeur est fermé : réactive les collisions dynamiques si l'outil les avait désactivées.", "internal": true},
-    "onEditorInitialized": {"desc": "Hook émis à l'initialisation de l'éditeur : enregistre la fenêtre (520x420) et son entrée de menu dans le groupe Debug.", "internal": true}
+    "onEditorGui": {
+      "desc": "Editor drawing hook: displays the Route / AI Vehicles tabbed window.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook emitted when the editor is closed: re-enables dynamic collisions if the tool had disabled them.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook emitted when the editor initializes: registers the window (520x420) and its menu entry in the Debug group.",
+      "internal": true
+    }
   }
 }

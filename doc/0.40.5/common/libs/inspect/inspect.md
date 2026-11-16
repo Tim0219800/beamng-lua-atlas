@@ -1,64 +1,64 @@
 # `libs_inspect_inspect`
 
-*Fichier : `lua/common/libs/inspect/inspect.lua` · VM : Commun (GE + véhicule) · 330 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/inspect/inspect.lua` · VM: Common (GE + vehicle) · 330 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/inspect/inspect")`
+**Access:** `require("libs/inspect/inspect")`
 
-inspect.lua 3.1.0 : bibliothèque tierce (Enrique García Cota, licence MIT) qui transforme n'importe quelle valeur Lua en chaîne lisible : tables triées, indentation, références circulaires repérées par <id>, métatables affichées. Le module est appelable : inspect(t, options). Pratique pour déboguer.
+inspect.lua 3.1.0: third-party library (Enrique García Cota, MIT license) that turns any Lua value into a readable string: sorted tables, indentation, circular references marked by <id>, metatables displayed. The module is callable: inspect(t, options). Handy for debugging.
 
-## Exemple
+## Example
 
 ```lua
 local inspect = require("libs/inspect/inspect")
 print(inspect({1, 2, a = {b = true}}, {depth = 2}))
 ```
 
-## Remarques
+## Notes
 
-- Options de inspect.inspect : depth (profondeur max, défaut illimitée), newline (défaut "\n"), indent (défaut deux espaces), process (fonction process(item, path) appliquée récursivement avant l'affichage).
-- Les fonctions, userdata et threads sont affichés sous la forme <type id>.
-- Les champs KEY et METATABLE sont des marqueurs internes utilisés dans process (déduit du code).
-- `i` est listé comme globale affectée par l'extracteur automatique ; c'est en pratique une variable de boucle locale du fichier (à vérifier, non essentiel).
+- Options of inspect.inspect: depth (max depth, unlimited by default), newline (default "\n"), indent (default two spaces), process (function process(item, path) applied recursively before display).
+- Functions, userdata and threads are displayed in the form <type id>.
+- The KEY and METATABLE fields are internal markers used in process (inferred from code).
+- `i` is listed as an assigned global by the automatic extractor; in practice it is a local loop variable of the file (to be checked, not essential).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_inspect_inspect.inspect(root, options)` | Renvoie une représentation textuelle de root. Peut aussi s'appeler directement : inspect(root, options). | 298 |
+| `libs_inspect_inspect.inspect(root, options)` | Returns a textual representation of root. Can also be called directly: inspect(root, options). | 298 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_inspect_inspect.inspect(root, options)`
 
-Renvoie une représentation textuelle de root. Peut aussi s'appeler directement : inspect(root, options).
+Returns a textual representation of root. Can also be called directly: inspect(root, options).
 
-- `root` (*any*) : Valeur à afficher
+- `root` (*any*) : Value to display
 - `options` (*table|nil*) : {depth, newline, indent, process}
-- **renvoie** : string Texte formaté
+- **returns**: string Formatted text
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `KEY` | any | Marqueur de clé utilisé dans le chemin passé à options.process. |
-| `METATABLE` | any | Marqueur de métatable utilisé dans le chemin passé à options.process. |
+| `KEY` | any | Key marker used in the path passed to options.process. |
+| `METATABLE` | any | Metatable marker used in the path passed to options.process. |
 
-## Classe `Inspector`
+## Class `Inspector`
 
-Objet interne qui accumule le texte dans un tampon pendant le parcours de la valeur.
+Internal object that accumulates text in a buffer while walking the value.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `Inspector:alreadyVisited(v)` | Indique si la valeur a déjà un identifiant (table déjà rencontrée). | 208 |
-| `Inspector:down(f)` | Exécute f un niveau plus profond (incrémente puis décrémente le niveau). | 198 |
-| `Inspector:getId(v)` | Renvoie l'identifiant numérique de la valeur, selon son type, en le créant au besoin. | 212 |
-| `Inspector:putKey(k)` | Écrit une clé de table : identifiant brut ou [clé] entre crochets. | 223 |
-| `Inspector:putTable(t)` | Écrit une table : parties séquentielle et non séquentielle, métatable, limite de profondeur, références répétées. | 230 |
-| `Inspector:putValue(v)` | Écrit une valeur selon son type (chaîne échappée, nombre, booléen, table, ou <type id>). | 281 |
-| `Inspector:puts(...)` | Ajoute des morceaux de texte au tampon. | 188 |
-| `Inspector:tabify()` | Ajoute un saut de ligne suivi de l'indentation du niveau courant. | 204 |
+| `Inspector:alreadyVisited(v)` | Tells whether the value already has an identifier (table already encountered). | 208 |
+| `Inspector:down(f)` | Runs f one level deeper (increments then decrements the level). | 198 |
+| `Inspector:getId(v)` | Returns the numeric identifier of the value, according to its type, creating it if needed. | 212 |
+| `Inspector:putKey(k)` | Writes a table key: raw identifier or [key] in brackets. | 223 |
+| `Inspector:putTable(t)` | Writes a table: sequential and non-sequential parts, metatable, depth limit, repeated references. | 230 |
+| `Inspector:putValue(v)` | Writes a value according to its type (escaped string, number, boolean, table, or <type id>). | 281 |
+| `Inspector:puts(...)` | Appends pieces of text to the buffer. | 188 |
+| `Inspector:tabify()` | Appends a line break followed by the indentation of the current level. | 204 |
 
-**Globales affectées :** `i`
+**Globals assigned:** `i`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/inspect/inspect.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/inspect/inspect.lua`.*

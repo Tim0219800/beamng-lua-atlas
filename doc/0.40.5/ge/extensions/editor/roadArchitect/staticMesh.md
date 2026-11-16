@@ -1,39 +1,39 @@
 # `editor_roadArchitect_staticMesh`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/staticMesh.lua` · VM : Game Engine (GE) · 268 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/staticMesh.lua` · VM: Game Engine (GE) · 268 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_staticMesh` : `extensions.load("editor_roadArchitect_staticMesh")`, puis la globale `editor_roadArchitect_staticMesh`
+**Access:** extension `editor_roadArchitect_staticMesh`: `extensions.load("editor_roadArchitect_staticMesh")`, then the global `editor_roadArchitect_staticMesh`
 
-Place des objets TSStatic (fichiers .dae) le long des routes du Road Architect, à partir des couches (layers) du profil latéral. Deux types de couches sont gérés : le type 4 (même maillage répété sur toute la longueur de la route) et le type 5 (une seule unité de maillage). Appelé par roads.finalise ; les objets sont retirés par tryRemove lors du unfinalise ou de la suppression de la route.
+Places TSStatic objects (.dae files) along the Road Architect roads, from the layers of the lateral profile. Two layer types are handled: type 4 (same mesh repeated over the whole length of the road) and type 5 (a single mesh unit). Called by roads.finalise; the objects are removed by tryRemove on unfinalise or when the road is deleted.
 
-## Remarques
+## Notes
 
-- Les objets sont créés avec decalType = 'None', canSave = true et ajoutés au dossier de scène de la route.
-- Le nom de chaque objet unique de type 5 est '<matDisplay> <indice de route>- single -<indice de couche>'.
-- Le champ layer.mat contient le chemin du fichier de forme (shapeName).
+- The objects are created with decalType = 'None', canSave = true and added to the road's scene folder.
+- The name of each unique type 5 object is '<matDisplay> <road index>- single -<layer index>'.
+- The layer.mat field contains the shape file path (shapeName).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_staticMesh.createStaticMeshes(r, roadIdx, folder)` | Parcourt les couches du profil de la route et crée les objets statiques correspondants (type 4 : répétition le long de la route ; type 5 : unité unique). | 228 |
-| `editor_roadArchitect_staticMesh.tryRemove(roadName)` | Supprime de la scène tous les maillages statiques (répétés et uniques) créés pour la route, et oublie leurs entrées. | 246 |
+| `editor_roadArchitect_staticMesh.createStaticMeshes(r, roadIdx, folder)` | Iterates over the layers of the road's profile and creates the corresponding static objects (type 4: repetition along the road; type 5: single unit). | 228 |
+| `editor_roadArchitect_staticMesh.tryRemove(roadName)` | Removes from the scene all static meshes (repeated and unique) created for the road, and forgets their entries. | 246 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_staticMesh.createStaticMeshes(r, roadIdx, folder)`
 
-Parcourt les couches du profil de la route et crée les objets statiques correspondants (type 4 : répétition le long de la route ; type 5 : unité unique).
+Iterates over the layers of the road's profile and creates the corresponding static objects (type 4: repetition along the road; type 5: single unit).
 
-- `r` (*table*) : Route avec profile.layers.
-- `roadIdx` (*integer*) : Indice de la route (sert au nommage).
-- `folder` (*userdata*) : SimGroup de scène.
+- `r` (*table*) : Road with profile.layers.
+- `roadIdx` (*integer*) : Index of the road (used for naming).
+- `folder` (*userdata*) : Scene SimGroup.
 
 #### `editor_roadArchitect_staticMesh.tryRemove(roadName)`
 
-Supprime de la scène tous les maillages statiques (répétés et uniques) créés pour la route, et oublie leurs entrées.
+Removes from the scene all static meshes (repeated and unique) created for the road, and forgets their entries.
 
-- `roadName` (*string*) : Nom de la route (le commentaire du code parle d'indice, mais la clé est le nom).
+- `roadName` (*string*) : Name of the road (the code comment talks about an index, but the key is the name).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/staticMesh.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/staticMesh.lua`.*

@@ -2,166 +2,166 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/celestial.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Ciel astronomique réel piloté par le TimeOfDay du niveau. L'horloge (time, play, dayLength) et le lieu/date de l'observateur (latitude, longitude, year, month, day) viennent du TimeOfDay ; l'extension positionne le soleil, la lune (taille et phase) et l'orientation du champ d'étoiles sur ce même instant (objet ScatterSky). Elle gère aussi les étoiles filantes, les éclipses solaires, un profil céleste par niveau (atmosphère, corps) et une carte de détail au survol des étoiles/constellations. Un moddeur s'en sert pour changer le lieu, la date, la taille de la lune, afficher des grilles ou remplacer le calcul du ciel (setDriver).
---- Accès : extension `core_celestial` : `extensions.load("core_celestial")`, puis la globale `core_celestial`
+--- Real astronomical sky driven by the level's TimeOfDay. The clock (time, play, dayLength) and the observer's place/date (latitude, longitude, year, month, day) come from the TimeOfDay; the extension positions the sun, the moon (size and phase) and the orientation of the star field at that same instant (ScatterSky object). It also handles shooting stars, solar eclipses, a per-level sky profile (atmosphere, bodies) and a detail card on hovering stars/constellations. A modder uses it to change the place, the date, the moon size, display grids or replace the sky computation (setDriver).
+--- Access: extension `core_celestial`: `extensions.load("core_celestial")`, then the global `core_celestial`
 ---@class core_celestial
----@field hover table Réglages publics de la carte de détail au survol, modifiables sans forker le fichier : dist (16 m devant la caméra), starHeight 4.6, constHeight 2.5, rightFrac 0.82, downFrac 0.10, tilt -0.22, res 2 (supersampling de texture), starPickDeg 1.5 (distance angulaire pour choisir une étoile), constPickDeg 6 (pour choisir une constellation), shimmerDist 40, shimmerRadiusFrac 0.025, shimmerColor {r,g,b}, leaderColor {r,g,b,a}, et les fonctions de remplacement starTemplate(), constTemplate(), starVars(meta), constVars(id). Après avoir remplacé un *Template, appeler refreshHoverCards().
+---@field hover table Public settings of the hover detail card, modifiable without forking the file: dist (16 m in front of the camera), starHeight 4.6, constHeight 2.5, rightFrac 0.82, downFrac 0.10, tilt -0.22, res 2 (texture supersampling), starPickDeg 1.5 (angular distance to pick a star), constPickDeg 6 (to pick a constellation), shimmerDist 40, shimmerRadiusFrac 0.025, shimmerColor {r,g,b}, leaderColor {r,g,b,a}, and the replacement functions starTemplate(), constTemplate(), starVars(meta), constVars(id). After replacing a *Template, call refreshHoverCards().
 core_celestial = {}
 
---- Cherche la prochaine éclipse solaire visible depuis le lieu de l'observateur du niveau, à partir de l'instant courant du TimeOfDay.
----Source : lua/ge/extensions/core/celestial.lua:708
----@return table|nil  {year, month, day, time} au maximum de l'éclipse, nil si aucune dans la plage de recherche ou pas de TimeOfDay
+--- Looks for the next solar eclipse visible from the level observer's location, starting from the current TimeOfDay instant.
+---Source: lua/ge/extensions/core/celestial.lua:708
+---@return table|nil  {year, month, day, time} at the eclipse maximum, nil if none in the search range or no TimeOfDay
 function core_celestial.findNextSolarEclipse() end
 
---- Profil céleste actif.
----Source : lua/ge/extensions/core/celestial.lua:813
----@return table|nil  profil
+--- Active sky profile.
+---Source: lua/ge/extensions/core/celestial.lua:813
+---@return table|nil  profile
 function core_celestial.getActiveProfile() end
 
---- État des couches d'affichage.
----Source : lua/ge/extensions/core/celestial.lua:782
----@return table  {hasSky=boolean, constellationLines=..., ...} ; seul hasSky s'il n'y a pas de ciel
+--- State of the display layers.
+---Source: lua/ge/extensions/core/celestial.lua:782
+---@return table  {hasSky=boolean, constellationLines=..., ...}; only hasSky if there is no sky
 function core_celestial.getDisplayState() end
 
---- Renvoie le pilote de ciel personnalisé courant.
----Source : lua/ge/extensions/core/celestial.lua:717
----@return function|nil  pilote ou nil si le calcul intégré est utilisé
+--- Returns the current custom sky driver.
+---Source: lua/ge/extensions/core/celestial.lua:717
+---@return function|nil  driver or nil if the built-in computation is used
 function core_celestial.getDriver() end
 
---- Dernier résultat de survol (constellation + étoile).
----Source : lua/ge/extensions/core/celestial.lua:724
----@return table|nil  fiche du dernier survol ou nil
+--- Last hover result (constellation + star).
+---Source: lua/ge/extensions/core/celestial.lua:724
+---@return table|nil  card of the last hover or nil
 function core_celestial.getHover() end
 
---- Décalage du nord courant.
----Source : lua/ge/extensions/core/celestial.lua:726
----@return number  degrés
+--- Current north offset.
+---Source: lua/ge/extensions/core/celestial.lua:726
+---@return number  degrees
 function core_celestial.getNorthOffset() end
 
---- Instantané de configuration pour outils de debug/scripts.
----Source : lua/ge/extensions/core/celestial.lua:817
+--- Configuration snapshot for debug tools/scripts.
+---Source: lua/ge/extensions/core/celestial.lua:817
 ---@return table  enabled, hoverEnabled, northOffsetDeg, azimuthSign, moonScale, latitude, longitude, year, month, day, time, meteor{name,test,ratePreset,rate,showerFraction}, display
 function core_celestial.getState() end
 
---- Indique si le ciel astronomique réel est activé.
----Source : lua/ge/extensions/core/celestial.lua:712
----@return boolean  état
+--- Tells whether the real astronomical sky is enabled.
+---Source: lua/ge/extensions/core/celestial.lua:712
+---@return boolean  state
 function core_celestial.isEnabled() end
 
---- Charge ou remplace le profil céleste (atmosphère, corps). Le bloc atmosphère est repoussé vers ScatterSky à l'image suivante.
----Source : lua/ge/extensions/core/celestial.lua:806
----@param profile string|table chemin d'un JSON ou table déjà décodée
----@return boolean  false si le profil n'est ni une table ni un JSON lisible
+--- Loads or replaces the sky profile (atmosphere, bodies). The atmosphere block is pushed to ScatterSky on the next frame.
+---Source: lua/ge/extensions/core/celestial.lua:806
+---@param profile string|table path of a JSON or already decoded table
+---@return boolean  false if the profile is neither a table nor a readable JSON
 function core_celestial.loadProfile(profile) end
 
---- Hook : fin du niveau ; vide les caches et oublie le profil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/celestial.lua:1103
+--- Hook: end of the level; empties the caches and forgets the profile.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/celestial.lua:1103
 function core_celestial.onClientEndMission() end
 
---- Hook : un niveau vient d'être chargé ; vide les caches et recharge le profil céleste.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/celestial.lua:1102
+--- Hook: a level has just been loaded; empties the caches and reloads the sky profile.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/celestial.lua:1102
 function core_celestial.onClientPostStartMission() end
 
---- Hook : met l'extension en déchargement manuel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/celestial.lua:1088
+--- Hook: sets the extension to manual unloading.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/celestial.lua:1088
 function core_celestial.onExtensionLoaded() end
 
---- Hook : changement de langue ; reconstruit l'atlas de noms et les cartes de survol (gratuit si rien ne change).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/celestial.lua:1107
+--- Hook: language change; rebuilds the name atlas and the hover cards (free if nothing changes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/celestial.lua:1107
 function core_celestial.onLanguageChanged() end
 
---- Hook par image : applique l'atmosphère du profil, puis calcule la position du soleil, de la lune et des étoiles depuis le TimeOfDay et met à jour le survol ; ou restaure le ciel d'origine si désactivé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/celestial.lua:1071
----@param dtReal number secondes réelles
----@param dtSim number secondes de simulation (non utilisé)
+--- Per-frame hook: applies the profile's atmosphere, then computes the position of the sun, moon and stars from the TimeOfDay and updates hovering; or restores the original sky if disabled.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/celestial.lua:1071
+---@param dtReal number real seconds
+---@param dtSim number simulation seconds (unused)
 function core_celestial.onPreRender(dtReal, dtSim) end
 
---- Hook : rechargement à chaud des fichiers de langue ; même effet que onLanguageChanged.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/celestial.lua:1107
+--- Hook: hot reload of the language files; same effect as onLanguageChanged.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/celestial.lua:1107
 function core_celestial.onReloadLocales() end
 
---- Détruit les cartes de survol pour qu'elles soient reconstruites depuis M.hover au prochain survol (à appeler après avoir remplacé un *Template).
----Source : lua/ge/extensions/core/celestial.lua:970
+--- Destroys the hover cards so they are rebuilt from M.hover on the next hover (to call after replacing a *Template).
+---Source: lua/ge/extensions/core/celestial.lua:970
 function core_celestial.refreshHoverCards() end
 
---- Auto-test de la partie mathématique (JD, soleil, lune, réfraction, parallaxe, fuseau, météores, éclipses). Lève une erreur d'assertion en cas d'écart.
----Source : lua/ge/extensions/core/celestial.lua:1112
----@return boolean  true si tout passe
+--- Self-test of the math part (JD, sun, moon, refraction, parallax, time zone, meteors, eclipses). Raises an assertion error on a mismatch.
+---Source: lua/ge/extensions/core/celestial.lua:1112
+---@return boolean  true if everything passes
 function core_celestial.selftest() end
 
---- Inverse le sens est-ouest du ciel si le soleil/les étoiles apparaissent en miroir.
----Source : lua/ge/extensions/core/celestial.lua:727
----@param s number négatif = -1, sinon 1
+--- Reverses the east-west direction of the sky if the sun/stars appear mirrored.
+---Source: lua/ge/extensions/core/celestial.lua:727
+---@param s number negative = -1, otherwise 1
 function core_celestial.setAzimuthSign(s) end
 
---- Écrit année/mois/jour dans le TimeOfDay du niveau ; les arguments nil sont ignorés.
----Source : lua/ge/extensions/core/celestial.lua:792
----@param y integer|nil année
----@param mo integer|nil mois 1-12
----@param d integer|nil jour
+--- Writes year/month/day to the level's TimeOfDay; nil arguments are ignored.
+---Source: lua/ge/extensions/core/celestial.lua:792
+---@param y integer|nil year
+---@param mo integer|nil month 1-12
+---@param d integer|nil day
 function core_celestial.setDate(y, mo, d) end
 
---- Active/désactive une couche d'affichage du ciel (voir notes pour les clés valides). Sans effet si pas de ScatterSky ou clé inconnue.
----Source : lua/ge/extensions/core/celestial.lua:776
+--- Enables/disables a sky display layer (see notes for valid keys). No effect if no ScatterSky or unknown key.
+---Source: lua/ge/extensions/core/celestial.lua:776
 ---@param key string constellationLines, constellationLabels, horizonGrid, equatorialGrid, meridianGrid, moonGrid
----@param value boolean afficher ou non
+---@param value boolean show or not
 function core_celestial.setDisplayOption(key, value) end
 
---- Remplace le calcul du ciel à chaque image. fn(ctx) reçoit les valeurs du ciel réel préremplies (ctx.sunAz/sunEl, ctx.bodies, ctx.star*, ctx.meteor*, ctx.time/jd/lst/lat/lon) et un utilitaire ctx.altAz(raDeg, decDeg) ; il les modifie pour déplacer le ciel. nil rétablit le calcul intégré.
----Source : lua/ge/extensions/core/celestial.lua:716
----@param fn function|nil fonction fn(ctx) ; toute valeur non fonction est traitée comme nil
+--- Replaces the sky computation every frame. fn(ctx) receives the prefilled real sky values (ctx.sunAz/sunEl, ctx.bodies, ctx.star*, ctx.meteor*, ctx.time/jd/lst/lat/lon) and a utility ctx.altAz(raDeg, decDeg); it modifies them to move the sky. nil restores the built-in computation.
+---Source: lua/ge/extensions/core/celestial.lua:716
+---@param fn function|nil function fn(ctx); any non-function value is treated as nil
 function core_celestial.setDriver(fn) end
 
---- Active ou désactive le ciel astronomique réel (activé par défaut) ; la transition est appliquée à la prochaine image.
----Source : lua/ge/extensions/core/celestial.lua:704
----@param on boolean true = ciel réel ; false = restaure l'ambiance nocturne d'origine du niveau
+--- Enables or disables the real astronomical sky (enabled by default); the transition is applied on the next frame.
+---Source: lua/ge/extensions/core/celestial.lua:704
+---@param on boolean true = real sky; false = restores the level's original night ambiance
 function core_celestial.setEnabled(on) end
 
---- Active la carte de détail au survol des étoiles (l'overlay UI l'active pendant son affichage). Désactiver efface le dernier résultat.
----Source : lua/ge/extensions/core/celestial.lua:720
----@param on boolean activer le survol
+--- Enables the detail card on hovering stars (the UI overlay enables it while shown). Disabling clears the last result.
+---Source: lua/ge/extensions/core/celestial.lua:720
+---@param on boolean enable hovering
 function core_celestial.setHoverEnabled(on) end
 
---- Écrit latitude/longitude dans le TimeOfDay du niveau (source de vérité). Ne fait rien sans TimeOfDay.
----Source : lua/ge/extensions/core/celestial.lua:786
----@param latDeg number latitude en degrés (nord positif)
----@param lonDeg number longitude en degrés (est positif)
+--- Writes latitude/longitude to the level's TimeOfDay (source of truth). Does nothing without a TimeOfDay.
+---Source: lua/ge/extensions/core/celestial.lua:786
+---@param latDeg number latitude in degrees (north positive)
+---@param lonDeg number longitude in degrees (east positive)
 function core_celestial.setLocation(latDeg, lonDeg) end
 
---- Choisit un préréglage de taux d'étoiles filantes.
----Source : lua/ge/extensions/core/celestial.lua:739
----@param preset string|nil default (calendrier réel), low (10), moderate (30), high (120) ; nil = default ; valeur inconnue = sans effet
+--- Chooses a shooting star rate preset.
+---Source: lua/ge/extensions/core/celestial.lua:739
+---@param preset string|nil default (real calendar), low (10), moderate (30), high (120); nil = default; unknown value = no effect
 function core_celestial.setMeteorRatePreset(preset) end
 
---- Debug : force une forte pluie d'étoiles filantes même hors saison.
----Source : lua/ge/extensions/core/celestial.lua:736
----@param on boolean activer
+--- Debug: forces a heavy meteor shower even out of season.
+---Source: lua/ge/extensions/core/celestial.lua:736
+---@param on boolean enable
 function core_celestial.setMeteorTest(on) end
 
---- Debug : fixe le taux d'étoiles filantes et active le mode test.
----Source : lua/ge/extensions/core/celestial.lua:737
----@param r number météores par minute (30 par défaut)
+--- Debug: sets the shooting star rate and enables test mode.
+---Source: lua/ge/extensions/core/celestial.lua:737
+---@param r number meteors per minute (30 by default)
 function core_celestial.setMeteorTestRate(r) end
 
---- Change la taille de la lune (appliquée tout de suite si le ciel réel est actif).
----Source : lua/ge/extensions/core/celestial.lua:729
----@param s number échelle ; 0.05 par défaut, le défaut des niveaux (~0.2) est énorme
+--- Changes the moon size (applied immediately if the real sky is active).
+---Source: lua/ge/extensions/core/celestial.lua:729
+---@param s number scale; 0.05 by default, the levels' default (~0.2) is huge
 function core_celestial.setMoonScale(s) end
 
---- Décale le nord vrai par rapport à l'axe +Y du monde.
----Source : lua/ge/extensions/core/celestial.lua:725
----@param deg number degrés (0 si non numérique)
+--- Offsets true north relative to the world's +Y axis.
+---Source: lua/ge/extensions/core/celestial.lua:725
+---@param deg number degrees (0 if non-numeric)
 function core_celestial.setNorthOffset(deg) end
 
---- Fuseau civil de l'observateur. Un niveau peut aussi fixer tod.utcOffset / tod.dstRule directement.
----Source : lua/ge/extensions/core/celestial.lua:799
----@param stdOffsetHours number|nil décalage UTC standard en heures ; nil = déduit de la longitude
----@param rule string|nil règle d'heure d'été : auto, eu, us, au, none ; nil = inchangée
+--- Civil time zone of the observer. A level can also set tod.utcOffset / tod.dstRule directly.
+---Source: lua/ge/extensions/core/celestial.lua:799
+---@param stdOffsetHours number|nil standard UTC offset in hours; nil = deduced from the longitude
+---@param rule string|nil daylight saving rule: auto, eu, us, au, none; nil = unchanged
 function core_celestial.setTimezone(stdOffsetHours, rule) end
 

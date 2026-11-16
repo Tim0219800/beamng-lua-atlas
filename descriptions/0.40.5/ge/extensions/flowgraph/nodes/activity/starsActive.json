@@ -1,16 +1,26 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/activity/starsActive.lua",
-  "module": "Nœud flowgraph « Stars Active » (catégorie repeat_instant, tags activity/mission). Chaque pin de sortie flow personnalisé (le nom du pin = clé d'étoile) laisse passer le flux si l'étoile correspondante est active pour les réglages utilisateur actuels de la mission (gameplay_missions_missionScreen.getActiveStarsForUserSettings). La liste est calculée une seule fois (coûteuse) puis mise en cache jusqu'au prochain démarrage du graphe. Sans flux d'entrée, tous les pins sont à faux.",
-  "notes": ["Sans activité associée, ne fait rien. Une clé absente de starInfo donne false (self.activeStars[pin.name] testé avant)."],
+  "module": "Flowgraph node \"Stars Active\" (category repeat_instant, tags activity/mission). Each custom flow output pin (pin name = star key) lets the flow through if the corresponding star is active for the mission's current user settings (gameplay_missions_missionScreen.getActiveStarsForUserSettings). The list is computed only once (expensive) then cached until the next graph start. Without input flow, all pins are false.",
+  "notes": [
+    "Without an associated activity, does nothing. A key absent from starInfo gives false (self.activeStars[pin.name] tested beforehand)."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Active savePins et allowCustomOutPins.", "internal": true},
-        "_executionStarted": {"desc": "Efface le cache des étoiles actives.", "internal": true},
-        "work": {"desc": "Calcule (une fois) starInfo puis met chaque pin de sortie flow à enabled de l'étoile correspondante."}
+        "init": {
+          "desc": "Enables savePins and allowCustomOutPins.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Clears the cache of active stars.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Computes (once) starInfo then sets each flow output pin to the enabled value of the corresponding star."
+        }
       }
     }
   }

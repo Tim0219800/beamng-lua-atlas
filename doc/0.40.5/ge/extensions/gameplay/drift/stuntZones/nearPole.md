@@ -1,47 +1,47 @@
 # `gameplay_drift_stuntZones_nearPole`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/stuntZones/nearPole.lua` · VM : Game Engine (GE) · 171 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/stuntZones/nearPole.lua` · VM: Game Engine (GE) · 171 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/drift/stuntZones/nearPole")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/drift/stuntZones/nearPole")` (file under extensions/ but not a regular extension)
 
-Type de zone de cascade « nearPole » : un poteau rayé (delineator, config vehicles/delineator/stripes.pc) est spawné à pos ; le joueur marque des points en le frôlant en drift sans le toucher. Le module renvoie un constructeur appelé par gameplay_drift_stuntZones.setStuntZones ; ce n'est pas une extension. Émet onAnyStuntZoneAccomplished avec le sous-hook onNearPoleAccomplished (angle, closeness et points de base nearPole).
+"nearPole" stunt zone type: a striped pole (delineator, config vehicles/delineator/stripes.pc) is spawned at pos; the player scores points by drifting close to it without touching it. The module returns a constructor called by gameplay_drift_stuntZones.setStuntZones; it is not an extension. Emits onAnyStuntZoneAccomplished with the sub-hook onNearPoleAccomplished (angle, closeness and nearPole base points).
 
-## Remarques
+## Notes
 
-- Un coin du véhicule doit passer à moins de maxDist = 4 m du poteau ; le score est donné quand le véhicule s'éloigne (distance centre-poteau supérieure à celle de la frame précédente) et que le poteau n'a pas été touché.
-- closeness = 1 - (minCornerDist / 4), avec minCornerDist la distance minimale d'un coin du véhicule au poteau ; plus c'est proche, plus le score est élevé (score = angle * closeness / 90 * points, dans scoring).
-- Toucher le poteau (collision lue dans objectCollisions) met hitPole à vrai et supprime le marqueur : la zone ne peut alors plus être validée.
-- Comme hitPole, reset() remet le poteau en place et recrée le marqueur après 0.1 s.
+- A corner of the vehicle must come within maxDist = 4 m of the pole; the score is awarded when the vehicle moves away (center-to-pole distance greater than in the previous frame) and the pole has not been hit.
+- closeness = 1 - (minCornerDist / 4), where minCornerDist is the minimum distance from a vehicle corner to the pole; the closer, the higher the score (score = angle * closeness / 90 * points, in scoring).
+- Hitting the pole (collision read from objectCollisions) sets hitPole to true and removes the marker: the zone can then no longer be validated.
+- Like hitPole, reset() puts the pole back in place and recreates the marker after 0.1 s.
 
-## Classe `C`
+## Class `C`
 
-Zone nearPole. Champs : data = {id, zoneData = {pos}}, marker, activeData = {veh, hitPole, lastFrameHitPole, available, resetFlag, lastFramePlDist, minCornerDist}.
+nearPole zone. Fields: data = {id, zoneData = {pos}}, marker, activeData = {veh, hitPole, lastFrameHitPole, available, resetFlag, lastFramePlDist, minCornerDist}.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_drift_stuntZones_nearPole")(options)`.
+The module returns a constructor: `local obj = require("gameplay_drift_stuntZones_nearPole")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:accomplish()` | Réussite : supprime le marqueur, rend la zone indisponible et émet onAnyStuntZoneAccomplished (sous-hook onNearPoleAccomplished avec currDegAngle, closeness, points). | 82 |
-| `C:clear()` | Supprime le véhicule poteau et son marqueur. | 8 |
-| `C:clearMarker()` | Supprime le marqueur de course s'il existe. | 15 |
-| `C:createMarker()` | Crée un marqueur de course « overhead » (rayon 5) 2.5 m au-dessus du poteau. | 22 |
-| `C:detectStunt()` | Parcourt les 4 coins du véhicule (getVehCorners), mémorise la distance minimale et marque la zone comme réussie quand le véhicule s'éloigne du poteau sans l'avoir touché. | 104 |
-| `C:init(data)` | Constructeur interne : mémorise les données, spawne le poteau rayé à zoneData.pos, crée le marqueur. | 67 |
-| `C:isAvailable()` | Indique si le poteau peut encore rapporter des points. | 159 |
-| `C:onUpdate(dtReal, dtSim)` | Appelé à chaque frame : met à jour le marqueur et détecte une collision entre le véhicule du drift et le poteau. | 132 |
-| `C:onVehicleDestroyed(vehId)` | Si le véhicule détruit est le poteau, oublie le poteau et retire la zone du gestionnaire. | 152 |
-| `C:reset()` | Remet le poteau en place (reset physique et mesh), réinitialise les données puis recrée le marqueur après 0.1 s via un job. | 46 |
-| `C:resetData()` | Remet à zéro activeData (available = true, distances à l'infini). | 33 |
+| `C:accomplish()` | Success: removes the marker, makes the zone unavailable and emits onAnyStuntZoneAccomplished (sub-hook onNearPoleAccomplished with currDegAngle, closeness, points). | 82 |
+| `C:clear()` | Removes the pole vehicle and its marker. | 8 |
+| `C:clearMarker()` | Removes the race marker if it exists. | 15 |
+| `C:createMarker()` | Creates an "overhead" race marker (radius 5) 2.5 m above the pole. | 22 |
+| `C:detectStunt()` | Iterates over the vehicle's 4 corners (getVehCorners), stores the minimum distance and marks the zone as accomplished when the vehicle moves away from the pole without having hit it. | 104 |
+| `C:init(data)` | Internal constructor: stores the data, spawns the striped pole at zoneData.pos, creates the marker. | 67 |
+| `C:isAvailable()` | Returns whether the pole can still earn points. | 159 |
+| `C:onUpdate(dtReal, dtSim)` | Called every frame: updates the marker and detects a collision between the drift vehicle and the pole. | 132 |
+| `C:onVehicleDestroyed(vehId)` | If the destroyed vehicle is the pole, forgets the pole and removes the zone from the manager. | 152 |
+| `C:reset()` | Puts the pole back in place (physics and mesh reset), reinitializes the data, then recreates the marker after 0.1 s via a job. | 46 |
+| `C:resetData()` | Resets activeData (available = true, distances to infinity). | 33 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onAnyStuntZoneAccomplished` — écouté par 3 module(s)
+- `onAnyStuntZoneAccomplished` — listened to by 3 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/stuntZones/nearPole.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/stuntZones/nearPole.lua`.*

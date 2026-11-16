@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/ui/pause/providers/routeData/multiplayer.lua",
+  "module": "Fournisseur de données du menu pause pour le multijoueur : page d'accueil multijoueur (boutons Paramètres de session / Modes de jeu / Gérer les joueurs), réglages de session (PauseMultiplayerSessionTab) et liste des joueurs (PauseMultiplayerPlayerList). Les actions sont en lecture seule en mode freeroamTutorial.",
+  "notes": [
+    "Plusieurs libellés sont en anglais en dur, non traduits : « Session Settings », « Create Session... », « Manage Players », « Players », « Read-only in this mode ».",
+    "getMultiplayerData accède à multiplayer_gamemodeManager.getCurrentGamemodeExt() : le bouton Modes de jeu mène à pause.gamemodeSettings si un mode tourne, sinon à pause.gamemodes."
+  ],
+  "functions": {
+    "getPlayerListSidePanelContents": {
+      "desc": "Renvoie le contenu du panneau latéral « Joueurs » (titre ui.multiplayer.players et composant PauseMultiplayerPlayerList). Aussi utilisé par routeData_gamemodes.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Liste de panneaux latéraux."}],
+      "internal": false
+    },
+    "getMultiplayerData": {
+      "desc": "Renvoie la page d'accueil multijoueur avec trois boutons de navigation (routes pause.multiplayer.settings, pause.gamemodes ou pause.gamemodeSettings, pause.multiplayer.playerList). Les deux derniers ne sont activés que si une session multijoueur est active.",
+      "params": {"context": {"type": "table", "desc": "Contexte pause (champs lus : isMultiplayerActive, mode)."}},
+      "returns": [{"type": "table", "desc": "{active, disabledReason, mainPanelContent, sidePanelContents}"}],
+      "internal": false
+    },
+    "getMultiplayerSettingsData": {
+      "desc": "Renvoie la page de réglages de session (composant PauseMultiplayerSessionTab) avec la liste des joueurs en panneau latéral.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{mainPanelContent, sidePanelContents}"}],
+      "internal": false
+    },
+    "getMultiplayerPlayerListData": {
+      "desc": "Renvoie la page de gestion des joueurs (composant PauseMultiplayerPlayerList avec interactive = true).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{mainPanelContent}"}],
+      "internal": false
+    }
+  }
+}

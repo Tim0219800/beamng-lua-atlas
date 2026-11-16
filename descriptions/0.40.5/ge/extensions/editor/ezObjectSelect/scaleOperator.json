@@ -1,48 +1,93 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/scaleOperator.lua",
-  "module": "Opérateur modal « Scale » (touche S) de l'outil Easy Select. Au démarrage il ouvre une session de transformation (modalOperatorCommon.begin, historique « EasySelectScale ») ; le facteur d'échelle est la distance souris-pivot à l'écran divisée par la distance initiale (ou une valeur saisie au clavier), bornée à [0.0001, 100000]. Contraintes d'axe X/Y/Z, Shift+axe pour exclure un axe, double appui pour l'espace local. Clic gauche/Entrée valide, clic droit/Échap annule.",
+  "module": "\"Scale\" modal operator (S key) of the Easy Select tool. On start it opens a transform session (modalOperatorCommon.begin, history \"EasySelectScale\"); the scale factor is the screen mouse-pivot distance divided by the initial distance (or a value typed on the keyboard), clamped to [0.0001, 100000]. X/Y/Z axis constraints, Shift+axis to exclude an axis, double press for local space. Left click/Enter confirms, right click/Esc cancels.",
   "notes": [
-    "Le suivi radial n'est actif qu'après que la souris s'est éloignée d'au moins 10 px (x uiscale) du pivot ; avant cela le facteur vaut 1.",
-    "Refuse de démarrer si un opérateur ou une transformSession est déjà actif."
+    "Radial tracking is only active after the mouse has moved at least 10 px (x uiscale) away from the pivot; before that the factor is 1.",
+    "Refuses to start if an operator or a transformSession is already active."
   ],
   "functions": {
     "wantsBegin": {
-      "desc": "Renvoie true si la touche S vient d'être pressée.",
+      "desc": "Returns true if the S key has just been pressed.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "touche S pressée cette frame"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "S key pressed this frame"
+        }
+      ]
     },
     "begin": {
-      "desc": "Démarre l'opérateur sur la sélection. Renvoie false si déjà actif, si la session n'a pas pu démarrer ou si le pivot n'est pas projetable à l'écran (la session est alors annulée).",
-      "params": {"options": {"type": "table|nil", "desc": "{defaultLocal = boolean} : espace local par défaut"}},
-      "returns": [{"type": "boolean", "desc": "true si démarré"}]
+      "desc": "Starts the operator on the selection. Returns false if already active, if the session could not start or if the pivot is not projectable on screen (the session is then cancelled).",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{defaultLocal = boolean}: default local space"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if started"
+        }
+      ]
     },
     "update": {
-      "desc": "À appeler chaque frame : gère fin demandée, contraintes, saisie numérique, calcule le facteur, l'applique via transformSession.updateScale et dessine le gizmo.",
+      "desc": "To be called every frame: handles the requested end, constraints, numeric input, computes the factor, applies it via transformSession.updateScale and draws the gizmo.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "\"active\" tant que l'opérateur tourne ; sinon résultat de finish (valeur résolue et complétion) ; nil si inactif"}]
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "\"active\" while the operator runs; otherwise result of finish (resolved value and completion); nil if inactive"
+        }
+      ]
     },
     "cancel": {
-      "desc": "Annule l'opérateur en cours (restaure les objets).",
+      "desc": "Cancels the current operator (restores the objects).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si un opérateur était actif"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if an operator was active"
+        }
+      ]
     },
     "setLocalSpace": {
-      "desc": "Bascule espace local/monde pour la contrainte courante.",
-      "params": {"localSpace": {"type": "boolean", "desc": "true pour l'espace local"}},
-      "returns": [{"type": "boolean", "desc": "résultat de modalOperatorCommon.setLocalSpace"}]
+      "desc": "Toggles local/world space for the current constraint.",
+      "params": {
+        "localSpace": {
+          "type": "boolean",
+          "desc": "true for local space"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "result of modalOperatorCommon.setLocalSpace"
+        }
+      ]
     },
     "isActive": {
-      "desc": "Indique si l'opérateur est en cours.",
+      "desc": "Indicates whether the operator is in progress.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": ""}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ]
     },
     "getObjectIds": {
-      "desc": "Ids des objets manipulés par la session ({} si inactif).",
+      "desc": "Ids of the objects manipulated by the session ({} if inactive).",
       "params": {},
-      "returns": [{"type": "table", "desc": "liste d'ids"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "list of ids"
+        }
+      ]
     },
     "drawScreen": {
-      "desc": "Dessine l'indicateur près du pivot et le HUD (contrainte UNIFORM/axe, WORLD/LOCAL, facteur « 1.000x », aide des touches).",
+      "desc": "Draws the indicator near the pivot and the HUD (UNIFORM/axis constraint, WORLD/LOCAL, factor \"1.000x\", key help).",
       "params": {}
     }
   }

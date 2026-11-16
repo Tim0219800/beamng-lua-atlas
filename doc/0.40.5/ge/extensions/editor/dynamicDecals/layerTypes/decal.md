@@ -1,67 +1,67 @@
 # `editor_dynamicDecals_layerTypes_decal`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/layerTypes/decal.lua` · VM : Game Engine (GE) · 1254 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/layerTypes/decal.lua` · VM: Game Engine (GE) · 1254 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_layerTypes_decal` : `extensions.load("editor_dynamicDecals_layerTypes_decal")`, puis la globale `editor_dynamicDecals_layerTypes_decal`
+**Access:** extension `editor_dynamicDecals_layerTypes_decal`: `extensions.load("editor_dynamicDecals_layerTypes_decal")`, then the global `editor_dynamicDecals_layerTypes_decal`
 
-Type de calque « Decal » de l'outil Dynamic Decals, le plus important : un decal unique avec couleur, textures (color, alpha, metallic, normal, roughness), échelle, rotation, skew, UV, masque alpha, miroir, dégradé et propriétés SDF (Signed Distance Fields : contours, adoucissement). Fournit la section « Decal Properties » (réglages du decal courant, ordre 60), la GUI d'inspecteur du type decal, la fenêtre d'introduction SDF, la fenêtre de choix d'un caractère de police et les pages de documentation (Decal Layers, Properties, SDF).
+"Decal" layer type of the Dynamic Decals tool, the most important one: a single decal with color, textures (color, alpha, metallic, normal, roughness), scale, rotation, skew, UV, alpha mask, mirror, gradient and SDF (Signed Distance Fields: outlines, softening) properties. Provides the "Decal Properties" section (settings of the current decal, order 60), the inspector GUI of the decal type, the SDF introduction window, the font character picker window and the documentation pages (Decal Layers, Properties, SDF).
 
-## Remarques
+## Notes
 
-- Une texture est « compatible SDF » si son fichier sidecar (texturesApi.readSidecarFile) contient isSdfCompatible = true.
-- La fenêtre d'intro SDF s'ouvre à l'apparition d'une texture couleur compatible SDF, tant que la préférence `dynamicDecalsTool.decalProperties.doNotShowSdfIntroAgain` est false et que la fenêtre n'a pas été fermée dans la session.
-- Dans l'inspecteur, la mise à jour de decalScale n'écrit que .x et .z (pas .y) ; les modifications d'un widget passent par widgets.draw puis api.setLayer(layer, true) quand l'édition est terminée.
-- La préférence `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (défaut true) propage mirrored et flipMirroredDecal aux calques enfants (via setPropertyInChildrenRec).
-- Le fichier enregistre aussi deux propriétés ajoutées localement : « mirroredDebug » (trace la ligne du plan de miroir sur la forme) et « mirrorOffsetProperty » (décale le plan, de -1 à 1).
+- A texture is "SDF-compatible" if its sidecar file (texturesApi.readSidecarFile) contains isSdfCompatible = true.
+- The SDF intro window opens when an SDF-compatible color texture appears, as long as the preference `dynamicDecalsTool.decalProperties.doNotShowSdfIntroAgain` is false and the window has not been closed during the session.
+- In the inspector, the update of decalScale only writes .x and .z (not .y); widget changes go through widgets.draw then api.setLayer(layer, true) when editing is finished.
+- The preference `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (default true) propagates mirrored and flipMirroredDecal to child layers (via setPropertyInChildrenRec).
+- The file also registers two locally added properties: "mirroredDebug" (traces the mirror plane line on the shape) and "mirrorOffsetProperty" (offsets the plane, from -1 to 1).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_layerTypes_decal.checkColorDecalTexturesSdfCompatible()` | Si la texture couleur courante est compatible SDF, affiche la fenêtre d'introduction SDF (sauf si elle a été fermée ou si la préférence doNotShowSdfIntroAgain est vraie). | 77 |
-| `editor_dynamicDecals_layerTypes_decal.editModeUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame par le mode d'édition (via tool.registerEditorOnUpdateFn) : décompte le minuteur de mise en évidence des propriétés SDF. *(interne)* | 1154 |
-| `editor_dynamicDecals_layerTypes_decal.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 1146 |
-| `editor_dynamicDecals_layerTypes_decal.hideSdfIntroWindow()` | Ferme la fenêtre d'introduction SDF. | 1247 |
-| `editor_dynamicDecals_layerTypes_decal.isTexturesSdfCompatible(texturePath)` | Indique si la texture donnée est compatible SDF, d'après son fichier de métadonnées. | 67 |
-| `editor_dynamicDecals_layerTypes_decal.registerEditorPreferences(prefsRegistry)` | Enregistre `dynamicDecalsTool.decalProperties` : scaleStep (float 0.025, de 0.001 à 0.25), rotationStep (float 15 degrés, de 1 à 360), texturePreviewSize (float 128, de 32 à 512), doNotShowSdfIntroAgain (bool false) ; et `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (bool true). *(interne)* | 1134 |
-| `editor_dynamicDecals_layerTypes_decal.setup(tool_in)` | Appelé par l'outil : récupère les modules liés, enregistre les fenêtres (SDF 400x400, caractère de police 550x550), la section « Decal Properties », les callbacks d'update et de GUI, la GUI d'inspecteur du type decal, les pages de documentation et la liste des blend modes. *(interne)* | 1211 |
-| `editor_dynamicDecals_layerTypes_decal.showSdfIntroWindow()` | Ouvre la fenêtre « Dynamic Decals - SDF Introduction ». | 1246 |
+| `editor_dynamicDecals_layerTypes_decal.checkColorDecalTexturesSdfCompatible()` | If the current color texture is SDF-compatible, displays the SDF introduction window (unless it was closed or the doNotShowSdfIntroAgain preference is true). | 77 |
+| `editor_dynamicDecals_layerTypes_decal.editModeUpdate(dtReal, dtSim, dtRaw)` | Called every frame by the edit mode (via tool.registerEditorOnUpdateFn): counts down the timer of the SDF property highlight. *(internal)* | 1154 |
+| `editor_dynamicDecals_layerTypes_decal.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 1146 |
+| `editor_dynamicDecals_layerTypes_decal.hideSdfIntroWindow()` | Closes the SDF introduction window. | 1247 |
+| `editor_dynamicDecals_layerTypes_decal.isTexturesSdfCompatible(texturePath)` | Indicates whether the given texture is SDF-compatible, based on its metadata file. | 67 |
+| `editor_dynamicDecals_layerTypes_decal.registerEditorPreferences(prefsRegistry)` | Registers `dynamicDecalsTool.decalProperties`: scaleStep (float 0.025, from 0.001 to 0.25), rotationStep (float 15 degrees, from 1 to 360), texturePreviewSize (float 128, from 32 to 512), doNotShowSdfIntroAgain (bool false); and `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (bool true). *(internal)* | 1134 |
+| `editor_dynamicDecals_layerTypes_decal.setup(tool_in)` | Called by the tool: gets the related modules, registers the windows (SDF 400x400, font character 550x550), the "Decal Properties" section, the update and GUI callbacks, the inspector GUI of the decal type, the documentation pages and the list of blend modes. *(internal)* | 1211 |
+| `editor_dynamicDecals_layerTypes_decal.showSdfIntroWindow()` | Opens the "Dynamic Decals - SDF Introduction" window. | 1246 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_layerTypes_decal.editModeUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque frame par le mode d'édition (via tool.registerEditorOnUpdateFn) : décompte le minuteur de mise en évidence des propriétés SDF.
+Called every frame by the edit mode (via tool.registerEditorOnUpdateFn): counts down the timer of the SDF property highlight.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `editor_dynamicDecals_layerTypes_decal.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_layerTypes_decal.isTexturesSdfCompatible(texturePath)`
 
-Indique si la texture donnée est compatible SDF, d'après son fichier de métadonnées.
+Indicates whether the given texture is SDF-compatible, based on its metadata file.
 
-- `texturePath` (*string|nil*) : Chemin de la texture ; par défaut la texture couleur courante du decal (api.getDecalTexturePath("color")).
-- **renvoie** : boolean true si la métadonnée isSdfCompatible est vraie.
+- `texturePath` (*string|nil*) : Texture path; defaults to the decal's current color texture (api.getDecalTexturePath("color")).
+- **returns**: boolean true if the isSdfCompatible metadata is true.
 
 #### `editor_dynamicDecals_layerTypes_decal.registerEditorPreferences(prefsRegistry)`
 
-Enregistre `dynamicDecalsTool.decalProperties` : scaleStep (float 0.025, de 0.001 à 0.25), rotationStep (float 15 degrés, de 1 à 360), texturePreviewSize (float 128, de 32 à 512), doNotShowSdfIntroAgain (bool false) ; et `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (bool true).
+Registers `dynamicDecalsTool.decalProperties`: scaleStep (float 0.025, from 0.001 to 0.25), rotationStep (float 15 degrees, from 1 to 360), texturePreviewSize (float 128, from 32 to 512), doNotShowSdfIntroAgain (bool false); and `dynamicDecalsTool.inspector.applyMirroredPropertyToChildren` (bool true).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_layerTypes_decal.setup(tool_in)`
 
-Appelé par l'outil : récupère les modules liés, enregistre les fenêtres (SDF 400x400, caractère de police 550x550), la section « Decal Properties », les callbacks d'update et de GUI, la GUI d'inspecteur du type decal, les pages de documentation et la liste des blend modes.
+Called by the tool: gets the related modules, registers the windows (SDF 400x400, font character 550x550), the "Decal Properties" section, the update and GUI callbacks, the inspector GUI of the decal type, the documentation pages and the list of blend modes.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/layerTypes/decal.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/layerTypes/decal.lua`.*

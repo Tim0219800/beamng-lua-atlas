@@ -1,64 +1,64 @@
 # `gameplay_markers_crawlMarker`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/crawlMarker.lua` · VM : Game Engine (GE) · 276 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/crawlMarker.lua` · VM: Game Engine (GE) · 276 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_crawlMarker` : `extensions.load("gameplay_markers_crawlMarker")`, puis la globale `gameplay_markers_crawlMarker`
+**Access:** extension `gameplay_markers_crawlMarker`: `extensions.load("gameplay_markers_crawlMarker")`, then the global `gameplay_markers_crawlMarker`
 
-Marqueur de zone de crawling (rock crawling) en mode jeu : une icône flottante au-dessus d'une zone sphérique. Le véhicule du joueur qui entre dans la sphère (centre de sa boîte englobante à moins de radius, 2 m par défaut) fait monter l'icône et la rend interactive (liste d'activités à accepter). Le module renvoie {create, cluster} : cluster regroupe les POI crawlMarker, create fabrique l'objet marqueur (classe C).
+Crawling zone marker (rock crawling) in play mode: a floating icon above a spherical zone. The player's vehicle entering the sphere (center of its bounding box within radius, 2 m by default) raises the icon and makes it interactive (list of activities to accept). The module returns {create, cluster}: cluster groups the crawlMarker POIs, create builds the marker object (class C).
 
-## Remarques
+## Notes
 
-- cluster regroupe les POI ayant la même pos et la même iconPos (clé = tostring(pos)..tostring(iconPos)) ; l'icône par défaut est mission_rockcrawling01_triangle.
-- Les POI doivent fournir markerInfo.crawlMarker avec pos, radius, iconPos et icon (facultative) ; cluster.elemData reprend poi.data de chaque POI.
-- L'icône n'est visible que si la caméra est à moins de 35 m et qu'un rayon statique (castRayStatic) ne rencontre pas d'obstacle ; elle est masquée quand la grande carte est active.
-- isInAreaChanged vaut "in" ou "out" pendant une frame lors d'une entrée/sortie de zone, sinon nil.
-- update ne fait rien si le joueur n'a pas de véhicule (data.veh nil) ; la marche n'est pas exigée.
-- drawAxisBox dessine une boîte de debug (debugDrawer) mais n'est appelée nulle part dans ce fichier.
+- cluster groups the POIs with the same pos and the same iconPos (key = tostring(pos)..tostring(iconPos)); the default icon is mission_rockcrawling01_triangle.
+- POIs must provide markerInfo.crawlMarker with pos, radius, iconPos and icon (optional); cluster.elemData takes poi.data of each POI.
+- The icon is only visible if the camera is within 35 m and a static ray (castRayStatic) does not hit an obstacle; it is hidden when the big map is active.
+- isInAreaChanged is "in" or "out" for one frame when entering/leaving a zone, otherwise nil.
+- update does nothing if the player has no vehicle (data.veh nil); walking is not required.
+- drawAxisBox draws a debug box (debugDrawer) but is not called anywhere in this file.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_crawlMarker.cluster(pois, allClusters)` | Regroupe les POI crawlMarker identiques (même pos et iconPos) en clusters et les ajoute à allClusters. *(interne)* | 245 |
-| `gameplay_markers_crawlMarker.create(...)` | Fabrique un objet marqueur de crawling (instance de C) et appelle init. | 236 |
+| `gameplay_markers_crawlMarker.cluster(pois, allClusters)` | Groups identical crawlMarker POIs (same pos and iconPos) into clusters and adds them to allClusters. *(internal)* | 245 |
+| `gameplay_markers_crawlMarker.create(...)` | Builds a crawling marker object (instance of C) and calls init. | 236 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_crawlMarker.cluster(pois, allClusters)`
 
-Regroupe les POI crawlMarker identiques (même pos et iconPos) en clusters et les ajoute à allClusters.
+Groups identical crawlMarker POIs (same pos and iconPos) into clusters and adds them to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.crawlMarker.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.crawlMarker.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_crawlMarker.create(...)`
 
-Fabrique un objet marqueur de crawling (instance de C) et appelle init.
+Builds a crawling marker object (instance of C) and calls init.
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur de zone de crawling avec icône animée.
+Crawling zone marker with animated icon.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Retire l'icône de l'icon renderer et efface triggerArea. | 145 |
-| `C:createObjects()` | Nettoie les objets existants (n'en crée pas de nouveaux). | 123 |
-| `C:drawAxisBox(corner, x, y, z, clr)` | Dessine une boîte alignée (arêtes et faces semi-transparentes) par debugDrawer ; utilitaire de debug. | 170 |
-| `C:drawOnMinimap(td)` | Dessine un cercle à la position de l'icône sur la minimap (ui_apps_minimap_utils.simpleCircle). | 228 |
-| `C:hide()` | Passe invisible et met l'opacité de l'icône à 0. | 127 |
-| `C:init()` | Initialise visible = true. | 22 |
-| `C:instantFade(visible)` | Ne fait rien. | 166 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Si canInteract et que le joueur est dans la zone, ajoute les données (elemData) du cluster à la liste des éléments interactifs. | 156 |
-| `C:setup(cluster)` | Lit pos, rot, scl du cluster et crée l'icône (id <cluster.id>-gsIcon) avec ses lisseurs ; décalage d'icône 0.5 m, levée 1.0 m. | 26 |
-| `C:show()` | Repasse visible. | 140 |
-| `C:update(data)` | Chaque frame : teste l'entrée dans la sphère, anime la hauteur et l'opacité de l'icône, dessine un trait quand l'icône est levée, met à jour isInAreaChanged, anyOverlap. | 65 |
+| `C:clearObjects()` | Removes the icon from the icon renderer and clears triggerArea. | 145 |
+| `C:createObjects()` | Cleans up existing objects (does not create new ones). | 123 |
+| `C:drawAxisBox(corner, x, y, z, clr)` | Draws an axis-aligned box (semi-transparent edges and faces) via debugDrawer; debug utility. | 170 |
+| `C:drawOnMinimap(td)` | Draws a circle at the icon's position on the minimap (ui_apps_minimap_utils.simpleCircle). | 228 |
+| `C:hide()` | Becomes invisible and sets the icon opacity to 0. | 127 |
+| `C:init()` | Initializes visible = true. | 22 |
+| `C:instantFade(visible)` | Does nothing. | 166 |
+| `C:interactInPlayMode(interactData, interactableElements)` | If canInteract and the player is in the zone, adds the cluster's data (elemData) to the list of interactive elements. | 156 |
+| `C:setup(cluster)` | Reads pos, rot, scl from the cluster and creates the icon (id <cluster.id>-gsIcon) with its smoothers; icon offset 0.5 m, lift 1.0 m. | 26 |
+| `C:show()` | Becomes visible again. | 140 |
+| `C:update(data)` | Every frame: tests entry into the sphere, animates the icon's height and opacity, draws a line when the icon is raised, updates isInAreaChanged, anyOverlap. | 65 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/crawlMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/crawlMarker.lua`.*

@@ -2,19 +2,19 @@
 -- tim19Atlas stub generated from lua/common/jit/zone.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module jit.zone de LuaJIT (Mike Pall, licence MIT, 2005-2026) : pile hiérarchique de « zones » nommées utilisée par le profileur (jit.p avec l'option z) pour regrouper les échantillons par zone logique. Le module est un objet appelable : zone('nom') empile une zone, zone() sans argument en dépile une (erreur « empty zone stack » si vide).
---- Accès : globale `zone`
+--- LuaJIT's jit.zone module (Mike Pall, MIT license, 2005-2026): hierarchical stack of named "zones" used by the profiler (jit.p with the z option) to group samples by logical zone. The module is a callable object: zone('name') pushes a zone, zone() with no argument pops one (error "empty zone stack" if empty).
+--- Access: global `zone`
 ---@class zone
 zone = {}
 
---- Vide complètement la pile de zones. (assignée dynamiquement)
----Source : lua/common/jit/zone.lua:dyn
----@param t table Le module lui-même (appel avec ':' : zone:flush()).
+--- Completely empties the zone stack. (dynamically assigned)
+---Source: lua/common/jit/zone.lua:dyn
+---@param t table The module itself (called with ':' : zone:flush()).
 function zone.flush(t) end
 
---- Renvoie le nom de la zone courante (sommet de pile), nil si la pile est vide. (assignée dynamiquement)
----Source : lua/common/jit/zone.lua:dyn
----@param t table Le module lui-même (appel zone:get()).
----@return string|nil  Nom de la zone courante.
+--- Returns the name of the current zone (top of the stack), nil if the stack is empty. (dynamically assigned)
+---Source: lua/common/jit/zone.lua:dyn
+---@param t table The module itself (call zone:get()).
+---@return string|nil  Name of the current zone.
 function zone.get(t) end
 

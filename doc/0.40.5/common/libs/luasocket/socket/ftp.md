@@ -1,12 +1,12 @@
 # `libs_luasocket_socket_ftp`
 
-*Fichier : `lua/common/libs/luasocket/socket/ftp.lua` · VM : Commun (GE + véhicule) · 285 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luasocket/socket/ftp.lua` · VM: Common (GE + vehicle) · 285 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luasocket/socket/ftp")`
+**Access:** `require("libs/luasocket/socket/ftp")`
 
-Client FTP de LuaSocket (Diego Nehab), bâti sur socket.tp et LTN12. Offre une API haut niveau (get, put, command) acceptant une URL ftp:// ou une table de paramètres, et une API bas niveau (open puis greet, login, pasv, send, receive…). Le module s'enregistre aussi dans socket.ftp.
+LuaSocket FTP client (Diego Nehab), built on socket.tp and LTN12. Offers a high-level API (get, put, command) accepting an ftp:// URL or a parameters table, and a low-level API (open then greet, login, pasv, send, receive...). The module also registers itself in socket.ftp.
 
-## Exemple
+## Example
 
 ```lua
 local ftp = require('libs/luasocket/socket/ftp')
@@ -14,61 +14,61 @@ local contenu, err = ftp.get('ftp://anonymous:mdp@serveur/chemin/fichier.txt;typ
 ftp.put('ftp://user:mdp@serveur/dest.txt', 'données')
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions high-level sont enveloppées par socket.protect : en cas d'erreur elles renvoient nil, message au lieu de lever une exception.
-- Bug : metat.__index:port utilise math.mod, absent de LuaJIT/Lua 5.1 standard (remplacé par math.fmod) : le mode actif (PORT) échouera ; le mode passif (pasv, utilisé par get/put) n'est pas concerné.
-- Bug : dans send, readyt[tp] indexe avec le module tp au lieu de la socket de contrôle (le test de statut pendant le transfert n'est donc jamais vrai).
-- Le fichier requiert 'socket.socket', 'socket.url', 'socket.tp' et 'ltn12' par nom court : ces noms doivent être résolubles par le chemin de recherche des modules du jeu.
-- Dans une table de requête, les champs reconnus : host, port, user, password, type ('a' ou 'i'), path, command, argument, source, sink, step, url, create. Un champ explicite écrase celui de l'URL.
+- The high-level functions are wrapped by socket.protect: on error they return nil, message instead of raising an exception.
+- Bug: metat.__index:port uses math.mod, absent from LuaJIT/standard Lua 5.1 (replaced by math.fmod): the active mode (PORT) will fail; the passive mode (pasv, used by get/put) is not affected.
+- Bug: in send, readyt[tp] indexes with the tp module instead of the control socket (so the status check during the transfer is never true).
+- The file requires 'socket.socket', 'socket.url', 'socket.tp' and 'ltn12' by short name: these names must be resolvable by the game's module search path.
+- In a request table, the recognized fields: host, port, user, password, type ('a' or 'i'), path, command, argument, source, sink, step, url, create. An explicit field overrides the one from the URL.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luasocket_socket_ftp.open(server, port, create)` | Ouvre une connexion de contrôle vers un serveur FTP et renvoie un objet bas niveau avec les méthodes greet, login, pasv, port, send, receive, cwd, type, quit, close. Lève une erreur (socket.try) en cas d'échec. | 37 |
+| `libs_luasocket_socket_ftp.open(server, port, create)` | Opens a control connection to an FTP server and returns a low-level object with the methods greet, login, pasv, port, send, receive, cwd, type, quit, close. Raises an error (socket.try) on failure. | 37 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luasocket_socket_ftp.open(server, port, create)`
 
-Ouvre une connexion de contrôle vers un serveur FTP et renvoie un objet bas niveau avec les méthodes greet, login, pasv, port, send, receive, cwd, type, quit, close. Lève une erreur (socket.try) en cas d'échec.
+Opens a control connection to an FTP server and returns a low-level object with the methods greet, login, pasv, port, send, receive, cwd, type, quit, close. Raises an error (socket.try) on failure.
 
-- `server` (*string*) : Hôte.
-- `port` (*integer|nil*) : Port (défaut 21).
-- `create` (*function|nil*) : Fabrique de socket alternative (défaut socket.tcp).
-- **renvoie** : table Objet de connexion FTP.
+- `server` (*string*) : Host.
+- `port` (*integer|nil*) : Port (default 21).
+- `create` (*function|nil*) : Alternative socket factory (default socket.tcp).
+- **returns**: table FTP connection object.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `PASSWORD` | string | Mot de passe anonyme par défaut : 'anonymous@anonymous.org' (à remplacer par une adresse e-mail). |
-| `PORT` | integer | Port FTP par défaut : 21. |
-| `TIMEOUT` | number | Délai en secondes avant d'abandonner une connexion : 60. |
-| `USER` | string | Utilisateur anonyme par défaut : 'ftp'. |
-| `command` | function | ftp.command(cmdt) : envoie une commande FTP (champs host, command, argument, check, user, password…) et ferme la connexion. Renvoie 1 ou nil, erreur. |
-| `get` | function | ftp.get(url\|table) : télécharge un fichier. Avec une URL, renvoie le contenu (chaîne) ; avec une table, utilise le sink fourni. |
-| `put` | function | ftp.put(url, corps) ou ftp.put(table) : envoie un fichier ; renvoie le nombre d'octets envoyés. |
+| `PASSWORD` | string | Default anonymous password: 'anonymous@anonymous.org' (to be replaced by an e-mail address). |
+| `PORT` | integer | Default FTP port: 21. |
+| `TIMEOUT` | number | Timeout in seconds before giving up on a connection: 60. |
+| `USER` | string | Default anonymous user: 'ftp'. |
+| `command` | function | ftp.command(cmdt): sends an FTP command (fields host, command, argument, check, user, password...) and closes the connection. Returns 1 or nil, error. |
+| `get` | function | ftp.get(url\|table): downloads a file. With a URL, returns the content (string); with a table, uses the provided sink. |
+| `put` | function | ftp.put(url, body) or ftp.put(table): uploads a file; returns the number of bytes sent. |
 
-## Classe `connection`
+## Class `connection`
 
-Objet renvoyé par open (champs tp = canal de contrôle, data, server, pasvt, try).
+Object returned by open (fields tp = control channel, data, server, pasvt, try).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `connection:close()` | Ferme les connexions de données, serveur et contrôle. | dyn |
-| `connection:cwd(dir)` | Change de répertoire distant. | dyn |
-| `connection:greet()` | Lit le message d'accueil du serveur. | dyn |
-| `connection:login(user, password)` | Authentifie avec USER/PASS (valeurs anonymes par défaut). | dyn |
-| `connection:pasv()` | Passe en mode passif et mémorise l'IP et le port de données ; renvoie ip, port. | dyn |
-| `connection:pasvconnect()` | Ouvre la connexion de données en mode passif. | dyn |
-| `connection:port(ip, port)` | Passe en mode actif : annonce un port local au serveur (ouvre un socket serveur si ip est nil). Utilise math.mod (voir notes). | dyn |
-| `connection:portconnect()` | Accepte la connexion de données en mode actif. | dyn |
-| `connection:quit()` | Envoie QUIT. | dyn |
-| `connection:receive(recvt)` | Reçoit des données (commande RETR par défaut) dans le sink fourni ; nécessite pasv ou port avant. | dyn |
-| `connection:send(sendt)` | Envoie des données (commande STOR par défaut) ; nécessite pasv ou port avant. Renvoie le nombre d'octets envoyés. | dyn |
-| `connection:type(type)` | Choisit le mode de transfert ('a' texte, 'i' binaire). | dyn |
+| `connection:close()` | Closes the data, server and control connections. | dyn |
+| `connection:cwd(dir)` | Changes the remote directory. | dyn |
+| `connection:greet()` | Reads the server's welcome message. | dyn |
+| `connection:login(user, password)` | Authenticates with USER/PASS (anonymous values by default). | dyn |
+| `connection:pasv()` | Switches to passive mode and stores the data IP and port; returns ip, port. | dyn |
+| `connection:pasvconnect()` | Opens the data connection in passive mode. | dyn |
+| `connection:port(ip, port)` | Switches to active mode: announces a local port to the server (opens a server socket if ip is nil). Uses math.mod (see notes). | dyn |
+| `connection:portconnect()` | Accepts the data connection in active mode. | dyn |
+| `connection:quit()` | Sends QUIT. | dyn |
+| `connection:receive(recvt)` | Receives data (RETR command by default) into the provided sink; requires pasv or port beforehand. | dyn |
+| `connection:send(sendt)` | Sends data (STOR command by default); requires pasv or port beforehand. Returns the number of bytes sent. | dyn |
+| `connection:type(type)` | Selects the transfer mode ('a' text, 'i' binary). | dyn |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luasocket/socket/ftp.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luasocket/socket/ftp.lua`.*

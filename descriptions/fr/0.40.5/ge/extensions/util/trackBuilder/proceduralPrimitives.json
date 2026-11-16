@@ -1,0 +1,80 @@
+{
+  "path": "lua/ge/extensions/util/trackBuilder/proceduralPrimitives.lua",
+  "module": "Générateurs de formes simples pour les obstacles du Track Builder : tore (ring), cylindre, cône, cube, bosse (bump) et rampe. Chaque fonction renvoie une table de mesh procédural {verts, uvs, normals, faces, material} prête à être passée à ProceduralMesh:createMesh({{mesh}}) (verts et normals sont des {x,y,z}, uvs des {u,v}, faces des {v,n,u} indexés depuis 0). Le matériau par défaut est 'track_editor_A_border'.",
+  "usage": "local mesh = util_trackBuilder_proceduralPrimitives.createCylinder(2, 5)\nlocal obj = createObject('ProceduralMesh')\nobj:registerObject('monCylindre')\nscenetree.MissionGroup:add(obj.obj)\nobj:createMesh({{mesh}})",
+  "notes": [
+    "Les paramètres sont d'abord normalisés (valeur absolue, valeurs par défaut) ; certains sont des diamètres : createCylinder et createCone divisent le paramètre radius par 2, et createRing multiplie radius par 2.",
+    "Le nombre de segments dépend de la taille (par exemple cylindre : radius*8 borné entre 12 et 72), donc les gros objets sont plus détaillés.",
+    "createCube échange les axes : size.x et size.y sont inversés (size = vec3(|size.y|, |size.x|, |size.z|)).",
+    "Le fichier contient aussi createIcosphere (locale, non exportée, avec appel à be:reloadCollision) ; elle n'est pas accessible depuis l'extérieur."
+  ],
+  "functions": {
+    "createRing": {
+      "desc": "Tore (anneau) centré sur l'origine, dans le plan YZ.",
+      "params": {
+        "radius": {"type": "number", "desc": "Paramètre de rayon ; multiplié par 2 en interne."},
+        "thickness": {"type": "number", "desc": "Épaisseur du tube ; divisée par 2 en interne."},
+        "material": {"type": "string|nil", "desc": "Matériau (défaut 'track_editor_A_border')."}
+      },
+      "returns": [{"type": "table", "desc": "Mesh procédural."}],
+      "internal": false
+    },
+    "createCylinder": {
+      "desc": "Cylindre d'axe Z centré sur l'origine, avec faces haut et bas.",
+      "params": {
+        "radius": {"type": "number", "desc": "Diamètre (divisé par 2 en interne)."},
+        "height": {"type": "number", "desc": "Hauteur en mètres."},
+        "material": {"type": "string|nil", "desc": "Matériau."}
+      },
+      "returns": [{"type": "table", "desc": "Mesh procédural."}],
+      "internal": false
+    },
+    "createCone": {
+      "desc": "Cône d'axe Z centré sur l'origine, pointe en haut.",
+      "params": {
+        "radius": {"type": "number", "desc": "Diamètre de la base (divisé par 2 en interne)."},
+        "height": {"type": "number", "desc": "Hauteur en mètres."},
+        "material": {"type": "string|nil", "desc": "Matériau."}
+      },
+      "returns": [{"type": "table", "desc": "Mesh procédural."}],
+      "internal": false
+    },
+    "createCube": {
+      "desc": "Parallélépipède centré sur l'origine. uvStyle choisit la disposition des UV (1 par défaut).",
+      "params": {
+        "size": {"type": "vec3|nil", "desc": "Dimensions ; vec3(1,1,1) par défaut. x et y sont échangés en interne."},
+        "material": {"type": "string|nil", "desc": "Matériau."},
+        "uvStyle": {"type": "any", "desc": "Style d'UV (1 par défaut ; la valeur est comparée à 1)."}
+      },
+      "returns": [{"type": "table", "desc": "Mesh procédural."}],
+      "internal": false
+    },
+    "createBump": {
+      "desc": "Bosse (dos d'âne) : base de length × width et plateau supérieur de upperLength × upperWidth, d'une hauteur height.",
+      "params": {
+        "length": {"type": "number|nil", "desc": "Longueur de la base (2 par défaut)."},
+        "width": {"type": "number|nil", "desc": "Largeur de la base (5 par défaut)."},
+        "height": {"type": "number|nil", "desc": "Hauteur (1 par défaut)."},
+        "upperLength": {"type": "number|nil", "desc": "Longueur du plateau (0,5 par défaut)."},
+        "upperWidth": {"type": "number|nil", "desc": "Largeur du plateau (4 par défaut)."},
+        "material": {"type": "string|nil", "desc": "Matériau."}
+      },
+      "returns": [{"type": "table", "desc": "Mesh procédural."}],
+      "internal": false
+    },
+    "createRamp": {
+      "desc": "Rampe de longueur len, qui monte jusqu'à la hauteur hei. thinning rétrécit la largeur en haut, attack règle la courbure du profil (puissance), twist ajoute une torsion le long de la rampe.",
+      "params": {
+        "width": {"type": "number|nil", "desc": "Largeur de la base (5 par défaut)."},
+        "len": {"type": "number|nil", "desc": "Longueur (10 par défaut)."},
+        "hei": {"type": "number|nil", "desc": "Hauteur finale (2 par défaut)."},
+        "thinning": {"type": "number|nil", "desc": "Facteur de largeur en haut, borné à [0, 2] (0,5 par défaut)."},
+        "attack": {"type": "number|nil", "desc": "Exposant du profil de hauteur, minimum 1."},
+        "twist": {"type": "number|nil", "desc": "Torsion totale (0 par défaut ; unité déduite du code : radians)."},
+        "material": {"type": "string|nil", "desc": "Matériau."}
+      },
+      "returns": [{"type": "table", "desc": "Mesh procédural."}],
+      "internal": false
+    }
+  }
+}

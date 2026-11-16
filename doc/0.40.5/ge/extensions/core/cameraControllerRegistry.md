@@ -1,96 +1,96 @@
 # `core_cameraControllerRegistry`
 
-*Fichier : `lua/ge/extensions/core/cameraControllerRegistry.lua` · VM : Game Engine (GE) · 98 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraControllerRegistry.lua` · VM: Game Engine (GE) · 98 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_cameraControllerRegistry` : `extensions.load("core_cameraControllerRegistry")`, puis la globale `core_cameraControllerRegistry`
+**Access:** extension `core_cameraControllerRegistry`: `extensions.load("core_cameraControllerRegistry")`, then the global `core_cameraControllerRegistry`
 
-Couche de routage facultative placée devant le chemin d'entrée caméra. Des 'contrôleurs' enregistrés (par id, avec priorité) peuvent consommer certaines entrées (ex. onRelativeInput, onEditorMouseWheel) quand ils sont actifs ; ce qui n'est pas consommé continue vers la caméra active comme avant. Se charge avec require('core/cameraControllerRegistry') (ce n'est pas une extension). Utilisé par core/cameraInput.lua. Un moddeur l'utilise pour intercepter la souris/molette (ex. outil d'édition de caméra) sans casser les caméras normales.
+Optional routing layer placed in front of the camera input path. Registered 'controllers' (by id, with priority) can consume certain inputs (e.g. onRelativeInput, onEditorMouseWheel) when they are active; whatever is not consumed continues to the active camera as before. Loaded with require('core/cameraControllerRegistry') (it is not an extension). Used by core/cameraInput.lua. A modder uses it to intercept the mouse/wheel (e.g. a camera editing tool) without breaking normal cameras.
 
-## Exemple
+## Example
 
 ```lua
 local reg = require('core/cameraControllerRegistry')
 reg.register('monOutil', {
-  onRelativeInput = function(axis, val, player) return false end, -- true = consommé
+  onRelativeInput = function(axis, val, player) return false end, -- true = consumed
 }, 10)
-if reg.acquire('monOutil') then --[[ capture exclusive ]] end
+if reg.acquire('monOutil') then --[[ exclusive capture ]] end
 reg.release('monOutil')
 ```
 
-## Remarques
+## Notes
 
-- Un contrôleur est une table dont les clés sont des noms de méthodes (ex. onRelativeInput, onEditorMouseWheel) ; une méthode consomme l'évènement en renvoyant exactement true.
-- Ordre d'appel : priorité décroissante, puis id alphabétique. Si un contrôleur a 'capturé' (acquire), seul celui-ci reçoit les évènements.
-- acquire n'est autorisé que si aucun autre n'a capturé et si l'appelant est le contrôleur en cours de dispatch, ou le premier de l'ordre (priorité la plus haute) : on ne peut donc capturer que depuis son propre callback ou en étant en tête.
-- unregister libère automatiquement la capture si ce contrôleur la détenait.
+- A controller is a table whose keys are method names (e.g. onRelativeInput, onEditorMouseWheel); a method consumes the event by returning exactly true.
+- Call order: descending priority, then alphabetical id. If a controller has 'captured' (acquire), only that one receives events.
+- acquire is only allowed if no other has captured and if the caller is the controller currently being dispatched, or the first in the order (highest priority): so you can only capture from your own callback or by being first.
+- unregister automatically releases the capture if that controller held it.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_cameraControllerRegistry.acquire(id)` | Prend la capture exclusive des entrées pour ce contrôleur (voir notes pour les conditions). | 70 |
-| `core_cameraControllerRegistry.dispatch(method, ...)` | Envoie un évènement aux contrôleurs : au propriétaire de la capture seul s'il y en a un, sinon à tous dans l'ordre jusqu'à ce que l'un renvoie true. | 51 |
-| `core_cameraControllerRegistry.isOwner(id)` | Teste si ce contrôleur détient la capture. | 88 |
-| `core_cameraControllerRegistry.isRegistered(id, controller)` | Teste si l'id est enregistré (et, si controller est donné, qu'il s'agit de ce contrôleur). | 92 |
-| `core_cameraControllerRegistry.register(id, controller, priority)` | Enregistre un contrôleur. Échoue (false) si l'id n'est pas une chaîne non vide, si controller n'est pas une table ou si l'id existe déjà. | 31 |
-| `core_cameraControllerRegistry.release(id)` | Relâche la capture si ce contrôleur la détient. | 82 |
-| `core_cameraControllerRegistry.unregister(id, controller)` | Retire un contrôleur. Si controller est donné, il doit correspondre à celui enregistré. Libère la capture si besoin. | 42 |
+| `core_cameraControllerRegistry.acquire(id)` | Takes exclusive capture of the inputs for this controller (see notes for the conditions). | 70 |
+| `core_cameraControllerRegistry.dispatch(method, ...)` | Sends an event to the controllers: to the capture owner only if there is one, otherwise to all in order until one returns true. | 51 |
+| `core_cameraControllerRegistry.isOwner(id)` | Tests whether this controller holds the capture. | 88 |
+| `core_cameraControllerRegistry.isRegistered(id, controller)` | Tests whether the id is registered (and, if controller is given, that it is this controller). | 92 |
+| `core_cameraControllerRegistry.register(id, controller, priority)` | Registers a controller. Fails (false) if the id is not a non-empty string, if controller is not a table or if the id already exists. | 31 |
+| `core_cameraControllerRegistry.release(id)` | Releases the capture if this controller holds it. | 82 |
+| `core_cameraControllerRegistry.unregister(id, controller)` | Removes a controller. If controller is given, it must match the registered one. Releases the capture if needed. | 42 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_cameraControllerRegistry.acquire(id)`
 
-Prend la capture exclusive des entrées pour ce contrôleur (voir notes pour les conditions).
+Takes exclusive capture of the inputs for this controller (see notes for the conditions).
 
-- `id` (*string*) : Identifiant d'un contrôleur enregistré
-- **renvoie** : boolean true si la capture est (ou était déjà) à ce contrôleur
+- `id` (*string*) : Identifier of a registered controller
+- **returns**: boolean true if the capture is (or already was) held by this controller
 
 #### `core_cameraControllerRegistry.dispatch(method, ...)`
 
-Envoie un évènement aux contrôleurs : au propriétaire de la capture seul s'il y en a un, sinon à tous dans l'ordre jusqu'à ce que l'un renvoie true.
+Sends an event to the controllers: to the capture owner only if there is one, otherwise to all in order until one returns true.
 
-- `method` (*string*) : Nom de la méthode à appeler sur les contrôleurs
-- `...` (*any*) : Arguments passés à la méthode
-- **renvoie** : boolean true si un contrôleur a consommé l'évènement
+- `method` (*string*) : Name of the method to call on the controllers
+- `...` (*any*) : Arguments passed to the method
+- **returns**: boolean true if a controller consumed the event
 
 #### `core_cameraControllerRegistry.isOwner(id)`
 
-Teste si ce contrôleur détient la capture.
+Tests whether this controller holds the capture.
 
-- `id` (*string*) : Identifiant
-- **renvoie** : boolean true si propriétaire
+- `id` (*string*) : Identifier
+- **returns**: boolean true if owner
 
 #### `core_cameraControllerRegistry.isRegistered(id, controller)`
 
-Teste si l'id est enregistré (et, si controller est donné, qu'il s'agit de ce contrôleur).
+Tests whether the id is registered (and, if controller is given, that it is this controller).
 
-- `id` (*string*) : Identifiant
-- `controller` (*table|nil*) : Contrôleur attendu
-- **renvoie** : boolean true si enregistré
+- `id` (*string*) : Identifier
+- `controller` (*table|nil*) : Expected controller
+- **returns**: boolean true if registered
 
 #### `core_cameraControllerRegistry.register(id, controller, priority)`
 
-Enregistre un contrôleur. Échoue (false) si l'id n'est pas une chaîne non vide, si controller n'est pas une table ou si l'id existe déjà.
+Registers a controller. Fails (false) if the id is not a non-empty string, if controller is not a table or if the id already exists.
 
-- `id` (*string*) : Identifiant unique
-- `controller` (*table*) : Table de callbacks nommés
-- `priority` (*number|nil*) : Priorité (plus grand = appelé en premier), 0 par défaut
-- **renvoie** : boolean true si enregistré
+- `id` (*string*) : Unique identifier
+- `controller` (*table*) : Table of named callbacks
+- `priority` (*number|nil*) : Priority (larger = called first), 0 by default
+- **returns**: boolean true if registered
 
 #### `core_cameraControllerRegistry.release(id)`
 
-Relâche la capture si ce contrôleur la détient.
+Releases the capture if this controller holds it.
 
-- `id` (*string*) : Identifiant
-- **renvoie** : boolean true si relâchée
+- `id` (*string*) : Identifier
+- **returns**: boolean true if released
 
 #### `core_cameraControllerRegistry.unregister(id, controller)`
 
-Retire un contrôleur. Si controller est donné, il doit correspondre à celui enregistré. Libère la capture si besoin.
+Removes a controller. If controller is given, it must match the registered one. Releases the capture if needed.
 
-- `id` (*string*) : Identifiant
-- `controller` (*table|nil*) : Contrôleur attendu (vérification facultative)
-- **renvoie** : boolean true si retiré
+- `id` (*string*) : Identifier
+- `controller` (*table|nil*) : Expected controller (optional check)
+- **returns**: boolean true if removed
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraControllerRegistry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraControllerRegistry.lua`.*

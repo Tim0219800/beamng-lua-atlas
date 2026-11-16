@@ -1,212 +1,212 @@
 {
   "path": "lua/ge/extensions/flowgraph/pin.lua",
-  "module": "Classe `pin` du flowgraph : représente une broche d'entrée ou de sortie d'un nœud (nom, type, direction, valeur, liens). Le module renvoie un constructeur : `require('flowgraph_pin')(graph, node, direction, type, name, default, description)`. Les moddeurs de nœuds la manipulent via `self.pinIn.<nom>` / `self.pinOut.<nom>` (champ `.value`, `:isUsed()`, `:valueSetVec3/Quat`). Le reste (dessin, tooltip, menu) sert à l'éditeur ImGui.",
+  "module": "Flowgraph `pin` class: represents an input or output pin of a node (name, type, direction, value, links). The module returns a constructor: `require('flowgraph_pin')(graph, node, direction, type, name, default, description)`. Node modders manipulate it through `self.pinIn.<name>` / `self.pinOut.<name>` (`.value` field, `:isUsed()`, `:valueSetVec3/Quat`). The rest (drawing, tooltip, menu) serves the ImGui editor.",
   "notes": [
-    "Le suivi d'usage (`enableUsageTracking = true`) remplace le `__index`/`__newindex` de la table de classe : lire ou écrire `pin.value` accède en réalité à `_value` et met à jour `_frameLastUsed` avec le compteur de frames du manager.",
-    "Comme les métatables modifiées sont celles de la classe partagée (`getmetatable(self)`), ce comportement s'applique à tous les pins.",
-    "`valueSetVec3` et `valueSetQuat` réutilisent la même table `valueHelperTable` (pas d'allocation) : ne pas conserver la table renvoyée entre deux frames ; vec3 met `[4] = nil`.",
-    "Pour un pin `in` hors flux, un seul lien est gardé (`links[1]`) ; pour les flux ou les sorties, plusieurs liens s'empilent.",
-    "`pinMode` vaut 'normal' par défaut ; 'hardcoded' signifie valeur fixée dans l'éditeur (le pin compte alors comme utilisé).",
-    "Dans `_draw_in`, `constValue` est vérifié par `~= nil` pour afficher un cadenas."
+    "Usage tracking (`enableUsageTracking = true`) replaces the `__index`/`__newindex` of the class table: reading or writing `pin.value` actually accesses `_value` and updates `_frameLastUsed` with the manager's frame counter.",
+    "Since the modified metatables are those of the shared class (`getmetatable(self)`), this behavior applies to all pins.",
+    "`valueSetVec3` and `valueSetQuat` reuse the same `valueHelperTable` table (no allocation): do not keep the returned table between frames; vec3 sets `[4] = nil`.",
+    "For a non-flow `in` pin, only one link is kept (`links[1]`); for flows or outputs, several links stack up.",
+    "`pinMode` is 'normal' by default; 'hardcoded' means the value is fixed in the editor (the pin then counts as used).",
+    "In `_draw_in`, `constValue` is checked with `~= nil` to display a padlock."
   ],
   "classes": {
     "C": {
-      "desc": "Pin de flowgraph. Champs notables : graph, id, name, type (string ou liste de types), direction ('in'/'out'), node, default, defaultValue, description, hidden, links, hardTemplates, impulse, chainFlow, tableType, pinMode, quickAccess.",
+      "desc": "Flowgraph pin. Notable fields: graph, id, name, type (string or list of types), direction ('in'/'out'), node, default, defaultValue, description, hidden, links, hardTemplates, impulse, chainFlow, tableType, pinMode, quickAccess.",
       "functions": {
         "init": {
-          "desc": "Constructeur : enregistre le graphe, obtient un id unique du manager (`getNextFreePinLinkId`), stocke nom/type/direction/valeur par défaut et active le suivi d'usage de `value`. Un pin de sortie de type `delegate` reçoit `hasOutputDelegates = true`.",
+          "desc": "Constructor: records the graph, gets a unique id from the manager (`getNextFreePinLinkId`), stores name/type/direction/default value and enables usage tracking of `value`. An output pin of type `delegate` gets `hasOutputDelegates = true`.",
           "params": {
             "graph": {
               "type": "table",
-              "desc": "Graphe qui contient le pin."
+              "desc": "Graph that contains the pin."
             },
             "node": {
               "type": "table",
-              "desc": "Nœud propriétaire."
+              "desc": "Owning node."
             },
             "direction": {
               "type": "string",
-              "desc": "'in' ou 'out'."
+              "desc": "'in' or 'out'."
             },
             "type": {
               "type": "string|table",
-              "desc": "Type du pin (flow, number, string, bool, vec3, quat, color, table, any…) ou liste de types."
+              "desc": "Pin type (flow, number, string, bool, vec3, quat, color, table, any...) or list of types."
             },
             "name": {
               "type": "string",
-              "desc": "Nom du pin."
+              "desc": "Pin name."
             },
             "default": {
               "type": "any",
-              "desc": "Valeur par défaut."
+              "desc": "Default value."
             },
             "description": {
               "type": "string",
-              "desc": "Texte d'aide affiché dans le tooltip."
+              "desc": "Help text shown in the tooltip."
             }
           },
           "internal": true
         },
         "getFirstConnectedLink": {
-          "desc": "Renvoie le premier lien du pin (`links[1]`), ou nil.",
+          "desc": "Returns the pin's first link (`links[1]`), or nil.",
           "returns": [
             {
               "type": "table|nil",
-              "desc": "Premier lien."
+              "desc": "First link."
             }
           ]
         },
         "_draw_in": {
-          "desc": "Dessine un pin d'entrée dans l'éditeur (icône de type, nom, valeur constante éventuelle avec cadenas).",
+          "desc": "Draws an input pin in the editor (type icon, name, optional constant value with a padlock).",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style ImGui."
+              "desc": "ImGui style."
             },
             "alpha": {
               "type": "number",
-              "desc": "Opacité."
+              "desc": "Opacity."
             },
             "simpleDraw": {
               "type": "string",
-              "desc": "Mode d'affichage ('simple' masque le nom)."
+              "desc": "Display mode ('simple' hides the name)."
             },
             "constValue": {
               "type": "any",
-              "desc": "Valeur constante à afficher, ou nil."
+              "desc": "Constant value to display, or nil."
             },
             "outWidth": {
               "type": "number",
-              "desc": "Largeur de la colonne."
+              "desc": "Column width."
             }
           },
           "internal": true
         },
         "_draw_out": {
-          "desc": "Dessine un pin de sortie dans l'éditeur (nom aligné à droite puis icône).",
+          "desc": "Draws an output pin in the editor (right-aligned name then icon).",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style ImGui."
+              "desc": "ImGui style."
             },
             "alpha": {
               "type": "number",
-              "desc": "Opacité."
+              "desc": "Opacity."
             },
             "simpleDraw": {
               "type": "string",
-              "desc": "Mode d'affichage."
+              "desc": "Display mode."
             },
             "const": {
               "type": "any",
-              "desc": "Non utilisé pour une sortie."
+              "desc": "Not used for an output."
             },
             "outWidth": {
               "type": "number",
-              "desc": "Largeur de la colonne."
+              "desc": "Column width."
             }
           },
           "internal": true
         },
         "getTypeWithImpulseAndChain": {
-          "desc": "Renvoie 'impulse' si le pin est une impulsion, 'chainFlow' s'il est en flux chaîné, sinon son type (utilisé pour choisir l'icône).",
+          "desc": "Returns 'impulse' if the pin is an impulse, 'chainFlow' if it is a chained flow, otherwise its type (used to choose the icon).",
           "returns": [
             {
               "type": "string|table",
-              "desc": "Type d'affichage."
+              "desc": "Display type."
             }
           ]
         },
         "getTableType": {
-          "desc": "Si le pin est de type table (ou inclut table), renvoie `tableType` (ou 'generic') ; sinon une chaîne vide.",
+          "desc": "If the pin is of type table (or includes table), returns `tableType` (or 'generic'); otherwise an empty string.",
           "returns": [
             {
               "type": "string",
-              "desc": "Sous-type de table."
+              "desc": "Table subtype."
             }
           ]
         },
         "_getCalculatedWidth": {
-          "desc": "Calcule la largeur d'affichage du pin (icône + texte + marge).",
+          "desc": "Computes the pin's display width (icon + text + margin).",
           "params": {
             "simpleDraw": {
               "type": "any",
-              "desc": "Non utilisé (le mode est lu dans les préférences)."
+              "desc": "Not used (the mode is read from the preferences)."
             }
           },
           "returns": [
             {
               "type": "number",
-              "desc": "Largeur."
+              "desc": "Width."
             }
           ],
           "internal": true
         },
         "isActive": {
-          "desc": "Pendant la création d'un lien, dit si ce pin peut servir de cible (actif) ou s'il doit être grisé.",
+          "desc": "While a link is being created, tells whether this pin can be a target (active) or should be grayed out.",
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si utilisable."
+              "desc": "true if usable."
             }
           ]
         },
         "drawTooltip": {
-          "desc": "Affiche l'infobulle ImGui du pin : nom, type valide ou connecté, type de table et description.",
+          "desc": "Displays the pin's ImGui tooltip: name, valid or connected type, table type and description.",
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "Manager de flowgraph."
+              "desc": "Flowgraph manager."
             }
           },
           "internal": true
         },
         "highlightLinks": {
-          "desc": "Marque tous les liens du pin comme surlignés (`_highlight = true`).",
+          "desc": "Marks all of the pin's links as highlighted (`_highlight = true`).",
           "internal": true
         },
         "draw": {
-          "desc": "Dessine le pin (selon `direction`) avec la bonne opacité, gère le clic (sélection du nœud) et mémorise le survol.",
+          "desc": "Draws the pin (according to `direction`) with the right opacity, handles the click (node selection) and remembers the hover.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style ImGui."
+              "desc": "ImGui style."
             },
             "isHeader": {
               "type": "boolean",
-              "desc": "Non utilisé dans le code."
+              "desc": "Not used in the code."
             },
             "constValue": {
               "type": "any",
-              "desc": "Valeur constante à afficher."
+              "desc": "Constant value to display."
             },
             "outWidth": {
               "type": "number",
-              "desc": "Largeur."
+              "desc": "Width."
             }
           },
           "returns": [
             {
               "type": "boolean",
-              "desc": "Résultat de `isActive()`."
+              "desc": "Result of `isActive()`."
             }
           ],
           "internal": true
         },
         "hoverDraw": {
-          "desc": "Si le pin est survolé, surligne ses liens et affiche son infobulle.",
+          "desc": "If the pin is hovered, highlights its links and displays its tooltip.",
           "params": {
             "mgr": {
               "type": "table",
@@ -216,63 +216,63 @@
           "internal": true
         },
         "showContextMenu": {
-          "desc": "Menu contextuel du pin dans l'éditeur : accès rapide, masquer le pin (si sans lien), afficher/masquer ses liens, debug.",
+          "desc": "Pin context menu in the editor: quick access, hide the pin (if it has no links), show/hide its links, debug.",
           "params": {
             "menuPos": {
               "type": "any",
-              "desc": "Position du menu."
+              "desc": "Menu position."
             },
             "main": {
               "type": "table",
-              "desc": "Éditeur principal."
+              "desc": "Main editor."
             }
           },
           "internal": true
         },
         "_onLink": {
-          "desc": "Appelé quand un lien est créé : remplace `links[1]` (entrée hors flux) ou ajoute le lien ; rend le pin visible.",
+          "desc": "Called when a link is created: replaces `links[1]` (non-flow input) or adds the link; makes the pin visible.",
           "params": {
             "link": {
               "type": "table",
-              "desc": "Lien ajouté."
+              "desc": "Added link."
             }
           },
           "internal": true
         },
         "_onUnlink": {
-          "desc": "Appelé quand un lien est supprimé : le retire de la liste.",
+          "desc": "Called when a link is deleted: removes it from the list.",
           "params": {
             "link": {
               "type": "table",
-              "desc": "Lien retiré."
+              "desc": "Removed link."
             }
           },
           "internal": true
         },
         "isUsed": {
-          "desc": "Renvoie true si le pin a au moins un lien ou si sa valeur est codée en dur (`pinMode == 'hardcoded'`). Utilisé par certains nœuds pour sauter des calculs inutiles.",
+          "desc": "Returns true if the pin has at least one link or if its value is hardcoded (`pinMode == 'hardcoded'`). Used by some nodes to skip unnecessary computations.",
           "returns": [
             {
               "type": "boolean",
-              "desc": "true si utilisé."
+              "desc": "true if used."
             }
           ]
         },
         "valueSetVec3": {
-          "desc": "Écrit un vecteur dans `value` sous forme de table {x, y, z} réutilisée (sans allocation).",
+          "desc": "Writes a vector into `value` as a reused {x, y, z} table (no allocation).",
           "params": {
             "v": {
               "type": "vec3",
-              "desc": "Vecteur source."
+              "desc": "Source vector."
             }
           }
         },
         "valueSetQuat": {
-          "desc": "Écrit un quaternion dans `value` sous forme de table {x, y, z, w} réutilisée.",
+          "desc": "Writes a quaternion into `value` as a reused {x, y, z, w} table.",
           "params": {
             "v": {
               "type": "quat",
-              "desc": "Quaternion source."
+              "desc": "Source quaternion."
             }
           }
         }

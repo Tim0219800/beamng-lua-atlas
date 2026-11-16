@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/kerbSpec.lua",
+  "module": "Section unique de bordure (kerb) et de trottoir (footway) à laquelle tous les outils de l'éditeur construisent, et pierre dont elles sont taillées. Les dimensions vivent ici pour qu'une voiture ressente le même ressaut sur une rue, un parking, un pont ou une place. Donne aussi les lignes de texture d'une variante de bordure.",
+  "notes": [
+    "Spec : slabW 1.65 m (une dalle de large), slabThick 0.12, kerbW 0.15, kerbH 0.12 (12 cm hors de la route), buryM 0.30 (profondeur à partir de laquelle un bord est dit enterré), matériaux slabs_large et m_sidewalk_curb_trim_01.",
+    "La feuille de texture de bordure empile 5 variantes en V (un cinquième chacune) ; l'arête vive doit rester sur la rangée centrale car la normal map y porte un arrondi."
+  ],
+  "fields": {
+    "spec": {"type": "table", "desc": "Dimensions et matériaux : slabW, slabThick, kerbW, kerbH, buryM, slabMaterial, kerbMaterial."}
+  },
+  "functions": {
+    "kerbRows": {
+      "desc": "Renvoie les trois lignes V de la texture occupées par une variante de bordure : le dos de la marche, l'arête et le pied de la face. La variante est tronquée à l'entier et bornée à 0..4 ; une valeur non numérique donne 0.",
+      "params": {"variant": {"type": "integer|nil", "desc": "Indice de variante, 0 à 4."}},
+      "returns": [
+        {"type": "number", "desc": "Rangée du dos de la marche (variante * 0.2)."},
+        {"type": "number", "desc": "Rangée de l'arête (+0.1)."},
+        {"type": "number", "desc": "Rangée du pied de la face (+0.2 moins un petit écart de 0.00332)."}
+      ],
+      "internal": false
+    }
+  }
+}

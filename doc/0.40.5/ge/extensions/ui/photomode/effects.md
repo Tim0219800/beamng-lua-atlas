@@ -1,115 +1,115 @@
 # `ui_photomode_effects`
 
-*Fichier : `lua/ge/extensions/ui/photomode/effects.lua` · VM : Game Engine (GE) · 907 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/effects.lua` · VM: Game Engine (GE) · 907 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_effects` : `extensions.load("ui_photomode_effects")`, puis la globale `ui_photomode_effects`
+**Access:** extension `ui_photomode_effects`: `extensions.load("ui_photomode_effects")`, then the global `ui_photomode_effects`
 
-Effets de post-traitement du mode photo : profondeur de champ (DOF, avec mise au point automatique), SSAO, occlusion spéculaire, ombres en espace écran, réflexions SSR, flou de mouvement, qualité des réflexions dynamiques et des rétroviseurs, visibilité des occupants, plus l'état du flash (délégué à ui_photomode_flash). Le module lit et écrit ces valeurs via les objets postFX de scenetree, les variables $DOFPostFx::* et les réglages graphiques, sauvegarde l'état de départ de la session (y compris sur disque avec ui_photomode_postFxPersistence) et le restaure à la fin.
+Photo mode post-processing effects: depth of field (DOF, with autofocus), SSAO, specular occlusion, screen-space shadows, SSR reflections, motion blur, dynamic reflections and mirror quality, occupant visibility, plus the flash state (delegated to ui_photomode_flash). The module reads and writes these values via the scenetree postFX objects, the $DOFPostFx::* variables and the graphics settings, saves the session's starting state (including to disk with ui_photomode_postFxPersistence) and restores it at the end.
 
-## Exemple
+## Example
 
 ```lua
 local res = ui_photomode_effects.setEffectsState({dofEnabled = true, dofAutofocus = true, ssrQualityMode = "High"})
 if not res.ok then log('W', 'x', res.reason) end
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions d'écriture exigent une session de mode photo active (ui_photomode_shared.S.sessionActive), sinon elles renvoient {ok = false, reason = "session_inactive"}.
-- Raisons d'échec possibles : effects_state_invalid, effects_patch_empty, effect_unavailable, effect_set_failed, ssao_quality_invalid, ssr_quality_invalid, reflection_quality_invalid, mirrors_quality_invalid, screen_space_shadows_set_failed, effects_defaults_unavailable, preset_part_invalid, flash_set_failed.
-- Bornes appliquées par clamp (défaut en cas de valeur invalide) : dofMaxBlurNear 0 à 1 (0), dofMaxBlurFar 0 à 1 (0.15), dofFocusRange -100 à 250 (50), dofAperture 0.1 à 100 (8), dofFalloffSharpness 0.1 à 100 (1), motionBlurStrength 0 à 2 (0.5).
-- Correspondance avec les variables du moteur : dofMaxBlurNear = $DOFPostFx::BlurMin, dofMaxBlurFar = BlurMax, dofFocusRange = FocusRangeMax, dofAperture = BlurCurveFar, dofFalloffSharpness = FocusRangeMin.
-- Avec dofAutofocus actif et sans dofFocusRange fourni, la portée manuelle est mémorisée puis FocusRangeMax passe à 0 ; elle est rétablie à la désactivation de l'autofocus.
-- Modes acceptés : reflectionQualityMode et mirrorsQualityMode = Disabled, Lowest, Low, Normal, High, Ultra ; ssrQualityMode = Off, Low, Medium, High ; ssaoQualityMode = Off, Normal, High (Low est ramené à Normal ; un nombre >= 64 d'échantillons donne High).
-- applyPresetState accepte options.part (all, dof, ssao, specularOcclusion, screenSpaceShadows, ssr, motionBlur, reflections, occupants, flash) pour n'appliquer qu'une partie d'un preset ; dans ce découpage, mirrorsQualityMode fait partie de « reflections ».
-- Dans resetEffectsToDefaults, les résultats de applyEffectsStatePatch et restoreDofEffectsState ne sont pas vérifiés : la fonction renvoie ok = true même si une étape a échoué.
+- The write functions require an active photo mode session (ui_photomode_shared.S.sessionActive), otherwise they return {ok = false, reason = "session_inactive"}.
+- Possible failure reasons: effects_state_invalid, effects_patch_empty, effect_unavailable, effect_set_failed, ssao_quality_invalid, ssr_quality_invalid, reflection_quality_invalid, mirrors_quality_invalid, screen_space_shadows_set_failed, effects_defaults_unavailable, preset_part_invalid, flash_set_failed.
+- Bounds applied by clamping (default on invalid value): dofMaxBlurNear 0 to 1 (0), dofMaxBlurFar 0 to 1 (0.15), dofFocusRange -100 to 250 (50), dofAperture 0.1 to 100 (8), dofFalloffSharpness 0.1 to 100 (1), motionBlurStrength 0 to 2 (0.5).
+- Mapping to engine variables: dofMaxBlurNear = $DOFPostFx::BlurMin, dofMaxBlurFar = BlurMax, dofFocusRange = FocusRangeMax, dofAperture = BlurCurveFar, dofFalloffSharpness = FocusRangeMin.
+- With dofAutofocus active and no dofFocusRange provided, the manual range is stored then FocusRangeMax is set to 0; it is restored when autofocus is disabled.
+- Accepted modes: reflectionQualityMode and mirrorsQualityMode = Disabled, Lowest, Low, Normal, High, Ultra; ssrQualityMode = Off, Low, Medium, High; ssaoQualityMode = Off, Normal, High (Low is mapped to Normal; a sample count >= 64 gives High).
+- applyPresetState accepts options.part (all, dof, ssao, specularOcclusion, screenSpaceShadows, ssr, motionBlur, reflections, occupants, flash) to apply only part of a preset; in this split, mirrorsQualityMode is part of "reflections".
+- In resetEffectsToDefaults, the results of applyEffectsStatePatch and restoreDofEffectsState are not checked: the function returns ok = true even if a step failed.
 
-**Dépendances (chargées avant) :** `ui_photomode_shared`, `ui_photomode_postFxPersistence`, `ui_photomode_flash`, `core_settings_graphic`
+**Dependencies (loaded first):** `ui_photomode_shared`, `ui_photomode_postFxPersistence`, `ui_photomode_flash`, `core_settings_graphic`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_effects.applyPresetState(state, options)` | Applique un preset d'effets, en totalité ou pour une partie (options.part), puis délègue la sous-table flash à ui_photomode_flash.applyPresetState. | 854 |
-| `ui_photomode_effects.buildMetadataState()` | Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : les 16 réglages d'effets plus flash. | 882 |
-| `ui_photomode_effects.buildState()` | Construit l'état d'affichage des effets (même fonction que le local buildEffectsState). | 406 |
-| `ui_photomode_effects.captureDefaultPresetState()` | État par défaut pour un preset (état de départ de la session, avec le flash par défaut), ou nil si l'état de départ n'a pas été capturé. | 798 |
-| `ui_photomode_effects.capturePresetState()` | État à enregistrer dans un preset (identique à buildMetadataState). | 794 |
-| `ui_photomode_effects.captureRestoreState()` | Capture l'état de départ de la session et le sauvegarde via ui_photomode_postFxPersistence.saveRestoreState (fusion avec la version persistée), pour restauration à la fin. Appelée au début d'une session du mode photo. *(interne)* | 420 |
-| `ui_photomode_effects.captureSerializableState()` | Lit directement les valeurs actuelles dans le moteur (objets postFX, variables $DOFPostFx::*, réglages graphiques) et les renvoie sous forme brute ; les valeurs illisibles valent nil. | 355 |
-| `ui_photomode_effects.getEffectsState()` | Renvoie l'état courant des effets (valeurs, availability, defaults, defaultsAvailable, sessionActive, flash) avec ok = session active, et reason = session_inactive sinon. | 785 |
-| `ui_photomode_effects.resetEffectsToDefaults()` | Réapplique l'état capturé au début de la session, y compris le flash. | 755 |
-| `ui_photomode_effects.restoreState()` | Restaure l'état de départ (relu depuis la persistance si elle a réussi, sinon depuis la mémoire) : d'abord les effets hors DOF, puis le DOF. Appelée à la fin d'une session. *(interne)* | 707 |
-| `ui_photomode_effects.setEffectsState(partialState)` | Applique un patch partiel d'effets : dofEnabled, dofAutofocus, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, ssaoQualityMode (alias ssaoQuality, ssaoSamples, ssaoEnabled), screenSpaceShadowsEnabled, specularOcclusionEnabled, ssrQualityMode, motionBlurEnabled, motionBlurStrength, reflectionQualityMode, mirrorsQualityMode, occupantsVisible. Valeurs numériques bornées, modes validés. S'arrête à la première erreur (les champs déjà appliqués restent appliqués). | 726 |
+| `ui_photomode_effects.applyPresetState(state, options)` | Applies an effects preset, in full or for a part (options.part), then delegates the flash sub-table to ui_photomode_flash.applyPresetState. | 854 |
+| `ui_photomode_effects.buildMetadataState()` | Subset of the state to write into a photo's metadata: the 16 effect settings plus flash. | 882 |
+| `ui_photomode_effects.buildState()` | Builds the effects display state (same function as the local buildEffectsState). | 406 |
+| `ui_photomode_effects.captureDefaultPresetState()` | Default state for a preset (the session's starting state, with the default flash), or nil if the starting state was not captured. | 798 |
+| `ui_photomode_effects.capturePresetState()` | State to save in a preset (same as buildMetadataState). | 794 |
+| `ui_photomode_effects.captureRestoreState()` | Captures the session's starting state and saves it via ui_photomode_postFxPersistence.saveRestoreState (merged with the persisted version), for restoration at the end. Called at the start of a photo mode session. *(internal)* | 420 |
+| `ui_photomode_effects.captureSerializableState()` | Reads the current values directly from the engine (postFX objects, $DOFPostFx::* variables, graphics settings) and returns them in raw form; unreadable values are nil. | 355 |
+| `ui_photomode_effects.getEffectsState()` | Returns the current effects state (values, availability, defaults, defaultsAvailable, sessionActive, flash) with ok = session active, and reason = session_inactive otherwise. | 785 |
+| `ui_photomode_effects.resetEffectsToDefaults()` | Reapplies the state captured at the start of the session, including the flash. | 755 |
+| `ui_photomode_effects.restoreState()` | Restores the starting state (re-read from persistence if it succeeded, otherwise from memory): first the non-DOF effects, then the DOF. Called at the end of a session. *(internal)* | 707 |
+| `ui_photomode_effects.setEffectsState(partialState)` | Applies a partial effects patch: dofEnabled, dofAutofocus, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, ssaoQualityMode (aliases ssaoQuality, ssaoSamples, ssaoEnabled), screenSpaceShadowsEnabled, specularOcclusionEnabled, ssrQualityMode, motionBlurEnabled, motionBlurStrength, reflectionQualityMode, mirrorsQualityMode, occupantsVisible. Numeric values clamped, modes validated. Stops at the first error (fields already applied stay applied). | 726 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_effects.applyPresetState(state, options)`
 
-Applique un preset d'effets, en totalité ou pour une partie (options.part), puis délègue la sous-table flash à ui_photomode_flash.applyPresetState.
+Applies an effects preset, in full or for a part (options.part), then delegates the flash sub-table to ui_photomode_flash.applyPresetState.
 
-- `state` (*table*) : État de preset
-- `options` (*table|nil*) : {part = nom de partie} (facultatif)
-- **renvoie** : table {state} en cas de succès, sinon {ok = false, reason}
+- `state` (*table*) : Preset state
+- `options` (*table|nil*) : {part = part name} (optional)
+- **returns**: table {state} on success, otherwise {ok = false, reason}
 
 #### `ui_photomode_effects.buildMetadataState()`
 
-Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : les 16 réglages d'effets plus flash.
+Subset of the state to write into a photo's metadata: the 16 effect settings plus flash.
 
-- **renvoie** : table Réglages
+- **returns**: table Settings
 
 #### `ui_photomode_effects.buildState()`
 
-Construit l'état d'affichage des effets (même fonction que le local buildEffectsState).
+Builds the effects display state (same function as the local buildEffectsState).
 
-- **renvoie** : table État avec valeurs, availability, defaults, sessionActive, flash
+- **returns**: table State with values, availability, defaults, sessionActive, flash
 
 #### `ui_photomode_effects.captureDefaultPresetState()`
 
-État par défaut pour un preset (état de départ de la session, avec le flash par défaut), ou nil si l'état de départ n'a pas été capturé.
+Default state for a preset (the session's starting state, with the default flash), or nil if the starting state was not captured.
 
-- **renvoie** : table|nil Réglages initiaux
+- **returns**: table|nil Initial settings
 
 #### `ui_photomode_effects.capturePresetState()`
 
-État à enregistrer dans un preset (identique à buildMetadataState).
+State to save in a preset (same as buildMetadataState).
 
-- **renvoie** : table Réglages
+- **returns**: table Settings
 
 #### `ui_photomode_effects.captureSerializableState()`
 
-Lit directement les valeurs actuelles dans le moteur (objets postFX, variables $DOFPostFx::*, réglages graphiques) et les renvoie sous forme brute ; les valeurs illisibles valent nil.
+Reads the current values directly from the engine (postFX objects, $DOFPostFx::* variables, graphics settings) and returns them in raw form; unreadable values are nil.
 
-- **renvoie** : table État brut
+- **returns**: table Raw state
 
 #### `ui_photomode_effects.getEffectsState()`
 
-Renvoie l'état courant des effets (valeurs, availability, defaults, defaultsAvailable, sessionActive, flash) avec ok = session active, et reason = session_inactive sinon.
+Returns the current effects state (values, availability, defaults, defaultsAvailable, sessionActive, flash) with ok = session active, and reason = session_inactive otherwise.
 
-- **renvoie** : table État d'affichage
+- **returns**: table Display state
 
 #### `ui_photomode_effects.resetEffectsToDefaults()`
 
-Réapplique l'état capturé au début de la session, y compris le flash.
+Reapplies the state captured at the start of the session, including the flash.
 
-- **renvoie** : table {ok, reason?, state?}
+- **returns**: table {ok, reason?, state?}
 
 #### `ui_photomode_effects.setEffectsState(partialState)`
 
-Applique un patch partiel d'effets : dofEnabled, dofAutofocus, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, ssaoQualityMode (alias ssaoQuality, ssaoSamples, ssaoEnabled), screenSpaceShadowsEnabled, specularOcclusionEnabled, ssrQualityMode, motionBlurEnabled, motionBlurStrength, reflectionQualityMode, mirrorsQualityMode, occupantsVisible. Valeurs numériques bornées, modes validés. S'arrête à la première erreur (les champs déjà appliqués restent appliqués).
+Applies a partial effects patch: dofEnabled, dofAutofocus, dofMaxBlurNear, dofMaxBlurFar, dofFocusRange, dofAperture, dofFalloffSharpness, ssaoQualityMode (aliases ssaoQuality, ssaoSamples, ssaoEnabled), screenSpaceShadowsEnabled, specularOcclusionEnabled, ssrQualityMode, motionBlurEnabled, motionBlurStrength, reflectionQualityMode, mirrorsQualityMode, occupantsVisible. Numeric values clamped, modes validated. Stops at the first error (fields already applied stay applied).
 
-- `partialState` (*table*) : Champs à modifier
-- **renvoie** : table {ok, reason?, state}
+- `partialState` (*table*) : Fields to change
+- **returns**: table {ok, reason?, state}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | ui_photomode_shared, ui_photomode_postFxPersistence, ui_photomode_flash, core_settings_graphic |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/effects.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/effects.lua`.*

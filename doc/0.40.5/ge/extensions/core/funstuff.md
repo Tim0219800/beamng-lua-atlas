@@ -1,153 +1,153 @@
 # `core_funstuff`
 
-*Fichier : `lua/ge/extensions/core/funstuff.lua` · VM : Game Engine (GE) · 514 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/funstuff.lua` · VM: Game Engine (GE) · 514 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_funstuff` : `extensions.load("core_funstuff")`, puis la globale `core_funstuff`
+**Access:** extension `core_funstuff`: `extensions.load("core_funstuff")`, then the global `core_funstuff`
 
-Extension GE `core_funstuff` : actions « fun » du menu radial du mode bac à sable (sandbox) : champ de force, propulsions et lancers du véhicule, destruction (casser, dégonfler, incendier, exploser), ouverture des capots/portes, niveau de carburant, couleurs et véhicule aléatoires, itinéraire aléatoire. Les fonctions exportées agissent sur le véhicule joueur 0 et renvoient une instruction pour le menu radial ({'hide'} ou {'reload'}). registerFunstuffActions enregistre les entrées dans core_quickAccess.
+GE extension `core_funstuff`: "fun" actions of the sandbox mode radial menu: force field, vehicle boosts and flings, destruction (break, deflate, ignite, explode), opening hoods/doors, fuel level, random colors and vehicle, random route. The exported functions act on player vehicle 0 and return an instruction for the radial menu ({'hide'} or {'reload'}). registerFunstuffActions registers the entries in core_quickAccess.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('core_funstuff')
-core_funstuff.boost()            -- +25 m/s dans la direction du véhicule
-core_funstuff.flingUpward()      -- +15 m/s vers le haut
+core_funstuff.boost()            -- +25 m/s in the vehicle's direction
+core_funstuff.flingUpward()      -- +15 m/s upwards
 core_funstuff.igniteVehicle()
 ```
 
-## Remarques
+## Notes
 
-- Valeurs de lancer (applyFling, vitesses ajoutées au cluster du véhicule via applyClusterVelocityScaleAdd) : flingUpward +15 m/s en z, flingDownward -15 m/s, boost +25 m/s selon la direction du véhicule, boostBackwards -25 m/s. L'effet est réduit linéairement quand la vitesse du véhicule dans la direction du lancer dépasse 200 km/h (55,6 m/s) et annulé à 450 km/h (125 m/s).
-- Retour : chaque action renvoie {'hide'} (fermer le menu radial) ou {'reload'} (recharger les entrées du menu) : valeur attendue par core_quickAccess ; sans effet quand elles sont appelées par script.
-- Plusieurs fonctions n'ont pas de test : breakAllBreakgroups, breakHinges, deflateTires, deflateRandomTire, igniteVehicle, extinguishVehicle font getPlayerVehicle(0):queueLuaCommand(...) directement et provoquent une erreur Lua s'il n'y a pas de véhicule joueur. Les fonctions de boost/fling testent, elles, l'existence du véhicule.
-- explodeVehicle : crée une 'planète' répulsive (obj:setPlanets({x,y,z,rayon 5,masse})) sous le véhicule avec une masse de -3e13 * taille/3 (taille = plus grande demi-dimension de la boîte englobante), déclenche fire.explodeVehicle et beamstate.breakAllBreakgroups, puis supprime la planète après 0,2 s de temps de simulation (le commentaire dit « 1 second »). La commande est envoyée à tous les objets (be:queueAllObjectLua), donc tous les véhicules subissent la force.
-- Non exportées (internes aux entrées du menu) : randomizeColors, randomVehicle, randomRoute (3000 à 8000 m, checkpoints tous les 300 m, ratio 50 % terre / 50 % bitume), setFuelLevel(level 0..1).
-- Les entrées du menu sont masquées si l'action correspondante est bloquée par core_input_actionFilter (funBreak, funHinges, funTires, funFire, funExtinguish, funBoom, forceField, funFling, funFlingDownward, funBoost, funBoostBackwards, latchesOpen, latchesClose, parts_selector, vehicle_selector, toggleBigMap).
-- Incohérences : le paramètre `entries` de registerFunstuffActions n'est pas utilisé ; la fonction enregistre trois niveaux de menu (/root/sandbox/funStuff/, .../destruction/, .../forces/, .../other/) et peut créer des doublons si elle est appelée plusieurs fois.
+- Fling values (applyFling, velocities added to the vehicle's cluster via applyClusterVelocityScaleAdd): flingUpward +15 m/s in z, flingDownward -15 m/s, boost +25 m/s along the vehicle's direction, boostBackwards -25 m/s. The effect is reduced linearly when the vehicle's speed in the fling direction exceeds 200 km/h (55.6 m/s) and cancelled at 450 km/h (125 m/s).
+- Return: each action returns {'hide'} (close the radial menu) or {'reload'} (reload the menu entries): value expected by core_quickAccess; no effect when called by script.
+- Several functions have no check: breakAllBreakgroups, breakHinges, deflateTires, deflateRandomTire, igniteVehicle, extinguishVehicle call getPlayerVehicle(0):queueLuaCommand(...) directly and cause a Lua error if there is no player vehicle. The boost/fling functions do check that the vehicle exists.
+- explodeVehicle: creates a repulsive 'planet' (obj:setPlanets({x,y,z,radius 5,mass})) under the vehicle with a mass of -3e13 * size/3 (size = largest half-dimension of the bounding box), triggers fire.explodeVehicle and beamstate.breakAllBreakgroups, then removes the planet after 0.2 s of simulation time (the comment says "1 second"). The command is sent to all objects (be:queueAllObjectLua), so all vehicles are subject to the force.
+- Not exported (internal to the menu entries): randomizeColors, randomVehicle, randomRoute (3000 to 8000 m, checkpoints every 300 m, 50 % dirt / 50 % asphalt ratio), setFuelLevel(level 0..1).
+- Menu entries are hidden if the corresponding action is blocked by core_input_actionFilter (funBreak, funHinges, funTires, funFire, funExtinguish, funBoom, forceField, funFling, funFlingDownward, funBoost, funBoostBackwards, latchesOpen, latchesClose, parts_selector, vehicle_selector, toggleBigMap).
+- Inconsistencies: the `entries` parameter of registerFunstuffActions is unused; the function registers three menu levels (/root/sandbox/funStuff/, .../destruction/, .../forces/, .../other/) and can create duplicates if called several times.
 
-**Dépendances (chargées avant) :** `core_jobsystem`, `gameplay_forceField`
+**Dependencies (loaded first):** `core_jobsystem`, `gameplay_forceField`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_funstuff.boost()` | Ajoute 25 m/s au véhicule joueur dans sa direction avant. | 61 |
-| `core_funstuff.boostBackwards()` | Ajoute 25 m/s au véhicule joueur vers l'arrière. | 72 |
-| `core_funstuff.breakAllBreakgroups()` | Casse tous les groupes de rupture (breakgroups) du véhicule joueur (beamstate.breakAllBreakgroups). Erreur s'il n'y a pas de véhicule. | 85 |
-| `core_funstuff.breakHinges()` | Casse les charnières du véhicule joueur (beamstate.breakHinges). | 90 |
-| `core_funstuff.closeLatches()` | Ferme tous les verrous du véhicule joueur via l'action 'latchesClose'. | 253 |
-| `core_funstuff.deflateRandomTire()` | Dégonfle un pneu au hasard (beamstate.deflateRandomTire). | 100 |
-| `core_funstuff.deflateTires()` | Dégonfle tous les pneus du véhicule joueur (beamstate.deflateTires). | 95 |
-| `core_funstuff.explodeVehicle()` | Fait exploser le véhicule joueur (voir notes : planète répulsive temporaire + fire.explodeVehicle + rupture de tous les breakgroups). S'exécute dans un job de core_jobsystem. | 133 |
-| `core_funstuff.extinguishVehicle()` | Éteint le feu du véhicule joueur (fire.extinguishVehicle). | 110 |
-| `core_funstuff.flingDownward()` | Projette le véhicule joueur vers le bas de 15 m/s. | 53 |
-| `core_funstuff.flingUpward()` | Projette le véhicule joueur vers le haut de 15 m/s (réduit s'il monte déjà vite). | 45 |
-| `core_funstuff.igniteVehicle()` | Met le feu au véhicule joueur (fire.igniteVehicle). | 105 |
-| `core_funstuff.openLatches()` | Ouvre tous les verrous (portes, capot, coffre) du véhicule joueur via core_vehicleBridge.executeAction(…, 'latchesOpen'). | 248 |
-| `core_funstuff.registerFunstuffActions(entries)` | Enregistre dans core_quickAccess les niveaux de menu radial '/root/sandbox/funStuff/' (accueil + sous-menus Destruction, Forces, Other) et leurs entrées, en respectant les actions bloquées par core_input_actionFilter. | 271 |
-| `core_funstuff.toggleForceField()` | Fait tourner le champ de force sur trois états : inactif -> répulsion (multiplicateur 1) -> attraction (multiplicateur -0.5) -> inactif. | 9 |
+| `core_funstuff.boost()` | Adds 25 m/s to the player vehicle in its forward direction. | 61 |
+| `core_funstuff.boostBackwards()` | Adds 25 m/s to the player vehicle backwards. | 72 |
+| `core_funstuff.breakAllBreakgroups()` | Breaks all breakgroups of the player vehicle (beamstate.breakAllBreakgroups). Error if there is no vehicle. | 85 |
+| `core_funstuff.breakHinges()` | Breaks the hinges of the player vehicle (beamstate.breakHinges). | 90 |
+| `core_funstuff.closeLatches()` | Closes all latches of the player vehicle via the 'latchesClose' action. | 253 |
+| `core_funstuff.deflateRandomTire()` | Deflates one random tire (beamstate.deflateRandomTire). | 100 |
+| `core_funstuff.deflateTires()` | Deflates all tires of the player vehicle (beamstate.deflateTires). | 95 |
+| `core_funstuff.explodeVehicle()` | Explodes the player vehicle (see notes: temporary repulsive planet + fire.explodeVehicle + breaking all breakgroups). Runs in a core_jobsystem job. | 133 |
+| `core_funstuff.extinguishVehicle()` | Extinguishes the fire of the player vehicle (fire.extinguishVehicle). | 110 |
+| `core_funstuff.flingDownward()` | Throws the player vehicle downwards at 15 m/s. | 53 |
+| `core_funstuff.flingUpward()` | Throws the player vehicle upwards at 15 m/s (reduced if it is already rising fast). | 45 |
+| `core_funstuff.igniteVehicle()` | Sets the player vehicle on fire (fire.igniteVehicle). | 105 |
+| `core_funstuff.openLatches()` | Opens all latches (doors, hood, trunk) of the player vehicle via core_vehicleBridge.executeAction(…, 'latchesOpen'). | 248 |
+| `core_funstuff.registerFunstuffActions(entries)` | Registers in core_quickAccess the radial menu levels '/root/sandbox/funStuff/' (home + Destruction, Forces, Other submenus) and their entries, respecting the actions blocked by core_input_actionFilter. | 271 |
+| `core_funstuff.toggleForceField()` | Cycles the force field through three states: inactive -> repulsion (multiplier 1) -> attraction (multiplier -0.5) -> inactive. | 9 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_funstuff.boost()`
 
-Ajoute 25 m/s au véhicule joueur dans sa direction avant.
+Adds 25 m/s to the player vehicle in its forward direction.
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.boostBackwards()`
 
-Ajoute 25 m/s au véhicule joueur vers l'arrière.
+Adds 25 m/s to the player vehicle backwards.
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.breakAllBreakgroups()`
 
-Casse tous les groupes de rupture (breakgroups) du véhicule joueur (beamstate.breakAllBreakgroups). Erreur s'il n'y a pas de véhicule.
+Breaks all breakgroups of the player vehicle (beamstate.breakAllBreakgroups). Error if there is no vehicle.
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.breakHinges()`
 
-Casse les charnières du véhicule joueur (beamstate.breakHinges).
+Breaks the hinges of the player vehicle (beamstate.breakHinges).
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.closeLatches()`
 
-Ferme tous les verrous du véhicule joueur via l'action 'latchesClose'.
+Closes all latches of the player vehicle via the 'latchesClose' action.
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.deflateRandomTire()`
 
-Dégonfle un pneu au hasard (beamstate.deflateRandomTire).
+Deflates one random tire (beamstate.deflateRandomTire).
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.deflateTires()`
 
-Dégonfle tous les pneus du véhicule joueur (beamstate.deflateTires).
+Deflates all tires of the player vehicle (beamstate.deflateTires).
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.explodeVehicle()`
 
-Fait exploser le véhicule joueur (voir notes : planète répulsive temporaire + fire.explodeVehicle + rupture de tous les breakgroups). S'exécute dans un job de core_jobsystem.
+Explodes the player vehicle (see notes: temporary repulsive planet + fire.explodeVehicle + breaking all breakgroups). Runs in a core_jobsystem job.
 
-- **renvoie** : string[]|nil {'hide'} ; nil s'il n'y a pas de véhicule joueur.
+- **returns**: string[]|nil {'hide'}; nil if there is no player vehicle.
 
 #### `core_funstuff.extinguishVehicle()`
 
-Éteint le feu du véhicule joueur (fire.extinguishVehicle).
+Extinguishes the fire of the player vehicle (fire.extinguishVehicle).
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.flingDownward()`
 
-Projette le véhicule joueur vers le bas de 15 m/s.
+Throws the player vehicle downwards at 15 m/s.
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.flingUpward()`
 
-Projette le véhicule joueur vers le haut de 15 m/s (réduit s'il monte déjà vite).
+Throws the player vehicle upwards at 15 m/s (reduced if it is already rising fast).
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.igniteVehicle()`
 
-Met le feu au véhicule joueur (fire.igniteVehicle).
+Sets the player vehicle on fire (fire.igniteVehicle).
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.openLatches()`
 
-Ouvre tous les verrous (portes, capot, coffre) du véhicule joueur via core_vehicleBridge.executeAction(…, 'latchesOpen').
+Opens all latches (doors, hood, trunk) of the player vehicle via core_vehicleBridge.executeAction(…, 'latchesOpen').
 
-- **renvoie** : string[] {'hide'}.
+- **returns**: string[] {'hide'}.
 
 #### `core_funstuff.registerFunstuffActions(entries)`
 
-Enregistre dans core_quickAccess les niveaux de menu radial '/root/sandbox/funStuff/' (accueil + sous-menus Destruction, Forces, Other) et leurs entrées, en respectant les actions bloquées par core_input_actionFilter.
+Registers in core_quickAccess the radial menu levels '/root/sandbox/funStuff/' (home + Destruction, Forces, Other submenus) and their entries, respecting the actions blocked by core_input_actionFilter.
 
-- `entries` (*any*) : Non utilisé.
+- `entries` (*any*) : Not used.
 
 #### `core_funstuff.toggleForceField()`
 
-Fait tourner le champ de force sur trois états : inactif -> répulsion (multiplicateur 1) -> attraction (multiplicateur -0.5) -> inactif.
+Cycles the force field through three states: inactive -> repulsion (multiplier 1) -> attraction (multiplier -0.5) -> inactive.
 
-- **renvoie** : string[] {'reload'} : recharge le menu radial.
+- **returns**: string[] {'reload'}: reloads the radial menu.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'core_jobsystem', 'gameplay_forceField'}. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`, `queueAllObjectLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/funstuff.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/funstuff.lua`.*

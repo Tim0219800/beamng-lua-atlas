@@ -1,66 +1,66 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/spawnVehicle.lua",
-  "module": "Nœud « Spawn Vehicle » : crée un véhicule (`core_vehicles.spawnNewVehicle` ou `replaceVehicle` si `replacePlayer`), attend qu'il soit prêt puis expose son id. Pins d'entrée : `flow`, `reset` (impulsion, supprime et réinitialise), `model` (défaut 'pickup'), `config` (string ou table, défaut 'vehicles/pickup/d15_4wd_A.pc'), `pos` (vec3), `rot` (quat), et cachés `licenseText`, `color` (couleur ou nom de peinture), `randomColor`, `name`, `replacePlayer`, `keepCamera`, `keepVehicle`, `keepOnReset`. Sorties : `flow` (une fois chargé), `loaded` (impulsion), `vehId`. Machine à états `state` : 1 spawn, 2 attente `ready`, 3 sortie, 4 maintien, 5 échec.",
+  "module": "Node \"Spawn Vehicle\": creates a vehicle (`core_vehicles.spawnNewVehicle` or `replaceVehicle` if `replacePlayer`), waits until it is ready then exposes its id. Input pins: `flow`, `reset` (pulse, deletes and resets), `model` (default 'pickup'), `config` (string or table, default 'vehicles/pickup/d15_4wd_A.pc'), `pos` (vec3), `rot` (quat), and hidden `licenseText`, `color` (color or paint name), `randomColor`, `name`, `replacePlayer`, `keepCamera`, `keepVehicle`, `keepOnReset`. Outputs: `flow` (once loaded), `loaded` (pulse), `vehId`. State machine `state`: 1 spawn, 2 wait for `ready`, 3 output, 4 hold, 5 failure.",
   "notes": [
-    "Échec de spawn : réessaie chaque seconde pendant 10 s, puis log E, passe en état 5 et, si le flowgraph est lié à une activité, abandonne la mission avec fondu.",
-    "La rotation fournie est multipliée par `quat(0,0,1,0)` (180°).",
-    "Couleur aléatoire désactivée pour les configs de type Police ou Service.",
-    "`autoEnterVehicle` = non `keepCamera`."
+    "Spawn failure: retries every second for 10 s, then E log, goes to state 5 and, if the flowgraph is linked to an activity, aborts the mission with a fade.",
+    "The provided rotation is multiplied by `quat(0,0,1,0)` (180°).",
+    "Random color disabled for Police or Service type configs.",
+    "`autoEnterVehicle` = not `keepCamera`."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Réinitialise l'état et les sorties au démarrage.",
+          "desc": "Resets the state and the outputs at start.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Réinitialise l'état et la référence au véhicule.",
+          "desc": "Resets the state and the vehicle reference.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affichage central du nœud, vide.",
+          "desc": "Central display of the node, empty.",
           "internal": true,
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+              "desc": "Editor node builder (builder:Middle())."
             },
             "style": {
               "type": "any",
-              "desc": "Style ImGui de l'éditeur."
+              "desc": "Editor ImGui style."
             }
           }
         },
         "getCmd": {
-          "desc": "Construit une commande Lua pour appeler `buttonPushed(action)` sur ce nœud depuis une autre VM (déduit du code).",
+          "desc": "Builds a Lua command to call `buttonPushed(action)` on this node from another VM (inferred from code).",
           "internal": false,
           "params": {
             "action": {
               "type": "string|nil",
-              "desc": "Action transmise à `buttonPushed`."
+              "desc": "Action passed to `buttonPushed`."
             }
           }
         },
         "init": {
-          "desc": "Constructeur ; état 1, sortie `flow` false.",
+          "desc": "Constructor; state 1, `flow` output false.",
           "internal": true
         },
         "onSpawnFailed": {
-          "desc": "Appelé quand le spawn échoue : programme un nouvel essai (1 s) ou abandonne après 10 s.",
+          "desc": "Called when the spawn fails: schedules a new attempt (1 s) or gives up after 10 s.",
           "internal": true
         },
         "postInit": {
-          "desc": "Marque le pin `color` avec `colorSetup = {vehicleColor = true}`.",
+          "desc": "Marks the `color` pin with `colorSetup = {vehicleColor = true}`.",
           "internal": true
         },
         "resetSpawnRetry": {
-          "desc": "Remet à zéro le minuteur et le temps cumulé d'échecs de spawn.",
+          "desc": "Resets the timer and the accumulated spawn failure time to zero.",
           "internal": true
         },
         "work": {
-          "desc": "Machine à états du spawn (voir module) ; gère aussi le `reset`.",
+          "desc": "Spawn state machine (see module); also handles `reset`.",
           "internal": true
         }
       }

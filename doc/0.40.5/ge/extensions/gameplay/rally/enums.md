@@ -1,29 +1,29 @@
 # `gameplay_rally_enums`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/enums.lua` · VM : Game Engine (GE) · 86 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/enums.lua` · VM: Game Engine (GE) · 86 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_enums` : `extensions.load("gameplay_rally_enums")`, puis la globale `gameplay_rally_enums`
+**Access:** extension `gameplay_rally_enums`: `extensions.load("gameplay_rally_enums")`, then the global `gameplay_rally_enums`
 
-Énumérations partagées du système de rallye (notes de copilote) : mode audio des pacenotes, type de déclenchement (trigger), type de relâchement pour les virages lents, avec leurs noms lisibles. Ce sont des tables de constantes consultées par l'éditeur de notes et par le moteur de rallye ; le fichier ne contient aucune fonction.
+Shared enumerations of the rally system (co-driver notes): pacenote audio mode, trigger type, release type for slow corners, with their readable names. These are constant tables used by the note editor and by the rally engine; the file contains no functions.
 
-## Remarques
+## Notes
 
-- Les valeurs numériques sont persistées dans les carnets de notes : ne pas les renuméroter.
-- Plusieurs valeurs de triggerType et de slowCornerReleaseType sont commentées dans le code (csStatic, csHalf, ceMinus5, ceStatic pour triggerType) et donc indisponibles.
-- slowCornerReleaseType : écarts de 10 en 10 (10 à 50) ; csHalf (30) est la valeur par défaut d'après son libellé.
+- The numeric values are persisted in the notebooks: do not renumber them.
+- Several triggerType and slowCornerReleaseType values are commented out in the code (csStatic, csHalf, ceMinus5, ceStatic for triggerType) and therefore unavailable.
+- slowCornerReleaseType: steps of 10 (10 to 50); csHalf (30) is the default value according to its label.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `pacenoteAudioMode` | table<string, integer> | Modes audio : auto=1, freeform=2, structuredOnline=3, structuredOffline=4, custom=5. |
-| `pacenoteAudioModeDisplayNames` | table<integer, string> | Noms affichés à l'utilisateur (éditeur, debug) ; structuredOffline s'affiche 'structured'. |
-| `pacenoteAudioModeHidden` | table<string, boolean> | Modes masqués dans les listes de choix (freeform, structuredOnline) mais toujours fonctionnels pour les carnets existants. |
-| `pacenoteAudioModeNames` | table<integer, string> | Nom technique de chaque mode audio, indexé par valeur. |
-| `slowCornerReleaseType` | table<string, integer> | Moment de relâche d'une note de virage lent : csStaticMinus40=10, csStatic=20, csHalf=30, ceMinus5=40, ceStatic=50. |
-| `slowCornerReleaseTypeName` | table<integer, string> | Libellés correspondants (ex. '40m before corner start', 'at corner end'). |
-| `triggerType` | table<string, integer> | Types de déclenchement d'une note : dynamic=1, csImmediate=15. |
-| `triggerTypeName` | table<integer, string> | Libellés des types de déclenchement ('dynamic (default)', 'immediate (only use for first pacenote)'). |
+| `pacenoteAudioMode` | table<string, integer> | Audio modes: auto=1, freeform=2, structuredOnline=3, structuredOffline=4, custom=5. |
+| `pacenoteAudioModeDisplayNames` | table<integer, string> | Names shown to the user (editor, debug); structuredOffline is displayed as 'structured'. |
+| `pacenoteAudioModeHidden` | table<string, boolean> | Modes hidden in the choice lists (freeform, structuredOnline) but still functional for existing notebooks. |
+| `pacenoteAudioModeNames` | table<integer, string> | Technical name of each audio mode, keyed by value. |
+| `slowCornerReleaseType` | table<string, integer> | Release moment of a slow corner note: csStaticMinus40=10, csStatic=20, csHalf=30, ceMinus5=40, ceStatic=50. |
+| `slowCornerReleaseTypeName` | table<integer, string> | Matching labels (e.g. '40m before corner start', 'at corner end'). |
+| `triggerType` | table<string, integer> | Trigger types of a note: dynamic=1, csImmediate=15. |
+| `triggerTypeName` | table<integer, string> | Labels of the trigger types ('dynamic (default)', 'immediate (only use for first pacenote)'). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/enums.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/enums.lua`.*

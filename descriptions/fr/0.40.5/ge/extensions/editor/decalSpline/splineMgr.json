@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/editor/decalSpline/splineMgr.lua",
+  "module": "Gestionnaire des splines de l'outil Decal Spline de l'éditeur (préfixe « Decal Spline », mode d'édition decalSplineEditMode) : une spline de decals suit un tracé (nœuds, largeurs, normales) sur lequel des decals sont répartis (espacement, jitter, rotation, lignes/colonnes de l'atlas, échelle, frame, jusqu'à 4 composants). Le module garde la liste des splines et une table id vers index, crée/supprime/coupe/joint des splines, gère undo/redo, copie de profil, sérialisation (buffer binaire ou table JSON de session), liens avec des splines maîtres, et reconstruit la géométrie et les decals des splines marquées isDirty.",
+  "notes": ["Une spline est une table : name, id (UUID), isDirty, isLoop, isLink/linkId, nodes (vec3), widths, nmls, divPoints/divWidths/tangents/binormals/normals/discMap (géométrie dérivée recalculée), isEnabled, isAliasRoundRobin, roadLength, spacing, jitter, randomSeed, et par composant n (1 à 4) : rotN, numRowsN, numColsN, scaleN, frameN.", "Valeurs par défaut des curseurs : spacing 0, jitter 0, rot 1, randomSeed 41225, numRows 4, numCols 2, scale 1, frame 3, matériau par défaut asphalt_patches ; minimum 100 subdivisions ; taille minimale d'import d'un tracé 10 m.", "Toute modification d'une spline passe par isDirty = true : updateDirtyDecalSplines (appelée chaque frame par l'outil) reconstruit alors la géométrie (catmullRomRaycast) et les decals (pop.populateDecalSpline). Moins de 2 nœuds : decals et géométrie dérivée supprimés.", "Une spline désactivée (isEnabled = false) dont les decals existent déjà n'est pas reconstruite.", "convertPathsToDecalSplines crée une spline pour chaque chemin même si le chemin est trop petit (la spline reste alors vide), et le message de log compte #paths - #decalSplines (faux s'il existait déjà des splines).", "deepCopyDecalSplineState est listé deux fois dans l'interface publique (même fonction)."],
+  "functions": {
+    "getToolPrefixStr": {"desc": "Renvoie le préfixe de l'outil (« Decal Spline »).", "params": {}, "returns": [{"type": "string", "desc": "préfixe"}]},
+    "getEditModeKey": {"desc": "Renvoie la clé du mode d'édition (« decalSplineEditMode »).", "params": {}, "returns": [{"type": "string", "desc": "clé"}]},
+    "getDecalSplines": {"desc": "Renvoie la table des splines (référence, non copiée).", "params": {}, "returns": [{"type": "table", "desc": "tableau de splines"}]},
+    "getSplineMap": {"desc": "Renvoie la table id de spline vers index.", "params": {}, "returns": [{"type": "table<string, integer>", "desc": "id vers index"}]},
+    "setDecalSpline": {"desc": "Place une spline à l'index donné et la marque isDirty.", "params": {"spline": {"type": "table", "desc": "spline"}, "idx": {"type": "integer", "desc": "index (base 1)"}}},
+    "setDecalSplines": {"desc": "Place toutes les splines d'un tableau aux mêmes index (chacune marquée isDirty) ; ne supprime pas les autres.", "params": {"splines": {"type": "table", "desc": "tableau de splines"}}},
+    "getDefaultSliderParams": {"desc": "Renvoie les valeurs par défaut des curseurs de l'interface.", "params": {}, "returns": [{"type": "table", "desc": "spacing, jitter, rot, randomSeed, numRows, numCols, scale, frame…"}]},
+    "addNewDecalSpline": {"desc": "Ajoute à la fin une nouvelle spline vide avec un nom unique (« Decal Spline N »), un UUID Engine.generateUUID() et les paramètres par défaut.", "params": {}},
+    "splitDecalSpline": {
+      "desc": "Coupe une spline au nœud donné en deux splines. Une boucle est ouverte sur place en démarrant au nœud choisi.",
+      "params": {"selectedSplineIdx": {"type": "integer", "desc": "index de la spline"}, "selectedNodeIdx": {"type": "integer", "desc": "index du nœud de coupe"}}
+    },
+    "joinDecalSplines": {
+      "desc": "Joint deux splines non bouclées : la géométrie concaténée est appliquée à la première, la seconde est supprimée. Sans effet si les index de nœuds sont invalides.",
+      "params": {
+        "splineIdx1": {"type": "integer", "desc": "index de la première spline (conservée)"},
+        "nodeIdx1": {"type": "integer", "desc": "nœud d'extrémité de la première"},
+        "splineIdx2": {"type": "integer", "desc": "index de la seconde spline (supprimée)"},
+        "nodeIdx2": {"type": "integer", "desc": "nœud d'extrémité de la seconde"}
+      }
+    },
+    "removeDecalSpline": {"desc": "Supprime une spline, retire ses decals de la scène, met à jour la table d'index, et supprime le dossier de decals s'il ne reste plus de spline.", "params": {"idx": {"type": "integer", "desc": "index (base 1)"}}},
+    "removeLinkedDecalSpline": {"desc": "Supprime une spline à partir de son id (appelée quand la couche maîtresse est supprimée). Sans effet si l'id est inconnu.", "params": {"splineId": {"type": "string", "desc": "id de la spline"}}},
+    "removeAllDecalSplines": {
+      "desc": "Supprime les splines. Avec isIncludeDisabled vrai, toutes ; sinon seulement celles activées et non liées.",
+      "params": {"isIncludeDisabled": {"type": "boolean", "desc": "inclure les splines désactivées (et liées)"}}
+    },
+    "deepCopyDecalSpline": {"desc": "Copie profonde (encode/decode string.buffer) d'une spline, avec la géométrie dérivée vidée.", "params": {"spline": {"type": "table", "desc": "spline"}}, "returns": [{"type": "table", "desc": "copie"}]},
+    "deepCopyDecalSplineState": {"desc": "Copie profonde de toutes les splines (pour l'historique undo).", "params": {}, "returns": [{"type": "table", "desc": "tableau de copies"}]},
+    "singleSplineEditUndo": {"desc": "Annule une édition de spline unique avec decalSplineData.old (si présent).", "params": {"decalSplineData": {"type": "table", "desc": "{old, new}"}}, "internal": true},
+    "singleSplineEditRedo": {"desc": "Rétablit une édition de spline unique avec decalSplineData.new (si présent).", "params": {"decalSplineData": {"type": "table", "desc": "{old, new}"}}, "internal": true},
+    "transSplineEditUndo": {"desc": "Annule une édition globale : supprime toutes les splines, remet data.old, marque tout isDirty et recalcule la table d'index.", "params": {"data": {"type": "table", "desc": "{old, new} avec des tableaux de splines"}}, "internal": true},
+    "transSplineEditRedo": {"desc": "Rétablit une édition globale avec data.new.", "params": {"data": {"type": "table", "desc": "{old, new} avec des tableaux de splines"}}, "internal": true},
+    "copyDecalSplineProfile": {"desc": "Copie le profil (paramètres de répartition des decals) d'une spline, sans nodes, widths, nmls ni géométrie dérivée.", "params": {"spline": {"type": "table", "desc": "spline source"}}, "returns": [{"type": "table", "desc": "profil"}]},
+    "pasteDecalSplineProfile": {"desc": "Applique un profil à une spline : supprime ses decals, copie les paramètres (spacing, jitter, rotN, numRowsN, numColsN, scaleN, frameN…) et la marque isDirty.", "params": {"spline": {"type": "table", "desc": "spline cible"}, "profile": {"type": "table", "desc": "profil issu de copyDecalSplineProfile"}}},
+    "serializeDecalSpline": {"desc": "Sérialise une spline en blob binaire (string.buffer) pour l'éditeur.", "params": {"spline": {"type": "table", "desc": "spline"}}, "returns": [{"type": "string", "desc": "données encodées"}]},
+    "serializeDecalSplineToTable": {"desc": "Sérialise une spline en table portable pour un fichier de session : géométrie dérivée vidée, handle de scène supprimé, la spline vivante n'est pas modifiée.", "params": {"spline": {"type": "table", "desc": "spline"}}, "returns": [{"type": "table", "desc": "table simple"}]},
+    "deserializeDecalSpline": {
+      "desc": "Désérialise une spline depuis le blob de l'éditeur (string) ou une table JSON de session. Sur le chemin JSON, les tables dérivées sont vides et les positions réhydratées en vec3 avant la première construction.",
+      "params": {"data": {"type": "string|table", "desc": "blob ou table"}, "isCreateObject": {"type": "boolean|nil", "desc": "(déduit du code) indique s'il faut créer l'objet"}},
+      "returns": [{"type": "table", "desc": "spline"}]
+    },
+    "recomputeIdMap": {"desc": "Recalcule la table id vers index (appelée par l'utilitaire de session après un chargement).", "params": {}},
+    "updateDirtyDecalSplines": {"desc": "Reconstruit les splines isDirty : raycasts verticaux des nœuds, géométrie Catmull-Rom, decals, longueur ; marque l'édition dans la session si au moins une a été reconstruite. Appelée chaque frame par l'outil.", "params": {}, "internal": true},
+    "convertPathsToDecalSplines": {"desc": "Convertit des tracés issus d'une image (points en grille terrain) en splines : coordonnées monde via l'éditeur de terrain, normales du terrain. Les tracés dont la plus petite dimension fait au plus 10 m ne sont pas importés (voir notes).", "params": {"paths": {"type": "table", "desc": "tableau de {points, widths}"}}},
+    "getCurrentDecalSplineList": {"desc": "Liste des splines activées sous forme {name, id, type} (type = préfixe de l'outil), pour les sélecteurs d'autres outils.", "params": {}, "returns": [{"type": "table", "desc": "tableau de {name, id, type}"}]},
+    "isLinked": {"desc": "Indique si la spline d'id donné est liée à une spline maîtresse.", "params": {"id": {"type": "string", "desc": "id de spline"}}, "returns": [{"type": "boolean", "desc": "vrai si liée"}]},
+    "setLink": {"desc": "Active ou désactive le lien d'une spline avec un groupe, supprime ses decals et la marque isDirty.", "params": {"id": {"type": "string", "desc": "id de spline"}, "groupId": {"type": "string|nil", "desc": "id du groupe de lien"}, "isLink": {"type": "boolean", "desc": "lier ou délier"}}},
+    "updateLinkedDecalSpline": {
+      "desc": "Met à jour une spline liée avec la géométrie de la spline maîtresse (nœuds, largeurs, normales, boucle). Si moins de 2 points, vide la géométrie dérivée et supprime les decals.",
+      "params": {"id": {"type": "string", "desc": "id de spline"}, "points": {"type": "table", "desc": "nœuds vec3"}, "widths": {"type": "table", "desc": "largeurs"}, "nmls": {"type": "table", "desc": "normales"}, "isLoop": {"type": "boolean", "desc": "boucle"}, "isConformToTerrain": {"type": "boolean", "desc": "(non utilisé dans la fonction)"}}
+    },
+    "unlinkAll": {"desc": "Délie toutes les splines liées et marque toutes les splines isDirty.", "params": {}}
+  }
+}

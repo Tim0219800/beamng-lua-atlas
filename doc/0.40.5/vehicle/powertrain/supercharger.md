@@ -1,132 +1,132 @@
 # `powertrain_supercharger`
 
-*Fichier : `lua/vehicle/powertrain/supercharger.lua` · VM : Véhicule · 354 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/supercharger.lua` · VM: Vehicle · 354 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `supercharger` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `supercharger` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Sous-système de compresseur mécanique (supercharger) rattaché à un moteur : le compresseur est entraîné par le vilebrequin (rapport gearRatio, avec un embrayage progressif entre clutchEngageRPM et clutchDisengageRPM). Trois types : 'roots', 'screws', 'centrifugal', chacun avec sa courbe d'efficacité et son niveau de pulsation. Calcule la pression de suralimentation (psi/1000 tr/min, courbe boostController selon l'ouverture des gaz, soupape de décharge), l'applique à engine.forcedInductionCoef et prélève une perte de couple proportionnelle au régime (crankLossPer1kRPM). Génère aussi le sifflement du compresseur.
+Mechanical supercharger subsystem attached to an engine: the supercharger is driven by the crankshaft (ratio gearRatio, with a progressive clutch between clutchEngageRPM and clutchDisengageRPM). Three types: 'roots', 'screws', 'centrifugal', each with its own efficiency curve and pulsation level. Computes the boost pressure (psi/1000 RPM, boostController curve according to throttle opening, blow-off valve), applies it to engine.forcedInductionCoef and takes a torque loss proportional to engine speed (crankLossPer1kRPM). Also generates the supercharger whine.
 
-## Exemple
+## Example
 
 ```lua
--- jbeam du moteur : "supercharger":{"type":"roots", "gearRatio":2, "pressurePSIPer1kRPM":1.2, "lobes":3, "boostController":[[0,0],[100,1]]}
+-- engine jbeam: "supercharger":{"type":"roots", "gearRatio":2, "pressurePSIPer1kRPM":1.2, "lobes":3, "boostController":[[0,0],[100,1]]}
 local eng = powertrain.getDevice('mainEngine')
-eng.supercharger.setBypassPressure(8) -- soupape de décharge à 8 psi
+eng.supercharger.setBypassPressure(8) -- blow-off valve at 8 psi
 ```
 
-## Remarques
+## Notes
 
-- Unités jbeam : pressions en psi, régimes en tr/min (conversion rpmToAV 0.10471971768, avToRPM 9.5493). Valeur electrics écrite : superchargerBoost (psi), superchargerBoostMax (= pression maximale de la courbe, en psi).
-- Clés jbeam : type ('roots', 'screws' ou 'centrifugal', obligatoire ; type inconnu -> log d'erreur et init interrompu), gearRatio (1), maxRPM (régime max du compresseur ; défaut ceil(maxRPM moteur*gearRatio)), pressurePSIPer1kRPM (obligatoire, pente de pression), boostController (liste de [gaz en %, coefficient], obligatoire : index 0..100 de la courbe = ouverture des gaz *100), lobes (2..4, défaut 3 ; screws impose au moins 3 ; centrifugal impose 0), twistedLobes (roots), pulseCoefModifier, crankLossPer1kRPM (5 -> 0.005 de perte par 1000 tr/min), clutchEngageRPM (1000), clutchEngageRange, clutchDisengageRPM (2*maxRPM moteur), clutchDisengageRange, pressureRatePSI (50 psi/s), sons : whineLoopEvent, whinePitchPer10kRPM (0.65), whineVolumePerPSI (0.01), whineVolumePer10kRPM.
-- Pulsations : pulseCoefModifier par défaut 0.98 pour screws, 0.95 (roots torsadé) ou 0.9 (roots droit), 1 pour centrifugal ; fréquence = nombre de lobes * vitesse du compresseur.
-- La pression de la courbe est calculée par pressionCoef(rpm relatif) * pente * rpm avec un polynôme d'ordre 2 propre au type ; la soupape de décharge coupe la pression au-delà de bypassConditions.maxPressure (très élevée par défaut, réglable avec setBypassPressure) et à 0 si les gaz sont inférieurs à 1 %.
-- Gain de couple : forcedInductionCoef *= max(1 + 0.0000087*pression_Pa - perte, 0), appelé dans updateFixedStep à chaque pas de physique.
-- Bug/incohérence : setPartCondition construit integrityState avec damageFrictionCoef et damageExhaustPowerCoef (copié du turbo) puis lit integrityState.damagePressureCoef : quand integrity est un nombre, damagePressureCoef revient toujours à 1 (l'intégrité est ignorée).
-- Bug/incohérence : getPartCondition appelle min(pressureIntegrityValue) avec un seul argument (équivalent à la valeur elle-même).
-- Bug/incohérence : maxPressure est une variable locale du module jamais remise à 0 dans init (cumule le maximum sur les rechargements du module). applyDeformGroupDamage signale 'inductionSystemDamaged' mais reset ne l'efface pas (seul 'superchargerDamaged' l'est).
-- Bug/incohérence : le flux 'forcedInductionInfo' lit electrics.values.boost et electrics.values.boostMax, que ce fichier n'écrit pas (il écrit superchargerBoost / superchargerBoostMax) ; sans moteur qui définit boost/boostMax, une arithmétique sur nil est possible.
-- Après un retour anticipé de init (type inconnu, boostController absent), updateGFX et updateFixedStep restent à nop et les variables internes (pressureCurve…) sont partiellement initialisées.
+- jbeam units: pressures in psi, speeds in RPM (conversion rpmToAV 0.10471971768, avToRPM 9.5493). electrics values written: superchargerBoost (psi), superchargerBoostMax (= maximum pressure of the curve, in psi).
+- jbeam keys: type ('roots', 'screws' or 'centrifugal', required; unknown type -> error log and init aborted), gearRatio (1), maxRPM (max supercharger speed; default ceil(engine maxRPM*gearRatio)), pressurePSIPer1kRPM (required, pressure slope), boostController (list of [throttle in %, coefficient], required: index 0..100 of the curve = throttle opening *100), lobes (2..4, default 3; screws forces at least 3; centrifugal forces 0), twistedLobes (roots), pulseCoefModifier, crankLossPer1kRPM (5 -> 0.005 loss per 1000 RPM), clutchEngageRPM (1000), clutchEngageRange, clutchDisengageRPM (2*engine maxRPM), clutchDisengageRange, pressureRatePSI (50 psi/s), sounds: whineLoopEvent, whinePitchPer10kRPM (0.65), whineVolumePerPSI (0.01), whineVolumePer10kRPM.
+- Pulsations: pulseCoefModifier defaults to 0.98 for screws, 0.95 (twisted roots) or 0.9 (straight roots), 1 for centrifugal; frequency = number of lobes * supercharger speed.
+- The curve pressure is computed as pressureCoef(relative rpm) * slope * rpm with a type-specific order-2 polynomial; the blow-off valve cuts the pressure beyond bypassConditions.maxPressure (very high by default, adjustable with setBypassPressure) and to 0 if the throttle is below 1%.
+- Torque gain: forcedInductionCoef *= max(1 + 0.0000087*pressure_Pa - loss, 0), called in updateFixedStep at each physics step.
+- Bug/inconsistency: setPartCondition builds integrityState with damageFrictionCoef and damageExhaustPowerCoef (copied from the turbo) then reads integrityState.damagePressureCoef: when integrity is a number, damagePressureCoef always comes back as 1 (the integrity is ignored).
+- Bug/inconsistency: getPartCondition calls min(pressureIntegrityValue) with a single argument (equivalent to the value itself).
+- Bug/inconsistency: maxPressure is a module-local variable never reset to 0 in init (accumulates the maximum across module reloads). applyDeformGroupDamage reports 'inductionSystemDamaged' but reset does not clear it (only 'superchargerDamaged' is cleared).
+- Bug/inconsistency: the 'forcedInductionInfo' stream reads electrics.values.boost and electrics.values.boostMax, which this file does not write (it writes superchargerBoost / superchargerBoostMax); without an engine that defines boost/boostMax, arithmetic on nil is possible.
+- After an early return from init (unknown type, missing boostController), updateGFX and updateFixedStep remain nop and the internal variables (pressureCurve...) are partially initialized.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_supercharger.applyDeformGroupDamage(damageAmount)` | Réduit la pression délivrée (damagePressureCoef, jusqu'à -0.1) quand un groupe de déformation est endommagé, et signale 'inductionSystemDamaged'. *(interne)* | 72 |
-| `powertrain_supercharger.getPartCondition()` | Renvoie l'intégrité du compresseur. *(interne)* | 91 |
-| `powertrain_supercharger.getTorqueCoefs()` | Estime le coefficient de gain de couple du compresseur pour chaque régime de la courbe de couple du moteur (embrayage et rapport pris en compte). | 320 |
-| `powertrain_supercharger.init(device, jbeamData)` | Initialise le compresseur pour un moteur : lit le jbeam, génère la courbe de pression et celle du boostController, calcule la vitesse maximale du compresseur et installe updateGFX/updateFixedStep. Si jbeamData est nil, désactive updateGFX. *(interne)* | 209 |
-| `powertrain_supercharger.initSounds(jbeamData)` | Crée le son de sifflement du compresseur (soundObj) sur le noeud du moteur et calcule les coefficients de volume et de pitch. *(interne)* | 183 |
-| `powertrain_supercharger.reset(jbeamData)` | Remet à zéro le lisseur de pression et les coefficients de dégâts et d'usure, et efface 'superchargerDamaged'. *(interne)* | 202 |
-| `powertrain_supercharger.resetSounds(jbeamData)` | Ne fait rien (fonction vide). *(interne)* | 180 |
-| `powertrain_supercharger.setBypassPressure(pressurePSI)` | Règle la pression à partir de laquelle la soupape de décharge limite la pression du compresseur. | 102 |
-| `powertrain_supercharger.setPartCondition(odometer, integrity, visual)` | Applique l'usure (odomètre : pression jusqu'à 50 % à 1e9) et l'intégrité d'une pièce chargée depuis une sauvegarde. Voir le bug noté sur damagePressureCoef. *(interne)* | 77 |
-| `powertrain_supercharger.updateFixedStep(dt)` | Pas de physique : multiplie assignedEngine.forcedInductionCoef par le gain de couple du compresseur (pression) moins la perte au vilebrequin. (assignée dynamiquement) *(interne)* | dyn |
-| `powertrain_supercharger.updateGFX(dt)` | Frame graphique : état de l'embrayage progressif, vitesse et régime du compresseur, pulsations, pression avec soupape de décharge et lissage, perte de couple, electrics.superchargerBoost et flux 'forcedInductionInfo'. (assignée dynamiquement) *(interne)* | dyn |
-| `powertrain_supercharger.updateSounds(dt)` | Règle volume et pitch du sifflement selon la pression et le régime du compresseur. *(interne)* | 106 |
+| `powertrain_supercharger.applyDeformGroupDamage(damageAmount)` | Reduces the delivered pressure (damagePressureCoef, down to -0.1) when a deform group is damaged, and reports 'inductionSystemDamaged'. *(internal)* | 72 |
+| `powertrain_supercharger.getPartCondition()` | Returns the supercharger integrity. *(internal)* | 91 |
+| `powertrain_supercharger.getTorqueCoefs()` | Estimates the supercharger torque gain coefficient for each RPM of the engine torque curve (clutch and ratio taken into account). | 320 |
+| `powertrain_supercharger.init(device, jbeamData)` | Initializes the supercharger for an engine: reads the jbeam, generates the pressure curve and the boostController curve, computes the maximum supercharger speed and installs updateGFX/updateFixedStep. If jbeamData is nil, disables updateGFX. *(internal)* | 209 |
+| `powertrain_supercharger.initSounds(jbeamData)` | Creates the supercharger whine sound (soundObj) on the engine node and computes the volume and pitch coefficients. *(internal)* | 183 |
+| `powertrain_supercharger.reset(jbeamData)` | Resets the pressure smoother and the damage and wear coefficients, and clears 'superchargerDamaged'. *(internal)* | 202 |
+| `powertrain_supercharger.resetSounds(jbeamData)` | Does nothing (empty function). *(internal)* | 180 |
+| `powertrain_supercharger.setBypassPressure(pressurePSI)` | Sets the pressure above which the blow-off valve limits the supercharger pressure. | 102 |
+| `powertrain_supercharger.setPartCondition(odometer, integrity, visual)` | Applies wear (odometer: pressure down to 50% at 1e9) and integrity of a part loaded from a save. See the bug noted on damagePressureCoef. *(internal)* | 77 |
+| `powertrain_supercharger.updateFixedStep(dt)` | Physics step: multiplies assignedEngine.forcedInductionCoef by the supercharger torque gain (pressure) minus the crankshaft loss. (dynamically assigned) *(internal)* | dyn |
+| `powertrain_supercharger.updateGFX(dt)` | Graphics frame: progressive clutch state, supercharger speed and RPM, pulsations, pressure with blow-off valve and smoothing, torque loss, electrics.superchargerBoost and 'forcedInductionInfo' stream. (dynamically assigned) *(internal)* | dyn |
+| `powertrain_supercharger.updateSounds(dt)` | Sets the whine volume and pitch according to the supercharger pressure and speed. *(internal)* | 106 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_supercharger.applyDeformGroupDamage(damageAmount)`
 
-Réduit la pression délivrée (damagePressureCoef, jusqu'à -0.1) quand un groupe de déformation est endommagé, et signale 'inductionSystemDamaged'.
+Reduces the delivered pressure (damagePressureCoef, down to -0.1) when a deform group is damaged, and reports 'inductionSystemDamaged'.
 
-- `damageAmount` (*number*) : Quantité de dégât.
+- `damageAmount` (*number*) : Damage amount.
 
 #### `powertrain_supercharger.getPartCondition()`
 
-Renvoie l'intégrité du compresseur.
+Returns the supercharger integrity.
 
-- **renvoie** : number Intégrité 0..1.
-- **renvoie** : table {damagePressureCoef}.
+- **returns**: number Integrity 0..1.
+- **returns**: table {damagePressureCoef}.
 
 #### `powertrain_supercharger.getTorqueCoefs()`
 
-Estime le coefficient de gain de couple du compresseur pour chaque régime de la courbe de couple du moteur (embrayage et rapport pris en compte).
+Estimates the supercharger torque gain coefficient for each RPM of the engine torque curve (clutch and ratio taken into account).
 
-- **renvoie** : table<integer, number> Table indexée par rpm+1 : coefficient (1 = aucun gain).
+- **returns**: table<integer, number> Table keyed by rpm+1: coefficient (1 = no gain).
 
 #### `powertrain_supercharger.init(device, jbeamData)`
 
-Initialise le compresseur pour un moteur : lit le jbeam, génère la courbe de pression et celle du boostController, calcule la vitesse maximale du compresseur et installe updateGFX/updateFixedStep. Si jbeamData est nil, désactive updateGFX.
+Initializes the supercharger for an engine: reads the jbeam, generates the pressure curve and the boostController curve, computes the maximum supercharger speed and installs updateGFX/updateFixedStep. If jbeamData is nil, disables updateGFX.
 
-- `device` (*table*) : Device moteur.
-- `jbeamData` (*table|nil*) : Table jbeam 'supercharger'.
+- `device` (*table*) : Engine device.
+- `jbeamData` (*table|nil*) : 'supercharger' jbeam table.
 
 #### `powertrain_supercharger.initSounds(jbeamData)`
 
-Crée le son de sifflement du compresseur (soundObj) sur le noeud du moteur et calcule les coefficients de volume et de pitch.
+Creates the supercharger whine sound (soundObj) on the engine node and computes the volume and pitch coefficients.
 
-- `jbeamData` (*table*) : Table jbeam 'supercharger'.
+- `jbeamData` (*table*) : 'supercharger' jbeam table.
 
 #### `powertrain_supercharger.reset(jbeamData)`
 
-Remet à zéro le lisseur de pression et les coefficients de dégâts et d'usure, et efface 'superchargerDamaged'.
+Resets the pressure smoother and the damage and wear coefficients, and clears 'superchargerDamaged'.
 
-- `jbeamData` (*table*) : Non utilisé.
+- `jbeamData` (*table*) : Not used.
 
 #### `powertrain_supercharger.resetSounds(jbeamData)`
 
-Ne fait rien (fonction vide).
+Does nothing (empty function).
 
-- `jbeamData` (*table*) : Non utilisé.
+- `jbeamData` (*table*) : Not used.
 
 #### `powertrain_supercharger.setBypassPressure(pressurePSI)`
 
-Règle la pression à partir de laquelle la soupape de décharge limite la pression du compresseur.
+Sets the pressure above which the blow-off valve limits the supercharger pressure.
 
-- `pressurePSI` (*number*) : Pression de décharge en psi.
+- `pressurePSI` (*number*) : Blow-off pressure in psi.
 
 #### `powertrain_supercharger.setPartCondition(odometer, integrity, visual)`
 
-Applique l'usure (odomètre : pression jusqu'à 50 % à 1e9) et l'intégrité d'une pièce chargée depuis une sauvegarde. Voir le bug noté sur damagePressureCoef.
+Applies wear (odometer: pressure down to 50% at 1e9) and integrity of a part loaded from a save. See the bug noted on damagePressureCoef.
 
-- `odometer` (*number*) : Odomètre de la pièce.
-- `integrity` (*number|table*) : Intégrité 0..1 ou table d'état.
-- `visual` (*any*) : Non utilisé.
+- `odometer` (*number*) : Part odometer.
+- `integrity` (*number|table*) : Integrity 0..1 or state table.
+- `visual` (*any*) : Not used.
 
 #### `powertrain_supercharger.updateFixedStep(dt)`
 
-Pas de physique : multiplie assignedEngine.forcedInductionCoef par le gain de couple du compresseur (pression) moins la perte au vilebrequin. (assignée dynamiquement)
+Physics step: multiplies assignedEngine.forcedInductionCoef by the supercharger torque gain (pressure) minus the crankshaft loss. (dynamically assigned)
 
-- `dt` (*number*) : Pas de physique (s). Non utilisé.
+- `dt` (*number*) : Physics step (s). Unused.
 
 #### `powertrain_supercharger.updateGFX(dt)`
 
-Frame graphique : état de l'embrayage progressif, vitesse et régime du compresseur, pulsations, pression avec soupape de décharge et lissage, perte de couple, electrics.superchargerBoost et flux 'forcedInductionInfo'. (assignée dynamiquement)
+Graphics frame: progressive clutch state, supercharger speed and RPM, pulsations, pressure with blow-off valve and smoothing, torque loss, electrics.superchargerBoost and 'forcedInductionInfo' stream. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps de la frame (s).
+- `dt` (*number*) : Frame time step (s).
 
 #### `powertrain_supercharger.updateSounds(dt)`
 
-Règle volume et pitch du sifflement selon la pression et le régime du compresseur.
+Sets the whine volume and pitch according to the supercharger pressure and speed.
 
-- `dt` (*number*) : Pas de temps (s). Non utilisé.
+- `dt` (*number*) : Time step (s). Unused.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `isExisting` | boolean | Toujours true : indique au moteur qu'un compresseur existe. |
+| `isExisting` | boolean | Always true: tells the engine that a supercharger exists. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/supercharger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/supercharger.lua`.*

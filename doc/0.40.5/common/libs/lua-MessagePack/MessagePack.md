@@ -1,12 +1,12 @@
 # `libs_lua_MessagePack_MessagePack`
 
-*Fichier : `lua/common/libs/lua-MessagePack/MessagePack.lua` · VM : Commun (GE + véhicule) · 592 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-MessagePack/MessagePack.lua` · VM: Common (GE + vehicle) · 592 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lua-MessagePack/MessagePack")`
+**Access:** `require("libs/lua-MessagePack/MessagePack")`
 
-lua-MessagePack (François Perrad, licence MIT, version de base 0.5.1, adaptée par BeamNG en 2022) : sérialisation binaire MessagePack. Cette version utilise string.buffer de LuaJIT et un tampon de travail partagé ; elle sait aussi sérialiser les vec3 et quat (cdata). Un moddeur s'en sert pour encoder/décoder des tables Lua en chaînes binaires compactes (échange réseau, fichiers).
+lua-MessagePack (François Perrad, MIT license, base version 0.5.1, adapted by BeamNG in 2022): MessagePack binary serialization. This version uses LuaJIT's string.buffer and a shared work buffer; it can also serialize vec3 and quat (cdata). A modder uses it to encode/decode Lua tables into compact binary strings (network exchange, files).
 
-## Exemple
+## Example
 
 ```lua
 local mp = require('libs/lua-MessagePack/MessagePack')
@@ -14,98 +14,98 @@ local bin = mp.pack({a = 1, b = {1, 2, 3}})
 local data = mp.unpack(bin)
 ```
 
-## Remarques
+## Notes
 
-- Tous les nombres sont écrits en double (0xCB), jamais en entier compact. À la lecture, les entiers MessagePack sont convertis en nombres Lua.
-- Une chaîne Lua est écrite comme binaire (bin8/16/32), pas comme str MessagePack ; à la lecture, str et bin deviennent tous deux des chaînes Lua.
-- Mode de tableau par défaut : 'without_hole' (appelé à la fin du fichier) : une table est écrite comme tableau si ses clés sont 1..n sans trou, sinon comme map. Changer avec set_array.
-- Les vec3 sont écrits en map {x,y,z} et les quat en map {x,y,z,w} ; tout autre cdata est écrit comme la chaîne '?'.
-- packWorkBuffer et packPrefixWorkBuffer renvoient le tampon interne partagé (bufTmp) : son contenu est écrasé à l'appel de pack suivant ; le consommer immédiatement.
-- Les types non gérés (function, thread) lèvent l'erreur "pack '<type>' is unimplemented".
-- Les types d'extension (ext) : build_ext renvoie nil par défaut, donc les valeurs ext lues deviennent nil sauf si build_ext est remplacée.
+- All numbers are written as doubles (0xCB), never as compact integers. When reading, MessagePack integers are converted to Lua numbers.
+- A Lua string is written as binary (bin8/16/32), not as MessagePack str; when reading, str and bin both become Lua strings.
+- Default array mode: 'without_hole' (called at the end of the file): a table is written as an array if its keys are 1..n without holes, otherwise as a map. Change with set_array.
+- vec3 are written as a map {x,y,z} and quat as a map {x,y,z,w}; any other cdata is written as the string '?'.
+- packWorkBuffer and packPrefixWorkBuffer return the shared internal buffer (bufTmp): its content is overwritten at the next pack call; consume it immediately.
+- Unhandled types (function, thread) raise the error "pack '<type>' is unimplemented".
+- Extension types (ext): build_ext returns nil by default, so ext values read become nil unless build_ext is replaced.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_lua_MessagePack_MessagePack.build_ext(tag, data)` | Crochet appelé pour chaque valeur d'extension lue ; l'implémentation par défaut renvoie nil. À remplacer pour décoder vos types d'extension. | 457 |
-| `libs_lua_MessagePack_MessagePack.pack(data)` | Sérialise une valeur Lua en chaîne MessagePack. | 255 |
-| `libs_lua_MessagePack_MessagePack.packPrefix(prefix, data)` | Sérialise data précédé de la chaîne prefix. | 265 |
-| `libs_lua_MessagePack_MessagePack.packPrefixWorkBuffer(prefix, data)` | Comme packPrefix, mais renvoie le tampon de travail partagé. | 259 |
-| `libs_lua_MessagePack_MessagePack.packWorkBuffer(data)` | Comme pack, mais renvoie le tampon de travail partagé sans le convertir en chaîne (évite une copie). | 249 |
-| `libs_lua_MessagePack_MessagePack.set_array(array)` | Choisit comment les tables Lua sont sérialisées : 'without_hole' (tableau si indices consécutifs sans trou, sinon map), 'with_hole' (tableau jusqu'à l'indice max si toutes les clés sont des nombres positifs), 'always_as_map' (toujours une map). Toute autre valeur lève une erreur. | 130 |
-| `libs_lua_MessagePack_MessagePack.unpack(s)` | Désérialise une chaîne contenant exactement une valeur MessagePack. Lève une erreur 'missing bytes' si elle est tronquée et 'extra bytes' s'il reste des octets. | 558 |
-| `libs_lua_MessagePack_MessagePack.unpack_cursor(c)` | Décode la valeur suivante à partir d'un curseur {s, i, j, underflow}, en avançant c.i. | 271 |
-| `libs_lua_MessagePack_MessagePack.unpacker(src)` | Renvoie un itérateur qui décode successivement plusieurs valeurs : depuis une chaîne (renvoie la position et la valeur) ou depuis une fonction fournissant des morceaux de données (renvoie true et la valeur). | 568 |
+| `libs_lua_MessagePack_MessagePack.build_ext(tag, data)` | Hook called for each extension value read; the default implementation returns nil. Replace it to decode your extension types. | 457 |
+| `libs_lua_MessagePack_MessagePack.pack(data)` | Serializes a Lua value into a MessagePack string. | 255 |
+| `libs_lua_MessagePack_MessagePack.packPrefix(prefix, data)` | Serializes data preceded by the string prefix. | 265 |
+| `libs_lua_MessagePack_MessagePack.packPrefixWorkBuffer(prefix, data)` | Like packPrefix, but returns the shared work buffer. | 259 |
+| `libs_lua_MessagePack_MessagePack.packWorkBuffer(data)` | Like pack, but returns the shared work buffer without converting it to a string (avoids a copy). | 249 |
+| `libs_lua_MessagePack_MessagePack.set_array(array)` | Chooses how Lua tables are serialized: 'without_hole' (array if consecutive indices without holes, otherwise map), 'with_hole' (array up to the max index if all keys are positive numbers), 'always_as_map' (always a map). Any other value raises an error. | 130 |
+| `libs_lua_MessagePack_MessagePack.unpack(s)` | Deserializes a string containing exactly one MessagePack value. Raises a 'missing bytes' error if it is truncated and 'extra bytes' if bytes remain. | 558 |
+| `libs_lua_MessagePack_MessagePack.unpack_cursor(c)` | Decodes the next value from a cursor {s, i, j, underflow}, advancing c.i. | 271 |
+| `libs_lua_MessagePack_MessagePack.unpacker(src)` | Returns an iterator that successively decodes several values: from a string (returns the position and the value) or from a function supplying chunks of data (returns true and the value). | 568 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_lua_MessagePack_MessagePack.build_ext(tag, data)`
 
-Crochet appelé pour chaque valeur d'extension lue ; l'implémentation par défaut renvoie nil. À remplacer pour décoder vos types d'extension.
+Hook called for each extension value read; the default implementation returns nil. Replace it to decode your extension types.
 
-- `tag` (*integer*) : Numéro d'extension.
-- `data` (*string*) : Octets de l'extension.
-- **renvoie** : any Valeur construite.
+- `tag` (*integer*) : Extension number.
+- `data` (*string*) : Extension bytes.
+- **returns**: any Value built.
 
 #### `libs_lua_MessagePack_MessagePack.pack(data)`
 
-Sérialise une valeur Lua en chaîne MessagePack.
+Serializes a Lua value into a MessagePack string.
 
 - `data` (*any*) : nil, boolean, number, string, table, vec3, quat, string.buffer.
-- **renvoie** : string Données binaires.
+- **returns**: string Binary data.
 
 #### `libs_lua_MessagePack_MessagePack.packPrefix(prefix, data)`
 
-Sérialise data précédé de la chaîne prefix.
+Serializes data preceded by the string prefix.
 
-- `prefix` (*string*) : Octets à écrire avant les données.
-- `data` (*any*) : Valeur.
-- **renvoie** : string prefix suivi des données.
+- `prefix` (*string*) : Bytes to write before the data.
+- `data` (*any*) : Value.
+- **returns**: string prefix followed by the data.
 
 #### `libs_lua_MessagePack_MessagePack.packPrefixWorkBuffer(prefix, data)`
 
-Comme packPrefix, mais renvoie le tampon de travail partagé.
+Like packPrefix, but returns the shared work buffer.
 
-- `prefix` (*string*) : Préfixe.
-- `data` (*any*) : Valeur.
-- **renvoie** : userdata string.buffer interne.
+- `prefix` (*string*) : Prefix.
+- `data` (*any*) : Value.
+- **returns**: userdata Internal string.buffer.
 
 #### `libs_lua_MessagePack_MessagePack.packWorkBuffer(data)`
 
-Comme pack, mais renvoie le tampon de travail partagé sans le convertir en chaîne (évite une copie).
+Like pack, but returns the shared work buffer without converting it to a string (avoids a copy).
 
-- `data` (*any*) : Valeur à sérialiser.
-- **renvoie** : userdata string.buffer interne, réutilisé à chaque appel.
+- `data` (*any*) : Value to serialize.
+- **returns**: userdata Internal string.buffer, reused on each call.
 
 #### `libs_lua_MessagePack_MessagePack.set_array(array)`
 
-Choisit comment les tables Lua sont sérialisées : 'without_hole' (tableau si indices consécutifs sans trou, sinon map), 'with_hole' (tableau jusqu'à l'indice max si toutes les clés sont des nombres positifs), 'always_as_map' (toujours une map). Toute autre valeur lève une erreur.
+Chooses how Lua tables are serialized: 'without_hole' (array if consecutive indices without holes, otherwise map), 'with_hole' (array up to the max index if all keys are positive numbers), 'always_as_map' (always a map). Any other value raises an error.
 
-- `array` (*string*) : 'without_hole', 'with_hole' ou 'always_as_map'.
+- `array` (*string*) : 'without_hole', 'with_hole' or 'always_as_map'.
 
 #### `libs_lua_MessagePack_MessagePack.unpack(s)`
 
-Désérialise une chaîne contenant exactement une valeur MessagePack. Lève une erreur 'missing bytes' si elle est tronquée et 'extra bytes' s'il reste des octets.
+Deserializes a string containing exactly one MessagePack value. Raises a 'missing bytes' error if it is truncated and 'extra bytes' if bytes remain.
 
-- `s` (*string*) : Données.
-- **renvoie** : any Valeur décodée.
+- `s` (*string*) : Data.
+- **returns**: any Decoded value.
 
 #### `libs_lua_MessagePack_MessagePack.unpack_cursor(c)`
 
-Décode la valeur suivante à partir d'un curseur {s, i, j, underflow}, en avançant c.i.
+Decodes the next value from a cursor {s, i, j, underflow}, advancing c.i.
 
-- `c` (*table*) : Curseur sur la chaîne source.
-- **renvoie** : any Valeur décodée.
+- `c` (*table*) : Cursor on the source string.
+- **returns**: any Decoded value.
 
 #### `libs_lua_MessagePack_MessagePack.unpacker(src)`
 
-Renvoie un itérateur qui décode successivement plusieurs valeurs : depuis une chaîne (renvoie la position et la valeur) ou depuis une fonction fournissant des morceaux de données (renvoie true et la valeur).
+Returns an iterator that successively decodes several values: from a string (returns the position and the value) or from a function supplying chunks of data (returns true and the value).
 
-- `src` (*string|function*) : Chaîne, ou fonction renvoyant le morceau suivant (ou nil).
-- **renvoie** : function Itérateur.
+- `src` (*string|function*) : String, or function returning the next chunk (or nil).
+- **returns**: function Iterator.
 
-**Globales affectées :** `k`
+**Globals assigned:** `k`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-MessagePack/MessagePack.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-MessagePack/MessagePack.lua`.*

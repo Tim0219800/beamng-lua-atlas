@@ -2,179 +2,179 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/audioManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestionnaire audio renvoyé par le constructeur du module. Attributs : rallyManager, queue (dequeue), currAudioObj, activeAudioChannels, cornerGapMs, phraseGapMs, linkWordGapMs, pacenoteGapMs, enableSpeedScaling, codriverTimingOffsetSeconds.
+--- Audio manager returned by the module constructor. Attributes: rallyManager, queue (dequeue), currAudioObj, activeAudioChannels, cornerGapMs, phraseGapMs, linkWordGapMs, pacenoteGapMs, enableSpeedScaling, codriverTimingOffsetSeconds.
 ---@class gameplay_rally_audioManager
 local gameplay_rally_audioManager = {}
 
---- Source unique de la durée de lecture d'un clip, écart de fin inclus : max(audioLen + gap/1000, 0.01).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:117
+--- Single source of a clip's playback duration, trailing gap included: max(audioLen + gap/1000, 0.01).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:117
 ---@param audioObj table|nil Clip.
----@return number  Durée effective en secondes.
+---@return number  Effective duration in seconds.
 function gameplay_rally_audioManager:_audioObjEffectiveLen(audioObj) end
 
---- Ajoute un clip à la file (tête ou queue). Si le clip a des audioCandidates, en tire un au hasard et copie ses fname/audioLen.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:307
+--- Adds a clip to the queue (head or tail). If the clip has audioCandidates, draws one at random and copies its fname/audioLen.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:307
 ---@param audioObj table Clip.
----@param addToFront boolean|nil true = push_left, sinon push_right.
+---@param addToFront boolean|nil true = push_left, otherwise push_right.
 function gameplay_rally_audioManager:_enqueueAudioObj(audioObj, addToFront) end
 
---- Écart à appliquer après un clip : linkWordGap pour la catégorie 'linkword' ; si structuredTimingAfter=='clip', cornerGap entre deux clips 'corner' consécutifs sinon phraseGap ; si 'pacenote', pacenoteGap ; sinon 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:100
+--- Gap to apply after a clip: linkWordGap for the 'linkword' category; if structuredTimingAfter=='clip', cornerGap between two consecutive 'corner' clips otherwise phraseGap; if 'pacenote', pacenoteGap; otherwise 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:100
 ---@param audioObj table|nil Clip (category, nextCategory, structuredTimingAfter).
----@return integer  Écart en ms.
+---@return integer  Gap in ms.
 function gameplay_rally_audioManager:_getAudioObjGapAfterMs(audioObj) end
 
---- Fonction vide (ne fait rien).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:40
+--- Empty function _anon(does nothing).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:40
 function gameplay_rally_audioManager:_loadPacenoteMetadata() end
 
---- Résout le pack vocal actif du carnet (notebook:resolveActiveVoicepack) et applique ses réglages via setVoicepackTiming.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:83
+--- Resolves the notebook's active voicepack (notebook:resolveActiveVoicepack) and applies its settings via setVoicepackTiming.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:83
 function gameplay_rally_audioManager:_loadVoicepackTimingDefaults() end
 
---- Arrête immédiatement tous les canaux audio actifs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:186
+--- Immediately stops all active audio channels.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:186
 function gameplay_rally_audioManager:_stopAudio() end
 
---- Arrête (Engine.Audio.intercomStopPacenote) les canaux dont l'heure d'expiration est dépassée et recalcule la prochaine expiration.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:159
+--- Stops (Engine.Audio.intercomStopPacenote) the channels whose expiry time has passed and recomputes the next expiry.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:159
 function gameplay_rally_audioManager:_stopExpiredAudioChannels() end
 
---- Mémorise un canal audio actif et son heure d'expiration (rallyUtil.getTime) pour l'arrêt automatique ; ignore un identifiant non numérique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:145
----@param channelId number Identifiant de canal renvoyé par intercomPlayPacenote.
----@param expiresAt number|nil Heure d'expiration, nil = pas d'expiration.
+--- Stores an active audio channel and its expiry time (rallyUtil.getTime) for automatic stopping; ignores a non-numeric identifier.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:145
+---@param channelId number Channel identifier returned by intercomPlayPacenote.
+---@param expiresAt number|nil Expiry time, nil = no expiry.
 function gameplay_rally_audioManager:_trackAudioChannel(channelId, expiresAt) end
 
---- Met en file une liste d'audioObj.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:233
----@param audioObjs table[]|nil Liste de clips.
----@param addToFront boolean|nil true pour insérer en tête.
----@return integer  Nombre de clips traités (0 si nil).
+--- Queues a list of audioObj.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:233
+---@param audioObjs table[]|nil List of clips.
+---@param addToFront boolean|nil true to insert at the head.
+---@return integer  Number of clips processed (0 if nil).
 function gameplay_rally_audioManager:enqueueAudioObjs(audioObjs, addToFront) end
 
---- Met en file tous les clips d'une note (pacenote:audioObjs()). Journalise une erreur si aucun clip.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:244
----@param pacenote table Note avec la méthode audioObjs().
----@param addToFront boolean|nil true pour insérer en tête.
+--- Queues all clips of a note (pacenote:audioObjs()). Logs an error if there are no clips.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:244
+---@param pacenote table Note with the audioObjs() method.
+---@param addToFront boolean|nil true to insert at the head.
 function gameplay_rally_audioManager:enqueuePacenoteAudio(pacenote, addToFront) end
 
---- Ajoute une pause silencieuse à la file (utilisé aux lignes de départ et d'arrivée).
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:212
----@param secs number Durée en secondes.
----@param addToFront boolean|nil true pour placer en tête de file.
+--- Adds a silent pause to the queue (used at the start and finish lines).
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:212
+---@param secs number Duration in seconds.
+---@param addToFront boolean|nil true to place at the head of the queue.
 function gameplay_rally_audioManager:enqueuePauseSecs(secs, addToFront) end
 
---- Met en file une note système (fichier audio audioFname). Si le fichier est absent, affiche un message d'erreur à l'écran et ne fait rien. La durée par défaut est 1,0 s.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:260
----@param pacenote table Note système (name, text, audioFname).
----@param addToFront boolean|nil true pour insérer en tête.
----@param audioLen number|nil Durée du clip en secondes (1.0 par défaut).
+--- Queues a system note (audio file audioFname). If the file is missing, shows an error message on screen and does nothing. The default duration is 1.0 s.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:260
+---@param pacenote table System note (name, text, audioFname).
+---@param addToFront boolean|nil true to insert at the head.
+---@param audioLen number|nil Clip duration in seconds (1.0 by default).
 function gameplay_rally_audioManager:enqueueSystemPacenote(pacenote, addToFront, audioLen) end
 
---- Décalage de timing du copilote propre au pack vocal, en secondes.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:79
----@return number  Décalage (0 si invalide).
+--- Voicepack-specific co-driver timing offset, in seconds.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:79
+---@return number  Offset (0 if invalid).
 function gameplay_rally_audioManager:getCodriverTimingOffsetSeconds() end
 
---- Écart (ms) entre deux clips de virage consécutifs.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:43
----@return integer  Écart en ms.
+--- Gap (ms) between two consecutive corner clips.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:43
+---@return integer  Gap in ms.
 function gameplay_rally_audioManager:getCornerGapMs() end
 
---- Écart (ms) appliqué après un mot de liaison (clip de catégorie 'linkword').
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:59
----@return integer  Écart en ms.
+--- Gap (ms) applied after a link word (clip of category 'linkword').
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:59
+---@return integer  Gap in ms.
 function gameplay_rally_audioManager:getLinkWordGapMs() end
 
---- Écart (ms) entre la fin d'une note et la suivante.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:67
----@return integer  Écart en ms.
+--- Gap (ms) between the end of one note and the next.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:67
+---@return integer  Gap in ms.
 function gameplay_rally_audioManager:getPacenoteGapMs() end
 
---- Écart (ms) entre deux phrases (clips) d'une même note.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:51
----@return integer  Écart en ms.
+--- Gap (ms) between two phrases (clips) of the same note.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:51
+---@return integer  Gap in ms.
 function gameplay_rally_audioManager:getPhraseGapMs() end
 
---- Renvoie une table réutilisée {queueSize, paused} ; paused vaut true quand rien n'est en cours de lecture. La table est partagée entre appels : ne pas la conserver.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:332
+--- Returns a reused table {queueSize, paused}; paused is true when nothing is playing. The table is shared between calls: do not keep it.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:332
 ---@return table  {queueSize = integer, paused = boolean}.
 function gameplay_rally_audioManager:getQueueInfo() end
 
---- Si une note sans drapeau 'damage' est en cours de lecture sur un canal actif, la coupe, vide la file et oublie le clip : la note interrompue ne sera pas rejouée.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:198
+--- If a note without the 'damage' flag is playing on an active channel, cuts it, clears the queue and forgets the clip: the interrupted note will not be replayed.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:198
 function gameplay_rally_audioManager:handleDamage() end
 
---- Initialise l'état (file vide, espacements à 0) puis charge les réglages de temps du pack vocal actif du carnet de notes du rallyManager.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:13
----@param rallyManager table Gestionnaire de rallye ; son champ notebook (méthode resolveActiveVoicepack) fournit le pack vocal.
+--- Initializes the state (empty queue, spacings at 0) then loads the timing settings of the active voicepack of the rallyManager's notebook.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:13
+---@param rallyManager table Rally manager; its notebook field (method resolveActiveVoicepack) provides the voicepack.
 function gameplay_rally_audioManager:init(rallyManager) end
 
---- Vrai tant que le clip (ou la pause) courant n'a pas atteint son timeout.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:323
----@return boolean  true si une lecture est en cours.
+--- True as long as the current clip (or pause) has not reached its timeout.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:323
+---@return boolean  true if playback is in progress.
 function gameplay_rally_audioManager:isPlaying() end
 
---- Indique si le délai du copilote dépend de la vitesse (true sauf si le pack vocal l'a désactivé).
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:75
----@return boolean  État de la mise à l'échelle.
+--- Indicates whether the co-driver's delay depends on speed (true unless the voicepack disabled it).
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:75
+---@return boolean  Scaling state.
 function gameplay_rally_audioManager:isSpeedScalingEnabled() end
 
---- Appelé à chaque frame : arrête les canaux expirés puis lance le clip suivant si possible.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:379
----@param dtReal number Delta de temps réel (s).
----@param dtSim number Delta de temps de simulation (s).
----@param dtRaw number Delta de temps brut (s).
+--- Called every frame: stops expired channels, then starts the next clip if possible.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:379
+---@param dtReal number Real-time delta (s).
+---@param dtSim number Simulation time delta (s).
+---@param dtRaw number Raw time delta (s).
 function gameplay_rally_audioManager:onUpdate(dtReal, dtSim, dtRaw) end
 
---- Durée parlée totale d'une note : somme des durées effectives de ses clips moins l'écart de fin de note (c'est de l'espacement vers la note suivante, pas la fin de la note).
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:125
----@param pacenote table|nil Note avec la méthode audioObjs().
----@return number  Durée en secondes (0 si pas de clips).
+--- Total spoken duration of a note: sum of the effective durations of its clips minus the note's end gap (that is spacing toward the next note, not the end of the note).
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:125
+---@param pacenote table|nil Note with the audioObjs() method.
+---@return number  Duration in seconds (0 if no clips).
 function gameplay_rally_audioManager:pacenoteEffectiveAudioLen(pacenote) end
 
---- Si rien ne joue, retire le prochain clip de la file : pour une note, lance Engine.Audio.intercomPlayPacenote (fichier pacenoteFname) et calcule le timeout ; pour une pause, calcule seulement le timeout. Ignore les notes sans nom de fichier.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:340
+--- If nothing is playing, removes the next clip from the queue: for a note, starts Engine.Audio.intercomPlayPacenote (file pacenoteFname) and computes the timeout; for a pause, only computes the timeout. Ignores notes without a file name.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:340
 function gameplay_rally_audioManager:playNextInQueue() end
 
---- Vide la file, arrête tous les canaux audio en cours et oublie le clip courant.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:136
+--- Clears the queue, stops all ongoing audio channels and forgets the current clip.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:136
 function gameplay_rally_audioManager:resetQueue() end
 
---- Règle l'écart entre virages (borné par audioTiming.clampCornerGapMs).
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:47
----@param ms number Écart en ms.
+--- Sets the gap between corners (bounded by audioTiming.clampCornerGapMs).
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:47
+---@param ms number Gap in ms.
 function gameplay_rally_audioManager:setCornerGapMs(ms) end
 
---- Règle l'écart après mot de liaison (borné).
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:63
----@param ms number Écart en ms.
+--- Sets the gap after a link word (bounded).
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:63
+---@param ms number Gap in ms.
 function gameplay_rally_audioManager:setLinkWordGapMs(ms) end
 
---- Règle l'écart entre notes (borné).
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:71
----@param ms number Écart en ms.
+--- Sets the gap between notes (bounded).
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:71
+---@param ms number Gap in ms.
 function gameplay_rally_audioManager:setPacenoteGapMs(ms) end
 
---- Règle l'écart entre phrases (borné).
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:55
----@param ms number Écart en ms.
+--- Sets the gap between phrases (bounded).
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:55
+---@param ms number Gap in ms.
 function gameplay_rally_audioManager:setPhraseGapMs(ms) end
 
---- Applique les réglages d'un pack vocal : cornerGapMs, phraseGapMs, linkWordGapMs (par défaut = phraseGapMs), pacenoteGapMs, enableSpeedScaling (vrai sauf si égal à false) et codriverTimingOffsetSeconds. Sans entrée, tout est à 0 et la mise à l'échelle par la vitesse est active.
----Source : lua/ge/extensions/gameplay/rally/audioManager.lua:91
----@param voicepackEntry table|nil Entrée de pack vocal.
+--- Applies a voicepack's settings: cornerGapMs, phraseGapMs, linkWordGapMs (default = phraseGapMs), pacenoteGapMs, enableSpeedScaling (true unless equal to false) and codriverTimingOffsetSeconds. Without an entry, everything is 0 and speed scaling is active.
+---Source: lua/ge/extensions/gameplay/rally/audioManager.lua:91
+---@param voicepackEntry table|nil Voicepack entry.
 function gameplay_rally_audioManager:setVoicepackTiming(voicepackEntry) end
 

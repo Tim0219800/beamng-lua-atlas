@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/freeroam/levelStats.lua",
+  "module": "Statistiques d'usage des niveaux et des points de départ pour l'interface : compte combien de fois chaque niveau/point de départ a été lancé et quand. Les données sont persistées dans `/settings/cloud/uiStats.json` (table `levels` avec count, lastUsed, spawnPoints, et table `vehicles`). Global : freeroam_levelStats.",
+  "notes": [
+    "Le point de départ par défaut n'a pas de nom : il est stocké sous le nom interne `__default__` et restitué avec spawnPointName=nil.",
+    "Les dates sont en ISO 8601 UTC (os.date '!%Y-%m-%dT%H:%M:%SZ').",
+    "Chaque recordLevelSpawn réécrit tout le fichier JSON.",
+    "Les listes triées placent en tête l'élément utilisé le plus récemment, puis les autres par nombre de lancements décroissant (à égalité, plus récent d'abord)."
+  ],
+  "functions": {
+    "recordLevelSpawn": {
+      "desc": "Incrémente le compteur et la date du niveau et du point de départ, puis sauvegarde le fichier de stats.",
+      "params": {"levelName": {"type": "string", "desc": "Nom du niveau."}, "spawnPointName": {"type": "string|nil", "desc": "Nom du point de départ ; nil = point par défaut."}},
+      "internal": false
+    },
+    "getTopLevels": {
+      "desc": "Niveaux triés par usage (dernier utilisé en premier, puis par nombre).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Liste de {levelName, count, lastUsed}."}],
+      "internal": false
+    },
+    "getTopSpawnPoints": {
+      "desc": "Points de départ d'un niveau triés de la même façon.",
+      "params": {"levelName": {"type": "string", "desc": "Nom du niveau."}},
+      "returns": [{"type": "table", "desc": "Liste de {spawnPointName|nil, count, lastUsed}."}],
+      "internal": false
+    },
+    "getUiStats": {
+      "desc": "Regroupe topLevels et topSpawnPoints (les points de départ de tous les niveaux, concaténés, sans nom de niveau).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{topLevels, topSpawnPoints}"}],
+      "internal": false
+    }
+  }
+}

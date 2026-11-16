@@ -1,58 +1,58 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/beamstate.lua",
-  "module": "Nœud « Beamstate » (catégorie `once_p_duration`, tags destroy/damage/funstuff). Appelle une fonction sans paramètre de `beamstate` côté véhicule, choisie dans une liste déroulante : `breakAllBreakgroups`, `breakHinges`, `deflateTires`. Pin d'entrée : `vehId` (number, obligatoire). Exécuté une fois.",
+  "module": "Node \"Beamstate\" (category `once_p_duration`, tags destroy/damage/funstuff). Calls a parameterless function of `beamstate` on the vehicle side, chosen in a dropdown list: `breakAllBreakgroups`, `breakHinges`, `deflateTires`. Input pin: `vehId` (number, required). Executed once.",
   "notes": [
-    "Contrairement à d'autres nœuds, il n'y a pas de repli sur le véhicule joueur : sans `vehId` valide, rien ne se passe.",
-    "`drawCustomProperties` ne renvoie pas `reason` (return vide) : le changement de fonction n'est pas signalé à l'éditeur."
+    "Unlike other nodes, there is no fallback to the player vehicle: without a valid `vehId`, nothing happens.",
+    "`drawCustomProperties` does not return `reason` (empty return): the function change is not reported to the editor."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_onDeserialized": {
-          "desc": "Appelé au chargement du projet ; restaure les réglages du nœud depuis `nodeData`.",
+          "desc": "Called when the project loads; restores the node's settings from `nodeData`.",
           "internal": true,
           "params": {
             "nodeData": {
               "type": "table",
-              "desc": "Données sauvegardées du nœud."
+              "desc": "Saved node data."
             }
           }
         },
         "_onSerialize": {
-          "desc": "Appelé à la sauvegarde du projet ; copie les réglages du nœud dans la table `res`.",
+          "desc": "Called when the project is saved; copies the node's settings into the `res` table.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde à remplir."
+              "desc": "Save table to fill."
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Affichage ImGui des propriétés du nœud dans le panneau de l'éditeur ; renvoie une chaîne décrivant la modification faite, ou nil.",
+          "desc": "ImGui display of the node's properties in the editor panel; returns a string describing the change made, or nil.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel.",
+          "desc": "ImGui display in the center of the node in the flowgraph editor; purely visual.",
           "internal": true,
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+              "desc": "Editor node builder (builder:Middle())."
             },
             "style": {
               "type": "any",
-              "desc": "Style ImGui de l'éditeur."
+              "desc": "Editor ImGui style."
             }
           }
         },
         "init": {
-          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "desc": "Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Envoie `beamstate.<fonction choisie>()` au véhicule `vehId` via `queueLuaCommand`. Ne fait rien si le véhicule n'existe pas.",
+          "desc": "Sends `beamstate.<chosen function>()` to the vehicle `vehId` via `queueLuaCommand`. Does nothing if the vehicle does not exist.",
           "internal": true
         }
       }

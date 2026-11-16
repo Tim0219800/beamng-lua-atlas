@@ -1,81 +1,81 @@
 # `editor_roadArchitect_terraform`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/terraform.lua` · VM : Game Engine (GE) · 741 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/terraform.lua` · VM: Game Engine (GE) · 741 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_terraform` : `extensions.load("editor_roadArchitect_terraform")`, puis la globale `editor_roadArchitect_terraform`
+**Access:** extension `editor_roadArchitect_terraform`: `extensions.load("editor_roadArchitect_terraform")`, then the global `editor_roadArchitect_terraform`
 
-Modifie le terrain (TerrainBlock) pour l'adapter aux routes du Road Architect : aplanit le terrain sous une route ou un réseau de routes (avec un domaine d'influence et une marge), calcule des masques de routes, et importe/exporte la heightmap en PNG 16 bits. Utilisé par l'interface du Road Architect et par l'import de réseaux routiers. Toutes les fonctions sortent sans rien faire si la scène n'a pas de TerrainBlock (ex. smallgrid).
+Modifies the terrain (TerrainBlock) to fit the Road Architect roads: flattens the terrain under a road or road network (with a domain of influence and a margin), computes road masks, and imports/exports the heightmap as a 16-bit PNG. Used by the Road Architect UI and by road network imports. All functions return without doing anything if the scene has no TerrainBlock (e.g. smallgrid).
 
-## Exemple
+## Example
 
 ```lua
 local tf = extensions.editor_roadArchitect_terraform
-tf.terraformMultiRoads(30, 1.0, nil)  -- tout le réseau, domaine d'influence 30 m, marge 1 m
+tf.terraformMultiRoads(30, 1.0, nil)  -- whole network, domain of influence 30 m, margin 1 m
 ```
 
-## Remarques
+## Notes
 
-- Le domaine d'influence (DOI) est borné à un minimum de 5 m (max(5, DOI)).
-- Un callback d'annulation (terraformUndo) existe en interne pour restaurer les hauteurs modifiées.
-- conformTerrainToRoad et terraformMultiRoads utilisent un TerrainEditor de repli (TerrainEditor()) si l'éditeur de terrain n'est pas ouvert ; writeHeightmapToPng, setHeightmapFromPng et getRoadMasks exigent extensions.editor_terrainEditor et sortent sinon.
-- setHeightmapFromPng : si le chargement du PNG échoue, le code logue une erreur mais continue quand même la boucle d'application (pas de return) ; la bitmap utilisée n'est alors pas valide.
-- writeHeightmapToPng renvoie {} quand il n'y a pas de terrain, et rien sinon (valeur de retour incohérente).
-- Le PNG est en GFXFormatR16 ; l'échelle va de la hauteur de base du terrain (tb:getPosition().z) à tb.maxHeight.
+- The domain of influence (DOI) is bounded to a minimum of 5 m (max(5, DOI)).
+- An undo callback (terraformUndo) exists internally to restore the modified heights.
+- conformTerrainToRoad and terraformMultiRoads use a fallback TerrainEditor (TerrainEditor()) if the terrain editor is not open; writeHeightmapToPng, setHeightmapFromPng and getRoadMasks require extensions.editor_terrainEditor and exit otherwise.
+- setHeightmapFromPng: if loading the PNG fails, the code logs an error but still continues the application loop (no return); the bitmap used is then not valid.
+- writeHeightmapToPng returns {} when there is no terrain, and nothing otherwise (inconsistent return value).
+- The PNG is in GFXFormatR16; the scale goes from the terrain base height (tb:getPosition().z) to tb.maxHeight.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_terraform.conformTerrainToRoad(rIdx, DOI, margin)` | Aplanit le terrain local pour qu'il épouse une route : calcule les quads de la route, un masque et des hauteurs fixées, moyenne avec les voisins puis écrit le terrain. L'emprise est la boîte 2D de la route agrandie du DOI. | 303 |
-| `editor_roadArchitect_terraform.getRoadMasks(DOI, margin, group)` | Calcule deux masques sur la grille du terrain : un masque des routes seules (valeur 65535 là où une route couvre le point, dilaté de 1 case) et un masque routes + marge (dilatation par margin). | 672 |
-| `editor_roadArchitect_terraform.setHeightmapFromPng(path)` | Applique une heightmap PNG au terrain (case par case) puis met à jour la grille du TerrainBlock. | 632 |
-| `editor_roadArchitect_terraform.terraformMultiRoads(DOI, margin, group)` | Modèle le terrain sur tout le réseau routier, ou sur le groupe indiqué. Recalcule d'abord tous les renderData. N'inclut ni overlays ni ponts. | 451 |
-| `editor_roadArchitect_terraform.writeHeightmapToPng(path)` | Enregistre la heightmap du terrain dans un fichier PNG 16 bits (hauteurs négatives ramenées à 0). | 604 |
+| `editor_roadArchitect_terraform.conformTerrainToRoad(rIdx, DOI, margin)` | Flattens the local terrain so that it hugs a road: computes the road's quads, a mask and fixed heights, averages with the neighbors then writes the terrain. The extent is the road's 2D box enlarged by the DOI. | 303 |
+| `editor_roadArchitect_terraform.getRoadMasks(DOI, margin, group)` | Computes two masks on the terrain grid: a mask of the roads alone (value 65535 where a road covers the point, dilated by 1 cell) and a roads + margin mask (dilation by margin). | 672 |
+| `editor_roadArchitect_terraform.setHeightmapFromPng(path)` | Applies a PNG heightmap to the terrain (cell by cell) then updates the TerrainBlock grid. | 632 |
+| `editor_roadArchitect_terraform.terraformMultiRoads(DOI, margin, group)` | Shapes the terrain over the whole road network, or over the indicated group. First recomputes all renderData. Includes neither overlays nor bridges. | 451 |
+| `editor_roadArchitect_terraform.writeHeightmapToPng(path)` | Saves the terrain heightmap to a 16-bit PNG file (negative heights clamped to 0). | 604 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_terraform.conformTerrainToRoad(rIdx, DOI, margin)`
 
-Aplanit le terrain local pour qu'il épouse une route : calcule les quads de la route, un masque et des hauteurs fixées, moyenne avec les voisins puis écrit le terrain. L'emprise est la boîte 2D de la route agrandie du DOI.
+Flattens the local terrain so that it hugs a road: computes the road's quads, a mask and fixed heights, averages with the neighbors then writes the terrain. The extent is the road's 2D box enlarged by the DOI.
 
-- `rIdx` (*integer*) : Indice de la route dans roads.
-- `DOI` (*number*) : Domaine d'influence (distance de fondu), en mètres, minimum 5.
-- `margin` (*number*) : Marge autour de la route (déduit du code : dilatation du masque).
+- `rIdx` (*integer*) : Index of the road in roads.
+- `DOI` (*number*) : Domain of influence (fade distance), in meters, minimum 5.
+- `margin` (*number*) : Margin around the road (inferred from code: mask dilation).
 
 #### `editor_roadArchitect_terraform.getRoadMasks(DOI, margin, group)`
 
-Calcule deux masques sur la grille du terrain : un masque des routes seules (valeur 65535 là où une route couvre le point, dilaté de 1 case) et un masque routes + marge (dilatation par margin).
+Computes two masks on the terrain grid: a mask of the roads alone (value 65535 where a road covers the point, dilated by 1 cell) and a roads + margin mask (dilation by margin).
 
-- `DOI` (*number*) : Domaine d'influence, en mètres (minimum 5) ; sert à étendre la boîte de recherche.
-- `margin` (*integer*) : Nombre de cases de dilatation du masque de marge (déduit du code).
-- `group` (*table|nil*) : Groupe placé, ou nil pour toutes les routes.
-- **renvoie** : table<integer, table<integer, number>>|nil Masque des routes indexé [x][y] (0 ou 65535) ; nil s'il n'y a pas de terrain.
-- **renvoie** : table<integer, table<integer, number>> Masque routes + marge.
+- `DOI` (*number*) : Domain of influence, in meters (minimum 5); used to extend the search box.
+- `margin` (*integer*) : Number of dilation cells of the margin mask (inferred from code).
+- `group` (*table|nil*) : Placed group, or nil for all roads.
+- **returns**: table<integer, table<integer, number>>|nil Road mask indexed [x][y] (0 or 65535); nil if there is no terrain.
+- **returns**: table<integer, table<integer, number>> Roads + margin mask.
 
 #### `editor_roadArchitect_terraform.setHeightmapFromPng(path)`
 
-Applique une heightmap PNG au terrain (case par case) puis met à jour la grille du TerrainBlock.
+Applies a PNG heightmap to the terrain (cell by cell) then updates the TerrainBlock grid.
 
-- `path` (*string*) : Chemin du PNG.
+- `path` (*string*) : Path of the PNG.
 
 #### `editor_roadArchitect_terraform.terraformMultiRoads(DOI, margin, group)`
 
-Modèle le terrain sur tout le réseau routier, ou sur le groupe indiqué. Recalcule d'abord tous les renderData. N'inclut ni overlays ni ponts.
+Shapes the terrain over the whole road network, or over the indicated group. First recomputes all renderData. Includes neither overlays nor bridges.
 
-- `DOI` (*number*) : Domaine d'influence, en mètres (minimum 5).
-- `margin` (*number*) : Marge autour des routes (déduit du code).
-- `group` (*table|nil*) : Groupe placé, ou nil pour tout le réseau.
+- `DOI` (*number*) : Domain of influence, in meters (minimum 5).
+- `margin` (*number*) : Margin around the roads (inferred from code).
+- `group` (*table|nil*) : Placed group, or nil for the whole network.
 
 #### `editor_roadArchitect_terraform.writeHeightmapToPng(path)`
 
-Enregistre la heightmap du terrain dans un fichier PNG 16 bits (hauteurs négatives ramenées à 0).
+Saves the terrain heightmap to a 16-bit PNG file (negative heights clamped to 0).
 
-- `path` (*string*) : Chemin du fichier .png à écrire.
-- **renvoie** : table|nil {} s'il n'y a pas de terrain, sinon nil.
+- `path` (*string*) : Path of the .png file to write.
+- **returns**: table|nil {} if there is no terrain, otherwise nil.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/terraform.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/terraform.lua`.*

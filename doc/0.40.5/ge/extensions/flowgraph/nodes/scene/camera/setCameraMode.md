@@ -1,20 +1,20 @@
 # `flowgraph_nodes_scene_camera_setCameraMode`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraMode.lua` · VM : Game Engine (GE) · 29 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraMode.lua` · VM: Game Engine (GE) · 29 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/setCameraMode")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/setCameraMode")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Set Camera Mode » (repeat_instant, dependance core_camera). Pin d'entree : mode (string), nom du mode camera. A chaque execution, si le nom n'est pas vide, appelle core_camera.setByName(0, mode).
+Flowgraph node "Set Camera Mode" (repeat_instant, depends on core_camera). Input pin: mode (string), name of the camera mode. On each execution, if the name is not empty, calls core_camera.setByName(0, mode).
 
-**Dépendances (chargées avant) :** `core_camera`
+**Dependencies (loaded first):** `core_camera`
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Change le mode camera du joueur 0 via core_camera.setByName si le pin mode est non vide. | 22 |
+| `C:work()` | Changes the camera mode of player 0 via core_camera.setByName if the mode pin is not empty. | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraMode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraMode.lua`.*

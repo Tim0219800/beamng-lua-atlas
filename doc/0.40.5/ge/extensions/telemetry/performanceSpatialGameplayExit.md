@@ -1,45 +1,45 @@
 # `telemetry_performanceSpatialGameplayExit`
 
-*Fichier : `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.lua` · VM : Game Engine (GE) · 172 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.lua` · VM: Game Engine (GE) · 172 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_performanceSpatialGameplayExit` : `extensions.load("telemetry_performanceSpatialGameplayExit")`, puis la globale `telemetry_performanceSpatialGameplayExit`
+**Access:** extension `telemetry_performanceSpatialGameplayExit`: `extensions.load("telemetry_performanceSpatialGameplayExit")`, then the global `telemetry_performanceSpatialGameplayExit`
 
-Aide de télémétrie : détermine quelle activité de gameplay est en cours (mission, scénario, livraison, essai, certification, drag/drift/crawl en freeroam, livraison de carrière) et fabrique l'évènement « gameplayActivityExit » quand le joueur la quitte (abandon, sortie du monde ou du jeu), avec le niveau et la position arrondie du joueur. Les entrées sont validées strictement (types, longueur, caractères) ; un paramètre `source` permet d'injecter de faux modules pour les tests (par défaut _G).
+Telemetry helper: determines which gameplay activity is in progress (mission, scenario, delivery, test drive, certification, drag/drift/crawl in freeroam, career delivery) and builds the "gameplayActivityExit" event when the player leaves it (abort, world exit or game exit), with the level and the player's rounded position. Inputs are strictly validated (types, length, characters); a `source` parameter allows injecting fake modules for tests (default _G).
 
-## Remarques
+## Notes
 
-- Types d'activité : mission, scenario, careerDelivery, testDrive, vehicleCertification, freeformDelivery, freeroamDrag, freeroamDrift, freeroamCrawl. Types de sortie : abort, worldExit, gameExit.
-- Ordre de priorité de resolveActivity : mission au premier plan, scénario non terminé (état différent de finished/post), livraison libre, essai routier de carrière, test de certification, drag freeroam non terminé, drift freeroam hors phase de conclusion, crawl freeroam (hors mission, non terminé/disqualifié), enfin livraison de carrière.
-- Un identifiant d'activité n'est conservé que s'il fait au plus 256 caractères, sans caractère de contrôle ni espace en début/fin et ne contient que lettres, chiffres, _ . / : + - et espaces ; sinon il est omis (l'évènement reste émis).
-- Le niveau doit correspondre à ^[%w_.-]+$ (128 caractères max) et, si trackedLevels est fourni, y figurer ; sinon capture renvoie nil.
-- La position est arrondie à 0,1 m ; elle vient du véhicule du joueur 0, à défaut de la caméra (positionSource = vehicle ou camera). Sans position valide, capture renvoie nil.
-- Tous les appels vers les autres modules sont protégés par pcall : une erreur donne simplement nil.
+- Activity types: mission, scenario, careerDelivery, testDrive, vehicleCertification, freeformDelivery, freeroamDrag, freeroamDrift, freeroamCrawl. Exit types: abort, worldExit, gameExit.
+- Priority order of resolveActivity: foreground mission, unfinished scenario (state other than finished/post), free delivery, career road test, certification test, unfinished freeroam drag, freeroam drift outside the conclusion phase, freeroam crawl (outside a mission, not finished/disqualified), finally career delivery.
+- An activity identifier is only kept if it is at most 256 characters, has no control character or leading/trailing space and only contains letters, digits, _ . / : + - and spaces; otherwise it is omitted (the event is still emitted).
+- The level must match ^[%w_.-]+$ (128 characters max) and, if trackedLevels is provided, be in it; otherwise capture returns nil.
+- The position is rounded to 0.1 m; it comes from player 0's vehicle, failing that from the camera (positionSource = vehicle or camera). Without a valid position, capture returns nil.
+- All calls to the other modules are protected by pcall: an error simply gives nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_performanceSpatialGameplayExit.capture(exitKind, currentActivity, trackedLevels, source)` | Construit l'évènement de sortie d'activité : name = "gameplayActivityExit", exitKind, level, position {x,y,z}, positionSource, plus activityType/activityId. | 146 |
-| `telemetry_performanceSpatialGameplayExit.resolveActivity(source)` | Identifie l'activité de gameplay en cours selon l'ordre de priorité décrit dans les notes. | 52 |
+| `telemetry_performanceSpatialGameplayExit.capture(exitKind, currentActivity, trackedLevels, source)` | Builds the activity exit event: name = "gameplayActivityExit", exitKind, level, position {x,y,z}, positionSource, plus activityType/activityId. | 146 |
+| `telemetry_performanceSpatialGameplayExit.resolveActivity(source)` | Identifies the current gameplay activity according to the priority order described in the notes. | 52 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_performanceSpatialGameplayExit.capture(exitKind, currentActivity, trackedLevels, source)`
 
-Construit l'évènement de sortie d'activité : name = "gameplayActivityExit", exitKind, level, position {x,y,z}, positionSource, plus activityType/activityId.
+Builds the activity exit event: name = "gameplayActivityExit", exitKind, level, position {x,y,z}, positionSource, plus activityType/activityId.
 
-- `exitKind` (*string*) : abort, worldExit ou gameExit.
-- `currentActivity` (*table|nil*) : Activité déjà résolue ({activityType, activityId}) ; sinon resolveActivity(source) est appelée.
-- `trackedLevels` (*table<string, boolean>|nil*) : Ensemble des niveaux suivis ; hors de cet ensemble, rien n'est capturé.
-- `source` (*table|nil*) : Source de modules injectable (_G par défaut).
-- **renvoie** : table|nil Évènement prêt à envoyer, ou nil si une validation échoue.
+- `exitKind` (*string*) : abort, worldExit or gameExit.
+- `currentActivity` (*table|nil*) : Already resolved activity ({activityType, activityId}); otherwise resolveActivity(source) is called.
+- `trackedLevels` (*table<string, boolean>|nil*) : Set of tracked levels; outside this set, nothing is captured.
+- `source` (*table|nil*) : Injectable module source (_G by default).
+- **returns**: table|nil Event ready to send, or nil if a validation fails.
 
 #### `telemetry_performanceSpatialGameplayExit.resolveActivity(source)`
 
-Identifie l'activité de gameplay en cours selon l'ordre de priorité décrit dans les notes.
+Identifies the current gameplay activity according to the priority order described in the notes.
 
-- `source` (*table|nil*) : Table dont les champs jouent le rôle des modules du jeu (_G par défaut) ; sert aux tests.
-- **renvoie** : table|nil {activityType, activityId} ou nil si aucune activité n'est en cours.
+- `source` (*table|nil*) : Table whose fields play the role of the game modules (_G by default); used for tests.
+- **returns**: table|nil {activityType, activityId} or nil if no activity is in progress.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/performanceSpatialGameplayExit.lua`.*

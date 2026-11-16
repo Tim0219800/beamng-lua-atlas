@@ -1,301 +1,301 @@
 # `editor_meshSpline_splineMgr`
 
-*Fichier : `lua/ge/extensions/editor/meshSpline/splineMgr.lua` · VM : Game Engine (GE) · 1410 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/meshSpline/splineMgr.lua` · VM: Game Engine (GE) · 1410 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_meshSpline_splineMgr` : `extensions.load("editor_meshSpline_splineMgr")`, puis la globale `editor_meshSpline_splineMgr`
+**Access:** extension `editor_meshSpline_splineMgr`: `extensions.load("editor_meshSpline_splineMgr")`, then the global `editor_meshSpline_splineMgr`
 
-Gestionnaire d'état de l'outil Mesh Spline : détient la liste des mesh splines (meshSplines) et la table id vers indice (splineMap). Il crée, copie, découpe, joint, supprime, sérialise et reconstruit les splines, applique les presets, gère les liens avec le Master Spline et fournit les callbacks undo/redo de l'éditeur. Chaque spline possède un dossier SimGroup dans MissionGroup (non sauvegardé tant qu'elle n'est pas « bakée ») et reçoit un UUID via Engine.generateUUID().
+State manager of the Mesh Spline tool: holds the list of mesh splines (meshSplines) and the id-to-index table (splineMap). It creates, copies, cuts, joins, deletes, serializes and rebuilds the splines, applies presets, manages the links with the Master Spline and provides the editor's undo/redo callbacks. Each spline has a SimGroup folder in MissionGroup (not saved until it is "baked") and receives a UUID via Engine.generateUUID().
 
-## Remarques
+## Notes
 
-- Une spline est une table : nodes, widths, nmls (données source) et divPoints, divWidths, tangents, binormals, normals, discMap (géométrie dérivée, recalculée). isDirty = true demande une reconstruction au prochain updateDirtyMeshSplines.
-- isEnabled = false signifie spline verrouillée (bakée) : ses meshes restent dans la scène.
-- isLink / linkId marquent une spline pilotée par un Master Spline ; removeAllMeshSplines(false) ne supprime que les splines actives et non liées.
-- deepCopyMeshSpline passe par buffer.encode/decode et vide les tables dérivées de la copie.
-- Le preset par défaut d'une nouvelle spline est 'concrete_barrier'.
+- A spline is a table: nodes, widths, nmls (source data) and divPoints, divWidths, tangents, binormals, normals, discMap (derived geometry, recomputed). isDirty = true requests a rebuild at the next updateDirtyMeshSplines.
+- isEnabled = false means locked (baked) spline: its meshes stay in the scene.
+- isLink / linkId mark a spline driven by a Master Spline; removeAllMeshSplines(false) only deletes active, non-linked splines.
+- deepCopyMeshSpline goes through buffer.encode/decode and clears the copy's derived tables.
+- The default preset of a new spline is 'concrete_barrier'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_meshSpline_splineMgr.addNewMeshSpline()` | Ajoute une nouvelle mesh spline vide : nom unique, UUID, dossier de scène, flags par défaut (isEnabled, normalMode = 2, isAliasRoundRobin...), puis applique le preset 'concrete_barrier' et met à jour la table id vers indice. | 610 |
-| `editor_meshSpline_splineMgr.conformNodesToTerrain(spline)` | Action ponctuelle : pose les nœuds de contrôle sur la surface en dessous (raycast vertical) puis marque la spline dirty. La construction reste libre en 3D ; à relancer après un terraformage pour re-coller. | 1246 |
-| `editor_meshSpline_splineMgr.convertPathsToMeshSplines(paths)` | Convertit des chemins tracés depuis une bitmap en mesh splines : une spline par chemin, points convertis en coordonnées monde via le terrain editor, normales prises sur le terrain. Un chemin trop petit n'est pas importé (la spline vide créée reste dans la liste). | 1256 |
-| `editor_meshSpline_splineMgr.copyMeshSplineProfile(spline)` | Copie le profil d'une spline (tous ses paramètres sans les nœuds, largeurs, normales ni géométrie dérivée) pour le coller sur une autre. | 1083 |
-| `editor_meshSpline_splineMgr.deepCopyMeshSpline(spline)` | Copie profonde d'une spline (buffer.encode/decode), avec les tables de géométrie dérivée vidées. | 707 |
-| `editor_meshSpline_splineMgr.deepCopyMeshSplineState()` | Copie profonde de la liste complète des splines (pour l'historique undo/redo). | 719 |
-| `editor_meshSpline_splineMgr.deserializeMeshSpline(data, isCreateObject)` | Désérialise une spline. data est soit le blob encodé de l'éditeur (string), soit une table issue d'un fichier de session JSON ; dans ce dernier cas les tables dérivées sont créées vides et les positions {x,y,z} redeviennent des vec3 avant la première reconstruction. | 1180 |
-| `editor_meshSpline_splineMgr.findMeshSpline(id)` | Trouve une spline vivante par son id. | 672 |
-| `editor_meshSpline_splineMgr.getCurrentMeshSplineList()` | Renvoie la liste simplifiée des splines actives (isEnabled) pour l'interface : nom, id et type. | 1289 |
-| `editor_meshSpline_splineMgr.getDefaultSliderParams()` | Renvoie les paramètres par défaut des curseurs de l'interface (bornes, valeurs). | 607 |
-| `editor_meshSpline_splineMgr.getEditModeKey()` | Renvoie la clé du mode d'édition de l'outil. | 476 |
-| `editor_meshSpline_splineMgr.getMeshSplines()` | Renvoie la table vivante des mesh splines (non copiée). | 479 |
-| `editor_meshSpline_splineMgr.getSplineMap()` | Renvoie la table vivante id vers indice des splines. | 482 |
-| `editor_meshSpline_splineMgr.getToolPrefixStr()` | Renvoie le préfixe de nom de l'outil (« Mesh Spline »). | 473 |
-| `editor_meshSpline_splineMgr.isLinked(id)` | Dit si la spline d'id donné est liée à un Master Spline. | 1303 |
-| `editor_meshSpline_splineMgr.joinMeshSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joint deux mesh splines ouvertes en une seule : la géométrie concaténée (geom.joinSplineGeometry) est écrite dans la première, la seconde est supprimée. Ne fait rien si un indice est invalide ou si les nœuds ne permettent pas la jonction. | 885 |
-| `editor_meshSpline_splineMgr.objectSelectRedo(data)` | Callback de rétablissement pour une opération de sélection d'objet : remet data.new à la place de la spline de même id. *(interne)* | 1080 |
-| `editor_meshSpline_splineMgr.objectSelectUndo(data)` | Callback d'annulation pour une opération de sélection d'objet : remet data.old à la place de la spline de même id, retire ses meshes et la marque dirty. *(interne)* | 1077 |
-| `editor_meshSpline_splineMgr.pasteMeshSplineProfile(spline, profile)` | Colle un profil sur la spline : retire d'abord ses meshes, reprend les paramètres du profil (normalMode, espacement, jitter, décalage vertical, etc.) et marque la spline dirty. | 1098 |
-| `editor_meshSpline_splineMgr.presetSelectionRedo(meshSplineData)` | Rétablit le choix d'un preset (retire les meshes avant d'appliquer le nouvel état). *(interne)* | 1029 |
-| `editor_meshSpline_splineMgr.presetSelectionUndo(meshSplineData)` | Annule le choix d'un preset (retire les meshes avant d'appliquer l'ancien état). *(interne)* | 1015 |
-| `editor_meshSpline_splineMgr.recomputeIdMap()` | Recalcule la table id vers indice (appelée par l'utilitaire de session après un chargement qui ajoute des splines). | 1063 |
-| `editor_meshSpline_splineMgr.removeAllMeshSplines(isIncludeDisabled)` | Supprime toutes les splines. Avec isIncludeDisabled à true, y compris les verrouillées et liées ; sinon seulement les actives non liées. | 688 |
-| `editor_meshSpline_splineMgr.removeLinkedMeshSpline(splineId)` | Supprime une spline liée par son id (appelée quand une couche du Master Spline est retirée). Ne fait rien si l'id est inconnu. | 678 |
-| `editor_meshSpline_splineMgr.removeMeshSpline(idx)` | Supprime la spline d'indice donné : ses meshes, son dossier de scène, puis l'entrée de la liste ; met à jour la table id vers indice. Plante si l'indice n'existe pas (la spline est lue sans test avant tryRemove). | 656 |
-| `editor_meshSpline_splineMgr.serializeMeshSpline(spline)` | Sérialise une spline pour le tampon d'éditeur : vide d'abord les tables dérivées de la spline vivante (elle est donc modifiée), puis renvoie buffer.encode(spline). | 1158 |
-| `editor_meshSpline_splineMgr.serializeMeshSplineToTable(spline)` | Sérialise une spline en table simple et portable pour un fichier de session (toolUtilities/session). Copie profonde via le codec pour ne jamais modifier la spline vivante ; la géométrie dérivée est vidée (reconstruite ensuite) et le handle de scène retiré. | 1171 |
-| `editor_meshSpline_splineMgr.setLink(id, groupId, isLink)` | Active ou désactive le lien d'une spline (isLink, linkId), retire ses meshes et la marque dirty. Ne fait rien si l'id est inconnu. | 1309 |
-| `editor_meshSpline_splineMgr.setMeshSpline(spline, idx)` | Place la spline à l'indice donné, crée son dossier de scène (SimGroup dans MissionGroup, cansave = false) s'il n'existe pas et la marque dirty. | 485 |
-| `editor_meshSpline_splineMgr.setMeshSplines(splines)` | Enregistre toutes les splines de la table à leurs indices (appelle setMeshSpline pour chacune). | 505 |
-| `editor_meshSpline_splineMgr.setPreset(spline, presetStr)` | Applique un preset (mesh central, capuchons, espacement, décalages, etc., issus de la table des presets) à la spline : supprime d'abord ses meshes de la scène, copie les paramètres du preset, mesure le mesh et marque la spline dirty. Ne fait rien si la spline ou le nom est nil ; un nom inconnu se contente de la vider et de la marquer dirty. | 512 |
-| `editor_meshSpline_splineMgr.singleSplineEditRedo(meshSplineData)` | Callback de rétablissement pour l'édition d'une seule spline. *(interne)* | 1007 |
-| `editor_meshSpline_splineMgr.singleSplineEditUndo(meshSplineData)` | Callback d'annulation pour l'édition d'une seule spline (historique de l'éditeur). *(interne)* | 999 |
-| `editor_meshSpline_splineMgr.splitMeshSpline(selectedSplineIdx, selectedNodeIdx)` | Coupe la spline sélectionnée en deux au nœud sélectionné. Une spline en boucle est simplement ouverte au point de coupe. Sinon la spline d'origine est supprimée et remplacée par deux nouvelles splines nommées <nom>_split_A et <nom>_split_B qui reprennent ses paramètres. | 728 |
-| `editor_meshSpline_splineMgr.transSplineEditRedo(data)` | Rétablit une édition transverse à plusieurs mesh splines. *(interne)* | 1053 |
-| `editor_meshSpline_splineMgr.transSplineEditUndo(data)` | Annule une édition transverse à plusieurs mesh splines. *(interne)* | 1043 |
-| `editor_meshSpline_splineMgr.unlinkAll()` | Délie toutes les mesh splines (isLink = false, linkId = nil) et les marque dirty. | 1347 |
-| `editor_meshSpline_splineMgr.updateDirtyMeshSplines()` | Reconstruit les splines marquées dirty : moins de 2 nœuds, retire meshes et géométrie ; sinon recalcule la géométrie (populationEngine.updateGeometry), repeuple les meshes (populate.populateMeshSpline) et met à jour roadLength. Signale ensuite une édition à la session « meshSpline ». | 1218 |
-| `editor_meshSpline_splineMgr.updateLinkedMeshSpline(id, points, widths, nmls, isLoop, isConformToTerrain)` | Met à jour une spline liée avec la géométrie du Master Spline (nodes, widths, nmls, isLoop, isConformToTerrain). S'il y a moins de 2 points, vide la géométrie dérivée et retire les meshes. Marque la spline dirty. | 1324 |
+| `editor_meshSpline_splineMgr.addNewMeshSpline()` | Adds a new empty mesh spline: unique name, UUID, scene folder, default flags (isEnabled, normalMode = 2, isAliasRoundRobin...), then applies the 'concrete_barrier' preset and updates the id-to-index table. | 610 |
+| `editor_meshSpline_splineMgr.conformNodesToTerrain(spline)` | One-shot action: places the control nodes on the surface below (vertical raycast) then marks the spline dirty. Construction stays free in 3D; rerun it after terraforming to re-snap. | 1246 |
+| `editor_meshSpline_splineMgr.convertPathsToMeshSplines(paths)` | Converts paths drawn from a bitmap into mesh splines: one spline per path, points converted to world coordinates via the terrain editor, normals taken from the terrain. A path that is too small is not imported (the empty spline created stays in the list). | 1256 |
+| `editor_meshSpline_splineMgr.copyMeshSplineProfile(spline)` | Copies a spline's profile (all its parameters without the nodes, widths, normals or derived geometry) to paste it onto another. | 1083 |
+| `editor_meshSpline_splineMgr.deepCopyMeshSpline(spline)` | Deep copy of a spline (buffer.encode/decode), with the derived geometry tables cleared. | 707 |
+| `editor_meshSpline_splineMgr.deepCopyMeshSplineState()` | Deep copy of the full list of splines (for undo/redo history). | 719 |
+| `editor_meshSpline_splineMgr.deserializeMeshSpline(data, isCreateObject)` | Deserializes a spline. data is either the editor's encoded blob (string) or a table from a JSON session file; in the latter case the derived tables are created empty and the {x,y,z} positions become vec3 again before the first rebuild. | 1180 |
+| `editor_meshSpline_splineMgr.findMeshSpline(id)` | Finds a live spline by its id. | 672 |
+| `editor_meshSpline_splineMgr.getCurrentMeshSplineList()` | Returns the simplified list of active splines (isEnabled) for the interface: name, id and type. | 1289 |
+| `editor_meshSpline_splineMgr.getDefaultSliderParams()` | Returns the default parameters of the interface sliders (bounds, values). | 607 |
+| `editor_meshSpline_splineMgr.getEditModeKey()` | Returns the tool's edit mode key. | 476 |
+| `editor_meshSpline_splineMgr.getMeshSplines()` | Returns the live table of mesh splines (not copied). | 479 |
+| `editor_meshSpline_splineMgr.getSplineMap()` | Returns the live id-to-index table of the splines. | 482 |
+| `editor_meshSpline_splineMgr.getToolPrefixStr()` | Returns the tool's name prefix ("Mesh Spline"). | 473 |
+| `editor_meshSpline_splineMgr.isLinked(id)` | Tells whether the spline with the given id is linked to a Master Spline. | 1303 |
+| `editor_meshSpline_splineMgr.joinMeshSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joins two open mesh splines into one: the concatenated geometry (geom.joinSplineGeometry) is written into the first, the second is deleted. Does nothing if an index is invalid or if the nodes do not allow the join. | 885 |
+| `editor_meshSpline_splineMgr.objectSelectRedo(data)` | Redo callback for an object selection operation: puts data.new back in place of the spline with the same id. *(internal)* | 1080 |
+| `editor_meshSpline_splineMgr.objectSelectUndo(data)` | Undo callback for an object selection operation: puts data.old back in place of the spline with the same id, removes its meshes and marks it dirty. *(internal)* | 1077 |
+| `editor_meshSpline_splineMgr.pasteMeshSplineProfile(spline, profile)` | Pastes a profile onto the spline: first removes its meshes, takes the profile's parameters (normalMode, spacing, jitter, vertical offset, etc.) and marks the spline dirty. | 1098 |
+| `editor_meshSpline_splineMgr.presetSelectionRedo(meshSplineData)` | Redoes the choice of a preset (removes the meshes before applying the new state). *(internal)* | 1029 |
+| `editor_meshSpline_splineMgr.presetSelectionUndo(meshSplineData)` | Undoes the choice of a preset (removes the meshes before applying the old state). *(internal)* | 1015 |
+| `editor_meshSpline_splineMgr.recomputeIdMap()` | Recomputes the id-to-index table (called by the session utility after a load that adds splines). | 1063 |
+| `editor_meshSpline_splineMgr.removeAllMeshSplines(isIncludeDisabled)` | Deletes all the splines. With isIncludeDisabled true, including locked and linked ones; otherwise only the active non-linked ones. | 688 |
+| `editor_meshSpline_splineMgr.removeLinkedMeshSpline(splineId)` | Deletes a linked spline by its id (called when a Master Spline layer is removed). Does nothing if the id is unknown. | 678 |
+| `editor_meshSpline_splineMgr.removeMeshSpline(idx)` | Deletes the spline at the given index: its meshes, its scene folder, then the list entry; updates the id-to-index table. Crashes if the index does not exist (the spline is read without a test before tryRemove). | 656 |
+| `editor_meshSpline_splineMgr.serializeMeshSpline(spline)` | Serializes a spline for the editor buffer: first clears the derived tables of the live spline (which is therefore modified), then returns buffer.encode(spline). | 1158 |
+| `editor_meshSpline_splineMgr.serializeMeshSplineToTable(spline)` | Serializes a spline into a simple, portable table for a session file (toolUtilities/session). Deep copy via the codec so the live spline is never modified; the derived geometry is cleared (rebuilt afterwards) and the scene handle removed. | 1171 |
+| `editor_meshSpline_splineMgr.setLink(id, groupId, isLink)` | Enables or disables a spline's link (isLink, linkId), removes its meshes and marks it dirty. Does nothing if the id is unknown. | 1309 |
+| `editor_meshSpline_splineMgr.setMeshSpline(spline, idx)` | Places the spline at the given index, creates its scene folder (SimGroup in MissionGroup, cansave = false) if it does not exist and marks it dirty. | 485 |
+| `editor_meshSpline_splineMgr.setMeshSplines(splines)` | Registers all the splines of the table at their indices (calls setMeshSpline for each). | 505 |
+| `editor_meshSpline_splineMgr.setPreset(spline, presetStr)` | Applies a preset (central mesh, caps, spacing, offsets, etc., from the presets table) to the spline: first removes its meshes from the scene, copies the preset parameters, measures the mesh and marks the spline dirty. Does nothing if the spline or the name is nil; an unknown name just clears it and marks it dirty. | 512 |
+| `editor_meshSpline_splineMgr.singleSplineEditRedo(meshSplineData)` | Redo callback for the edit of a single spline. *(internal)* | 1007 |
+| `editor_meshSpline_splineMgr.singleSplineEditUndo(meshSplineData)` | Undo callback for the edit of a single spline (editor history). *(internal)* | 999 |
+| `editor_meshSpline_splineMgr.splitMeshSpline(selectedSplineIdx, selectedNodeIdx)` | Cuts the selected spline in two at the selected node. A looped spline is simply opened at the cut point. Otherwise the original spline is deleted and replaced by two new splines named <name>_split_A and <name>_split_B that take over its parameters. | 728 |
+| `editor_meshSpline_splineMgr.transSplineEditRedo(data)` | Redoes a cross-cutting edit across several mesh splines. *(internal)* | 1053 |
+| `editor_meshSpline_splineMgr.transSplineEditUndo(data)` | Undoes a cross-cutting edit across several mesh splines. *(internal)* | 1043 |
+| `editor_meshSpline_splineMgr.unlinkAll()` | Unlinks all the mesh splines (isLink = false, linkId = nil) and marks them dirty. | 1347 |
+| `editor_meshSpline_splineMgr.updateDirtyMeshSplines()` | Rebuilds the splines marked dirty: fewer than 2 nodes, removes meshes and geometry; otherwise recomputes the geometry (populationEngine.updateGeometry), repopulates the meshes (populate.populateMeshSpline) and updates roadLength. Then signals an edit to the "meshSpline" session. | 1218 |
+| `editor_meshSpline_splineMgr.updateLinkedMeshSpline(id, points, widths, nmls, isLoop, isConformToTerrain)` | Updates a linked spline with the Master Spline's geometry (nodes, widths, nmls, isLoop, isConformToTerrain). If there are fewer than 2 points, clears the derived geometry and removes the meshes. Marks the spline dirty. | 1324 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_meshSpline_splineMgr.conformNodesToTerrain(spline)`
 
-Action ponctuelle : pose les nœuds de contrôle sur la surface en dessous (raycast vertical) puis marque la spline dirty. La construction reste libre en 3D ; à relancer après un terraformage pour re-coller.
+One-shot action: places the control nodes on the surface below (vertical raycast) then marks the spline dirty. Construction stays free in 3D; rerun it after terraforming to re-snap.
 
-- `spline` (*table*) : Spline à modifier.
+- `spline` (*table*) : Spline to modify.
 
 #### `editor_meshSpline_splineMgr.convertPathsToMeshSplines(paths)`
 
-Convertit des chemins tracés depuis une bitmap en mesh splines : une spline par chemin, points convertis en coordonnées monde via le terrain editor, normales prises sur le terrain. Un chemin trop petit n'est pas importé (la spline vide créée reste dans la liste).
+Converts paths drawn from a bitmap into mesh splines: one spline per path, points converted to world coordinates via the terrain editor, normals taken from the terrain. A path that is too small is not imported (the empty spline created stays in the list).
 
-- `paths` (*table[]*) : Chemins avec points ({x,y} en grille) et widths.
+- `paths` (*table[]*) : Paths with points ({x,y} in grid) and widths.
 
 #### `editor_meshSpline_splineMgr.copyMeshSplineProfile(spline)`
 
-Copie le profil d'une spline (tous ses paramètres sans les nœuds, largeurs, normales ni géométrie dérivée) pour le coller sur une autre.
+Copies a spline's profile (all its parameters without the nodes, widths, normals or derived geometry) to paste it onto another.
 
-- `spline` (*table*) : Spline source.
-- **renvoie** : table Profil copié.
+- `spline` (*table*) : Source spline.
+- **returns**: table Copied profile.
 
 #### `editor_meshSpline_splineMgr.deepCopyMeshSpline(spline)`
 
-Copie profonde d'une spline (buffer.encode/decode), avec les tables de géométrie dérivée vidées.
+Deep copy of a spline (buffer.encode/decode), with the derived geometry tables cleared.
 
-- `spline` (*table*) : Spline à copier.
-- **renvoie** : table Copie indépendante.
+- `spline` (*table*) : Spline to copy.
+- **returns**: table Independent copy.
 
 #### `editor_meshSpline_splineMgr.deepCopyMeshSplineState()`
 
-Copie profonde de la liste complète des splines (pour l'historique undo/redo).
+Deep copy of the full list of splines (for undo/redo history).
 
-- **renvoie** : table Liste de copies.
+- **returns**: table List of copies.
 
 #### `editor_meshSpline_splineMgr.deserializeMeshSpline(data, isCreateObject)`
 
-Désérialise une spline. data est soit le blob encodé de l'éditeur (string), soit une table issue d'un fichier de session JSON ; dans ce dernier cas les tables dérivées sont créées vides et les positions {x,y,z} redeviennent des vec3 avant la première reconstruction.
+Deserializes a spline. data is either the editor's encoded blob (string) or a table from a JSON session file; in the latter case the derived tables are created empty and the {x,y,z} positions become vec3 again before the first rebuild.
 
-- `data` (*string|table*) : Blob ou table de session.
-- `isCreateObject` (*boolean*) : true pour créer le dossier SimGroup de scène de la spline (sauf si une spline verrouillée en garde déjà un après rechargement Lua).
-- **renvoie** : table La spline désérialisée.
+- `data` (*string|table*) : Blob or session table.
+- `isCreateObject` (*boolean*) : true to create the spline's scene SimGroup folder (unless a locked spline already keeps one after a Lua reload).
+- **returns**: table The deserialized spline.
 
 #### `editor_meshSpline_splineMgr.findMeshSpline(id)`
 
-Trouve une spline vivante par son id.
+Finds a live spline by its id.
 
-- `id` (*string*) : UUID de la spline.
-- **renvoie** : table|nil La spline, ou nil si absente.
+- `id` (*string*) : UUID of the spline.
+- **returns**: table|nil The spline, or nil if absent.
 
 #### `editor_meshSpline_splineMgr.getCurrentMeshSplineList()`
 
-Renvoie la liste simplifiée des splines actives (isEnabled) pour l'interface : nom, id et type.
+Returns the simplified list of active splines (isEnabled) for the interface: name, id and type.
 
-- **renvoie** : table[] Éléments {name, id, type}.
+- **returns**: table[] Elements {name, id, type}.
 
 #### `editor_meshSpline_splineMgr.getDefaultSliderParams()`
 
-Renvoie les paramètres par défaut des curseurs de l'interface (bornes, valeurs).
+Returns the default parameters of the interface sliders (bounds, values).
 
-- **renvoie** : table Paramètres de curseurs.
+- **returns**: table Slider parameters.
 
 #### `editor_meshSpline_splineMgr.getEditModeKey()`
 
-Renvoie la clé du mode d'édition de l'outil.
+Returns the tool's edit mode key.
 
-- **renvoie** : string Clé du mode d'édition.
+- **returns**: string Edit mode key.
 
 #### `editor_meshSpline_splineMgr.getMeshSplines()`
 
-Renvoie la table vivante des mesh splines (non copiée).
+Returns the live table of mesh splines (not copied).
 
-- **renvoie** : table Liste des splines, base 1.
+- **returns**: table List of splines, 1-based.
 
 #### `editor_meshSpline_splineMgr.getSplineMap()`
 
-Renvoie la table vivante id vers indice des splines.
+Returns the live id-to-index table of the splines.
 
-- **renvoie** : table<string, integer> Indice par id.
+- **returns**: table<string, integer> Index by id.
 
 #### `editor_meshSpline_splineMgr.getToolPrefixStr()`
 
-Renvoie le préfixe de nom de l'outil (« Mesh Spline »).
+Returns the tool's name prefix ("Mesh Spline").
 
-- **renvoie** : string Préfixe de l'outil.
+- **returns**: string Tool prefix.
 
 #### `editor_meshSpline_splineMgr.isLinked(id)`
 
-Dit si la spline d'id donné est liée à un Master Spline.
+Tells whether the spline with the given id is linked to a Master Spline.
 
-- `id` (*string*) : UUID de la spline.
-- **renvoie** : boolean true si liée, false sinon (ou si absente).
+- `id` (*string*) : UUID of the spline.
+- **returns**: boolean true if linked, false otherwise (or if absent).
 
 #### `editor_meshSpline_splineMgr.joinMeshSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)`
 
-Joint deux mesh splines ouvertes en une seule : la géométrie concaténée (geom.joinSplineGeometry) est écrite dans la première, la seconde est supprimée. Ne fait rien si un indice est invalide ou si les nœuds ne permettent pas la jonction.
+Joins two open mesh splines into one: the concatenated geometry (geom.joinSplineGeometry) is written into the first, the second is deleted. Does nothing if an index is invalid or if the nodes do not allow the join.
 
-- `splineIdx1` (*integer*) : Indice de la première spline.
-- `nodeIdx1` (*integer*) : Nœud d'extrémité de la première.
-- `splineIdx2` (*integer*) : Indice de la seconde spline.
-- `nodeIdx2` (*integer*) : Nœud d'extrémité de la seconde.
+- `splineIdx1` (*integer*) : Index of the first spline.
+- `nodeIdx1` (*integer*) : End node of the first.
+- `splineIdx2` (*integer*) : Index of the second spline.
+- `nodeIdx2` (*integer*) : End node of the second.
 
 #### `editor_meshSpline_splineMgr.objectSelectRedo(data)`
 
-Callback de rétablissement pour une opération de sélection d'objet : remet data.new à la place de la spline de même id.
+Redo callback for an object selection operation: puts data.new back in place of the spline with the same id.
 
-- `data` (*table*) : Données d'action avec old et new.
+- `data` (*table*) : Action data with old and new.
 
 #### `editor_meshSpline_splineMgr.objectSelectUndo(data)`
 
-Callback d'annulation pour une opération de sélection d'objet : remet data.old à la place de la spline de même id, retire ses meshes et la marque dirty.
+Undo callback for an object selection operation: puts data.old back in place of the spline with the same id, removes its meshes and marks it dirty.
 
-- `data` (*table*) : Données d'action avec old et new.
+- `data` (*table*) : Action data with old and new.
 
 #### `editor_meshSpline_splineMgr.pasteMeshSplineProfile(spline, profile)`
 
-Colle un profil sur la spline : retire d'abord ses meshes, reprend les paramètres du profil (normalMode, espacement, jitter, décalage vertical, etc.) et marque la spline dirty.
+Pastes a profile onto the spline: first removes its meshes, takes the profile's parameters (normalMode, spacing, jitter, vertical offset, etc.) and marks the spline dirty.
 
-- `spline` (*table*) : Spline cible.
-- `profile` (*table*) : Profil renvoyé par copyMeshSplineProfile.
+- `spline` (*table*) : Target spline.
+- `profile` (*table*) : Profile returned by copyMeshSplineProfile.
 
 #### `editor_meshSpline_splineMgr.presetSelectionRedo(meshSplineData)`
 
-Rétablit le choix d'un preset (retire les meshes avant d'appliquer le nouvel état).
+Redoes the choice of a preset (removes the meshes before applying the new state).
 
-- `meshSplineData` (*table*) : Données d'action.
+- `meshSplineData` (*table*) : Action data.
 
 #### `editor_meshSpline_splineMgr.presetSelectionUndo(meshSplineData)`
 
-Annule le choix d'un preset (retire les meshes avant d'appliquer l'ancien état).
+Undoes the choice of a preset (removes the meshes before applying the old state).
 
-- `meshSplineData` (*table*) : Données d'action.
+- `meshSplineData` (*table*) : Action data.
 
 #### `editor_meshSpline_splineMgr.removeAllMeshSplines(isIncludeDisabled)`
 
-Supprime toutes les splines. Avec isIncludeDisabled à true, y compris les verrouillées et liées ; sinon seulement les actives non liées.
+Deletes all the splines. With isIncludeDisabled true, including locked and linked ones; otherwise only the active non-linked ones.
 
-- `isIncludeDisabled` (*boolean*) : true pour tout supprimer.
+- `isIncludeDisabled` (*boolean*) : true to delete everything.
 
 #### `editor_meshSpline_splineMgr.removeLinkedMeshSpline(splineId)`
 
-Supprime une spline liée par son id (appelée quand une couche du Master Spline est retirée). Ne fait rien si l'id est inconnu.
+Deletes a linked spline by its id (called when a Master Spline layer is removed). Does nothing if the id is unknown.
 
-- `splineId` (*string*) : UUID de la spline.
+- `splineId` (*string*) : UUID of the spline.
 
 #### `editor_meshSpline_splineMgr.removeMeshSpline(idx)`
 
-Supprime la spline d'indice donné : ses meshes, son dossier de scène, puis l'entrée de la liste ; met à jour la table id vers indice. Plante si l'indice n'existe pas (la spline est lue sans test avant tryRemove).
+Deletes the spline at the given index: its meshes, its scene folder, then the list entry; updates the id-to-index table. Crashes if the index does not exist (the spline is read without a test before tryRemove).
 
-- `idx` (*integer*) : Indice de la spline (base 1).
+- `idx` (*integer*) : Spline index (1-based).
 
 #### `editor_meshSpline_splineMgr.serializeMeshSpline(spline)`
 
-Sérialise une spline pour le tampon d'éditeur : vide d'abord les tables dérivées de la spline vivante (elle est donc modifiée), puis renvoie buffer.encode(spline).
+Serializes a spline for the editor buffer: first clears the derived tables of the live spline (which is therefore modified), then returns buffer.encode(spline).
 
-- `spline` (*table*) : Spline à sérialiser.
-- **renvoie** : string Données encodées (déduit du code).
+- `spline` (*table*) : Spline to serialize.
+- **returns**: string Encoded data (inferred from code).
 
 #### `editor_meshSpline_splineMgr.serializeMeshSplineToTable(spline)`
 
-Sérialise une spline en table simple et portable pour un fichier de session (toolUtilities/session). Copie profonde via le codec pour ne jamais modifier la spline vivante ; la géométrie dérivée est vidée (reconstruite ensuite) et le handle de scène retiré.
+Serializes a spline into a simple, portable table for a session file (toolUtilities/session). Deep copy via the codec so the live spline is never modified; the derived geometry is cleared (rebuilt afterwards) and the scene handle removed.
 
-- `spline` (*table*) : Spline à sérialiser.
-- **renvoie** : table Table JSON-compatible.
+- `spline` (*table*) : Spline to serialize.
+- **returns**: table JSON-compatible table.
 
 #### `editor_meshSpline_splineMgr.setLink(id, groupId, isLink)`
 
-Active ou désactive le lien d'une spline (isLink, linkId), retire ses meshes et la marque dirty. Ne fait rien si l'id est inconnu.
+Enables or disables a spline's link (isLink, linkId), removes its meshes and marks it dirty. Does nothing if the id is unknown.
 
-- `id` (*string*) : UUID de la spline.
-- `groupId` (*string*) : Identifiant du groupe de lien, utilisé comme linkId si isLink est vrai.
-- `isLink` (*boolean*) : true pour lier, false pour délier.
+- `id` (*string*) : UUID of the spline.
+- `groupId` (*string*) : Identifier of the link group, used as linkId if isLink is true.
+- `isLink` (*boolean*) : true to link, false to unlink.
 
 #### `editor_meshSpline_splineMgr.setMeshSpline(spline, idx)`
 
-Place la spline à l'indice donné, crée son dossier de scène (SimGroup dans MissionGroup, cansave = false) s'il n'existe pas et la marque dirty.
+Places the spline at the given index, creates its scene folder (SimGroup in MissionGroup, cansave = false) if it does not exist and marks it dirty.
 
-- `spline` (*table*) : Spline à enregistrer.
-- `idx` (*integer*) : Indice de destination (base 1).
+- `spline` (*table*) : Spline to register.
+- `idx` (*integer*) : Destination index (1-based).
 
 #### `editor_meshSpline_splineMgr.setMeshSplines(splines)`
 
-Enregistre toutes les splines de la table à leurs indices (appelle setMeshSpline pour chacune).
+Registers all the splines of the table at their indices (calls setMeshSpline for each).
 
-- `splines` (*table*) : Liste de splines.
+- `splines` (*table*) : List of splines.
 
 #### `editor_meshSpline_splineMgr.setPreset(spline, presetStr)`
 
-Applique un preset (mesh central, capuchons, espacement, décalages, etc., issus de la table des presets) à la spline : supprime d'abord ses meshes de la scène, copie les paramètres du preset, mesure le mesh et marque la spline dirty. Ne fait rien si la spline ou le nom est nil ; un nom inconnu se contente de la vider et de la marquer dirty.
+Applies a preset (central mesh, caps, spacing, offsets, etc., from the presets table) to the spline: first removes its meshes from the scene, copies the preset parameters, measures the mesh and marks the spline dirty. Does nothing if the spline or the name is nil; an unknown name just clears it and marks it dirty.
 
-- `spline` (*table*) : Spline cible.
-- `presetStr` (*string*) : Nom du preset, par exemple 'concrete_barrier'.
+- `spline` (*table*) : Target spline.
+- `presetStr` (*string*) : Preset name, for example 'concrete_barrier'.
 
 #### `editor_meshSpline_splineMgr.singleSplineEditRedo(meshSplineData)`
 
-Callback de rétablissement pour l'édition d'une seule spline.
+Redo callback for the edit of a single spline.
 
-- `meshSplineData` (*table*) : Données d'action contenant le nouvel état.
+- `meshSplineData` (*table*) : Action data containing the new state.
 
 #### `editor_meshSpline_splineMgr.singleSplineEditUndo(meshSplineData)`
 
-Callback d'annulation pour l'édition d'une seule spline (historique de l'éditeur).
+Undo callback for the edit of a single spline (editor history).
 
-- `meshSplineData` (*table*) : Données d'action contenant l'ancien état.
+- `meshSplineData` (*table*) : Action data containing the old state.
 
 #### `editor_meshSpline_splineMgr.splitMeshSpline(selectedSplineIdx, selectedNodeIdx)`
 
-Coupe la spline sélectionnée en deux au nœud sélectionné. Une spline en boucle est simplement ouverte au point de coupe. Sinon la spline d'origine est supprimée et remplacée par deux nouvelles splines nommées <nom>_split_A et <nom>_split_B qui reprennent ses paramètres.
+Cuts the selected spline in two at the selected node. A looped spline is simply opened at the cut point. Otherwise the original spline is deleted and replaced by two new splines named <name>_split_A and <name>_split_B that take over its parameters.
 
-- `selectedSplineIdx` (*integer*) : Indice de la spline (base 1).
-- `selectedNodeIdx` (*integer*) : Indice du nœud de coupe (base 1).
+- `selectedSplineIdx` (*integer*) : Spline index (1-based).
+- `selectedNodeIdx` (*integer*) : Index of the cut node (1-based).
 
 #### `editor_meshSpline_splineMgr.transSplineEditRedo(data)`
 
-Rétablit une édition transverse à plusieurs mesh splines.
+Redoes a cross-cutting edit across several mesh splines.
 
-- `data` (*table*) : Données d'action.
+- `data` (*table*) : Action data.
 
 #### `editor_meshSpline_splineMgr.transSplineEditUndo(data)`
 
-Annule une édition transverse à plusieurs mesh splines.
+Undoes a cross-cutting edit across several mesh splines.
 
-- `data` (*table*) : Données d'action.
+- `data` (*table*) : Action data.
 
 #### `editor_meshSpline_splineMgr.updateLinkedMeshSpline(id, points, widths, nmls, isLoop, isConformToTerrain)`
 
-Met à jour une spline liée avec la géométrie du Master Spline (nodes, widths, nmls, isLoop, isConformToTerrain). S'il y a moins de 2 points, vide la géométrie dérivée et retire les meshes. Marque la spline dirty.
+Updates a linked spline with the Master Spline's geometry (nodes, widths, nmls, isLoop, isConformToTerrain). If there are fewer than 2 points, clears the derived geometry and removes the meshes. Marks the spline dirty.
 
-- `id` (*string*) : UUID de la spline liée.
-- `points` (*table*) : Nœuds.
-- `widths` (*table*) : Largeurs par nœud.
-- `nmls` (*table*) : Normales par nœud.
-- `isLoop` (*boolean*) : Spline en boucle.
-- `isConformToTerrain` (*boolean*) : Épouse la surface en dessous.
+- `id` (*string*) : UUID of the linked spline.
+- `points` (*table*) : Nodes.
+- `widths` (*table*) : Widths per node.
+- `nmls` (*table*) : Normals per node.
+- `isLoop` (*boolean*) : Looped spline.
+- `isConformToTerrain` (*boolean*) : Conforms to the surface below.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/meshSpline/splineMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/meshSpline/splineMgr.lua`.*

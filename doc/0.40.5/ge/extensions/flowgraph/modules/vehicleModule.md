@@ -1,12 +1,12 @@
 # `flowgraph_modules_vehicleModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/vehicleModule.lua` · VM : Game Engine (GE) · 295 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/vehicleModule.lua` · VM: Game Engine (GE) · 295 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/vehicleModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/vehicleModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder -150) qui suit les véhicules utilisés par un graphe : ceux qu'il fait apparaître ou qu'on lui déclare avec addForeignVehicle. Il attend que chaque véhicule soit prêt, récupère les décalages de ses attelages (tow_hitch, fifthwheel…), suit les attelages entre véhicules, gère les données de bus (agenouillement, portes, arrêts) et supprime les véhicules à l'arrêt du graphe sauf ceux marqués dontDelete. Dépend de gameplay_walk et core_vehicleBridge.
+Flowgraph module (moduleOrder -150) that tracks the vehicles used by a graph: those it spawns or those declared to it with addForeignVehicle. It waits for each vehicle to be ready, retrieves the offsets of its couplers (tow_hitch, fifthwheel...), tracks couplings between vehicles, manages bus data (kneeling, doors, stops) and deletes the vehicles when the graph stops except those marked dontDelete. Depends on gameplay_walk and core_vehicleBridge.
 
-## Exemple
+## Example
 
 ```lua
 local vm = mgr.modules.vehicle
@@ -14,56 +14,56 @@ local id = vm:getVehicleIdByInternalName('mon_vehicule')
 if vm:isBus(id) then vm:registerBusChangeNotification(id) end
 ```
 
-## Remarques
+## Notes
 
-- Hooks écoutés : onCouplerAttached, onCouplerDetached, onBusUpdate, onVehicleResetted (onBusUpdate n'a pas de méthode dans ce fichier).
-- Les véhicules suivis ont veh.canSave = false.
-- getVehicle renvoie une table vide (jamais nil) si l'id est inconnu.
-- Bug possible : onCouplerAttached/onCouplerDetached plantent si l'un des deux ids n'est pas suivi (self.couplings[id] est nil).
-- requestBusData est vide (son contenu est commenté) ; la fonction ne fait rien.
-- Ordre de priorité des attelages pour le tri de couplerOffset : tow_hitch, fifthwheel, gooseneck_hitch, fifthwheel_v2, pintle. Plus d'un attelage sur un véhicule génère un log I.
-- executionStopped : supprime les véhicules non dontDelete, restaure le carburant stocké des autres, restaure la blacklist de gameplay_walk et l'état de core_trailerRespawn.
+- Hooks listened to: onCouplerAttached, onCouplerDetached, onBusUpdate, onVehicleResetted (onBusUpdate has no method in this file).
+- Tracked vehicles have veh.canSave = false.
+- getVehicle returns an empty table (never nil) if the id is unknown.
+- Possible bug: onCouplerAttached/onCouplerDetached crash if one of the two ids is not tracked (self.couplings[id] is nil).
+- requestBusData is empty (its content is commented out); the function does nothing.
+- Coupler priority order for the couplerOffset sort: tow_hitch, fifthwheel, gooseneck_hitch, fifthwheel_v2, pintle. More than one coupler on a vehicle generates an I log.
+- executionStopped: deletes non-dontDelete vehicles, restores the stored fuel of the others, restores the gameplay_walk blacklist and the core_trailerRespawn state.
 
-**Dépendances (chargées avant) :** `gameplay_walk`, `core_vehicleBridge`
+**Dependencies (loaded first):** `gameplay_walk`, `core_vehicleBridge`
 
-## Classe `C`
+## Class `C`
 
-Instance du module véhicule (mgr.modules.vehicle). Tables internes : vehicles (id -> données : id, ready, internalName, couplerOffset, couplerTags, dontDelete, storedEnergyStorage…), sortedIds (ids triés), couplings (id -> {autreId = true}).
+Vehicle module instance (mgr.modules.vehicle). Internal tables: vehicles (id -> data: id, ready, internalName, couplerOffset, couplerTags, dontDelete, storedEnergyStorage...), sortedIds (sorted ids), couplings (id -> {otherId = true}).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addCouplerOffset(id, off, tag)` | Enregistre les décalages d'attelage reçus (vec3, nom, tag) pour un véhicule et les trie par priorité de tag puis par nom. | 135 |
-| `C:addForeignVehicle(veh, moreData)` | Déclare un véhicule non créé par le flowgraph mais à suivre ; il est marqué dontDelete (non supprimé à l'arrêt). | 27 |
-| `C:addVehicle(veh, moreData)` | Commence à suivre un véhicule (ignoré s'il l'est déjà). Si le véhicule est prêt, appelle readyUpVehicle. | 33 |
-| `C:clear()` | Vide vehicles, sortedIds et couplings. | 16 |
-| `C:executionStarted()` | Mémorise la blacklist de gameplay_walk et l'état de core_trailerRespawn pour les restaurer à l'arrêt. | 150 |
-| `C:executionStopped()` | Appelée à l'arrêt du graphe : supprime les véhicules non dontDelete, restaure l'énergie des autres, la blacklist de marche et core_trailerRespawn, puis clear(). | 195 |
-| `C:getSpawnedVehicles()` | Copie profonde de la liste triée des ids de véhicules suivis. | 22 |
-| `C:getVehicle(id)` | Renvoie les données suivies d'un véhicule, ou une table vide. | 58 |
-| `C:getVehicleIdByInternalName(name)` | Cherche l'id d'un véhicule d'après son nom interne exact. | 62 |
-| `C:getVehiclesIdByInternalNameMatch(name)` | Renvoie les ids dont le nom interne correspond au motif (string.find, donc motif Lua). | 71 |
-| `C:init()` | Crée les tables internes puis appelle clear(). | 8 |
-| `C:isBus(id)` | Indique si le modèle du véhicule a le Body Style « Bus ». | 281 |
-| `C:isBusDoorOpen(id)` | Indique si la porte du bus est ouverte (valeur en cache 'dooropen' == 1). | 272 |
-| `C:isBusKneel(id)` | Indique si le bus est agenouillé (valeur en cache 'kneel' == 1). | 271 |
-| `C:isCoupled(id)` | Indique si le véhicule est attelé à au moins un autre. | 243 |
-| `C:isCoupledTo(id, other)` | Indique si le véhicule est attelé au véhicule other. | 244 |
-| `C:onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | Hook : enregistre l'attelage entre deux véhicules (dans les deux sens). | 234 |
-| `C:onCouplerDetached(objId1, objId2, nodeId, obj2nodeId)` | Hook : supprime l'attelage entre deux véhicules. | 238 |
-| `C:onUpdate()` | Appelée à chaque frame : repère les véhicules devenus prêts et appelle readyUpVehicle. | 81 |
-| `C:onVehicleResetted(id)` | Hook appelé quand un véhicule est réinitialisé ; relaie à activity:onVehicleReset(id) si l'activité existe. | 289 |
-| `C:readyUpVehicle(id)` | Marque le véhicule prêt ; sauf ignoreReadyUp, active le suivi mapmgr (via le module level, éventuellement différé) et demande les décalages d'attelage pour chaque tag. | 105 |
-| `C:registerBusChangeNotification(id)` | Demande à core_vehicleBridge d'être notifié des changements de « kneel » et « dooropen » du véhicule. | 263 |
-| `C:requestBusData(id)` | Ne fait rien : le corps (envoi bus_onTriggerTick) est commenté. | 247 |
-| `C:requestBusStop(id, data)` | Envoie au bus l'évènement bus_onSetStopRequest (demande d'arrêt). | 274 |
-| `C:setKeepVehicle(id, keep)` | Définit dontDelete pour un véhicule suivi ; s'il est dans un prefab, demande au module prefab de le dépaqueter avant suppression. | 170 |
-| `C:storeFuelAmount(id)` | Demande et mémorise l'énergie des réservoirs du véhicule, pour la restaurer à l'arrêt (s'il n'est pas supprimé). Log W si le véhicule n'est pas suivi. | 155 |
-| `C:updateBusDisplayData(id, data)` | Envoie au véhicule l'évènement bus_onRouteChange avec les données d'affichage de ligne. | 255 |
+| `C:addCouplerOffset(id, off, tag)` | Records the received coupler offsets (vec3, name, tag) for a vehicle and sorts them by tag priority then by name. | 135 |
+| `C:addForeignVehicle(veh, moreData)` | Declares a vehicle not created by the flowgraph but to be tracked; it is marked dontDelete (not deleted on stop). | 27 |
+| `C:addVehicle(veh, moreData)` | Starts tracking a vehicle (ignored if already tracked). If the vehicle is ready, calls readyUpVehicle. | 33 |
+| `C:clear()` | Clears vehicles, sortedIds and couplings. | 16 |
+| `C:executionStarted()` | Stores the gameplay_walk blacklist and the core_trailerRespawn state to restore them on stop. | 150 |
+| `C:executionStopped()` | Called when the graph stops: deletes non-dontDelete vehicles, restores the energy of the others, the walking blacklist and core_trailerRespawn, then clear(). | 195 |
+| `C:getSpawnedVehicles()` | Deep copy of the sorted list of tracked vehicle ids. | 22 |
+| `C:getVehicle(id)` | Returns a vehicle's tracked data, or an empty table. | 58 |
+| `C:getVehicleIdByInternalName(name)` | Looks up a vehicle's id by its exact internal name. | 62 |
+| `C:getVehiclesIdByInternalNameMatch(name)` | Returns the ids whose internal name matches the pattern (string.find, so a Lua pattern). | 71 |
+| `C:init()` | Creates the internal tables then calls clear(). | 8 |
+| `C:isBus(id)` | Indicates whether the vehicle's model has the "Bus" Body Style. | 281 |
+| `C:isBusDoorOpen(id)` | Indicates whether the bus door is open (cached value 'dooropen' == 1). | 272 |
+| `C:isBusKneel(id)` | Indicates whether the bus is kneeling (cached value 'kneel' == 1). | 271 |
+| `C:isCoupled(id)` | Indicates whether the vehicle is coupled to at least one other. | 243 |
+| `C:isCoupledTo(id, other)` | Indicates whether the vehicle is coupled to the vehicle other. | 244 |
+| `C:onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | Hook: records the coupling between two vehicles (in both directions). | 234 |
+| `C:onCouplerDetached(objId1, objId2, nodeId, obj2nodeId)` | Hook: removes the coupling between two vehicles. | 238 |
+| `C:onUpdate()` | Called every frame: detects vehicles that have become ready and calls readyUpVehicle. | 81 |
+| `C:onVehicleResetted(id)` | Hook called when a vehicle is reset; relays to activity:onVehicleReset(id) if the activity exists. | 289 |
+| `C:readyUpVehicle(id)` | Marks the vehicle ready; unless ignoreReadyUp, enables mapmgr tracking (via the level module, possibly deferred) and requests the coupler offsets for each tag. | 105 |
+| `C:registerBusChangeNotification(id)` | Asks core_vehicleBridge to be notified of changes to the vehicle's "kneel" and "dooropen". | 263 |
+| `C:requestBusData(id)` | Does nothing: the body (sending bus_onTriggerTick) is commented out. | 247 |
+| `C:requestBusStop(id, data)` | Sends the bus the bus_onSetStopRequest event (stop request). | 274 |
+| `C:setKeepVehicle(id, keep)` | Sets dontDelete for a tracked vehicle; if it is in a prefab, asks the prefab module to unpack it before deletion. | 170 |
+| `C:storeFuelAmount(id)` | Requests and stores the energy of the vehicle's tanks, to restore it on stop (if it is not deleted). W log if the vehicle is not tracked. | 155 |
+| `C:updateBusDisplayData(id, data)` | Sends the vehicle the bus_onRouteChange event with the route display data. | 255 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/vehicleModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/vehicleModule.lua`.*

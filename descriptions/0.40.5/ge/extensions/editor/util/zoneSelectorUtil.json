@@ -1,40 +1,69 @@
 {
   "path": "lua/ge/extensions/editor/util/zoneSelectorUtil.lua",
-  "module": "Élément d'interface de l'éditeur de missions (via editorElementHelper) pour choisir des zones de garage : « Initial Zones » (où le joueur peut apparaître) et « Destination Zones » (où il peut obtenir des destinations). Les noms de zones sont lus dans `<globalInfoFolder>/garages.sites.json` via gameplay_sites_sitesManager.loadSites. Le module renvoie un constructeur : `require('editor/util/zoneSelectorUtil')(element)`.",
+  "module": "Mission editor UI element (via editorElementHelper) to choose garage zones: \"Initial Zones\" (where the player can spawn) and \"Destination Zones\" (where they can get destinations). The zone names are read from `<globalInfoFolder>/garages.sites.json` via gameplay_sites_sitesManager.loadSites. The module returns a constructor: `require('editor/util/zoneSelectorUtil')(element)`.",
   "notes": [
-    "L'`element` est une table de configuration partagée (champs lus : fieldName, globalInfoFolderFieldName, _id ; champs écrits : initialZones, destinationZones, loadedZones, sitesFile, zonesLoaded, caches).",
-    "Les listes choisies sont écrites dans le conteneur de données ctd sous les clés `<fieldName>_initialZones` et `<fieldName>_destinationZones`.",
-    "Si le dossier est vide, le fichier garages.sites.json absent ou sitesManager indisponible, la liste de zones reste vide et un message jaune s'affiche.",
-    "Le fichier de sites est toujours nommé garages.sites.json ; les zones sont triées alphabétiquement.",
-    "Les ensembles de recherche rapide sont mis en cache et reconstruits seulement quand la taille du tableau change."
+    "The `element` is a shared configuration table (fields read: fieldName, globalInfoFolderFieldName, _id; fields written: initialZones, destinationZones, loadedZones, sitesFile, zonesLoaded, caches).",
+    "The chosen lists are written into the data container ctd under the keys `<fieldName>_initialZones` and `<fieldName>_destinationZones`.",
+    "If the folder is empty, the garages.sites.json file is missing or sitesManager is unavailable, the zone list stays empty and a yellow message is displayed.",
+    "The sites file is always named garages.sites.json; the zones are sorted alphabetically.",
+    "The quick-lookup sets are cached and rebuilt only when the array size changes."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Instance liée à un `element` d'éditeur.",
+      "desc": "Instance bound to an editor `element`.",
       "functions": {
         "init": {
-          "desc": "Constructeur : mémorise l'élément.",
-          "params": {"element": {"type": "table", "desc": "Définition de l'élément UI (fieldName, globalInfoFolderFieldName…)."}},
+          "desc": "Constructor: remembers the element.",
+          "params": {
+            "element": {
+              "type": "table",
+              "desc": "UI element definition (fieldName, globalInfoFolderFieldName...)."
+            }
+          },
           "internal": true
         },
         "loadZonesFromSitesFile": {
-          "desc": "Charge les noms de zones depuis `<dossier global>/garages.sites.json` (une seule fois par fichier) dans element.loadedZones.",
-          "params": {"ctd": {"type": "table", "desc": "Données du conteneur contenant le dossier global."}}
+          "desc": "Loads the zone names from `<global folder>/garages.sites.json` (only once per file) into element.loadedZones.",
+          "params": {
+            "ctd": {
+              "type": "table",
+              "desc": "Container data containing the global folder."
+            }
+          }
         },
         "setContainer": {
-          "desc": "Lit initialZones/destinationZones depuis ctd et réinitialise l'état de chargement pour forcer un rechargement.",
-          "params": {"ctd": {"type": "table", "desc": "Données du conteneur."}}
+          "desc": "Reads initialZones/destinationZones from ctd and resets the loading state to force a reload.",
+          "params": {
+            "ctd": {
+              "type": "table",
+              "desc": "Container data."
+            }
+          }
         },
         "draw": {
-          "desc": "Dessine l'interface : combos d'ajout, boutons Select All / Remove All, listes avec bouton Remove, résumé. Écrit les listes dans ctd.",
+          "desc": "Draws the interface: add combos, Select All / Remove All buttons, lists with Remove button, summary. Writes the lists into ctd.",
           "params": {
-            "ctd": {"type": "table", "desc": "Données du conteneur."},
-            "container": {"type": "table", "desc": "Conteneur parent (non utilisé ici)."},
-            "labelFn": {"type": "function", "desc": "Fonction appelée avec l'élément pour dessiner son libellé."}
+            "ctd": {
+              "type": "table",
+              "desc": "Container data."
+            },
+            "container": {
+              "type": "table",
+              "desc": "Parent container (unused here)."
+            },
+            "labelFn": {
+              "type": "function",
+              "desc": "Function called with the element to draw its label."
+            }
           },
-          "returns": [{"type": "boolean", "desc": "true si une liste a été modifiée."}]
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if a list was modified."
+            }
+          ]
         }
       }
     }

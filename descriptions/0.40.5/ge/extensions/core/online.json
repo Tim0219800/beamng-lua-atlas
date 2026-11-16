@@ -1,145 +1,268 @@
 {
   "path": "lua/ge/extensions/core/online.lua",
-  "module": "Extension GE `core_online` : couche d'accès aux services en ligne de BeamNG (authentification, API du repository de mods, téléchargements). Elle n'est active que si le réglage 'onlineFeatures' vaut 'enable'. Elle envoie les requêtes HTTP via SecureComm côté moteur, suit chaque requête (état 'working' puis 'finished') et rappelle un callback Lua à la fin. Elle reçoit aussi des instructions du serveur (messages à afficher, mises à jour de mods). Un moddeur s'en sert très rarement ; core_modmanager et core_repository l'utilisent.",
-  "usage": "-- appel d'API JSON (exemple du code)\ncore_online.apiCall('s1/v4/getMods?query=&order_by=&order=&page=1', function(req)\n  dump(req.responseData)\nend)\n-- téléchargement d'un fichier\ncore_online.download('https://exemple.org/x.zip', function(req) log('I','', req.state) end, nil, '/temp/x.zip')",
+  "module": "GE extension `core_online`: access layer to BeamNG's online services (authentication, mod repository API, downloads). It is only active if the 'onlineFeatures' setting is 'enable'. It sends HTTP requests via SecureComm on the engine side, tracks each request ('working' then 'finished' state) and calls a Lua callback at the end. It also receives instructions from the server (messages to display, mod updates). A modder very rarely uses it; core_modmanager and core_repository use it.",
+  "usage": "-- JSON API call (example from the code)\ncore_online.apiCall('s1/v4/getMods?query=&order_by=&order=&page=1', function(req)\n  dump(req.responseData)\nend)\n-- file download\ncore_online.download('https://exemple.org/x.zip', function(req) log('I','', req.state) end, nil, '/temp/x.zip')",
   "notes": [
-    "Si les fonctions en ligne sont désactivées (réglage 'onlineFeatures' différent de 'enable'), apiCall/download renvoient false sans rien envoyer ; désactiver le réglage met aussi le réglage 'telemetry' à 'disable'. Si le client n'est pas authentifié (Engine.Online.isAuthenticated()), l'appel est refusé avec une erreur dans le log et renvoie false.",
-    "Une requête est suivie dans `requests` (id croissant unique). La table publique passée au callback contient : id, url ou uri, outfile, dirname/filename/fileext, state ('working'|'finished'), error/errorCode (si curlCode ~= 0), effectiveURL, responseCode, responseBuffer (texte), responseData (table JSON décodée, si non vide), dltotal, dlnow, ultotal, ulnow, dlspeed, ulspeed, time (progression). downloadURL ne renvoie rien (nil) en cas de succès : seul false indique un refus.",
-    "Si l'adresse commence par http:// ou https:// elle est utilisée telle quelle (champ url), sinon elle est traitée comme un chemin relatif d'API (champ uri). reqType vaut 'get' par défaut. postDataTbl est encodé en JSON (lunajson) et envoyé comme corps. postFileName et authorizationHeader sont transmis seulement par apiCall.",
-    "Le moteur rappelle callbackSecureCommCpp et callbackSecureCommCppProgress (noms enregistrés comme 'core_online.callbackSecureCommCpp...') : ne pas les supprimer. clearRequest(id) est appelée par le moteur ensuite pour libérer la requête.",
-    "Bug probable dans callbackSecureCommCpp : le test utilise la variable `responseresponseHeadersBuffer` (faute de frappe, toujours nil), donc r.pub.responseHeaders n'est jamais rempli.",
-    "Bug : M.requestSubscriptions et M.testWebsocket sont exportés mais aucune variable locale de ce nom n'existe : ils valent nil.",
-    "Instructions serveur (onInstructions) : seules celles avec origin == 'gameauth' sont acceptées. Types gérés : message (affiché via guihooks 'OnlineMessage' sauf identifiants masqués dans le réglage OnlineHiddenMessageIDs), modUpdateAvailable (core_modmanager.check4Update), repomsg, repocmd, automationmsg (core_repository). Un autre type est loggé en erreur."
+    "If online features are disabled ('onlineFeatures' setting different from 'enable'), apiCall/download return false without sending anything; disabling the setting also sets the 'telemetry' setting to 'disable'. If the client is not authenticated (Engine.Online.isAuthenticated()), the call is refused with an error in the log and returns false.",
+    "A request is tracked in `requests` (unique increasing id). The public table passed to the callback contains: id, url or uri, outfile, dirname/filename/fileext, state ('working'|'finished'), error/errorCode (if curlCode ~= 0), effectiveURL, responseCode, responseBuffer (text), responseData (decoded JSON table, if non-empty), dltotal, dlnow, ultotal, ulnow, dlspeed, ulspeed, time (progress). downloadURL returns nothing (nil) on success: only false indicates a refusal.",
+    "If the address starts with http:// or https:// it is used as is (url field), otherwise it is treated as a relative API path (uri field). reqType is 'get' by default. postDataTbl is encoded as JSON (lunajson) and sent as the body. postFileName and authorizationHeader are only passed by apiCall.",
+    "The engine calls callbackSecureCommCpp and callbackSecureCommCppProgress (names registered as 'core_online.callbackSecureCommCpp...'): do not remove them. clearRequest(id) is then called by the engine to free the request.",
+    "Probable bug in callbackSecureCommCpp: the test uses the variable `responseresponseHeadersBuffer` (typo, always nil), so r.pub.responseHeaders is never filled.",
+    "Bug: M.requestSubscriptions and M.testWebsocket are exported but no local variable of that name exists: they are nil.",
+    "Server instructions (onInstructions): only those with origin == 'gameauth' are accepted. Handled types: message (displayed via guihooks 'OnlineMessage' except IDs hidden in the OnlineHiddenMessageIDs setting), modUpdateAvailable (core_modmanager.check4Update), repomsg, repocmd, automationmsg (core_repository). Any other type is logged as an error."
   ],
   "fields": {},
   "functions": {
     "apiCall": {
-      "desc": "Appel d'API JSON : comme download mais demande une réponse JSON décodée dans responseData.",
+      "desc": "JSON API call: like download but requests a decoded JSON response in responseData.",
       "params": {
-        "uri": {"type": "string", "desc": "Chemin d'API ('s1/v4/...') ou URL complète."},
-        "finishCallback": {"type": "function|nil", "desc": "Appelé à la fin avec la table publique de la requête ; nil = requête sans callback."},
-        "postDataTbl": {"type": "table|nil", "desc": "Données à envoyer, encodées en JSON."},
-        "outfile": {"type": "string|nil", "desc": "Fichier où écrire la réponse."},
-        "reqType": {"type": "string|nil", "desc": "Méthode HTTP, 'get' par défaut (mise en minuscules)."},
-        "progressCallback": {"type": "function|nil", "desc": "Appelé périodiquement avec la table publique (progression)."},
-        "postFileName": {"type": "string|nil", "desc": "Nom de fichier à envoyer en POST."},
-        "authorizationHeader": {"type": "string|nil", "desc": "En-tête d'autorisation à ajouter."}
+        "uri": {
+          "type": "string",
+          "desc": "API path ('s1/v4/...') or full URL."
+        },
+        "finishCallback": {
+          "type": "function|nil",
+          "desc": "Called at the end with the request's public table; nil = request without callback."
+        },
+        "postDataTbl": {
+          "type": "table|nil",
+          "desc": "Data to send, encoded as JSON."
+        },
+        "outfile": {
+          "type": "string|nil",
+          "desc": "File where the response is written."
+        },
+        "reqType": {
+          "type": "string|nil",
+          "desc": "HTTP method, 'get' by default (lowercased)."
+        },
+        "progressCallback": {
+          "type": "function|nil",
+          "desc": "Called periodically with the public table (progress)."
+        },
+        "postFileName": {
+          "type": "string|nil",
+          "desc": "File name to send in POST."
+        },
+        "authorizationHeader": {
+          "type": "string|nil",
+          "desc": "Authorization header to add."
+        }
       },
-      "returns": [{"type": "boolean|nil", "desc": "false si refusé (désactivé ou non authentifié), nil sinon."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false if refused (disabled or not authenticated), nil otherwise."
+        }
+      ],
       "internal": false
     },
     "download": {
-      "desc": "Télécharge une URL ou un chemin du serveur (sans traiter la réponse comme du JSON).",
+      "desc": "Downloads a URL or a server path (without treating the response as JSON).",
       "params": {
-        "uri": {"type": "string", "desc": "URL complète ou chemin."},
-        "finishCallback": {"type": "function|nil", "desc": "Callback de fin."},
-        "postDataTbl": {"type": "table|nil", "desc": "Données POST encodées en JSON."},
-        "outfile": {"type": "string|nil", "desc": "Fichier de destination."},
-        "reqType": {"type": "string|nil", "desc": "Méthode HTTP, 'get' par défaut."},
-        "progressCallback": {"type": "function|nil", "desc": "Callback de progression."}
+        "uri": {
+          "type": "string",
+          "desc": "Full URL or path."
+        },
+        "finishCallback": {
+          "type": "function|nil",
+          "desc": "End callback."
+        },
+        "postDataTbl": {
+          "type": "table|nil",
+          "desc": "POST data encoded as JSON."
+        },
+        "outfile": {
+          "type": "string|nil",
+          "desc": "Destination file."
+        },
+        "reqType": {
+          "type": "string|nil",
+          "desc": "HTTP method, 'get' by default."
+        },
+        "progressCallback": {
+          "type": "function|nil",
+          "desc": "Progress callback."
+        }
       },
-      "returns": [{"type": "boolean|nil", "desc": "false si refusé, nil sinon."}],
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "false if refused, nil otherwise."
+        }
+      ],
       "internal": false
     },
     "openSession": {
-      "desc": "Ouvre la session en ligne côté moteur (Engine.Online.openSession), une seule fois par lancement du jeu et seulement si les fonctions en ligne sont activées.",
+      "desc": "Opens the online session on the engine side (Engine.Online.openSession), only once per game launch and only if online features are enabled.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "requestState": {
-      "desc": "Demande à l'interface l'état de connexion : envoie 'OnlineStateChanged' et, si un fournisseur de service (ex. Steam) est connecté, 'SteamInfo'.",
+      "desc": "Asks the UI for the connection state: sends 'OnlineStateChanged' and, if a service provider (e.g. Steam) is connected, 'SteamInfo'.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getRequestsUI": {
-      "desc": "Envoie à l'interface (guihooks 'OnlineRequestsState') la partie publique de toutes les requêtes en cours ou terminées.",
+      "desc": "Sends to the UI (guihooks 'OnlineRequestsState') the public part of all in-progress or finished requests.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "onOnlineStateChanged": {
-      "desc": "Hook appelé par le moteur quand l'état de connexion change : prévient l'interface et envoie les infos du fournisseur de service.",
-      "params": {"connected": {"type": "boolean", "desc": "true si authentifié."}},
+      "desc": "Hook called by the engine when the connection state changes: notifies the UI and sends the service provider info.",
+      "params": {
+        "connected": {
+          "type": "boolean",
+          "desc": "true if authenticated."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Au chargement : lit le réglage onlineFeatures (onSettingsChanged).",
+      "desc": "On load: reads the onlineFeatures setting (onSettingsChanged).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSettingsChanged": {
-      "desc": "Hook appelé quand les réglages changent : active (et ouvre la session) ou désactive les fonctions en ligne selon onlineFeatures.",
+      "desc": "Hook called when settings change: enables (and opens the session) or disables online features depending on onlineFeatures.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onUIOnlineMessageReady": {
-      "desc": "Appelé par l'interface quand elle peut afficher les messages en ligne : envoie ceux déjà reçus.",
+      "desc": "Called by the UI when it can display online messages: sends those already received.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onUIOnlineMessageHide": {
-      "desc": "Appelé par l'interface pour masquer définitivement un message : ajoute son uid au réglage OnlineHiddenMessageIDs et sauvegarde.",
-      "params": {"uid": {"type": "string", "desc": "Identifiant du message."}},
+      "desc": "Called by the UI to permanently hide a message: adds its uid to the OnlineHiddenMessageIDs setting and saves.",
+      "params": {
+        "uid": {
+          "type": "string",
+          "desc": "Message identifier."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onInstructions": {
-      "desc": "Appelé par le moteur avec des instructions envoyées par le serveur d'authentification (voir notes).",
-      "params": {"data": {"type": "table", "desc": "{ origin = 'gameauth', cmds = [ { type, ... } ] }"}},
+      "desc": "Called by the engine with instructions sent by the authentication server (see notes).",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{ origin = 'gameauth', cmds = [ { type, ... } ] }"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "callbackSecureCommCpp": {
-      "desc": "Rappel du moteur à la fin d'une requête : remplit la table publique, la passe à l'état 'finished' et appelle le callback Lua de fin.",
+      "desc": "Engine callback at the end of a request: fills the public table, sets it to the 'finished' state and calls the Lua end callback.",
       "params": {
-        "id": {"type": "integer", "desc": "Id de la requête."},
-        "responseCode": {"type": "integer", "desc": "Code HTTP."},
-        "responseBuffer": {"type": "string", "desc": "Corps de la réponse."},
-        "responseHeaders": {"type": "string", "desc": "En-têtes de réponse."},
-        "responseData": {"type": "table", "desc": "Réponse JSON décodée."},
-        "postData": {"type": "any", "desc": "Données envoyées (non utilisées)."},
-        "curlCode": {"type": "integer", "desc": "Code d'erreur curl (0 = ok)."},
-        "curlErrorStr": {"type": "string", "desc": "Message d'erreur curl."},
-        "effectiveURL": {"type": "string", "desc": "URL finale après redirections."}
+        "id": {
+          "type": "integer",
+          "desc": "Request id."
+        },
+        "responseCode": {
+          "type": "integer",
+          "desc": "HTTP code."
+        },
+        "responseBuffer": {
+          "type": "string",
+          "desc": "Response body."
+        },
+        "responseHeaders": {
+          "type": "string",
+          "desc": "Response headers."
+        },
+        "responseData": {
+          "type": "table",
+          "desc": "Decoded JSON response."
+        },
+        "postData": {
+          "type": "any",
+          "desc": "Data sent (unused)."
+        },
+        "curlCode": {
+          "type": "integer",
+          "desc": "curl error code (0 = ok)."
+        },
+        "curlErrorStr": {
+          "type": "string",
+          "desc": "curl error message."
+        },
+        "effectiveURL": {
+          "type": "string",
+          "desc": "Final URL after redirects."
+        }
       },
       "returns": [],
       "internal": true
     },
     "callbackSecureCommCppProgress": {
-      "desc": "Rappel du moteur pendant une requête : met à jour la progression (valeurs 0 ignorées) et appelle le callback de progression.",
+      "desc": "Engine callback during a request: updates the progress (0 values ignored) and calls the progress callback.",
       "params": {
-        "id": {"type": "integer", "desc": "Id de la requête."},
-        "dltotal": {"type": "number", "desc": "Octets à télécharger au total."},
-        "dlnow": {"type": "number", "desc": "Octets téléchargés."},
-        "ultotal": {"type": "number", "desc": "Octets à envoyer au total."},
-        "ulnow": {"type": "number", "desc": "Octets envoyés."},
-        "dlspeed": {"type": "number", "desc": "Vitesse de téléchargement."},
-        "ulspeed": {"type": "number", "desc": "Vitesse d'envoi."},
-        "time": {"type": "number", "desc": "Temps écoulé."}
+        "id": {
+          "type": "integer",
+          "desc": "Request id."
+        },
+        "dltotal": {
+          "type": "number",
+          "desc": "Total bytes to download."
+        },
+        "dlnow": {
+          "type": "number",
+          "desc": "Bytes downloaded."
+        },
+        "ultotal": {
+          "type": "number",
+          "desc": "Total bytes to upload."
+        },
+        "ulnow": {
+          "type": "number",
+          "desc": "Bytes sent."
+        },
+        "dlspeed": {
+          "type": "number",
+          "desc": "Download speed."
+        },
+        "ulspeed": {
+          "type": "number",
+          "desc": "Upload speed."
+        },
+        "time": {
+          "type": "number",
+          "desc": "Elapsed time."
+        }
       },
       "returns": [],
       "internal": true
     },
     "clearRequest": {
-      "desc": "Appelée par le moteur après une requête terminée : l'oublie.",
-      "params": {"id": {"type": "integer", "desc": "Id de la requête."}},
+      "desc": "Called by the engine after a request has finished: forgets it.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "Request id."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "requestSubscriptions": {
-      "desc": "Exportée mais vaut nil : aucune fonction de ce nom n'est définie dans le fichier.",
+      "desc": "Exported but nil: no function of that name is defined in the file.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "testWebsocket": {
-      "desc": "Exportée mais vaut nil : aucune fonction de ce nom n'est définie dans le fichier.",
+      "desc": "Exported but nil: no function of that name is defined in the file.",
       "params": {},
       "returns": [],
       "internal": true

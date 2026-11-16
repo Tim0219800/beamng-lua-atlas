@@ -1,39 +1,39 @@
 # `flowgraph_nodes_events_customizedTriggerBox`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/events/customizedTriggerBox.lua` · VM : Game Engine (GE) · 270 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/events/customizedTriggerBox.lua` · VM: Game Engine (GE) · 270 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/events/customizedTriggerBox")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/events/customizedTriggerBox")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Custom Trigger » (catégorie repeat_instant, événement). Crée une zone de déclenchement (boîte ou sphère/ellipsoïde) pendant l'exécution du projet. Pins d'entrée : position (vec3), rotation (quat), scale (number ou vec3), vehId (défaut : véhicule joueur). Sorties : enter et exit (impulsions), inside, outside, vehId. Le type de zone (Box/Sphere) se choisit dans l'éditeur.
+Flowgraph node "Custom Trigger" (category repeat_instant, event). Creates a trigger zone (box or sphere/ellipsoid) while the project is running. Input pins: position (vec3), rotation (quat), scale (number or vec3), vehId (default: player vehicle). Outputs: enter and exit (pulses), inside, outside, vehId. The zone type (Box/Sphere) is chosen in the editor.
 
-## Remarques
+## Notes
 
-- data.highPrecision : teste 4 points de la boîte englobante du véhicule (au lieu de sa seule position). data.debug : dessine la zone avec debugDrawer.
-- Si le véhicule est introuvable, toutes les sorties passent à nil.
-- Le trigger est recalculé quand position, rotation ou scale changent. Le type est sérialisé (triggerType).
-- todo du code : à fusionner avec onBeamNGTrigger.
+- data.highPrecision: tests 4 points of the vehicle's bounding box (instead of its position alone). data.debug: draws the zone with debugDrawer.
+- If the vehicle cannot be found, all outputs are set to nil.
+- The trigger is recomputed when position, rotation or scale change. The type is serialized (triggerType).
+- Code todo: to be merged with onBeamNGTrigger.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Réinitialise les états dedans/dehors et marque le trigger à recalculer. | 51 |
-| `C:_executionStopped()` | Oublie la position, l'échelle et les points mémorisés. | 59 |
-| `C:_onDeserialized(res)` | Relit triggerType depuis res. | 263 |
-| `C:_onSerialize(res)` | Sauvegarde triggerType dans res. | 259 |
-| `C:checkIntersections()` | Teste si l'un des points du véhicule est dans la zone (containsOBB_point ou containsEllipsoid_Point) et met à jour enterFlag, exitFlag, vehInside. | 66 |
-| `C:drawAxisBox(corner, x, y, z, clr)` | Dessine une boîte colorée avec arêtes via debugDrawer (mode debug). | 178 |
-| `C:drawCustomProperties()` | Éditeur : liste déroulante du type de trigger ; renvoie la raison du changement. | 235 |
-| `C:drawMiddle(builder, style)` | Dessin du nœud dans l'éditeur. | 255 |
-| `C:init(mgr, ...)` | Initialise les drapeaux, triggerType = 'Box', data.highPrecision et data.debug à false. | 40 |
-| `C:work(args)` | Recalcule la zone si besoin, récupère les points du véhicule, appelle checkIntersections et remplit les pins de sortie. | 93 |
+| `C:_executionStarted()` | Resets the inside/outside states and marks the trigger for recomputation. | 51 |
+| `C:_executionStopped()` | Forgets the stored position, scale and points. | 59 |
+| `C:_onDeserialized(res)` | Rereads triggerType from res. | 263 |
+| `C:_onSerialize(res)` | Saves triggerType in res. | 259 |
+| `C:checkIntersections()` | Tests whether any of the vehicle's points is inside the zone (containsOBB_point or containsEllipsoid_Point) and updates enterFlag, exitFlag, vehInside. | 66 |
+| `C:drawAxisBox(corner, x, y, z, clr)` | Draws a colored box with edges via debugDrawer (debug mode). | 178 |
+| `C:drawCustomProperties()` | Editor: trigger type dropdown; returns the change reason. | 235 |
+| `C:drawMiddle(builder, style)` | Node drawing in the editor. | 255 |
+| `C:init(mgr, ...)` | Initializes the flags, triggerType = 'Box', data.highPrecision and data.debug to false. | 40 |
+| `C:work(args)` | Recomputes the zone if needed, gets the vehicle's points, calls checkIntersections and fills the output pins. | 93 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/events/customizedTriggerBox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/events/customizedTriggerBox.lua`.*

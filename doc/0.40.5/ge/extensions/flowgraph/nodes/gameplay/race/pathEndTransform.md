@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_race_pathEndTransform`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathEndTransform.lua` · VM : Game Engine (GE) · 66 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathEndTransform.lua` · VM: Game Engine (GE) · 66 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/pathEndTransform")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/pathEndTransform")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race End Transform » (catégorie repeat_instant, tag scenario). Donne la transformation du pathnode de fin d'un pathData, utile pour des triggers personnalisés. Le nœud de fin est path.endNode ; pour un chemin fermé sans endNode valide, c'est startNode. Sorties : endExists / endDoesNotExist (flow), existing (bool), pos (vec3), dirVec (normale du pathnode ou {0,0,1}) et radius. Calculé une seule fois (tant que self.path est nil).
+Flowgraph node "Race End Transform" (category repeat_instant, tag scenario). Gives the transform of the end pathnode of a pathData, useful for custom triggers. The end node is path.endNode; for a closed path without a valid endNode, it is startNode. Outputs: endExists / endDoesNotExist (flow), existing (bool), pos (vec3), dirVec (pathnode normal or {0,0,1}) and radius. Computed only once (as long as self.path is nil).
 
-## Remarques
+## Notes
 
-- Si endNode vaut -1, un avertissement est loggé : la fin doit être marquée explicitement dans le Race Editor.
-- endExists/endDoesNotExist sont remis à false à chaque frame ; seul endExists passe à true, et uniquement lors du calcul initial : endDoesNotExist ne devient jamais vrai dans ce code.
+- If endNode is -1, a warning is logged: the end must be explicitly marked in the Race Editor.
+- endExists/endDoesNotExist are reset to false every frame; only endExists becomes true, and only during the initial computation: endDoesNotExist never becomes true in this code.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Oublie le chemin mémorisé. | 32 |
-| `C:init(mgr, ...)` | Initialise self.path et désactive clearOutPinsOnStart. | 27 |
-| `C:work(args)` | Trouve le pathnode de fin et écrit existing, pos, dirVec, radius et les flows endExists/endDoesNotExist. | 36 |
+| `C:_executionStopped()` | Forgets the stored path. | 32 |
+| `C:init(mgr, ...)` | Initializes self.path and disables clearOutPinsOnStart. | 27 |
+| `C:work(args)` | Finds the end pathnode and writes existing, pos, dirVec, radius and the flows endExists/endDoesNotExist. | 36 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathEndTransform.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathEndTransform.lua`.*

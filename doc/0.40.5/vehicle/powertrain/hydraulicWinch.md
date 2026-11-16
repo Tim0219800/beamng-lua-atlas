@@ -1,14 +1,14 @@
 # `powertrain_hydraulicWinch`
 
-*Fichier : `lua/vehicle/powertrain/hydraulicWinch.lua` · VM : Véhicule · 1 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/hydraulicWinch.lua` · VM: Vehicle · 1 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `hydraulicWinch` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `hydraulicWinch` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Fichier vide (0 octet) dans BeamNG.drive 0.40.5. Il ne définit ni `new`, ni champ, ni fonction. Utiliser un composant `hydraulicWinch` dans le jbeam `powertrain` ferait échouer le chargement du module (require renvoie true au lieu d'une table, donc l'appel de `new` échouerait). Aucun autre fichier Lua du jeu ne référence `hydraulicWinch`.
+Empty file (0 bytes) in BeamNG.drive 0.40.5. It defines no `new`, field or function. Using a `hydraulicWinch` component in the `powertrain` jbeam would make the module load fail (require returns true instead of a table, so the call to `new` would fail). No other Lua file of the game references `hydraulicWinch`.
 
-## Remarques
+## Notes
 
-- Bug / reliquat : fichier présent mais vide. Pour un treuil réel, voir electricWinch (prototype) ou linearActuator, hydraulicCylinder, hydraulicPump.
+- Bug / leftover: file present but empty. For a real winch, see electricWinch (prototype) or linearActuator, hydraulicCylinder, hydraulicPump.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/hydraulicWinch.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/hydraulicWinch.lua`.*

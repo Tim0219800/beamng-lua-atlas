@@ -1,47 +1,47 @@
 # `gameplay_drift_freeroam_cruising`
 
-*Fichier : `lua/ge/extensions/gameplay/drift/freeroam/cruising.lua` · VM : Game Engine (GE) · 65 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/drift/freeroam/cruising.lua` · VM: Game Engine (GE) · 65 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_drift_freeroam_cruising` : `extensions.load("gameplay_drift_freeroam_cruising")`, puis la globale `gameplay_drift_freeroam_cruising`
+**Access:** extension `gameplay_drift_freeroam_cruising`: `extensions.load("gameplay_drift_freeroam_cruising")`, then the global `gameplay_drift_freeroam_cruising`
 
-Détecte en roaming libre le passage en mode « cruising » de drift : quand le joueur enchaîne assez de drifts (ou fait un très long drift), le contexte drift passe de "inFreeroam" à "inFreeroamCruising" (ce qui fait afficher l'interface de drift) puis revient à "inFreeroam" après quelques secondes sans drifter. Lit gameplay_drift_drift et pilote gameplay_drift_general.setContext.
+Detects in free roaming the switch to drift "cruising" mode: when the player chains enough drifts (or does a very long drift), the drift context goes from "inFreeroam" to "inFreeroamCruising" (which shows the drift interface) then goes back to "inFreeroam" after a few seconds without drifting. Reads gameplay_drift_drift and drives gameplay_drift_general.setContext.
 
-## Remarques
+## Notes
 
-- Seuils codés en dur : drift >= 1.5 s avec au moins 3 drifts chaînés, ou drift >= 3.2 s ; le drift ne doit pas s'être terminé à moins de 25 m de son point de départ (sinon c'est un donut, pas du cruising) ; l'interface est désactivée après 3 s sans drift.
-- Le décompte de fin utilise dtSim (temps simulé), donc il est ralenti/figé avec le ralenti ou la pause.
-- Le hook onDriftFreeroamCruisingStarted est émis sans argument au passage en cruising.
-- La fonction locale getGC (garbage du profileur) n'est pas exportée : code mort.
+- Hardcoded thresholds: drift >= 1.5 s with at least 3 chained drifts, or drift >= 3.2 s; the drift must not have ended within 25 m of its starting point (otherwise it is a donut, not cruising); the interface is disabled after 3 s without drifting.
+- The end countdown uses dtSim (simulated time), so it is slowed/frozen with slow motion or pause.
+- The onDriftFreeroamCruisingStarted hook is emitted with no argument when switching to cruising.
+- The local function getGC (profiler garbage) is not exported: dead code.
 
-**Dépendances (chargées avant) :** `gameplay_drift_general`, `gameplay_drift_drift`
+**Dependencies (loaded first):** `gameplay_drift_general`, `gameplay_drift_drift`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_drift_freeroam_cruising.onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame : teste le début du cruising (detectStart) puis sa fin (detectEnd). Si le debug général est actif, mesure le coût avec un LuaProfiler. *(interne)* *(hook)* | 46 |
+| `gameplay_drift_freeroam_cruising.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: tests the start of cruising (detectStart) then its end (detectEnd). If general debug is active, measures the cost with a LuaProfiler. *(internal)* *(hook)* | 46 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_drift_freeroam_cruising.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque frame : teste le début du cruising (detectStart) puis sa fin (detectEnd). Si le debug général est actif, mesure le coût avec un LuaProfiler.
+Called every frame: tests the start of cruising (detectStart) then its end (detectEnd). If general debug is active, measures the cost with a LuaProfiler.
 
-- `dtReal` (*number*) : Delta temps réel en secondes (inutilisé).
-- `dtSim` (*number*) : Delta temps simulé en secondes, utilisé pour le décompte de fin.
-- `dtRaw` (*number*) : Delta temps brut en secondes (inutilisé).
+- `dtReal` (*number*) : Real time delta in seconds (unused).
+- `dtSim` (*number*) : Simulated time delta in seconds, used for the end countdown.
+- `dtRaw` (*number*) : Raw time delta in seconds (unused).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | gameplay_drift_general et gameplay_drift_drift, chargés avant. |
+| `dependencies` | string[] | gameplay_drift_general and gameplay_drift_drift, loaded beforehand. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onDriftFreeroamCruisingStarted` — écouté par 1 module(s)
+- `onDriftFreeroamCruisingStarted` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/drift/freeroam/cruising.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/drift/freeroam/cruising.lua`.*

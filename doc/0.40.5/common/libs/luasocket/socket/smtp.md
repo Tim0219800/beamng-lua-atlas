@@ -1,60 +1,60 @@
 # `libs_luasocket_socket_smtp`
 
-*Fichier : `lua/common/libs/luasocket/socket/smtp.lua` · VM : Commun (GE + véhicule) · 256 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luasocket/socket/smtp.lua` · VM: Common (GE + vehicle) · 256 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luasocket/socket/smtp")`
+**Access:** `require("libs/luasocket/socket/smtp")`
 
-Bibliothèque tierce LuaSocket (auteur Diego Nehab) : client SMTP pour envoyer des e-mails. Elle s'attache à la table `socket` sous `socket.smtp`. Elle fournit l'API de haut niveau `send` (connexion, EHLO, authentification LOGIN/PLAIN, envoi, QUIT) et l'API de bas niveau `open` (objet à méthodes greet/mail/rcpt/data/quit/login/plain/auth/send/close), ainsi que `message` pour construire une source de message MIME (simple ou multipart). Elle n'est pas utilisée par le gameplay : c'est du code embarqué avec LuaSocket.
+Third-party LuaSocket library (author Diego Nehab): SMTP client for sending e-mails. It attaches to the `socket` table as `socket.smtp`. It provides the high-level API `send` (connection, EHLO, LOGIN/PLAIN authentication, sending, QUIT) and the low-level API `open` (object with methods greet/mail/rcpt/data/quit/login/plain/auth/send/close), as well as `message` to build a MIME message source (simple or multipart). It is not used by gameplay: it is code bundled with LuaSocket.
 
-## Exemple
+## Example
 
 ```lua
 local smtp = require('socket.smtp')
 local ok, err = smtp.send{ from = '<a@b.c>', rcpt = {'<d@e.f>'}, source = smtp.message{ headers = {subject = 'Hello'}, body = 'texte' }, server = 'localhost', port = 25 }
 ```
 
-## Remarques
+## Notes
 
-- Le fichier fait `require('socket.socket')`, `require('socket.tp')`, `require('ltn12')`, `require('socket.headers')` et `require('mime')` : ces modules doivent être résolvables (le chemin atlas `libs/luasocket/socket/smtp` est celui du fichier, pas le nom de require interne).
-- TIMEOUT = 60 s, SERVER = 'localhost', PORT = 25, ZONE = '-0000' par défaut ; DOMAIN vaut la variable d'environnement SERVER_NAME ou 'localhost'.
-- `send` est enveloppée par `socket.protect` : les erreurs sont renvoyées sous la forme `nil, message` au lieu d'être levées.
-- Les corps de message sans content-type reçoivent 'text/plain; charset="iso-8859-1"'. L'en-tête mime-version est toujours forcé à '1.0'.
+- The file does `require('socket.socket')`, `require('socket.tp')`, `require('ltn12')`, `require('socket.headers')` and `require('mime')`: these modules must be resolvable (the atlas path `libs/luasocket/socket/smtp` is that of the file, not the internal require name).
+- TIMEOUT = 60 s, SERVER = 'localhost', PORT = 25, ZONE = '-0000' by default; DOMAIN equals the environment variable SERVER_NAME or 'localhost'.
+- `send` is wrapped by `socket.protect`: errors are returned as `nil, message` instead of being raised.
+- Message bodies without a content-type get 'text/plain; charset="iso-8859-1"'. The mime-version header is always forced to '1.0'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luasocket_socket_smtp.message(mesgt)` | Construit une source (fonction itératrice de chunks, compatible LTN12) pour un message. mesgt = {headers, body} ; body peut être une chaîne, une fonction source ou une table (multipart, avec preamble/epilogue). Ajoute les en-têtes date, x-mailer et mime-version. | 233 |
-| `libs_luasocket_socket_smtp.open(server, port, create)` | Ouvre une connexion SMTP et renvoie un objet de bas niveau (méthodes greet, mail, rcpt, data, quit, close, login, plain, auth, send). Lève une erreur (via socket.try) si la connexion échoue. | 116 |
+| `libs_luasocket_socket_smtp.message(mesgt)` | Builds a source (chunk iterator function, LTN12-compatible) for a message. mesgt = {headers, body}; body can be a string, a source function or a table (multipart, with preamble/epilogue). Adds the date, x-mailer and mime-version headers. | 233 |
+| `libs_luasocket_socket_smtp.open(server, port, create)` | Opens an SMTP connection and returns a low-level object (methods greet, mail, rcpt, data, quit, close, login, plain, auth, send). Raises an error (via socket.try) if the connection fails. | 116 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luasocket_socket_smtp.message(mesgt)`
 
-Construit une source (fonction itératrice de chunks, compatible LTN12) pour un message. mesgt = {headers, body} ; body peut être une chaîne, une fonction source ou une table (multipart, avec preamble/epilogue). Ajoute les en-têtes date, x-mailer et mime-version.
+Builds a source (chunk iterator function, LTN12-compatible) for a message. mesgt = {headers, body}; body can be a string, a source function or a table (multipart, with preamble/epilogue). Adds the date, x-mailer and mime-version headers.
 
-- `mesgt` (*table*) : Description du message ; sa clé `headers` est remplacée par la version normalisée (modifiée en place).
-- **renvoie** : function Source : chaque appel renvoie le chunk suivant, ou nil puis une erreur.
+- `mesgt` (*table*) : Message description; its `headers` key is replaced by the normalized version (modified in place).
+- **returns**: function Source: each call returns the next chunk, or nil then an error.
 
 #### `libs_luasocket_socket_smtp.open(server, port, create)`
 
-Ouvre une connexion SMTP et renvoie un objet de bas niveau (méthodes greet, mail, rcpt, data, quit, close, login, plain, auth, send). Lève une erreur (via socket.try) si la connexion échoue.
+Opens an SMTP connection and returns a low-level object (methods greet, mail, rcpt, data, quit, close, login, plain, auth, send). Raises an error (via socket.try) if the connection fails.
 
-- `server` (*string|nil*) : Hôte du serveur ; défaut SERVER.
-- `port` (*integer|nil*) : Port ; défaut PORT.
-- `create` (*function|nil*) : Fabrique de socket TCP ; défaut socket.tcp.
-- **renvoie** : table Objet SMTP dont les méthodes lèvent une erreur en cas de réponse inattendue du serveur.
+- `server` (*string|nil*) : Server host; default SERVER.
+- `port` (*integer|nil*) : Port; default PORT.
+- `create` (*function|nil*) : TCP socket factory; default socket.tcp.
+- **returns**: table SMTP object whose methods raise an error on an unexpected server response.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `DOMAIN` | string | Domaine utilisé dans la commande EHLO ; variable d'environnement SERVER_NAME ou "localhost". |
-| `PORT` | number | Port SMTP par défaut (25). |
-| `SERVER` | string | Serveur SMTP par défaut ("localhost"). |
-| `TIMEOUT` | number | Délai de connexion en secondes (60). |
-| `ZONE` | string | Fuseau horaire par défaut de l'en-tête Date ("-0000" = inconnu). |
-| `send` | function | API de haut niveau : prend une table {server, port, domain, user, password, from, rcpt, source, step, create}, ouvre la connexion, fait greet, auth, send, quit puis close. Renvoie 1 en cas de succès, sinon nil et un message d'erreur. |
+| `DOMAIN` | string | Domain used in the EHLO command; environment variable SERVER_NAME or "localhost". |
+| `PORT` | number | Default SMTP port (25). |
+| `SERVER` | string | Default SMTP server ("localhost"). |
+| `TIMEOUT` | number | Connection timeout in seconds (60). |
+| `ZONE` | string | Default time zone of the Date header ("-0000" = unknown). |
+| `send` | function | High-level API: takes a table {server, port, domain, user, password, from, rcpt, source, step, create}, opens the connection, does greet, auth, send, quit then close. Returns 1 on success, otherwise nil and an error message. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luasocket/socket/smtp.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luasocket/socket/smtp.lua`.*

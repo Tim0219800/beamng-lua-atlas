@@ -1,12 +1,12 @@
 # `controller_advancedCouplerControl`
 
-*Fichier : `lua/vehicle/controller/advancedCouplerControl.lua` · VM : Véhicule · 570 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/advancedCouplerControl.lua` · VM: Vehicle · 570 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `advancedCouplerControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `advancedCouplerControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire qui pilote un groupe de verrous locaux (portes, trappes, hayons, loquets) formés de paires de noeuds du même véhicule, via `obj:attachLocalCoupler`. Il suit l'état du groupe (attached, coupling, autoCoupling, detached, broken, desyncedAttached, desyncedDetached), joue les sons d'attache/détache, applique une force d'ouverture ou de fermeture pendant une courte durée, enregistre les groupes de casse des coupleurs auprès de `beamstate`, et publie deux electrics `<nom>_attached` et `<nom>_notAttached` (1/0). On l'instancie une fois par groupe, avec un `name` unique.
+Auxiliary controller that drives a group of local latches (doors, hatches, tailgates, latches) made of node pairs of the same vehicle, via `obj:attachLocalCoupler`. It tracks the group state (attached, coupling, autoCoupling, detached, broken, desyncedAttached, desyncedDetached), plays the attach/detach sounds, applies an opening or closing force for a short duration, registers the couplers' break groups with `beamstate`, and publishes two electrics `<name>_attached` and `<name>_notAttached` (1/0). It is instantiated once per group, with a unique `name`.
 
-## Exemple
+## Example
 
 ```lua
 local door = controller.getControllerSafe("doorLatchFL")
@@ -14,136 +14,136 @@ door.toggleGroup()
 print(door.getGroupState())
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam du groupe : `groupType` ("default", "autoCoupling", "manualClose", "manualCloseMultiPoint" ; défaut "default"), `couplerNodes` (table d'en-tête avec colonnes cid1, cid2, forceCid1, forceCid2, autoCouplingStrength (40000), autoCouplingRadius (0.01), autoCouplingLockRadius (0.005), autoCouplingSpeed (0.2), couplingStartRadius, breakGroup), `soundNode_nodes` (premier noeud), `attachSoundEvent`, `detachSoundEvent`, `breakSoundEvent`, `attachSoundVolume`, `detachSoundVolume`, `breakSoundVolume`, `openForceMagnitude` (100), `openForceDuration` (0.2 s), `closeForceMagnitude` (100), `closeForceDuration` (0.3 s), `openForceConditions` (table d'en-tête : advancedCouplerControlName, requiredStates), `attachUIMessage`, `attachingUIMessage`, `detachUIMessage`, `latchTriggerElectricName`, `unlatchTriggerElectricName`.
-- `cid2` peut être une table de plusieurs noeuds seulement en mode manualCloseMultiPoint (sinon seul le premier est utilisé avec une erreur loguée) ; le noeud le plus proche est alors choisi.
-- Les noms de noeuds sont résolus par `beamstate.nodeNameMap` ; une paire dont un noeud est introuvable est ignorée avec un avertissement.
-- toggleGroupConditional attend des conditions {nomContrôleur, étatInterdit, messageErreur}.
-- Les sons ne sont autorisés que 0,1 s après le reset (évite les sons au spawn).
-- Anomalie : dans onCouplerAttached, le message UI d'attache est conditionné par `detachUIMessage` (et non `attachUIMessage`), donc il n'apparaît que si les deux sont définis.
-- onCouplerFound et onGameplayEvent sont exportés mais vides ; resetSounds et initSounds aussi.
-- L'état est sauvegardé sous la clé `<nom>_groupState` ; setState essaie de reproduire l'état (impulsion d'attache, détache ou rupture de tous les couples).
+- Group jbeam keys: `groupType` ("default", "autoCoupling", "manualClose", "manualCloseMultiPoint"; default "default"), `couplerNodes` (header table with columns cid1, cid2, forceCid1, forceCid2, autoCouplingStrength (40000), autoCouplingRadius (0.01), autoCouplingLockRadius (0.005), autoCouplingSpeed (0.2), couplingStartRadius, breakGroup), `soundNode_nodes` (first node), `attachSoundEvent`, `detachSoundEvent`, `breakSoundEvent`, `attachSoundVolume`, `detachSoundVolume`, `breakSoundVolume`, `openForceMagnitude` (100), `openForceDuration` (0.2 s), `closeForceMagnitude` (100), `closeForceDuration` (0.3 s), `openForceConditions` (header table: advancedCouplerControlName, requiredStates), `attachUIMessage`, `attachingUIMessage`, `detachUIMessage`, `latchTriggerElectricName`, `unlatchTriggerElectricName`.
+- `cid2` can be a table of several nodes only in manualCloseMultiPoint mode (otherwise only the first is used, with a logged error); the closest node is then chosen.
+- Node names are resolved by `beamstate.nodeNameMap`; a pair with a node that cannot be found is ignored with a warning.
+- toggleGroupConditional expects conditions {controllerName, forbiddenState, errorMessage}.
+- Sounds are allowed only 0.1 s after the reset (avoids sounds at spawn).
+- Anomaly: in onCouplerAttached, the attach UI message is conditioned on `detachUIMessage` (and not `attachUIMessage`), so it only appears if both are defined.
+- onCouplerFound and onGameplayEvent are exported but empty; resetSounds and initSounds too.
+- The state is saved under the key `<name>_groupState`; setState tries to reproduce the state (attach impulse, detach or break of all pairs).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_advancedCouplerControl.detachGroup()` | Détache toutes les paires du groupe, déclenche la force d'ouverture si toutes les `openForceConditions` (états requis d'autres groupes) sont remplies et affiche `detachUIMessage`. Ne fait rien si le groupe est déjà détaché ou en autoCoupling. | 175 |
-| `controller_advancedCouplerControl.getGroupState()` | Renvoie l'état du groupe. | 377 |
-| `controller_advancedCouplerControl.getState()` | Renvoie l'état du groupe sous la clé `<nom>_groupState`. | 512 |
-| `controller_advancedCouplerControl.init(jbeamData)` | Construit le groupe à partir du jbeam (paires de noeuds, sons, forces, messages), enregistre les groupes de casse de coupleurs, lance les attaches initiales et synchronise l'état. *(interne)* | 412 |
-| `controller_advancedCouplerControl.initSounds(jbeamData)` | Vide ; présent pour le cycle de vie. *(interne)* | 409 |
-| `controller_advancedCouplerControl.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)` | Hook : une paire du groupe s'est attachée. Met à jour l'état, joue le son d'attache (volume lié à la force) et annule les forces en cours quand tout le groupe est attaché. *(interne)* *(hook)* | 331 |
-| `controller_advancedCouplerControl.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook : une paire du groupe s'est détachée. État `detached` si breakForce <= 0, sinon `broken` ; remet en file le verrou automatique et joue le son de détache. *(interne)* *(hook)* | 357 |
-| `controller_advancedCouplerControl.onCouplerFound(nodeId, obj2id, obj2nodeId)` | Hook de controller.lua quand un coupleur proche est trouvé ; vide ici. *(interne)* *(hook)* | 323 |
-| `controller_advancedCouplerControl.onGameplayEvent(eventName, ...)` | Hook d'évènement de gameplay, vide dans ce contrôleur. *(interne)* *(hook)* | 374 |
-| `controller_advancedCouplerControl.reset(jbeamData)` | Remet tous les verrous à l'état détaché, relance les attaches initiales (`couplingStartRadius`) et ré-enregistre les groupes de casse. *(interne)* | 390 |
-| `controller_advancedCouplerControl.resetSounds(jbeamData)` | Vide ; présent pour le cycle de vie. *(interne)* | 387 |
-| `controller_advancedCouplerControl.setState(data)` | Tente de reproduire un état sauvegardé (attache, détache ou rupture de toutes les paires). | 517 |
-| `controller_advancedCouplerControl.toggleGroup()` | Ouvre ou ferme le groupe selon son état. Ignoré tant qu'une force d'ouverture ou de fermeture est en cours. | 211 |
-| `controller_advancedCouplerControl.toggleGroupConditional(conditions)` | Comme toggleGroup, mais d'abord vérifie des conditions sur d'autres contrôleurs advancedCouplerControl ; si l'un est dans l'état interdit, affiche le message d'erreur et ne fait rien. | 223 |
-| `controller_advancedCouplerControl.tryAttachGroupImpulse()` | Tente de refermer le groupe : selon groupType, relance les attaches locales des paires détachées, déclenche le message `attachingUIMessage` et une force de fermeture de `closeForceDuration`. Sans effet si le groupe est déjà attaché. | 144 |
-| `controller_advancedCouplerControl.updateGFX(dt)` | Chaque frame : gère le délai des sons, les déclencheurs electrics de verrouillage/déverrouillage, les verrous automatiques en attente, la recherche du noeud cid2 le plus proche en mode multipoint, et applique les forces d'ouverture/fermeture. *(interne)* | 254 |
+| `controller_advancedCouplerControl.detachGroup()` | Detaches all pairs of the group, triggers the opening force if all `openForceConditions` (required states of other groups) are met and displays `detachUIMessage`. Does nothing if the group is already detached or in autoCoupling. | 175 |
+| `controller_advancedCouplerControl.getGroupState()` | Returns the group state. | 377 |
+| `controller_advancedCouplerControl.getState()` | Returns the group state under the key `<name>_groupState`. | 512 |
+| `controller_advancedCouplerControl.init(jbeamData)` | Builds the group from the jbeam (node pairs, sounds, forces, messages), registers the couplers' break groups, starts the initial attaches and synchronizes the state. *(internal)* | 412 |
+| `controller_advancedCouplerControl.initSounds(jbeamData)` | Empty; present for the lifecycle. *(internal)* | 409 |
+| `controller_advancedCouplerControl.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)` | Hook: a pair of the group has attached. Updates the state, plays the attach sound (volume tied to the force) and cancels ongoing forces when the whole group is attached. *(internal)* *(hook)* | 331 |
+| `controller_advancedCouplerControl.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook: a pair of the group has detached. State `detached` if breakForce <= 0, otherwise `broken`; re-queues the automatic latch and plays the detach sound. *(internal)* *(hook)* | 357 |
+| `controller_advancedCouplerControl.onCouplerFound(nodeId, obj2id, obj2nodeId)` | Hook from controller.lua when a nearby coupler is found; empty here. *(internal)* *(hook)* | 323 |
+| `controller_advancedCouplerControl.onGameplayEvent(eventName, ...)` | Gameplay event hook, empty in this controller. *(internal)* *(hook)* | 374 |
+| `controller_advancedCouplerControl.reset(jbeamData)` | Resets all latches to the detached state, restarts the initial attaches (`couplingStartRadius`) and re-registers the break groups. *(internal)* | 390 |
+| `controller_advancedCouplerControl.resetSounds(jbeamData)` | Empty; present for the lifecycle. *(internal)* | 387 |
+| `controller_advancedCouplerControl.setState(data)` | Tries to reproduce a saved state (attach, detach or break of all pairs). | 517 |
+| `controller_advancedCouplerControl.toggleGroup()` | Opens or closes the group depending on its state. Ignored while an opening or closing force is in progress. | 211 |
+| `controller_advancedCouplerControl.toggleGroupConditional(conditions)` | Like toggleGroup, but first checks conditions on other advancedCouplerControl controllers; if one is in the forbidden state, displays the error message and does nothing. | 223 |
+| `controller_advancedCouplerControl.tryAttachGroupImpulse()` | Tries to close the group again: depending on groupType, restarts the local attaches of detached pairs, triggers the `attachingUIMessage` message and a closing force of `closeForceDuration`. No effect if the group is already attached. | 144 |
+| `controller_advancedCouplerControl.updateGFX(dt)` | Every frame: handles the sound delay, the lock/unlock electrics triggers, pending automatic latches, the search for the closest cid2 node in multipoint mode, and applies the opening/closing forces. *(internal)* | 254 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_advancedCouplerControl.getGroupState()`
 
-Renvoie l'état du groupe.
+Returns the group state.
 
-- **renvoie** : string "attached", "coupling", "autoCoupling", "detached", "broken", "desyncedAttached" ou "desyncedDetached".
+- **returns**: string "attached", "coupling", "autoCoupling", "detached", "broken", "desyncedAttached" or "desyncedDetached".
 
 #### `controller_advancedCouplerControl.getState()`
 
-Renvoie l'état du groupe sous la clé `<nom>_groupState`.
+Returns the group state under the key `<name>_groupState`.
 
-- **renvoie** : table<string, string> Table d'état.
+- **returns**: table<string, string> State table.
 
 #### `controller_advancedCouplerControl.init(jbeamData)`
 
-Construit le groupe à partir du jbeam (paires de noeuds, sons, forces, messages), enregistre les groupes de casse de coupleurs, lance les attaches initiales et synchronise l'état.
+Builds the group from the jbeam (node pairs, sounds, forces, messages), registers the couplers' break groups, starts the initial attaches and synchronizes the state.
 
-- `jbeamData` (*table*) : Données jbeam du groupe.
+- `jbeamData` (*table*) : Group jbeam data.
 
 #### `controller_advancedCouplerControl.initSounds(jbeamData)`
 
-Vide ; présent pour le cycle de vie.
+Empty; present for the lifecycle.
 
-- `jbeamData` (*table*) : Non utilisé.
+- `jbeamData` (*table*) : Not used.
 
 #### `controller_advancedCouplerControl.onCouplerAttached(nodeId, obj2id, obj2nodeId, attachForce)`
 
-Hook : une paire du groupe s'est attachée. Met à jour l'état, joue le son d'attache (volume lié à la force) et annule les forces en cours quand tout le groupe est attaché.
+Hook: a pair of the group has attached. Updates the state, plays the attach sound (volume tied to the force) and cancels ongoing forces when the whole group is attached.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre côté.
-- `attachForce` (*number*) : Reçoit en pratique l'argument `attachSpeed` de controller.lua (déduit du code) ; sert à l'agressivité du son.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the node on the other side.
+- `attachForce` (*number*) : In practice receives the `attachSpeed` argument from controller.lua (inferred from code); used for the sound's aggressiveness.
 
 #### `controller_advancedCouplerControl.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook : une paire du groupe s'est détachée. État `detached` si breakForce <= 0, sinon `broken` ; remet en file le verrou automatique et joue le son de détache.
+Hook: a pair of the group has detached. State `detached` if breakForce <= 0, otherwise `broken`; re-queues the automatic latch and plays the detach sound.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre côté.
-- `breakForce` (*number*) : Force de rupture (0 = détachement normal).
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the node on the other side.
+- `breakForce` (*number*) : Break force (0 = normal detachment).
 
 #### `controller_advancedCouplerControl.onCouplerFound(nodeId, obj2id, obj2nodeId)`
 
-Hook de controller.lua quand un coupleur proche est trouvé ; vide ici.
+Hook from controller.lua when a nearby coupler is found; empty here.
 
-- `nodeId` (*integer*) : cid du noeud local.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : cid du noeud de l'autre véhicule.
+- `nodeId` (*integer*) : cid of the local node.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : cid of the other vehicle's node.
 
 #### `controller_advancedCouplerControl.onGameplayEvent(eventName, ...)`
 
-Hook d'évènement de gameplay, vide dans ce contrôleur.
+Gameplay event hook, empty in this controller.
 
-- `eventName` (*string*) : Nom de l'évènement.
-- `...` (*any*) : Arguments de l'évènement.
+- `eventName` (*string*) : Event name.
+- `...` (*any*) : Event arguments.
 
 #### `controller_advancedCouplerControl.reset(jbeamData)`
 
-Remet tous les verrous à l'état détaché, relance les attaches initiales (`couplingStartRadius`) et ré-enregistre les groupes de casse.
+Resets all latches to the detached state, restarts the initial attaches (`couplingStartRadius`) and re-registers the break groups.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_advancedCouplerControl.resetSounds(jbeamData)`
 
-Vide ; présent pour le cycle de vie.
+Empty; present for the lifecycle.
 
-- `jbeamData` (*table*) : Non utilisé.
+- `jbeamData` (*table*) : Not used.
 
 #### `controller_advancedCouplerControl.setState(data)`
 
-Tente de reproduire un état sauvegardé (attache, détache ou rupture de toutes les paires).
+Tries to reproduce a saved state (attach, detach or break of all pairs).
 
-- `data` (*table|nil*) : Table contenant `<nom>_groupState`.
+- `data` (*table|nil*) : Table containing `<name>_groupState`.
 
 #### `controller_advancedCouplerControl.toggleGroupConditional(conditions)`
 
-Comme toggleGroup, mais d'abord vérifie des conditions sur d'autres contrôleurs advancedCouplerControl ; si l'un est dans l'état interdit, affiche le message d'erreur et ne fait rien.
+Like toggleGroup, but first checks conditions on other advancedCouplerControl controllers; if one is in the forbidden state, displays the error message and does nothing.
 
-- `conditions` (*table[]*) : Liste de {nomContrôleur, étatInterdit, messageErreur?}.
+- `conditions` (*table[]*) : List of {controllerName, forbiddenState, errorMessage?}.
 
 #### `controller_advancedCouplerControl.updateGFX(dt)`
 
-Chaque frame : gère le délai des sons, les déclencheurs electrics de verrouillage/déverrouillage, les verrous automatiques en attente, la recherche du noeud cid2 le plus proche en mode multipoint, et applique les forces d'ouverture/fermeture.
+Every frame: handles the sound delay, the lock/unlock electrics triggers, pending automatic latches, the search for the closest cid2 node in multipoint mode, and applies the opening/closing forces.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `applyForceTime`, `attachLocalCoupler`, `detachCoupler`, `nodeLength`, `playSFXOnceCT`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/advancedCouplerControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/advancedCouplerControl.lua`.*

@@ -1,28 +1,67 @@
 {
   "path": "lua/ge/extensions/editor/mainToolbar.lua",
-  "module": "Barre d'outils principale (fenêtre « Main Toolbar ») du World Editor. Elle contient les boutons généraux (nouveau/ouvrir/sauvegarder niveau…), les boutons de gizmo d'axe (grille, snap de rotation et d'échelle), la caméra, l'heure du jour et l'exposition, ainsi que la liste des modes d'édition regroupables en « sets » enregistrés dans un fichier. Les autres extensions peuvent y ajouter des boutons via les hooks émis.",
+  "module": "Main toolbar (\"Main Toolbar\" window) of the World Editor. It contains the general buttons (new/open/save level...), the axis gizmo buttons (grid, rotation and scale snap), the camera, the time of day and the exposure, as well as the list of edit modes groupable into \"sets\" saved in a file. Other extensions can add buttons to it via the emitted hooks.",
   "notes": [
-    "Hooks émis : onEditorGuiGeneralToolbar (boutons généraux), onEditorGuiEditModesToolbar et onEditorGuiEditModeToolbar (modes d'édition).",
-    "Ne dessine rien en mode headless ni tant que editor.menuHeight n'est pas défini (menu principal pas encore dessiné).",
-    "À la désactivation de l'éditeur, restaure l'auto-exposition et l'EV manuel de PostEffectLocalExposureObject modifiés depuis la barre.",
-    "Préférence ui.general.enableVehicleControls : active/désactive les action maps VehicleCommonActionMap et VehicleSpecificActionMap."
+    "Emitted hooks: onEditorGuiGeneralToolbar (general buttons), onEditorGuiEditModesToolbar and onEditorGuiEditModeToolbar (edit modes).",
+    "Draws nothing in headless mode or as long as editor.menuHeight is not set (main menu not drawn yet).",
+    "When the editor is deactivated, restores the auto-exposure and the manual EV of PostEffectLocalExposureObject modified from the bar.",
+    "Preference ui.general.enableVehicleControls: enables/disables the VehicleCommonActionMap and VehicleSpecificActionMap action maps."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "{'core_environment'}."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "{'core_environment'}."
+    }
   },
   "functions": {
-    "onEditorGuiToolBar": {"desc": "Dessine la fenêtre de la barre d'outils à chaque frame et émet les hooks de barre d'outils.", "params": {}, "internal": true},
-    "onEditorInitialized": {"desc": "Enregistre et affiche la fenêtre « mainToolbar » et charge les sets de modes d'édition depuis le fichier.", "params": {}, "internal": true},
+    "onEditorGuiToolBar": {
+      "desc": "Draws the toolbar window every frame and emits the toolbar hooks.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Registers and shows the \"mainToolbar\" window and loads the edit mode sets from the file.",
+      "params": {},
+      "internal": true
+    },
     "onEditorPreferenceValueChanged": {
-      "desc": "Si ui.general.enableVehicleControls change, active/désactive les action maps véhicule.",
+      "desc": "If ui.general.enableVehicleControls changes, enables/disables the vehicle action maps.",
       "params": {
-        "path": {"type": "string", "desc": "Chemin de la préférence."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "path": {
+          "type": "string",
+          "desc": "Preference path."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       },
       "internal": true
     },
-    "onEditorSaveState": {"desc": "Appelé à la sauvegarde de l'état de l'éditeur. Corps vide.", "params": {"state": {"type": "table", "desc": "État de l'éditeur."}}, "internal": true},
-    "onEditorLoadState": {"desc": "Appelé au chargement de l'état de l'éditeur. Corps vide.", "params": {"state": {"type": "table", "desc": "État de l'éditeur."}}, "internal": true},
-    "onEditorDeactivated": {"desc": "Appelé à la désactivation de l'éditeur : restaure l'exposition initiale si elle avait été modifiée.", "params": {}, "internal": true}
+    "onEditorSaveState": {
+      "desc": "Called when the editor state is saved. Empty body.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "Editor state."
+        }
+      },
+      "internal": true
+    },
+    "onEditorLoadState": {
+      "desc": "Called when the editor state is loaded. Empty body.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "Editor state."
+        }
+      },
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Called when the editor is deactivated: restores the initial exposure if it was modified.",
+      "params": {},
+      "internal": true
+    }
   }
 }

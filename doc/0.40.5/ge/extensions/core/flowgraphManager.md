@@ -1,229 +1,229 @@
 # `core_flowgraphManager`
 
-*Fichier : `lua/ge/extensions/core/flowgraphManager.lua` · VM : Game Engine (GE) · 436 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/flowgraphManager.lua` · VM: Game Engine (GE) · 436 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_flowgraphManager` : `extensions.load("core_flowgraphManager")`, puis la globale `core_flowgraphManager`
+**Access:** extension `core_flowgraphManager`: `extensions.load("core_flowgraphManager")`, then the global `core_flowgraphManager`
 
-Extension GE `core_flowgraphManager` : gestionnaire des projets Flowgraph (scripts visuels à base de nœuds) en cours d'exécution. Il crée, charge, démarre, supprime et sérialise les `manager` (un par projet .flow.json), fournit les catalogues de nœuds et de templates d'état disponibles pour l'éditeur, et expose des helpers `_flowgraph_createNode / _flowgraph_createStateNode / _flowgraph_createModule` que les fichiers de nœuds utilisent pour se déclarer. Un moddeur l'utilise pour lancer un projet flowgraph par script ou retrouver un nœud/module d'un projet actif.
+GE extension `core_flowgraphManager`: manager of the running Flowgraph projects (node-based visual scripts). It creates, loads, starts, deletes and serializes `manager` objects (one per .flow.json project), provides the catalogs of available nodes and state templates for the editor, and exposes helpers `_flowgraph_createNode / _flowgraph_createStateNode / _flowgraph_createModule` that node files use to declare themselves. A modder uses it to launch a flowgraph project by script or to find a node/module of an active project.
 
-## Exemple
+## Example
 
 ```lua
 local mgr, ok = core_flowgraphManager.loadManager('/flowgraphEditor/monProjet.flow.json')
 if ok then mgr:setRunning(true) end
--- projet unique partagé (flowgraphEditor/<nom>.flow.json), démarré automatiquement
+-- single shared project (flowgraphEditor/<name>.flow.json), started automatically
 local s = core_flowgraphManager.getSingleton('monProjet')
 ```
 
-## Remarques
+## Notes
 
-- Un 'manager' est un objet créé par require('/lua/ge/extensions/flowgraph/manager')(M) : champs vus ici : id, graphs[graphId].nodes[nodeId], modules[nom], hidden, transient, savedDir, savedFilename, stopRunningOnClientEndMission ; méthodes vues : setRunning, destroy, historySnapshot, broadcastCall, resolveHooksAndReset, _onSerialize/_onDeserialized. Leur détail est dans le dossier flowgraph/.
-- Les managers à démarrage différé (startNextFrame) sont lancés au prochain onUpdate ; ceux de startOnLoadingScreenFadeout le sont quand le hook onLoadingScreenFadeout est reçu et sont marqués stopRunningOnClientEndMission.
-- onSerialize/onDeserialized sont utilisés lors du rechargement des extensions et aussi par reInitOnFileChange : modifier un fichier de nœud (flowgraph/nodes ou un *Node.lua du dossier customNodes d'un projet) recharge tous les managers.
-- Les managers 'transient' ne sont pas sérialisés ; les 'singletons' (getSingleton) sont retrouvés par nom après rechargement et relancés.
-- Incohérences : le commentaire de getNextUniqueIdentifier dit 'do not use ever' ; getAvailableStateTemplates utilise stateData.name qui n'est jamais défini (le dernier élément de splitPath n'est donc pas ajouté) et construit sourcePath avec l'extension .lua alors que ce sont des .flow.json ; mgrRunningChanged est un local vide non exporté ; les hooks onFlowgraphSceneObjectAdd/Remove/Changed ne font que dump() dans la console.
-- Champs : M.dependencies n'est pas défini à la création, mais par refreshDependencies() (clés de runningProxies).
+- A 'manager' is an object created by require('/lua/ge/extensions/flowgraph/manager')(M): fields seen here: id, graphs[graphId].nodes[nodeId], modules[name], hidden, transient, savedDir, savedFilename, stopRunningOnClientEndMission; methods seen: setRunning, destroy, historySnapshot, broadcastCall, resolveHooksAndReset, _onSerialize/_onDeserialized. Their details are in the flowgraph/ folder.
+- Managers with deferred start (startNextFrame) are launched at the next onUpdate; those in startOnLoadingScreenFadeout are launched when the onLoadingScreenFadeout hook is received and are marked stopRunningOnClientEndMission.
+- onSerialize/onDeserialized are used when extensions are reloaded and also by reInitOnFileChange: modifying a node file (flowgraph/nodes or a *Node.lua of a project's customNodes folder) reloads all managers.
+- 'transient' managers are not serialized; 'singletons' (getSingleton) are found again by name after a reload and restarted.
+- Inconsistencies: the comment of getNextUniqueIdentifier says 'do not use ever'; getAvailableStateTemplates uses stateData.name which is never defined (so the last element of splitPath is not added) and builds sourcePath with the .lua extension whereas they are .flow.json files; mgrRunningChanged is an empty, non-exported local; the onFlowgraphSceneObjectAdd/Remove/Changed hooks only dump() to the console.
+- Fields: M.dependencies is not defined at creation, but by refreshDependencies() (keys of runningProxies).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_flowgraphManager.addManager(data)` | Crée un manager, éventuellement à partir de données déjà décodées, et l'ajoute à la liste. Ne le démarre pas. | 115 |
-| `core_flowgraphManager.clearAllManagers()` | Détruit tous les managers et vide la liste. | 59 |
-| `core_flowgraphManager.controls(name)` | Diffuse à tous les managers l'évènement de contrôle 'onControlsReset' (name = 'reset') ou 'onControlsAction' (name = 'action'). | 387 |
-| `core_flowgraphManager.getAllManagers()` | Liste de tous les managers actifs (référence directe à la table interne). | 66 |
-| `core_flowgraphManager.getAvailableNodeTemplates()` | Scanne récursivement '/lua/ge/extensions/flowgraph/nodes/' (*.lua), les charge avec require (les erreurs sont loguées et le nœud ignoré) et construit un arbre de catégories et une table à plat. Résultat mis en cache jusqu'à la modification d'un fichier de nœud. | 262 |
-| `core_flowgraphManager.getAvailablePinTypes(node)` | Types de pins entrants/sortants d'un nœud d'après son pinSchema ; ajoute 'flow' en entrée et sortie pour les nœuds fonctionnels non simples (via ui_flowgraph_editor). | 302 |
-| `core_flowgraphManager.getAvailableStateTemplates()` | Scanne '/flowgraphEditor/states/' (*state.flow.json), lit chaque fichier et construit un arbre et une table à plat de templates d'état. Les fichiers directement à la racine du dossier sont ignorés. | 326 |
-| `core_flowgraphManager.getManagerByID(id)` | Cherche un manager par son id. | 70 |
-| `core_flowgraphManager.getManagerGraphNode(mgrId, graphId, nodeId)` | Récupère en sécurité un nœud d'un graphe d'un manager actif ; nil si un des ids est invalide (à préférer à l'accès direct getManagerByID(m).graphs[g].nodes[n]). | 79 |
-| `core_flowgraphManager.getManagerModule(mgrId, moduleName)` | Récupère un module d'un manager actif par son nom ; nil si absent. | 89 |
-| `core_flowgraphManager.getNextUniqueIdentifier()` | Compteur d'identifiants uniques incrémenté à chaque appel. Le code indique « do not use ever » : réservé à l'implémentation de flowgraph. *(interne)* | 9 |
-| `core_flowgraphManager.getSingleton(name)` | Renvoie le manager unique de ce nom ; le charge depuis 'flowgraphEditor/<name>.flow.json', le démarre et le mémorise s'il n'existe pas encore. | 367 |
-| `core_flowgraphManager.loadManager(filepath, hidden, keepSavedDirs)` | Crée un manager et y charge un projet .flow.json. Le manager est ajouté à la liste même si le fichier est introuvable (erreur loguée, manager vide). | 97 |
-| `core_flowgraphManager.onDeserialized(data)` | Hook de restauration : détruit les managers, les recrée depuis les données, relance les singletons. *(interne)* *(hook)* | 244 |
-| `core_flowgraphManager.onExtensionLoaded()` | Hook au chargement : définit les fonctions globales _flowgraph_createNode, _flowgraph_createStateNode et _flowgraph_createModule (rawset dans _G) utilisées par les fichiers de nœuds/modules. *(interne)* *(hook)* | 29 |
-| `core_flowgraphManager.onFileChanged(filename, type)` | Hook de modification de fichier : si un nœud de base ou un '*Node.lua' du dossier customNodes d'un projet actif change, recharge (sérialise/désérialise) tous les managers. *(interne)* *(hook)* | 206 |
-| `core_flowgraphManager.onFlowgraphSceneObjectAdd(id, name, fgPath)` | Hook appelé à l'ajout d'un objet de scène flowgraph : affiche seulement un dump de debug. *(interne)* *(hook)* | 399 |
-| `core_flowgraphManager.onFlowgraphSceneObjectChanged(id, name, fgPath)` | Hook de modification d'un objet de scène flowgraph : dump de debug uniquement. *(interne)* *(hook)* | 407 |
-| `core_flowgraphManager.onFlowgraphSceneObjectRemove(id, name, fgPath)` | Hook de suppression d'un objet de scène flowgraph : dump de debug uniquement. *(interne)* *(hook)* | 403 |
-| `core_flowgraphManager.onLoadingScreenFadeout()` | Hook en fin d'écran de chargement : démarre les managers de la liste startOnLoadingScreenFadeout. *(interne)* *(hook)* | 153 |
-| `core_flowgraphManager.onSerialize()` | Hook de sauvegarde avant rechargement des extensions : sérialise les managers non transitoires et l'index des singletons. *(interne)* *(hook)* | 224 |
-| `core_flowgraphManager.onUpdate()` | Hook par image : résout les hooks en attente et réinitialise chaque manager, démarre/supprime ceux planifiés puis diffuse 'onFlowgraphManagerPreUpdate' à chacun. *(interne)* *(hook)* | 166 |
-| `core_flowgraphManager.refreshDependencies()` | Recalcule M.dependencies à partir des clés de M.runningProxies. | 21 |
-| `core_flowgraphManager.removeManager(mgr)` | Détruit un manager et le retire de la liste ainsi que des singletons. Sans effet si le manager n'est pas trouvé (comparaison par id). | 124 |
-| `core_flowgraphManager.removeNextFrame(mgr)` | Planifie la suppression d'un manager au prochain onUpdate (évite de détruire un manager pendant son exécution). | 148 |
-| `core_flowgraphManager.startNextFrame(mgr)` | Planifie setRunning(true) d'un manager au prochain onUpdate. | 145 |
-| `core_flowgraphManager.startOnLoadingScreenFadeout(fg)` | Met un manager en file pour démarrer à la fin de l'écran de chargement (hook onLoadingScreenFadeout), utilisé par les projets lancés automatiquement avec un niveau. | 161 |
+| `core_flowgraphManager.addManager(data)` | Creates a manager, optionally from already decoded data, and adds it to the list. Does not start it. | 115 |
+| `core_flowgraphManager.clearAllManagers()` | Destroys all managers and clears the list. | 59 |
+| `core_flowgraphManager.controls(name)` | Broadcasts to all managers the control event 'onControlsReset' (name = 'reset') or 'onControlsAction' (name = 'action'). | 387 |
+| `core_flowgraphManager.getAllManagers()` | List of all active managers (direct reference to the internal table). | 66 |
+| `core_flowgraphManager.getAvailableNodeTemplates()` | Recursively scans '/lua/ge/extensions/flowgraph/nodes/' (*.lua), loads them with require (errors are logged and the node is skipped) and builds a category tree and a flat table. Result cached until a node file is modified. | 262 |
+| `core_flowgraphManager.getAvailablePinTypes(node)` | Input/output pin types of a node according to its pinSchema; adds 'flow' as input and output for non-simple functional nodes (via ui_flowgraph_editor). | 302 |
+| `core_flowgraphManager.getAvailableStateTemplates()` | Scans '/flowgraphEditor/states/' (*state.flow.json), reads each file and builds a tree and a flat table of state templates. Files directly at the root of the folder are ignored. | 326 |
+| `core_flowgraphManager.getManagerByID(id)` | Looks up a manager by its id. | 70 |
+| `core_flowgraphManager.getManagerGraphNode(mgrId, graphId, nodeId)` | Safely retrieves a node of a graph of an active manager; nil if one of the ids is invalid (preferable to direct access getManagerByID(m).graphs[g].nodes[n]). | 79 |
+| `core_flowgraphManager.getManagerModule(mgrId, moduleName)` | Retrieves a module of an active manager by its name; nil if absent. | 89 |
+| `core_flowgraphManager.getNextUniqueIdentifier()` | Unique identifier counter incremented on every call. The code says "do not use ever": reserved for the flowgraph implementation. *(internal)* | 9 |
+| `core_flowgraphManager.getSingleton(name)` | Returns the single manager of this name; if it does not exist yet, loads it from 'flowgraphEditor/<name>.flow.json', starts it and stores it. | 367 |
+| `core_flowgraphManager.loadManager(filepath, hidden, keepSavedDirs)` | Creates a manager and loads a .flow.json project into it. The manager is added to the list even if the file is not found (error logged, empty manager). | 97 |
+| `core_flowgraphManager.onDeserialized(data)` | Restore hook: destroys the managers, recreates them from the data, restarts the singletons. *(internal)* *(hook)* | 244 |
+| `core_flowgraphManager.onExtensionLoaded()` | Hook on load: defines the global functions _flowgraph_createNode, _flowgraph_createStateNode and _flowgraph_createModule (rawset in _G) used by the node/module files. *(internal)* *(hook)* | 29 |
+| `core_flowgraphManager.onFileChanged(filename, type)` | File modification hook: if a base node or a '*Node.lua' of an active project's customNodes folder changes, reloads (serializes/deserializes) all managers. *(internal)* *(hook)* | 206 |
+| `core_flowgraphManager.onFlowgraphSceneObjectAdd(id, name, fgPath)` | Hook called when a flowgraph scene object is added: only displays a debug dump. *(internal)* *(hook)* | 399 |
+| `core_flowgraphManager.onFlowgraphSceneObjectChanged(id, name, fgPath)` | Hook for modification of a flowgraph scene object: debug dump only. *(internal)* *(hook)* | 407 |
+| `core_flowgraphManager.onFlowgraphSceneObjectRemove(id, name, fgPath)` | Hook for removal of a flowgraph scene object: debug dump only. *(internal)* *(hook)* | 403 |
+| `core_flowgraphManager.onLoadingScreenFadeout()` | Hook at the end of the loading screen: starts the managers of the startOnLoadingScreenFadeout list. *(internal)* *(hook)* | 153 |
+| `core_flowgraphManager.onSerialize()` | Save hook before extensions reload: serializes the non-transient managers and the singletons index. *(internal)* *(hook)* | 224 |
+| `core_flowgraphManager.onUpdate()` | Per-frame hook: resolves pending hooks and resets each manager, starts/deletes the scheduled ones then broadcasts 'onFlowgraphManagerPreUpdate' to each. *(internal)* *(hook)* | 166 |
+| `core_flowgraphManager.refreshDependencies()` | Recomputes M.dependencies from the keys of M.runningProxies. | 21 |
+| `core_flowgraphManager.removeManager(mgr)` | Destroys a manager and removes it from the list and from the singletons. No effect if the manager is not found (compared by id). | 124 |
+| `core_flowgraphManager.removeNextFrame(mgr)` | Schedules the deletion of a manager at the next onUpdate (avoids destroying a manager while it is running). | 148 |
+| `core_flowgraphManager.startNextFrame(mgr)` | Schedules setRunning(true) of a manager at the next onUpdate. | 145 |
+| `core_flowgraphManager.startOnLoadingScreenFadeout(fg)` | Queues a manager to start at the end of the loading screen (onLoadingScreenFadeout hook), used by projects launched automatically with a level. | 161 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_flowgraphManager.addManager(data)`
 
-Crée un manager, éventuellement à partir de données déjà décodées, et l'ajoute à la liste. Ne le démarre pas.
+Creates a manager, optionally from already decoded data, and adds it to the list. Does not start it.
 
-- `data` (*table|nil*) : Données de projet sérialisées.
-- **renvoie** : table Manager.
+- `data` (*table|nil*) : Serialized project data.
+- **returns**: table Manager.
 
 #### `core_flowgraphManager.controls(name)`
 
-Diffuse à tous les managers l'évènement de contrôle 'onControlsReset' (name = 'reset') ou 'onControlsAction' (name = 'action').
+Broadcasts to all managers the control event 'onControlsReset' (name = 'reset') or 'onControlsAction' (name = 'action').
 
-- `name` (*string*) : 'reset' ou 'action' ; autres valeurs ignorées.
+- `name` (*string*) : 'reset' or 'action'; other values are ignored.
 
 #### `core_flowgraphManager.getAllManagers()`
 
-Liste de tous les managers actifs (référence directe à la table interne).
+List of all active managers (direct reference to the internal table).
 
-- **renvoie** : table[] Managers.
+- **returns**: table[] Managers.
 
 #### `core_flowgraphManager.getAvailableNodeTemplates()`
 
-Scanne récursivement '/lua/ge/extensions/flowgraph/nodes/' (*.lua), les charge avec require (les erreurs sont loguées et le nœud ignoré) et construit un arbre de catégories et une table à plat. Résultat mis en cache jusqu'à la modification d'un fichier de nœud.
+Recursively scans '/lua/ge/extensions/flowgraph/nodes/' (*.lua), loads them with require (errors are logged and the node is skipped) and builds a category tree and a flat table. Result cached until a node file is modified.
 
-- **renvoie** : table Arbre : sous-dossier -> {nodes = {nom -> template}, ...sous-dossiers}.
-- **renvoie** : table<string, table> Table à plat chemin -> template (champs ajoutés : path, sourcePath, splitPath, availablePinTypes).
+- **returns**: table Tree: subfolder -> {nodes = {name -> template}, ...subfolders}.
+- **returns**: table<string, table> Flat table path -> template (added fields: path, sourcePath, splitPath, availablePinTypes).
 
 #### `core_flowgraphManager.getAvailablePinTypes(node)`
 
-Types de pins entrants/sortants d'un nœud d'après son pinSchema ; ajoute 'flow' en entrée et sortie pour les nœuds fonctionnels non simples (via ui_flowgraph_editor).
+Input/output pin types of a node according to its pinSchema; adds 'flow' as input and output for non-simple functional nodes (via ui_flowgraph_editor).
 
-- `node` (*table*) : Définition de nœud (champs pinSchema, category).
-- **renvoie** : table {_in = {type = true}, _out = {type = true}}.
+- `node` (*table*) : Node definition (fields pinSchema, category).
+- **returns**: table {_in = {type = true}, _out = {type = true}}.
 
 #### `core_flowgraphManager.getAvailableStateTemplates()`
 
-Scanne '/flowgraphEditor/states/' (*state.flow.json), lit chaque fichier et construit un arbre et une table à plat de templates d'état. Les fichiers directement à la racine du dossier sont ignorés.
+Scans '/flowgraphEditor/states/' (*state.flow.json), reads each file and builds a tree and a flat table of state templates. Files directly at the root of the folder are ignored.
 
-- **renvoie** : table Arbre par sous-dossier : {states = {…}}.
-- **renvoie** : table<string, table> Table à plat chemin -> {data, path, sourcePath, splitPath}.
+- **returns**: table Tree by subfolder: {states = {…}}.
+- **returns**: table<string, table> Flat table path -> {data, path, sourcePath, splitPath}.
 
 #### `core_flowgraphManager.getManagerByID(id)`
 
-Cherche un manager par son id.
+Looks up a manager by its id.
 
-- `id` (*integer*) : Id du manager.
-- **renvoie** : table|nil Manager ou nil.
+- `id` (*integer*) : Manager id.
+- **returns**: table|nil Manager or nil.
 
 #### `core_flowgraphManager.getManagerGraphNode(mgrId, graphId, nodeId)`
 
-Récupère en sécurité un nœud d'un graphe d'un manager actif ; nil si un des ids est invalide (à préférer à l'accès direct getManagerByID(m).graphs[g].nodes[n]).
+Safely retrieves a node of a graph of an active manager; nil if one of the ids is invalid (preferable to direct access getManagerByID(m).graphs[g].nodes[n]).
 
-- `mgrId` (*integer*) : Id du manager.
-- `graphId` (*integer*) : Id du graphe.
-- `nodeId` (*integer*) : Id du nœud.
-- **renvoie** : table|nil Nœud.
+- `mgrId` (*integer*) : Manager id.
+- `graphId` (*integer*) : Graph id.
+- `nodeId` (*integer*) : Node id.
+- **returns**: table|nil Node.
 
 #### `core_flowgraphManager.getManagerModule(mgrId, moduleName)`
 
-Récupère un module d'un manager actif par son nom ; nil si absent.
+Retrieves a module of an active manager by its name; nil if absent.
 
-- `mgrId` (*integer*) : Id du manager.
-- `moduleName` (*string*) : Nom du module.
-- **renvoie** : table|nil Module.
+- `mgrId` (*integer*) : Manager id.
+- `moduleName` (*string*) : Module name.
+- **returns**: table|nil Module.
 
 #### `core_flowgraphManager.getNextUniqueIdentifier()`
 
-Compteur d'identifiants uniques incrémenté à chaque appel. Le code indique « do not use ever » : réservé à l'implémentation de flowgraph.
+Unique identifier counter incremented on every call. The code says "do not use ever": reserved for the flowgraph implementation.
 
-- **renvoie** : integer Identifiant.
+- **returns**: integer Identifier.
 
 #### `core_flowgraphManager.getSingleton(name)`
 
-Renvoie le manager unique de ce nom ; le charge depuis 'flowgraphEditor/<name>.flow.json', le démarre et le mémorise s'il n'existe pas encore.
+Returns the single manager of this name; if it does not exist yet, loads it from 'flowgraphEditor/<name>.flow.json', starts it and stores it.
 
-- `name` (*string*) : Nom de projet sans extension.
-- **renvoie** : table|nil Manager ; nil si le fichier est introuvable.
+- `name` (*string*) : Project name without extension.
+- **returns**: table|nil Manager; nil if the file is not found.
 
 #### `core_flowgraphManager.loadManager(filepath, hidden, keepSavedDirs)`
 
-Crée un manager et y charge un projet .flow.json. Le manager est ajouté à la liste même si le fichier est introuvable (erreur loguée, manager vide).
+Creates a manager and loads a .flow.json project into it. The manager is added to the list even if the file is not found (error logged, empty manager).
 
-- `filepath` (*string*) : Chemin du fichier .flow.json.
-- `hidden` (*boolean|nil*) : Marque le manager comme caché (mgr.hidden).
-- `keepSavedDirs` (*boolean|nil*) : true = garde savedDir/savedFilename du fichier au lieu de ceux de filepath.
-- **renvoie** : table Manager.
-- **renvoie** : boolean true si le fichier a été lu.
+- `filepath` (*string*) : Path of the .flow.json file.
+- `hidden` (*boolean|nil*) : Marks the manager as hidden (mgr.hidden).
+- `keepSavedDirs` (*boolean|nil*) : true = keeps the file's savedDir/savedFilename instead of those of filepath.
+- **returns**: table Manager.
+- **returns**: boolean true if the file was read.
 
 #### `core_flowgraphManager.onDeserialized(data)`
 
-Hook de restauration : détruit les managers, les recrée depuis les données, relance les singletons.
+Restore hook: destroys the managers, recreates them from the data, restarts the singletons.
 
-- `data` (*table*) : Données de onSerialize.
+- `data` (*table*) : Data from onSerialize.
 
 #### `core_flowgraphManager.onFileChanged(filename, type)`
 
-Hook de modification de fichier : si un nœud de base ou un '*Node.lua' du dossier customNodes d'un projet actif change, recharge (sérialise/désérialise) tous les managers.
+File modification hook: if a base node or a '*Node.lua' of an active project's customNodes folder changes, reloads (serializes/deserializes) all managers.
 
-- `filename` (*string*) : Chemin du fichier.
-- `type` (*any*) : Non utilisé.
+- `filename` (*string*) : File path.
+- `type` (*any*) : Not used.
 
 #### `core_flowgraphManager.onFlowgraphSceneObjectAdd(id, name, fgPath)`
 
-Hook appelé à l'ajout d'un objet de scène flowgraph : affiche seulement un dump de debug.
+Hook called when a flowgraph scene object is added: only displays a debug dump.
 
-- `id` (*integer*) : Id de l'objet.
-- `name` (*string*) : Nom.
-- `fgPath` (*string*) : Chemin du flowgraph.
+- `id` (*integer*) : Object id.
+- `name` (*string*) : Name.
+- `fgPath` (*string*) : Flowgraph path.
 
 #### `core_flowgraphManager.onFlowgraphSceneObjectChanged(id, name, fgPath)`
 
-Hook de modification d'un objet de scène flowgraph : dump de debug uniquement.
+Hook for modification of a flowgraph scene object: debug dump only.
 
-- `id` (*integer*) : Id de l'objet.
-- `name` (*string*) : Nom.
-- `fgPath` (*string*) : Chemin du flowgraph.
+- `id` (*integer*) : Object id.
+- `name` (*string*) : Name.
+- `fgPath` (*string*) : Flowgraph path.
 
 #### `core_flowgraphManager.onFlowgraphSceneObjectRemove(id, name, fgPath)`
 
-Hook de suppression d'un objet de scène flowgraph : dump de debug uniquement.
+Hook for removal of a flowgraph scene object: debug dump only.
 
-- `id` (*integer*) : Id de l'objet.
-- `name` (*string*) : Nom.
-- `fgPath` (*string*) : Chemin du flowgraph.
+- `id` (*integer*) : Object id.
+- `name` (*string*) : Name.
+- `fgPath` (*string*) : Flowgraph path.
 
 #### `core_flowgraphManager.onSerialize()`
 
-Hook de sauvegarde avant rechargement des extensions : sérialise les managers non transitoires et l'index des singletons.
+Save hook before extensions reload: serializes the non-transient managers and the singletons index.
 
-- **renvoie** : table {mgrs, uniques}.
+- **returns**: table {mgrs, uniques}.
 
 #### `core_flowgraphManager.removeManager(mgr)`
 
-Détruit un manager et le retire de la liste ainsi que des singletons. Sans effet si le manager n'est pas trouvé (comparaison par id).
+Destroys a manager and removes it from the list and from the singletons. No effect if the manager is not found (compared by id).
 
 - `mgr` (*table*) : Manager.
 
 #### `core_flowgraphManager.removeNextFrame(mgr)`
 
-Planifie la suppression d'un manager au prochain onUpdate (évite de détruire un manager pendant son exécution).
+Schedules the deletion of a manager at the next onUpdate (avoids destroying a manager while it is running).
 
 - `mgr` (*table*) : Manager.
 
 #### `core_flowgraphManager.startNextFrame(mgr)`
 
-Planifie setRunning(true) d'un manager au prochain onUpdate.
+Schedules setRunning(true) of a manager at the next onUpdate.
 
 - `mgr` (*table*) : Manager.
 
 #### `core_flowgraphManager.startOnLoadingScreenFadeout(fg)`
 
-Met un manager en file pour démarrer à la fin de l'écran de chargement (hook onLoadingScreenFadeout), utilisé par les projets lancés automatiquement avec un niveau.
+Queues a manager to start at the end of the loading screen (onLoadingScreenFadeout hook), used by projects launched automatically with a level.
 
 - `fg` (*table*) : Manager.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `enableUsageTracking` | boolean | Drapeau de suivi d'usage (false par défaut) ; lu par d'autres modules flowgraph. |
-| `nodePath` | string | '/lua/ge/extensions/flowgraph/nodes/' : dossier des nœuds de base. |
-| `runningProxies` | table<string, any> | Extensions proxy en cours ; leurs clés servent à recalculer M.dependencies (refreshDependencies). |
-| `skipCountdowns` | boolean | Drapeau pour ignorer les compte à rebours (false par défaut) ; lu par d'autres modules flowgraph. |
+| `enableUsageTracking` | boolean | Usage tracking flag (false by default); read by other flowgraph modules. |
+| `nodePath` | string | '/lua/ge/extensions/flowgraph/nodes/': folder of the base nodes. |
+| `runningProxies` | table<string, any> | Running proxy extensions; their keys are used to recompute M.dependencies (refreshDependencies). |
+| `skipCountdowns` | boolean | Flag to ignore countdowns (false by default); read by other flowgraph modules. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/flowgraphManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/flowgraphManager.lua`.*

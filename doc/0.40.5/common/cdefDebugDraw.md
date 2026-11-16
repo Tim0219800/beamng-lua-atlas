@@ -1,16 +1,16 @@
 # `cdefDebugDraw`
 
-*Fichier : `lua/common/cdefDebugDraw.lua` · VM : Commun (GE + véhicule) · 20 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/cdefDebugDraw.lua` · VM: Common (GE + vehicle) · 20 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("cdefDebugDraw")`
+**Access:** `require("cdefDebugDraw")`
 
-Déclarations FFI (ffi.cdef) des fonctions C++ de dessin de debug (BNG_DBG_DRAW_*) : sphère, cylindre, ligne, texte, prisme carré, triangle plein et versions par lots (batch). Ne s'exécute que si ffi est disponible. Un moddeur n'appelle normalement pas ces symboles directement : on passe par l'API debugDrawer.
+FFI declarations (ffi.cdef) of the C++ debug drawing functions (BNG_DBG_DRAW_*): sphere, cylinder, line, text, square prism, filled triangle and batch versions. Only runs if ffi is available. A modder does not normally call these symbols directly: use the debugDrawer API instead.
 
-## Remarques
+## Notes
 
-- Le fichier ne définit aucune fonction Lua ni aucun champ : uniquement un ffi.cdef.
-- Les couleurs sont passées en entier non signé packé (packedCol).
-- Déclare aussi le typedef Vector3 {float x, y, z}.
+- The file defines no Lua function or field: only an ffi.cdef.
+- Colors are passed as a packed unsigned integer (packedCol).
+- Also declares the typedef Vector3 {float x, y, z}.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/cdefDebugDraw.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/cdefDebugDraw.lua`.*

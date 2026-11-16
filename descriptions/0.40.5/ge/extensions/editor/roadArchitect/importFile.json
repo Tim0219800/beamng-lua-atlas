@@ -1,45 +1,80 @@
 {
   "path": "lua/ge/extensions/editor/roadArchitect/importFile.lua",
-  "module": "Utilitaires d'import de fichiers pour Road Architect, pensés pour un usage sans interface (pont tech/BeamNGpy). Ils lisent un fichier depuis un chemin virtuel ou natif, le copient si besoin dans /temp/roadArchitectImport, préparent les API de l'éditeur (historique, préférences) sans ouvrir l'UI, puis finalisent les routes (DecalRoads, collisions, navgraph).",
+  "module": "File import utilities for Road Architect, designed for headless use (tech/BeamNGpy bridge). They read a file from a virtual or native path, copy it if needed into /temp/roadArchitectImport, prepare the editor APIs (history, preferences) without opening the UI, then finalize the roads (DecalRoads, collisions, navgraph).",
   "usage": "local imp = extensions.editor_roadArchitect_importFile\nlocal chemin, stage = imp.stageText('C:/x/route.json', contenu)\nlocal data = imp.readTextFile(chemin)\nimp.ensureEditorHistory()\nimp.maybeFinalise({finalize = true})",
   "notes": [
-    "readTextFile essaie dans l'ordre : readFile avec séparateurs normalisés, readFile avec le chemin brut, conversion FS:native2Virtual, puis io.open en mode binaire.",
-    "stageText ne copie rien si fileContent est nil ou vide : il renvoie alors le chemin d'origine et false.",
-    "maybeFinalise renvoie false, nil quand options.finalize n'est pas exactement true, sans rien faire.",
-    "ensureEditorHistory lève une erreur (error) si editor_main, editor.history ou editor.getPreference restent indisponibles."
+    "readTextFile tries in order: readFile with normalized separators, readFile with the raw path, FS:native2Virtual conversion, then io.open in binary mode.",
+    "stageText copies nothing if fileContent is nil or empty: it then returns the original path and false.",
+    "maybeFinalise returns false, nil when options.finalize is not exactly true, doing nothing.",
+    "ensureEditorHistory raises an error (error) if editor_main, editor.history or editor.getPreference remain unavailable."
   ],
   "functions": {
     "readTextFile": {
-      "desc": "Lit le contenu d'un fichier à partir d'un chemin virtuel ou natif absolu. Essaie readFile, la conversion native vers virtuel, puis io.open en binaire. Renvoie nil si le chemin est invalide ou si le fichier est introuvable.",
-      "params": {"filePath": {"type": "string", "desc": "Chemin virtuel ou natif (les antislashs sont normalisés en /)."}},
-      "returns": [{"type": "string|nil", "desc": "Contenu du fichier, ou nil."}],
+      "desc": "Reads the content of a file from an absolute virtual or native path. Tries readFile, the native-to-virtual conversion, then io.open in binary. Returns nil if the path is invalid or the file is not found.",
+      "params": {
+        "filePath": {
+          "type": "string",
+          "desc": "Virtual or native path (backslashes are normalized to /)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "File content, or nil."
+        }
+      ],
       "internal": false
     },
     "stageText": {
-      "desc": "Écrit le contenu fourni dans /temp/roadArchitectImport/<nom du fichier> (dossier créé si nécessaire) afin que le jeu puisse le lire dans son système de fichiers virtuel. Convertit fileContent en string avec tostring s'il n'en est pas une. Lève une erreur si l'écriture échoue.",
+      "desc": "Writes the given content to /temp/roadArchitectImport/<file name> (folder created if needed) so that the game can read it in its virtual file system. Converts fileContent to a string with tostring if it is not one. Raises an error if the write fails.",
       "params": {
-        "filePath": {"type": "string", "desc": "Chemin d'origine, dont seul le nom de fichier est conservé (import.bin par défaut)."},
-        "fileContent": {"type": "string|nil", "desc": "Contenu à déposer ; si nil ou vide, rien n'est écrit."}
+        "filePath": {
+          "type": "string",
+          "desc": "Original path, of which only the file name is kept (import.bin by default)."
+        },
+        "fileContent": {
+          "type": "string|nil",
+          "desc": "Content to write; if nil or empty, nothing is written."
+        }
       },
       "returns": [
-        {"type": "string", "desc": "Chemin utilisable : le fichier déposé, ou filePath si rien n'a été écrit."},
-        {"type": "boolean", "desc": "true si le fichier a été déposé."}
+        {
+          "type": "string",
+          "desc": "Usable path: the staged file, or filePath if nothing was written."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if the file was staged."
+        }
       ],
       "internal": false
     },
     "ensureEditorHistory": {
-      "desc": "Prépare les API du World Editor nécessaires à l'import et à la finalisation sans ouvrir l'interface : charge editor_main si besoin, appelle editor.initializeModules pour créer l'historique, puis editor.ensurePreferencesApi ou editor.loadPreferences pour les préférences (nécessaires à roadRiver.getPreference lors de la finalisation des DecalRoads).",
+      "desc": "Prepares the World Editor APIs needed for import and finalization without opening the UI: loads editor_main if needed, calls editor.initializeModules to create the history, then editor.ensurePreferencesApi or editor.loadPreferences for the preferences (needed by roadRiver.getPreference when finalizing DecalRoads).",
       "params": {},
       "returns": [],
       "internal": false,
-      "notes": ["Nécessaire car setEditorActive est différé sur plusieurs frames de splash et ne peut pas servir dans une même requête BeamNGpy."]
+      "notes": [
+        "Needed because setEditorActive is deferred over several splash frames and cannot be used within a single BeamNGpy request."
+      ]
     },
     "maybeFinalise": {
-      "desc": "Si options.finalize est true, pose les DecalRoads et meshes, recharge les collisions et reconstruit le navgraph, comme la bascule Render/finalise de Road Architect. Déjà finalisé (objet « Road Architect » existant) : appelle d'abord roads.unfinalise() pour éviter les doublons.",
-      "params": {"options": {"type": "table|nil", "desc": "Options d'import ; seul le champ finalize (boolean) est lu."}},
+      "desc": "If options.finalize is true, places the DecalRoads and meshes, reloads collisions and rebuilds the navgraph, like the Render/finalise toggle of Road Architect. Already finalized (\"Road Architect\" object exists): first calls roads.unfinalise() to avoid duplicates.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "Import options; only the finalize field (boolean) is read."
+        }
+      },
       "returns": [
-        {"type": "boolean", "desc": "true si la finalisation a eu lieu."},
-        {"type": "string|nil", "desc": "Message d'erreur, par exemple « finalize requires a loaded level (MissionGroup missing) »."}
+        {
+          "type": "boolean",
+          "desc": "true if finalization took place."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message, for example \"finalize requires a loaded level (MissionGroup missing)\"."
+        }
       ],
       "internal": false
     }

@@ -1,0 +1,188 @@
+{
+  "path": "lua/ge/extensions/statistics/statistics.lua",
+  "module": "Extension GE qui suit les statistiques d'un scénario (distance parcourue, altitude, vitesse max, dégâts, temps, objectifs) pour chaque véhicule, calcule les points obtenus et attribue la médaille finale (wood/bronze/silver/gold). Les paramètres viennent de scenario.statistics (maxValue, maxPoints, best/worst, target, source, required, alias, overall avec goldCutoff/silverCutoff/bronzeCutoff). Un moddeur s'en sert pour lire les résultats d'un scénario (getVehicleStat, getScenarioOverallStat) ou pour y ajouter ses propres statistiques (initialiseArbitraryStat, setStatProgress).",
+  "usage": "local stats = statistics_statistics.getVehicleStat(be:getPlayerVehicleID(0))\nfor _, s in ipairs(stats or {}) do print(s.label, s.value, s.points, s.maxPoints) end",
+  "notes": [
+    "Les tables internes sont indexées par id de véhicule puis par clé 'stat_<nom>' ou 'goal_<nom>' ; chaque entrée contient des 'instances' (une par source/véhicule suivi).",
+    "Unités : distance et altitude en mètres ; si le total est < 1609.34 m (1 mile) l'unité affichée est 'm', sinon l'unité utilisateur 'distance'. La vitesse (max) est la norme de map.objects[id].vel en m/s.",
+    "Points d'une stat : (value / maxValue) * maxPoints, ou, pour le temps, interpolation linéaire entre best (points max) et worst (0). Les points sont bornés à ±maxPoints puis arrondis par math.floor.",
+    "Médaille : wood si le scénario est échoué ; gold si score >= goldCutoff (défaut 90 %) ou maxPoints == 0 ; silver >= silverCutoff (70) ; bronze >= bronzeCutoff (0).",
+    "Bug probable : dans initialiseTimeStat, quand scenario.statistics.time est un tableau, maxPoints/best/worst sont lus sur le tableau (timeProperties) et non sur l'entrée courante (entry), donc ils valent nil.",
+    "Bug probable : getSummaryStats additionne data.points / data.maxPoints sans test de nil (erreur si le nom n'existe pas dans scenarioStats).",
+    "DEBUG_generateScoreForMedal fait clamp(percent, 0, 100) alors que percent est déjà une fraction 0..1 ; le jeu logge des erreurs en build shipping car la fonction devrait être retirée.",
+    "enableStatisticTracking appelle vehicle:getPosition() sans tester vehicle nil et écrit initialZPos/initialPos sur statEntry (et non sur l'instance) alors que onUpdate lit instance.initialPos/initialZPos."
+  ],
+  "functions": {
+    "reset": {
+      "desc": "Vide scenarioStats (résumés par scénario). Ne touche pas à statsTable.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "enableStatisticTracking": {
+      "desc": "Active le suivi d'une statistique pour un véhicule (enabled = true) et mémorise la position de départ pour 'altitude' (initialZPos) ou 'distance' (initialPos). Ne fait rien si la statistique n'existe pas pour ce véhicule.",
+      "params": {
+        "vehicleID": {"type": "integer", "desc": "Id du véhicule."},
+        "statisticName": {"type": "string", "desc": "Nom de la stat sans préfixe : 'distance', 'altitude', 'speed', 'damage', 'time'…"}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "disableStatisticTracking": {
+      "desc": "Désactive le suivi d'une statistique pour un véhicule (enabled = false). Les valeurs déjà mesurées sont conservées.",
+      "params": {
+        "vehicleID": {"type": "integer", "desc": "Id du véhicule."},
+        "statisticName": {"type": "string", "desc": "Nom de la stat sans préfixe."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "getScenarioOverallStat": {
+      "desc": "Renvoie le résumé global d'un scénario (label, points, maxPoints, failed, medal…), ou une table vide s'il n'y en a pas.",
+      "params": {"scenario": {"type": "table", "desc": "Table du scénario (seul scenario.name est utilisé)."}},
+      "returns": [{"type": "table", "desc": "Entrée de scenarioStats[scenario.name] ou {}."}],
+      "internal": false
+    },
+    "getVehicleStat": {
+      "desc": "Construit la liste des statistiques d'un véhicule pour l'interface de fin de scénario : une entrée par stat/objectif avec label, decimals, unit, predefinedUnit, required, failed, value, points, maxPoints et relativePoints (en %). Agrège les instances (somme des valeurs et des points). Pour une unité '%', la valeur est ramenée à value/maxValue*100.",
+      "params": {"vehicleID": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [{"type": "table[]|nil", "desc": "Liste d'entrées, ou nil si le véhicule n'a pas de stats."}],
+      "internal": false
+    },
+    "getSummaryStats": {
+      "desc": "Renvoie, dans l'ordre donné, les résumés de plusieurs scénarios (avec relativePoints en %) ainsi que le total des points obtenus et le total des points max. Utilisé pour un récapitulatif de campagne.",
+      "params": {"statsOrder": {"type": "string[]", "desc": "Noms de scénarios (clés de scenarioStats)."}},
+      "returns": [
+        {"type": "table[]", "desc": "Résumés par scénario."},
+        {"type": "number", "desc": "Somme des points du joueur."},
+        {"type": "number", "desc": "Somme des points max."}
+      ],
+      "internal": false
+    },
+    "setGoalProgress": {
+      "desc": "Crée ou met à jour la progression d'un objectif (clé 'goal_<nom>', required = true) pour un véhicule : enregistre points et maxPoints de l'instance et failed si goalData.status == 'failed'. Ne fait rien si le véhicule n'a pas encore de table de stats.",
+      "params": {
+        "vehicleID": {"type": "integer", "desc": "Id du véhicule."},
+        "goalName": {"type": "string", "desc": "Identifiant de l'objectif (nomove, timeLimit, speed…)."},
+        "instanceId": {"type": "any", "desc": "Identifiant de l'instance (souvent l'id du véhicule cible de l'objectif)."},
+        "goalData": {"type": "table", "desc": "Champs points, maxPoints, status ('init', 'failed'…)."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "setStatProgress": {
+      "desc": "Crée ou met à jour une statistique pour un véhicule. Les champs decimals, enabled, label, predefinedUnit, unit et isGoal sont stockés au niveau de la stat ; tous les autres champs de statData (value, maxValue, maxPoints, source…) sont copiés dans l'instance instanceId. Ignoré si instanceId ou statData manque ou n'est pas une table.",
+      "params": {
+        "vehicleID": {"type": "integer", "desc": "Id du véhicule."},
+        "statName": {"type": "string", "desc": "Nom de la stat (clé interne 'stat_<nom>')."},
+        "instanceId": {"type": "any", "desc": "Identifiant de l'instance (souvent le nom de la source)."},
+        "statData": {"type": "table", "desc": "Données de la stat."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "initialiseArbitraryStat": {
+      "desc": "Ajoute une statistique personnalisée (value = 0, decimals = 2, enabled) à un véhicule ; la source est vehicleName.",
+      "params": {
+        "statName": {"type": "string", "desc": "Nom de la stat."},
+        "statLabel": {"type": "string", "desc": "Libellé (clé de traduction ou texte)."},
+        "vehicle": {"type": "userdata", "desc": "Objet véhicule (getID() est appelé)."},
+        "vehicleName": {"type": "string", "desc": "Nom du véhicule, utilisé comme source et id d'instance."},
+        "maxPoints": {"type": "number|nil", "desc": "Points maximum de la stat."},
+        "maxValue": {"type": "number|nil", "desc": "Valeur donnant les points max."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "stopStatsGathering": {
+      "desc": "Fin de collecte : choisit l'unité de distance/altitude (m si < 1609.34 m, sinon unité 'distance'), calcule les points du véhicule joueur et remplit le résumé du scénario (points, maxPoints, failed, medal).",
+      "params": {"scenario": {"type": "table", "desc": "Scénario terminé (scenario.name, scenario.result.failed)."}},
+      "returns": [],
+      "internal": false
+    },
+    "getMedalRanking": {
+      "desc": "Convertit un nom de médaille en rang : wood 0, bronze 1, silver 2, gold 3 ; -1 si inconnu.",
+      "params": {"medalString": {"type": "string", "desc": "'wood', 'bronze', 'silver' ou 'gold'."}},
+      "returns": [{"type": "integer", "desc": "Rang de 0 à 3, ou -1."}],
+      "internal": false
+    },
+    "DEBUG_generateScoreForMedal": {
+      "desc": "Fonction de debug : force le score du joueur à un pourcentage juste au-dessus du seuil de la médaille demandée et remplit le résumé du scénario courant.",
+      "params": {"medalString": {"type": "string", "desc": "'bronze', 'silver' ou 'gold'."}},
+      "returns": [],
+      "internal": false
+    },
+    "onRaceGoalsInitilised": {
+      "desc": "Hook : appelé quand les objectifs de course sont initialisés. Recrée les tables de stats (initialiseTables). Le nom contient la faute 'Initilised'.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "onScenarioRestarted": {
+      "desc": "Hook : appelé au redémarrage du scénario ; recrée les tables de stats.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "onScenarioChange": {
+      "desc": "Hook : appelé à chaque changement d'état du scénario. À l'état 'post', capture les dégâts finaux de chaque véhicule (map.objects[id].damage).",
+      "params": {"scenario": {"type": "table|nil", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame. Tant que scenario.raceState == 'racing' (et état ≠ 'post'), met à jour distance (norme du déplacement depuis initialPos), altitude (écart absolu en Z) et vitesse maximale pour chaque véhicule suivi.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceInit": {
+      "desc": "Hook : appelé à l'initialisation de la course ; relève la position de départ (initialPos, initialZPos) des stats distance et altitude.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceTick": {
+      "desc": "Hook : appelé à chaque tick de course ; enregistre le chrono courant dans la stat 'time'.",
+      "params": {
+        "raceTickTime": {"type": "number", "desc": "Non utilisé."},
+        "timer": {"type": "number", "desc": "Temps de course en secondes."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onRaceResult": {
+      "desc": "Hook : appelé à la fin de la course ; enregistre status.finalTime dans la stat 'time'.",
+      "params": {"status": {"type": "table", "desc": "Résultat de course (finalTime)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sauvegarde de l'extension : renvoie statsTable (clés id converties en noms de véhicule) et scenarioStats.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{statsTable, scenarioStats}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de rechargement : restaure statsTable (noms reconvertis en ids) et scenarioStats.",
+      "params": {"data": {"type": "table", "desc": "Données produites par onSerialize."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSaveCampaign": {
+      "desc": "Hook de sauvegarde de campagne : passe les mêmes données que onSerialize à saveCallback.",
+      "params": {"saveCallback": {"type": "function", "desc": "Appelée avec (alias global du module, données)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onResumeCampaign": {
+      "desc": "Hook de reprise de campagne : restaure statsTable et scenarioStats depuis data.",
+      "params": {
+        "campaignInProgress": {"type": "any", "desc": "Non utilisé."},
+        "data": {"type": "table", "desc": "Données sauvegardées par onSaveCampaign."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -2,23 +2,23 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/roadNetworkExporter.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre d'éditeur « Road Network Import/Exporter » (menu Window > Tech), visible uniquement avec une licence tech (ResearchVerifier.isTechLicenseVerified()). Elle permet d'importer et d'exporter le réseau routier du Road Architect aux formats OpenDRIVE (.xodr), OpenStreetMap (.osm) et SUMO (.nod.xml / .edg.xml), avec des options d'import (placement, décalage vertical, terraformage, domaine d'influence et marge) reprises du Road Architect.
---- Accès : extension `editor_roadNetworkExporter` : `extensions.load("editor_roadNetworkExporter")`, puis la globale `editor_roadNetworkExporter`
+--- "Road Network Import/Exporter" editor window (Window > Tech menu), visible only with a tech license (ResearchVerifier.isTechLicenseVerified()). It allows importing and exporting the Road Architect road network in OpenDRIVE (.xodr), OpenStreetMap (.osm) and SUMO (.nod.xml / .edg.xml) formats, with import options (placement, vertical offset, terraforming, domain of influence and margin) taken from Road Architect.
+--- Access: extension `editor_roadNetworkExporter`: `extensions.load("editor_roadNetworkExporter")`, then the global `editor_roadNetworkExporter`
 ---@class editor_roadNetworkExporter
 editor_roadNetworkExporter = {}
 
---- Hook appelé quand l'éditeur est activé. Mémorise le TerrainBlock courant (extensions.editor_terrainEditor.getTerrainBlock()). Sans effet sans licence tech.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadNetworkExporter.lua:43
+--- Hook called when the editor is activated. Stores the current TerrainBlock (extensions.editor_terrainEditor.getTerrainBlock()). No effect without a tech license.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadNetworkExporter.lua:43
 function editor_roadNetworkExporter.onEditorActivated() end
 
---- Hook appelé à chaque frame d'interface de l'éditeur. Dessine la fenêtre : options d'import, tableau Import/Export pour OpenDRIVE, OpenStreetMap et SUMO, puis le résultat de l'import (routes importées/ignorées, avertissements).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadNetworkExporter.lua:241
+--- Hook called every editor UI frame. Draws the window: import options, Import/Export table for OpenDRIVE, OpenStreetMap and SUMO, then the import result (imported/skipped roads, warnings).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadNetworkExporter.lua:241
 function editor_roadNetworkExporter.onEditorGui() end
 
---- Hook de l'éditeur, appelé à l'initialisation. Vérifie la licence tech et, si elle est valide, enregistre la fenêtre (600x600) et l'entrée de menu « Road Network Import/Exporter » dans le groupe Tech.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadNetworkExporter.lua:36
+--- Editor hook, called on initialization. Checks the tech license and, if valid, registers the window (600x600) and the "Road Network Import/Exporter" menu entry in the Tech group.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadNetworkExporter.lua:36
 function editor_roadNetworkExporter.onEditorInitialized() end
 

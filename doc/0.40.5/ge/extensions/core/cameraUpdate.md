@@ -1,50 +1,50 @@
 # `core_cameraUpdate`
 
-*Fichier : `lua/ge/extensions/core/cameraUpdate.lua` · VM : Game Engine (GE) · 318 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraUpdate.lua` · VM: Game Engine (GE) · 318 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_cameraUpdate` : `extensions.load("core_cameraUpdate")`, puis la globale `core_cameraUpdate`
+**Access:** extension `core_cameraUpdate`: `extensions.load("core_cameraUpdate")`, then the global `core_cameraUpdate`
 
-Boucle de mise à jour de la caméra à chaque image, séparée de core/camera.lua. Elle traite la vue principale du joueur puis les contextes de rendu supplémentaires (écran partagé, flux vidéo) : remplit camData (position, vitesse, dt, véhicule suivi), appelle le mode de caméra sélectionné (caméra globale ou caméra du véhicule), puis les caméras « en cours d'exécution » (filtres), et copie le résultat dans finalCameraData. core_camera injecte son état via setup() et expose onPreRender / onClientPostStartMission comme ses propres callbacks ; un moddeur n'appelle normalement rien ici.
+Per-frame camera update loop, separate from core/camera.lua. It processes the player's main view then the extra render contexts (split screen, video streams): fills camData (position, velocity, dt, tracked vehicle), calls the selected camera mode (global camera or vehicle camera), then the "running" cameras (filters), and copies the result into finalCameraData. core_camera injects its state via setup() and exposes onPreRender / onClientPostStartMission as its own callbacks; a modder does not normally call anything here.
 
-## Remarques
+## Notes
 
-- Hooks émis : onCameraChanged(player, camName, vehId) quand le nom de caméra ou le véhicule change pour un contexte (player vaut 0 si le contexte n'a pas de joueur) ; onCameraPreRender(camData) seulement sur la vue principale et seulement quand une caméra globale a réussi son update().
-- Si les calculs de caméra donnent NaN/inf, la dernière pose valide est réutilisée et le mode est réinitialisé via cam:init() (journal d'erreur).
-- Repli en cascade : caméra du véhicule manquante -> « orbit » -> caméra libre (commands.setFreeCamera() sur la vue principale ; sur un contexte supplémentaire, la caméra globale 'free' du contexte).
-- camData.dt est multiplié par cameraM.speedFactor (dtSim, dtReal, dtRaw aussi). Sur la vue principale, la distance des ombres de soleil vaut 0.5 en conduite (caméra attachée) et 1.0 avec une caméra globale.
-- Le rayon SSAO passe à 0.5 quand la caméra est à l'intérieur du véhicule (et 1.5 dehors), sauf en mode bigMap.
-- Le nearClip par défaut vient de theLevelInfo.nearClip, sinon 0.1 ; le fov par défaut vaut 60.
+- Emitted hooks: onCameraChanged(player, camName, vehId) when the camera name or vehicle changes for a context (player is 0 if the context has no player); onCameraPreRender(camData) only on the main view and only when a global camera's update() succeeded.
+- If the camera computations give NaN/inf, the last valid pose is reused and the mode is reset via cam:init() (error log).
+- Cascading fallback: missing vehicle camera -> "orbit" -> free camera (commands.setFreeCamera() on the main view; on an extra context, the context's 'free' global camera).
+- camData.dt is multiplied by cameraM.speedFactor (dtSim, dtReal, dtRaw too). On the main view, the sun shadow distance is 0.5 when driving (attached camera) and 1.0 with a global camera.
+- The SSAO radius goes to 0.5 when the camera is inside the vehicle (and 1.5 outside), except in bigMap mode.
+- The default nearClip comes from theLevelInfo.nearClip, otherwise 0.1; the default fov is 60.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_cameraUpdate.onClientPostStartMission()` | Hook appelé après le démarrage d'un niveau : oublie le nearClip du niveau et l'état intérieur/extérieur de la caméra pour que le rayon SSAO soit réappliqué. *(interne)* *(hook)* | 79 |
-| `core_cameraUpdate.onPreRender(dtReal, dtSim, dtRaw)` | Appelé à chaque image avant le rendu (via core_camera) : met à jour la vue principale puis chaque contexte supplémentaire. Ne fait rien tant que levelLoaded est faux. *(interne)* *(hook)* | 308 |
-| `core_cameraUpdate.setup(deps)` | Reçoit de core/camera.lua ses tables d'état et ses fonctions utilitaires (extraContexts, mainContext, moveManager, getGlobalCameras, getVehicleData, getRunningCamsOrder, setGlobalCameraByName, set, vehicleChanged, isInsideBasedOnCameras, isUnicycle, cameraM). Appelé une fois par core_camera. *(interne)* | 22 |
+| `core_cameraUpdate.onClientPostStartMission()` | Hook called after a level starts: forgets the level's nearClip and the camera's inside/outside state so that the SSAO radius is reapplied. *(internal)* *(hook)* | 79 |
+| `core_cameraUpdate.onPreRender(dtReal, dtSim, dtRaw)` | Called every frame before rendering (via core_camera): updates the main view then each extra context. Does nothing while levelLoaded is false. *(internal)* *(hook)* | 308 |
+| `core_cameraUpdate.setup(deps)` | Receives from core/camera.lua its state tables and utility functions (extraContexts, mainContext, moveManager, getGlobalCameras, getVehicleData, getRunningCamsOrder, setGlobalCameraByName, set, vehicleChanged, isInsideBasedOnCameras, isUnicycle, cameraM). Called once by core_camera. *(internal)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_cameraUpdate.onPreRender(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque image avant le rendu (via core_camera) : met à jour la vue principale puis chaque contexte supplémentaire. Ne fait rien tant que levelLoaded est faux.
+Called every frame before rendering (via core_camera): updates the main view then each extra context. Does nothing while levelLoaded is false.
 
-- `dtReal` (*number*) : dt de rendu lissé, en secondes
-- `dtSim` (*number*) : dt de simulation lissé (tient compte du ralenti/pause), en secondes
-- `dtRaw` (*number*) : dt de rendu brut, horloge réelle, en secondes
+- `dtReal` (*number*) : smoothed render dt, in seconds
+- `dtSim` (*number*) : smoothed simulation dt (accounts for slow motion/pause), in seconds
+- `dtRaw` (*number*) : raw render dt, real clock, in seconds
 
 #### `core_cameraUpdate.setup(deps)`
 
-Reçoit de core/camera.lua ses tables d'état et ses fonctions utilitaires (extraContexts, mainContext, moveManager, getGlobalCameras, getVehicleData, getRunningCamsOrder, setGlobalCameraByName, set, vehicleChanged, isInsideBasedOnCameras, isUnicycle, cameraM). Appelé une fois par core_camera.
+Receives from core/camera.lua its state tables and utility functions (extraContexts, mainContext, moveManager, getGlobalCameras, getVehicleData, getRunningCamsOrder, setGlobalCameraByName, set, vehicleChanged, isInsideBasedOnCameras, isUnicycle, cameraM). Called once by core_camera.
 
-- `deps` (*table*) : Table des dépendances injectées par core_camera, clés citées ci-dessus.
+- `deps` (*table*) : Table of dependencies injected by core_camera, keys listed above.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCameraChanged` — écouté par 3 module(s)
-- `onCameraPreRender` — écouté par 1 module(s)
+- `onCameraChanged` — listened to by 3 module(s)
+- `onCameraPreRender` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraUpdate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraUpdate.lua`.*

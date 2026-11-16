@@ -1,38 +1,67 @@
 {
   "path": "lua/ge/extensions/vehicles/saveConfigUtils.lua",
-  "module": "Utilitaires de l'éditeur de métadonnées d'une configuration de véhicule (info_<config>.json) lors de la sauvegarde. Définit la liste des champs éditables (Description, Value, Years, vehicleSelectorSubCluster, vehicleSelectorSubGroup, Country, Region, Type, Body Style, Config Type, Commercial Class, Derby Class, InsuranceClass, Population) avec leur type, limites et libellés. `getFields` prépare ces champs pour l'interface (valeurs, options, valeur de repli) et `validateMetadata` normalise et valide les métadonnées avant écriture.",
+  "module": "Utilities for the vehicle configuration metadata editor (info_<config>.json) when saving. Defines the list of editable fields (Description, Value, Years, vehicleSelectorSubCluster, vehicleSelectorSubGroup, Country, Region, Type, Body Style, Config Type, Commercial Class, Derby Class, InsuranceClass, Population) with their type, limits and labels. `getFields` prepares these fields for the UI (values, options, fallback value) and `validateMetadata` normalizes and validates the metadata before writing.",
   "usage": "local fields = vehicles_saveConfigUtils.getFields('pickup', '/vehicles/pickup/', 'base', 'mon_config')\nlocal meta, err = vehicles_saveConfigUtils.validateMetadata({Description = 'Ma config', Population = 500}, 'pickup')\nif not meta then log('E', 'x', dumps(err)) end",
   "notes": [
-    "Les options des listes viennent du catalogue de véhicules (core_vehicles.getModelList / getModel) ou des configs du modèle ; elles sont mises en cache (clearCache les vide).",
-    "Les valeurs Type exclues des options : Traffic, PropTraffic, PropParked, Utility, Debug, Unknown.",
-    "Limites : Description 120 caractères max ; Population entier de 0 à 50000 ; Value (prix) >= 0 ; Years = {min, max} entiers avec min <= max ; InsuranceClass parmi dailyDriver, commercial, prestige.",
-    "Les erreurs de validateMetadata sont de la forme {field, code} avec code parmi notTable, unknownField, invalidType, empty, tooLong, invalidRange, invalidOption, invalidNumber.",
-    "Si deux valeurs du catalogue ont le même libellé traduit, la plus fréquente est gardée et un avertissement est journalisé une seule fois."
+    "The list options come from the vehicle catalog (core_vehicles.getModelList / getModel) or from the model's configs; they are cached (clearCache empties them).",
+    "Type values excluded from the options: Traffic, PropTraffic, PropParked, Utility, Debug, Unknown.",
+    "Limits: Description 120 characters max; Population integer from 0 to 50000; Value (price) >= 0; Years = {min, max} integers with min <= max; InsuranceClass among dailyDriver, commercial, prestige.",
+    "The errors of validateMetadata have the form {field, code} with code among notTable, unknownField, invalidType, empty, tooLong, invalidRange, invalidOption, invalidNumber.",
+    "If two catalog values have the same translated label, the most frequent one is kept and a warning is logged only once."
   ],
   "functions": {
     "getFields": {
-      "desc": "Construit la liste des champs de métadonnées pour l'éditeur. Pour chaque définition, calcule la valeur de la config cible (avec repli sur la config source si useSourceFallback), la valeur de repli du modèle, l'état `included`, et les options (avec une entrée « personnalisée » pour les listes qui autorisent une valeur libre). Retourne des copies des définitions, sans les clés internes.",
+      "desc": "Builds the list of metadata fields for the editor. For each definition, computes the target config's value (falling back to the source config if useSourceFallback), the model's fallback value, the `included` state, and the options (with a \"custom\" entry for lists that allow a free value). Returns copies of the definitions, without the internal keys.",
       "params": {
-        "modelKey": {"type": "string", "desc": "clé du modèle de véhicule"},
-        "vehicleDirectory": {"type": "string|nil", "desc": "dossier du véhicule (terminé par /) où lire info_<config>.json ; sinon core_vehicles.getConfig est utilisé"},
-        "sourceConfigName": {"type": "string|nil", "desc": "nom de la config d'origine (valeurs de repli)"},
-        "targetConfigName": {"type": "string|nil", "desc": "nom de la config cible dont on lit les valeurs actuelles"}
-      },
-      "returns": [{"type": "table[]", "desc": "liste ordonnée de champs : key, type, label, value, fallbackValue, included, optional, options, etc."}]
-    },
-    "validateMetadata": {
-      "desc": "Valide et normalise une table de métadonnées. L'alias minuscule `description` est accepté pour `Description`. Refuse les clés inconnues et les valeurs invalides ; trim des textes, tri des multi-sélections.",
-      "params": {
-        "metadata": {"type": "table|nil", "desc": "métadonnées à valider ; nil donne une table vide"},
-        "modelKey": {"type": "string|nil", "desc": "clé du modèle, utilisée pour résoudre les options des listes dépendantes du modèle"}
+        "modelKey": {
+          "type": "string",
+          "desc": "vehicle model key"
+        },
+        "vehicleDirectory": {
+          "type": "string|nil",
+          "desc": "vehicle folder (ending with /) where to read info_<config>.json; otherwise core_vehicles.getConfig is used"
+        },
+        "sourceConfigName": {
+          "type": "string|nil",
+          "desc": "name of the source config (fallback values)"
+        },
+        "targetConfigName": {
+          "type": "string|nil",
+          "desc": "name of the target config whose current values are read"
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "métadonnées normalisées, ou nil en cas d'erreur"},
-        {"type": "table|nil", "desc": "en cas d'erreur : {field = clé ou nil, code = chaîne}"}
+        {
+          "type": "table[]",
+          "desc": "ordered list of fields: key, type, label, value, fallbackValue, included, optional, options, etc."
+        }
+      ]
+    },
+    "validateMetadata": {
+      "desc": "Validates and normalizes a metadata table. The lowercase alias `description` is accepted for `Description`. Rejects unknown keys and invalid values; trims texts, sorts multi-selections.",
+      "params": {
+        "metadata": {
+          "type": "table|nil",
+          "desc": "metadata to validate; nil gives an empty table"
+        },
+        "modelKey": {
+          "type": "string|nil",
+          "desc": "model key, used to resolve the options of model-dependent lists"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "normalized metadata, or nil on error"
+        },
+        {
+          "type": "table|nil",
+          "desc": "on error: {field = key or nil, code = string}"
+        }
       ]
     },
     "clearCache": {
-      "desc": "Vide les caches d'options (pays et catalogue) ; à appeler quand la liste des véhicules a changé."
+      "desc": "Empties the option caches (country and catalog); call when the vehicle list has changed."
     }
   }
 }

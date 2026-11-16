@@ -2,41 +2,41 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/collision.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Filtre de collision de caméra.
+--- Camera collision filter.
 ---@class core_cameraModes_collision
 local core_cameraModes_collision = {}
 
---- Distance cible -> caméra imposée par la collision.
----Source : lua/ge/extensions/core/cameraModes/collision.lua:142
----@return number|nil  distance en mètres, nil s'il n'y a pas de collision
+--- Target -> camera distance imposed by collision.
+---Source: lua/ge/extensions/core/cameraModes/collision.lua:142
+---@return number|nil  distance in meters, nil if there is no collision
 function core_cameraModes_collision:collidingCamDistance() end
 
---- Réinitialise l'état (distances, indice de rayon, lissage) et lit le réglage cameraCollision.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/collision.lua:18
+--- Resets the state (distances, ray index, smoothing) and reads the cameraCollision setting.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/collision.lua:18
 function core_cameraModes_collision:init() end
 
---- Détecte une géométrie que les rayons de coin ne voient pas : traversée complète d'un mur en une image, ou arête du plan proche qui coupe une surface.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/collision.lua:36
----@param rayDestinations vec3[] les 4 coins du plan proche
----@param cornerIdx integer coin 1 à 4 à tester
----@return boolean  true si obstacle
+--- Detects geometry that the corner rays do not see: full crossing of a wall in one frame, or a near-plane edge that cuts a surface.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/collision.lua:36
+---@param rayDestinations vec3[] the 4 corners of the near plane
+---@param cornerIdx integer corner 1 to 4 to test
+---@return boolean  true if obstacle
 function core_cameraModes_collision:isObstacleInFrontOfCam(rayDestinations, cornerIdx) end
 
---- Hook : relit le réglage 'cameraCollision' (true par défaut).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/collision.lua:30
+--- Hook: re-reads the 'cameraCollision' setting (true by default).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/collision.lua:30
 function core_cameraModes_collision:onSettingsChanged() end
 
---- Hook : réinitialise le filtre (appelle init).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/collision.lua:138
+--- Hook: resets the filter (calls init).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/collision.lua:138
 function core_cameraModes_collision:onVehicleSwitched() end
 
---- Calcule la nouvelle position de caméra sur l'axe cible -> caméra et écrit data.res.pos.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/collision.lua:54
+--- Computes the new camera position on the target -> camera axis and writes data.res.pos.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/collision.lua:54
 ---@param data table camData
 function core_cameraModes_collision:update(data) end
 

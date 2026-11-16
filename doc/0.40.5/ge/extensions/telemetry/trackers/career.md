@@ -1,54 +1,54 @@
 # `telemetry_trackers_career`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/career.lua` · VM : Game Engine (GE) · 83 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/career.lua` · VM: Game Engine (GE) · 83 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_career` : `extensions.load("telemetry_trackers_career")`, puis la globale `telemetry_trackers_career`
+**Access:** extension `telemetry_trackers_career`: `extensions.load("telemetry_trackers_career")`, then the global `telemetry_trackers_career`
 
-Suiveur de télémétrie du mode carrière : mesure la durée pendant laquelle une carrière est jouée (activité « careerActive » avec l'état de la sauvegarde à l'ouverture : argent, beamXP, bons, nombre de véhicules, nouvelle sauvegarde, tutoriel) et enregistre les véhicules achetés (vehicleAddedToInventory) et vendus (vehicleSold). Il passe par telemetry_core.startActivity/endActivity/addEvent.
+Career mode telemetry tracker: measures how long a career is played (activity "careerActive" with the save state at opening: money, beamXP, vouchers, vehicle count, new save, tutorial) and records the vehicles bought (vehicleAddedToInventory) and sold (vehicleSold). It goes through telemetry_core.startActivity/endActivity/addEvent.
 
-## Remarques
+## Notes
 
-- Extension en déchargement manuel ; lors d'un rechargement Lua, onExtensionUnloaded ferme l'activité en cours (sinon elle n'aurait pas de durée).
-- onBeforeVehicleSell ne fait rien si l'inventaire ne contient pas inventoryId.
+- Extension in manual unload; on a Lua reload, onExtensionUnloaded closes the activity in progress (otherwise it would have no duration).
+- onBeforeVehicleSell does nothing if the inventory does not contain inventoryId.
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_career.onBeforeVehicleSell(data)` | Hook appelé avant la vente d'un véhicule : enregistre modèle, nom et prix de vente. *(interne)* *(hook)* | 56 |
-| `telemetry_trackers_career.onCareerActive(active, newSave)` | Hook appelé quand la carrière devient active ou inactive : démarre ou termine l'activité careerActive (avec les attributs du joueur au démarrage). *(interne)* *(hook)* | 24 |
-| `telemetry_trackers_career.onExtensionLoaded()` | Hook appelé au chargement : passe l'extension en déchargement manuel. *(interne)* *(hook)* | 70 |
-| `telemetry_trackers_career.onExtensionUnloaded()` | Hook appelé au déchargement : un rechargement Lua détruit les suiveurs sans onExit, donc l'activité carrière est fermée ici aussi. *(interne)* *(hook)* | 18 |
-| `telemetry_trackers_career.onVehicleAddedToInventory(data)` | Hook appelé à l'ajout d'un véhicule à l'inventaire : enregistre modèle, nom et prix d'achat. *(interne)* *(hook)* | 42 |
+| `telemetry_trackers_career.onBeforeVehicleSell(data)` | Hook called before a vehicle is sold: records model, name and sale price. *(internal)* *(hook)* | 56 |
+| `telemetry_trackers_career.onCareerActive(active, newSave)` | Hook called when the career becomes active or inactive: starts or ends the careerActive activity (with the player's attributes at start). *(internal)* *(hook)* | 24 |
+| `telemetry_trackers_career.onExtensionLoaded()` | Hook called on load: sets the extension to manual unload. *(internal)* *(hook)* | 70 |
+| `telemetry_trackers_career.onExtensionUnloaded()` | Hook called on unload: a Lua reload destroys the trackers without onExit, so the career activity is also closed here. *(internal)* *(hook)* | 18 |
+| `telemetry_trackers_career.onVehicleAddedToInventory(data)` | Hook called when a vehicle is added to the inventory: records model, name and purchase price. *(internal)* *(hook)* | 42 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_career.onBeforeVehicleSell(data)`
 
-Hook appelé avant la vente d'un véhicule : enregistre modèle, nom et prix de vente.
+Hook called before a vehicle is sold: records model, name and sale price.
 
-- `data` (*table*) : Contient inventoryId et price.
+- `data` (*table*) : Contains inventoryId and price.
 
 #### `telemetry_trackers_career.onCareerActive(active, newSave)`
 
-Hook appelé quand la carrière devient active ou inactive : démarre ou termine l'activité careerActive (avec les attributs du joueur au démarrage).
+Hook called when the career becomes active or inactive: starts or ends the careerActive activity (with the player's attributes at start).
 
-- `active` (*boolean*) : true si la carrière démarre.
-- `newSave` (*boolean*) : true si c'est une nouvelle sauvegarde.
+- `active` (*boolean*) : true if the career is starting.
+- `newSave` (*boolean*) : true if it is a new save.
 
 #### `telemetry_trackers_career.onVehicleAddedToInventory(data)`
 
-Hook appelé à l'ajout d'un véhicule à l'inventaire : enregistre modèle, nom et prix d'achat.
+Hook called when a vehicle is added to the inventory: records model, name and purchase price.
 
-- `data` (*table*) : Contient vehicleInfo (model_key, Name) et purchaseData (prices).
+- `data` (*table*) : Contains vehicleInfo (model_key, Name) and purchaseData (prices).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/career.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/career.lua`.*

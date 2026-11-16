@@ -2,36 +2,36 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Jalons basés sur les statistiques de gameplay (gameplay_statistic) : distance parcourue (vehicle/total_odometer.length, en m, 8 paliers de 10 à 300 km), temps de jeu en carrière (general/mode/career.time, en s, paliers de 5 h), tonneaux (vehicle/rollover) et temps en l'air (vehicle/airtime.time, en s). Récompense majorLinear. La notification repose sur des callbacks de statistique enregistrés pour le prochain palier.
---- Accès : extension `career_modules_milestones_generalMilestones_statistic` : `extensions.load("career_modules_milestones_generalMilestones_statistic")`, puis la globale `career_modules_milestones_generalMilestones_statistic`
+--- Milestones based on gameplay statistics (gameplay_statistic): distance traveled (vehicle/total_odometer.length, in m, 8 tiers from 10 to 300 km), career play time (general/mode/career.time, in s, 5 h tiers), rollovers (vehicle/rollover) and airtime (vehicle/airtime.time, in s). majorLinear reward. Notification relies on statistic callbacks registered for the next tier.
+--- Access: extension `career_modules_milestones_generalMilestones_statistic`: `extensions.load("career_modules_milestones_generalMilestones_statistic")`, then the global `career_modules_milestones_generalMilestones_statistic`
 ---@class career_modules_milestones_generalMilestones_statistic
 career_modules_milestones_generalMilestones_statistic = {}
 
---- Retire le callback de statistique du jalon s'il existe.
----Source : lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:88
----@param milestone table Configuration du jalon.
+--- Removes the milestone's statistic callback if it exists.
+---Source: lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:88
+---@param milestone table Milestone configuration.
 function career_modules_milestones_generalMilestones_statistic.clearStatisticCallback(milestone) end
 
---- Hook appelé après la réclamation d'un jalon : alias de registerStastisticCallback pour ré-enregistrer la surveillance.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:95
----@param milestone table Configuration du jalon réclamé.
+--- Hook called after a milestone is claimed: alias of registerStastisticCallback to re-register the watching.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:95
+---@param milestone table Configuration of the claimed milestone.
 function career_modules_milestones_generalMilestones_statistic.onGeneralMilestoneClaimed(milestone) end
 
---- Hook : construit les quatre jalons statistiques (stat_distance, stat_playtime, stat_rollover, jump) et les ajoute à milestonesList.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:8
----@param milestonesList table[] Liste à compléter.
+--- Hook: builds the four statistic milestones (stat_distance, stat_playtime, stat_rollover, jump) and adds them to milestonesList.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:8
+---@param milestonesList table[] List to fill.
 function career_modules_milestones_generalMilestones_statistic.onGeneralMilestonesCollect(milestonesList) end
 
---- Hook : enregistre le callback de statistique de chaque jalon.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:81
----@param milestone any Non utilisé.
+--- Hook: registers the statistic callback of each milestone.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:81
+---@param milestone any Not used.
 function career_modules_milestones_generalMilestones_statistic.onGeneralMilestonesSetupCallbacks(milestone) end
 
---- Enregistre un callback déclenché quand la statistique surveillée atteint la cible du prochain palier ; le callback notifie le jalon et mémorise notificationStep.
----Source : lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:95
----@param milestone table Configuration du jalon (watchStatisticKey, getTarget...).
+--- Registers a callback triggered when the watched statistic reaches the next tier's target; the callback notifies the milestone and stores notificationStep.
+---Source: lua/ge/extensions/career/modules/milestones/generalMilestones/statistic.lua:95
+---@param milestone table Milestone configuration (watchStatisticKey, getTarget...).
 function career_modules_milestones_generalMilestones_statistic.registerStastisticCallback(milestone) end
 

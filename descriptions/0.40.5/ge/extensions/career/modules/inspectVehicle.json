@@ -1,139 +1,244 @@
 {
   "path": "lua/ge/extensions/career/modules/inspectVehicle.lua",
-  "module": "Gère l'inspection d'un véhicule à vendre (concession ou vendeur privé) en mode carrière avant achat. startInspection fait apparaître le véhicule gelé sur une place de parking, soit en téléportant le joueur, soit en lui donnant un trajet GPS à parcourir dans un temps limité ; une fois arrivé, un « tether » (laisse de distance) limite l'éloignement. Le module définit les règles d'essai (testDriveInfo : durée 60 s, zone, route, frais d'abandon), ouvre le menu d'achat, démarre l'essai via career_modules_testDrive, publie un point d'intérêt (POI) et nettoie à la fin (achat, abandon, trop loin, véhicule déplacé, mode livraison ou mission lancé).",
+  "module": "Handles the inspection of a vehicle for sale (dealership or private seller) in career mode before purchase. startInspection spawns the frozen vehicle on a parking spot, either by teleporting the player or by giving them a GPS route to follow within a time limit; once arrived, a \"tether\" (distance leash) limits how far they can move away. The module defines the test drive rules (testDriveInfo: duration 60 s, zone, route, abandonment fee), opens the purchase menu, starts the test via career_modules_testDrive, publishes a point of interest (POI) and cleans up at the end (purchase, abandonment, too far, vehicle moved, delivery mode or mission started).",
   "notes": [
-    "Constantes : distance de départ du vendeur 25 m (leaveSaleDist), arrivée à l'inspection à moins de 20 m avec ligne de vue (castRayStatic), véhicule déplacé de plus de 10 m de sa place = vente annulée, tether du menu d'achat 3 m, essai de 60 s.",
-    "Temps pour arriver à l'inspection : longueur du chemin GPS / 5 (m/s), arrondie à la minute supérieure ; au bout, la vente est annulée (sellerTimedOut).",
-    "Le véhicule inspecté est gelé (setFreeze) et contact coupé ; il est réinitialisé avec partCondition.initConditions selon son kilométrage (vehicleInfo.Mileage).",
-    "leaveSaleCallback modes de despawn : 'despawn' (supprime le véhicule), 'flagForDeletion' (marque pour suppression par career_modules_vehicleDeletionService), 'dontDespawn' (défaut : le garde, gelé si freezePreviousVeh).",
-    "Bug : repairVehicle utilise la variable `vehId` qui n'est définie nulle part dans la fonction (nil) : payRepairIfNeededGenericVeh reçoit nil. Le code est indiqué « utilisé seulement pendant le tutoriel ».",
-    "Bug : leaveSaleCallback teste `dontShowLeaveSaleMessage`, variable globale jamais définie (nil) : le message de départ s'affiche toujours.",
-    "Les marqueurs POI de type 'inspectVehicle' sont ajoutés à la liste des POI via onGetRawPoiListForLevel et l'invite d'activité propose « voir les informations d'achat »."
+    "Constants: seller departure distance 25 m (leaveSaleDist), arrival at the inspection within 20 m with line of sight (castRayStatic), vehicle moved more than 10 m from its spot = sale canceled, purchase menu tether 3 m, 60 s test.",
+    "Time to reach the inspection: GPS path length / 5 (m/s), rounded up to the next minute; at the end, the sale is canceled (sellerTimedOut).",
+    "The inspected vehicle is frozen (setFreeze) with the ignition off; it is reset with partCondition.initConditions according to its mileage (vehicleInfo.Mileage).",
+    "leaveSaleCallback despawn modes: 'despawn' (removes the vehicle), 'flagForDeletion' (marks for deletion by career_modules_vehicleDeletionService), 'dontDespawn' (default: keeps it, frozen if freezePreviousVeh).",
+    "Bug: repairVehicle uses the variable `vehId`, which is not defined anywhere in the function (nil): payRepairIfNeededGenericVeh receives nil. The code is marked \"only used during the tutorial\".",
+    "Bug: leaveSaleCallback tests `dontShowLeaveSaleMessage`, a global variable that is never defined (nil): the leave message is always shown.",
+    "The 'inspectVehicle' POI markers are added to the POI list via onGetRawPoiListForLevel and the activity prompt offers \"see purchase information\"."
   ],
   "fields": {
-    "dependencies": {"type": "table", "desc": "Table vide : aucune dépendance."}
+    "dependencies": {
+      "type": "table",
+      "desc": "Empty table: no dependency."
+    }
   },
   "functions": {
     "showVehicle": {
-      "desc": "Fait apparaître le véhicule à vendre (shopId) sans l'activer (contact coupé, gelé, conditions de pièces initialisées) et mémorise ses infos (shopId, vehId, nom, valeur).",
-      "params": {"vehicleInfo": {"type": "table|nil", "desc": "Infos de l'annonce (shopId, Brand, Name, Value…)."}},
-      "returns": [{"type": "userdata|nil", "desc": "Objet véhicule, nil en cas d'échec."}]
+      "desc": "Spawns the vehicle for sale (shopId) without activating it (ignition off, frozen, part conditions initialized) and stores its info (shopId, vehId, name, value).",
+      "params": {
+        "vehicleInfo": {
+          "type": "table|nil",
+          "desc": "Listing info (shopId, Brand, Name, Value…)."
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "Vehicle object, nil on failure."
+        }
+      ]
     },
     "startInspection": {
-      "desc": "Démarre l'inspection : ferme une inspection précédente, fait apparaître le véhicule, choisit la place de parking (celle du vendeur privé, ou la meilleure place de la concession), déplace d'éventuels véhicules gênants, place le véhicule, puis téléporte le joueur (quickTravel) ou lui trace un chemin GPS avec limite de temps. Définit les règles d'essai.",
+      "desc": "Starts the inspection: closes a previous inspection, spawns the vehicle, chooses the parking spot (the private seller's, or the dealership's best spot), moves any obstructing vehicles, places the vehicle, then teleports the player (quickTravel) or draws them a GPS path with a time limit. Defines the test drive rules.",
       "params": {
-        "vehicleInfo": {"type": "table", "desc": "Annonce (shopId, sellerId, parkingSpotName pour un privé…)."},
-        "teleportToVehicle": {"type": "boolean", "desc": "true pour téléporter le joueur à la place du véhicule."},
-        "job": {"type": "table|nil", "desc": "Job coroutine existant ; sinon un job est créé."}
+        "vehicleInfo": {
+          "type": "table",
+          "desc": "Listing (shopId, sellerId, parkingSpotName for a private seller…)."
+        },
+        "teleportToVehicle": {
+          "type": "boolean",
+          "desc": "true to teleport the player to the vehicle's spot."
+        },
+        "job": {
+          "type": "table|nil",
+          "desc": "Existing coroutine job; otherwise a job is created."
+        }
       },
-      "returns": [{"type": "boolean|nil", "desc": "Avec un job fourni : true si démarré, false si le spawn échoue ; sans job : nil (asynchrone)."}]
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "With a job provided: true if started, false if the spawn fails; without a job: nil (asynchronous)."
+        }
+      ]
     },
     "leaveSaleCallback": {
-      "desc": "Termine la vente en cours (laisse dépassée, abandon, achat…) : ferme les menus, abandonne l'essai si actif, déclare une réclamation de dégâts d'essai s'il y a lieu, gère le véhicule selon despawnPreviousVehMode, puis réinitialise l'état. Ignoré sans véhicule inspecté ou si un départ est déjà en cours.",
+      "desc": "Ends the current sale (leash exceeded, abandonment, purchase…): closes the menus, abandons the test if active, files a test drive damage claim if applicable, handles the vehicle according to despawnPreviousVehMode, then resets the state. Ignored without an inspected vehicle or if a departure is already in progress.",
       "params": {
-        "despawnPreviousVehMode": {"type": "string|nil", "desc": "'despawn', 'flagForDeletion' ou 'dontDespawn' (défaut)."},
-        "freezePreviousVeh": {"type": "boolean|nil", "desc": "Geler le véhicule s'il est gardé ; true par défaut."},
-        "checkDamage": {"type": "boolean|nil", "desc": "Vérifier les dégâts après un essai ; true par défaut."},
-        "defaultLeaveMessage": {"type": "string|nil", "desc": "Message affiché si aucun essai actif ; « leftSale » par défaut."}
+        "despawnPreviousVehMode": {
+          "type": "string|nil",
+          "desc": "'despawn', 'flagForDeletion' or 'dontDespawn' (default)."
+        },
+        "freezePreviousVeh": {
+          "type": "boolean|nil",
+          "desc": "Freeze the vehicle if it is kept; true by default."
+        },
+        "checkDamage": {
+          "type": "boolean|nil",
+          "desc": "Check for damage after a test; true by default."
+        },
+        "defaultLeaveMessage": {
+          "type": "string|nil",
+          "desc": "Message shown if no test is active; \"leftSale\" by default."
+        }
       },
       "internal": true
     },
     "buySpawnedVehicle": {
-      "desc": "Achète le véhicule inspecté via career_modules_vehicleShopping puis quitte la vente en le conservant.",
-      "params": {"buyVehicleOptions": {"type": "table", "desc": "Options d'achat transmises à vehicleShopping.buySpawnedVehicle."}}
+      "desc": "Buys the inspected vehicle via career_modules_vehicleShopping then leaves the sale, keeping it.",
+      "params": {
+        "buyVehicleOptions": {
+          "type": "table",
+          "desc": "Purchase options passed to vehicleShopping.buySpawnedVehicle."
+        }
+      }
     },
     "startTestDrive": {
-      "desc": "Ferme les menus et démarre l'essai du véhicule inspecté avec les règles testDriveInfo."
+      "desc": "Closes the menus and starts the test drive of the inspected vehicle with the testDriveInfo rules."
     },
     "getSpawnedVehicleInfo": {
-      "desc": "Infos du véhicule actuellement inspecté.",
-      "returns": [{"type": "table|nil", "desc": "{shopId, vehId, name, value} ou nil."}]
+      "desc": "Info of the vehicle currently being inspected.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{shopId, vehId, name, value} or nil."
+        }
+      ]
     },
     "getDidTestDrive": {
-      "desc": "Indique si le joueur a fait l'essai pendant cette inspection.",
-      "returns": [{"type": "boolean|nil", "desc": "true si un essai a eu lieu."}]
+      "desc": "Indicates whether the player did the test drive during this inspection.",
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if a test took place."
+        }
+      ]
     },
     "isTestDriveDamageDetected": {
-      "desc": "Indique si des dégâts ont été détectés pendant l'essai.",
-      "returns": [{"type": "boolean", "desc": "true si oui."}]
+      "desc": "Indicates whether damage was detected during the test.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if so."
+        }
+      ]
     },
     "repairVehicle": {
-      "desc": "Utilisé seulement dans le tutoriel : fondu d'écran puis paiement de la réparation d'un véhicule générique (voir bug dans notes : vehId non défini).",
+      "desc": "Only used in the tutorial: screen fade then payment of the repair of a generic vehicle (see the bug in the notes: vehId not defined).",
       "internal": true
     },
     "getInspectVehiclePoi": {
-      "desc": "Construit le POI du véhicule inspecté (marqueur inspectVehicleMarker sur la place de départ ; marqueur de grande carte si le joueur doit s'y rendre).",
-      "returns": [{"type": "table|nil", "desc": "POI ou nil si carrière inactive / pas d'essai défini."}]
+      "desc": "Builds the POI of the inspected vehicle (inspectVehicleMarker marker on the starting spot; big map marker if the player must go there).",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "POI or nil if career is inactive / no test defined."
+        }
+      ]
     },
     "onGetRawPoiListForLevel": {
-      "desc": "Hook de collecte des POI : ajoute le POI d'inspection à la liste.",
+      "desc": "POI collection hook: adds the inspection POI to the list.",
       "params": {
-        "levelIdentifier": {"type": "string", "desc": "Niveau courant."},
-        "elements": {"type": "table", "desc": "Liste de POI à compléter."}
+        "levelIdentifier": {
+          "type": "string",
+          "desc": "Current level."
+        },
+        "elements": {
+          "type": "table",
+          "desc": "POI list to complete."
+        }
       },
       "internal": true
     },
     "onActivityAcceptGatherData": {
-      "desc": "Hook du prompt d'activité : pour un élément de type inspectVehicle, ajoute une carte avec le nom du véhicule, le vendeur et un bouton qui ouvre le menu d'achat avec tether.",
+      "desc": "Activity prompt hook: for an element of type inspectVehicle, adds a card with the vehicle name, the seller and a button that opens the purchase menu with a tether.",
       "params": {
-        "elemData": {"type": "table", "desc": "Éléments proches."},
-        "activityData": {"type": "table", "desc": "Données d'activité à compléter."}
+        "elemData": {
+          "type": "table",
+          "desc": "Nearby elements."
+        },
+        "activityData": {
+          "type": "table",
+          "desc": "Activity data to complete."
+        }
       },
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook par image : détecte le déplacement du véhicule à vendre, décompte le temps imparti pour arriver et détecte l'arrivée du joueur.",
+      "desc": "Per-frame hook: detects the movement of the vehicle for sale, counts down the time allowed to arrive and detects the player's arrival.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps de simulation (s)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
       },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : si le véhicule inspecté est détruit, réinitialise l'inspection.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule supprimé."}},
+      "desc": "Hook: if the inspected vehicle is destroyed, resets the inspection.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Removed vehicle."
+        }
+      },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook : si le joueur passe dans le véhicule inspecté hors essai, le regèle.",
+      "desc": "Hook: if the player gets into the inspected vehicle outside a test, freezes it again.",
       "params": {
-        "oldId": {"type": "integer", "desc": "Ancien véhicule."},
-        "newId": {"type": "integer", "desc": "Nouveau véhicule."},
-        "player": {"type": "integer", "desc": "Joueur concerné."}
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New vehicle."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player concerned."
+        }
       },
       "internal": true
     },
     "onAnyMissionChanged": {
-      "desc": "Hook : quand une mission démarre en carrière, quitte la vente et supprime le véhicule.",
+      "desc": "Hook: when a mission starts in career, leaves the sale and removes the vehicle.",
       "params": {
-        "status": {"type": "string", "desc": "État de la mission ('started'…)."},
-        "id": {"type": "string", "desc": "Identifiant de la mission."}
+        "status": {
+          "type": "string",
+          "desc": "Mission state ('started'…)."
+        },
+        "id": {
+          "type": "string",
+          "desc": "Mission identifier."
+        }
       },
       "internal": true
     },
     "onDeliveryModeStarted": {
-      "desc": "Hook : le début du mode livraison termine l'inspection et supprime le véhicule.",
+      "desc": "Hook: the start of delivery mode ends the inspection and removes the vehicle.",
       "internal": true
     },
     "onTestDriveStarted": {
-      "desc": "Hook de début d'essai : note qu'un essai a eu lieu et retire les tethers.",
+      "desc": "Test start hook: notes that a test took place and removes the tethers.",
       "internal": true
     },
     "onTestDriveDamageDetected": {
-      "desc": "Hook : un dégât a été détecté pendant l'essai.",
+      "desc": "Hook: damage was detected during the test.",
       "internal": true
     },
     "onTestDriveAbandoned": {
-      "desc": "Hook : essai abandonné ; quitte la vente (véhicule marqué pour suppression).",
+      "desc": "Hook: test abandoned; leaves the sale (vehicle marked for deletion).",
       "internal": true
     },
     "onTestDriveEndedAfterFade": {
-      "desc": "Hook : essai terminé après fondu ; réarme les tethers et rouvre le menu d'achat.",
+      "desc": "Hook: test finished after fade; re-arms the tethers and reopens the purchase menu.",
       "internal": true
     },
     "onPurchaseMenuClosed": {
-      "desc": "Hook : le menu d'achat est fermé ; retire le tether sphérique du menu.",
+      "desc": "Hook: the purchase menu is closed; removes the menu's spherical tether.",
       "internal": true
     }
   }

@@ -1,36 +1,36 @@
 # `flowgraph_nodes_vehicle_moveTo`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/moveTo.lua` · VM : Game Engine (GE) · 70 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/moveTo.lua` · VM: Game Engine (GE) · 70 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/moveTo")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/moveTo")` (file under extensions/ but not a regular extension)
 
-Nœud « Move Vehicle To » (catégorie `repeat_instant`, tags rotation/position/teleport/move). Déplace un véhicule. Pins d'entrée : `vehId`, `pos` (vec3), `rot` (quat), et pins cachés `safeTeleport`, `centerVehicle`, `repairVehicle` (défaut true si nil). Déclenche ensuite le hook `trackVehReset`.
+Node "Move Vehicle To" (category `repeat_instant`, tags rotation/position/teleport/move). Moves a vehicle. Input pins: `vehId`, `pos` (vec3), `rot` (quat), and hidden pins `safeTeleport`, `centerVehicle`, `repairVehicle` (default true if nil). Then triggers the `trackVehReset` hook.
 
-## Remarques
+## Notes
 
-- Avec `repairVehicle` vrai/nil : `safeTeleport` → `spawn.safeTeleport` (rotation corrigée par `* quat(0,0,-1,0)`), sinon `vehicleSetPositionRotation` (non centré, quaternion brut). Avec `repairVehicle` faux : toujours `safeTeleport` sans réparation.
-- Appelé à chaque frame tant que le flux est actif : le véhicule est replacé à chaque frame.
-- Sort sans rien faire si `pos` n'a pas 3 composantes.
+- With `repairVehicle` true/nil: `safeTeleport` -> `spawn.safeTeleport` (rotation corrected by `* quat(0,0,-1,0)`), otherwise `vehicleSetPositionRotation` (not centered, raw quaternion). With `repairVehicle` false: always `safeTeleport` without repair.
+- Called every frame while the flow is active: the vehicle is repositioned every frame.
+- Exits without doing anything if `pos` does not have 3 components.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Constructeur vide. | 31 |
-| `C:resetVehicle()` | Déplace le véhicule selon `pos`/`rot` et les options, puis `extensions.hook('trackVehReset')`. | 39 |
-| `C:work()` | Appelle `resetVehicle`. | 35 |
+| `C:init()` | Empty constructor. | 31 |
+| `C:resetVehicle()` | Moves the vehicle according to `pos`/`rot` and the options, then `extensions.hook('trackVehReset')`. | 39 |
+| `C:work()` | Calls `resetVehicle`. | 35 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `trackVehReset`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/moveTo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/moveTo.lua`.*

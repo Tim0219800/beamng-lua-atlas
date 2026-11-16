@@ -1,86 +1,269 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/notebook/pacenoteWaypoint.lua",
-  "module": "Waypoint d'une pacenote de rallye : une position, un rayon, une normale (direction d'un plan de franchissement) et un type (cornerStart ou cornerEnd, voir waypointTypes). Il sait se sérialiser, se dessiner dans la vue 3D avec debugDrawer (sphère, plan, texte, ou cylindres en mode reconnaissance) et mémorise les points de route associés pour le calcul de distance. Le module renvoie un constructeur : require(...)(pacenote, name, pos, forceId).",
+  "module": "Waypoint of a rally pacenote: a position, a radius, a normal (direction of a crossing plane) and a type (cornerStart or cornerEnd, see waypointTypes). It can serialize itself, draw itself in the 3D view with debugDrawer (sphere, plane, text, or cylinders in recce mode) and stores the associated route points for distance computation. The module returns a constructor: require(...)(pacenote, name, pos, forceId).",
   "usage": "local newWp = require('/lua/ge/extensions/gameplay/rally/notebook/pacenoteWaypoint')\nlocal wp = newWp(pacenote, 'Waypoint 1', vec3(0,0,0))\nwp:setManual(vec3(10,5,0), 4, vec3(0,1,0))",
   "notes": [
-    "setPos et setManual copient le vec3 reçu (vec3(pos)) pour ne pas partager d'état avec l'appelant.",
-    "Bug probable : setNormal(nil) remet la normale par défaut (0,1,0) mais exécute ensuite normal:length() sur nil, ce qui lève une erreur. Une normale de longueur <= 0.9 est ignorée silencieusement.",
-    "Le rayon initial vient de editor_rallyEditor.getPrefDefaultRadius() si l'éditeur est chargé, sinon de rallyUtil.default_waypoint_intersect_radius.",
-    "onSerialize n'écrit que oldId, name, waypointType, pos, radius, normal ; onDeserialized restaure en mode \"manual\" (oldIdMap non utilisé).",
-    "colorForWpType renvoie nil si waypointType n'est ni cornerStart ni cornerEnd."
+    "setPos and setManual copy the received vec3 (vec3(pos)) so as not to share state with the caller.",
+    "Probable bug: setNormal(nil) resets the normal to the default (0,1,0) but then runs normal:length() on nil, which raises an error. A normal with length <= 0.9 is silently ignored.",
+    "The initial radius comes from editor_rallyEditor.getPrefDefaultRadius() if the editor is loaded, otherwise from rallyUtil.default_waypoint_intersect_radius.",
+    "onSerialize writes only oldId, name, waypointType, pos, radius, normal; onDeserialized restores in \"manual\" mode (oldIdMap unused).",
+    "colorForWpType returns nil if waypointType is neither cornerStart nor cornerEnd."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Instance de waypoint. Champs : pacenote, id, name, waypointType, normal (vec3), pos (vec3), radius, intersectRadius, sortOrder (999999 par défaut), mode (nil ou \"manual\"), routePoint, originalDistToTarget, staticRoutePoint, staticOriginalDistToTarget.",
+      "desc": "Waypoint instance. Fields: pacenote, id, name, waypointType, normal (vec3), pos (vec3), radius, intersectRadius, sortOrder (999999 by default), mode (nil or \"manual\"), routePoint, originalDistToTarget, staticRoutePoint, staticOriginalDistToTarget.",
       "functions": {
         "init": {
-          "desc": "Constructeur. L'id vient de forceId ou de pacenote:getNextUniqueIdentifier(), le type de pacenote:getNextWaypointType(), le nom par défaut est « Waypoint <id> ».",
+          "desc": "Constructor. The id comes from forceId or pacenote:getNextUniqueIdentifier(), the type from pacenote:getNextWaypointType(), the default name is \"Waypoint <id>\".",
           "params": {
-            "pacenote": {"type": "table", "desc": "Pacenote propriétaire."},
-            "name": {"type": "string|nil", "desc": "Nom du waypoint."},
-            "pos": {"type": "vec3|nil", "desc": "Position."},
-            "forceId": {"type": "integer|nil", "desc": "Identifiant imposé (chargement)."}
+            "pacenote": {
+              "type": "table",
+              "desc": "Owning pacenote."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Waypoint name."
+            },
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "Position."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Forced identifier (loading)."
+            }
           },
           "internal": true
         },
         "setManual": {
-          "desc": "Passe en mode \"manual\" et fixe position, rayon et normale.",
+          "desc": "Switches to \"manual\" mode and sets position, radius and normal.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position."},
-            "radius": {"type": "number", "desc": "Rayon en mètres."},
-            "normal": {"type": "vec3", "desc": "Normale (voir setNormal)."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Position."
+            },
+            "radius": {
+              "type": "number",
+              "desc": "Radius in meters."
+            },
+            "normal": {
+              "type": "vec3",
+              "desc": "Normal (see setNormal)."
+            }
           }
         },
-        "setPos": {"desc": "Définit la position (copie du vec3).", "params": {"newpos": {"type": "vec3", "desc": "Nouvelle position."}}},
-        "setNormal": {"desc": "Définit la normale, normalisée, si sa longueur dépasse 0.9 ; sinon inchangée.", "params": {"normal": {"type": "vec3", "desc": "Direction."}}},
-        "onSerialize": {"desc": "Renvoie la table à écrire en JSON : oldId, name, waypointType, pos, radius, normal (tableaux de 3 nombres).", "returns": [{"type": "table", "desc": "Données sérialisées."}], "internal": true},
+        "setPos": {
+          "desc": "Sets the position (copy of the vec3).",
+          "params": {
+            "newpos": {
+              "type": "vec3",
+              "desc": "New position."
+            }
+          }
+        },
+        "setNormal": {
+          "desc": "Sets the normal, normalized, if its length exceeds 0.9; otherwise unchanged.",
+          "params": {
+            "normal": {
+              "type": "vec3",
+              "desc": "Direction."
+            }
+          }
+        },
+        "onSerialize": {
+          "desc": "Returns the table to write as JSON: oldId, name, waypointType, pos, radius, normal (arrays of 3 numbers).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Serialized data."
+            }
+          ],
+          "internal": true
+        },
         "onDeserialized": {
-          "desc": "Restaure type, nom, position, rayon et normale depuis les données sauvegardées.",
-          "params": {"data": {"type": "table", "desc": "Données issues de onSerialize."}, "oldIdMap": {"type": "table", "desc": "Non utilisé ici."}},
+          "desc": "Restores type, name, position, radius and normal from the saved data.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data produced by onSerialize."
+            },
+            "oldIdMap": {
+              "type": "table",
+              "desc": "Not used here."
+            }
+          },
           "internal": true
         },
         "colorForWpType": {
-          "desc": "Couleur du waypoint selon son type et le mode de dessin : couleurs cs/ce normales, « adjacent » pour 'previous' et 'next', « adjacent_bg » pour 'background'.",
-          "params": {"pn_drawMode": {"type": "string|nil", "desc": "'previous', 'next', 'background' ou nil."}},
-          "returns": [{"type": "table|nil", "desc": "Couleur {r,g,b} (valeurs 0-1) du module rally/util/colors, nil si type inconnu."}]
+          "desc": "Waypoint color according to its type and the drawing mode: normal cs/ce colors, \"adjacent\" for 'previous' and 'next', \"adjacent_bg\" for 'background'.",
+          "params": {
+            "pn_drawMode": {
+              "type": "string|nil",
+              "desc": "'previous', 'next', 'background' or nil."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Color {r,g,b} (values 0-1) from the rally/util/colors module, nil if unknown type."
+            }
+          ]
         },
         "drawDebug": {
-          "desc": "Dessine le waypoint : sphère de rayon radius (ou radius*radius_factor), texte facultatif et prisme carré figurant le plan de franchissement. En survol, l'opacité est remplacée par les valeurs « hover ».",
+          "desc": "Draws the waypoint: sphere of radius radius (or radius*radius_factor), optional text and a square prism representing the crossing plane. On hover, the opacity is replaced by the \"hover\" values.",
           "params": {
-            "hover": {"type": "boolean", "desc": "Waypoint survolé."},
-            "text": {"type": "string|nil", "desc": "Texte à afficher."},
-            "clr_shape": {"type": "table", "desc": "Couleur {r,g,b} 0-1."},
-            "alpha_shape": {"type": "number", "desc": "Opacité de la forme."},
-            "alpha_text": {"type": "number", "desc": "Opacité du texte."},
-            "clr_text_fg": {"type": "table|nil", "desc": "Couleur du texte."},
-            "clr_text_bg": {"type": "table|nil", "desc": "Couleur du fond du texte."},
-            "radius_factor": {"type": "number|nil", "desc": "Facteur appliqué au rayon."},
-            "globalOpacity": {"type": "number", "desc": "Multiplicateur d'opacité, utilisé en survol."}
+            "hover": {
+              "type": "boolean",
+              "desc": "Hovered waypoint."
+            },
+            "text": {
+              "type": "string|nil",
+              "desc": "Text to display."
+            },
+            "clr_shape": {
+              "type": "table",
+              "desc": "Color {r,g,b} 0-1."
+            },
+            "alpha_shape": {
+              "type": "number",
+              "desc": "Shape opacity."
+            },
+            "alpha_text": {
+              "type": "number",
+              "desc": "Text opacity."
+            },
+            "clr_text_fg": {
+              "type": "table|nil",
+              "desc": "Text color."
+            },
+            "clr_text_bg": {
+              "type": "table|nil",
+              "desc": "Text background color."
+            },
+            "radius_factor": {
+              "type": "number|nil",
+              "desc": "Factor applied to the radius."
+            },
+            "globalOpacity": {
+              "type": "number",
+              "desc": "Opacity multiplier, used on hover."
+            }
           }
         },
         "drawDebugRecce": {
-          "desc": "Dessin du mode reconnaissance : texte de la note au-dessus, plan translucide et trois cylindres formant un portique de 6 m de haut. Le prochain waypoint (i == 1) est plus opaque.",
-          "params": {"i": {"type": "integer", "desc": "Rang parmi les notes à venir (1 = prochaine)."}, "noteText": {"type": "string", "desc": "Texte à afficher."}}
+          "desc": "Recce mode drawing: the note's text above, a translucent plane and three cylinders forming a 6 m high gantry. The next waypoint (i == 1) is more opaque.",
+          "params": {
+            "i": {
+              "type": "integer",
+              "desc": "Rank among the upcoming notes (1 = next)."
+            },
+            "noteText": {
+              "type": "string",
+              "desc": "Text to display."
+            }
+          }
         },
-        "isLockable": {"desc": "true si le type est cornerStart ou cornerEnd.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
-        "isLocked": {"desc": "true si le waypoint est verrouillable et que la préférence editor_rallyEditor.getPrefLockWaypoints() est active.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
-        "isCs": {"desc": "true si le type est cornerStart.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
-        "isCe": {"desc": "true si le type est cornerEnd.", "returns": [{"type": "boolean", "desc": "Résultat."}]},
+        "isLockable": {
+          "desc": "true if the type is cornerStart or cornerEnd.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Result."
+            }
+          ]
+        },
+        "isLocked": {
+          "desc": "true if the waypoint is lockable and the preference editor_rallyEditor.getPrefLockWaypoints() is enabled.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Result."
+            }
+          ]
+        },
+        "isCs": {
+          "desc": "true if the type is cornerStart.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Result."
+            }
+          ]
+        },
+        "isCe": {
+          "desc": "true if the type is cornerEnd.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Result."
+            }
+          ]
+        },
         "setRoutePoint": {
-          "desc": "Mémorise le point de route et sa distToTarget d'origine (celle-ci change quand le point devient le premier de la route).",
-          "params": {"rp": {"type": "table", "desc": "Point de route (champ distToTarget)."}}
+          "desc": "Stores the route point and its original distToTarget (which changes when the point becomes the first of the route).",
+          "params": {
+            "rp": {
+              "type": "table",
+              "desc": "Route point (distToTarget field)."
+            }
+          }
         },
-        "getRoutePoint": {"desc": "Renvoie le point de route mémorisé.", "returns": [{"type": "table|nil", "desc": "Point de route."}]},
+        "getRoutePoint": {
+          "desc": "Returns the stored route point.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Road point."
+            }
+          ]
+        },
         "setStaticRoutePoint": {
-          "desc": "Idem setRoutePoint pour la route statique.",
-          "params": {"rp": {"type": "table", "desc": "Point de route statique."}}
+          "desc": "Same as setRoutePoint for the static route.",
+          "params": {
+            "rp": {
+              "type": "table",
+              "desc": "Static road point."
+            }
+          }
         },
-        "getStaticRoutePoint": {"desc": "Renvoie le point de route statique.", "returns": [{"type": "table|nil", "desc": "Point de route."}]},
-        "getOriginalDistToTarget": {"desc": "Distance d'origine à la cible du point de route.", "returns": [{"type": "number|nil", "desc": "Distance."}]},
-        "getStaticOriginalDistToTarget": {"desc": "Distance d'origine à la cible du point de route statique.", "returns": [{"type": "number|nil", "desc": "Distance."}]},
-        "nameWithPacenote": {"desc": "Texte « <nom pacenote>[Cs|Ce] ».", "returns": [{"type": "string", "desc": "Libellé."}]}
+        "getStaticRoutePoint": {
+          "desc": "Returns the static route point.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Road point."
+            }
+          ]
+        },
+        "getOriginalDistToTarget": {
+          "desc": "Original distance to the route point's target.",
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "Distance."
+            }
+          ]
+        },
+        "getStaticOriginalDistToTarget": {
+          "desc": "Original distance to the static route point's target.",
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "Distance."
+            }
+          ]
+        },
+        "nameWithPacenote": {
+          "desc": "Text \"<pacenote name>[Cs|Ce]\".",
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Label."
+            }
+          ]
+        }
       }
     }
   }

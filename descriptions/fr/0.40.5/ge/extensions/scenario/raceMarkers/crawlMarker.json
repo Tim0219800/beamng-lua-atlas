@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/crawlMarker.lua",
+  "module": "Marqueur de checkpoint pour les parcours de franchissement (crawl) : une flèche flottante qui regarde la caméra, deux drapeaux orange plantés de part et d'autre du passage (posés sur le terrain), et une grande colonne visible de loin. Il a ses propres modes (inactive, current, recovery, bonus, skipped, final, finished). La flèche monte jusqu'à une hauteur d'où elle reste visible de la caméra (lancers de rayon statiques). Compatible avec l'écran partagé (setRenderViewPlayer). Le module renvoie un constructeur : require('scenario/raceMarkers/crawlMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "Couleurs par mode : default blanc, inactive gris (0.5), current orange (1, 0.5, 0), recovery jaune (1, 0.85, 0), bonus violet (0.8, 0.2, 1), skipped rouge (1, 0.07, 0), final bleu (0.1, 0.3, 1), finished vert (0.4, 1, 0.2), hidden noir. Le mode 'finished' masque la base.",
+    "Les modes actifs (current, recovery, bonus, final) ont une colonne visible dès 40 m au lieu de 200 m et la flèche cherche un point dégagé jusqu'à 100 m de hauteur.",
+    "setToCheckpoint(wp) lit wp.pos (le point est replaqué au sol : core_terrain.getTerrainHeight ou be:getSurfaceHeightBelow), wp.radius, wp.fadeNear (5 par défaut), wp.fadeFar (25), wp.delay (secondes avant que la flèche monte), wp.dir (direction du passage) ou wp.nextPos (le sens se déduit alors du checkpoint suivant).",
+    "Les drapeaux sont décalés de 2.5 m de chaque côté de la direction de passage et alignés sur la normale du terrain.",
+    "drawOnMinimap(td) dessine un cercle coloré avec ui_apps_minimap_utils.simpleCircle (si le mode n'est pas 'hidden') ; il est appelé par scenario_race_marker.drawOnMinimap.",
+    "Le premier paramètre de update est dt (durée réelle), le second dtSim (durée simulée, utilisée pour le délai et les ressorts de hauteur et d'échelle).",
+    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur crawl avec flèche, drapeaux et colonne.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état, les lisseurs et les couleurs.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "placeFlags": {"desc": "Place les deux drapeaux de part et d'autre de la position selon pathDirection, au sol.", "params": {}},
+        "update": {"desc": "Appel par image : couleur, alpha selon la distance, orientation et hauteur de la flèche, échelle, colonne.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Place le marqueur sur un checkpoint et réinitialise les caches de hauteur.", "params": {"wp": {"type": "table", "desc": "{pos, radius?, fadeNear?, fadeFar?, delay?, dir?, nextPos?}."}}},
+        "drawOnMinimap": {"desc": "Dessine un cercle sur la minicarte à la position du marqueur, avec la couleur du mode.", "params": {"td": {"type": "any", "desc": "Contexte de dessin (non utilisé)."}}},
+        "setMode": {"desc": "Change de mode : affiche (sauf 'hidden'), mémorise l'ancien mode et relance le fondu ; ne fait rien de plus si le mode est inchangé.", "params": {"mode": {"type": "string", "desc": "default, inactive, current, recovery, bonus, skipped, final, finished ou hidden."}}},
+        "setVisibility": {"desc": "Affiche ou cache flèche, drapeaux et colonne.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "applyRenderViewMask": {"desc": "Cache les objets du marqueur dans les vues d'écran partagé des autres joueurs que renderViewPlayer.", "params": {}},
+        "setRenderViewPlayer": {"desc": "Réserve ce marqueur à la vue d'un joueur (nil pour tous) et applique le masque.", "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur."}}},
+        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée flèche, deux drapeaux et colonne.", "params": {}},
+        "clearMarkers": {"desc": "Supprime les objets créés (en effaçant leur masque de vue).", "params": {}}
+      }
+    }
+  }
+}

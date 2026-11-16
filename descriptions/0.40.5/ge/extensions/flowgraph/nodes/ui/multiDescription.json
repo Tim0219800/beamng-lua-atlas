@@ -1,49 +1,49 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/multiDescription.lua",
-  "module": "Nœud flowgraph « Multi Description » (catégorie repeat_instant) : fusionne plusieurs textes en une description multiple pour Start Screen / End Screen. Entrées « value_i » (any) ; sortie « value » (table de type multiTranslationObject : liste des valeurs).",
+  "module": "Flowgraph node \"Multi Description\" (category repeat_instant): merges several texts into a multiple description for Start Screen / End Screen. Inputs \"value_i\" (any); output \"value\" (table of type multiTranslationObject: list of values).",
   "notes": [
-    "drawMiddle utilise self.data.pattern, hérité d'un autre nœud (en pratique nil)."
+    "drawMiddle uses self.data.pattern, inherited from another node (nil in practice)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure count.",
+          "desc": "Restores count.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde count.",
+          "desc": "Saves count.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Champ « Count ».",
+          "desc": "\"Count\" field.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche self.data.pattern (10 premiers caractères) si défini.",
+          "desc": "Displays self.data.pattern (first 10 characters) if defined.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+              "desc": "Editor node builder (builder:Middle() opens the central area)."
             },
             "style": {
               "type": "any",
-              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+              "desc": "Node display style provided by the editor."
             }
           },
           "internal": true
@@ -53,25 +53,25 @@
           "internal": true
         },
         "postInit": {
-          "desc": "Crée les pins initiaux.",
+          "desc": "Creates the initial pins.",
           "internal": true
         },
         "updatePins": {
-          "desc": "Ajuste le nombre de pins value_i.",
+          "desc": "Adjusts the number of value_i pins.",
           "params": {
             "old": {
               "type": "integer",
-              "desc": "Ancien nombre d'éléments."
+              "desc": "Old number of elements."
             },
             "new": {
               "type": "integer",
-              "desc": "Nouveau nombre d'éléments."
+              "desc": "New number of elements."
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Construit la liste des valeurs d'entrée et l'écrit sur « value ».",
+          "desc": "Builds the list of input values and writes it to \"value\".",
           "internal": true
         }
       }

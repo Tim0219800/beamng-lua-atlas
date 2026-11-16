@@ -2,23 +2,23 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/api.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension véhicule qui démarre un petit serveur HTTP/JSON local (utils/httpJsonServer) sur localhost:23512 au chargement de l'extension. Il répond à deux routes : v1/ping et v1/getData (nœuds, poutres et triangles du véhicule, pour un éditeur externe). L'extension est chargée par véhicule ; le serveur est démarré une seule fois dans ce VM.
---- Accès : extension `api` : `extensions.load (VM véhicule)("api")`, puis la globale `api`
+--- Vehicle extension that starts a small local HTTP/JSON server (utils/httpJsonServer) on localhost:23512 when the extension loads. It answers two routes: v1/ping and v1/getData (nodes, beams and triangles of the vehicle, for an external editor). The extension is loaded per vehicle; the server is started only once in this VM.
+--- Access: extension `api`: `extensions.load (vehicle VM)("api")`, then the global `api`
 ---@class api
 api = {}
 
---- Appelé au chargement de l'extension : démarre une fois le serveur HTTP JSON sur localhost:23512 avec le gestionnaire de requêtes interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/api.lua:108
+--- Called when the extension loads: starts the JSON HTTP server once on localhost:23512 with the internal request handler.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/api.lua:108
 function api.onExtensionLoaded() end
 
---- Hook appelé quand le véhicule est chargé ; corps vide (code de débogage commenté).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/api.lua:125
+--- Hook called when the vehicle is loaded; empty body (debug code commented out).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/api.lua:125
 function api.onVehicleLoaded() end
 
---- Appelé chaque frame : traite les connexions en attente du serveur HTTP.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/api.lua:129
+--- Called every frame: processes the HTTP server's pending connections.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/api.lua:129
 function api.updateGFX() end
 

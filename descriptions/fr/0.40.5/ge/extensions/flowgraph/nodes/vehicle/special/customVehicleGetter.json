@@ -1,0 +1,51 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/special/customVehicleGetter.lua",
+  "module": "Nœud « Get Custom Vehicle Value » (comportement `duration`, `once`). Évalue côté véhicule une expression Lua (`data.fun`, par exemple `electrics.values.ignition` ou `electrics.values.hazard_enabled`, choisie dans une liste ou personnalisée) et renvoie le résultat via `obj:queueGameEngineLua` vers `returnValue`. Pins d'entrée : `flow`, `reset`, `VehId` ; sorties : `flow` (quand la valeur est arrivée, avec un délai de quelques frames), `value` (any), `valBool` (bool : valeur ~= 0 si number, sinon nil).",
+  "notes": [
+    "Le pin d'entrée s'appelle `VehId` (majuscule) mais le code lit `self.pinIn.vehId` : le véhicule choisi est donc ignoré et le véhicule joueur est utilisé.",
+    "L'expression est insérée telle quelle dans une commande Lua : à ne pas alimenter avec une source non fiable."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Efface la valeur reçue.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Liste déroulante des fonctions prédéfinies et champ de texte pour une fonction personnalisée.",
+          "internal": true
+        },
+        "getCmd": {
+          "desc": "Construit la commande Lua envoyée au véhicule.",
+          "internal": false,
+          "params": {
+            "action": {
+              "type": "string|nil",
+              "desc": "Action transmise à `buttonPushed`."
+            }
+          }
+        },
+        "init": {
+          "desc": "Constructeur ; `data.fun` = première fonction de la liste.",
+          "internal": true
+        },
+        "returnValue": {
+          "desc": "Appelé en retour par la VM véhicule avec la valeur sérialisée ; la désérialise dans `returnedValue`.",
+          "internal": false,
+          "params": {
+            "value": {
+              "type": "string",
+              "desc": "Valeur sérialisée renvoyée par la VM véhicule."
+            }
+          }
+        },
+        "work": {
+          "desc": "Envoie la commande au véhicule une fois, puis expose `value`/`valBool` dès réception.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

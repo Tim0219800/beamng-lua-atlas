@@ -2,61 +2,61 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/solarTimeOfDay.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Calculs solaires purs (sans appel moteur) : à partir d'une latitude, longitude, date et décalage UTC, calcule lever, midi solaire, coucher et minuit solaire, puis les convertit dans la convention de temps du jeu (tod.time : 0 = midi, 0.25 = 18h, 0.5 = minuit, 0.75 = 6h). Sert aux choix d'heure du jour (matin, après-midi, soir…) dans les menus de course rapide, et gère les cas polaires (jour ou nuit continu).
---- Accès : extension `core_solarTimeOfDay` : `extensions.load("core_solarTimeOfDay")`, puis la globale `core_solarTimeOfDay`
+--- Pure solar computations (no engine call): from a latitude, longitude, date and UTC offset, computes sunrise, solar noon, sunset and solar midnight, then converts them to the game's time convention (tod.time: 0 = noon, 0.25 = 6 pm, 0.5 = midnight, 0.75 = 6 am). Used for time-of-day choices (morning, afternoon, evening...) in the quick race menus, and handles polar cases (continuous day or night).
+--- Access: extension `core_solarTimeOfDay`: `extensions.load("core_solarTimeOfDay")`, then the global `core_solarTimeOfDay`
 ---@class core_solarTimeOfDay
 core_solarTimeOfDay = {}
 
---- Construit la liste d'options d'heure du jeu. Dans un cas polaire, renvoie seulement solarMidnight et solarNoon (clés de traduction ui.quickrace.tod.*). Sinon copie chaque option fournie en y ajoutant value = valeur solaire pour sa clé (nil si inconnue).
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:265
----@param state table Voir notes.
----@param options table[]|nil Options existantes avec un champ key (morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset, night, sunrise…).
----@return table[]  Options avec champ value.
+--- Builds the list of time-of-day options. In a polar case, returns only solarMidnight and solarNoon (translation keys ui.quickrace.tod.*). Otherwise copies each provided option adding value = solar value for its key (nil if unknown).
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:265
+---@param state table See notes.
+---@param options table[]|nil Existing options with a key field (morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset, night, sunrise...).
+---@return table[]  Options with a value field.
 function core_solarTimeOfDay.buildSolarTimeOfDayOptions(state, options) end
 
---- Décalage horaire civil (heures) : state.utcOffset s'il est donné, sinon déduit de la longitude et de la règle d'heure d'été.
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:169
----@param state table Voir notes.
----@return number|nil  Décalage en heures, nil si state est incomplet.
+--- Civil time offset (hours): state.utcOffset if given, otherwise inferred from the longitude and the daylight saving rule.
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:169
+---@param state table See notes.
+---@return number|nil  Offset in hours, nil if state is incomplete.
 function core_solarTimeOfDay.getCivilOffsetHours(state) end
 
---- Fenêtre de nuit : début (coucher) et fin (lever) en valeurs tod.time.
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:256
----@param state table Voir notes.
----@return number|nil  Début de la nuit (coucher).
----@return number|nil  Fin de la nuit (lever). nil si polaire ou state incomplet.
+--- Night window: start (sunset) and end (sunrise) as tod.time values.
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:256
+---@param state table See notes.
+---@return number|nil  Start of night (sunset).
+---@return number|nil  End of night (sunrise). nil if polar or state incomplete.
 function core_solarTimeOfDay.getSolarNightWindow(state) end
 
---- Calcule les événements solaires en minutes locales : sunrise, noon, sunset, night (minuit solaire) et polar.
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:200
----@param state table Voir notes.
----@return {sunrise: integer|nil, noon: integer, sunset: integer|nil, night: integer, polar: string|nil}|nil  Événements, nil si state est incomplet.
+--- Computes the solar events in local minutes: sunrise, noon, sunset, night (solar midnight) and polar.
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:200
+---@param state table See notes.
+---@return {sunrise: integer|nil, noon: integer, sunset: integer|nil, night: integer, polar: string|nil}|nil  Events, nil if state is incomplete.
 function core_solarTimeOfDay.getSolarTimeOfDayEvents(state) end
 
---- Valeurs tod.time nommées : sunrise, noon, sunset, night, plus morning (1/3 du lever vers midi), earlyNoon (5/9), lateNoon (40 % de midi vers coucher), afternoon (70 %) et evening (94 %) quand lever et coucher existent.
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:252
----@param state table Voir notes.
----@return table<string, number>|nil  Valeurs par clé, nil si state est incomplet.
+--- Named tod.time values: sunrise, noon, sunset, night, plus morning (1/3 from sunrise to noon), earlyNoon (5/9), lateNoon (40% from noon to sunset), afternoon (70%) and evening (94%) when sunrise and sunset exist.
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:252
+---@param state table See notes.
+---@return table<string, number>|nil  Values by key, nil if state is incomplete.
 function core_solarTimeOfDay.getSolarTimeOfDayValues(state) end
 
---- Renvoie la valeur tod.time de l'option dont la clé est donnée parmi celles de buildSolarTimeOfDayOptions.
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:291
----@param key string Clé d'option.
----@param state table Voir notes.
----@param options table[]|nil Options candidates.
----@return number|nil  Valeur, nil si clé non texte ou introuvable.
+--- Returns the tod.time value of the option whose key is given among those of buildSolarTimeOfDayOptions.
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:291
+---@param key string Option key.
+---@param state table See notes.
+---@param options table[]|nil Candidate options.
+---@return number|nil  Value, nil if the key is not text or not found.
 function core_solarTimeOfDay.getTimeValueForKey(key, state, options) end
 
---- Convertit des minutes locales depuis minuit en valeur tod.time ((minutes/1440 - 0.5) modulo 1). Les minutes sont arrondies puis ramenées dans 0..1439.
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:165
----@param minutes number Minutes depuis minuit.
----@return number|nil  Valeur tod.time (0 = midi), nil si minutes n'est pas un nombre fini.
+--- Converts local minutes since midnight into a tod.time value ((minutes/1440 - 0.5) modulo 1). The minutes are rounded then brought into 0..1439.
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:165
+---@param minutes number Minutes since midnight.
+---@return number|nil  tod.time value (0 = noon), nil if minutes is not a finite number.
 function core_solarTimeOfDay.timeFromMinutes(minutes) end
 
---- Convertit un temps normalisé en heure du jeu en suivant le soleil réel : 0 à 0.25 = midi vers coucher, 0.25 à 0.5 = coucher vers minuit, 0.5 à 0.75 = minuit vers lever, 0.75 à 1 = lever vers midi. En cas polaire, utilise seulement le midi solaire. Sans événements solaires valides, renvoie le temps normalisé inchangé.
----Source : lua/ge/extensions/core/solarTimeOfDay.lua:173
----@param normalizedTime number Temps normalisé ; ramené dans 0..1 par modulo.
----@param state table Voir notes.
----@return number|nil  Valeur tod.time ; -1 si normalizedTime est négatif ; nil si non numérique.
+--- Converts a normalized time into game time following the real sun: 0 to 0.25 = noon to sunset, 0.25 to 0.5 = sunset to midnight, 0.5 to 0.75 = midnight to sunrise, 0.75 to 1 = sunrise to noon. In a polar case, uses only solar noon. Without valid solar events, returns the normalized time unchanged.
+---Source: lua/ge/extensions/core/solarTimeOfDay.lua:173
+---@param normalizedTime number Normalized time; brought into 0..1 by modulo.
+---@param state table See notes.
+---@return number|nil  tod.time value; -1 if normalizedTime is negative; nil if non-numeric.
 function core_solarTimeOfDay.timeFromNormalizedTime(normalizedTime, state) end
 

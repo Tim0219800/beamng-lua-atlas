@@ -1,41 +1,41 @@
 # `gameplay_missions_locationsDetector`
 
-*Fichier : `lua/ge/extensions/gameplay/missions/locationsDetector.lua` · VM : Game Engine (GE) · 58 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/missions/locationsDetector.lua` · VM: Game Engine (GE) · 58 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_missions_locationsDetector` : `extensions.load("gameplay_missions_locationsDetector")`, puis la globale `gameplay_missions_locationsDetector`
+**Access:** extension `gameplay_missions_locationsDetector`: `extensions.load("gameplay_missions_locationsDetector")`, then the global `gameplay_missions_locationsDetector`
 
-Détecte les missions dont le cluster de marqueurs contient la position donnée du joueur. getNearbyLocations parcourt les clusters de gameplay_missions_clustering (avec le rayon de fusion de la grande carte si elle est active) et renvoie, pour chaque mission trouvée, son type, l'objet mission, le cluster et l'id. La partie « missions d'arrière-plan » est commentée dans le fichier.
+Detects the missions whose marker cluster contains the player's given position. getNearbyLocations iterates over the gameplay_missions_clustering clusters (with the big map's merge radius if it is active) and returns, for each mission found, its type, the mission object, the cluster and the id. The "background missions" part is commented out in the file.
 
-## Remarques
+## Notes
 
-- Le test de proximité est defaultLocationCheck : cluster.pos et cluster.radius doivent exister et distance(playerPosition, cluster.pos) <= cluster.radius.
-- Le tableau renvoyé est réutilisé à chaque appel (vidé par table.clear) : ne pas le conserver entre deux appels.
-- Incohérence : M.onPoiTriggered et M.isEnabled sont assignés à des variables locales jamais définies : ces champs valent nil.
-- missionsChanged est toujours false : getMissionsAtLocation renvoie la variable changed qui n'est jamais modifiée (le code qui la mettait à jour est commenté).
-- Le paramètre accessible de getNearbyLocations vient d'une variable non définie (nil) et est de toute façon forcé à true dans getMissionsAtLocation ; la variable p (profileur) y est testée comme globale, nil si non définie.
+- The proximity test is defaultLocationCheck: cluster.pos and cluster.radius must exist and distance(playerPosition, cluster.pos) <= cluster.radius.
+- The returned array is reused on every call (cleared by table.clear): do not keep it between two calls.
+- Inconsistency: M.onPoiTriggered and M.isEnabled are assigned to local variables that are never defined: these fields are nil.
+- missionsChanged is always false: getMissionsAtLocation returns the variable changed which is never modified (the code that updated it is commented out).
+- The accessible parameter of getNearbyLocations comes from an undefined variable (nil) and is forced to true anyway in getMissionsAtLocation; the variable p (profiler) is tested there as a global, nil if not defined.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_missions_locationsDetector.getNearbyLocations(level, playerPosition)` | Renvoie les missions dont un cluster contient la position du joueur. | 43 |
+| `gameplay_missions_locationsDetector.getNearbyLocations(level, playerPosition)` | Returns the missions for which a cluster contains the player's position. | 43 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_missions_locationsDetector.getNearbyLocations(level, playerPosition)`
 
-Renvoie les missions dont un cluster contient la position du joueur.
+Returns the missions for which a cluster contains the player's position.
 
-- `level` (*string*) : Identifiant du niveau (transmis à la fonction de test, non utilisé).
-- `playerPosition` (*vec3*) : Position du joueur.
-- **renvoie** : table {missions = {{type, mission, location, id}, ...}, missionsChanged = false}.
+- `level` (*string*) : Level identifier (passed to the test function, unused).
+- `playerPosition` (*vec3*) : Player position.
+- **returns**: table {missions = {{type, mission, location, id}, ...}, missionsChanged = false}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `isEnabled` | nil | Toujours nil : référence à une variable locale non définie. ⚠ référence `isEnabled` non définie dans le fichier (vaut probablement nil) |
-| `onPoiTriggered` | nil | Toujours nil : référence à une variable locale non définie. ⚠ référence `onPoiTriggered` non définie dans le fichier (vaut probablement nil) |
+| `isEnabled` | nil | Always nil: reference to an undefined local variable. ⚠ reference `isEnabled` not defined in the file (probably nil) |
+| `onPoiTriggered` | nil | Always nil: reference to an undefined local variable. ⚠ reference `onPoiTriggered` not defined in the file (probably nil) |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/missions/locationsDetector.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/missions/locationsDetector.lua`.*

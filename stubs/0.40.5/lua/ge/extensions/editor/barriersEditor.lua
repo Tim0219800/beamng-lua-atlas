@@ -2,34 +2,34 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/barriersEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre « Barriers Selector » (menu Gameplay > Barriers Editor) pour choisir les prefabs de barrières d'un niveau. Elle cherche dans /levels/<niveau>/ les fichiers .prefab correspondant à un motif (défaut *barrier*), les instancie temporairement pour relever la position des TSStatic, puis les affiche en deux listes (non sélectionnés / sélectionnés) avec des sphères de debug dans la vue. Un mode d'édition « Barriers Selection » permet de cliquer dans la vue (clic = bascule, Maj = ajouter seulement, Alt = retirer seulement). Des entrées de menu synchronisent la sélection avec l'éditeur de courses (editor_raceEditor, champ path.prefabs).
---- Accès : extension `editor_barriersEditor` : `extensions.load("editor_barriersEditor")`, puis la globale `editor_barriersEditor`
+--- "Barriers Selector" window (Gameplay > Barriers Editor menu) to choose the barrier prefabs of a level. It searches /levels/<level>/ for .prefab files matching a pattern (default *barrier*), temporarily instantiates them to read the TSStatic positions, then displays them in two lists (unselected / selected) with debug spheres in the view. A "Barriers Selection" edit mode lets you click in the view (click = toggle, Shift = add only, Alt = remove only). Menu entries synchronize the selection with the race editor (editor_raceEditor, field path.prefabs).
+--- Access: extension `editor_barriersEditor`: `extensions.load("editor_barriersEditor")`, then the global `editor_barriersEditor`
 ---@class editor_barriersEditor
----@field onExtensionLoaded nil Vaut nil : référence à une variable locale jamais définie.
+---@field onExtensionLoaded nil Is nil: reference to a local variable that is never defined.
 editor_barriersEditor = {}
 
---- Fonction vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/barriersEditor.lua:303
----@param data any Non utilisé.
+--- Empty function.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/barriersEditor.lua:303
+---@param data any Not used.
 function editor_barriersEditor.onDeserialized(data) end
 
---- Appelé chaque frame de l'éditeur : dessine la fenêtre (menus Load / Race Editor, deux listes de prefabs, boutons > et <) et les sphères de debug de chaque prefab.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/barriersEditor.lua:77
+--- Called every editor frame: draws the window (Load / Race Editor menus, two prefab lists, > and < buttons) and the debug spheres of each prefab.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/barriersEditor.lua:77
 function editor_barriersEditor.onEditorGui() end
 
---- Enregistre la fenêtre (1500x700), l'entrée de menu « Barriers Editor » (groupe Gameplay) et le mode d'édition « Barriers Selection » avec ses raccourcis souris.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/barriersEditor.lua:286
+--- Registers the window (1500x700), the "Barriers Editor" menu entry (Gameplay group) and the "Barriers Selection" edit mode with its mouse shortcuts.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/barriersEditor.lua:286
 function editor_barriersEditor.onEditorInitialized() end
 
---- Fonction vide (ne renvoie rien).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/barriersEditor.lua:300
+--- Empty function _anon(returns nothing).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/barriersEditor.lua:300
 function editor_barriersEditor.onSerialize() end
 
---- Désélectionne les objets de l'éditeur et affiche la fenêtre « Barriers Selector ».
----Source : lua/ge/extensions/editor/barriersEditor.lua:281
+--- Deselects the editor objects and shows the "Barriers Selector" window.
+---Source: lua/ge/extensions/editor/barriersEditor.lua:281
 function editor_barriersEditor.show() end
 

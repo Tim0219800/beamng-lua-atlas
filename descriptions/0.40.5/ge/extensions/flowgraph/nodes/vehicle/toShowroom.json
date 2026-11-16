@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/toShowroom.lua",
-  "module": "Nœud « Move To Showroom » (catégorie `repeat_instant`, dépend de `util_showroom`). Remet à zéro et déplace un véhicule dans le showroom (`util_showroom.moveInside(veh)`). Pin d'entrée : `vehId` (défaut : joueur).",
+  "module": "Node \"Move To Showroom\" (category `repeat_instant`, depends on `util_showroom`). Resets and moves a vehicle into the showroom (`util_showroom.moveInside(veh)`). Input pin: `vehId` (default: player).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "work": {
-          "desc": "Appelle `util_showroom.moveInside` sur le véhicule.",
+          "desc": "Calls `util_showroom.moveInside` on the vehicle.",
           "internal": true
         }
       }

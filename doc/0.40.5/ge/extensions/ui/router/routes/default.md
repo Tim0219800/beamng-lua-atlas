@@ -1,24 +1,24 @@
 # `ui_router_routes_default`
 
-*Fichier : `lua/ge/extensions/ui/router/routes/default.lua` · VM : Game Engine (GE) · 57 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routes/default.lua` · VM: Game Engine (GE) · 57 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routes_default` : `extensions.load("ui_router_routes_default")`, puis la globale `ui_router_routes_default`
+**Access:** extension `ui_router_routes_default`: `extensions.load("ui_router_routes_default")`, then the global `ui_router_routes_default`
 
-Module de routes par défaut, abstrait, qui définit la configuration `ui` d'écrans de base : mapview (Angular), options (Vue, infoBar par défaut), play (Angular, uiApps visibles) et radial (Vue).
+Default, abstract routes module that defines the `ui` configuration of base screens: mapview (Angular), options (Vue, default infoBar), play (Angular, visible uiApps) and radial (Vue).
 
-## Remarques
+## Notes
 
-- Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = "<nom>" }`.
-- Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.
-- `ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.
+- Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = "<name>" }`.
+- The keys of `Children` form the segments of the dotted name: "<module>.<child>". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.
+- `ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `Children` | table<string, table> | mapview, options, play, radial : chacun ne définit que son bloc `ui` (uiTypes, uiTypesFilter = only, infoBar, topBar, uiApps). |
-| `ModuleName` | string | Nom du module de routes (premier segment du nom pointé). |
+| `Children` | table<string, table> | mapview, options, play, radial: each defines only its `ui` block (uiTypes, uiTypesFilter = only, infoBar, topBar, uiApps). |
+| `ModuleName` | string | Name of the routes module (first segment of the dotted name). |
 | `Root` | table | {abstract = true} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routes/default.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routes/default.lua`.*

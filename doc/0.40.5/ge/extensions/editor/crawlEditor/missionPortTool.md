@@ -1,49 +1,49 @@
 # `editor_crawlEditor_missionPortTool`
 
-*Fichier : `lua/ge/extensions/editor/crawlEditor/missionPortTool.lua` · VM : Game Engine (GE) · 502 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/crawlEditor/missionPortTool.lua` · VM: Game Engine (GE) · 502 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_crawlEditor_missionPortTool` : `extensions.load("editor_crawlEditor_missionPortTool")`, puis la globale `editor_crawlEditor_missionPortTool`
+**Access:** extension `editor_crawlEditor_missionPortTool`: `extensions.load("editor_crawlEditor_missionPortTool")`, then the global `editor_crawlEditor_missionPortTool`
 
-Outil de migration de l'éditeur de crawl : convertit d'anciennes missions crawl (dossier /gameplay/missions/<niveau>/crawl/<mission>/ contenant bounds.sites.json et race.race.json) vers le nouveau système de crawl. Pour chaque mission il génère un fichier .boundary.json (zone issue de bounds.sites.json), un .path.json (nœuds issus des pathnodes de race.race.json, avec drapeaux de recovery), un .startingPosition.json (position de départ) dans /levels/<niveau>/crawls/, puis un .trail.json dans le dossier de la mission, qui relie le tout. Passe par gameplay/crawl/saveSystem (saveBoundary, savePath, saveStartingPosition, saveTrail).
+Migration tool of the crawl editor: converts old crawl missions (folder /gameplay/missions/<level>/crawl/<mission>/ containing bounds.sites.json and race.race.json) to the new crawl system. For each mission it generates a .boundary.json file (zone from bounds.sites.json), a .path.json (nodes from the pathnodes of race.race.json, with recovery flags), a .startingPosition.json (starting position) in /levels/<level>/crawls/, then a .trail.json in the mission folder, which links everything. Goes through gameplay/crawl/saveSystem (saveBoundary, savePath, saveStartingPosition, saveTrail).
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_crawlEditor_missionPortTool')
-editor_crawlEditor_missionPortTool.portMission('/gameplay/missions/west_coast_usa/crawl/maMission', 'west_coast_usa')
+editor_crawlEditor_missionPortTool.portMission('/gameplay/missions/west_coast_usa/crawl/myMission', 'west_coast_usa')
 ```
 
-## Remarques
+## Notes
 
-- Fichiers requis : bounds.sites.json et race.race.json (sinon échec, retour false) ; info.json absent = simple avertissement.
-- Seule la première zone (zones[1]) de bounds.sites.json est convertie ; elle doit avoir au moins 3 sommets. Si top/bot sont absents, des plans inactifs par défaut sont créés (haut z=10 normale +Z, bas z=-10 normale -Z).
-- Chaque pathnode devient un nœud {name, pos, radius (défaut 6), flags}. Flags : normal, recovery, reverseRecovery, sidePadding ; isRecoveryCheckpoint = true si recovery ou reverseRecovery valent autre chose que -1. recovery/reverseRecovery pointent vers un oldId de startPositions, pas un indice de pathnode.
-- Position de départ : startPositions dont oldId == defaultStartPosition, sinon la première entrée (avertissement). Rotation = direction vers le premier nœud (identité si distance <= 0,001), rayon 10, icône 2 m au-dessus.
-- Le trail créé a isFromMission = true, pathReversed = false, rules {isPointsBased = false, isTimed = false}, prefabs vide.
-- Le niveau cible vaut getCurrentLevelIdentifier() si targetLevel est nil. Les mots de passe ne sont pas concernés ; les fichiers existants du même nom sont réécrits (portAllMissions ne vérifie pas si une mission est déjà portée).
-- Les fonctions locales convertBoundsToBoundary, convertRaceToPath, extractMissionName, scanMissions et portAllMissions ne sont pas exportées ; le bouton « Port All Missions » parcourt tous les niveaux (getAllLevelIdentifiers) puis appelle editor_crawlEditor.loadAllObjects().
+- Required files: bounds.sites.json and race.race.json (otherwise failure, returns false); missing info.json = simple warning.
+- Only the first zone (zones[1]) of bounds.sites.json is converted; it must have at least 3 vertices. If top/bot are missing, default inactive planes are created (top z=10 normal +Z, bottom z=-10 normal -Z).
+- Each pathnode becomes a node {name, pos, radius (default 6), flags}. Flags: normal, recovery, reverseRecovery, sidePadding; isRecoveryCheckpoint = true if recovery or reverseRecovery is anything other than -1. recovery/reverseRecovery point to an oldId of startPositions, not a pathnode index.
+- Starting position: startPositions whose oldId == defaultStartPosition, otherwise the first entry (warning). Rotation = direction toward the first node (identity if distance <= 0.001), radius 10, icon 2 m above.
+- The created trail has isFromMission = true, pathReversed = false, rules {isPointsBased = false, isTimed = false}, empty prefabs.
+- The target level is getCurrentLevelIdentifier() if targetLevel is nil. Passwords are not concerned; existing files of the same name are rewritten (portAllMissions does not check whether a mission is already ported).
+- The local functions convertBoundsToBoundary, convertRaceToPath, extractMissionName, scanMissions and portAllMissions are not exported; the "Port All Missions" button goes through all levels (getAllLevelIdentifiers) then calls editor_crawlEditor.loadAllObjects().
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_crawlEditor_missionPortTool.openPortingDialog()` | Rescanne les missions du niveau courant et ouvre la fenêtre de portage. | 492 |
-| `editor_crawlEditor_missionPortTool.portMission(missionDir, targetLevel)` | Convertit une mission crawl : lit bounds.sites.json, race.race.json, crée boundary/path/startingPosition dans /levels/<niveau>/crawls/ et le trail dans le dossier de la mission. Journalise chaque erreur avec le tag mission_port_tool. | 132 |
-| `editor_crawlEditor_missionPortTool.showPortingDialog()` | Dessine la fenêtre imgui « Mission Port Tool » (Port All Missions, liste des missions convertibles du niveau courant avec un bouton par mission, Refresh, Close) si le dialogue est ouvert. À appeler à chaque frame (depuis l'éditeur). *(interne)* | 409 |
+| `editor_crawlEditor_missionPortTool.openPortingDialog()` | Rescans the missions of the current level and opens the porting window. | 492 |
+| `editor_crawlEditor_missionPortTool.portMission(missionDir, targetLevel)` | Converts a crawl mission: reads bounds.sites.json, race.race.json, creates boundary/path/startingPosition in /levels/<level>/crawls/ and the trail in the mission folder. Logs each error with the tag mission_port_tool. | 132 |
+| `editor_crawlEditor_missionPortTool.showPortingDialog()` | Draws the imgui window "Mission Port Tool" (Port All Missions, list of convertible missions of the current level with one button per mission, Refresh, Close) if the dialog is open. To be called every frame (from the editor). *(internal)* | 409 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_crawlEditor_missionPortTool.portMission(missionDir, targetLevel)`
 
-Convertit une mission crawl : lit bounds.sites.json, race.race.json, crée boundary/path/startingPosition dans /levels/<niveau>/crawls/ et le trail dans le dossier de la mission. Journalise chaque erreur avec le tag mission_port_tool.
+Converts a crawl mission: reads bounds.sites.json, race.race.json, creates boundary/path/startingPosition in /levels/<level>/crawls/ and the trail in the mission folder. Logs each error with the tag mission_port_tool.
 
-- `missionDir` (*string*) : Chemin du dossier de la mission (le nom de la mission est son dernier segment)
-- `targetLevel` (*string|nil*) : Identifiant du niveau de destination ; par défaut le niveau chargé
-- **renvoie** : boolean true si boundary, path et trail ont été sauvés ; false en cas d'échec (la position de départ est facultative)
+- `missionDir` (*string*) : Path of the mission folder (the mission name is its last segment)
+- `targetLevel` (*string|nil*) : Destination level identifier; defaults to the loaded level
+- **returns**: boolean true if boundary, path and trail were saved; false on failure (the starting position is optional)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`, `fileExists`, `findFiles`, `stat`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/crawlEditor/missionPortTool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/crawlEditor/missionPortTool.lua`.*

@@ -1,41 +1,41 @@
 # `ui_gameplaySelector_tileGenerators_scenarioTiles`
 
-*Fichier : `lua/ge/extensions/ui/gameplaySelector/tileGenerators/scenarioTiles.lua` · VM : Game Engine (GE) · 204 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/gameplaySelector/tileGenerators/scenarioTiles.lua` · VM: Game Engine (GE) · 204 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_gameplaySelector_tileGenerators_scenarioTiles` : `extensions.load("ui_gameplaySelector_tileGenerators_scenarioTiles")`, puis la globale `ui_gameplaySelector_tileGenerators_scenarioTiles`
+**Access:** extension `ui_gameplaySelector_tileGenerators_scenarioTiles`: `extensions.load("ui_gameplaySelector_tileGenerators_scenarioTiles")`, then the global `ui_gameplaySelector_tileGenerators_scenarioTiles`
 
-Générateur de tuiles du sélecteur de gameplay pour les scénarios (système hérité). Il ajoute une tuile par scénario renvoyé par scenario_scenariosLoader.getList et construit le panneau de détails avec un bouton « Start Scenario ». Les scénarios multijoueur local sont classés dans le système scenariosMultiplayer.
+Gameplay selector tile generator for scenarios (legacy system). It adds one tile per scenario returned by scenario_scenariosLoader.getList and builds the details panel with a "Start Scenario" button. Local multiplayer scenarios are classified in the scenariosMultiplayer system.
 
-## Remarques
+## Notes
 
-- Les tuiles ne sont ajoutées que pour le backend gameplaySelector. La tuile « More Scenarios... » est commentée dans le code et n'existe donc pas.
-- Les détails affichent toujours « Scenario system is outdated. » (système hérité).
-- Les spécifications incluent difficulté, auteurs, date, carte, nombre de joueurs locaux, objectifs (goals) et attributs additionnels.
+- Tiles are only added for the gameplaySelector backend. The "More Scenarios..." tile is commented out in the code and therefore does not exist.
+- The details always display "Scenario system is outdated." (legacy system).
+- The specifications include difficulty, authors, date, map, number of local players, objectives (goals) and additional attributes.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_gameplaySelector_tileGenerators_scenarioTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)` | Hook appelé à l'ouverture des détails d'une tuile. Si itemDetails.scenarioSourceFile existe, charge le scénario et ajoute dans details un bloc (titre, description, aperçu, favori, spécifications, étiquettes officiel, auxiliaire, multijoueur, mod) avec un bouton « Start Scenario » qui enregistre l'élément comme récent puis appelle scenario_scenariosLoader.start. *(interne)* *(hook)* | 148 |
-| `ui_gameplaySelector_tileGenerators_scenarioTiles.onGameplaySelectorGetTiles(items, backend)` | Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector, ajoute une tuile par scénario (nom traduit, aperçu, niveau, clé scenario_<sourceFile>). Un scénario dont playersCountRange.max dépasse 1 reçoit l'icône helmets et le type scenarioMultiplayer ; les icônes beamNG et bug signalent les scénarios officiels et auxiliaires. *(interne)* *(hook)* | 7 |
+| `ui_gameplaySelector_tileGenerators_scenarioTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)` | Hook called when a tile's details are opened. If itemDetails.scenarioSourceFile exists, loads the scenario and adds to details a block (title, description, preview, favorite, specifications, official, auxiliary, multiplayer, mod labels) with a "Start Scenario" button that records the item as recent and then calls scenario_scenariosLoader.start. *(internal)* *(hook)* | 148 |
+| `ui_gameplaySelector_tileGenerators_scenarioTiles.onGameplaySelectorGetTiles(items, backend)` | Hook called when the selector collects its tiles. For the gameplaySelector backend, adds one tile per scenario (translated name, preview, level, key scenario_<sourceFile>). A scenario whose playersCountRange.max exceeds 1 gets the helmets icon and the scenarioMultiplayer type; the beamNG and bug icons flag official and auxiliary scenarios. *(internal)* *(hook)* | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_gameplaySelector_tileGenerators_scenarioTiles.onGameplaySelectorGetDetails(itemDetails, details, buttonInstance, backend)`
 
-Hook appelé à l'ouverture des détails d'une tuile. Si itemDetails.scenarioSourceFile existe, charge le scénario et ajoute dans details un bloc (titre, description, aperçu, favori, spécifications, étiquettes officiel, auxiliaire, multijoueur, mod) avec un bouton « Start Scenario » qui enregistre l'élément comme récent puis appelle scenario_scenariosLoader.start.
+Hook called when a tile's details are opened. If itemDetails.scenarioSourceFile exists, loads the scenario and adds to details a block (title, description, preview, favorite, specifications, official, auxiliary, multiplayer, mod labels) with a "Start Scenario" button that records the item as recent and then calls scenario_scenariosLoader.start.
 
-- `itemDetails` (*table*) : Données showDetails de la tuile (scenarioSourceFile, key).
-- `details` (*table*) : Liste de blocs de détails à compléter.
-- `buttonInstance` (*table*) : Objet fournissant addButton.
-- `backend` (*table*) : Backend offrant isFavourite et trackRecent.
+- `itemDetails` (*table*) : Tile showDetails data (scenarioSourceFile, key).
+- `details` (*table*) : List of details blocks to complete.
+- `buttonInstance` (*table*) : Object providing addButton.
+- `backend` (*table*) : Backend offering isFavourite and trackRecent.
 
 #### `ui_gameplaySelector_tileGenerators_scenarioTiles.onGameplaySelectorGetTiles(items, backend)`
 
-Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector, ajoute une tuile par scénario (nom traduit, aperçu, niveau, clé scenario_<sourceFile>). Un scénario dont playersCountRange.max dépasse 1 reçoit l'icône helmets et le type scenarioMultiplayer ; les icônes beamNG et bug signalent les scénarios officiels et auxiliaires.
+Hook called when the selector collects its tiles. For the gameplaySelector backend, adds one tile per scenario (translated name, preview, level, key scenario_<sourceFile>). A scenario whose playersCountRange.max exceeds 1 gets the helmets icon and the scenarioMultiplayer type; the beamNG and bug icons flag official and auxiliary scenarios.
 
-- `items` (*table*) : Liste de tuiles à compléter (modifiée en place).
-- `backend` (*table*) : Backend appelant ; backendName doit valoir « gameplaySelector ».
+- `items` (*table*) : List of tiles to complete (modified in place).
+- `backend` (*table*) : Calling backend; backendName must be "gameplaySelector".
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/gameplaySelector/tileGenerators/scenarioTiles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/gameplaySelector/tileGenerators/scenarioTiles.lua`.*

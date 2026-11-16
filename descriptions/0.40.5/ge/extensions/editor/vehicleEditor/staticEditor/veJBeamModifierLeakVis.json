@@ -1,32 +1,47 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamModifierLeakVis.lua",
-  "module": "Application « JBeam Modifier Leaking Visualizer » du Static Editor. En JBeam, un modificateur (par exemple beamSpring, nodeWeight, frictionCoef) posé dans une ligne reste actif pour les lignes suivantes, même dans les parties suivantes d'un véhicule (il « fuit »). Cet outil analyse les parties du véhicule chargé dans l'ordre de chargement, avec leurs données AST, calcule quels modificateurs fuient d'une partie à l'autre dans chaque section, et les affiche dans un tableau (sections en boutons, parties en lignes, modificateurs en colonnes). Les sections qui fuient sont colorées en rouge. Une case « Ignore Default Values » (EXPERIMENTAL) ignore les valeurs égales aux valeurs par défaut du moteur (table modifiersDefaultValues codée en dur).",
+  "module": "\"JBeam Modifier Leaking Visualizer\" app of the Static Editor. In JBeam, a modifier (for example beamSpring, nodeWeight, frictionCoef) placed in a line stays active for the following lines, even in the following parts of a vehicle (it \"leaks\"). This tool analyzes the parts of the loaded vehicle in load order, with their AST data, computes which modifiers leak from one part to another in each section, and displays them in a table (sections as buttons, parts as rows, modifiers as columns). Sections that leak are colored red. An \"Ignore Default Values\" checkbox (EXPERIMENTAL) ignores the values equal to the engine's default values (hard-coded modifiersDefaultValues table).",
   "usage": "extensions.load('editor_vehicleEditor_staticEditor_veJBeamModifierLeakVis')\neditor_vehicleEditor_staticEditor_veJBeamModifierLeakVis.open()",
   "notes": [
-    "Nécessite un véhicule chargé dans l'éditeur (vEditor.vehicle) ; sinon la fenêtre n'affiche rien après l'ouverture.",
-    "Les parties sont obtenues par un parcours récursif de vEditor.vehData.config.partsTree dans l'ordre des slots (slots2 ou slots) ; chaque fichier JBeam est relu et parsé en AST (json-ast) une seule fois grâce à un cache local.",
-    "Les valeurs spéciales de chaînes (par exemple « |NORMAL », « NM_xxx » pour un matériau de node) sont converties comme le fait le chargeur JBeam (replaceSpecialValues, avec particles.getMaterialIDByName).",
-    "ImGui limite les tables à 64 colonnes : si une section a plus de modificateurs, un message d'avertissement l'indique et tous ne sont pas affichés.",
-    "La table modifiersDefaultValues est incomplète (l'interface elle-même précise « Not all default values accounted for »).",
-    "La variable locale runTest vaut false : les compteurs de test internes (comparaison avec vEditor.vdata) sont désactivés."
+    "Requires a vehicle loaded in the editor (vEditor.vehicle); otherwise the window shows nothing after opening.",
+    "The parts are obtained by a recursive walk of vEditor.vehData.config.partsTree in slot order (slots2 or slots); each JBeam file is re-read and parsed into an AST (json-ast) only once thanks to a local cache.",
+    "The special string values (for example \"|NORMAL\", \"NM_xxx\" for a node material) are converted as the JBeam loader does (replaceSpecialValues, with particles.getMaterialIDByName).",
+    "ImGui limits tables to 64 columns: if a section has more modifiers, a warning message says so and not all are displayed.",
+    "The modifiersDefaultValues table is incomplete (the interface itself states \"Not all default values accounted for\").",
+    "The local variable runTest is false: the internal test counters (comparison with vEditor.vdata) are disabled."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « JBeam Modifier Leaking Visualizer »."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "Text of the Apps menu entry: \"JBeam Modifier Leaking Visualizer\"."
+    }
   },
   "functions": {
-    "open": {"desc": "Ouvre la fenêtre de l'application (windowOpen[0] = true)."},
+    "open": {
+      "desc": "Opens the app window (windowOpen[0] = true)."
+    },
     "onUpdate": {
-      "desc": "Hook d'extension appelé à chaque frame : dessine le bouton « Start Analysis », la case des valeurs par défaut, les boutons de section et le tableau des modificateurs quand la fenêtre est ouverte et qu'un véhicule est chargé.",
+      "desc": "Extension hook called every frame: draws the \"Start Analysis\" button, the default values checkbox, the section buttons and the modifiers table when the window is open and a vehicle is loaded.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement Lua : sauvegarde l'état de la fenêtre.",
-      "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}],
+      "desc": "Hook called before a Lua reload: saves the window state.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement Lua : restaure l'état de la fenêtre.",
-      "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}},
+      "desc": "Hook called after a Lua reload: restores the window state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "table produced by onSerialize"
+        }
+      },
       "internal": true
     }
   }

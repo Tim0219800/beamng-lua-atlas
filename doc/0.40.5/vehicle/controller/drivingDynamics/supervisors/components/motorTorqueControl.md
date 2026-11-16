@@ -1,137 +1,137 @@
 # `controller_drivingDynamics_supervisors_components_motorTorqueControl`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/supervisors/components/motorTorqueControl.lua` · VM : Véhicule · 379 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/supervisors/components/motorTorqueControl.lua` · VM: Vehicle · 379 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/supervisors/components/motorTorqueControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/supervisors/components/motorTorqueControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Composant du système drivingDynamics qui réduit le couple moteur via device.throttleFactor, pour l'antipatinage (ordre 40) et le contrôle de lacet (ordre 40). Pour chaque moteur concerné, le facteur final est min(facteur antipatinage, facteur lacet), recalculé à chaque pas fixe. L'antipatinage utilise un PID sur le glissement maximal du groupe de roues du moteur ; le lacet utilise trois PID (écart de lacet, dérive de caisse, dérive avant). N'est pas utilisable pour l'ABS.
+Component of the drivingDynamics system that reduces engine torque via device.throttleFactor, for traction control (order 40) and yaw control (order 40). For each motor concerned, the final factor is min(traction control factor, yaw factor), recomputed at every fixed step. Traction control uses a PID on the maximum slip of the motor's wheel group; yaw uses three PIDs (yaw error, body slip, front slip). Cannot be used for ABS.
 
-## Remarques
+## Notes
 
-- Clés jbeam : useForTractionControl, useForYawControl (vrai par défaut) ; tractionControl.wheelGroupSettings (table d'en-tête : motorName, kP, kI, kD (0), integralInCoef (20), integralOutCoef (2), slipThreshold (0.2), minimumThrottleLimit (0)) ; yawControl.PIDSettings (table d'en-tête : type yawAV | slipAngle | frontAxleSlipAngle, kP, kI, kD, integralInCoef, integralOutCoef ; défaut yawAV {2,0.5,0,100,10} et slipAngle {2,1,0,10,1}), yawControl.yawAVThreshold (0.4), yawControl.slipAngleThreshold (0.1), yawControl.frontAxleSlipAngleThreshold (0.1), yawControl.minimumThrottleLimit (0), yawControlledMotors (liste de noms de moteurs).
-- Les rôles ne sont actifs que si le superviseur correspondant existe ET si la table jbeam correspondante (tractionControl / yawControl) est présente.
-- Le facteur d'antipatinage est lissé (temporalSmoothing 5/5) et borné par minimumThrottleLimit ; le facteur de lacet est borné par yawControl.minimumThrottleLimit. M.isActingAsTC / isActingAsYC sont vrais quand le facteur est < 1.
-- setParameters traite : tractionControl.isEnabled, tractionControl.wheelGroupSettings.<moteur>.(kP|kI|kD|integralInCoef|integralOutCoef|slipThreshold|minimumThrottleLimit), yawControl.isEnabled, yawControl.yawAvThreshold, yawControl.slipAngleThreshold. Les PID de lacet ne sont pas reconfigurés par setParameters/applyControlParameters (seul l'antipatinage l'est) ; yawControl.frontAxleSlipAngleThreshold n'est pas modifiable.
-- Incohérence : si le rôle yawControl est actif mais pas tractionControl (ou inversement), controlParameters.yawControl/tractionControl peut être nil, et actAsTractionControl/actAsYawControl lisent controlParameters.<rôle>.isEnabled sans garde ; ces fonctions ne sont toutefois appelées que si le composant s'est enregistré pour ce rôle.
-- Le throttleFactor du moteur peut être aussi modifié par d'autres contrôleurs (esc.lua passe par electrics, pas par ce champ) ; ici il est écrasé à chaque pas.
+- jbeam keys: useForTractionControl, useForYawControl (true by default); tractionControl.wheelGroupSettings (header table: motorName, kP, kI, kD (0), integralInCoef (20), integralOutCoef (2), slipThreshold (0.2), minimumThrottleLimit (0)); yawControl.PIDSettings (header table: type yawAV | slipAngle | frontAxleSlipAngle, kP, kI, kD, integralInCoef, integralOutCoef; default yawAV {2,0.5,0,100,10} and slipAngle {2,1,0,10,1}), yawControl.yawAVThreshold (0.4), yawControl.slipAngleThreshold (0.1), yawControl.frontAxleSlipAngleThreshold (0.1), yawControl.minimumThrottleLimit (0), yawControlledMotors (list of motor names).
+- The roles are only active if the corresponding supervisor exists AND the corresponding jbeam table (tractionControl / yawControl) is present.
+- The traction control factor is smoothed (temporalSmoothing 5/5) and bounded by minimumThrottleLimit; the yaw factor is bounded by yawControl.minimumThrottleLimit. M.isActingAsTC / isActingAsYC are true when the factor is < 1.
+- setParameters handles: tractionControl.isEnabled, tractionControl.wheelGroupSettings.<motor>.(kP|kI|kD|integralInCoef|integralOutCoef|slipThreshold|minimumThrottleLimit), yawControl.isEnabled, yawControl.yawAvThreshold, yawControl.slipAngleThreshold. The yaw PIDs are not reconfigured by setParameters/applyControlParameters (only traction control is); yawControl.frontAxleSlipAngleThreshold is not modifiable.
+- Inconsistency: if the yawControl role is active but not tractionControl (or vice versa), controlParameters.yawControl/tractionControl may be nil, and actAsTractionControl/actAsYawControl read controlParameters.<role>.isEnabled without a guard; these functions are however only called if the component registered for that role.
+- The motor's throttleFactor can also be modified by other controllers (esc.lua goes through electrics, not through this field); here it is overwritten at every step.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.actAsTractionControl(wheelGroup, dt)` | Appelé par tractionControl : calcule le facteur de couple du moteur d'un groupe de roues d'après le glissement maximal du groupe. *(interne)* | 54 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)` | Appelé par yawControl : calcule un facteur de couple commun à tous les moteurs contrôlés d'après l'écart de lacet, l'angle de dérive de caisse (survirage seulement) et la dérive avant. *(interne)* | 80 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.getConfig()` | Renvoie une copie de la configuration. | 348 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.init(jbeamData)` | Passe isActive à true et remet à false les indicateurs. *(interne)* | 173 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.initLastStage(jbeamData)` | Ne fait rien. *(interne)* | 308 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.initSecondStage(jbeamData)` | Lit la configuration, crée les PID, liste les moteurs contrôlés et s'enregistre auprès des superviseurs. *(interne)* | 190 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.registerCMU(cmu)` | Mémorise la référence au CMU. *(interne)* | 147 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.reset()` | Remet à zéro les indicateurs et les PID. *(interne)* | 151 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.sendConfigData()` | Envoie la configuration au CMU. | 352 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.setConfig(configTable)` | Remplace la configuration complète. | 343 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.setDebugMode(debugEnabled)` | Active/désactive les paquets de debug. | 141 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.setParameters(parameters)` | Applique des paramètres (voir notes) puis reconfigure les PID d'antipatinage. | 320 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.shutdown()` | Désactive le composant. | 311 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.updateFixedStep(dt)` | Applique à chaque moteur contrôlé throttleFactor = min(facteur TC, facteur YC). *(interne)* | 41 |
-| `controller_drivingDynamics_supervisors_components_motorTorqueControl.updateGFX(dt)` | Vide (version debug : envoie un paquet détaillé). *(interne)* | 104 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.actAsTractionControl(wheelGroup, dt)` | Called by tractionControl: computes the torque factor of a wheel group's motor from the group's maximum slip. *(internal)* | 54 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)` | Called by yawControl: computes a torque factor common to all controlled motors from the yaw error, the body slip angle (oversteer only) and the front slip. *(internal)* | 80 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.getConfig()` | Returns a copy of the configuration. | 348 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.init(jbeamData)` | Sets isActive to true and resets the flags to false. *(internal)* | 173 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.initLastStage(jbeamData)` | Does nothing. *(internal)* | 308 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.initSecondStage(jbeamData)` | Reads the configuration, creates the PIDs, lists the controlled motors and registers with the supervisors. *(internal)* | 190 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.registerCMU(cmu)` | Stores the reference to the CMU. *(internal)* | 147 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.reset()` | Resets the flags and the PIDs to zero. *(internal)* | 151 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.sendConfigData()` | Sends the configuration to the CMU. | 352 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.setConfig(configTable)` | Replaces the entire configuration. | 343 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.setDebugMode(debugEnabled)` | Enables/disables debug packets. | 141 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.setParameters(parameters)` | Applies parameters (see notes) then reconfigures the traction control PIDs. | 320 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.shutdown()` | Disables the component. | 311 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.updateFixedStep(dt)` | Applies throttleFactor = min(TC factor, YC factor) to each controlled motor. *(internal)* | 41 |
+| `controller_drivingDynamics_supervisors_components_motorTorqueControl.updateGFX(dt)` | Empty (debug version: sends a detailed packet). *(internal)* | 104 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.actAsTractionControl(wheelGroup, dt)`
 
-Appelé par tractionControl : calcule le facteur de couple du moteur d'un groupe de roues d'après le glissement maximal du groupe.
+Called by tractionControl: computes the torque factor of a wheel group's motor from the group's maximum slip.
 
-- `wheelGroup` (*table*) : Groupe de roues {motor, maxSlip…}.
-- `dt` (*number*) : Pas de temps (s).
-- **renvoie** : boolean Vrai si le couple est réduit.
+- `wheelGroup` (*table*) : Wheel group {motor, maxSlip...}.
+- `dt` (*number*) : Time step (s).
+- **returns**: boolean True if the torque is reduced.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.actAsYawControl(measuredYaw, expectedYaw, yawDifference, bodySlipAngle, frontSlipAngle, rearSlipAngle, dt)`
 
-Appelé par yawControl : calcule un facteur de couple commun à tous les moteurs contrôlés d'après l'écart de lacet, l'angle de dérive de caisse (survirage seulement) et la dérive avant.
+Called by yawControl: computes a torque factor common to all controlled motors from the yaw error, the body slip angle (oversteer only) and the front slip.
 
-- `measuredYaw` (*number*) : Lacet mesuré (rad/s).
-- `expectedYaw` (*number*) : Non utilisé.
-- `yawDifference` (*number*) : Écart de lacet.
-- `bodySlipAngle` (*number*) : Angle de dérive de caisse ajusté (rad).
-- `frontSlipAngle` (*number*) : Angle de dérive avant (rad).
-- `rearSlipAngle` (*number*) : Non utilisé.
-- `dt` (*number*) : Pas de temps (s).
-- **renvoie** : boolean Vrai si le couple est réduit.
+- `measuredYaw` (*number*) : Measured yaw (rad/s).
+- `expectedYaw` (*number*) : Not used.
+- `yawDifference` (*number*) : Yaw error.
+- `bodySlipAngle` (*number*) : Adjusted body slip angle (rad).
+- `frontSlipAngle` (*number*) : Front slip angle (rad).
+- `rearSlipAngle` (*number*) : Not used.
+- `dt` (*number*) : Time step (s).
+- **returns**: boolean True if the torque is reduced.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.getConfig()`
 
-Renvoie une copie de la configuration.
+Returns a copy of the configuration.
 
-- **renvoie** : table Copie de la configuration.
+- **returns**: table Copy of the configuration.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.init(jbeamData)`
 
-Passe isActive à true et remet à false les indicateurs.
+Sets isActive to true and resets the flags to false.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.initLastStage(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.initSecondStage(jbeamData)`
 
-Lit la configuration, crée les PID, liste les moteurs contrôlés et s'enregistre auprès des superviseurs.
+Reads the configuration, creates the PIDs, lists the controlled motors and registers with the supervisors.
 
-- `jbeamData` (*table*) : Données jbeam (voir notes).
+- `jbeamData` (*table*) : jbeam data (see notes).
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.registerCMU(cmu)`
 
-Mémorise la référence au CMU.
+Stores the reference to the CMU.
 
-- `cmu` (*table*) : Contrôleur CMU.
+- `cmu` (*table*) : CMU controller.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.setConfig(configTable)`
 
-Remplace la configuration complète.
+Replaces the entire configuration.
 
 - `configTable` (*table*) : Table {tractionControl, yawControl}.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.setDebugMode(debugEnabled)`
 
-Active/désactive les paquets de debug.
+Enables/disables debug packets.
 
-- `debugEnabled` (*boolean*) : Vrai pour activer.
+- `debugEnabled` (*boolean*) : True to enable.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.setParameters(parameters)`
 
-Applique des paramètres (voir notes) puis reconfigure les PID d'antipatinage.
+Applies parameters (see notes) then reconfigures the traction control PIDs.
 
-- `parameters` (*table<string, any>*) : Paramètres à appliquer.
+- `parameters` (*table<string, any>*) : Parameters to apply.
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.updateFixedStep(dt)`
 
-Applique à chaque moteur contrôlé throttleFactor = min(facteur TC, facteur YC).
+Applies throttleFactor = min(TC factor, YC factor) to each controlled motor.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_drivingDynamics_supervisors_components_motorTorqueControl.updateGFX(dt)`
 
-Vide (version debug : envoie un paquet détaillé).
+Empty (debug version: sends a detailed packet).
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `actAsABSControl` | function | nop. |
-| `componentOrderABSControl` | number | 1000 : inutilisé. |
+| `componentOrderABSControl` | number | 1000: unused. |
 | `componentOrderTractionControl` | number | 40. |
 | `componentOrderYawControl` | number | 40. |
-| `defaultOrder` | number | Ordre d'exécution par défaut (70). |
-| `isActingAsABS` | boolean | Toujours false. |
-| `isActingAsTC` | boolean | Vrai quand le couple est réduit pour l'antipatinage. |
-| `isActingAsYC` | boolean | Vrai quand le couple est réduit par le contrôle de lacet. |
-| `isActive` | boolean | Vrai après init. |
+| `defaultOrder` | number | Default execution order (70). |
+| `isActingAsABS` | boolean | Always false. |
+| `isActingAsTC` | boolean | True when the torque is reduced for traction control. |
+| `isActingAsYC` | boolean | True when the torque is reduced by the yaw control. |
+| `isActive` | boolean | True after init. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/supervisors/components/motorTorqueControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/supervisors/components/motorTorqueControl.lua`.*

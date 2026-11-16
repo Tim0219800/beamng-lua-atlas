@@ -1,28 +1,28 @@
 # `gameplay_rally_test_testRouteFix`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/test/testRouteFix.lua` · VM : Game Engine (GE) · 80 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/test/testRouteFix.lua` · VM: Game Engine (GE) · 80 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rally_test_testRouteFix` : `extensions.load("gameplay_rally_test_testRouteFix")`, puis la globale `gameplay_rally_test_testRouteFix`
+**Access:** extension `gameplay_rally_test_testRouteFix`: `extensions.load("gameplay_rally_test_testRouteFix")`, then the global `gameplay_rally_test_testRouteFix`
 
-Extension de test de développement pour le module gameplay/route/route : au chargement, elle crée une Route avec un petit chemin de 3 points codés en dur, puis à chaque frame dessine le chemin (sphères, prismes, numéros) via debugDrawer et fait suivre le véhicule joueur par route:trackVehicle. Se charge avec extensions.load('gameplay_rally_test_testRouteFix'). Sans intérêt en jeu normal.
+Development test extension for the gameplay/route/route module: on load, it creates a Route with a small hard-coded 3-point path, then every frame draws the path (spheres, prisms, numbers) via debugDrawer and makes the player vehicle follow it with route:trackVehicle. Loaded with extensions.load('gameplay_rally_test_testRouteFix'). Of no use in normal gameplay.
 
-## Remarques
+## Notes
 
-- Les coordonnées du chemin sont fixes (monde de test) ; les fonctions drawMousePos et drawPath existent mais leur appel est commenté dans onUpdate.
-- Le commentaire d'en-tête du fichier mentionne « extension name: gameplay_rally », ce qui ne correspond pas au nom réel de l'extension.
+- The path coordinates are fixed (test world); the drawMousePos and drawPath functions exist but their call is commented out in onUpdate.
+- The file's header comment mentions "extension name: gameplay_rally", which does not match the extension's real name.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rally_test_testRouteFix.onExtensionLoaded()` | Hook appelé au chargement de l'extension : crée la Route et appelle setupPathMulti sur le chemin de test. *(interne)* *(hook)* | 72 |
-| `gameplay_rally_test_testRouteFix.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension ; corps vide. *(interne)* *(hook)* | 77 |
-| `gameplay_rally_test_testRouteFix.onUpdate()` | Hook appelé à chaque frame : dessine la route et appelle route:trackVehicle sur le véhicule joueur 0 s'il existe. *(interne)* *(hook)* | 56 |
-| `gameplay_rally_test_testRouteFix.onVehicleResetted()` | Hook appelé quand un véhicule est remis en place ; corps vide. *(interne)* *(hook)* | 69 |
+| `gameplay_rally_test_testRouteFix.onExtensionLoaded()` | Hook called when the extension loads: creates the Route and calls setupPathMulti on the test path. *(internal)* *(hook)* | 72 |
+| `gameplay_rally_test_testRouteFix.onExtensionUnloaded()` | Hook called when the extension unloads; empty body. *(internal)* *(hook)* | 77 |
+| `gameplay_rally_test_testRouteFix.onUpdate()` | Hook called every frame: draws the route and calls route:trackVehicle on player vehicle 0 if it exists. *(internal)* *(hook)* | 56 |
+| `gameplay_rally_test_testRouteFix.onVehicleResetted()` | Hook called when a vehicle is put back in place; empty body. *(internal)* *(hook)* | 69 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/test/testRouteFix.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/test/testRouteFix.lua`.*

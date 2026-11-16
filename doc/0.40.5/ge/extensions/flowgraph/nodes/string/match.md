@@ -1,25 +1,25 @@
 # `flowgraph_nodes_string_match`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/string/match.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/string/match.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/string/match")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/string/match")` (file under extensions/ but not a regular extension)
 
-Noeud « Match String » (simple). Doit renvoyer la première capture d'un pattern Lua appliqué à la chaîne d'entrée ; pins : value (in, string), value (out, string). Pattern dans data.pattern (« %d » par défaut).
+Node "Match String" (simple). Should return the first capture of a Lua pattern applied to the input string; pins: value (in, string), value (out, string). Pattern in data.pattern ("%d" by default).
 
-## Remarques
+## Notes
 
-- Bug : work utilise self.data.pattern.value alors que data.pattern est une chaîne : l'indexation d'une chaîne par 'value' donne nil, string.match reçoit un pattern nil et lève une erreur.
-- Le fichier note en todo que les patterns utilisables restent à documenter.
+- Bug: work uses self.data.pattern.value whereas data.pattern is a string: indexing a string by 'value' gives nil, string.match receives a nil pattern and raises an error.
+- The file notes as a todo that the usable patterns remain to be documented.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 31 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 31 |
 | `C:init()` | data.pattern = '%d'. | 23 |
-| `C:work()` | Appelle string.match(value, data.pattern.value) et écrit le résultat. | 27 |
+| `C:work()` | Calls string.match(value, data.pattern.value) and writes the result. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/string/match.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/string/match.lua`.*

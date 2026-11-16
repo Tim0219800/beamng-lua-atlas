@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/gameplay/vehiclePresencePolicy.lua",
+  "module": "Règles pures (sans état) décrivant la « présence » d'un joueur par rapport à un véhicule : driver (conducteur), passenger (passager) ou unrestricted (sans restriction). Dit si une carte d'actions d'entrée est autorisée pour un mode donné et quel mode non assis utiliser par défaut. Pas de hook ni d'état : on l'utilise comme bibliothèque.",
+  "usage": "local policy = require(\"gameplay/vehiclePresencePolicy\")\nif policy.allowsActionMap(mode, \"driving\") then ... end",
+  "notes": [
+    "Modes valides : driver, passenger, unrestricted.",
+    "allowsActionMap : unrestricted autorise tout ; driver n'autorise que la carte « driving » ; passenger n'autorise rien.",
+    "Le fichier se charge par require(\"gameplay/vehiclePresencePolicy\") ; le nom d'extension gameplay_vehiclePresencePolicy n'est pas nécessairement chargé par extensions.load."
+  ],
+  "functions": {
+    "isValidMode": {
+      "desc": "Teste si une valeur est un mode connu.",
+      "params": {"mode": {"type": "any", "desc": "Valeur à tester."}},
+      "returns": [{"type": "boolean", "desc": "true pour driver, passenger ou unrestricted."}],
+      "internal": false
+    },
+    "normalizeMode": {
+      "desc": "Renvoie le mode s'il est valide, sinon le mode de repli s'il est valide, sinon « passenger ».",
+      "params": {"mode": {"type": "any", "desc": "Mode demandé."}, "fallback": {"type": "any", "desc": "Mode de repli facultatif."}},
+      "returns": [{"type": "string", "desc": "Un mode valide."}],
+      "internal": false
+    },
+    "defaultUnseatedMode": {
+      "desc": "Mode par défaut d'un joueur non assis : « unrestricted » en freeroam (ou sans mode) quand le multi-siège n'est pas actif, « passenger » sinon.",
+      "params": {"context": {"type": "table|nil", "desc": "{mode = \"freeroam\"|\"multiplayer\"|\"career\"|..., isMultiseatActive = boolean}"}},
+      "returns": [{"type": "string", "desc": "\"unrestricted\" ou \"passenger\""}],
+      "internal": false
+    },
+    "allowsActionMap": {
+      "desc": "Indique si une carte d'actions est autorisée pour le mode.",
+      "params": {"mode": {"type": "string", "desc": "Mode de présence."}, "mapKind": {"type": "string", "desc": "Type de carte d'actions (par ex. « driving », « slot »)."}},
+      "returns": [{"type": "boolean", "desc": ""}],
+      "internal": false
+    }
+  }
+}

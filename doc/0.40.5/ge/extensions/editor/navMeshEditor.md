@@ -1,40 +1,40 @@
 # `editor_navMeshEditor`
 
-*Fichier : `lua/ge/extensions/editor/navMeshEditor.lua` · VM : Game Engine (GE) · 979 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/navMeshEditor.lua` · VM: Game Engine (GE) · 979 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_navMeshEditor` : `extensions.load("editor_navMeshEditor")`, puis la globale `editor_navMeshEditor`
+**Access:** extension `editor_navMeshEditor`: `extensions.load("editor_navMeshEditor")`, then the global `editor_navMeshEditor`
 
-Éditeur du navmesh Recast (maillage de navigation de l'IA) dans le World Editor, modelé sur l'éditeur de rivières : un mode d'édition « Navigation Mesh », une barre d'outils, une interaction dans la vue 3D et deux fenêtres (« NavMesh Overview » : grille 2D des tuiles et formes de la tuile courante ; « navMeshTileView »). Six outils : tiles (sélection et verrouillage des tuiles pour qu'une reconstruction ne les change pas), outline (polygone de couverture), areas (volumes convexes typés Exclude/Ground/Road/Sidewalk/Water), links (liaisons hors maillage jump/drop/climb/teleport), test (recherche de chemin A vers B) et crowd (agents IA vivants). Tout est annulable. Il pilote les fonctions C++ navmeshEditor* (navmeshEditorBuild, navmeshEditorSave/Load, navmeshEditorFindPath, navmeshEditorCrowd*, etc.). Le navmesh est enregistré avec le niveau (onEditorAfterSaveLevel) et rechargé à l'ouverture.
+Editor of the Recast navmesh (AI navigation mesh) in the World Editor, modeled on the river editor: a "Navigation Mesh" edit mode, a toolbar, an interaction in the 3D view and two windows ("NavMesh Overview": 2D grid of the tiles and shapes of the current tile; "navMeshTileView"). Six tools: tiles (selection and locking of tiles so a rebuild does not change them), outline (coverage polygon), areas (typed convex volumes Exclude/Ground/Road/Sidewalk/Water), links (off-mesh jump/drop/climb/teleport links), test (A to B pathfinding) and crowd (live AI agents). Everything is undoable. It drives the C++ functions navmeshEditor* (navmeshEditorBuild, navmeshEditorSave/Load, navmeshEditorFindPath, navmeshEditorCrowd*, etc.). The navmesh is saved with the level (onEditorAfterSaveLevel) and reloaded on opening.
 
-## Remarques
+## Notes
 
-- Si la fonction navmeshEditorGetState n'existe pas (moteur sans cette API), la fenêtre affiche « NavMesh engine API not found. Rebuild the game (C++)... » et l'outil est inutilisable.
-- Raccourcis : clic gauche = sélectionner/placer, Alt+clic = ajouter un nœud, clic droit = supprimer un nœud ou une liaison. Sans polygone d'outline, tout le niveau est couvert ; avec un outline, le navmesh extérieur est retiré à la construction.
-- Types de liaisons (flags) : walk 1, swim 2, jump 4, ledge 8, drop 16, climb 32, teleport 64. Types d'aire : 0 Exclude, 1 Ground, 2 Road, 3 Sidewalk, 4 Water.
-- Les paramètres de construction éditables incluent cs, ch, walkableSlopeAngle, walkableHeight/Climb/Radius (en voxels), tileSize, maxEdgeLen, minRegionArea, maxPolysPerTile, etc. (voir CONFIG_FIELDS).
+- If the function navmeshEditorGetState does not exist (engine without this API), the window displays "NavMesh engine API not found. Rebuild the game (C++)..." and the tool is unusable.
+- Shortcuts: left click = select/place, Alt+click = add a node, right click = delete a node or a link. Without an outline polygon, the whole level is covered; with an outline, the outer navmesh is removed at build time.
+- Link types (flags): walk 1, swim 2, jump 4, ledge 8, drop 16, climb 32, teleport 64. Area types: 0 Exclude, 1 Ground, 2 Road, 3 Sidewalk, 4 Water.
+- The editable build parameters include cs, ch, walkableSlopeAngle, walkableHeight/Climb/Radius (in voxels), tileSize, maxEdgeLen, minRegionArea, maxPolysPerTile, etc. (see CONFIG_FIELDS).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_navMeshEditor.allowGizmo()` | Indique si le gizmo de transformation est autorisé : vrai uniquement quand le mode d'édition courant est « Navigation Mesh ». | 971 |
-| `editor_navMeshEditor.onEditorAfterOpenLevel()` | Hook appelé après l'ouverture d'un niveau dans l'éditeur : réinitialise polygones, aires, sélection, tuiles et liaisons ; le navmesh sera rechargé à la prochaine activation du mode. *(interne)* *(hook)* | 964 |
-| `editor_navMeshEditor.onEditorAfterSaveLevel()` | Hook appelé après la sauvegarde d'un niveau dans l'éditeur : enregistre le navmesh avec le niveau. *(interne)* *(hook)* | 963 |
-| `editor_navMeshEditor.onEditorGui()` | Hook d'éditeur appelé à chaque frame : dessine les fenêtres Overview et vue de tuile quand le mode navmesh est actif (ou le message d'API manquante). *(interne)* *(hook)* | 900 |
-| `editor_navMeshEditor.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre les deux fenêtres, le gestionnaire d'inspecteur « navMesh », le mode d'édition navMeshEditMode et l'entrée de menu « Navigation Mesh » (groupe Gameplay). *(interne)* *(hook)* | 942 |
-| `editor_navMeshEditor.show()` | Sélectionne le mode d'édition « Navigation Mesh ». | 920 |
+| `editor_navMeshEditor.allowGizmo()` | Indicates whether the transform gizmo is allowed: true only when the current edit mode is "Navigation Mesh". | 971 |
+| `editor_navMeshEditor.onEditorAfterOpenLevel()` | Hook called after a level is opened in the editor: resets polygons, areas, selection, tiles and links; the navmesh will be reloaded at the next activation of the mode. *(internal)* *(hook)* | 964 |
+| `editor_navMeshEditor.onEditorAfterSaveLevel()` | Hook called after a level is saved in the editor: saves the navmesh with the level. *(internal)* *(hook)* | 963 |
+| `editor_navMeshEditor.onEditorGui()` | Editor hook called every frame: draws the Overview and tile view windows when the navmesh mode is active (or the missing API message). *(internal)* *(hook)* | 900 |
+| `editor_navMeshEditor.onEditorInitialized()` | Hook called at editor initialization: registers the two windows, the "navMesh" inspector handler, the navMeshEditMode edit mode and the "Navigation Mesh" menu entry (Gameplay group). *(internal)* *(hook)* | 942 |
+| `editor_navMeshEditor.show()` | Selects the "Navigation Mesh" edit mode. | 920 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_navMeshEditor.allowGizmo()`
 
-Indique si le gizmo de transformation est autorisé : vrai uniquement quand le mode d'édition courant est « Navigation Mesh ».
+Indicates whether the transform gizmo is allowed: true only when the current edit mode is "Navigation Mesh".
 
-- **renvoie** : boolean Vrai si le mode d'édition courant est celui du navmesh.
+- **returns**: boolean True if the current edit mode is the navmesh one.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/navMeshEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/navMeshEditor.lua`.*

@@ -1,34 +1,34 @@
 # `flowgraph_nodes_scene_spawnTSStatic`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/spawnTSStatic.lua` · VM : Game Engine (GE) · 142 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/spawnTSStatic.lua` · VM: Game Engine (GE) · 142 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/spawnTSStatic")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/spawnTSStatic")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Spawn TSStatic » (once_instant, auteur BeamNG). Crée un objet TSStatic avec shapeName, position, rotation et scale. Entrées : flow, reset, shapeName, position, rotation, scale. Sorties : flow, created (impulsion d'une frame), lastId. L'objet est supprimé à l'arrêt, à la fin de mission ou à la destruction.
+Flowgraph node "Spawn TSStatic" (once_instant, author BeamNG). Creates a TSStatic object with shapeName, position, rotation and scale. Inputs: flow, reset, shapeName, position, rotation, scale. Outputs: flow, created (one-frame impulse), lastId. The object is deleted on stop, at the end of the mission or on destruction.
 
-## Remarques
+## Notes
 
-- Le code d'un décalage (pin offset) est commenté dans createObject et n'a aucun effet.
-- maxObjectCount n'est pas utilisé.
+- The code for an offset (pin offset) is commented out in createObject and has no effect.
+- maxObjectCount is not used.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset. | 100 |
-| `C:createObject(objectName)` | Crée le TSStatic (canSave = false), l'enregistre sous spawnedObj_<time>_<id>_<n>, écrit lastId et notifie l'éditeur. | 41 |
-| `C:destroy()` | Appelé à la destruction du noeud : nettoie les objets créés. | 136 |
-| `C:init(mgr, ...)` | Initialise la liste d'objets et data.maxObjectCount = 1. | 35 |
-| `C:onClientEndMission()` | Hook de fin de mission : nettoie les objets créés par le noeud. | 132 |
-| `C:onNodeReset()` | Supprime tous les objets créés. | 104 |
-| `C:work()` | Retombe created à false à la frame suivante. | 121 |
-| `C:workOnce()` | Crée l'objet et lève created. | 116 |
+| `C:_executionStopped()` | Calls onNodeReset. | 100 |
+| `C:createObject(objectName)` | Creates the TSStatic (canSave = false), registers it under spawnedObj_<time>_<id>_<n>, writes lastId and notifies the editor. | 41 |
+| `C:destroy()` | Called when the node is destroyed: cleans up the created objects. | 136 |
+| `C:init(mgr, ...)` | Initializes the object list and data.maxObjectCount = 1. | 35 |
+| `C:onClientEndMission()` | End-of-mission hook: cleans up the objects created by the node. | 132 |
+| `C:onNodeReset()` | Deletes all created objects. | 104 |
+| `C:work()` | Drops created back to false on the next frame. | 121 |
+| `C:workOnce()` | Creates the object and raises created. | 116 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`, `getId`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/spawnTSStatic.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/spawnTSStatic.lua`.*

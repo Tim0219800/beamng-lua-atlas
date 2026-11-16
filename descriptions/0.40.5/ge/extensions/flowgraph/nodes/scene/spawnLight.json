@@ -1,52 +1,52 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/spawnLight.lua",
-  "module": "Noeud flowgraph « SpotLight » (repeat_instant, auteur BeamNG). Crée un objet SpotLight (worldEditorCppApi.createObject) et le met à jour. Entrées : update (flow), clear (impulsion), position, rotation, range (20), innerAngle (15), outerAngle (45), color, brightness (1). Sorties : created (impulsion), lastId. data.maxObjectCount (1) limite le nombre d'objets.",
+  "module": "Flowgraph node \"SpotLight\" (repeat_instant, author BeamNG). Creates a SpotLight object (worldEditorCppApi.createObject) and updates it. Inputs: update (flow), clear (impulse), position, rotation, range (20), innerAngle (15), outerAngle (45), color, brightness (1). Outputs: created (impulse), lastId. data.maxObjectCount (1) limits the number of objects.",
   "notes": [
-    "Le nom construit dans createObject n'est jamais utilisé (pas de registerObject).",
-    "Le pin de couleur doit contenir 4 composantes, sinon la concaténation échoue."
+    "The name built in createObject is never used (no registerObject).",
+    "The color pin must contain 4 components, otherwise the concatenation fails."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise la liste d'objets et data.maxObjectCount = 1.",
+          "desc": "Initializes the object list and data.maxObjectCount = 1.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "createObject": {
-          "desc": "Crée la lumière avec les valeurs des pins (canSave = false), l'ajoute à la liste, écrit lastId et notifie l'éditeur.",
+          "desc": "Creates the light with the pin values (canSave = false), adds it to the list, writes lastId and notifies the editor.",
           "params": {
             "objectName": {
               "type": "any",
-              "desc": "non utilisé (le nom calculé n'est pas appliqué)"
+              "desc": "unused (the computed name is not applied)"
             }
           },
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Supprime les lumières à l'arrêt.",
+          "desc": "Deletes the lights on stop.",
           "internal": true
         },
         "clearObjects": {
-          "desc": "Supprime toutes les lumières créées.",
+          "desc": "Deletes all created lights.",
           "internal": true
         },
         "work": {
-          "desc": "Sur clear, supprime ; sinon crée la lumière si le maximum n'est pas atteint (created = true) et, avec update, la met à jour (position, rotation, angles, luminosité, portée, couleur).",
+          "desc": "On clear, deletes; otherwise creates the light if the maximum is not reached (created = true) and, with update, updates it (position, rotation, angles, brightness, range, color).",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "desc": "End-of-mission hook: cleans up the objects created by the node.",
           "internal": true
         },
         "destroy": {
-          "desc": "Appelé à la destruction du noeud : nettoie les objets créés.",
+          "desc": "Called when the node is destroyed: cleans up the created objects.",
           "internal": true
         }
       }

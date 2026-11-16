@@ -1,31 +1,133 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/references.lua",
-  "module": "Fenêtre « References » (fg_references) de l'éditeur Flowgraph : statistiques d'utilisation des types de nœuds. Au clic sur « Load Data », elle recense tous les modèles de nœuds (core_flowgraphManager.getAvailableNodeTemplates), puis compte leurs occurrences dans tous les fichiers *.flow.json de /levels/, /gameplay/ et /lua/ge/extensions/flowgraph/examples, plus dans le projet courant (placeholder « CurrentLocalFile »). Deux vues : liste filtrable (All / Current / unused) et détail d'un nœud (pins, projets qui l'utilisent).",
+  "module": "\"References\" window (fg_references) of the Flowgraph editor: usage statistics of node types. On clicking \"Load Data\", it lists all node templates (core_flowgraphManager.getAvailableNodeTemplates), then counts their occurrences in all *.flow.json files of /levels/, /gameplay/ and /lua/ge/extensions/flowgraph/examples, plus in the current project (placeholder \"CurrentLocalFile\"). Two views: filterable list (All / Current / unused) and node detail (pins, projects that use it).",
   "notes": [
-    "Charger les données lit tous les fichiers de flowgraph du jeu : peut être lent.",
-    "Un nœud trouvé dans un projet mais sans modèle est classé dans la catégorie 'OBSOLETE'.",
-    "addPinsAndBehavioursForCategory reproduit la logique de basenode pour les pins créés à l'exécution (flow, incomplete/complete/completed, reset).",
-    "Bugs probables : draw teste `self.nodeTable == {}` (toujours faux en Lua) ; updateNodeOccurrence crée la branche OBSOLETE avec la clé littérale `filename` au lieu du nom de fichier ; dans le cas f_duration, le test d'existence du pin 'completed' vérifie 'flow' ; showNodeReferences de flowgraphEditor appelle winReferences:searchFor qui n'existe pas dans cette fenêtre."
+    "Loading the data reads all of the game's flowgraph files: can be slow.",
+    "A node found in a project but without a template is classified in the 'OBSOLETE' category.",
+    "addPinsAndBehavioursForCategory reproduces the basenode logic for pins created at runtime (flow, incomplete/complete/completed, reset).",
+    "Probable bugs: draw tests `self.nodeTable == {}` (always false in Lua); updateNodeOccurrence creates the OBSOLETE branch with the literal key `filename` instead of the file name; in the f_duration case, the existence test of the 'completed' pin checks 'flow'; showNodeReferences of flowgraphEditor calls winReferences:searchFor which does not exist in this window."
   ],
   "classes": {
     "C": {
-      "desc": "Classe de la fenêtre (windowName 'fg_references', windowDescription 'References'). Principales données : nodeTable (par nom de nœud : displayName, amount, pins {inPins,outPins}, category, behaviour, amountForProjects), nodeStatistics, filteredNodes, sortedProjects, sortedCategories, viewMode (1 liste, 2 détail).",
+      "desc": "Window class (windowName 'fg_references', windowDescription 'References'). Main data: nodeTable (by node name: displayName, amount, pins {inPins,outPins}, category, behaviour, amountForProjects), nodeStatistics, filteredNodes, sortedProjects, sortedCategories, viewMode (1 list, 2 detail).",
       "functions": {
-        "init": {"desc": "Enregistre la fenêtre et initialise les tables, le mode de vue (1) et le filtre (All).", "internal": true},
-        "createNodeTable": {"desc": "Construit nodeTable à partir des modèles de nœuds disponibles puis compte les usages (checkFilesForNodes(true))."},
-        "findNodesRecursive": {"desc": "Parcourt récursivement l'arbre des dossiers de nœuds et crée une entrée nodeTable par nœud (pins in/out du pinSchema, catégorie, comportements) en mettant à jour les statistiques par catégorie.", "params": {"nodeDirectory": {"type": "table", "desc": "Arbre de modèles renvoyé par getAvailableNodeTemplates."}}},
-        "checkFilesForNodes": {"desc": "Recalcule les occurrences de chaque nœud dans les fichiers .flow.json et dans le projet courant, puis refiltre et retrie.", "params": {"initialCheck": {"type": "boolean", "desc": "true à la création : ne remet pas les compteurs à zéro."}}},
-        "sortCategories": {"desc": "Trie les catégories par nombre de types de nœuds décroissant dans self.sortedCategories."},
-        "fillNodeTable": {"desc": "Lit chaque fichier de flowgraph de la liste et met à jour les occurrences de ses nœuds.", "params": {"flowgraphDirectory": {"type": "string[]", "desc": "Chemins de fichiers .flow.json."}}},
-        "updateNodeOccurrence": {"desc": "Incrémente les compteurs d'usage d'un nœud (total, par projet, par catégorie) ; crée une entrée 'OBSOLETE' si le nœud est inconnu.", "params": {"nodeName": {"type": "string", "desc": "Nom (chemin) du type de nœud."}, "fileName": {"type": "string", "desc": "Fichier projet où il apparaît."}}},
-        "filterNodes": {"desc": "Construit filteredNodes selon le texte saisi et le mode de filtre (All, Current, unused), trié par nombre d'usages décroissant."},
-        "addPinsAndBehavioursForCategory": {"desc": "Ajoute à l'entrée nodeTable les pins et comportements (simple, duration, once) qui ne sont créés qu'à l'exécution selon la catégorie du nœud.", "params": {"nodeName": {"type": "string", "desc": "Nœud concerné."}, "category": {"type": "string|nil", "desc": "Catégorie du nœud."}}},
-        "pinExists": {"desc": "Indique si un pin de ce nom existe déjà dans l'entrée du nœud.", "params": {"nodeName": {"type": "string", "desc": "Nœud."}, "direction": {"type": "string", "desc": "'in' ou 'out'."}, "pinName": {"type": "string", "desc": "Nom du pin."}}, "returns": [{"type": "boolean|nil", "desc": "true si trouvé, sinon nil."}]},
-        "highlightText": {"desc": "Écrit un libellé en surlignant les occurrences du texte cherché (copie de nodelibrary).", "params": {"label": {"type": "string", "desc": "Texte."}, "highlightText": {"type": "string", "desc": "Sous-chaîne à surligner."}}},
-        "sortProjects": {"desc": "Trie les projets utilisant le nœud inspecté par nombre d'occurrences décroissant dans self.sortedProjects."},
-        "draw": {"desc": "Dessine la fenêtre : bouton « Load Data » tant que nodeTable est vide, sinon flèches de navigation et vue 1 ou 2.", "internal": true},
-        "drawViewMode1": {"desc": "Vue liste : champ de recherche, combo de mode de filtre, statistiques et liste des nœuds.", "internal": true},
-        "drawViewMode2": {"desc": "Vue détail du nœud inspecté : pins et projets qui l'utilisent.", "internal": true}
+        "init": {
+          "desc": "Registers the window and initializes the tables, the view mode (1) and the filter (All).",
+          "internal": true
+        },
+        "createNodeTable": {
+          "desc": "Builds nodeTable from the available node templates then counts the usages (checkFilesForNodes(true))."
+        },
+        "findNodesRecursive": {
+          "desc": "Recursively walks the node folder tree and creates one nodeTable entry per node (in/out pins from the pinSchema, category, behaviors) while updating the per-category statistics.",
+          "params": {
+            "nodeDirectory": {
+              "type": "table",
+              "desc": "Template tree returned by getAvailableNodeTemplates."
+            }
+          }
+        },
+        "checkFilesForNodes": {
+          "desc": "Recomputes the occurrences of each node in the .flow.json files and in the current project, then re-filters and re-sorts.",
+          "params": {
+            "initialCheck": {
+              "type": "boolean",
+              "desc": "true at creation: does not reset the counters."
+            }
+          }
+        },
+        "sortCategories": {
+          "desc": "Sorts the categories by decreasing number of node types in self.sortedCategories."
+        },
+        "fillNodeTable": {
+          "desc": "Reads each flowgraph file of the list and updates the occurrences of its nodes.",
+          "params": {
+            "flowgraphDirectory": {
+              "type": "string[]",
+              "desc": "Paths of .flow.json files."
+            }
+          }
+        },
+        "updateNodeOccurrence": {
+          "desc": "Increments the usage counters of a node (total, per project, per category); creates an 'OBSOLETE' entry if the node is unknown.",
+          "params": {
+            "nodeName": {
+              "type": "string",
+              "desc": "Name (path) of the node type."
+            },
+            "fileName": {
+              "type": "string",
+              "desc": "Project file where it appears."
+            }
+          }
+        },
+        "filterNodes": {
+          "desc": "Builds filteredNodes according to the typed text and the filter mode (All, Current, unused), sorted by decreasing number of usages."
+        },
+        "addPinsAndBehavioursForCategory": {
+          "desc": "Adds to the nodeTable entry the pins and behaviors (simple, duration, once) that are only created at runtime depending on the node's category.",
+          "params": {
+            "nodeName": {
+              "type": "string",
+              "desc": "Node concerned."
+            },
+            "category": {
+              "type": "string|nil",
+              "desc": "Node category."
+            }
+          }
+        },
+        "pinExists": {
+          "desc": "Indicates whether a pin of this name already exists in the node's entry.",
+          "params": {
+            "nodeName": {
+              "type": "string",
+              "desc": "Node."
+            },
+            "direction": {
+              "type": "string",
+              "desc": "'in' or 'out'."
+            },
+            "pinName": {
+              "type": "string",
+              "desc": "Pin name."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "true if found, otherwise nil."
+            }
+          ]
+        },
+        "highlightText": {
+          "desc": "Writes a label, highlighting the occurrences of the searched text (copy from nodelibrary).",
+          "params": {
+            "label": {
+              "type": "string",
+              "desc": "Text."
+            },
+            "highlightText": {
+              "type": "string",
+              "desc": "Substring to highlight."
+            }
+          }
+        },
+        "sortProjects": {
+          "desc": "Sorts the projects using the inspected node by decreasing number of occurrences in self.sortedProjects."
+        },
+        "draw": {
+          "desc": "Draws the window: \"Load Data\" button while nodeTable is empty, otherwise navigation arrows and view 1 or 2.",
+          "internal": true
+        },
+        "drawViewMode1": {
+          "desc": "List view: search field, filter mode combo, statistics and node list.",
+          "internal": true
+        },
+        "drawViewMode2": {
+          "desc": "Detail view of the inspected node: pins and projects that use it.",
+          "internal": true
+        }
       }
     }
   }

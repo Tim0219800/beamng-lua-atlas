@@ -1,22 +1,22 @@
 # `flowgraph_nodes_environment_getCloud`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/getCloud.lua` · VM : Game Engine (GE) · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/getCloud.lua` · VM: Game Engine (GE) · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/getCloud")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/getCloud")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Clouds » (catégorie repeat_instant, tags environment/weather/cloud). Lit les paramètres d'un objet nuage via core_environment. Entrée : objectId (number, optionnel). Sorties : coverage (couverture du ciel), exposure (luminosité), windSpeed (vitesse de défilement de la texture), height (hauteur). Sans objectId, utilise les nuages par défaut : seules coverage (getCloudCover) et windSpeed (getWindSpeed) sont disponibles, exposure et height valent 0.
+Flowgraph node "Get Clouds" (category repeat_instant, tags environment/weather/cloud). Reads the parameters of a cloud object via core_environment. Input: objectId (number, optional). Outputs: coverage (sky coverage), exposure (brightness), windSpeed (texture scroll speed), height (height). Without objectId, uses the default clouds: only coverage (getCloudCover) and windSpeed (getWindSpeed) are available, exposure and height are 0.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame, remplit les sorties depuis core_environment (getCloud*ByID si objectId, sinon valeurs par défaut). | 24 |
+| `C:work()` | Every frame, fills the outputs from core_environment (getCloud*ByID if objectId, otherwise default values). | 24 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getCloudCover`, `getCloudCoverByID`, `getCloudExposureByID`, `getCloudHeightByID`, `getCloudWindByID`, `getWindSpeed`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/getCloud.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/getCloud.lua`.*

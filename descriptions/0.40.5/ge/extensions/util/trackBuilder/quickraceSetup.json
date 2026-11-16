@@ -1,18 +1,23 @@
 {
   "path": "lua/ge/extensions/util/trackBuilder/quickraceSetup.lua",
-  "module": "Extension de liaison entre le mode course rapide (scénario) et le Track Builder : quand un scénario est chargé, elle décharge les pistes en place, charge la piste personnalisée du scénario (sc.track.customData.name) via util_trackBuilder_splineTrack, ajoute les checkpoints et positionne le véhicule, éventuellement dans le sens inverse.",
+  "module": "Link extension between quick race mode (scenario) and the Track Builder: when a scenario is loaded, it unloads the tracks in place, loads the scenario's custom track (sc.track.customData.name) via util_trackBuilder_splineTrack, adds the checkpoints and positions the vehicle, optionally in the reverse direction.",
   "notes": [
-    "Un drapeau done évite de refaire l'installation tant que onClientStartMission n'a pas été rappelé.",
-    "Les arguments passés à load(…, true, true, true) ne sont pas nommés dans ce fichier ; voir splineTrack."
+    "A done flag avoids redoing the setup until onClientStartMission has been called again.",
+    "The arguments passed to load(…, true, true, true) are not named in this file; see splineTrack."
   ],
   "functions": {
     "onScenarioLoaded": {
-      "desc": "Hook appelé quand un scénario est chargé. Si l'installation n'est pas déjà faite : unloadAll, load de la piste du scénario, addCheckPointPositions(reverse), positionVehicle(reverse).",
-      "params": {"sc": {"type": "table", "desc": "Scénario ; utilise sc.track.customData.name (nom de la piste) et sc.track.reverse (sens inverse)."}},
+      "desc": "Hook called when a scenario is loaded. If the setup is not already done: unloadAll, load of the scenario's track, addCheckPointPositions(reverse), positionVehicle(reverse).",
+      "params": {
+        "sc": {
+          "type": "table",
+          "desc": "Scenario; uses sc.track.customData.name (track name) and sc.track.reverse (reverse direction)."
+        }
+      },
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook appelé au début du chargement d'un niveau ; réinitialise le drapeau done pour permettre une nouvelle installation.",
+      "desc": "Hook called at the start of a level load; resets the done flag to allow a new setup.",
       "params": {},
       "internal": true
     }

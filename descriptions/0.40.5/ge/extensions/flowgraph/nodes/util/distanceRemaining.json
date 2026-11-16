@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/distanceRemaining.lua",
-  "module": "Nœud « Waypoints Distance » (repeat_instant). Calcule la distance restante le long d'une liste de waypoints pour un véhicule et indique s'il roule dans le bon sens. Entrées : alwaysUpdate (flow caché), vehId, waypoints (table de vec3). Sorties : distLeft, rightWay (bool), goingRightWay et goingWrongWay (flow). Sans alwaysUpdate, la distance n'est mise à jour que si le véhicule roule à plus de 0,5 m/s.",
+  "module": "Node \"Waypoints Distance\" (repeat_instant). Computes the remaining distance along a list of waypoints for a vehicle and indicates whether it is driving in the right direction. Inputs: alwaysUpdate (hidden flow), vehId, waypoints (table of vec3). Outputs: distLeft, rightWay (bool), goingRightWay and goingWrongWay (flow). Without alwaysUpdate, the distance is updated only if the vehicle is moving faster than 0.5 m/s.",
   "notes": [
-    "Bug : le code écrit self.pinOut.goingRigthWay (faute de frappe) alors que le pin s'appelle goingRightWay : cet accès vaut nil et lève une erreur dès que le calcul est atteint.",
-    "Seuil de vitesse 0,5 m/s ; sous ce seuil le sens est considéré correct."
+    "Bug: the code writes self.pinOut.goingRigthWay (typo) while the pin is named goingRightWay: this access is nil and raises an error as soon as the calculation is reached.",
+    "Speed threshold 0.5 m/s; below this threshold the direction is considered correct."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "work": {
-          "desc": "Trouve le segment le plus proche du véhicule (map.objects), somme la distance jusqu'à la fin, compare la vitesse à la direction du segment pour le sens de marche et écrit les pins.",
+          "desc": "Finds the segment closest to the vehicle (map.objects), sums the distance to the end, compares the speed with the segment direction for the driving direction and writes the pins.",
           "internal": true
         }
       }

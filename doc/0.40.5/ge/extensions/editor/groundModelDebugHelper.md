@@ -1,16 +1,16 @@
 # `editor_groundModelDebugHelper`
 
-*Fichier : `lua/ge/extensions/editor/groundModelDebugHelper.lua` · VM : Game Engine (GE) · 17 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/groundModelDebugHelper.lua` · VM: Game Engine (GE) · 17 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_groundModelDebugHelper` : `extensions.load("editor_groundModelDebugHelper")`, puis la globale `editor_groundModelDebugHelper`
+**Access:** extension `editor_groundModelDebugHelper`: `extensions.load("editor_groundModelDebugHelper")`, then the global `editor_groundModelDebugHelper`
 
-Ajoute à l'éditeur l'entrée de menu Window > Debug > « GroundModel Debug », qui ouvre la fenêtre de l'extension util_groundModelDebug (extensions.util_groundModelDebug.openWindow()).
+Adds to the editor the menu entry Window > Debug > "GroundModel Debug", which opens the window of the util_groundModelDebug extension (extensions.util_groundModelDebug.openWindow()).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_groundModelDebugHelper.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : ajoute l'entrée de menu « GroundModel Debug » (groupe Debug). *(interne)* *(hook)* | 11 |
+| `editor_groundModelDebugHelper.onEditorInitialized()` | Hook called at editor initialization: adds the "GroundModel Debug" menu entry (Debug group). *(internal)* *(hook)* | 11 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/groundModelDebugHelper.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/groundModelDebugHelper.lua`.*

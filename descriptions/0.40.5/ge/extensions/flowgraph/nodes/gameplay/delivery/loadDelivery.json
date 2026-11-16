@@ -1,17 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/loadDelivery.lua",
-  "module": "Nœud flowgraph « Load Delivery » (catégorie once_f_duration, livraison). Charge un fichier de livraison, prépare véhicules et routes et met le joueur dans le bon véhicule ; l'installation prend quelques frames. Utiliser ensuite Start Delivery. Pins d'entrée : flow, reset (caché), deliveryPath (défaut 'delivery.delivery.json'). Sorties : flow, success, isLoaded.",
-  "notes": ["Si missionTypeData.deliveryPath existe dans l'activité, il remplace deliveryPath quand celui-ci est vide ou égal à la valeur par défaut.", "Le chemin est résolu avec mgr:getRelativeAbsolutePath."],
+  "module": "Flowgraph node \"Load Delivery\" (category once_f_duration, delivery). Loads a delivery file, prepares vehicles and routes and puts the player in the right vehicle; the setup takes a few frames. Use Start Delivery afterwards. Input pins: flow, reset (hidden), deliveryPath (default 'delivery.delivery.json'). Outputs: flow, success, isLoaded.",
+  "notes": [
+    "If missionTypeData.deliveryPath exists in the activity, it replaces deliveryPath when the latter is empty or equal to the default value.",
+    "The path is resolved with mgr:getRelativeAbsolutePath."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise les sorties et l'état de durée à 'inactive'.", "internal": true},
-        "_executionStopped": {"desc": "Appelle reset.", "internal": true},
-        "onNodeReset": {"desc": "Appelle reset.", "internal": true},
-        "reset": {"desc": "Remet les sorties à faux et l'état à 'inactive'."},
-        "workOnce": {"desc": "Résout le chemin, appelle freeformDelivery.load et passe en état 'started' ; journalise les erreurs."},
-        "work": {"desc": "En état 'started', attend isLoaded() puis active success, isLoaded et flow ('finished') ; ensuite maintient flow."}
+        "init": {
+          "desc": "Initializes the outputs and the duration state to 'inactive'.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Calls reset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Calls reset.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Resets the outputs to false and the state to 'inactive'."
+        },
+        "workOnce": {
+          "desc": "Resolves the path, calls freeformDelivery.load and switches to the 'started' state; logs errors."
+        },
+        "work": {
+          "desc": "In the 'started' state, waits for isLoaded() then activates success, isLoaded and flow ('finished'); afterwards keeps flow."
+        }
       }
     }
   }

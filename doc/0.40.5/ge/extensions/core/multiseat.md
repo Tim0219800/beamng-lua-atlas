@@ -1,379 +1,379 @@
 # `core_multiseat`
 
-*Fichier : `lua/ge/extensions/core/multiseat.lua` · VM : Game Engine (GE) · 1527 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/multiseat.lua` · VM: Game Engine (GE) · 1527 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_multiseat` : `extensions.load("core_multiseat")`, puis la globale `core_multiseat`
+**Access:** extension `core_multiseat`: `extensions.load("core_multiseat")`, then the global `core_multiseat`
 
-Extension GE `core_multiseat` : gestion du multi-joueur local (plusieurs joueurs sur le même PC : clavier/souris et manettes). Elle décide quel joueur (indice 0, 1, 2...) contrôle chaque périphérique d'entrée, soit par attribution manuelle (par périphérique), soit par groupes de périphériques gérés par la plateforme (comptes utilisateur de console). Elle maintient la liste des joueurs 'rejoints' (joinedPlayers) avec leur persona (nom, icône, couleur via core_playerPersonas), place les joueurs dans des véhicules, affiche des étiquettes de joueurs (render_playerTags), colore les périphériques et émet onLocalParticipantsChanged. La majorité des fonctions est appelée par core_input_bindings et par l'interface multiseat.
+GE extension `core_multiseat`: local multiplayer management (several players on the same PC: keyboard/mouse and controllers). It decides which player (index 0, 1, 2...) controls each input device, either by manual assignment (per device), or by device groups managed by the platform (console user accounts). It maintains the list of 'joined' players (joinedPlayers) with their persona (name, icon, color via core_playerPersonas), places players in vehicles, displays player tags (render_playerTags), colors the devices and emits onLocalParticipantsChanged. Most functions are called by core_input_bindings and by the multiseat UI.
 
-## Exemple
+## Example
 
 ```lua
 if settings.getValue('multiseat') then
   for _, p in ipairs(core_multiseat.getParticipants()) do
-    log('I','', p.persona.displayName .. ' -> joueur ' .. p.assignment.playerIndex)
+    log('I','', p.persona.displayName .. ' -> player ' .. p.assignment.playerIndex)
   end
 end
 ```
 
-## Remarques
+## Notes
 
-- Vocabulaire : 'player' = indice de joueur (base 0, au plus 64 : maxPlayers codé en dur 'à aligner avec la limite du fast path de steering côté C++') ; 'persona' = identité numérotée à partir de 1 (core_playerPersonas) ; 'participant' = { id, persona, assignment, inputIcon } où assignment = { playerIndex, devices, deviceIds, primaryDeviceId, deviceLabel, connectedDeviceLabel, connectedInputIcon, connected }.
-- Appareils d'entrée : `devices` est la table fournie par core_input_bindings : nom de périphérique -> { guid, productName, pidvid, playerNumber, platformUserNumber } (indices 1 à 5). La clavier et la souris sont regroupés comme un seul 'périphérique' (id 'keyboard-mouse') dans les listes d'affectation.
-- Deux modes d'affectation : manuel (manuallyAssignedPlayers, un indice par périphérique, -1 = non assigné ; cycleDevicePlayer fait défiler) ou géré par la plateforme (Input.getPlatformUserCount() non nil : platformDeviceGroupPlayers, un indice par groupe d'appareils, via assignDeviceGroup). Sans réglage 'multiseat' vrai, tous les périphériques appartiennent au joueur 0.
-- normalizePlayerAssignments (interne) renumérote les joueurs pour qu'ils soient contigus à partir de 0, dans l'ordre des numéros de persona. getAssignedPlayers fait ce travail à chaque appel de core_input_bindings, mémorise l'assignation, met à jour activePlayers/joinedPlayers et peut replacer les joueurs à pied dans le véhicule le moins occupé (seatPlayers).
-- Édition de configuration : beginConfigurationEdit/endConfigurationEdit figent les affectations réelles pendant que l'interface compose une configuration. applyConfiguration(config) la valide (resolveConfiguration), prend un instantané (exportConfiguration), l'applique via core_input_bindings.applyPlayerAssignments, et restaure l'instantané en cas d'échec. Avec config.deferParticipantNotification, la notification est reportée jusqu'à finalizeConfiguration().
-- Hooks émis : onLocalParticipantsChanged(revision) ; évènement UI LocalParticipantsChanged(participants, revision). La 'révision' = compteur interne + révision de core_playerPersonas.
-- Bug/incohérence : getPlayerMarkersEnabled lit settings 'multiseatTags' comme un booléen et, si la valeur n'en est pas un (par exemple la chaîne 'always'/'smart'/'never' écrite par core_multiseatPlayerMarkers), la remplace par true/false dans les réglages (écrase l'ancienne chaîne). Les deux modules ne partagent pas le même format.
-- Incohérence : au chargement nextMockPlatformDeviceGroupId vaut 1 mais reset() le remet à 0 (affecte seulement le mode de débogage debugMockPlatformUsers).
-- M.allowTrafficDebug est défini à false et n'est utilisé nulle part dans ce fichier.
-- reset() (appelé à la fin du niveau) efface joueurs, personas, assignations et couleurs de périphériques, remet activePlayers = {0} et désactive le réglage 'multiseat' si cette session l'avait activé (personaOptInMode ou multiseatActive).
-- onSerialize ne renvoie un instantané que si multiseatActive est vrai ; sinon rien n'est sauvegardé. onDeserialized tente de restaurer la configuration exportée.
-- Les étiquettes de joueurs (render_playerTags) ne sont affichées que si le réglage multiseat est vrai, plus d'un joueur actif et le split-screen n'est pas chargé (render_splitScreen s'occupe alors des étiquettes).
+- Vocabulary: 'player' = player index (0-based, at most 64: maxPlayers hardcoded 'to be aligned with the limit of the steering fast path on the C++ side'); 'persona' = identity numbered from 1 (core_playerPersonas); 'participant' = { id, persona, assignment, inputIcon } where assignment = { playerIndex, devices, deviceIds, primaryDeviceId, deviceLabel, connectedDeviceLabel, connectedInputIcon, connected }.
+- Input devices: `devices` is the table provided by core_input_bindings: device name -> { guid, productName, pidvid, playerNumber, platformUserNumber } (indices 1 to 5). The keyboard and mouse are grouped as a single 'device' (id 'keyboard-mouse') in the assignment lists.
+- Two assignment modes: manual (manuallyAssignedPlayers, one index per device, -1 = unassigned; cycleDevicePlayer cycles through) or platform-managed (Input.getPlatformUserCount() non-nil: platformDeviceGroupPlayers, one index per device group, via assignDeviceGroup). Without a true 'multiseat' setting, all devices belong to player 0.
+- normalizePlayerAssignments (internal) renumbers the players so that they are contiguous from 0, in persona number order. getAssignedPlayers does this work on every call from core_input_bindings, stores the assignment, updates activePlayers/joinedPlayers and can place on-foot players in the least occupied vehicle (seatPlayers).
+- Configuration editing: beginConfigurationEdit/endConfigurationEdit freeze the real assignments while the UI composes a configuration. applyConfiguration(config) validates it (resolveConfiguration), takes a snapshot (exportConfiguration), applies it via core_input_bindings.applyPlayerAssignments, and restores the snapshot on failure. With config.deferParticipantNotification, the notification is postponed until finalizeConfiguration().
+- Emitted hooks: onLocalParticipantsChanged(revision); UI event LocalParticipantsChanged(participants, revision). The 'revision' = internal counter + core_playerPersonas revision.
+- Bug/inconsistency: getPlayerMarkersEnabled reads the 'multiseatTags' setting as a boolean and, if the value is not one (for example the string 'always'/'smart'/'never' written by core_multiseatPlayerMarkers), replaces it with true/false in the settings (overwriting the old string). The two modules do not share the same format.
+- Inconsistency: at load nextMockPlatformDeviceGroupId is 1 but reset() sets it back to 0 (only affects the debugMockPlatformUsers debug mode).
+- M.allowTrafficDebug is set to false and is not used anywhere in this file.
+- reset() (called at the end of the level) clears players, personas, assignments and device colors, sets activePlayers = {0} and disables the 'multiseat' setting if this session had enabled it (personaOptInMode or multiseatActive).
+- onSerialize only returns a snapshot if multiseatActive is true; otherwise nothing is saved. onDeserialized tries to restore the exported configuration.
+- Player tags (render_playerTags) are only displayed if the multiseat setting is true, more than one player is active and split-screen is not loaded (render_splitScreen then handles the tags).
 
-**Dépendances (chargées avant) :** `core_playerPersonas`, `render_playerTags`, `ui_multiseat_assignmentCache`
+**Dependencies (loaded first):** `core_playerPersonas`, `render_playerTags`, `ui_multiseat_assignmentCache`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_multiseat.applyConfiguration(config)` | Applique une configuration multiseat : active le réglage 'multiseat' et l'action map, installe les affectations, personas et joueurs, avec restauration automatique en cas d'erreur. | 1138 |
-| `core_multiseat.assignDeviceGroup(groupId, player)` | Assigne un groupe de périphériques de la plateforme à un joueur (ou -1 pour le désassigner). Refuse si la plateforme ne gère pas les joueurs, si le groupe n'existe pas ou si le joueur est déjà pris par un autre groupe. | 585 |
-| `core_multiseat.beginConfigurationEdit()` | Démarre une session d'édition : getAssignedPlayers renvoie alors des affectations figées au lieu de recalculer. | 1496 |
-| `core_multiseat.cachePlayerAssignments(config)` | Construit le cache (propriétaires de périphériques/groupes par numéro de persona) à partir d'une configuration et le stocke dans ui_multiseat_assignmentCache. | 1022 |
-| `core_multiseat.clearDeviceColors()` | Retire les couleurs de joueurs des périphériques, si elles avaient été appliquées. | 1362 |
-| `core_multiseat.clearJoinedPlayers()` | Retire tous les joueurs rejoints et efface toutes les personas. | 886 |
-| `core_multiseat.clearPlayerPersona(player)` | Remet la persona d'un joueur rejoint à ses valeurs par défaut et notifie. | 1291 |
-| `core_multiseat.cycleDevicePlayer(deviceId)` | Fait passer un périphérique (ou le groupe clavier+souris) au joueur suivant dans le cycle (joueur 0, -1 non assigné, puis joueur précédent...), renumérote les joueurs et met à jour core_input_bindings. Refusé si la plateforme gère les joueurs. | 616 |
-| `core_multiseat.endConfigurationEdit(devices, assignments)` | Termine l'édition, et mémorise éventuellement l'état des périphériques et des affectations fournis. | 1497 |
-| `core_multiseat.exportConfiguration()` | Exporte l'état complet du multiseat (affectations, joueurs rejoints, personas, caches) sous forme de table copiable, utilisée comme instantané pour restauration ou rechargement Lua. | 971 |
-| `core_multiseat.finalizeConfiguration()` | Termine une application différée : met à jour le cache d'affectations en attente et émet la notification des participants. | 1228 |
-| `core_multiseat.getAssignedPlayers(devices, logEnabled, seatPlayers)` | Calcule quel joueur contrôle chaque périphérique, l'applique via assignPlayerToDevice et met à jour l'état interne (joueurs actifs, personas). Pendant une édition de configuration, renvoie des affectations 'sûres' sans les modifier. Appelée par core_input_bindings. *(interne)* | 201 |
-| `core_multiseat.getAvailableParticipants()` | Participants disponibles pour l'interface : pour chaque joueur actif, { id = 'local-player:N', assignment, inputIcon, joined, persona (réelle si rejoint, sinon aperçu) }. | 1239 |
-| `core_multiseat.getCachedPlayerAssignments()` | Renvoie le cache d'affectations mémorisé dans ui_multiseat_assignmentCache. | 1029 |
-| `core_multiseat.getDeviceAssignments()` | Liste, pour l'interface, les 'périphériques' (clavier+souris regroupés, manettes) avec leur joueur assigné manuellement : { id, deviceIds, primaryDeviceId, deviceLabel, inputIcon, playerIndex, connected, deviceMetadata }. | 469 |
-| `core_multiseat.getDeviceAssignmentsFor(devices, assignedPlayers, connectedDevices)` | Version paramétrée de getDeviceAssignments pour des périphériques et affectations fournis. | 409 |
-| `core_multiseat.getDeviceGroupForPlayer(player)` | Renvoie le groupe de périphériques assigné à un joueur. | 609 |
-| `core_multiseat.getDeviceGroups()` | Groupes de périphériques de la plateforme (un par compte utilisateur), avec le joueur assigné ; inclut les groupes assignés mais déconnectés (connected = false). | 566 |
-| `core_multiseat.getDeviceGroupsFor(devices, groupAssignments)` | Version paramétrée de getDeviceGroups. | 496 |
-| `core_multiseat.getJoinedParticipants()` | Participants des joueurs rejoints, triés par indice de joueur. | 961 |
-| `core_multiseat.getJoinedPlayers()` | Indices triés des joueurs ayant rejoint (avec persona). | 713 |
-| `core_multiseat.getParticipant(player)` | Renvoie le participant d'un joueur. | 1272 |
-| `core_multiseat.getParticipantRevision()` | Renvoie la révision des participants (compteur interne + révision de core_playerPersonas), pour détecter les changements. | 62 |
-| `core_multiseat.getParticipants(players)` | Renvoie les participants (persona + affectation). Sans argument et s'il y a des joueurs rejoints, ce sont les joueurs rejoints ; sinon les joueurs actifs (avec persona en aperçu si non rejoints). | 1258 |
-| `core_multiseat.getPlayerMarkersEnabled()` | Indique si les étiquettes de joueurs sont activées (réglage 'multiseatTags' booléen, défaut true). Convertit en booléen une ancienne valeur chaîne ('never' = faux). Voir les notes sur l'incohérence avec core_multiseatPlayerMarkers. | 49 |
-| `core_multiseat.getPlayers(result)` | Remplit et renvoie la liste ordonnée des indices de joueurs actuellement actifs. | 322 |
-| `core_multiseat.isApplyingConfiguration()` | Indique si applyConfiguration est en cours. | 1495 |
-| `core_multiseat.isConfigurationEditActive()` | Indique si une édition de configuration est en cours. | 1505 |
-| `core_multiseat.isMultiseatActive()` | Indique si le multiseat est actif. | 1399 |
-| `core_multiseat.isPlatformManagingPlayers()` | Indique si la plateforme (console, Steam...) gère elle-même les joueurs : Input.getPlatformUserCount() non nil (ou mode de débogage). | 120 |
-| `core_multiseat.joinPlayer(player)` | Fait rejoindre un joueur actif : lui attribue le premier numéro de persona libre (persona par défaut), renumérote et notifie. Renvoie true s'il est déjà rejoint. | 838 |
-| `core_multiseat.leavePlayer(player)` | Retire un joueur rejoint : efface sa persona et libère ses périphériques ou son groupe, puis notifie. | 852 |
-| `core_multiseat.onClientEndMission()` | Fin de niveau : réinitialise tout l'état multiseat (voir notes, reset()). *(interne)* *(hook)* | 1403 |
-| `core_multiseat.onDeserialized(data)` | Après un rechargement Lua : restaure la configuration à partir de l'instantané. *(interne)* *(hook)* | 1450 |
-| `core_multiseat.onExtensionUnloaded()` | Au déchargement : détruit les étiquettes de joueurs et retire les couleurs de périphériques. *(interne)* *(hook)* | 1518 |
-| `core_multiseat.onLanguageChanged()` | Hook de changement de langue : resynchronise les joueurs rejoints, invalide les personas (noms traduits) et notifie. *(interne)* *(hook)* | 1511 |
-| `core_multiseat.onSerialize(reason)` | Avant un rechargement Lua : détruit étiquettes et couleurs, et renvoie un instantané si le multiseat est actif. *(interne)* *(hook)* | 1435 |
-| `core_multiseat.onUpdate(dtReal, dtSim)` | Hook par frame (seulement quand un niveau est chargé) : synchronise les couleurs de périphériques et affiche/met à jour les étiquettes de joueurs (render_playerTags), sauf si le split-screen est chargé. *(interne)* *(hook)* | 1379 |
-| `core_multiseat.previewDeviceColors(config)` | Affiche sur les périphériques les couleurs des joueurs d'une configuration encore en cours d'édition (core_devices.setPlayerColors). | 1348 |
-| `core_multiseat.resolveConfiguration(config, devices)` | Valide et normalise une configuration proposée par l'interface : renumérote les joueurs à partir de 0 selon l'ordre des numéros de persona et traduit les affectations de périphériques/groupes. | 1033 |
-| `core_multiseat.restoreConfiguration(snapshot)` | Restaure un instantané produit par exportConfiguration (protégé par pcall, refusé pendant un applyConfiguration) et notifie. | 1125 |
-| `core_multiseat.setMultiseatActive(active)` | Marque le multiseat comme actif (session multiseat en cours). | 1395 |
-| `core_multiseat.setPersonaOptInMode(enabled)` | Active ou désactive le mode où les joueurs doivent rejoindre explicitement (au lieu d'obtenir une persona automatiquement). L'activer efface les joueurs rejoints. | 898 |
-| `core_multiseat.setPlayerMarkersEnabled(enabled)` | Enregistre le réglage booléen 'multiseatTags'. | 58 |
-| `core_multiseat.setPlayerPersona(player, data)` | Définit la persona d'un joueur rejoint (nom, icône, couleur, véhicule) et notifie. | 1282 |
+| `core_multiseat.applyConfiguration(config)` | Applies a multiseat configuration: enables the 'multiseat' setting and the action map, installs the assignments, personas and players, with automatic restoration on error. | 1138 |
+| `core_multiseat.assignDeviceGroup(groupId, player)` | Assigns a platform device group to a player (or -1 to unassign). Refuses if the platform does not manage players, if the group does not exist or if the player is already taken by another group. | 585 |
+| `core_multiseat.beginConfigurationEdit()` | Starts an editing session: getAssignedPlayers then returns frozen assignments instead of recomputing. | 1496 |
+| `core_multiseat.cachePlayerAssignments(config)` | Builds the cache (device/group owners by persona number) from a configuration and stores it in ui_multiseat_assignmentCache. | 1022 |
+| `core_multiseat.clearDeviceColors()` | Removes the player colors from the devices, if they had been applied. | 1362 |
+| `core_multiseat.clearJoinedPlayers()` | Removes all joined players and clears all personas. | 886 |
+| `core_multiseat.clearPlayerPersona(player)` | Resets a joined player's persona to its default values and notifies. | 1291 |
+| `core_multiseat.cycleDevicePlayer(deviceId)` | Moves a device (or the keyboard+mouse group) to the next player in the cycle (player 0, -1 unassigned, then previous player...), renumbers the players and updates core_input_bindings. Refused if the platform manages players. | 616 |
+| `core_multiseat.endConfigurationEdit(devices, assignments)` | Ends the editing, and optionally stores the provided device and assignment state. | 1497 |
+| `core_multiseat.exportConfiguration()` | Exports the full multiseat state (assignments, joined players, personas, caches) as a copyable table, used as a snapshot for restoration or Lua reload. | 971 |
+| `core_multiseat.finalizeConfiguration()` | Finishes a deferred application: updates the pending assignment cache and emits the participants notification. | 1228 |
+| `core_multiseat.getAssignedPlayers(devices, logEnabled, seatPlayers)` | Computes which player controls each device, applies it via assignPlayerToDevice and updates the internal state (active players, personas). During a configuration edit, returns 'safe' assignments without modifying them. Called by core_input_bindings. *(internal)* | 201 |
+| `core_multiseat.getAvailableParticipants()` | Participants available for the UI: for each active player, { id = 'local-player:N', assignment, inputIcon, joined, persona (real if joined, otherwise preview) }. | 1239 |
+| `core_multiseat.getCachedPlayerAssignments()` | Returns the assignment cache stored in ui_multiseat_assignmentCache. | 1029 |
+| `core_multiseat.getDeviceAssignments()` | Lists, for the UI, the 'devices' (keyboard+mouse grouped, controllers) with their manually assigned player: { id, deviceIds, primaryDeviceId, deviceLabel, inputIcon, playerIndex, connected, deviceMetadata }. | 469 |
+| `core_multiseat.getDeviceAssignmentsFor(devices, assignedPlayers, connectedDevices)` | Parameterized version of getDeviceAssignments for provided devices and assignments. | 409 |
+| `core_multiseat.getDeviceGroupForPlayer(player)` | Returns the device group assigned to a player. | 609 |
+| `core_multiseat.getDeviceGroups()` | Platform device groups (one per user account), with the assigned player; includes assigned but disconnected groups (connected = false). | 566 |
+| `core_multiseat.getDeviceGroupsFor(devices, groupAssignments)` | Parameterized version of getDeviceGroups. | 496 |
+| `core_multiseat.getJoinedParticipants()` | Participants of the joined players, sorted by player index. | 961 |
+| `core_multiseat.getJoinedPlayers()` | Sorted indices of the players that have joined (with persona). | 713 |
+| `core_multiseat.getParticipant(player)` | Returns a player's participant. | 1272 |
+| `core_multiseat.getParticipantRevision()` | Returns the participants revision (internal counter + core_playerPersonas revision), to detect changes. | 62 |
+| `core_multiseat.getParticipants(players)` | Returns the participants (persona + assignment). With no argument and if there are joined players, these are the joined players; otherwise the active players (with a preview persona if not joined). | 1258 |
+| `core_multiseat.getPlayerMarkersEnabled()` | Indicates whether player tags are enabled ('multiseatTags' boolean setting, default true). Converts an old string value to a boolean ('never' = false). See the notes on the inconsistency with core_multiseatPlayerMarkers. | 49 |
+| `core_multiseat.getPlayers(result)` | Fills and returns the ordered list of currently active player indices. | 322 |
+| `core_multiseat.isApplyingConfiguration()` | Indicates whether applyConfiguration is in progress. | 1495 |
+| `core_multiseat.isConfigurationEditActive()` | Indicates whether a configuration edit is in progress. | 1505 |
+| `core_multiseat.isMultiseatActive()` | Indicates whether multiseat is active. | 1399 |
+| `core_multiseat.isPlatformManagingPlayers()` | Indicates whether the platform (console, Steam...) manages players itself: Input.getPlatformUserCount() non-nil (or debug mode). | 120 |
+| `core_multiseat.joinPlayer(player)` | Makes an active player join: assigns it the first free persona number (default persona), renumbers and notifies. Returns true if already joined. | 838 |
+| `core_multiseat.leavePlayer(player)` | Removes a joined player: clears its persona and frees its devices or group, then notifies. | 852 |
+| `core_multiseat.onClientEndMission()` | End of level: resets the whole multiseat state (see notes, reset()). *(internal)* *(hook)* | 1403 |
+| `core_multiseat.onDeserialized(data)` | After a Lua reload: restores the configuration from the snapshot. *(internal)* *(hook)* | 1450 |
+| `core_multiseat.onExtensionUnloaded()` | On unload: destroys the player tags and removes the device colors. *(internal)* *(hook)* | 1518 |
+| `core_multiseat.onLanguageChanged()` | Language change hook: resynchronizes the joined players, invalidates the personas (translated names) and notifies. *(internal)* *(hook)* | 1511 |
+| `core_multiseat.onSerialize(reason)` | Before a Lua reload: destroys tags and colors, and returns a snapshot if multiseat is active. *(internal)* *(hook)* | 1435 |
+| `core_multiseat.onUpdate(dtReal, dtSim)` | Per-frame hook (only when a level is loaded): synchronizes the device colors and displays/updates the player tags (render_playerTags), unless split-screen is loaded. *(internal)* *(hook)* | 1379 |
+| `core_multiseat.previewDeviceColors(config)` | Shows on the devices the player colors of a configuration still being edited (core_devices.setPlayerColors). | 1348 |
+| `core_multiseat.resolveConfiguration(config, devices)` | Validates and normalizes a configuration proposed by the UI: renumbers the players from 0 according to persona number order and translates the device/group assignments. | 1033 |
+| `core_multiseat.restoreConfiguration(snapshot)` | Restores a snapshot produced by exportConfiguration (protected by pcall, refused during an applyConfiguration) and notifies. | 1125 |
+| `core_multiseat.setMultiseatActive(active)` | Marks multiseat as active (multiseat session in progress). | 1395 |
+| `core_multiseat.setPersonaOptInMode(enabled)` | Enables or disables the mode where players must join explicitly (instead of getting a persona automatically). Enabling it clears the joined players. | 898 |
+| `core_multiseat.setPlayerMarkersEnabled(enabled)` | Saves the boolean 'multiseatTags' setting. | 58 |
+| `core_multiseat.setPlayerPersona(player, data)` | Sets the persona of a joined player (name, icon, color, vehicle) and notifies. | 1282 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_multiseat.applyConfiguration(config)`
 
-Applique une configuration multiseat : active le réglage 'multiseat' et l'action map, installe les affectations, personas et joueurs, avec restauration automatique en cas d'erreur.
+Applies a multiseat configuration: enables the 'multiseat' setting and the action map, installs the assignments, personas and players, with automatic restoration on error.
 
-- `config` (*table*) : Voir resolveConfiguration ; champs en plus : multiseatActive (défaut true), deferParticipantNotification.
-- **renvoie** : boolean true si appliquée.
-- **renvoie** : string|nil Raison de l'échec.
+- `config` (*table*) : See resolveConfiguration; extra fields: multiseatActive (default true), deferParticipantNotification.
+- **returns**: boolean true if applied.
+- **returns**: string|nil Failure reason.
 
 #### `core_multiseat.assignDeviceGroup(groupId, player)`
 
-Assigne un groupe de périphériques de la plateforme à un joueur (ou -1 pour le désassigner). Refuse si la plateforme ne gère pas les joueurs, si le groupe n'existe pas ou si le joueur est déjà pris par un autre groupe.
+Assigns a platform device group to a player (or -1 to unassign). Refuses if the platform does not manage players, if the group does not exist or if the player is already taken by another group.
 
-- `groupId` (*integer*) : Identifiant du groupe.
-- `player` (*integer*) : Indice de joueur >= 0, ou -1.
-- **renvoie** : boolean true si l'affectation a été faite.
+- `groupId` (*integer*) : Group identifier.
+- `player` (*integer*) : Player index >= 0, or -1.
+- **returns**: boolean true if the assignment was made.
 
 #### `core_multiseat.cachePlayerAssignments(config)`
 
-Construit le cache (propriétaires de périphériques/groupes par numéro de persona) à partir d'une configuration et le stocke dans ui_multiseat_assignmentCache.
+Builds the cache (device/group owners by persona number) from a configuration and stores it in ui_multiseat_assignmentCache.
 
-- `config` (*table*) : Configuration avec participants et affectations.
-- **renvoie** : boolean false si config invalide.
+- `config` (*table*) : Configuration with participants and assignments.
+- **returns**: boolean false if the config is invalid.
 
 #### `core_multiseat.clearJoinedPlayers()`
 
-Retire tous les joueurs rejoints et efface toutes les personas.
+Removes all joined players and clears all personas.
 
-- **renvoie** : boolean false s'il n'y en avait aucun.
+- **returns**: boolean false if there were none.
 
 #### `core_multiseat.clearPlayerPersona(player)`
 
-Remet la persona d'un joueur rejoint à ses valeurs par défaut et notifie.
+Resets a joined player's persona to its default values and notifies.
 
-- `player` (*integer*) : Indice de joueur.
-- **renvoie** : boolean false si le joueur n'a pas rejoint.
+- `player` (*integer*) : Player index.
+- **returns**: boolean false if the player has not joined.
 
 #### `core_multiseat.cycleDevicePlayer(deviceId)`
 
-Fait passer un périphérique (ou le groupe clavier+souris) au joueur suivant dans le cycle (joueur 0, -1 non assigné, puis joueur précédent...), renumérote les joueurs et met à jour core_input_bindings. Refusé si la plateforme gère les joueurs.
+Moves a device (or the keyboard+mouse group) to the next player in the cycle (player 0, -1 unassigned, then previous player...), renumbers the players and updates core_input_bindings. Refused if the platform manages players.
 
-- `deviceId` (*string*) : Id d'un périphérique.
-- **renvoie** : boolean true si l'affectation a changé.
+- `deviceId` (*string*) : Id of a device.
+- **returns**: boolean true if the assignment changed.
 
 #### `core_multiseat.endConfigurationEdit(devices, assignments)`
 
-Termine l'édition, et mémorise éventuellement l'état des périphériques et des affectations fournis.
+Ends the editing, and optionally stores the provided device and assignment state.
 
-- `devices` (*table|nil*) : Périphériques à mémoriser.
-- `assignments` (*table|nil*) : Affectations à mémoriser.
+- `devices` (*table|nil*) : Devices to store.
+- `assignments` (*table|nil*) : Assignments to store.
 
 #### `core_multiseat.exportConfiguration()`
 
-Exporte l'état complet du multiseat (affectations, joueurs rejoints, personas, caches) sous forme de table copiable, utilisée comme instantané pour restauration ou rechargement Lua.
+Exports the full multiseat state (assignments, joined players, personas, caches) as a copyable table, used as a snapshot for restoration or Lua reload.
 
-- **renvoie** : table Instantané.
+- **returns**: table Snapshot.
 
 #### `core_multiseat.finalizeConfiguration()`
 
-Termine une application différée : met à jour le cache d'affectations en attente et émet la notification des participants.
+Finishes a deferred application: updates the pending assignment cache and emits the participants notification.
 
-- **renvoie** : boolean false s'il n'y avait rien à finaliser.
+- **returns**: boolean false if there was nothing to finalize.
 
 #### `core_multiseat.getAssignedPlayers(devices, logEnabled, seatPlayers)`
 
-Calcule quel joueur contrôle chaque périphérique, l'applique via assignPlayerToDevice et met à jour l'état interne (joueurs actifs, personas). Pendant une édition de configuration, renvoie des affectations 'sûres' sans les modifier. Appelée par core_input_bindings.
+Computes which player controls each device, applies it via assignPlayerToDevice and updates the internal state (active players, personas). During a configuration edit, returns 'safe' assignments without modifying them. Called by core_input_bindings.
 
-- `devices` (*table*) : nom de périphérique -> { guid, productName, pidvid, playerNumber, platformUserNumber }.
-- `logEnabled` (*boolean|nil*) : Écrit dans le log le nombre de joueurs et les affectations.
-- `seatPlayers` (*boolean|nil*) : Si vrai, fait monter les joueurs à pied dans le véhicule le moins occupé et fait descendre ceux devenus inactifs.
-- **renvoie** : table<string, integer> Périphérique -> indice de joueur (-1 = aucun).
+- `devices` (*table*) : device name -> { guid, productName, pidvid, playerNumber, platformUserNumber }.
+- `logEnabled` (*boolean|nil*) : Writes the number of players and the assignments to the log.
+- `seatPlayers` (*boolean|nil*) : If true, makes on-foot players enter the least occupied vehicle and makes those who became inactive exit.
+- **returns**: table<string, integer> Device -> player index (-1 = none).
 
 #### `core_multiseat.getAvailableParticipants()`
 
-Participants disponibles pour l'interface : pour chaque joueur actif, { id = 'local-player:N', assignment, inputIcon, joined, persona (réelle si rejoint, sinon aperçu) }.
+Participants available for the UI: for each active player, { id = 'local-player:N', assignment, inputIcon, joined, persona (real if joined, otherwise preview) }.
 
-- **renvoie** : table[] Participants disponibles.
+- **returns**: table[] Available participants.
 
 #### `core_multiseat.getCachedPlayerAssignments()`
 
-Renvoie le cache d'affectations mémorisé dans ui_multiseat_assignmentCache.
+Returns the assignment cache stored in ui_multiseat_assignmentCache.
 
-- **renvoie** : table|nil Cache.
+- **returns**: table|nil Cache.
 
 #### `core_multiseat.getDeviceAssignments()`
 
-Liste, pour l'interface, les 'périphériques' (clavier+souris regroupés, manettes) avec leur joueur assigné manuellement : { id, deviceIds, primaryDeviceId, deviceLabel, inputIcon, playerIndex, connected, deviceMetadata }.
+Lists, for the UI, the 'devices' (keyboard+mouse grouped, controllers) with their manually assigned player: { id, deviceIds, primaryDeviceId, deviceLabel, inputIcon, playerIndex, connected, deviceMetadata }.
 
-- **renvoie** : table[] Éléments décrits ci-dessus, clavier-souris en premier.
+- **returns**: table[] Elements described above, keyboard-mouse first.
 
 #### `core_multiseat.getDeviceAssignmentsFor(devices, assignedPlayers, connectedDevices)`
 
-Version paramétrée de getDeviceAssignments pour des périphériques et affectations fournis.
+Parameterized version of getDeviceAssignments for provided devices and assignments.
 
-- `devices` (*table|nil*) : Périphériques.
-- `assignedPlayers` (*table<string, integer>|nil*) : Périphérique -> joueur.
-- `connectedDevices` (*table|nil*) : Périphériques connectés (nil = tous).
-- **renvoie** : table[] Même format que getDeviceAssignments.
+- `devices` (*table|nil*) : Devices.
+- `assignedPlayers` (*table<string, integer>|nil*) : Device -> player.
+- `connectedDevices` (*table|nil*) : Connected devices (nil = all).
+- **returns**: table[] Same format as getDeviceAssignments.
 
 #### `core_multiseat.getDeviceGroupForPlayer(player)`
 
-Renvoie le groupe de périphériques assigné à un joueur.
+Returns the device group assigned to a player.
 
-- `player` (*integer*) : Indice de joueur.
-- **renvoie** : integer|nil groupId, ou nil.
+- `player` (*integer*) : Player index.
+- **returns**: integer|nil groupId, or nil.
 
 #### `core_multiseat.getDeviceGroups()`
 
-Groupes de périphériques de la plateforme (un par compte utilisateur), avec le joueur assigné ; inclut les groupes assignés mais déconnectés (connected = false).
+Platform device groups (one per user account), with the assigned player; includes assigned but disconnected groups (connected = false).
 
-- **renvoie** : table[] Éléments { id, groupId, playerIndex, label, devices, connected }.
+- **returns**: table[] Elements { id, groupId, playerIndex, label, devices, connected }.
 
 #### `core_multiseat.getDeviceGroupsFor(devices, groupAssignments)`
 
-Version paramétrée de getDeviceGroups.
+Parameterized version of getDeviceGroups.
 
-- `devices` (*table|nil*) : Périphériques.
-- `groupAssignments` (*table<integer, integer>|nil*) : groupId -> joueur.
-- **renvoie** : table[] Groupes triés par groupId.
+- `devices` (*table|nil*) : Devices.
+- `groupAssignments` (*table<integer, integer>|nil*) : groupId -> player.
+- **returns**: table[] Groups sorted by groupId.
 
 #### `core_multiseat.getJoinedParticipants()`
 
-Participants des joueurs rejoints, triés par indice de joueur.
+Participants of the joined players, sorted by player index.
 
-- **renvoie** : table[] Participants.
+- **returns**: table[] Participants.
 
 #### `core_multiseat.getJoinedPlayers()`
 
-Indices triés des joueurs ayant rejoint (avec persona).
+Sorted indices of the players that have joined (with persona).
 
-- **renvoie** : integer[] Indices de joueurs.
+- **returns**: integer[] Player indices.
 
 #### `core_multiseat.getParticipant(player)`
 
-Renvoie le participant d'un joueur.
+Returns a player's participant.
 
-- `player` (*integer*) : Indice de joueur.
-- **renvoie** : table|nil Participant.
+- `player` (*integer*) : Player index.
+- **returns**: table|nil Participant.
 
 #### `core_multiseat.getParticipantRevision()`
 
-Renvoie la révision des participants (compteur interne + révision de core_playerPersonas), pour détecter les changements.
+Returns the participants revision (internal counter + core_playerPersonas revision), to detect changes.
 
-- **renvoie** : integer Révision.
+- **returns**: integer Revision.
 
 #### `core_multiseat.getParticipants(players)`
 
-Renvoie les participants (persona + affectation). Sans argument et s'il y a des joueurs rejoints, ce sont les joueurs rejoints ; sinon les joueurs actifs (avec persona en aperçu si non rejoints).
+Returns the participants (persona + assignment). With no argument and if there are joined players, these are the joined players; otherwise the active players (with a preview persona if not joined).
 
-- `players` (*integer[]|nil*) : Liste d'indices de joueurs.
-- **renvoie** : table[] Participants.
+- `players` (*integer[]|nil*) : List of player indices.
+- **returns**: table[] Participants.
 
 #### `core_multiseat.getPlayerMarkersEnabled()`
 
-Indique si les étiquettes de joueurs sont activées (réglage 'multiseatTags' booléen, défaut true). Convertit en booléen une ancienne valeur chaîne ('never' = faux). Voir les notes sur l'incohérence avec core_multiseatPlayerMarkers.
+Indicates whether player tags are enabled ('multiseatTags' boolean setting, default true). Converts an old string value to a boolean ('never' = false). See the notes on the inconsistency with core_multiseatPlayerMarkers.
 
-- **renvoie** : boolean true si activées.
+- **returns**: boolean true if enabled.
 
 #### `core_multiseat.getPlayers(result)`
 
-Remplit et renvoie la liste ordonnée des indices de joueurs actuellement actifs.
+Fills and returns the ordered list of currently active player indices.
 
-- `result` (*integer[]|nil*) : Table à réutiliser (vidée puis remplie).
-- **renvoie** : integer[] Indices de joueurs.
+- `result` (*integer[]|nil*) : Table to reuse (cleared then filled).
+- **returns**: integer[] Player indices.
 
 #### `core_multiseat.isApplyingConfiguration()`
 
-Indique si applyConfiguration est en cours.
+Indicates whether applyConfiguration is in progress.
 
-- **renvoie** : boolean true si en cours.
+- **returns**: boolean true if in progress.
 
 #### `core_multiseat.isConfigurationEditActive()`
 
-Indique si une édition de configuration est en cours.
+Indicates whether a configuration edit is in progress.
 
-- **renvoie** : boolean true si en cours.
+- **returns**: boolean true if in progress.
 
 #### `core_multiseat.isMultiseatActive()`
 
-Indique si le multiseat est actif.
+Indicates whether multiseat is active.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `core_multiseat.isPlatformManagingPlayers()`
 
-Indique si la plateforme (console, Steam...) gère elle-même les joueurs : Input.getPlatformUserCount() non nil (ou mode de débogage).
+Indicates whether the platform (console, Steam...) manages players itself: Input.getPlatformUserCount() non-nil (or debug mode).
 
-- **renvoie** : boolean true si géré par la plateforme.
+- **returns**: boolean true if platform-managed.
 
 #### `core_multiseat.joinPlayer(player)`
 
-Fait rejoindre un joueur actif : lui attribue le premier numéro de persona libre (persona par défaut), renumérote et notifie. Renvoie true s'il est déjà rejoint.
+Makes an active player join: assigns it the first free persona number (default persona), renumbers and notifies. Returns true if already joined.
 
-- `player` (*integer*) : Indice de joueur actif.
-- **renvoie** : boolean false si le joueur n'est pas actif ou plus de place.
+- `player` (*integer*) : Active player index.
+- **returns**: boolean false if the player is not active or there is no room left.
 
 #### `core_multiseat.leavePlayer(player)`
 
-Retire un joueur rejoint : efface sa persona et libère ses périphériques ou son groupe, puis notifie.
+Removes a joined player: clears its persona and frees its devices or group, then notifies.
 
-- `player` (*integer*) : Indice de joueur.
-- **renvoie** : boolean false si le joueur n'avait pas rejoint.
+- `player` (*integer*) : Player index.
+- **returns**: boolean false if the player had not joined.
 
 #### `core_multiseat.onDeserialized(data)`
 
-Après un rechargement Lua : restaure la configuration à partir de l'instantané.
+After a Lua reload: restores the configuration from the snapshot.
 
-- `data` (*table*) : Instantané renvoyé par onSerialize.
+- `data` (*table*) : Snapshot returned by onSerialize.
 
 #### `core_multiseat.onSerialize(reason)`
 
-Avant un rechargement Lua : détruit étiquettes et couleurs, et renvoie un instantané si le multiseat est actif.
+Before a Lua reload: destroys tags and colors, and returns a snapshot if multiseat is active.
 
-- `reason` (*string|nil*) : Raison de la sérialisation (log).
-- **renvoie** : table|nil Instantané, ou nil si le multiseat est inactif.
+- `reason` (*string|nil*) : Serialization reason (log).
+- **returns**: table|nil Snapshot, or nil if multiseat is inactive.
 
 #### `core_multiseat.onUpdate(dtReal, dtSim)`
 
-Hook par frame (seulement quand un niveau est chargé) : synchronise les couleurs de périphériques et affiche/met à jour les étiquettes de joueurs (render_playerTags), sauf si le split-screen est chargé.
+Per-frame hook (only when a level is loaded): synchronizes the device colors and displays/updates the player tags (render_playerTags), unless split-screen is loaded.
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
-- `dtSim` (*number*) : Temps de simulation écoulé (s), non utilisé.
+- `dtReal` (*number*) : Elapsed real time (s).
+- `dtSim` (*number*) : Elapsed simulation time (s), unused.
 
 #### `core_multiseat.previewDeviceColors(config)`
 
-Affiche sur les périphériques les couleurs des joueurs d'une configuration encore en cours d'édition (core_devices.setPlayerColors).
+Shows on the devices the player colors of a configuration still being edited (core_devices.setPlayerColors).
 
-- `config` (*table|nil*) : Configuration à prévisualiser ; nil efface les couleurs.
+- `config` (*table|nil*) : Configuration to preview; nil clears the colors.
 
 #### `core_multiseat.resolveConfiguration(config, devices)`
 
-Valide et normalise une configuration proposée par l'interface : renumérote les joueurs à partir de 0 selon l'ordre des numéros de persona et traduit les affectations de périphériques/groupes.
+Validates and normalizes a configuration proposed by the UI: renumbers the players from 0 according to persona number order and translates the device/group assignments.
 
 - `config` (*table*) : { participants = [{ playerIndex, personaNumber, persona }], manualAssignments, groupAssignments, platformManagesPlayers, personaOptInMode, manualDeviceMetadata, platformDeviceGroups }.
-- `devices` (*table|nil*) : Périphériques connus.
-- **renvoie** : table|nil Configuration résolue { platformManagesPlayers, personaOptInMode, manualAssignments, groupAssignments, assignments, participants, personas, ... }.
-- **renvoie** : string|nil Raison d'échec : 'invalid_configuration', 'invalid_player_count' ou 'invalid_participant'.
+- `devices` (*table|nil*) : Known devices.
+- **returns**: table|nil Resolved configuration { platformManagesPlayers, personaOptInMode, manualAssignments, groupAssignments, assignments, participants, personas, ... }.
+- **returns**: string|nil Failure reason: 'invalid_configuration', 'invalid_player_count' or 'invalid_participant'.
 
 #### `core_multiseat.restoreConfiguration(snapshot)`
 
-Restaure un instantané produit par exportConfiguration (protégé par pcall, refusé pendant un applyConfiguration) et notifie.
+Restores a snapshot produced by exportConfiguration (protected by pcall, refused during an applyConfiguration) and notifies.
 
-- `snapshot` (*table*) : Instantané.
-- **renvoie** : boolean true si restauré.
+- `snapshot` (*table*) : Snapshot.
+- **returns**: boolean true if restored.
 
 #### `core_multiseat.setMultiseatActive(active)`
 
-Marque le multiseat comme actif (session multiseat en cours).
+Marks multiseat as active (multiseat session in progress).
 
-- `active` (*boolean*) : Nouvel état.
+- `active` (*boolean*) : New state.
 
 #### `core_multiseat.setPersonaOptInMode(enabled)`
 
-Active ou désactive le mode où les joueurs doivent rejoindre explicitement (au lieu d'obtenir une persona automatiquement). L'activer efface les joueurs rejoints.
+Enables or disables the mode where players must join explicitly (instead of getting a persona automatically). Enabling it clears the joined players.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
 #### `core_multiseat.setPlayerMarkersEnabled(enabled)`
 
-Enregistre le réglage booléen 'multiseatTags'.
+Saves the boolean 'multiseatTags' setting.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
 #### `core_multiseat.setPlayerPersona(player, data)`
 
-Définit la persona d'un joueur rejoint (nom, icône, couleur, véhicule) et notifie.
+Sets the persona of a joined player (name, icon, color, vehicle) and notifies.
 
-- `player` (*integer*) : Indice de joueur.
+- `player` (*integer*) : Player index.
 - `data` (*table*) : { id, displayName, icon, color, vehicle }
-- **renvoie** : boolean false si le joueur n'a pas rejoint ou données invalides.
+- **returns**: boolean false if the player has not joined or the data is invalid.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `allowTrafficDebug` | boolean | false. Non utilisé dans ce fichier. |
+| `allowTrafficDebug` | boolean | false. Not used in this file. |
 | `dependencies` | string[] | { 'core_playerPersonas', 'render_playerTags', 'ui_multiseat_assignmentCache' }. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onLocalParticipantsChanged` — écouté par 4 module(s)
+- `onLocalParticipantsChanged` — listened to by 4 module(s)
 
-**Évènements UI (guihooks.trigger) :** `LocalParticipantsChanged`
+**UI events (guihooks.trigger):** `LocalParticipantsChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`, `exitVehicle`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/multiseat.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/multiseat.lua`.*

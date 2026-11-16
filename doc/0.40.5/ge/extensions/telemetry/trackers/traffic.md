@@ -1,44 +1,44 @@
 # `telemetry_trackers_traffic`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/traffic.lua` · VM : Game Engine (GE) · 65 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/traffic.lua` · VM: Game Engine (GE) · 65 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_traffic` : `extensions.load("telemetry_trackers_traffic")`, puis la globale `telemetry_trackers_traffic`
+**Access:** extension `telemetry_trackers_traffic`: `extensions.load("telemetry_trackers_traffic")`, then the global `telemetry_trackers_traffic`
 
-Traceur de télémétrie du trafic. Il répond à la question « combien de trafic est réellement utilisé » : il ouvre l'activité `trafficActive` quand le trafic démarre et la ferme quand il s'arrête, en y joignant le pic de véhicules actifs. Dépend de `telemetry_core` et ne sert qu'à la collecte de statistiques, pas au gameplay.
+Traffic telemetry tracker. It answers the question "how much traffic is actually used": it opens the `trafficActive` activity when traffic starts and closes it when it stops, attaching the peak of active vehicles. Depends on `telemetry_core` and is only used for statistics collection, not for gameplay.
 
-## Remarques
+## Notes
 
-- Le nombre de véhicules n'est volontairement pas lu au démarrage ni à l'arrêt du trafic : ces hooks arrivent une frame après le premier ou le dernier véhicule, quand le compte n'est pas encore stable. Seul le pic (`peakAmount`) est conservé via onTrafficAmountChanged.
-- L'activité est aussi fermée sur onClientEndMission, onExit et onExtensionUnloaded, car le trafic ne s'arrête pas toujours proprement lors d'un changement de niveau et un rechargement Lua ne déclenche pas onExit.
-- L'extension se met en déchargement manuel (`setExtensionUnloadMode(M, "manual")`) au chargement.
+- The vehicle count is deliberately not read when traffic starts or stops: those hooks arrive one frame after the first or last vehicle, when the count is not yet stable. Only the peak (`peakAmount`) is kept via onTrafficAmountChanged.
+- The activity is also closed on onClientEndMission, onExit and onExtensionUnloaded, because traffic does not always stop cleanly on a level change and a Lua reload does not trigger onExit.
+- The extension sets itself to manual unload (`setExtensionUnloadMode(M, "manual")`) on load.
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_traffic.onClientEndMission()` | Hook appelé à la fin de la mission/du niveau côté client. Ferme l'activité de trafic si elle est ouverte (même code que onTrafficStopped). *(interne)* *(hook)* | 46 |
-| `telemetry_trackers_traffic.onExit()` | Hook appelé à la fermeture du jeu. Alias de onClientEndMission : ferme l'activité de trafic. *(interne)* *(hook)* | 46 |
-| `telemetry_trackers_traffic.onExtensionLoaded()` | Hook appelé au chargement de l'extension. Passe l'extension en déchargement manuel. *(interne)* *(hook)* | 50 |
-| `telemetry_trackers_traffic.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension (par exemple lors d'un rechargement Lua, qui ne passe pas par onExit). Ferme l'activité de trafic. *(interne)* *(hook)* | 46 |
-| `telemetry_trackers_traffic.onTrafficAmountChanged(activeAmount)` | Hook appelé chaque fois que des véhicules entrent ou sortent du pool de trafic. Ne garde que le maximum, sans créer d'événement. *(interne)* *(hook)* | 39 |
-| `telemetry_trackers_traffic.onTrafficStarted()` | Hook appelé quand le trafic démarre. Remet le pic à 0 et ouvre l'activité `trafficActive` avec le niveau courant (`getCurrentLevelIdentifier()` ou "unknown"). *(interne)* *(hook)* | 22 |
-| `telemetry_trackers_traffic.onTrafficStopped()` | Hook appelé quand le trafic s'arrête. Ne fait rien si le trafic n'était pas en cours ; sinon ferme l'activité `trafficActive` avec `peakAmount`. *(interne)* *(hook)* | 31 |
+| `telemetry_trackers_traffic.onClientEndMission()` | Hook called at the end of the mission/level on the client side. Closes the traffic activity if it is open (same code as onTrafficStopped). *(internal)* *(hook)* | 46 |
+| `telemetry_trackers_traffic.onExit()` | Hook called when the game exits. Alias of onClientEndMission: closes the traffic activity. *(internal)* *(hook)* | 46 |
+| `telemetry_trackers_traffic.onExtensionLoaded()` | Hook called when the extension loads. Sets the extension to manual unload. *(internal)* *(hook)* | 50 |
+| `telemetry_trackers_traffic.onExtensionUnloaded()` | Hook called when the extension is unloaded (for example on a Lua reload, which does not go through onExit). Closes the traffic activity. *(internal)* *(hook)* | 46 |
+| `telemetry_trackers_traffic.onTrafficAmountChanged(activeAmount)` | Hook called whenever vehicles enter or leave the traffic pool. Keeps only the maximum, without creating an event. *(internal)* *(hook)* | 39 |
+| `telemetry_trackers_traffic.onTrafficStarted()` | Hook called when traffic starts. Resets the peak to 0 and opens the `trafficActive` activity with the current level (`getCurrentLevelIdentifier()` or "unknown"). *(internal)* *(hook)* | 22 |
+| `telemetry_trackers_traffic.onTrafficStopped()` | Hook called when traffic stops. Does nothing if traffic was not running; otherwise closes the `trafficActive` activity with `peakAmount`. *(internal)* *(hook)* | 31 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_traffic.onTrafficAmountChanged(activeAmount)`
 
-Hook appelé chaque fois que des véhicules entrent ou sortent du pool de trafic. Ne garde que le maximum, sans créer d'événement.
+Hook called whenever vehicles enter or leave the traffic pool. Keeps only the maximum, without creating an event.
 
-- `activeAmount` (*integer*) : Nombre de véhicules de trafic actifs.
+- `activeAmount` (*integer*) : Number of active traffic vehicles.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions à charger avant celle-ci : `{'telemetry_core'}`. |
+| `dependencies` | table<integer, string> | Extensions to load before this one: `{'telemetry_core'}`. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/traffic.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/traffic.lua`.*

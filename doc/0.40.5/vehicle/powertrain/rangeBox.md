@@ -1,70 +1,70 @@
 # `powertrain_rangeBox`
 
-*Fichier : `lua/vehicle/powertrain/rangeBox.lua` · VM : Véhicule · 236 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/rangeBox.lua` · VM: Vehicle · 236 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `rangeBox` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `rangeBox` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `rangeBox` : boîte de gamme (réducteur à deux plages « high » / « low », ex. boîte de transfert 4x4 réduite ou gamme de camion). Le rapport ne change que par setMode : 'high' sélectionne le rapport le plus petit, 'low' le plus grand. La transmission reste toujours engagée (pas de neutre ni de synchro). Un moddeur l'utilise pour basculer entre gamme haute et basse ; le contrôle utilisateur passe par powertrain.toggleDeviceMode(nom) ou le bouton d'interface simple.
+Powertrain component `rangeBox`: range box (reducer with two ranges "high" / "low", e.g. 4x4 low-range transfer case or truck range). The ratio only changes via setMode: 'high' selects the smallest ratio, 'low' the largest. The transmission always stays engaged (no neutral or synchro). A modder uses it to switch between high and low range; the user control goes through powertrain.toggleDeviceMode(name) or the simple interface button.
 
-## Exemple
+## Example
 
 ```lua
 local rb = powertrain.getDevice("rangebox")
-rb:setMode("low")  -- gamme basse (rapport le plus grand)
+rb:setMode("low")  -- low range (largest ratio)
 print(rb.mode, rb.gearRatio)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (valeur initiale, remplacée), friction (N·m), dynamicFriction (N·m par rad/s), torqueLossCoef (0..1), gearRatios (liste obligatoire de rapports ; les valeurs >= 0 prennent les indices 0, 1, 2…, les valeurs < 0 les indices -1, -2… dans l'ordre de la liste).
-- Champs principaux : inputAV (rad/s côté parent = outputAV1 * gearRatio), outputAV1 (rad/s, posé par l'enfant), outputTorque1 (N·m), gearRatio, gearIndex, gearRatios (table indexée), lowGearIndex, highGearIndex, minGearIndex, maxGearIndex, minGearRatio, maxGearRatio, gearCount, mode ('low' ou 'high'), availableModes ({'high','low'}), defaultMode, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken.
-- À la construction, le mode initial est 'low' si l'indice de gamme basse est 0, sinon 'high'. L'indice de rapport est mis à 0 (setGearIndex(0, true), sans recalcul d'inertie).
-- Particularité d'indexation par rapport à manualGearbox : ici gearRatios[0] est le premier élément de la liste (il n'y a pas de neutre à rapport 0) ; les marches arrière négatives sont numérotées -1, -2… dans l'ordre de la liste.
-- Bugs / pièges : lowGearIndex/highGearIndex sont déterminés pendant l'itération (comparaison à maxGearRatio/minGearRatio mis à jour après), ce qui donne le bon résultat pour des rapports croissants mais pas forcément pour une liste désordonnée. reset ne remet pas gearIndex, gearRatio ni le mode à leurs valeurs initiales. new ne définit ni onBreak ni validate alors que setPartCondition peut appeler onBreak. setMode ignore toute valeur autre que 'high' ou 'low' (silencieusement) et ne tient pas compte de availableModes.
+- Jbeam keys read: name, type, inputName, inputIndex, gearRatio (initial value, replaced), friction (N·m), dynamicFriction (N·m per rad/s), torqueLossCoef (0..1), gearRatios (required list of ratios; values >= 0 take the indices 0, 1, 2…, values < 0 the indices -1, -2… in the order of the list).
+- Main fields: inputAV (rad/s parent side = outputAV1 * gearRatio), outputAV1 (rad/s, set by the child), outputTorque1 (N·m), gearRatio, gearIndex, gearRatios (indexed table), lowGearIndex, highGearIndex, minGearIndex, maxGearIndex, minGearRatio, maxGearRatio, gearCount, mode ('low' or 'high'), availableModes ({'high','low'}), defaultMode, cumulativeInertia, cumulativeGearRatio, maxCumulativeGearRatio, isBroken.
+- At construction, the initial mode is 'low' if the low range index is 0, otherwise 'high'. The gear index is set to 0 (setGearIndex(0, true), without inertia recomputation).
+- Indexing particularity compared to manualGearbox: here gearRatios[0] is the first element of the list (there is no neutral with ratio 0); negative reverse gears are numbered -1, -2… in the order of the list.
+- Bugs / pitfalls: lowGearIndex/highGearIndex are determined during the iteration (comparison with maxGearRatio/minGearRatio updated afterwards), which gives the right result for increasing ratios but not necessarily for an unordered list. reset does not reset gearIndex, gearRatio or the mode to their initial values. new defines neither onBreak nor validate although setPartCondition can call onBreak. setMode silently ignores any value other than 'high' or 'low' and does not take availableModes into account.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_rangeBox.new(jbeamData)` | Construit la boîte de gamme : table des rapports (avant et arrière), indices de gamme haute et basse, mode initial et état sauvegardable. *(interne)* | 143 |
+| `powertrain_rangeBox.new(jbeamData)` | Builds the range box: ratio table (forward and reverse), high and low range indices, initial mode and saveable state. *(internal)* | 143 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_rangeBox.new(jbeamData)`
 
-Construit la boîte de gamme : table des rapports (avant et arrière), indices de gamme haute et basse, mode initial et état sauvegardable.
+Builds the range box: ratio table (forward and reverse), high and low range indices, initial mode and saveable state.
 
-- `jbeamData` (*table*) : Données jbeam du composant (gearRatios obligatoire).
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component (gearRatios required).
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {gearbox=true}. |
 | `outputPorts` | table<integer, boolean> | {[1]=true}. |
 | `requiredExternalInertiaOutputs` | table<integer, integer> | {1}. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData).
+Object returned by new(jbeamData).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:applyDeformGroupDamage(damageAmount)` | Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1). | 82 |
-| `device:calculateInertia()` | Prend l'inertie et les rapports cumulés du premier enfant ; cumulativeInertia = inertie / gearRatio² (maxGearRatio si le rapport est 0). | 110 |
-| `device:getPartCondition()` | Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}. | 101 |
-| `device:getState()` | Renvoie stateData avec la clé '<nom>Mode' = mode courant (pour la sauvegarde). | 66 |
-| `device:reset(jbeamData)` | Remet à zéro vitesses, couple, inertie cumulée, coefficients d'usure/dégâts et isBroken ; relit friction. Ne remet pas le rapport. | 127 |
-| `device:setGearIndex(index, omitInertiaCaculation)` | Choisit le rapport par son indice (borné à [minGearIndex, maxGearIndex]) et recalcule l'inertie du groupe motopropulseur, sauf si omitInertiaCaculation est vrai. | 24 |
-| `device:setMode(mode)` | Passe en gamme 'high' (rapport le plus petit) ou 'low' (rapport le plus grand). Toute autre valeur est ignorée. Met à jour le bouton UI. | 52 |
-| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applique l'usure (odomètre, coefficient de 1 à 2) et les dégâts (intégrité nombre 0..1 ou table) ; appelle onBreak si isBroken, qui n'est pas défini sur ce device. | 86 |
-| `device:setState(data)` | Restaure le mode depuis data['<nom>Mode'] si c'est une chaîne différente du mode actuel. | 71 |
-| `device:torqueUpdate()` | Appelée à chaque pas physique : outputTorque1 = (couple parent - frottements) * gearRatio. | 20 |
-| `device:updateSimpleControlButtons()` | Si plusieurs modes et uiSimpleModeControl : met à jour le bouton d'interface simple (icônes powertrain_rangebox_high / low) pour powertrain.toggleDeviceMode(nom). | 33 |
-| `device:velocityUpdate(dt)` | Appelée à chaque pas physique : inputAV = outputAV1 * gearRatio, écrit dans le parent. | 15 |
+| `device:applyDeformGroupDamage(damageAmount)` | Increases the damage friction coefficient (0.01 of damage = +0.1). | 82 |
+| `device:calculateInertia()` | Takes the inertia and cumulative ratios of the first child; cumulativeInertia = inertia / gearRatio² (maxGearRatio if the ratio is 0). | 110 |
+| `device:getPartCondition()` | Returns the integrity 0..1 (0 if broken) and {damageFrictionCoef, isBroken}. | 101 |
+| `device:getState()` | Returns stateData with the key '<name>Mode' = current mode (for saving). | 66 |
+| `device:reset(jbeamData)` | Resets speeds, torque, cumulative inertia, wear/damage coefficients and isBroken; rereads friction. Does not reset the gear. | 127 |
+| `device:setGearIndex(index, omitInertiaCaculation)` | Chooses the gear by its index (clamped to [minGearIndex, maxGearIndex]) and recomputes the powertrain inertia, unless omitInertiaCaculation is true. | 24 |
+| `device:setMode(mode)` | Switches to 'high' range (smallest ratio) or 'low' range (largest ratio). Any other value is ignored. Updates the UI button. | 52 |
+| `device:setPartCondition(subSystem, odometer, integrity, visual)` | Applies wear (odometer, coefficient from 1 to 2) and damage (integrity number 0..1 or table); calls onBreak if isBroken, which is not defined on this device. | 86 |
+| `device:setState(data)` | Restores the mode from data['<name>Mode'] if it is a string different from the current mode. | 71 |
+| `device:torqueUpdate()` | Called at each physics step: outputTorque1 = (parent torque - friction) * gearRatio. | 20 |
+| `device:updateSimpleControlButtons()` | If several modes and uiSimpleModeControl: updates the simple interface button (icons powertrain_rangebox_high / low) for powertrain.toggleDeviceMode(name). | 33 |
+| `device:velocityUpdate(dt)` | Called at each physics step: inputAV = outputAV1 * gearRatio, written to the parent. | 15 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/rangeBox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/rangeBox.lua`.*

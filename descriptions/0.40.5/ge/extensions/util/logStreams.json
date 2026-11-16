@@ -1,81 +1,81 @@
 {
   "path": "lua/ge/extensions/util/logStreams.lua",
-  "module": "Petit utilitaire d'entrée/sortie pour sauvegarder et relire les « streams » (flux de données de véhicule) journalisés, sous trois formats dans le dossier utilisateur : loggedStreams.json, loggedStreams.txt (wikitable) et loggedStreams.rst. Les fonctions ne font que lire/écrire ces fichiers ; la génération du contenu se fait ailleurs.",
+  "module": "Small I/O utility to save and reread logged \"streams\" (vehicle data streams) in three formats in the user folder: loggedStreams.json, loggedStreams.txt (wikitable) and loggedStreams.rst. The functions only read/write these files; the content generation is done elsewhere.",
   "notes": [
-    "readWikitable et readRst remplacent les retours à la ligne par la séquence littérale \\n (« huge hack » selon le commentaire du code), pour pouvoir transmettre le texte sous forme de chaîne.",
-    "readWikitable/readRst échouent (erreur Lua sur nil) si le fichier n'existe pas, car readFile renvoie nil."
+    "readWikitable and readRst replace line breaks with the literal sequence \\n (\"huge hack\" according to the code comment), so that the text can be passed as a string.",
+    "readWikitable/readRst fail (Lua error on nil) if the file does not exist, because readFile returns nil."
   ],
   "functions": {
     "saveJson": {
-      "desc": "Écrit data dans loggedStreams.json (jsonWriteFile, format lisible).",
+      "desc": "Writes data to loggedStreams.json (jsonWriteFile, readable format).",
       "params": {
         "data": {
           "type": "table",
-          "desc": "Données à sérialiser"
+          "desc": "Data to serialize"
         }
       },
       "returns": [],
       "internal": false
     },
     "readJson": {
-      "desc": "Lit et décode loggedStreams.json.",
+      "desc": "Reads and decodes loggedStreams.json.",
       "params": {},
       "returns": [
         {
           "type": "table|nil",
-          "desc": "Contenu décodé, ou nil si le fichier est absent"
+          "desc": "Decoded content, or nil if the file is missing"
         }
       ],
       "internal": false
     },
     "saveWikitable": {
-      "desc": "Écrit le texte fourni dans loggedStreams.txt.",
+      "desc": "Writes the given text to loggedStreams.txt.",
       "params": {
         "data": {
           "type": "string",
-          "desc": "Texte au format wikitable"
+          "desc": "Text in wikitable format"
         }
       },
       "returns": [],
       "internal": false
     },
     "readWikitable": {
-      "desc": "Lit loggedStreams.txt en remplaçant chaque retour à la ligne par la séquence littérale \\n.",
+      "desc": "Reads loggedStreams.txt, replacing each line break with the literal sequence \\n.",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "Contenu avec \\n échappés"
+          "desc": "Content with escaped \\n"
         },
         {
           "type": "integer",
-          "desc": "Nombre de remplacements (second retour de gsub)"
+          "desc": "Number of replacements (second return value of gsub)"
         }
       ],
       "internal": false
     },
     "saveRst": {
-      "desc": "Écrit le texte fourni dans loggedStreams.rst.",
+      "desc": "Writes the given text to loggedStreams.rst.",
       "params": {
         "data": {
           "type": "string",
-          "desc": "Texte au format reStructuredText"
+          "desc": "Text in reStructuredText format"
         }
       },
       "returns": [],
       "internal": false
     },
     "readRst": {
-      "desc": "Lit loggedStreams.rst en remplaçant chaque retour à la ligne par la séquence littérale \\n.",
+      "desc": "Reads loggedStreams.rst, replacing each line break with the literal sequence \\n.",
       "params": {},
       "returns": [
         {
           "type": "string",
-          "desc": "Contenu avec \\n échappés"
+          "desc": "Content with escaped \\n"
         },
         {
           "type": "integer",
-          "desc": "Nombre de remplacements (second retour de gsub)"
+          "desc": "Number of replacements (second return value of gsub)"
         }
       ],
       "internal": false

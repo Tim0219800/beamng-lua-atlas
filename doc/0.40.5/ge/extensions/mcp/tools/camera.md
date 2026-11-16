@@ -1,70 +1,70 @@
 # `mcp_tools_camera`
 
-*Fichier : `lua/ge/extensions/mcp/tools/camera.lua` · VM : Game Engine (GE) · 98 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/camera.lua` · VM: Game Engine (GE) · 98 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_camera` : `extensions.load("mcp_tools_camera")`, puis la globale `mcp_tools_camera`
+**Access:** extension `mcp_tools_camera`: `extensions.load("mcp_tools_camera")`, then the global `mcp_tools_camera`
 
-Outils MCP pour la caméra du joueur : changer de mode, orbiter autour d'un véhicule (avec rotation continue), lire l'état de la caméra et placer la caméra libre. S'appuie sur core_camera. Module chargé par mcp_tools ; chaque M.xxx est un outil qui renvoie (texte, estErreur).
+MCP tools for the player camera: change mode, orbit around a vehicle (with continuous rotation), read the camera state and place the free camera. Relies on core_camera. Module loaded by mcp_tools; each M.xxx is a tool that returns (text, isError).
 
-## Remarques
+## Notes
 
-- La rotation continue de l'orbite (spin) est appliquée dans onUpdate ; changer de mode caméra avec set_camera (autre que orbit), set_free_camera ou spin=0 l'arrête.
-- Les angles sont en degrés, la distance en mètres. get_camera_state renvoie la rotation sous forme de quaternion {x,y,z,w}.
+- The continuous orbit rotation (spin) is applied in onUpdate; changing camera mode with set_camera (other than orbit), set_free_camera or spin=0 stops it.
+- Angles are in degrees, distance in meters. get_camera_state returns the rotation as a quaternion {x,y,z,w}.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_camera.get_camera_state()` | État de la caméra en JSON : mode, pos, rot (quaternion), fov (degrés). | 46 |
-| `mcp_tools_camera.onUpdate(dtReal)` | Appelé chaque frame (via le fan-out de mcp_tools) : si une orbite continue est active, incrémente le yaw de speed*dtReal (modulo 360) et applique core_camera.setRotation. *(interne)* *(hook)* | 12 |
-| `mcp_tools_camera.orbit_camera(args)` | Passe en caméra orbit et règle distance, rotation ou rotation continue autour d'un véhicule. | 29 |
-| `mcp_tools_camera.set_camera(args)` | Change le mode caméra du joueur 0 par son nom (core_camera.setByName). | 19 |
-| `mcp_tools_camera.set_free_camera(args)` | Passe en caméra libre et la place (position, rotation quaternion, fov) via core_camera.globalCameraFunction. La pose persiste ensuite, la caméra libre se déplace avec les entrées. | 59 |
+| `mcp_tools_camera.get_camera_state()` | Camera state as JSON: mode, pos, rot (quaternion), fov (degrees). | 46 |
+| `mcp_tools_camera.onUpdate(dtReal)` | Called every frame (via the mcp_tools fan-out): if a continuous orbit is active, increments the yaw by speed*dtReal (modulo 360) and applies core_camera.setRotation. *(internal)* *(hook)* | 12 |
+| `mcp_tools_camera.orbit_camera(args)` | Switches to the orbit camera and sets distance, rotation or continuous rotation around a vehicle. | 29 |
+| `mcp_tools_camera.set_camera(args)` | Changes player 0's camera mode by name (core_camera.setByName). | 19 |
+| `mcp_tools_camera.set_free_camera(args)` | Switches to the free camera and places it (position, quaternion rotation, fov) via core_camera.globalCameraFunction. The pose then persists, the free camera moves with inputs. | 59 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_camera.get_camera_state()`
 
-État de la caméra en JSON : mode, pos, rot (quaternion), fov (degrés).
+Camera state as JSON: mode, pos, rot (quaternion), fov (degrees).
 
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si core_camera indisponible.
+- **returns**: string JSON.
+- **returns**: boolean true if core_camera is unavailable.
 
 #### `mcp_tools_camera.onUpdate(dtReal)`
 
-Appelé chaque frame (via le fan-out de mcp_tools) : si une orbite continue est active, incrémente le yaw de speed*dtReal (modulo 360) et applique core_camera.setRotation.
+Called every frame (via the mcp_tools fan-out): if a continuous orbit is active, increments the yaw by speed*dtReal (modulo 360) and applies core_camera.setRotation.
 
-- `dtReal` (*number*) : Durée réelle de la frame (s).
+- `dtReal` (*number*) : Real frame time (s).
 
 #### `mcp_tools_camera.orbit_camera(args)`
 
-Passe en caméra orbit et règle distance, rotation ou rotation continue autour d'un véhicule.
+Switches to the orbit camera and sets distance, rotation or continuous rotation around a vehicle.
 
-- `args` (*table|nil*) : {yaw?: number°, pitch?: number° (défaut 20), distance?: number m, spin?: number °/s (0 stoppe), id?: integer}
-- **renvoie** : string Résumé.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table|nil*) : {yaw?: number°, pitch?: number° (default 20), distance?: number m, spin?: number °/s (0 stops), id?: integer}
+- **returns**: string Summary.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_camera.set_camera(args)`
 
-Change le mode caméra du joueur 0 par son nom (core_camera.setByName).
+Changes player 0's camera mode by name (core_camera.setByName).
 
-- `args` (*table*) : {name: string} orbit, driver, chase, external, hood, top, dash… (obligatoire).
-- **renvoie** : string Confirmation ou erreur.
-- **renvoie** : boolean true en cas d'erreur.
+- `args` (*table*) : {name: string} orbit, driver, chase, external, hood, top, dash… (required).
+- **returns**: string Confirmation or error.
+- **returns**: boolean true on error.
 
 #### `mcp_tools_camera.set_free_camera(args)`
 
-Passe en caméra libre et la place (position, rotation quaternion, fov) via core_camera.globalCameraFunction. La pose persiste ensuite, la caméra libre se déplace avec les entrées.
+Switches to the free camera and places it (position, quaternion rotation, fov) via core_camera.globalCameraFunction. The pose then persists, the free camera moves with inputs.
 
 - `args` (*table|nil*) : {pos?: {x,y,z}, rot?: {x,y,z,w}, fov?: number°}
-- **renvoie** : string « free camera set ».
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string "free camera set".
+- **returns**: boolean true on error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils set_camera, orbit_camera, get_camera_state, set_free_camera. |
+| `schemas` | table<string, table> | Schemas of the tools set_camera, orbit_camera, get_camera_state, set_free_camera. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/camera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/camera.lua`.*

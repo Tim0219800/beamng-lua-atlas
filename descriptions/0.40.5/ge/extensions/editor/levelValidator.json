@@ -1,58 +1,236 @@
 {
   "path": "lua/ge/extensions/editor/levelValidator.lua",
-  "module": "Outil « Level Validator » de l'éditeur (menu Window > Debug). Le bouton « Find issues » lance un job qui cherche dans le niveau les objets dupliqués, flottants (non plantés sur le terrain), les splines mal configurées (moins de 2 nœuds) et les échelles nulles ou quasi nulles, pour les objets de scène et les éléments de forêt. Les résultats sont triables, ignorables, et certains corrigeables (suppression des doublons, sans undo possible). Les résultats peuvent être lus par d'autres modules via getLevelLogs.",
+  "module": "Editor \"Level Validator\" tool (Window > Debug menu). The \"Find issues\" button starts a job that searches the level for duplicated objects, floating objects (not planted on the terrain), misconfigured splines (fewer than 2 nodes) and zero or near-zero scales, for scene objects and forest items. The results are sortable, ignorable, and some are fixable (deleting duplicates, no undo possible). The results can be read by other modules via getLevelLogs.",
   "usage": "editor_levelValidator.startLevelValidation()\nlocal agg = editor_levelValidator.getLevelLogsAggregated()",
   "notes": [
-    "Préférence levelValidator.general.extendedLogs : affiche des erreurs supplémentaires dans la liste.",
-    "Dans startLevelValidation, getLevelLogs() est appelé mais cette fonction locale est définie plus bas dans le fichier (ligne ~894) : à cet endroit c'est la globale getLevelLogs qui est visée, donc nil. Avec extendedLogs activé, l'appel échoue (bug probable du jeu).",
-    "Niveaux de log : I, W, E, D. Types internes : duplicate, floating, spline, scale.",
-    "onEditorAfterSaveLevel est vide (l'appel automatique à startLevelValidation est commenté)."
+    "Preference levelValidator.general.extendedLogs: displays additional errors in the list.",
+    "In startLevelValidation, getLevelLogs() is called but this local function is defined further down in the file (line ~894): at that point the global getLevelLogs is targeted, hence nil. With extendedLogs enabled, the call fails (probable game bug).",
+    "Log levels: I, W, E, D. Internal types: duplicate, floating, spline, scale.",
+    "onEditorAfterSaveLevel is empty (the automatic call to startLevelValidation is commented out)."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "{\"core_forest\"}."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "{\"core_forest\"}."
+    }
   },
   "functions": {
-    "startLevelValidation": {"desc": "Lance la validation du niveau dans un job (core_jobsystem, période 0.04) et passe l'état à « recherche en cours ».", "params": {}},
-    "getLevelLogs": {"desc": "Renvoie la liste brute des problèmes trouvés (entrées avec logLevel, type, objectId, message…).", "params": {}, "returns": [{"type": "table", "desc": "levelLogs."}]},
-    "getLevelLogsAggregated": {
-      "desc": "Renvoie les problèmes regroupés par type lisible (Duplicated Object, Floating Object, Spline Misconfigured, Duplicated Forest Item, Floating Forest Item, et « Zero or Near-Zero Scale »). Chaque entrée est enrichie du nom et de la position de l'objet, et d'une position/rotation de caméra (15 m derrière l'objet).",
-      "params": {},
-      "returns": [{"type": "table", "desc": "{elementsByType = {[i] = {type, count, elements}}}."}]
+    "startLevelValidation": {
+      "desc": "Starts the level validation in a job (core_jobsystem, period 0.04) and sets the state to \"search in progress\".",
+      "params": {}
     },
-    "onEditorInitialized": {"desc": "Enregistre la fenêtre « levelValidator » et l'entrée de menu « Level Validator » (groupe Debug).", "params": {}, "internal": true},
-    "onExtensionLoaded": {"desc": "Hook de chargement : écrit un log Debug « initialized ».", "params": {}, "internal": true},
-    "onEditorGui": {"desc": "Dessine la fenêtre de l'outil (bouton Find issues, liste filtrable et triable, actions).", "params": {}, "internal": true},
-    "onEditorRegisterPreferences": {
-      "desc": "Enregistre la catégorie de préférences levelValidator.general (extendedLogs, columnSizes caché).",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+    "getLevelLogs": {
+      "desc": "Returns the raw list of issues found (entries with logLevel, type, objectId, message...).",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "levelLogs."
+        }
+      ]
+    },
+    "getLevelLogsAggregated": {
+      "desc": "Returns the issues grouped by readable type (Duplicated Object, Floating Object, Spline Misconfigured, Duplicated Forest Item, Floating Forest Item, and \"Zero or Near-Zero Scale\"). Each entry is enriched with the object's name and position, and a camera position/rotation (15 m behind the object).",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{elementsByType = {[i] = {type, count, elements}}}."
+        }
+      ]
+    },
+    "onEditorInitialized": {
+      "desc": "Registers the \"levelValidator\" window and the \"Level Validator\" menu entry (Debug group).",
+      "params": {},
       "internal": true
     },
-    "onClientStartMission": {"desc": "Appelé au démarrage d'un niveau : réinitialise les dimensions du terrain, les logs et l'état de vérification.", "params": {}, "internal": true},
+    "onExtensionLoaded": {
+      "desc": "Load hook: writes a Debug log \"initialized\".",
+      "params": {},
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Draws the tool window (Find issues button, filterable and sortable list, actions).",
+      "params": {},
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Registers the levelValidator.general preferences category (extendedLogs, hidden columnSizes).",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Editor preferences registry."
+        }
+      },
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Called when a level starts: resets the terrain dimensions, the logs and the check state.",
+      "params": {},
+      "internal": true
+    },
     "onEditorAfterSaveLevel": {
-      "desc": "Appelé après la sauvegarde du niveau. Corps vide.",
-      "params": {"state": {"type": "any", "desc": "Non utilisé."}},
+      "desc": "Called after the level is saved. Empty body.",
+      "params": {
+        "state": {
+          "type": "any",
+          "desc": "Not used."
+        }
+      },
       "internal": true
     },
     "onEditorPreferenceValueChanged": {
-      "desc": "Si extendedLogs change, vide les résultats et réinitialise l'état de vérification.",
+      "desc": "If extendedLogs changes, clears the results and resets the check state.",
       "params": {
-        "path": {"type": "string", "desc": "Chemin de la préférence."},
-        "value": {"type": "any", "desc": "Nouvelle valeur."}
+        "path": {
+          "type": "string",
+          "desc": "Preference path."
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value."
+        }
       },
       "internal": true
     }
   },
   "classes": {
     "sortingFunctions": {
-      "desc": "Comparateurs de tri des colonnes de la liste de résultats (a et b sont deux entrées de log).",
+      "desc": "Sort comparators for the result list columns (a and b are two log entries).",
       "functions": {
-        "LogLevel": {"desc": "Tri par logLevel (chaîne).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
-        "Code": {"desc": "Tri par uniqueErrorCode (0 si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
-        "Description": {"desc": "Tri par message.", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
-        "Origin": {"desc": "Tri par champ origin (chaîne vide si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
-        "ObjectName": {"desc": "Tri par nom de l'objet a.object (chaîne vide si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
-        "File": {"desc": "Tri par champ filename.", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]},
-        "Line": {"desc": "Tri par champ lineNumber (0 si absent).", "params": {"a": {"type": "table", "desc": "Entrée de log."}, "b": {"type": "table", "desc": "Entrée de log."}}, "returns": [{"type": "boolean", "desc": "a avant b."}]}
+        "LogLevel": {
+          "desc": "Sort by logLevel (string).",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Log entry."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Log entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "a before b."
+            }
+          ]
+        },
+        "Code": {
+          "desc": "Sort by uniqueErrorCode (0 if absent).",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Log entry."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Log entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "a before b."
+            }
+          ]
+        },
+        "Description": {
+          "desc": "Sort by message.",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Log entry."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Log entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "a before b."
+            }
+          ]
+        },
+        "Origin": {
+          "desc": "Sort by origin field (empty string if absent).",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Log entry."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Log entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "a before b."
+            }
+          ]
+        },
+        "ObjectName": {
+          "desc": "Sort by the name of object a.object (empty string if absent).",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Log entry."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Log entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "a before b."
+            }
+          ]
+        },
+        "File": {
+          "desc": "Sort by filename field.",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Log entry."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Log entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "a before b."
+            }
+          ]
+        },
+        "Line": {
+          "desc": "Sort by lineNumber field (0 if absent).",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "Log entry."
+            },
+            "b": {
+              "type": "table",
+              "desc": "Log entry."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "a before b."
+            }
+          ]
+        }
       }
     }
   }

@@ -1,59 +1,59 @@
 # `core_multiseatPlayerMarkers`
 
-*Fichier : `lua/ge/extensions/core/multiseatPlayerMarkers.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/multiseatPlayerMarkers.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_multiseatPlayerMarkers` : `extensions.load("core_multiseatPlayerMarkers")`, puis la globale `core_multiseatPlayerMarkers`
+**Access:** extension `core_multiseatPlayerMarkers`: `extensions.load("core_multiseatPlayerMarkers")`, then the global `core_multiseatPlayerMarkers`
 
-Extension GE `core_multiseatPlayerMarkers` : lit et écrit le réglage 'multiseatTags' qui contrôle l'affichage des marqueurs (étiquettes) de joueurs en multi-joueur local. Trois modes : 'always', 'smart' (défaut) et 'never'. Les anciennes valeurs booléennes sont converties (true devient 'smart', false devient 'never').
+GE extension `core_multiseatPlayerMarkers`: reads and writes the 'multiseatTags' setting that controls the display of player markers (tags) in local multiplayer. Three modes: 'always', 'smart' (default) and 'never'. Old boolean values are converted (true becomes 'smart', false becomes 'never').
 
-## Exemple
+## Example
 
 ```lua
-local mode = core_multiseatPlayerMarkers.getMode()  -- 'smart' par défaut
+local mode = core_multiseatPlayerMarkers.getMode()  -- 'smart' by default
 core_multiseatPlayerMarkers.setMode('always')
 ```
 
-## Remarques
+## Notes
 
-- getMode réécrit le réglage dans settings si la valeur stockée n'était pas déjà normalisée (migration des booléens).
+- getMode rewrites the setting in settings if the stored value was not already normalized (boolean migration).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_multiseatPlayerMarkers.getMode()` | Renvoie le mode courant du réglage multiseatTags (défaut 'smart'), en le normalisant et en corrigeant le réglage si besoin. | 19 |
-| `core_multiseatPlayerMarkers.isEnabled(mode)` | Indique si les marqueurs sont actifs, c'est-à-dire si le mode normalisé n'est pas 'never'. | 32 |
-| `core_multiseatPlayerMarkers.normalize(mode)` | Convertit une valeur de réglage en mode valide : true devient 'smart', false devient 'never', 'always'/'smart'/'never' restent, toute autre valeur devient 'smart'. | 13 |
-| `core_multiseatPlayerMarkers.setMode(mode)` | Normalise puis enregistre le mode dans le réglage multiseatTags. | 26 |
+| `core_multiseatPlayerMarkers.getMode()` | Returns the current mode of the multiseatTags setting (default 'smart'), normalizing it and fixing the setting if needed. | 19 |
+| `core_multiseatPlayerMarkers.isEnabled(mode)` | Indicates whether markers are active, i.e. whether the normalized mode is not 'never'. | 32 |
+| `core_multiseatPlayerMarkers.normalize(mode)` | Converts a setting value into a valid mode: true becomes 'smart', false becomes 'never', 'always'/'smart'/'never' stay, any other value becomes 'smart'. | 13 |
+| `core_multiseatPlayerMarkers.setMode(mode)` | Normalizes then saves the mode in the multiseatTags setting. | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_multiseatPlayerMarkers.getMode()`
 
-Renvoie le mode courant du réglage multiseatTags (défaut 'smart'), en le normalisant et en corrigeant le réglage si besoin.
+Returns the current mode of the multiseatTags setting (default 'smart'), normalizing it and fixing the setting if needed.
 
-- **renvoie** : string 'always', 'smart' ou 'never'.
+- **returns**: string 'always', 'smart' or 'never'.
 
 #### `core_multiseatPlayerMarkers.isEnabled(mode)`
 
-Indique si les marqueurs sont actifs, c'est-à-dire si le mode normalisé n'est pas 'never'.
+Indicates whether markers are active, i.e. whether the normalized mode is not 'never'.
 
-- `mode` (*string|boolean|nil*) : Mode à tester.
-- **renvoie** : boolean true sauf pour 'never'.
+- `mode` (*string|boolean|nil*) : Mode to test.
+- **returns**: boolean true except for 'never'.
 
 #### `core_multiseatPlayerMarkers.normalize(mode)`
 
-Convertit une valeur de réglage en mode valide : true devient 'smart', false devient 'never', 'always'/'smart'/'never' restent, toute autre valeur devient 'smart'.
+Converts a setting value into a valid mode: true becomes 'smart', false becomes 'never', 'always'/'smart'/'never' stay, any other value becomes 'smart'.
 
-- `mode` (*string|boolean|nil*) : Valeur à normaliser.
-- **renvoie** : string 'always', 'smart' ou 'never'.
+- `mode` (*string|boolean|nil*) : Value to normalize.
+- **returns**: string 'always', 'smart' or 'never'.
 
 #### `core_multiseatPlayerMarkers.setMode(mode)`
 
-Normalise puis enregistre le mode dans le réglage multiseatTags.
+Normalizes then saves the mode in the multiseatTags setting.
 
-- `mode` (*string|boolean|nil*) : Mode souhaité.
-- **renvoie** : string Le mode réellement enregistré.
+- `mode` (*string|boolean|nil*) : Desired mode.
+- **returns**: string The mode actually saved.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/multiseatPlayerMarkers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/multiseatPlayerMarkers.lua`.*

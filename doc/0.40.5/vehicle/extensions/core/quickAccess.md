@@ -1,90 +1,90 @@
 # `core_quickAccess`
 
-*Fichier : `lua/vehicle/extensions/core/quickAccess.lua` · VM : Véhicule · 338 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/core/quickAccess.lua` · VM: Vehicle · 338 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_quickAccess` : `extensions.load (VM véhicule)("core_quickAccess")`, puis la globale `core_quickAccess`
+**Access:** extension `core_quickAccess`: `extensions.load (vehicle VM)("core_quickAccess")`, then the global `core_quickAccess`
 
-Proxy côté véhicule du menu radial (quick access) du GE Lua : les modules du véhicule y déclarent des entrées de menu (addEntry), le GE demande la liste (requestItems) puis signale la sélection d'un élément (selectItem). Gère aussi les entrées du régulateur de vitesse (cruise control) et les catégories de base du menu véhicule.
+Vehicle-side proxy of the GE Lua radial menu (quick access): vehicle modules declare menu entries there (addEntry), the GE requests the list (requestItems) then reports the selection of an item (selectItem). Also handles the cruise control entries and the base categories of the vehicle menu.
 
-## Exemple
+## Example
 
 ```lua
 extensions.core_quickAccess.addEntry({
   level = "/root/playerVehicle/lights/",
-  title = "Mon action", icon = "lowBeam", uniqueID = "monAction",
-  onSelect = function() print("clic") return {"hide"} end
+  title = "My action", icon = "lowBeam", uniqueID = "myAction",
+  onSelect = function() print("click") return {"hide"} end
 })
 ```
 
-## Remarques
+## Notes
 
-- addEntry doit rester synchronisé avec GE/core/quickAccess/addEntry (commentaire du code). Champs d'une entrée : title (clé de traduction ou {txt, context}), level (défaut '/root/playerVehicle/general/'), onSelect/onSecondarySelect/onTertiarySelect(item), onDeselect/onSecondaryDeselect/onTertiaryDeselect, goto (niveau cible), generator(entries) (fonction qui ajoute dynamiquement des entrées au niveau), uniqueID (remplace une entrée existante du même niveau), icon, color, priority, startSlot/endSlot, desc, holdRepeat, originalActionInfo.
-- Le niveau est normalisé : préfixé par '/root/playerVehicle' s'il ne commence pas par '/root/playerVehicle/' ou '/root/sandbox/', et terminé par '/'. Le contrôle `type(args.level) ~= 'string'` est fait après les appels string.startswith : un niveau non chaîne produit une erreur avant d'atteindre ce contrôle.
-- Valeurs de retour possibles d'un onSelect : nil (masquer le menu), {'hide'}, {'reload'} (recharge le menu 2 frames plus tard) ou {'goto', niveau}, {'error', raison}.
-- Le menu est reconstruit à chaque requestItems : les generator sont exécutés sur une copie profonde de l'arbre, les entrées avec generator sont retirées et chaque entrée reçoit objID et id = niveau .. titre .. index.
-- Cruise control : à onInit, si le véhicule a des roues motrices, une entrée niveau '/root/playerVehicle/cruise_control/' ajoute 4 boutons (activer/désactiver, +/reprise, -/fixer, annuler) qui pilotent l'extension cruiseControl. adjustCruiseSpeed change la consigne de ±1 km/h ou ±1 mph (selon uiUnitLength), exprimé en m/s.
-- registerMenu est obsolète : il écrit un log d'erreur et ne fait rien ; utiliser addEntry.
-- updateGFX n'est actif que pendant le délai de rechargement ; il est mis à nil sinon (extensions.hookUpdate).
+- addEntry must stay in sync with GE/core/quickAccess/addEntry (code comment). Fields of an entry: title (translation key or {txt, context}), level (default '/root/playerVehicle/general/'), onSelect/onSecondarySelect/onTertiarySelect(item), onDeselect/onSecondaryDeselect/onTertiaryDeselect, goto (target level), generator(entries) (function that dynamically adds entries to the level), uniqueID (replaces an existing entry of the same level), icon, color, priority, startSlot/endSlot, desc, holdRepeat, originalActionInfo.
+- The level is normalized: prefixed with '/root/playerVehicle' if it does not start with '/root/playerVehicle/' or '/root/sandbox/', and terminated with '/'. The check `type(args.level) ~= 'string'` is done after the string.startswith calls: a non-string level produces an error before reaching this check.
+- Possible return values of an onSelect: nil (hide the menu), {'hide'}, {'reload'} (reloads the menu 2 frames later) or {'goto', level}, {'error', reason}.
+- The menu is rebuilt at each requestItems: the generators are run on a deep copy of the tree, entries with generator are removed and each entry receives objID and id = level .. title .. index.
+- Cruise control: at onInit, if the vehicle has driven wheels, an entry at level '/root/playerVehicle/cruise_control/' adds 4 buttons (enable/disable, +/resume, -/set, cancel) that drive the cruiseControl extension. adjustCruiseSpeed changes the setpoint by ±1 km/h or ±1 mph (depending on uiUnitLength), expressed in m/s.
+- registerMenu is obsolete: it writes an error log and does nothing; use addEntry.
+- updateGFX is only active during the reload delay; it is set to nil otherwise (extensions.hookUpdate).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_quickAccess.addEntry(_args)` | Ajoute (ou remplace via uniqueID) une entrée de menu pour ce véhicule. | 20 |
-| `core_quickAccess.adjustCruiseSpeed(direction)` | Augmente ou diminue la consigne du régulateur d'un cran (1 km/h ou 1 mph) si l'extension cruiseControl est chargée. | 181 |
-| `core_quickAccess.onExtensionLoaded()` | Appelé au chargement : ajoute les catégories de base du menu véhicule (aides à la conduite, éclairage, actions rapides, fonctionnalités du véhicule, régulateur de vitesse). *(interne)* *(hook)* | 305 |
-| `core_quickAccess.onInit()` | Hook d'initialisation du véhicule : déclare les entrées du régulateur de vitesse s'il y a des roues motrices. *(interne)* *(hook)* | 188 |
-| `core_quickAccess.registerMenu()` | Obsolète : écrit une erreur dans le log (utiliser addEntry). | 333 |
-| `core_quickAccess.requestItems(level)` | Interface pour le GE : génère l'arbre complet (exécute les generator) et le renvoie au GE via core_quickAccess.vehicleItemsCallback. | 102 |
-| `core_quickAccess.selectItem(id, buttonDown, actionIndex)` | Interface pour le GE : exécute l'action d'une entrée désignée par son id selon que le bouton est enfoncé ou relâché et selon l'index d'action (1 principal, 2 secondaire, 3 tertiaire). Le résultat est renvoyé au GE via vehicleItemSelectCallback. | 135 |
-| `core_quickAccess.updateGFX(dt)` | Boucle temporaire (valeur nil au repos) qui compte 2 frames avant de notifier le GE d'une demande 'reload'. (assignée dynamiquement) *(interne)* | dyn |
+| `core_quickAccess.addEntry(_args)` | Adds (or replaces via uniqueID) a menu entry for this vehicle. | 20 |
+| `core_quickAccess.adjustCruiseSpeed(direction)` | Increases or decreases the cruise control setpoint by one step (1 km/h or 1 mph) if the cruiseControl extension is loaded. | 181 |
+| `core_quickAccess.onExtensionLoaded()` | Called at load: adds the base categories of the vehicle menu (driving aids, lighting, quick actions, vehicle features, cruise control). *(internal)* *(hook)* | 305 |
+| `core_quickAccess.onInit()` | Vehicle initialization hook: declares the cruise control entries if there are driven wheels. *(internal)* *(hook)* | 188 |
+| `core_quickAccess.registerMenu()` | Obsolete: writes an error in the log (use addEntry). | 333 |
+| `core_quickAccess.requestItems(level)` | Interface for the GE: generates the full tree (runs the generators) and returns it to the GE via core_quickAccess.vehicleItemsCallback. | 102 |
+| `core_quickAccess.selectItem(id, buttonDown, actionIndex)` | Interface for the GE: runs the action of an entry designated by its id depending on whether the button is pressed or released and on the action index (1 primary, 2 secondary, 3 tertiary). The result is returned to the GE via vehicleItemSelectCallback. | 135 |
+| `core_quickAccess.updateGFX(dt)` | Temporary loop (nil value at rest) that counts 2 frames before notifying the GE of a 'reload' request. (dynamically assigned) *(internal)* | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_quickAccess.addEntry(_args)`
 
-Ajoute (ou remplace via uniqueID) une entrée de menu pour ce véhicule.
+Adds (or replaces via uniqueID) a menu entry for this vehicle.
 
-- `_args` (*table*) : Description de l'entrée (voir notes).
-- **renvoie** : boolean true si ajoutée, false si le niveau est invalide.
+- `_args` (*table*) : Description of the entry (see notes).
+- **returns**: boolean true if added, false if the level is invalid.
 
 #### `core_quickAccess.adjustCruiseSpeed(direction)`
 
-Augmente ou diminue la consigne du régulateur d'un cran (1 km/h ou 1 mph) si l'extension cruiseControl est chargée.
+Increases or decreases the cruise control setpoint by one step (1 km/h or 1 mph) if the cruiseControl extension is loaded.
 
-- `direction` (*number*) : Positif pour augmenter, négatif pour diminuer (0 et non-nombre sont ignorés).
+- `direction` (*number*) : Positive to increase, negative to decrease (0 and non-numbers are ignored).
 
 #### `core_quickAccess.requestItems(level)`
 
-Interface pour le GE : génère l'arbre complet (exécute les generator) et le renvoie au GE via core_quickAccess.vehicleItemsCallback.
+Interface for the GE: generates the full tree (runs the generators) and returns it to the GE via core_quickAccess.vehicleItemsCallback.
 
-- `level` (*string*) : Niveau demandé (le GE reçoit l'arbre complet et le niveau).
-- **renvoie** : boolean Toujours true.
+- `level` (*string*) : Requested level (the GE receives the full tree and the level).
+- **returns**: boolean Always true.
 
 #### `core_quickAccess.selectItem(id, buttonDown, actionIndex)`
 
-Interface pour le GE : exécute l'action d'une entrée désignée par son id selon que le bouton est enfoncé ou relâché et selon l'index d'action (1 principal, 2 secondaire, 3 tertiaire). Le résultat est renvoyé au GE via vehicleItemSelectCallback.
+Interface for the GE: runs the action of an entry designated by its id depending on whether the button is pressed or released and on the action index (1 primary, 2 secondary, 3 tertiary). The result is returned to the GE via vehicleItemSelectCallback.
 
-- `id` (*string*) : Identifiant généré par requestItems.
-- `buttonDown` (*boolean*) : true à l'appui, false au relâchement.
-- `actionIndex` (*integer*) : 1, 2 ou 3.
-- **renvoie** : boolean|any true, ou le résultat de itemSelectCallback en cas de goto/erreur.
+- `id` (*string*) : Identifier generated by requestItems.
+- `buttonDown` (*boolean*) : true on press, false on release.
+- `actionIndex` (*integer*) : 1, 2 or 3.
+- **returns**: boolean|any true, or the result of itemSelectCallback in case of goto/error.
 
 #### `core_quickAccess.updateGFX(dt)`
 
-Boucle temporaire (valeur nil au repos) qui compte 2 frames avant de notifier le GE d'une demande 'reload'. (assignée dynamiquement)
+Temporary loop (nil value at rest) that counts 2 frames before notifying the GE of a 'reload' request. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `updateGFX`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getId`, `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/core/quickAccess.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/core/quickAccess.lua`.*

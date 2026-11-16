@@ -1,79 +1,79 @@
 {
   "path": "lua/ge/extensions/telemetry/performanceSpatialConfig.test.lua",
-  "module": "Tests unitaires de telemetry/performanceSpatialConfig (runTestFiles(\"performanceSpatialConfig\")).",
+  "module": "Unit tests of telemetry/performanceSpatialConfig (runTestFiles(\"performanceSpatialConfig\")).",
   "functions": {
     "testAdvancedCollectionDefaultsOff": {
-      "desc": "Vérifie qu'avec une config vide, intervalle 0 et tous les suivis avancés sont désactivés.",
+      "desc": "Checks that with an empty config, the interval is 0 and all advanced tracking is disabled.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testRecoveryTrackingIsExplicit": {
-      "desc": "Vérifie que recoveryTrackingEnabled doit être mis à true explicitement.",
+      "desc": "Checks that recoveryTrackingEnabled must be explicitly set to true.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testGameplayExitTrackingIsExplicit": {
-      "desc": "Vérifie que gameplayExitTrackingEnabled doit être mis à true explicitement.",
+      "desc": "Checks that gameplayExitTrackingEnabled must be explicitly set to true.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testShaderGenerationTrackingIsExplicit": {
-      "desc": "Vérifie que shaderGenerationTrackingEnabled doit être mis à true explicitement.",
+      "desc": "Checks that shaderGenerationTrackingEnabled must be explicitly set to true.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testDetailedMetricsAreExplicit": {
-      "desc": "Vérifie que sceneComplexityTrackingEnabled et renderTimingTrackingEnabled doivent être activés explicitement.",
+      "desc": "Checks that sceneComplexityTrackingEnabled and renderTimingTrackingEnabled must be explicitly enabled.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testLevelFilterBecomesLookup": {
-      "desc": "Vérifie que la liste levels devient une table de recherche nom -> true.",
+      "desc": "Checks that the levels list becomes a lookup table name -> true.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testDipSettingsAreClamped": {
-      "desc": "Vérifie que les seuils de chute hors limites sont ramenés dans leurs bornes.",
+      "desc": "Checks that out-of-range dip thresholds are brought back within their bounds.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],

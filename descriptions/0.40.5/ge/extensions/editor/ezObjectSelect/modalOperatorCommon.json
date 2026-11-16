@@ -1,94 +1,251 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua",
-  "module": "Fonctions communes aux opérateurs modaux (rotate, scale, translate) de l'outil Easy Select : démarrage d'une session de transformation sur la sélection, gestion des contraintes d'axe X/Y/Z (monde/local, exclusion avec Shift), saisie numérique, validation/annulation (Entrée ou clic gauche dans le viewport = confirm ; Échap ou clic droit = cancel), projection monde vers écran, et dessin du HUD et des indicateurs près de la souris.",
+  "module": "Functions shared by the modal operators (rotate, scale, translate) of the Easy Select tool: starting a transform session on the selection, handling X/Y/Z axis constraints (world/local, exclusion with Shift), numeric input, confirm/cancel (Enter or left click in the viewport = confirm; Esc or right click = cancel), world-to-screen projection, and drawing the HUD and indicators near the mouse.",
   "notes": [
-    "L'ancre de la session est le dernier objet de editor.selection.object ; le pivot est le centre de editor.objectSelectionBBox s'il est valide, sinon la position de l'ancre.",
-    "Appuyer deux fois sur la même touche d'axe (même état d'exclusion) bascule espace local/monde ; un autre axe recrée la contrainte avec l'espace par défaut.",
-    "L'objet « state » renvoyé par begin contient pivot, camera, startRay, startMouse, worldAxes, localAxes, constraint, defaultLocal, numeric ; les opérateurs y ajoutent leurs propres champs."
+    "The session anchor is the last object of editor.selection.object; the pivot is the center of editor.objectSelectionBBox if valid, otherwise the anchor position.",
+    "Pressing the same axis key twice (same exclusion state) toggles local/world space; another axis recreates the constraint with the default space.",
+    "The \"state\" object returned by begin contains pivot, camera, startRay, startMouse, worldAxes, localAxes, constraint, defaultLocal, numeric; operators add their own fields to it."
   ],
   "functions": {
     "normalized": {
-      "desc": "Normalise un vecteur ; renvoie fallback si sa longueur est <= 0.0001.",
-      "params": {"vector": {"type": "vec3", "desc": "Vecteur à normaliser"}, "fallback": {"type": "vec3", "desc": "Valeur de repli"}},
-      "returns": [{"type": "vec3", "desc": ""}]
+      "desc": "Normalizes a vector; returns fallback if its length is <= 0.0001.",
+      "params": {
+        "vector": {
+          "type": "vec3",
+          "desc": "Vector to normalize"
+        },
+        "fallback": {
+          "type": "vec3",
+          "desc": "Fallback value"
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3",
+          "desc": ""
+        }
+      ]
     },
     "currentRay": {
-      "desc": "Rayon caméra-souris courant (getCameraMouseRay).",
+      "desc": "Current camera-mouse ray (getCameraMouseRay).",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "{origin = vec3, direction = vec3 normalisé} ou nil"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{origin = vec3, direction = normalized vec3} or nil"
+        }
+      ]
     },
     "rayPlanePoint": {
-      "desc": "Intersection d'un rayon avec un plan.",
+      "desc": "Intersection of a ray with a plane.",
       "params": {
-        "ray": {"type": "table|nil", "desc": "{origin, direction}"},
-        "planePoint": {"type": "vec3", "desc": "Point du plan"},
-        "planeNormal": {"type": "vec3", "desc": "Normale du plan"}
+        "ray": {
+          "type": "table|nil",
+          "desc": "{origin, direction}"
+        },
+        "planePoint": {
+          "type": "vec3",
+          "desc": "Point of the plane"
+        },
+        "planeNormal": {
+          "type": "vec3",
+          "desc": "Plane normal"
+        }
       },
-      "returns": [{"type": "vec3|nil", "desc": "Point d'intersection, nil si rayon parallèle (|denominateur| <= 0.0001) ou sans rayon"}]
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": "Intersection point, nil if the ray is parallel (|denominator| <= 0.0001) or there is no ray"
+        }
+      ]
     },
     "begin": {
-      "desc": "Ouvre la session de transformation sur la sélection et crée l'état de l'opérateur. Renvoie nil si pas d'ancre, pas de caméra/rayon, ou si transformSession.begin échoue.",
-      "params": {"options": {"type": "table|nil", "desc": "{historyName = nom de la transaction d'historique, defaultLocal = boolean}"}},
-      "returns": [{"type": "table|nil", "desc": "état de l'opérateur"}]
+      "desc": "Opens the transform session on the selection and creates the operator state. Returns nil if there is no anchor, no camera/ray, or if transformSession.begin fails.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{historyName = history transaction name, defaultLocal = boolean}"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "operator state"
+        }
+      ]
     },
     "updateConstraint": {
-      "desc": "Lit les touches X/Y/Z et met à jour state.constraint = {axis, exclude, localSpace}.",
+      "desc": "Reads the X/Y/Z keys and updates state.constraint = {axis, exclude, localSpace}.",
       "params": {
-        "state": {"type": "table", "desc": "État de l'opérateur"},
-        "allowExclude": {"type": "boolean", "desc": "Si true, Shift maintenu signifie « exclure cet axe »"}
+        "state": {
+          "type": "table",
+          "desc": "Operator state"
+        },
+        "allowExclude": {
+          "type": "boolean",
+          "desc": "If true, holding Shift means \"exclude this axis\""
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si la contrainte a changé cette frame"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the constraint changed this frame"
+        }
+      ]
     },
     "setLocalSpace": {
-      "desc": "Définit l'espace local/monde par défaut et l'applique à la contrainte active ; ignore ensuite la touche 4 de la rangée du haut pour la saisie numérique à la prochaine mise à jour.",
-      "params": {"state": {"type": "table|nil", "desc": "État"}, "localSpace": {"type": "boolean", "desc": "true = local"}},
-      "returns": [{"type": "boolean", "desc": "false si state est nil"}]
+      "desc": "Sets the default local/world space and applies it to the active constraint; then ignores the top row key 4 for numeric input on the next update.",
+      "params": {
+        "state": {
+          "type": "table|nil",
+          "desc": "State"
+        },
+        "localSpace": {
+          "type": "boolean",
+          "desc": "true = local"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if state is nil"
+        }
+      ]
     },
     "axes": {
-      "desc": "Jeu d'axes courant (localAxes si la contrainte est en espace local, sinon worldAxes).",
-      "params": {"state": {"type": "table", "desc": "État"}},
-      "returns": [{"type": "table", "desc": "{x, y, z} de vec3"}]
+      "desc": "Current axis set (localAxes if the constraint is in local space, otherwise worldAxes).",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "State"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{x, y, z} of vec3"
+        }
+      ]
     },
     "activeAxis": {
-      "desc": "Vecteur de l'axe contraint, ou nil sans contrainte.",
-      "params": {"state": {"type": "table", "desc": "État"}},
-      "returns": [{"type": "vec3|nil", "desc": ""}]
+      "desc": "Vector of the constrained axis, or nil without constraint.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "State"
+        }
+      },
+      "returns": [
+        {
+          "type": "vec3|nil",
+          "desc": ""
+        }
+      ]
     },
     "updateNumeric": {
-      "desc": "Met à jour la saisie numérique (transformNumericInput) et renvoie la valeur saisie.",
-      "params": {"state": {"type": "table", "desc": "État"}},
-      "returns": [{"type": "number|nil", "desc": "valeur saisie ou nil"}]
+      "desc": "Updates the numeric input (transformNumericInput) and returns the entered value.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "State"
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "entered value or nil"
+        }
+      ]
     },
     "finishRequested": {
-      "desc": "Teste les touches de fin.",
+      "desc": "Tests the end keys.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "\"cancel\" (Échap/clic droit), \"confirm\" (Entrée, Entrée pavé, clic gauche dans le viewport) ou nil"}]
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "\"cancel\" (Esc/right click), \"confirm\" (Enter, numpad Enter, left click in the viewport) or nil"
+        }
+      ]
     },
     "finish": {
-      "desc": "Termine la session : confirm appelle transformSession.finish (si rien n'est validé, renvoie \"cancel\"), sinon transformSession.cancel ; rétablit le curseur.",
-      "params": {"result": {"type": "string", "desc": "\"confirm\" ou \"cancel\""}},
-      "returns": [{"type": "string", "desc": "résultat effectif"}, {"type": "any", "desc": "informations de complétion renvoyées par transformSession.finish"}]
+      "desc": "Ends the session: confirm calls transformSession.finish (if nothing is committed, returns \"cancel\"), otherwise transformSession.cancel; restores the cursor.",
+      "params": {
+        "result": {
+          "type": "string",
+          "desc": "\"confirm\" or \"cancel\""
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "effective result"
+        },
+        {
+          "type": "any",
+          "desc": "completion information returned by transformSession.finish"
+        }
+      ]
     },
     "projectToScreen": {
-      "desc": "Projette un point monde en coordonnées écran. nil si le point est derrière la caméra ou quasi dans son plan (profondeur <= 0.0001).",
-      "params": {"camera": {"type": "table", "desc": "Contexte caméra (pos, forward, right, up, halfTan, aspect, viewportX/Y, width, height)"}, "point": {"type": "vec3", "desc": "Point monde"}},
-      "returns": [{"type": "ImVec2|nil", "desc": ""}]
+      "desc": "Projects a world point to screen coordinates. nil if the point is behind the camera or nearly in its plane (depth <= 0.0001).",
+      "params": {
+        "camera": {
+          "type": "table",
+          "desc": "Camera context (pos, forward, right, up, halfTan, aspect, viewportX/Y, width, height)"
+        },
+        "point": {
+          "type": "vec3",
+          "desc": "World point"
+        }
+      },
+      "returns": [
+        {
+          "type": "ImVec2|nil",
+          "desc": ""
+        }
+      ]
     },
     "drawInteractionHint": {
-      "desc": "Cache le curseur système et dessine au curseur un point avec des chevrons (rotate : tangents ; scale : radiaux ; translate : 4 directions) et, hors translate, une ligne pointillée du pivot à la souris.",
-      "params": {"kind": {"type": "string", "desc": "\"rotate\", \"scale\" ou \"translate\""}, "pivotScreen": {"type": "ImVec2|nil", "desc": "Pivot en coordonnées écran (rien n'est dessiné si nil)"}}
+      "desc": "Hides the system cursor and draws at the cursor a dot with chevrons (rotate: tangents; scale: radial; translate: 4 directions) and, except for translate, a dotted line from the pivot to the mouse.",
+      "params": {
+        "kind": {
+          "type": "string",
+          "desc": "\"rotate\", \"scale\" or \"translate\""
+        },
+        "pivotScreen": {
+          "type": "ImVec2|nil",
+          "desc": "Pivot in screen coordinates (nothing is drawn if nil)"
+        }
+      }
     },
     "setInteractionCursorHidden": {
-      "desc": "Masque ou ré-affiche le curseur via l'objet Canvas (setCursorVisible).",
-      "params": {"hidden": {"type": "boolean", "desc": "true pour masquer"}}
+      "desc": "Hides or re-shows the cursor via the Canvas object (setCursorVisible).",
+      "params": {
+        "hidden": {
+          "type": "boolean",
+          "desc": "true to hide"
+        }
+      }
     },
     "drawHud": {
-      "desc": "Dessine un panneau à deux lignes près de la souris (ligne 1 : préfixe + détails ; ligne 2 : aide), gardé dans le viewport.",
+      "desc": "Draws a two-line panel near the mouse (line 1: prefix + details; line 2: help), kept within the viewport.",
       "params": {
-        "prefix": {"type": "string", "desc": "Lettre/titre (ex. \"R\", \"S\")"},
-        "details": {"type": "string", "desc": "Contrainte, espace et valeur"},
-        "help": {"type": "string", "desc": "Texte d'aide des touches"},
-        "border": {"type": "integer", "desc": "Couleur U32 imgui de la bordure"}
+        "prefix": {
+          "type": "string",
+          "desc": "Letter/title (e.g. \"R\", \"S\")"
+        },
+        "details": {
+          "type": "string",
+          "desc": "Constraint, space and value"
+        },
+        "help": {
+          "type": "string",
+          "desc": "Key help text"
+        },
+        "border": {
+          "type": "integer",
+          "desc": "imgui U32 color of the border"
+        }
       }
     }
   }

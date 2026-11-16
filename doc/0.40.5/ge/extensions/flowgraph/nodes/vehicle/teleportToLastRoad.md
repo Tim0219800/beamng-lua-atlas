@@ -1,29 +1,29 @@
 # `flowgraph_nodes_vehicle_teleportToLastRoad`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/teleportToLastRoad.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/teleportToLastRoad.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/teleportToLastRoad")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/teleportToLastRoad")` (file under extensions/ but not a regular extension)
 
-Nœud « Teleport To Last Road » (catégorie `repeat_instant`). Téléporte le véhicule sur la dernière route valide (`spawn.teleportToLastRoad`) et déclenche le hook `onVehicleTeleportedToLastRoad(vehId)`. Pins d'entrée : `vehId`, `resetVehicle` (bool), `destinationPos` (vec3, optionnel : position vers laquelle regarder, sinon 15 m devant le véhicule).
+Node "Teleport To Last Road" (category `repeat_instant`). Teleports the vehicle to the last valid road (`spawn.teleportToLastRoad`) and triggers the `onVehicleTeleportedToLastRoad(vehId)` hook. Input pins: `vehId`, `resetVehicle` (bool), `destinationPos` (vec3, optional: position to look toward, otherwise 15 m in front of the vehicle).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Constructeur vide. | 21 |
-| `C:work()` | Calcule la position visée puis appelle `spawn.teleportToLastRoad` et le hook. | 25 |
+| `C:init()` | Empty constructor. | 21 |
+| `C:work()` | Computes the target position then calls `spawn.teleportToLastRoad` and the hook. | 25 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onVehicleTeleportedToLastRoad`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/teleportToLastRoad.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/teleportToLastRoad.lua`.*

@@ -1,164 +1,291 @@
 {
   "path": "lua/ge/extensions/gameplay/garageMode.lua",
-  "module": "Mode garage : charge le niveau garage_v2 (ou utilise l'emplacement actuel en carrière), gèle le véhicule sur son point d'apparition, passe la caméra en orbite, bloque certaines actions d'entrée (map, menus véhicule, IA, marche, reset...), masque automatiquement plafond et piliers selon la position de la caméra, gère l'éclairage par groupes et permet de tester le véhicule dans le niveau gridmap_v2. Un moddeur s'en sert pour entrer/sortir du garage (start/stop) ou ajuster caméra et éclairage.",
-  "usage": "extensions.load('gameplay_garageMode')\ngameplay_garageMode.start(false)   -- charge garage_v2 avec le véhicule courant\ngameplay_garageMode.setCamera('front')\ngameplay_garageMode.setLighting({true, false, true}) -- ouest, milieu, est\ngameplay_garageMode.stop()",
+  "module": "Garage mode: loads the garage_v2 level (or uses the current location in career), freezes the vehicle at its spawn point, switches the camera to orbit, blocks certain input actions (map, vehicle menus, AI, walking, reset...), automatically hides ceiling and pillars depending on the camera position, manages lighting by groups and allows testing the vehicle in the gridmap_v2 level. A modder uses it to enter/exit the garage (start/stop) or adjust camera and lighting.",
+  "usage": "extensions.load('gameplay_garageMode')\ngameplay_garageMode.start(false)   -- loads garage_v2 with the current vehicle\ngameplay_garageMode.setCamera('front')\ngameplay_garageMode.setLighting({true, false, true}) -- west, middle, east\ngameplay_garageMode.stop()",
   "notes": [
-    "Préréglages de caméra de setCamera : default, front, back, side, left, right, top. Un nom inconnu donne nil à setDefaultRotation.",
-    "Groupes de scène masqués : hide_from_camera (plafond, si la caméra est au-dessus de z = 108.1), hide_from_camera_pillars_west / _east (selon x de la caméra) ; groupes d'éclairage lights_group_west, _middle, _east.",
-    "Le véhicule est gelé (setFreeze) 5 frames après son apparition, car le vlua peut être réinitialisé avant.",
-    "onUpdate n'est enregistré que pendant que le mode est actif (setActive appelle extensions.hookUpdate).",
-    "En carrière, les textes de chargement/sauvegarde passent par career_saveSystem.saveCurrent puis la chaîne d'étapes garageInitModules (gameplay_garageMode, career_modules_inventory) via initStepFinished.",
-    "Incohérence : la variable locale vehicleToLoad n'est jamais assignée ; le code de onClientStartMission (replaceVehicle) est donc inutilisé.",
-    "Émet le hook extensions.hook('onEndGarageMode') à la fin du mode."
+    "Camera presets of setCamera: default, front, back, side, left, right, top. An unknown name gives nil to setDefaultRotation.",
+    "Hidden scene groups: hide_from_camera (ceiling, if the camera is above z = 108.1), hide_from_camera_pillars_west / _east (depending on the camera's x); lighting groups lights_group_west, _middle, _east.",
+    "The vehicle is frozen (setFreeze) 5 frames after spawning, because the vlua can be reinitialized before.",
+    "onUpdate is only registered while the mode is active (setActive calls extensions.hookUpdate).",
+    "In career, loading/saving texts go through career_saveSystem.saveCurrent then the garageInitModules step chain (gameplay_garageMode, career_modules_inventory) via initStepFinished.",
+    "Inconsistency: the local variable vehicleToLoad is never assigned; the onClientStartMission code (replaceVehicle) is therefore unused.",
+    "Emits the hook extensions.hook('onEndGarageMode') at the end of the mode."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "core_jobsystem et core_vehicle_manager."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "core_jobsystem and core_vehicle_manager."
+    }
   },
   "functions": {
     "start": {
-      "desc": "Entre en mode garage. Avec useCurrentLocation vrai, reste sur la carte actuelle (carrière : vérifie qu'il y a des véhicules en inventaire, appelle career_modules_inventory.onBeforeGarage, passe en caméra orbite, met l'allumage à 0) ; sinon charge le niveau garage_v2 avec le véhicule courant.",
+      "desc": "Enters garage mode. With useCurrentLocation true, stays on the current map (career: checks that there are vehicles in the inventory, calls career_modules_inventory.onBeforeGarage, switches to orbit camera, sets ignition to 0); otherwise loads the garage_v2 level with the current vehicle.",
       "params": {
-        "_useCurrentLocation": {"type": "boolean|nil", "desc": "true pour utiliser l'emplacement actuel au lieu de charger garage_v2."},
-        "skipInventoryStep": {"type": "boolean|nil", "desc": "En carrière, saute l'appel à career_modules_inventory.onBeforeGarage."}
+        "_useCurrentLocation": {
+          "type": "boolean|nil",
+          "desc": "true to use the current location instead of loading garage_v2."
+        },
+        "skipInventoryStep": {
+          "type": "boolean|nil",
+          "desc": "In career, skips the call to career_modules_inventory.onBeforeGarage."
+        }
       },
       "internal": false
     },
     "stop": {
-      "desc": "Quitte le mode garage : remet l'allumage au niveau 3, dégèle le véhicule, restaure la caméra et l'état freeroam, puis émet onEndGarageMode.",
+      "desc": "Exits garage mode: sets ignition back to level 3, unfreezes the vehicle, restores the camera and the freeroam state, then emits onEndGarageMode.",
       "internal": false
     },
     "isActive": {
-      "desc": "Indique si le mode garage est actif.",
-      "returns": [{"type": "boolean", "desc": "true si actif."}],
+      "desc": "Returns whether garage mode is active.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ],
       "internal": false
     },
     "zoom": {
-      "desc": "Zoome la caméra de façon progressive (accélération limitée) ; sans effet hors mode garage. Le zoom s'arrête de lui-même après un court délai.",
-      "params": {"value": {"type": "number", "desc": "Sens et intensité (positif ou négatif) ; 0 ne fait rien."}},
+      "desc": "Zooms the camera progressively (limited acceleration); no effect outside garage mode. The zoom stops by itself after a short delay.",
+      "params": {
+        "value": {
+          "type": "number",
+          "desc": "Direction and intensity (positive or negative); 0 does nothing."
+        }
+      },
       "internal": false
     },
     "setCamera": {
-      "desc": "Lance un job qui passe en caméra orbite et applique une rotation par défaut prédéfinie.",
-      "params": {"preset": {"type": "string|nil", "desc": "default, front, back, side, left, right ou top (default si nil)."}},
+      "desc": "Starts a job that switches to orbit camera and applies a predefined default rotation.",
+      "params": {
+        "preset": {
+          "type": "string|nil",
+          "desc": "default, front, back, side, left, right or top (default if nil)."
+        }
+      },
       "internal": false
     },
     "setObjectsAutohide": {
-      "desc": "Active ou désactive le masquage automatique du plafond et des piliers.",
-      "params": {"v": {"type": "boolean", "desc": "true pour masquer automatiquement."}},
+      "desc": "Enables or disables the automatic hiding of the ceiling and pillars.",
+      "params": {
+        "v": {
+          "type": "boolean",
+          "desc": "true to hide automatically."
+        }
+      },
       "internal": false
     },
     "isObjectsAutohide": {
-      "desc": "Indique si le masquage automatique est actif.",
-      "returns": [{"type": "boolean", "desc": "État courant."}],
+      "desc": "Returns whether automatic hiding is active.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Current state."
+        }
+      ],
       "internal": false
     },
     "testVehicle": {
-      "desc": "Lance un job qui fait sortir le véhicule du garage (ai vers le waypoint garageExit), fond au noir puis charge gridmap_v2 en freeroam avec le véhicule courant.",
+      "desc": "Starts a job that makes the vehicle leave the garage (ai to the garageExit waypoint), fades to black then loads gridmap_v2 in freeroam with the current vehicle.",
       "internal": false
     },
     "setLighting": {
-      "desc": "Allume/éteint les trois groupes d'éclairage du garage (ouest, milieu, est).",
-      "params": {"state": {"type": "boolean[]|nil", "desc": "Tableau de 3 booléens ; nil rallume tout."}},
+      "desc": "Turns the garage's three lighting groups on/off (west, middle, east).",
+      "params": {
+        "state": {
+          "type": "boolean[]|nil",
+          "desc": "Array of 3 booleans; nil turns everything back on."
+        }
+      },
       "internal": false
     },
     "getLighting": {
-      "desc": "Renvoie l'état des trois groupes d'éclairage.",
-      "returns": [{"type": "boolean[]", "desc": "{ouest, milieu, est}."}],
+      "desc": "Returns the state of the three lighting groups.",
+      "returns": [
+        {
+          "type": "boolean[]",
+          "desc": "{west, middle, east}."
+        }
+      ],
       "internal": false
     },
     "setGarageMenuState": {
-      "desc": "Mémorise le menu de garage ouvert ; l'état \"paint\" marque le véhicule comme modifié.",
-      "params": {"state": {"type": "string|nil", "desc": "Nom du menu."}},
+      "desc": "Stores the open garage menu; the \"paint\" state marks the vehicle as modified.",
+      "params": {
+        "state": {
+          "type": "string|nil",
+          "desc": "Menu name."
+        }
+      },
       "internal": false
     },
     "getGarageMenuState": {
-      "desc": "Renvoie le menu de garage mémorisé.",
-      "returns": [{"type": "string|nil", "desc": "Nom du menu."}],
+      "desc": "Returns the stored garage menu.",
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Menu name."
+        }
+      ],
       "internal": false
     },
     "setVehicleDirty": {
-      "desc": "Prévu pour signaler un véhicule modifié en carrière ; le déclenchement du guihook est actuellement commenté, la fonction ne fait donc rien d'observable.",
+      "desc": "Intended to signal a modified vehicle in career; the guihook trigger is currently commented out, so the function does nothing observable.",
       "params": {
-        "vehicleDirty": {"type": "boolean", "desc": "État modifié."},
-        "switchedToNewVehicle": {"type": "boolean|nil", "desc": "Changement de véhicule."}
+        "vehicleDirty": {
+          "type": "boolean",
+          "desc": "Modified state."
+        },
+        "switchedToNewVehicle": {
+          "type": "boolean|nil",
+          "desc": "Vehicle change."
+        }
       },
       "internal": false
     },
     "getLastOwnedVehicleId": {
-      "desc": "ID du dernier véhicule possédé entré ou courant en carrière.",
-      "returns": [{"type": "integer|nil", "desc": "ID de véhicule."}],
+      "desc": "ID of the last owned vehicle entered, or the current one in career.",
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Vehicle ID."
+        }
+      ],
       "internal": false
     },
     "vehicleByIdOrActive": {
-      "desc": "Renvoie « Marque Nom » du modèle donné, ou du véhicule actif si aucun n'est fourni.",
-      "params": {"vehicleId": {"type": "string|nil", "desc": "Clé de modèle (nom du dossier jbeam), malgré son nom."}},
-      "returns": [{"type": "string|nil", "desc": "Texte « Brand Name » ou nil."}],
+      "desc": "Returns \"Brand Name\" of the given model, or of the active vehicle if none is provided.",
+      "params": {
+        "vehicleId": {
+          "type": "string|nil",
+          "desc": "Model key (jbeam folder name), despite its name."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "\"Brand Name\" text or nil."
+        }
+      ],
       "internal": false
     },
     "garageModeStartStep": {
-      "desc": "Étape d'initialisation en chaîne : lance career_saveSystem.saveCurrent() ; la fin de la sauvegarde appelle initStepFinished.",
+      "desc": "Chained initialization step: launches career_saveSystem.saveCurrent(); the end of the save calls initStepFinished.",
       "internal": true
     },
     "initStepFinished": {
-      "desc": "Passe à l'étape d'initialisation suivante (extension suivante de garageInitModules) ou termine la chaîne.",
+      "desc": "Moves to the next initialization step (next extension of garageInitModules) or ends the chain.",
       "internal": true
     },
     "onGarageEnter": {
-      "desc": "Hook de navigation UI : remplit data.layoutMenu (barre du haut avec onglets Garage/Tuning, en-tête, rails) et data.garage pour la route garage.",
+      "desc": "UI navigation hook: fills data.layoutMenu (top bar with Garage/Tuning tabs, header, rails) and data.garage for the garage route.",
       "params": {
-        "context": {"type": "table|nil", "desc": "Contexte de navigation."},
-        "toRoute": {"type": "table|nil", "desc": "Route de destination (champ name)."},
-        "fromRoute": {"type": "table|nil", "desc": "Route d'origine (non utilisée)."},
-        "data": {"type": "table", "desc": "Table de données de route, modifiée en place."}
+        "context": {
+          "type": "table|nil",
+          "desc": "Navigation context."
+        },
+        "toRoute": {
+          "type": "table|nil",
+          "desc": "Destination route (field name)."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Origin route (unused)."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Route data table, modified in place."
+        }
       },
       "internal": true
     },
     "onVehicleSpawned": {
-      "desc": "Hook appelé à l'apparition d'un véhicule ; en mode garage, le téléporte sur le point de spawn du niveau garage et programme le gel.",
-      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "desc": "Hook called when a vehicle spawns; in garage mode, teleports it to the garage level's spawn point and schedules the freeze.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle ID."
+        }
+      },
       "internal": true
     },
     "onSpawnCCallback": {
-      "desc": "Hook de spawn : demande que le véhicule apparaisse moteur éteint (spawnWithEngineRunning = false).",
-      "params": {"vehicleId": {"type": "integer", "desc": "ID du véhicule."}},
+      "desc": "Spawn hook: requests that the vehicle spawns with the engine off (spawnWithEngineRunning = false).",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "Vehicle ID."
+        }
+      },
       "internal": true
     },
     "onEnterVehicleFinished": {
-      "desc": "Hook : mémorise le véhicule entré comme dernier véhicule possédé.",
-      "params": {"vehicleId": {"type": "integer|nil", "desc": "ID du véhicule."}},
+      "desc": "Hook: stores the entered vehicle as the last owned vehicle.",
+      "params": {
+        "vehicleId": {
+          "type": "integer|nil",
+          "desc": "Vehicle ID."
+        }
+      },
       "internal": true
     },
     "onVehicleSaveFinished": {
-      "desc": "Hook : si l'initialisation du garage attend la sauvegarde, passe à l'étape suivante.",
+      "desc": "Hook: if the garage initialization is waiting for the save, moves to the next step.",
       "internal": true
     },
     "onClientPreStartMission": {
-      "desc": "Hook avant le démarrage d'un niveau : active le mode garage si demandé au chargement (décharge/recharge les extensions), sinon termine le mode garage s'il était actif.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook before a level starts: activates garage mode if requested at load (unloads/reloads extensions), otherwise ends garage mode if it was active.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook au démarrage d'un niveau : remplace le véhicule par vehicleToLoad s'il existe (jamais assigné dans ce fichier).",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook at level start: replaces the vehicle with vehicleToLoad if it exists (never assigned in this file).",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onThumbnailTriggered": {
-      "desc": "Hook de prise de vignette : dans garage_v2, quitte le mode garage et masque piliers est (affiche ouest/plafond) pendant la capture, puis réactive le mode ; affiche/retire l'écran noir GarageModeBlackscreen.",
-      "params": {"active": {"type": "boolean", "desc": "true au début de la capture, false à la fin."}},
+      "desc": "Thumbnail capture hook: in garage_v2, exits garage mode and hides the east pillars (shows west/ceiling) during the capture, then re-enables the mode; shows/removes the GarageModeBlackscreen black screen.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "true at the start of the capture, false at the end."
+        }
+      },
       "internal": true
     },
     "onLoadingScreenFadeout": {
-      "desc": "Hook à la fin de l'écran de chargement : après testVehicle, navigue vers la route UI \"play\".",
+      "desc": "Hook at the end of the loading screen: after testVehicle, navigates to the UI route \"play\".",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de rechargement des extensions : sauvegarde {active}.",
-      "returns": [{"type": "table", "desc": "{active = boolean}."}],
+      "desc": "Extension reload hook: saves {active}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{active = boolean}."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook de rechargement des extensions : restaure l'état actif.",
-      "params": {"v": {"type": "table", "desc": "Données de onSerialize."}},
+      "desc": "Extension reload hook: restores the active state.",
+      "params": {
+        "v": {
+          "type": "table",
+          "desc": "Data from onSerialize."
+        }
+      },
       "internal": true
     }
   }

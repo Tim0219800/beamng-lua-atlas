@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/vehicleMapData.lua",
+  "module": "Nœud « Get Vehicle Data » (catégorie `repeat_instant`). Fournit position, directions, rotation, vitesse, activité et dommages depuis `map.objects[vehId]`. Sorties : `position`, `dirVec`, `dirVecUp`, `rotation`, `velocity` (m/s), `velocityVector`, `active`, `damage`, `newAPIDamage` (`getSectionDamageSum`). Les sorties non branchées ne sont pas calculées (`isUsed`). Pin d'entrée : `vehId` (défaut 0, sinon joueur).",
+  "notes": [
+    "Si `vehId` désigne un objet inexistant, `vehId` reste à -1 et rien n'est écrit.",
+    "Le test `if not vehId` est inutile car `vehId` est toujours défini."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur vide.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Lit `map.objects[vehId]` et remplit les sorties branchées.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/tools/devTools.lua",
+  "module": "Panneau imgui d'outils de développement pour le rallye, destiné à l'éditeur de rallye. Il regroupe quatre sections : « Voicepack Tools » (génération d'un squelette de voicepack et export du script d'enregistrement en HTML ou TXT à partir des compositeurs de texte), « Pacenotes Tools » (détection de virages à partir de la driveline, génération de pacenotes, profil d'élévation avec export JSON), « Traffic » (zones d'exclusion de trafic, missions rallyLoop) et « Game Settings » (affiche rallyCodriverVoicepackMRU). Le module renvoie un constructeur. Les fichiers générés vont dans /temp/rally/.",
+  "notes": [
+    "loadCompositors parcourt compositors/styles/*.lua, ne garde que les modules qui ressemblent à un compositeur (tables distance, componentTypes, system et fonctions composite, enumerate) et que TextCompositor peut charger ; ils sont regroupés par dossier de style.",
+    "Fichiers produits : /temp/rally/voicepack_<style>/ (info.json, métadonnées et dossier audio vide), /temp/rally/beamng-voicepack-script_<empreinte>.html ou .txt, /temp/rally/elevation_profile_<horodatage>.json ; le dossier est ouvert dans l'explorateur (Engine.Platform.exploreFolder).",
+    "generateVoicepackSkeleton supprime d'abord le dossier de sortie s'il existe déjà (FS:remove puis FS:directoryRemove).",
+    "calculateCorners dépend de editor_rallyEditor (chemin courant, fenêtre des pacenotes, snaproad) : il faut que l'éditeur de rallye soit ouvert.",
+    "Les paramètres de détection de virages (lookAheadContext, straightThreshold, mergeDistanceThreshold, maxSimplifyIterations) sont des pointeurs imgui initialisés avec PacenoteGenerator.defaultParams.",
+    "Dans drawDrivelinePoints, la direction d'une section est comparée aux chaînes \" left\" et \" right\" avec une espace initiale (telles qu'écrites dans le code) ; une valeur sans espace serait dessinée en gris.",
+    "onUpdate ne dessine les points d'élévation et de driveline que si pacenotesTools.sectionExpanded est vrai (champ absent de init, fixé par draw)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet d'outils de développement renvoyé par le constructeur.",
+      "functions": {
+        "init": {
+          "desc": "Charge les compositeurs et initialise l'état des sections Pacenotes Tools (profil d'élévation, points de driveline, paramètres) et Traffic (rayon de zone 10, liste de missions rallyLoop).",
+          "internal": true
+        },
+        "loadCompositors": {
+          "desc": "Recense les styles de compositeurs de texte valides, les trie, les regroupe et prépare les cases cochées et le style sélectionné pour le squelette (le premier par défaut).",
+          "internal": false
+        },
+        "voicepackSkeletonOutDir": {
+          "desc": "Dossier de sortie du squelette de voicepack : /temp/rally/voicepack_<style avec '/' remplacés par '_'>.",
+          "returns": [{"type": "string", "desc": "Chemin, ou chaîne vide si aucun style n'est sélectionné"}]
+        },
+        "generateVoicepackSkeleton": {
+          "desc": "Crée un squelette de voicepack pour le compositeur sélectionné : info.json (persona, language et dialect vides, style et styleLabel), fichier de métadonnées vide et sous-dossier audio. Ouvre ensuite le dossier."
+        },
+        "selectedCompositors": {
+          "desc": "Liste des compositeurs cochés dans l'interface.",
+          "returns": [{"type": "string[]", "desc": "Noms de styles"}]
+        },
+        "recordingCoverageEntries": {
+          "desc": "Fusionne les entrées de script de tous les compositeurs cochés (enumerateScriptEntries), indexées par nom de fichier audio, avec la liste des styles et des contextes ; trie le résultat et numérote chaque entrée (order).",
+          "returns": [
+            {"type": "table[]", "desc": "Entrées triées"},
+            {"type": "string[]", "desc": "Styles sélectionnés"}
+          ]
+        },
+        "enumerate": {
+          "desc": "Raccourci qui appelle exportScriptReaderHtml."
+        },
+        "exportScriptReaderHtml": {
+          "desc": "Exporte le script d'enregistrement du copilote en page HTML (/temp/rally/beamng-voicepack-script_<empreinte>.html) pour les styles cochés."
+        },
+        "exportScriptReaderTxt": {
+          "desc": "Exporte le même script en fichier texte (/temp/rally/beamng-voicepack-script_<empreinte>.txt)."
+        },
+        "storeElevationProfile": {
+          "desc": "Mémorise un profil d'élévation et calcule un résumé (nombre de points, altitudes min et max, dénivelé, distance 2D, distances de début et fin, nombre de splits et de pathnodes de course).",
+          "params": {"elevationProfile": {"type": "table[]|nil", "desc": "Points {x, y, z, distFromStart, splitLabel, isRacePathnode}"}}
+        },
+        "exportElevationProfileToJson": {
+          "desc": "Écrit le profil d'élévation mémorisé et son résumé dans /temp/rally/elevation_profile_<horodatage>.json."
+        },
+        "drawElevationProfilePoints": {
+          "desc": "Dessine le profil d'élévation en sphères (vert pour les points normaux, rouge pour les pathnodes de course) si l'option est activée."
+        },
+        "drawGameSettings": {
+          "desc": "Affiche en imgui la valeur du réglage rallyCodriverVoicepackMRU."
+        },
+        "calculateCorners": {
+          "desc": "Détecte les virages sur les points de la driveline du snaproad de l'éditeur avec PacenoteGenerator.detectCorners et les paramètres de l'interface, puis mémorise les points et le résultat."
+        },
+        "storeCornerDetection": {
+          "desc": "Mémorise les sections et virages détectés et loggue leur nombre.",
+          "params": {"detection": {"type": "table|nil", "desc": "{sections, corners}"}}
+        },
+        "storeDrivelinePoints": {
+          "desc": "Copie les positions des points de la driveline et active leur affichage.",
+          "params": {"points": {"type": "table[]|nil", "desc": "Points avec champ pos"}}
+        },
+        "resetCornerDetectionParams": {
+          "desc": "Remet les paramètres de détection aux valeurs de PacenoteGenerator.defaultParams."
+        },
+        "drawDrivelinePoints": {
+          "desc": "Dessine les sections détectées (bleu pour gauche, rouge pour droite, gris pour droit) avec une sphère au début de chaque virage, ou à défaut la driveline brute en gris foncé."
+        },
+        "clearDrivelinePoints": {
+          "desc": "Efface les points de driveline, sections et virages mémorisés et masque leur affichage."
+        },
+        "drawTrafficZones": {
+          "desc": "Dessine les zones d'exclusion de trafic (sphère du rayon de la zone et petite sphère centrale) si activées."
+        },
+        "refreshRallyLoopMissions": {
+          "desc": "Recharge la liste des missions rallyLoop du niveau courant (précédée de « <none> ») et remet la sélection à zéro."
+        },
+        "getSelectedRallyLoopId": {
+          "desc": "Identifiant de la mission rallyLoop sélectionnée, extrait de l'entrée « Nom (id) » de la liste.",
+          "returns": [{"type": "string|nil", "desc": "Id de mission, nil si « <none> »"}]
+        },
+        "onUpdate": {
+          "desc": "Appelé à chaque frame par l'éditeur : dessine les points d'élévation et de driveline (si la section Pacenotes Tools est dépliée) et les zones de trafic.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine l'interface imgui complète des quatre sections (Voicepack Tools, Pacenotes Tools, Traffic, Game Settings).",
+          "internal": true
+        },
+        "onVehicleResetted": {
+          "desc": "Hook appelé quand le véhicule est remis en place ; corps vide (code commenté).",
+          "internal": true
+        },
+        "isPacenotesToolsSectionExpanded": {
+          "desc": "Indique si la section « Pacenotes Tools » est dépliée.",
+          "returns": [{"type": "boolean", "desc": "true si dépliée"}]
+        }
+      }
+    }
+  }
+}

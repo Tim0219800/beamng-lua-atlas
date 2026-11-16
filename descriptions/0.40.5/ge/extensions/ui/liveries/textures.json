@@ -1,46 +1,85 @@
 {
   "path": "lua/ge/extensions/ui/liveries/textures.lua",
-  "module": "Fournit à l'interface des livrées le catalogue des textures de décalcomanies dynamiques, classées par tags (digit, gradient, letter, logo, noise, pattern, shape, textureFill, Team Offroad) plus une catégorie « others » pour les textures sans tag. Le scan des textures tourne dans un job (editor_api_dynamicDecals_textures.setupAsync) avec un flux de progression, et les résultats sont envoyés à l'UI par guihooks. Mémorise aussi l'élément choisi dans le sélecteur.",
+  "module": "Provides the livery UI with the catalog of dynamic decal textures, classified by tags (digit, gradient, letter, logo, noise, pattern, shape, textureFill, Team Offroad) plus an \"others\" category for untagged textures. The texture scan runs in a job (editor_api_dynamicDecals_textures.setupAsync) with a progress stream, and the results are sent to the UI via guihooks. Also stores the item chosen in the selector.",
   "notes": [
-    "Événements guihooks émis : liveries_textureSelectorDataLoaded (métadonnées, fin du scan), liveries_textureCategoryData ({requestId, category, groups}), flux liveries_textureLoadProgress ({count, total, percent, inProgress}).",
-    "percent vaut -1 tant que le nombre total de fichiers est inconnu (progression indéterminée).",
-    "Une texture portant plusieurs tags apparaît dans chacun de leurs groupes (voulu, d'après le commentaire du code).",
-    "Si l'API editor_api_dynamicDecals_textures est absente, loadTextures renvoie « unavailable »."
+    "guihooks events emitted: liveries_textureSelectorDataLoaded (metadata, end of scan), liveries_textureCategoryData ({requestId, category, groups}), stream liveries_textureLoadProgress ({count, total, percent, inProgress}).",
+    "percent is -1 while the total number of files is unknown (indeterminate progress).",
+    "A texture with several tags appears in each of their groups (intended, according to the code comment).",
+    "If the editor_api_dynamicDecals_textures API is missing, loadTextures returns \"unavailable\"."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : editor_api_dynamicDecals_textures."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: editor_api_dynamicDecals_textures."
+    }
   },
   "functions": {
     "getTagLabel": {
-      "desc": "Renvoie la clé de traduction (ui.liveries.edit.decalCategories.*) associée à un tag de texture.",
-      "params": {"tag": {"type": "string", "desc": "Identifiant de tag, par exemple « logo »."}},
-      "returns": [{"type": "string|nil", "desc": "Clé de traduction, nil si le tag est inconnu."}]
+      "desc": "Returns the translation key (ui.liveries.edit.decalCategories.*) associated with a texture tag.",
+      "params": {
+        "tag": {
+          "type": "string",
+          "desc": "Tag identifier, for example \"logo\"."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Translation key, nil if the tag is unknown."
+        }
+      ]
     },
     "loadTextures": {
-      "desc": "Lance dans un job (cadence 1/30) le scan asynchrone des textures si elles ne sont pas déjà chargées, publie la progression, puis déclenche liveries_textureSelectorDataLoaded avec getSelectorMetadata().",
-      "returns": [{"type": "string", "desc": "« startLoading », « alreadyLoading » (job en cours, la progression est renvoyée) ou « unavailable » (API absente)."}]
+      "desc": "Launches in a job (rate 1/30) the asynchronous texture scan if they are not already loaded, publishes the progress, then triggers liveries_textureSelectorDataLoaded with getSelectorMetadata().",
+      "returns": [
+        {
+          "type": "string",
+          "desc": "\"startLoading\", \"alreadyLoading\" (job running, progress is returned) or \"unavailable\" (API missing)."
+        }
+      ]
     },
     "getSelectorMetadata": {
-      "desc": "Construit les métadonnées du sélecteur : catégorie par défaut « all », puis liste triée des catégories (tags connus, « others » s'il existe des textures sans tag), « all » en tête.",
-      "returns": [{"type": "table", "desc": "{defaultCategory = \"all\", categories = {{value, label}, ...}}."}]
+      "desc": "Builds the selector metadata: default category \"all\", then sorted list of categories (known tags, \"others\" if untagged textures exist), \"all\" first.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{defaultCategory = \"all\", categories = {{value, label}, ...}}."
+        }
+      ]
     },
     "requestSelectorCategory": {
-      "desc": "Prépare les groupes de textures d'une catégorie (« all » : tous les tags plus « others » ; « others » : textures sans tag ; ou un tag précis) et les envoie à l'UI par l'événement liveries_textureCategoryData. Chaque élément a name, label, value (nom de fichier) et preview (chemin).",
+      "desc": "Prepares the texture groups of a category (\"all\": all tags plus \"others\"; \"others\": untagged textures; or a specific tag) and sends them to the UI via the liveries_textureCategoryData event. Each item has name, label, value (file name) and preview (path).",
       "params": {
-        "category": {"type": "string", "desc": "Catégorie demandée ; une valeur non string est remplacée par « all »."},
-        "requestId": {"type": "number", "desc": "Identifiant renvoyé tel quel dans l'événement (0 par défaut)."}
+        "category": {
+          "type": "string",
+          "desc": "Requested category; a non-string value is replaced by \"all\"."
+        },
+        "requestId": {
+          "type": "number",
+          "desc": "Identifier returned as is in the event (0 by default)."
+        }
       }
     },
     "setSelectorItem": {
-      "desc": "Mémorise l'élément de catalogue choisi, conservé pendant la navigation vers l'écran de transformation.",
-      "params": {"item": {"type": "table|nil", "desc": "Élément choisi."}}
+      "desc": "Stores the chosen catalog item, kept while navigating to the transform screen.",
+      "params": {
+        "item": {
+          "type": "table|nil",
+          "desc": "Chosen item."
+        }
+      }
     },
     "getSelectedItem": {
-      "desc": "Renvoie l'élément mémorisé par setSelectorItem.",
-      "returns": [{"type": "table|nil", "desc": "Élément choisi ou nil."}]
+      "desc": "Returns the item stored by setSelectorItem.",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Chosen item or nil."
+        }
+      ]
     },
     "clearSelectedItem": {
-      "desc": "Oublie l'élément choisi."
+      "desc": "Forgets the chosen item."
     }
   }
 }

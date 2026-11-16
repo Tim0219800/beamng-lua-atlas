@@ -1,29 +1,44 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/subtools/fence/anchors.lua",
-  "module": "Découverte automatique d'une clôture dans l'outil Easy Object Select. À partir d'un TSStatic de départ (dont le mesh figure dans la liste d'assets autorisés), il cherche les TSStatic voisins dont les ancres (milieux des petits côtés de la boîte, via objectBoxAnchors) se correspondent mutuellement à moins de options.distance, construit le graphe de connexion, ordonne les pièces, détecte une boucle et calcule les points de jonction de la spline. draw() trace ces jonctions avec debugDrawer.",
+  "module": "Automatic fence discovery in the Easy Object Select tool. From a starting TSStatic (whose mesh is in the list of allowed assets), it looks for neighboring TSStatics whose anchors (midpoints of the short sides of the box, via objectBoxAnchors) mutually match within options.distance, builds the connection graph, orders the pieces, detects a loop and computes the spline junction points. draw() draws these junctions with debugDrawer.",
   "notes": [
-    "Seuls les TSStatic non « global bounds » dont shapeName (normalisé : minuscules, / , sans / initial) est dans assetPaths sont éligibles.",
-    "La correspondance doit être mutuelle : l'ancre la plus proche de A doit avoir A pour ancre la plus proche.",
-    "La découverte est plafonnée à options.maximumPieces (2048 par défaut) ; result.capped vaut alors true.",
-    "Une boucle est détectée quand il y a plus de 2 pièces et que la première et la dernière ont chacune 2 voisins."
+    "Only non-\"global bounds\" TSStatics whose shapeName (normalized: lowercase, /, no leading /) is in assetPaths are eligible.",
+    "The match must be mutual: A's nearest anchor must have A as its nearest anchor.",
+    "Discovery is capped at options.maximumPieces (2048 by default); result.capped is then true.",
+    "A loop is detected when there are more than 2 pieces and the first and the last each have 2 neighbors."
   ],
   "functions": {
     "discover": {
-      "desc": "Parcourt en largeur les pièces de clôture connectées au seed. Renvoie nil et un message si l'objet de départ n'est pas une pièce éligible.",
+      "desc": "Does a breadth-first walk over the fence pieces connected to the seed. Returns nil and a message if the starting object is not an eligible piece.",
       "params": {
-        "seedObjectId": {"type": "integer", "desc": "ID de l'objet TSStatic de départ."},
-        "options": {"type": "table|nil", "desc": "assetPaths (string[], mesh autorisés), distance (m, défaut 0.5, min 0.001), maximumPieces (défaut 2048)."}
+        "seedObjectId": {
+          "type": "integer",
+          "desc": "ID of the starting TSStatic object."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "assetPaths (string[], allowed meshes), distance (m, default 0.5, min 0.001), maximumPieces (default 2048)."
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "{ids (ordonnés), graph, descriptors, joints (vec3[]), isLoop, capped}."},
-        {"type": "string|nil", "desc": "Message d'erreur si nil."}
+        {
+          "type": "table|nil",
+          "desc": "{ids (ordered), graph, descriptors, joints (vec3[]), isLoop, capped}."
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error message if nil."
+        }
       ],
       "internal": false
     },
     "draw": {
-      "desc": "Dessine avec debugDrawer:drawLine la polyligne des jonctions (et le segment de fermeture si boucle) du résultat de discover.",
+      "desc": "Draws with debugDrawer:drawLine the polyline of the junctions (and the closing segment if loop) from the discover result.",
       "params": {
-        "result": {"type": "table|nil", "desc": "Résultat de discover ; ne fait rien si nil."}
+        "result": {
+          "type": "table|nil",
+          "desc": "Result of discover; does nothing if nil."
+        }
       },
       "internal": false
     }

@@ -1,24 +1,24 @@
 # `flowgraph_nodes_activity_starsActive`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/starsActive.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/starsActive.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/starsActive")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/starsActive")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Stars Active » (catégorie repeat_instant, tags activity/mission). Chaque pin de sortie flow personnalisé (le nom du pin = clé d'étoile) laisse passer le flux si l'étoile correspondante est active pour les réglages utilisateur actuels de la mission (gameplay_missions_missionScreen.getActiveStarsForUserSettings). La liste est calculée une seule fois (coûteuse) puis mise en cache jusqu'au prochain démarrage du graphe. Sans flux d'entrée, tous les pins sont à faux.
+Flowgraph node "Stars Active" (category repeat_instant, tags activity/mission). Each custom flow output pin (pin name = star key) lets the flow through if the corresponding star is active for the mission's current user settings (gameplay_missions_missionScreen.getActiveStarsForUserSettings). The list is computed only once (expensive) then cached until the next graph start. Without input flow, all pins are false.
 
-## Remarques
+## Notes
 
-- Sans activité associée, ne fait rien. Une clé absente de starInfo donne false (self.activeStars[pin.name] testé avant).
+- Without an associated activity, does nothing. A key absent from starInfo gives false (self.activeStars[pin.name] tested beforehand).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Efface le cache des étoiles actives. | 28 |
-| `C:init()` | Active savePins et allowCustomOutPins. | 23 |
-| `C:work()` | Calcule (une fois) starInfo puis met chaque pin de sortie flow à enabled de l'étoile correspondante. | 33 |
+| `C:_executionStarted()` | Clears the cache of active stars. | 28 |
+| `C:init()` | Enables savePins and allowCustomOutPins. | 23 |
+| `C:work()` | Computes (once) starInfo then sets each flow output pin to the enabled value of the corresponding star. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/starsActive.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/starsActive.lua`.*

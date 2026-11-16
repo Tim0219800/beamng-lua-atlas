@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraUpdate.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Boucle de mise à jour de la caméra à chaque image, séparée de core/camera.lua. Elle traite la vue principale du joueur puis les contextes de rendu supplémentaires (écran partagé, flux vidéo) : remplit camData (position, vitesse, dt, véhicule suivi), appelle le mode de caméra sélectionné (caméra globale ou caméra du véhicule), puis les caméras « en cours d'exécution » (filtres), et copie le résultat dans finalCameraData. core_camera injecte son état via setup() et expose onPreRender / onClientPostStartMission comme ses propres callbacks ; un moddeur n'appelle normalement rien ici.
---- Accès : extension `core_cameraUpdate` : `extensions.load("core_cameraUpdate")`, puis la globale `core_cameraUpdate`
+--- Per-frame camera update loop, separate from core/camera.lua. It processes the player's main view then the extra render contexts (split screen, video streams): fills camData (position, velocity, dt, tracked vehicle), calls the selected camera mode (global camera or vehicle camera), then the "running" cameras (filters), and copies the result into finalCameraData. core_camera injects its state via setup() and exposes onPreRender / onClientPostStartMission as its own callbacks; a modder does not normally call anything here.
+--- Access: extension `core_cameraUpdate`: `extensions.load("core_cameraUpdate")`, then the global `core_cameraUpdate`
 ---@class core_cameraUpdate
 core_cameraUpdate = {}
 
---- Hook appelé après le démarrage d'un niveau : oublie le nearClip du niveau et l'état intérieur/extérieur de la caméra pour que le rayon SSAO soit réappliqué.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraUpdate.lua:79
+--- Hook called after a level starts: forgets the level's nearClip and the camera's inside/outside state so that the SSAO radius is reapplied.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraUpdate.lua:79
 function core_cameraUpdate.onClientPostStartMission() end
 
---- Appelé à chaque image avant le rendu (via core_camera) : met à jour la vue principale puis chaque contexte supplémentaire. Ne fait rien tant que levelLoaded est faux.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraUpdate.lua:308
----@param dtReal number dt de rendu lissé, en secondes
----@param dtSim number dt de simulation lissé (tient compte du ralenti/pause), en secondes
----@param dtRaw number dt de rendu brut, horloge réelle, en secondes
+--- Called every frame before rendering (via core_camera): updates the main view then each extra context. Does nothing while levelLoaded is false.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraUpdate.lua:308
+---@param dtReal number smoothed render dt, in seconds
+---@param dtSim number smoothed simulation dt (accounts for slow motion/pause), in seconds
+---@param dtRaw number raw render dt, real clock, in seconds
 function core_cameraUpdate.onPreRender(dtReal, dtSim, dtRaw) end
 
---- Reçoit de core/camera.lua ses tables d'état et ses fonctions utilitaires (extraContexts, mainContext, moveManager, getGlobalCameras, getVehicleData, getRunningCamsOrder, setGlobalCameraByName, set, vehicleChanged, isInsideBasedOnCameras, isUnicycle, cameraM). Appelé une fois par core_camera.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraUpdate.lua:22
----@param deps table Table des dépendances injectées par core_camera, clés citées ci-dessus.
+--- Receives from core/camera.lua its state tables and utility functions (extraContexts, mainContext, moveManager, getGlobalCameras, getVehicleData, getRunningCamsOrder, setGlobalCameraByName, set, vehicleChanged, isInsideBasedOnCameras, isUnicycle, cameraM). Called once by core_camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraUpdate.lua:22
+---@param deps table Table of dependencies injected by core_camera, keys listed above.
 function core_cameraUpdate.setup(deps) end
 

@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/removeStashedPlayerVehicle.lua",
-  "module": "Noeud flowgraph 'Remove Stashed Player Vehicle' (categorie once_p_duration). Supprime le vehicule joueur mis de cote par le noeud de nettoyage de mission (module mission du gestionnaire). Aucun pin.",
+  "module": "Flowgraph node 'Remove Stashed Player Vehicle' (once_p_duration category). Deletes the player vehicle stashed by the mission cleanup node (manager's mission module). No pins.",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "workOnce": {
-          "desc": "Appelle self.mgr.modules.mission:removeStashedPlayerVehicle().",
+          "desc": "Calls self.mgr.modules.mission:removeStashedPlayerVehicle().",
           "internal": true
         }
       }

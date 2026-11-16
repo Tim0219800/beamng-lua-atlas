@@ -1,12 +1,12 @@
 # `career_modules_partShopping`
 
-*Fichier : `lua/ge/extensions/career/modules/partShopping.lua` · VM : Game Engine (GE) · 1086 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/partShopping.lua` · VM: Game Engine (GE) · 1086 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_partShopping` : `extensions.load("career_modules_partShopping")`, puis la globale `career_modules_partShopping`
+**Access:** extension `career_modules_partShopping`: `extensions.load("career_modules_partShopping")`, then the global `career_modules_partShopping`
 
-Boutique de pièces de la carrière (écran « personnalisation de pièces » de l'ordinateur du garage). Pour un véhicule de l'inventaire, il génère la liste des pièces compatibles par slot (pièces neuves du JBeam avec leur valeur, plus pièces en stockage de l'inventaire à coût nul), tient un panier (partsIn / partsOut), prévisualise le résultat en refaisant apparaître le véhicule avec les pièces choisies, ajoute automatiquement les pièces nécessaires dans les sous-slots, retire les pièces devenues incompatibles et applique l'achat (paiement, mise à jour de l'inventaire de pièces, sauvegarde).
+Career parts shop ("part customization" screen of the garage computer). For an inventory vehicle, it generates the list of compatible parts per slot (new JBeam parts with their value, plus inventory parts in storage at zero cost), maintains a cart (partsIn / partsOut), previews the result by respawning the vehicle with the chosen parts, automatically adds the necessary parts in sub-slots, removes parts that became incompatible and applies the purchase (payment, parts inventory update, save).
 
-## Exemple
+## Example
 
 ```lua
 career_modules_partShopping.startShopping(inventoryId, computerId)
@@ -15,150 +15,150 @@ local cart = career_modules_partShopping.getShoppingCart()
 print(cart.total)
 ```
 
-## Remarques
+## Notes
 
-- Taxe de vente : 7 % (salesTax) ajoutée au total du panier ; shoppingCart.total = somme des finalValue + taxes.
-- Une pièce neuve a une valeur finale = valeur calculée (career_modules_valueCalculator.getPartValue) arrondie à 5 près moins 0,01 (minimum 0) ; une pièce de l'inventaire proposée a finalValue = 0 ; l'entrée « empty » (emptyPlaceholder) permet de retirer une pièce non essentielle.
-- Les pièces de cargo (dryBulk ou fluid) sont désactivées (disabled) tant que la branche logistics-materials n'est pas débloquée (hors pièce de test « Magic Cargo Testing Part »).
-- La prévisualisation remplace le véhicule (core_vehicles.replaceVehicle) avec previewVehicle.config et gèle le véhicule ; la peinture des nouvelles pièces utilise la couleur d'apprêt de career_modules_painting.getPrimerColor.
-- Un véhicule avec des pièces cassées (entre 1 et le seuil) est d'abord réparé via l'assurance avant d'entrer en boutique.
-- Une laisse (tether) capsule entre l'ordinateur et le véhicule annule la session (cancelShopping) si le joueur s'éloigne.
-- Hooks émis : onPartShoppingStarted, onPartShoppingPartInstalled({part}), onPartShoppingCancelled, onPartShoppingTransactionComplete, plus guihooks partShoppingData et partShoppingRequestExit.
-- L'achat appelle career_modules_vehiclePerformance.invalidateCertification et débloque le succès VEHICLE_MODIFIED.
-- Route UI : career.computer.partShopping, .category (catégories « cargo » ou toutes les pièces) et .category.slot ; le panneau actif (categories, slots, parts) dépend de la route.
+- Sales tax: 7% (salesTax) added to the cart total; shoppingCart.total = sum of finalValue + taxes.
+- A new part has a final value = computed value (career_modules_valueCalculator.getPartValue) rounded to the nearest 5 minus 0.01 (minimum 0); an offered inventory part has finalValue = 0; the "empty" entry (emptyPlaceholder) allows removing a non-essential part.
+- Cargo parts (dryBulk or fluid) are disabled until the logistics-materials branch is unlocked (except the "Magic Cargo Testing Part" test part).
+- The preview replaces the vehicle (core_vehicles.replaceVehicle) with previewVehicle.config and freezes the vehicle; the paint of the new parts uses the primer color from career_modules_painting.getPrimerColor.
+- A vehicle with broken parts (between 1 and the threshold) is first repaired via insurance before entering the shop.
+- A capsule tether between the computer and the vehicle cancels the session (cancelShopping) if the player moves away.
+- Emitted hooks: onPartShoppingStarted, onPartShoppingPartInstalled({part}), onPartShoppingCancelled, onPartShoppingTransactionComplete, plus guihooks partShoppingData and partShoppingRequestExit.
+- The purchase calls career_modules_vehiclePerformance.invalidateCertification and unlocks the VEHICLE_MODIFIED achievement.
+- UI route: career.computer.partShopping, .category ("cargo" category or all parts) and .category.slot; the active panel (categories, slots, parts) depends on the route.
 
-**Dépendances (chargées avant) :** `career_career`, `gameplay_achievement`
+**Dependencies (loaded first):** `career_career`, `gameplay_achievement`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_partShopping.applyShopping()` | Valide l'achat : ne fait rien si le joueur ne peut pas payer le total TTC. Sinon remplace le véhicule de l'inventaire par la prévisualisation, déplace les pièces retirées en stockage, ajoute/met à jour les pièces installées, paie (tags partsBought, buying), sauvegarde le véhicule, joue le son et émet onPartShoppingTransactionComplete. | 972 |
-| `career_modules_partShopping.cancelShopping()` | Annule la session : émet onPartShoppingCancelled, refait apparaître le véhicule d'origine (spawnVehicle option 2) et ferme le menu. | 910 |
-| `career_modules_partShopping.getCategoryBreadcrumbTitle(category)` | Titre de fil d'Ariane pour la route de catégorie : « pièces de cargo » pour category == "cargo", sinon « toutes les pièces ». | 1000 |
-| `career_modules_partShopping.getPartsInShop()` | Renvoie la liste des pièces proposées (partsInShop). | 1020 |
-| `career_modules_partShopping.getShoppingCart()` | Renvoie le panier {partsIn, partsOut, partsInList, partsOutList, slotList, taxes, total}. | 1024 |
-| `career_modules_partShopping.getSlotBreadcrumbTitle(slotPath)` | Titre de fil d'Ariane pour la route de slot : nom lisible du dernier segment du chemin. | 1010 |
-| `career_modules_partShopping.installPart(part)` | Ajoute une pièce au panier (sans effet hors session), complète automatiquement les sous-slots vides avec des pièces de l'inventaire ou par défaut, met à jour la prévisualisation et émet onPartShoppingPartInstalled. | 855 |
-| `career_modules_partShopping.installPartByPartShopId(partShopId)` | Installe la pièce de la boutique identifiée par son partShopId. | 870 |
-| `career_modules_partShopping.isShoppingSessionActive()` | Indique si une session d'achat est active. | 994 |
-| `career_modules_partShopping.onComputerAddFunctions(menuData, computerFunctions)` | Hook de l'ordinateur : ajoute la fonction « personnalisation de pièces » (ordre 1) pour chaque véhicule du garage, désactivée si le véhicule est à réparer, si le véhicule de départ n'est pas acheté ou si career_modules_permissions refuse partBuying/vehicleModification. *(interne)* *(hook)* | 1028 |
-| `career_modules_partShopping.onRouteEnter(context, toRoute, fromRoute, data)` | Cycle de vie du routeur UI : mémorise la sélection (catégorie, slot, panneau) déduite de la route. *(interne)* *(hook)* | 445 |
-| `career_modules_partShopping.onRouteMount(context, toRoute, fromRoute, data)` | Cycle de vie du routeur UI : renormalise la sélection puis envoie les données de la boutique. *(interne)* *(hook)* | 451 |
-| `career_modules_partShopping.onVehicleSaveFinished()` | Hook : une fois la sauvegarde du véhicule terminée après un achat, ferme le menu si la fermeture était différée. *(interne)* *(hook)* | 922 |
-| `career_modules_partShopping.removePartBySlot(slot)` | Retire du panier la pièce du slot donné (restaure la pièce d'origine si elle convient encore au slot). | 879 |
-| `career_modules_partShopping.requestExit()` | Demande à l'UI de quitter l'écran (guihooks partShoppingRequestExit). | 918 |
-| `career_modules_partShopping.sendShoppingDataToUI()` | Régénère la boutique et envoie à l'UI (guihooks partShoppingData) : pièces, arbre de slots, panier, noms, liste de recherche, pièces filtrées selon la route, carte slot -> pièce installée et argent du joueur. | 414 |
-| `career_modules_partShopping.setupTether()` | Crée la laisse capsule entre l'ordinateur et le véhicule ; quand elle est franchie, cancelShopping est appelé. | 516 |
-| `career_modules_partShopping.startShopping(inventoryId, _originComputerId)` | Démarre une session pour un véhicule (celui donné, le courant, sinon celui du garage le plus proche). Répare d'abord par l'assurance si le véhicule est abîmé, puis prépare le panier, génère la boutique, pose la laisse, ouvre l'écran et fige le véhicule. | 531 |
-| `career_modules_partShopping.updatePreviewVehicle(currentPartConditions)` | Rappel appelé par le véhicule avec ses conditions de pièces après le respawn de prévisualisation : recopie l'arbre de pièces, met à jour le panier, renvoie les données à l'UI et refige le véhicule. *(interne)* | 456 |
+| `career_modules_partShopping.applyShopping()` | Confirms the purchase: does nothing if the player cannot pay the total including tax. Otherwise replaces the inventory vehicle with the preview, moves removed parts to storage, adds/updates installed parts, pays (tags partsBought, buying), saves the vehicle, plays the sound and emits onPartShoppingTransactionComplete. | 972 |
+| `career_modules_partShopping.cancelShopping()` | Cancels the session: emits onPartShoppingCancelled, respawns the original vehicle (spawnVehicle option 2) and closes the menu. | 910 |
+| `career_modules_partShopping.getCategoryBreadcrumbTitle(category)` | Breadcrumb title for the category route: "cargo parts" for category == "cargo", otherwise "all parts". | 1000 |
+| `career_modules_partShopping.getPartsInShop()` | Returns the list of offered parts (partsInShop). | 1020 |
+| `career_modules_partShopping.getShoppingCart()` | Returns the cart {partsIn, partsOut, partsInList, partsOutList, slotList, taxes, total}. | 1024 |
+| `career_modules_partShopping.getSlotBreadcrumbTitle(slotPath)` | Breadcrumb title for the slot route: readable name of the last segment of the path. | 1010 |
+| `career_modules_partShopping.installPart(part)` | Adds a part to the cart (no effect outside a session), automatically fills empty sub-slots with inventory or default parts, updates the preview and emits onPartShoppingPartInstalled. | 855 |
+| `career_modules_partShopping.installPartByPartShopId(partShopId)` | Installs the shop part identified by its partShopId. | 870 |
+| `career_modules_partShopping.isShoppingSessionActive()` | Indicates whether a shopping session is active. | 994 |
+| `career_modules_partShopping.onComputerAddFunctions(menuData, computerFunctions)` | Computer hook: adds the "part customization" function (order 1) for each garage vehicle, disabled if the vehicle needs repair, if the starter vehicle is not bought or if career_modules_permissions denies partBuying/vehicleModification. *(internal)* *(hook)* | 1028 |
+| `career_modules_partShopping.onRouteEnter(context, toRoute, fromRoute, data)` | UI router lifecycle: remembers the selection (category, slot, panel) inferred from the route. *(internal)* *(hook)* | 445 |
+| `career_modules_partShopping.onRouteMount(context, toRoute, fromRoute, data)` | UI router lifecycle: renormalizes the selection then sends the shop data. *(internal)* *(hook)* | 451 |
+| `career_modules_partShopping.onVehicleSaveFinished()` | Hook: once the vehicle save is finished after a purchase, closes the menu if closing was deferred. *(internal)* *(hook)* | 922 |
+| `career_modules_partShopping.removePartBySlot(slot)` | Removes from the cart the part of the given slot (restores the original part if it still fits the slot). | 879 |
+| `career_modules_partShopping.requestExit()` | Asks the UI to leave the screen (guihooks partShoppingRequestExit). | 918 |
+| `career_modules_partShopping.sendShoppingDataToUI()` | Regenerates the shop and sends to the UI (guihooks partShoppingData): parts, slot tree, cart, names, search list, parts filtered by route, slot -> installed part map and the player's money. | 414 |
+| `career_modules_partShopping.setupTether()` | Creates the capsule tether between the computer and the vehicle; when it is crossed, cancelShopping is called. | 516 |
+| `career_modules_partShopping.startShopping(inventoryId, _originComputerId)` | Starts a session for a vehicle (the given one, the current one, otherwise the nearest garage one). First repairs via insurance if the vehicle is damaged, then prepares the cart, generates the shop, sets the tether, opens the screen and freezes the vehicle. | 531 |
+| `career_modules_partShopping.updatePreviewVehicle(currentPartConditions)` | Callback called by the vehicle with its part conditions after the preview respawn: copies the parts tree, updates the cart, sends the data back to the UI and refreezes the vehicle. *(internal)* | 456 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_partShopping.getCategoryBreadcrumbTitle(category)`
 
-Titre de fil d'Ariane pour la route de catégorie : « pièces de cargo » pour category == "cargo", sinon « toutes les pièces ».
+Breadcrumb title for the category route: "cargo parts" for category == "cargo", otherwise "all parts".
 
-- `category` (*string*) : Paramètre de route category.
-- **renvoie** : string Titre traduit.
+- `category` (*string*) : Route parameter category.
+- **returns**: string Translated title.
 
 #### `career_modules_partShopping.getPartsInShop()`
 
-Renvoie la liste des pièces proposées (partsInShop).
+Returns the list of offered parts (partsInShop).
 
-- **renvoie** : table[] Pièces de la boutique.
+- **returns**: table[] Shop parts.
 
 #### `career_modules_partShopping.getShoppingCart()`
 
-Renvoie le panier {partsIn, partsOut, partsInList, partsOutList, slotList, taxes, total}.
+Returns the cart {partsIn, partsOut, partsInList, partsOutList, slotList, taxes, total}.
 
-- **renvoie** : table Panier.
+- **returns**: table Cart.
 
 #### `career_modules_partShopping.getSlotBreadcrumbTitle(slotPath)`
 
-Titre de fil d'Ariane pour la route de slot : nom lisible du dernier segment du chemin.
+Breadcrumb title for the slot route: readable name of the last segment of the path.
 
-- `slotPath` (*string*) : Paramètre de route slotPath.
-- **renvoie** : string|nil Nom du slot, nil si inconnu.
+- `slotPath` (*string*) : Route parameter slotPath.
+- **returns**: string|nil Slot name, nil if unknown.
 
 #### `career_modules_partShopping.installPart(part)`
 
-Ajoute une pièce au panier (sans effet hors session), complète automatiquement les sous-slots vides avec des pièces de l'inventaire ou par défaut, met à jour la prévisualisation et émet onPartShoppingPartInstalled.
+Adds a part to the cart (no effect outside a session), automatically fills empty sub-slots with inventory or default parts, updates the preview and emits onPartShoppingPartInstalled.
 
-- `part` (*table*) : Pièce de la boutique (containingSlot, name, partPath, finalValue...).
+- `part` (*table*) : Shop part (containingSlot, name, partPath, finalValue...).
 
 #### `career_modules_partShopping.installPartByPartShopId(partShopId)`
 
-Installe la pièce de la boutique identifiée par son partShopId.
+Installs the shop part identified by its partShopId.
 
-- `partShopId` (*integer*) : Identifiant de la pièce dans partsInShop.
+- `partShopId` (*integer*) : Part identifier in partsInShop.
 
 #### `career_modules_partShopping.isShoppingSessionActive()`
 
-Indique si une session d'achat est active.
+Indicates whether a shopping session is active.
 
-- **renvoie** : boolean true si active.
+- **returns**: boolean true if active.
 
 #### `career_modules_partShopping.onComputerAddFunctions(menuData, computerFunctions)`
 
-Hook de l'ordinateur : ajoute la fonction « personnalisation de pièces » (ordre 1) pour chaque véhicule du garage, désactivée si le véhicule est à réparer, si le véhicule de départ n'est pas acheté ou si career_modules_permissions refuse partBuying/vehicleModification.
+Computer hook: adds the "part customization" function (order 1) for each garage vehicle, disabled if the vehicle needs repair, if the starter vehicle is not bought or if career_modules_permissions denies partBuying/vehicleModification.
 
-- `menuData` (*table*) : Données du menu (computerFacility, vehiclesInGarage...).
-- `computerFunctions` (*table*) : Fonctions à compléter (vehicleSpecific[inventoryId]).
+- `menuData` (*table*) : Menu data (computerFacility, vehiclesInGarage...).
+- `computerFunctions` (*table*) : Functions to fill (vehicleSpecific[inventoryId]).
 
 #### `career_modules_partShopping.onRouteEnter(context, toRoute, fromRoute, data)`
 
-Cycle de vie du routeur UI : mémorise la sélection (catégorie, slot, panneau) déduite de la route.
+UI router lifecycle: remembers the selection (category, slot, panel) inferred from the route.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*table*) : Route cible (name, params).
-- `fromRoute` (*any*) : Route précédente.
+- `context` (*any*) : Router context.
+- `toRoute` (*table*) : Target route (name, params).
+- `fromRoute` (*any*) : Previous route.
 - `data` (*table*) : routeData.
 
 #### `career_modules_partShopping.onRouteMount(context, toRoute, fromRoute, data)`
 
-Cycle de vie du routeur UI : renormalise la sélection puis envoie les données de la boutique.
+UI router lifecycle: renormalizes the selection then sends the shop data.
 
-- `context` (*any*) : Contexte du routeur.
-- `toRoute` (*table*) : Route cible.
-- `fromRoute` (*any*) : Route précédente.
+- `context` (*any*) : Router context.
+- `toRoute` (*table*) : Target route.
+- `fromRoute` (*any*) : Previous route.
 - `data` (*table*) : routeData.
 
 #### `career_modules_partShopping.removePartBySlot(slot)`
 
-Retire du panier la pièce du slot donné (restaure la pièce d'origine si elle convient encore au slot).
+Removes from the cart the part of the given slot (restores the original part if it still fits the slot).
 
-- `slot` (*string*) : Chemin du slot (containingSlot).
+- `slot` (*string*) : Slot path (containingSlot).
 
 #### `career_modules_partShopping.startShopping(inventoryId, _originComputerId)`
 
-Démarre une session pour un véhicule (celui donné, le courant, sinon celui du garage le plus proche). Répare d'abord par l'assurance si le véhicule est abîmé, puis prépare le panier, génère la boutique, pose la laisse, ouvre l'écran et fige le véhicule.
+Starts a session for a vehicle (the given one, the current one, otherwise the nearest garage one). First repairs via insurance if the vehicle is damaged, then prepares the cart, generates the shop, sets the tether, opens the screen and freezes the vehicle.
 
-- `inventoryId` (*integer|nil*) : Id d'inventaire du véhicule.
-- `_originComputerId` (*string|nil*) : Id de l'ordinateur d'origine (sert au retour et à la laisse).
+- `inventoryId` (*integer|nil*) : Inventory id of the vehicle.
+- `_originComputerId` (*string|nil*) : Id of the originating computer (used for returning and for the tether).
 
 #### `career_modules_partShopping.updatePreviewVehicle(currentPartConditions)`
 
-Rappel appelé par le véhicule avec ses conditions de pièces après le respawn de prévisualisation : recopie l'arbre de pièces, met à jour le panier, renvoie les données à l'UI et refige le véhicule.
+Callback called by the vehicle with its part conditions after the preview respawn: copies the parts tree, updates the cart, sends the data back to the UI and refreezes the vehicle.
 
-- `currentPartConditions` (*table|nil*) : Conditions de pièces lues sur le véhicule.
+- `currentPartConditions` (*table|nil*) : Part conditions read from the vehicle.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career, gameplay_achievement. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career, gameplay_achievement. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onPartShoppingCancelled` — écouté par 1 module(s)
+- `onPartShoppingCancelled` — listened to by 1 module(s)
 - `onPartShoppingPartInstalled`
-- `onPartShoppingStarted` — écouté par 2 module(s)
-- `onPartShoppingTransactionComplete` — écouté par 2 module(s)
+- `onPartShoppingStarted` — listened to by 2 module(s)
+- `onPartShoppingTransactionComplete` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `partShoppingData`, `partShoppingRequestExit`
+**UI events (guihooks.trigger):** `partShoppingData`, `partShoppingRequestExit`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/partShopping.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/partShopping.lua`.*

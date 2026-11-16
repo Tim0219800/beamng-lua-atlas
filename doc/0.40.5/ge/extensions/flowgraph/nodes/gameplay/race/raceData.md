@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_race_raceData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceData.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceData.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/raceData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/raceData")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Data » (catégorie repeat_instant, tag scenario). Expose des données de course pour un véhicule (raceData.states[vehId]) : formattedTime (temps formaté via race:raceTime, calculé seulement si la pin est utilisée), recoveriesUsed, placement et isOnRoad (vrai tant que le véhicule est dans les limites du chemin IA ; un seul tick à faux est masqué).
+Flowgraph node "Race Data" (category repeat_instant, tag scenario). Exposes race data for a vehicle (raceData.states[vehId]): formattedTime (time formatted via race:raceTime, computed only if the pin is used), recoveriesUsed, placement and isOnRoad (true as long as the vehicle is within the AI path limits; a single false tick is masked).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Chaque frame : lit l'état du véhicule dans la course et remplit les quatre pins de sortie. | 25 |
+| `C:work(args)` | Every frame: reads the vehicle's state in the race and fills the four output pins. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/raceData.lua`.*

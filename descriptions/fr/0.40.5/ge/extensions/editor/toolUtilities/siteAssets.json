@@ -1,0 +1,115 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteAssets.lua",
+  "module": "Les « étagères » (bibliothèque sur disque) d'où viennent les sites posés : bâtiments, espaces ouverts, parkings. Trois éditeurs y cuisent leurs sites et un placeur les lit tous ; ce module fixe une seule fois où ils vivent et comment s'appellent leurs fichiers. Un site est un dossier nommé d'après son slug, contenant le manifeste (<kind>.json : bornes, transformations du kit, plan du sol, lampes, plantes), model.json (le document éditable, pour rouvrir le site dans l'éditeur qui l'a créé) et shell.dae (géométrie unique, LODs et collision).",
+  "notes": [
+    "Étagères (kinds) : building -> /assets/massingBuildings/ (manifeste building.json, éditeur editor_massingEditor) ; openSpace -> /assets/openSpaces/ (openSpace.json, editor_openSpaceEditor) ; carPark -> /assets/carParks/ (carPark.json, editor_parkingLotEditor). Chaque entrée a aussi id, noun, label, icon.",
+    "kindOf renvoie l'étagère « building » pour un kind inconnu ou nil.",
+    "Le manifeste est écrit compact (il contient des milliers de transformations) ; model.json est écrit indenté.",
+    "wipe supprime aussi le cache .cdae voisin d'un .dae, sans quoi le moteur le charge à la place du nouveau fichier.",
+    "Les fonctions disque utilisent FS (directoryExists, directoryCreate, directoryList, directoryRemove, findFiles, removeFile) : sans FS elles ne font rien et list renvoie une liste vide.",
+    "La page auto signale une globale « i » : ce sont des variables de boucle."
+  ],
+  "fields": {
+    "kinds": {"type": "table[]", "desc": "Liste des étagères : { id, noun, label, icon, root, manifest, editor }."},
+    "modelFile": {"type": "string", "desc": "Nom du fichier du document éditable : 'model.json'."},
+    "shellFile": {"type": "string", "desc": "Nom du fichier de géométrie unique : 'shell.dae'."}
+  },
+  "functions": {
+    "kindOf": {
+      "desc": "Renvoie la définition de l'étagère pour un identifiant (building par défaut).",
+      "params": {"kind": {"type": "string|nil", "desc": "'building', 'openSpace' ou 'carPark'."}},
+      "returns": [{"type": "table", "desc": "Entrée de kinds."}],
+      "internal": false
+    },
+    "slugify": {
+      "desc": "Nom de dossier tiré du nom de l'objet : minuscules, tout ce qui n'est pas alphanumérique devient un tiret bas, tirets bas de bord retirés. Une nouvelle cuisson d'un site renommé mais identique écrase donc son propre dossier. Un nom vide donne le nom commun du kind.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "name": {"type": "string|nil", "desc": "Nom du site."}},
+      "returns": [{"type": "string", "desc": "Slug."}],
+      "internal": false
+    },
+    "rootOf": {
+      "desc": "Dossier racine d'une étagère (par exemple /assets/openSpaces/).",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}},
+      "returns": [{"type": "string", "desc": "Chemin racine avec barre oblique finale."}],
+      "internal": false
+    },
+    "folderFor": {
+      "desc": "Dossier d'un site : racine + slug + '/'.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug du site."}},
+      "returns": [{"type": "string", "desc": "Chemin du dossier."}],
+      "internal": false
+    },
+    "manifestPath": {
+      "desc": "Chemin du manifeste d'un site dans son dossier dir.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "dir": {"type": "string", "desc": "Dossier du site (avec barre oblique finale)."}},
+      "returns": [{"type": "string", "desc": "Chemin du manifeste."}],
+      "internal": false
+    },
+    "modelPath": {
+      "desc": "Chemin de model.json dans dir.",
+      "params": {"dir": {"type": "string", "desc": "Dossier du site."}},
+      "returns": [{"type": "string", "desc": "Chemin."}],
+      "internal": false
+    },
+    "shellPath": {
+      "desc": "Chemin de shell.dae dans dir.",
+      "params": {"dir": {"type": "string", "desc": "Dossier du site."}},
+      "returns": [{"type": "string", "desc": "Chemin."}],
+      "internal": false
+    },
+    "ensureRoot": {
+      "desc": "S'assure que le dossier de l'étagère existe. Le dialogue de fichiers ne fait que LISTER le chemin donné sans le créer : sans cet appel, la première cuisson d'une installation neuve ouvrirait le dialogue sur un dossier inexistant.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}},
+      "returns": [{"type": "string", "desc": "Chemin racine."}],
+      "internal": false
+    },
+    "wipe": {
+      "desc": "Vide un dossier avant réécriture, pour qu'une cuisson plus petite ne laisse rien de périmé ; supprime aussi les caches .cdae.",
+      "params": {"dir": {"type": "string", "desc": "Dossier à vider."}},
+      "returns": [],
+      "internal": false
+    },
+    "prepare": {
+      "desc": "Crée si besoin le dossier du site, le vide et le renvoie prêt à écrire. Toute cuisson commence ici.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug du site."}},
+      "returns": [{"type": "string", "desc": "Dossier du site."}],
+      "internal": false
+    },
+    "writeModel": {
+      "desc": "Écrit le document éditable à côté de ses maillages : { version = 1, tool, state }. tool est l'éditeur qui l'a écrit, pour qu'un dossier ouvert par le mauvais le signale.",
+      "params": {"dir": {"type": "string", "desc": "Dossier du site."}, "tool": {"type": "string", "desc": "Identifiant de l'éditeur."}, "state": {"type": "table", "desc": "État sérialisé du document."}},
+      "returns": [{"type": "boolean", "desc": "true si l'écriture a réussi."}],
+      "internal": false
+    },
+    "writeManifest": {
+      "desc": "Écrit le manifeste (compact), puis prévient les observateurs enregistrés par onWritten avec (kind, manifest.slug).",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "dir": {"type": "string", "desc": "Dossier du site."}, "manifest": {"type": "table", "desc": "Manifeste avec au moins le champ slug."}},
+      "returns": [{"type": "boolean", "desc": "false si l'écriture a échoué, true sinon."}],
+      "internal": false
+    },
+    "onWritten": {
+      "desc": "Enregistre un observateur appelé chaque fois qu'un site est écrit sur une étagère. Les observateurs ne sont jamais retirés.",
+      "params": {"fn": {"type": "function", "desc": "fn(kind, slug)."}},
+      "returns": [],
+      "internal": false
+    },
+    "exists": {
+      "desc": "Le nom est-il déjà pris ? C'est ce que demande Save As avant d'écraser le travail de quelqu'un.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug."}},
+      "returns": [{"type": "boolean", "desc": "true si le dossier existe."}],
+      "internal": false
+    },
+    "remove": {
+      "desc": "Retire un site de l'étagère, dossier compris. Un renommage est une sauvegarde sous le nouveau nom suivie de cet appel sur l'ancien, ce qui garde honnête le nom stocké dans le manifeste.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}, "slug": {"type": "string", "desc": "Slug."}},
+      "returns": [{"type": "boolean", "desc": "true si supprimé, false si absent."}, {"type": "string", "desc": "Dossier supprimé, ou 'not in the library'."}],
+      "internal": false
+    },
+    "list": {
+      "desc": "Tout ce qui est déjà sur une étagère, trié par nom. Ne lit que les manifestes (une petite lecture json par site, aucun maillage). Chaque entrée est le manifeste augmenté de dir (son dossier) et kind (son étagère), ce qui suffit au placeur pour le dresser.",
+      "params": {"kind": {"type": "string|nil", "desc": "Étagère."}},
+      "returns": [{"type": "table[]", "desc": "Manifestes (avec slug), augmentés de dir et kind."}],
+      "internal": false
+    }
+  }
+}

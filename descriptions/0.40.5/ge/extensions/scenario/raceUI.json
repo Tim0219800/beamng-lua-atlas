@@ -1,41 +1,61 @@
 {
   "path": "lua/ge/extensions/scenario/raceUI.lua",
-  "module": "Pont entre la course de scénario et l'interface : envoie à l'UI la progression des waypoints (WayPointChange), des tours (RaceLapChange) et les comparaisons de temps avec le tour précédent (RaceCheckpointComparison, RaceTimeComparison). Ne réagit qu'aux évènements du véhicule du joueur 0.",
+  "module": "Bridge between the scenario race and the interface: sends the UI the waypoint progress (WayPointChange), lap progress (RaceLapChange) and time comparisons with the previous lap (RaceCheckpointComparison, RaceTimeComparison). Only reacts to events of player 0's vehicle.",
   "notes": [
-    "Évènements UI émis par guihooks.trigger : WayPointChange {current, count} ou nil, RaceLapChange {current, count} ou nil, RaceCheckpointComparison {timeOut = 5000, time}, RaceTimeComparison {timeOut = 5000, time}.",
-    "Les comparaisons ne sont émises qu'à partir du deuxième tour (lastTimeId > 1), et sont ignorées si scenario.disableWaypointTimes est vrai.",
-    "À chaque tour terminé, un message ui_message 'lap N time: X.XXXs' est affiché 2 s.",
-    "M.initialise n'est pas un hook : à appeler explicitement par le code du scénario."
+    "UI events emitted by guihooks.trigger: WayPointChange {current, count} or nil, RaceLapChange {current, count} or nil, RaceCheckpointComparison {timeOut = 5000, time}, RaceTimeComparison {timeOut = 5000, time}.",
+    "The comparisons are only emitted from the second lap (lastTimeId > 1), and are ignored if scenario.disableWaypointTimes is true.",
+    "On each completed lap, a ui_message 'lap N time: X.XXXs' is displayed for 2 s.",
+    "M.initialise is not a hook: it must be called explicitly by the scenario code."
   ],
   "fields": {},
   "functions": {
     "initialise": {
-      "desc": "Vide les temps de waypoints mémorisés et efface côté UI les affichages de waypoint et de tour.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario (non utilisé)."}},
+      "desc": "Clears the stored waypoint times and clears the waypoint and lap displays on the UI side.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario (unused)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "onRaceStart": {
-      "desc": "Hook de début de course : envoie WayPointChange {current = 0, count = N} si la configuration de tour a plus d'un waypoint, et RaceLapChange {current = 1, count = lapCount} si lapCount > 1.",
+      "desc": "Race start hook: sends WayPointChange {current = 0, count = N} if the lap configuration has more than one waypoint, and RaceLapChange {current = 1, count = lapCount} if lapCount > 1.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onScenarioChange": {
-      "desc": "Hook de changement d'état du scénario : efface l'affichage de waypoint quand le scénario est absent ou en 'pre-start'.",
-      "params": {"scenario": {"type": "table|nil", "desc": "Scénario courant."}},
+      "desc": "Scenario state change hook: clears the waypoint display when the scenario is absent or in 'pre-start'.",
+      "params": {
+        "scenario": {
+          "type": "table|nil",
+          "desc": "Current scenario."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onRaceWaypointReached": {
-      "desc": "Hook appelé à chaque waypoint atteint. Pour le véhicule du joueur, mémorise le temps, émet les comparaisons de temps avec le tour précédent et met à jour la progression de waypoint.",
-      "params": {"data": {"type": "table", "desc": "Données du waypoint : vehicleId, time, cur, currentLapConfig."}},
+      "desc": "Hook called on each waypoint reached. For the player's vehicle, stores the time, emits the time comparisons with the previous lap and updates the waypoint progress.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Waypoint data: vehicleId, time, cur, currentLapConfig."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onRaceLap": {
-      "desc": "Hook appelé à chaque tour terminé. Pour le véhicule du joueur, met à jour le numéro de tour (plafonné à lapCount), remet la progression de waypoint à fond et affiche le temps du tour.",
-      "params": {"data": {"type": "table", "desc": "Données du tour : vehicleId, lap, time (secondes)."}},
+      "desc": "Hook called on each completed lap. For the player's vehicle, updates the lap number (capped at lapCount), resets the waypoint progress to full and displays the lap time.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Lap data: vehicleId, lap, time (seconds)."
+        }
+      },
       "returns": [],
       "internal": true
     }

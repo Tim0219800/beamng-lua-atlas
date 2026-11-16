@@ -1,12 +1,12 @@
 # `libs_luaqrcode_qrencode`
 
-*Fichier : `lua/common/libs/luaqrcode/qrencode.lua` · VM : Commun (GE + véhicule) · 1259 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luaqrcode/qrencode.lua` · VM: Common (GE + vehicle) · 1259 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luaqrcode/qrencode")`
+**Access:** `require("libs/luaqrcode/qrencode")`
 
-luaqrcode (Patrick Gundlach / speedata, licence BSD 3 clauses) : générateur de QR codes en Lua pur. Il choisit la plus petite version (1 à 40) et le mode (numérique, alphanumérique, binaire), encode les données, calcule la correction d'erreur Reed-Solomon, génère les 8 masques et garde celui dont la pénalité est la plus faible. Il ne dessine rien : il renvoie une matrice de modules que le moddeur affiche lui-même (par exemple en UI ou texture).
+luaqrcode (Patrick Gundlach / speedata, BSD 3-clause license): pure-Lua QR code generator. It picks the smallest version (1 to 40) and the mode (numeric, alphanumeric, binary), encodes the data, computes the Reed-Solomon error correction, generates the 8 masks and keeps the one with the lowest penalty. It draws nothing: it returns a matrix of modules that the modder displays themselves (for example in UI or a texture).
 
-## Exemple
+## Example
 
 ```lua
 local qr = require('libs/luaqrcode/qrencode')
@@ -18,32 +18,32 @@ if ok then
 end
 ```
 
-## Remarques
+## Notes
 
-- Valeurs de la matrice : positif = module noir, négatif = module blanc (1/-1 pour les données, 2/-2 pour les motifs obligatoires). La matrice est indexée matrix[x][y], en base 1, taille carrée de 4 * version + 17 ; [1][1] est en haut à gauche.
-- qrcode renvoie (true, matrice) en cas de succès, (false, message) si les données arrangées ne sont pas un multiple de 8 bits ; les autres cas d'échec (texte trop long pour la version 40, etc.) peuvent lever une erreur (déduit du code).
-- Le paramètre mode n'est pas implémenté : le passer déclenche assert(false, 'not implemented') dans get_version_eclevel_mode_bistringlength. Le mode est choisi automatiquement : numérique si que des chiffres, alphanumérique pour [0-9A-Z $%*./:+-], sinon binaire.
-- Niveaux de correction ec_level : 1 à 4 (L, M, Q, H). Sans valeur, la fonction prend le niveau le plus élevé qui tient dans la plus petite version.
-- Le fichier contient un bloc 'if testing' qui exporte des fonctions internes si la globale testing est définie ; sinon seul qrcode est exporté.
-- Utilise le module 'bit' (LuaJIT BitOp).
+- Matrix values: positive = black module, negative = white module (1/-1 for data, 2/-2 for mandatory patterns). The matrix is indexed matrix[x][y], 1-based, square of size 4 * version + 17; [1][1] is top left.
+- qrcode returns (true, matrix) on success, (false, message) if the arranged data is not a multiple of 8 bits; other failure cases (text too long for version 40, etc.) may raise an error (inferred from code).
+- The mode parameter is not implemented: passing it triggers assert(false, 'not implemented') in get_version_eclevel_mode_bistringlength. The mode is chosen automatically: numeric if only digits, alphanumeric for [0-9A-Z $%*./:+-], otherwise binary.
+- ec_level error correction levels: 1 to 4 (L, M, Q, H). Without a value, the function takes the highest level that fits in the smallest version.
+- The file contains an 'if testing' block that exports internal functions if the global testing is defined; otherwise only qrcode is exported.
+- Uses the 'bit' module (LuaJIT BitOp).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luaqrcode_qrencode.qrcode(str, ec_level, mode)` | Génère le QR code d'une chaîne : détermine version, niveau de correction et mode, encode les données, ajoute la correction d'erreur, puis choisit le masque de moindre pénalité. | 1220 |
+| `libs_luaqrcode_qrencode.qrcode(str, ec_level, mode)` | Generates the QR code of a string: determines version, error correction level and mode, encodes the data, adds the error correction, then picks the lowest-penalty mask. | 1220 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luaqrcode_qrencode.qrcode(str, ec_level, mode)`
 
-Génère le QR code d'une chaîne : détermine version, niveau de correction et mode, encode les données, ajoute la correction d'erreur, puis choisit le masque de moindre pénalité.
+Generates the QR code of a string: determines version, error correction level and mode, encodes the data, adds the error correction, then picks the lowest-penalty mask.
 
-- `str` (*string*) : Texte à encoder.
-- `ec_level` (*integer|nil*) : Niveau de correction demandé, 1 à 4 (L, M, Q, H). Facultatif.
-- `mode` (*integer|nil*) : Non implémenté : ne pas fournir (provoque une assertion).
-- **renvoie** : boolean true si la génération a réussi.
-- **renvoie** : table<integer, table<integer, integer>>|string Matrice [x][y] des modules (positif = noir), ou message d'erreur si le premier retour est false.
+- `str` (*string*) : Text to encode.
+- `ec_level` (*integer|nil*) : Requested error correction level, 1 to 4 (L, M, Q, H). Optional.
+- `mode` (*integer|nil*) : Not implemented: do not provide it (causes an assertion).
+- **returns**: boolean true if generation succeeded.
+- **returns**: table<integer, table<integer, integer>>|string Matrix [x][y] of modules (positive = black), or error message if the first return value is false.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luaqrcode/qrencode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luaqrcode/qrencode.lua`.*

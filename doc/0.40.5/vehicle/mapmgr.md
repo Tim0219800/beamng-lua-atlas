@@ -1,12 +1,12 @@
 # `mapmgr`
 
-*Fichier : `lua/vehicle/mapmgr.lua` · VM : Véhicule · 414 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/mapmgr.lua` · VM: Vehicle · 414 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `mapmgr`
+**Access:** global `mapmgr`
 
-Pont entre le véhicule et la carte routière (navgraph) du jeu. Il reçoit la carte du Lua du jeu (GE) par boîte aux lettres (mailbox), la décode en graphe (graphpath) et arbre spatial (kd-tree des arêtes), et fournit à l'IA et aux extensions : recherche de la route la plus proche (findClosestRoad, findBestRoad), chemin point à point (getPointToPointPath), normale de surface (surfaceNormalBelow), objets proches (getObjects) et signaux de circulation. Il envoie aussi chaque frame au GE l'état du véhicule (map.objectData : joueur assis, dégâts, klaxon, feux, collisions) via sendTracking.
+Bridge between the vehicle and the game's road map (navgraph). It receives the map from the game Lua (GE) through a mailbox, decodes it into a graph (graphpath) and a spatial tree (kd-tree of edges), and provides to the AI and the extensions: nearest road search (findClosestRoad, findBestRoad), point-to-point path (getPointToPointPath), surface normal (surfaceNormalBelow), nearby objects (getObjects) and traffic signals. It also sends the vehicle state to the GE every frame (map.objectData: seated player, damage, horn, lights, collisions) via sendTracking.
 
-## Exemple
+## Example
 
 ```lua
 local a, b, dist = mapmgr.findBestRoad(obj:getPosition(), obj:getDirectionVector())
@@ -14,143 +14,143 @@ local path = mapmgr.getPointToPointPath(obj:getPosition(), vec3(100, 200, 0), 0.
 local n = mapmgr.surfaceNormalBelow(obj:getPosition(), 2)
 ```
 
-## Remarques
+## Notes
 
-- mapData (aussi M.mapData) est un graphpath importé de la carte ; M.nodeAliases, M.rules, M.signalsData et M.changeSet sont aussi publiés. mapData reste nil tant que la carte n'a pas été reçue (appeler requestMap ou attendre le hook onVehicleMapmgrUpdate côté GE) : findClosestRoad / findBestRoad planteraient si mapData ou edgeKdTree est nil (aucune vérification), contrairement à getPointToPointPath qui renvoie {}.
-- sendTracking est un nop par défaut (affecté dynamiquement) : enableTracking le remplace par la vraie fonction, disableTracking le remet à nop. main.lua appelle mapmgr.sendTracking() à chaque frame (avant ai.updateGFX). Le champ apparaît donc comme « nop non défini » dans l'extraction mais nop est une fonction globale définie ailleurs.
-- init active le suivi si le véhicule a des roues (wheels.wheelCount > 0) ou si v.data.general.enableTracking est vrai.
-- sendTracking envoie au GE un appel `map.objectData(id, anyPlayerSeated, degats, états, collisions)`, où états = horn, lightbar, hazard_enabled, turnsignal (si non nuls) et ignitionLevel (si 0 ou 1) lus dans electrics.values ; collisions = ids d'objets en collision (obj:getObjectCollisionIds). Il demande aussi la carte au GE (map.request(id, -2)) quand les signaux de circulation changent de version de façon inattendue.
-- Drivabilité dynamique : updateDrivabilities lit la mailbox 'updateDrivabilities' (liste plate {nœudA, nœudB, drivabilité,…}) et modifie la longueur et la drivabilité des arêtes du graphe.
-- findClosestRoad double la zone de recherche jusqu'à trouver une arête ou dépasser 200 m ; la distance renvoyée est en mètres, avec un biais wZ (défaut 1.85) qui pénalise les écarts de hauteur. Le commentaire du code note que la même fonction existe dans ge/map.lua.
-- findBestRoad choisit parmi les arêtes dont le rayon couvre la position celle qui est la plus alignée avec la direction du véhicule (valeur absolue si l'arête est à double sens), pénalisée par edge.gated ; repli sur findClosestRoad.
+- mapData (also M.mapData) is a graphpath imported from the map; M.nodeAliases, M.rules, M.signalsData and M.changeSet are also published. mapData stays nil until the map has been received (call requestMap or wait for the onVehicleMapmgrUpdate hook on the GE side): findClosestRoad / findBestRoad would crash if mapData or edgeKdTree is nil (no check), unlike getPointToPointPath which returns {}.
+- sendTracking is a nop by default (dynamically assigned): enableTracking replaces it with the real function, disableTracking sets it back to nop. main.lua calls mapmgr.sendTracking() every frame (before ai.updateGFX). The field therefore appears as "undefined nop" in the extraction but nop is a global function defined elsewhere.
+- init enables tracking if the vehicle has wheels (wheels.wheelCount > 0) or if v.data.general.enableTracking is true.
+- sendTracking sends the GE a call `map.objectData(id, anyPlayerSeated, damage, states, collisions)`, where states = horn, lightbar, hazard_enabled, turnsignal (if non-zero) and ignitionLevel (if 0 or 1) read from electrics.values; collisions = ids of colliding objects (obj:getObjectCollisionIds). It also requests the map from the GE (map.request(id, -2)) when the traffic signals change version unexpectedly.
+- Dynamic drivability: updateDrivabilities reads the 'updateDrivabilities' mailbox (flat list {nodeA, nodeB, drivability,…}) and modifies the length and drivability of the graph's edges.
+- findClosestRoad doubles the search area until it finds an edge or exceeds 200 m; the returned distance is in meters, with a wZ bias (default 1.85) that penalizes height differences. The code comment notes that the same function exists in ge/map.lua.
+- findBestRoad picks, among the edges whose radius covers the position, the one most aligned with the vehicle direction (absolute value if the edge is two-way), penalized by edge.gated; falls back to findClosestRoad.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mapmgr.clearCustomMap()` | Supprime la carte personnalisée si elle était active (mapData remis à nil). | 79 |
-| `mapmgr.disableTracking(forceDisable)` | Désactive l'envoi d'état (sendTracking = nop) si forceDisable ou si aucun joueur n'est assis. | 163 |
-| `mapmgr.enableTracking(name)` | Active l'envoi d'état au GE : associe un nom d'objet à l'id (map.setNameForId) et installe sendTracking. | 158 |
-| `mapmgr.findBestRoad(pos, dir, wZ)` | Trouve l'arête de route la plus pertinente selon la position ET la direction (alignement, sens unique, barrières), avec repli sur findClosestRoad. | 271 |
-| `mapmgr.findClosestRoad(pos, wZ)` | Trouve l'arête de route la plus proche d'une position (distance au segment avec biais de hauteur wZ). Nécessite que la carte soit chargée. | 241 |
-| `mapmgr.getObjects()` | Renvoie la table des objets proches (mailbox 'objUpdate'), décodée au plus une fois par instant de simulation. | 179 |
-| `mapmgr.getPointToPointPath(startPos, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Calcule un chemin sur le navgraph entre deux positions (le point de départ et la cible sont rattachés aux arêtes proches). Renvoie {} si la carte n'est pas chargée. | 379 |
-| `mapmgr.init()` | Active le suivi vers le GE si le véhicule a des roues ou general.enableTracking. Appelée par main.lua (initSystems, dernière étape). *(interne)* | 173 |
-| `mapmgr.requestMap()` | Demande au GE d'envoyer la carte (map.request(id, serial de la carte actuelle)). | 68 |
-| `mapmgr.reset()` | Vide la liste d'objets M.objects au reset du véhicule. *(interne)* | 169 |
-| `mapmgr.setCustomMap(map)` | Remplace la carte par un graphe fourni (outil/scénario) et oublie le numéro de build. | 72 |
-| `mapmgr.setMap(newbuildSerial)` | Charge la carte depuis la mailbox 'mapData' : construit le graphe, le kd-tree des arêtes, les règles et alias, applique les drivabilités puis notifie le GE par le hook onVehicleMapmgrUpdate. Ne fait rien si le numéro de build est déjà celui chargé ou si les données sont incomplètes. *(interne)* | 45 |
-| `mapmgr.setSignals(data)` | Définit la table des signaux de circulation (M.signalsData). *(interne)* | 87 |
-| `mapmgr.setSurfaceNormalBelow(v, p, r)` | Calcule la normale de la surface sous un point en échantillonnant la hauteur du sol en 3 points d'un triangle de rayon r autour de p (obj:getSurfaceHeightBelow). Précis jusqu'à environ 50° de pente ; renvoie (0,0,1) si le terrain est trop bas/irrégulier. Écrit le résultat dans v sans allocation. | 194 |
-| `mapmgr.surfaceNormalBelow(p, r)` | Version allouante de setSurfaceNormalBelow : renvoie un nouveau vec3. | 226 |
-| `mapmgr.updateDrivabilities()` | Applique au graphe les changements de drivabilité reçus par la mailbox 'updateDrivabilities' ; ne fait rien si la mailbox est vide ou sans graphe. *(interne)* | 21 |
-| `mapmgr.updateSignals(data)` | Met à jour l'action des signaux d'après un lot {clé1, clé2, clé3, action, …} (par groupes de 4). *(interne)* | 91 |
+| `mapmgr.clearCustomMap()` | Removes the custom map if it was active (mapData set back to nil). | 79 |
+| `mapmgr.disableTracking(forceDisable)` | Disables sending the state (sendTracking = nop) if forceDisable or if no player is seated. | 163 |
+| `mapmgr.enableTracking(name)` | Enables sending the state to the GE: associates an object name with the id (map.setNameForId) and installs sendTracking. | 158 |
+| `mapmgr.findBestRoad(pos, dir, wZ)` | Finds the most relevant road edge according to position AND direction (alignment, one-way, gates), falling back to findClosestRoad. | 271 |
+| `mapmgr.findClosestRoad(pos, wZ)` | Finds the road edge closest to a position (distance to the segment with wZ height bias). Requires the map to be loaded. | 241 |
+| `mapmgr.getObjects()` | Returns the table of nearby objects (mailbox 'objUpdate'), decoded at most once per simulation instant. | 179 |
+| `mapmgr.getPointToPointPath(startPos, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)` | Computes a path on the navgraph between two positions (the start point and the target are attached to nearby edges). Returns {} if the map is not loaded. | 379 |
+| `mapmgr.init()` | Enables tracking to the GE if the vehicle has wheels or general.enableTracking. Called by main.lua (initSystems, last step). *(internal)* | 173 |
+| `mapmgr.requestMap()` | Asks the GE to send the map (map.request(id, serial of the current map)). | 68 |
+| `mapmgr.reset()` | Empties the M.objects list on vehicle reset. *(internal)* | 169 |
+| `mapmgr.setCustomMap(map)` | Replaces the map with a provided graph (tool/scenario) and forgets the build number. | 72 |
+| `mapmgr.setMap(newbuildSerial)` | Loads the map from the 'mapData' mailbox: builds the graph, the edge kd-tree, the rules and aliases, applies the drivabilities then notifies the GE via the onVehicleMapmgrUpdate hook. Does nothing if the build number is already the loaded one or if the data is incomplete. *(internal)* | 45 |
+| `mapmgr.setSignals(data)` | Sets the table of traffic signals (M.signalsData). *(internal)* | 87 |
+| `mapmgr.setSurfaceNormalBelow(v, p, r)` | Computes the surface normal under a point by sampling the ground height at 3 points of a triangle of radius r around p (obj:getSurfaceHeightBelow). Accurate up to about 50° of slope; returns (0,0,1) if the terrain is too low/irregular. Writes the result into v without allocation. | 194 |
+| `mapmgr.surfaceNormalBelow(p, r)` | Allocating version of setSurfaceNormalBelow: returns a new vec3. | 226 |
+| `mapmgr.updateDrivabilities()` | Applies to the graph the drivability changes received through the 'updateDrivabilities' mailbox; does nothing if the mailbox is empty or there is no graph. *(internal)* | 21 |
+| `mapmgr.updateSignals(data)` | Updates the signals' action from a batch {key1, key2, key3, action, …} (in groups of 4). *(internal)* | 91 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mapmgr.disableTracking(forceDisable)`
 
-Désactive l'envoi d'état (sendTracking = nop) si forceDisable ou si aucun joueur n'est assis.
+Disables sending the state (sendTracking = nop) if forceDisable or if no player is seated.
 
-- `forceDisable` (*boolean|nil*) : true pour désactiver même si un joueur est assis.
+- `forceDisable` (*boolean|nil*) : true to disable even if a player is seated.
 
 #### `mapmgr.enableTracking(name)`
 
-Active l'envoi d'état au GE : associe un nom d'objet à l'id (map.setNameForId) et installe sendTracking.
+Enables sending the state to the GE: associates an object name with the id (map.setNameForId) and installs sendTracking.
 
-- `name` (*string|nil*) : Nom du véhicule dans la carte ; l'id du véhicule si nil.
+- `name` (*string|nil*) : Vehicle name in the map; the vehicle id if nil.
 
 #### `mapmgr.findBestRoad(pos, dir, wZ)`
 
-Trouve l'arête de route la plus pertinente selon la position ET la direction (alignement, sens unique, barrières), avec repli sur findClosestRoad.
+Finds the most relevant road edge according to position AND direction (alignment, one-way, gates), falling back to findClosestRoad.
 
-- `pos` (*vec3|nil*) : Position ; celle du véhicule si nil.
-- `dir` (*vec3|nil*) : Direction ; celle du véhicule si nil.
-- `wZ` (*number|nil*) : Poids de la différence de hauteur.
-- **renvoie** : any Premier noeud de l'arête.
-- **renvoie** : any Second noeud de l'arête.
-- **renvoie** : number Distance en mètres.
+- `pos` (*vec3|nil*) : Position; the vehicle's if nil.
+- `dir` (*vec3|nil*) : Direction; the vehicle's if nil.
+- `wZ` (*number|nil*) : Weight of the height difference.
+- **returns**: any First node of the edge.
+- **returns**: any Second node of the edge.
+- **returns**: number Distance in meters.
 
 #### `mapmgr.findClosestRoad(pos, wZ)`
 
-Trouve l'arête de route la plus proche d'une position (distance au segment avec biais de hauteur wZ). Nécessite que la carte soit chargée.
+Finds the road edge closest to a position (distance to the segment with wZ height bias). Requires the map to be loaded.
 
-- `pos` (*vec3|nil*) : Position ; celle du véhicule si nil.
-- `wZ` (*number|nil*) : Poids de la différence de hauteur (1.85 par défaut).
-- **renvoie** : any Identifiant du premier noeud de l'arête (nil si rien trouvé à moins de 200 m).
-- **renvoie** : any Identifiant du second noeud de l'arête.
-- **renvoie** : number Distance à l'arête en mètres.
+- `pos` (*vec3|nil*) : Position; the vehicle's if nil.
+- `wZ` (*number|nil*) : Weight of the height difference (1.85 by default).
+- **returns**: any Identifier of the first node of the edge (nil if nothing found within 200 m).
+- **returns**: any Identifier of the second node of the edge.
+- **returns**: number Distance to the edge in meters.
 
 #### `mapmgr.getObjects()`
 
-Renvoie la table des objets proches (mailbox 'objUpdate'), décodée au plus une fois par instant de simulation.
+Returns the table of nearby objects (mailbox 'objUpdate'), decoded at most once per simulation instant.
 
-- **renvoie** : table M.objects (partagée, ne pas conserver entre frames).
+- **returns**: table M.objects (shared, do not keep between frames).
 
 #### `mapmgr.getPointToPointPath(startPos, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ)`
 
-Calcule un chemin sur le navgraph entre deux positions (le point de départ et la cible sont rattachés aux arêtes proches). Renvoie {} si la carte n'est pas chargée.
+Computes a path on the navgraph between two positions (the start point and the target are attached to nearby edges). Returns {} if the map is not loaded.
 
-- `startPos` (*vec3*) : Position de départ.
-- `targetPos` (*vec3*) : Position cible.
-- `cutOffDrivability` (*number|nil*) : Les routes de drivabilité inférieure ou égale sont pénalisées.
-- `dirMult` (*number|nil*) : Pénalité si le chemin ne respecte pas les sens légaux (> 1, typiquement >= 1e4) ; nil ou 1 = aucune.
-- `penaltyAboveCutoff` (*number|nil*) : Multiplicateur de coût au-dessus du seuil de drivabilité.
-- `penaltyBelowCutoff` (*number|nil*) : Multiplicateur de coût sous le seuil.
-- `wZ` (*number|nil*) : Biais de hauteur (4 par défaut) pour choisir le noeud d'arrivée.
-- **renvoie** : table Liste des noeuds du chemin (format graphpath), {} si impossible.
+- `startPos` (*vec3*) : Start position.
+- `targetPos` (*vec3*) : Target position.
+- `cutOffDrivability` (*number|nil*) : Roads of lower or equal drivability are penalized.
+- `dirMult` (*number|nil*) : Penalty if the path does not respect legal directions (> 1, typically >= 1e4); nil or 1 = none.
+- `penaltyAboveCutoff` (*number|nil*) : Cost multiplier above the drivability threshold.
+- `penaltyBelowCutoff` (*number|nil*) : Cost multiplier below the threshold.
+- `wZ` (*number|nil*) : Height bias (4 by default) to choose the arrival node.
+- **returns**: table List of path nodes (graphpath format), {} if impossible.
 
 #### `mapmgr.setCustomMap(map)`
 
-Remplace la carte par un graphe fourni (outil/scénario) et oublie le numéro de build.
+Replaces the map with a provided graph (tool/scenario) and forgets the build number.
 
-- `map` (*table*) : Graphe au format graphpath.
+- `map` (*table*) : Graph in graphpath format.
 
 #### `mapmgr.setMap(newbuildSerial)`
 
-Charge la carte depuis la mailbox 'mapData' : construit le graphe, le kd-tree des arêtes, les règles et alias, applique les drivabilités puis notifie le GE par le hook onVehicleMapmgrUpdate. Ne fait rien si le numéro de build est déjà celui chargé ou si les données sont incomplètes.
+Loads the map from the 'mapData' mailbox: builds the graph, the edge kd-tree, the rules and aliases, applies the drivabilities then notifies the GE via the onVehicleMapmgrUpdate hook. Does nothing if the build number is already the loaded one or if the data is incomplete.
 
-- `newbuildSerial` (*number|nil*) : Numéro de build de la carte annoncée ; ignoré s'il est identique à celui déjà chargé.
+- `newbuildSerial` (*number|nil*) : Build number of the announced map; ignored if identical to the one already loaded.
 
 #### `mapmgr.setSignals(data)`
 
-Définit la table des signaux de circulation (M.signalsData).
+Sets the table of traffic signals (M.signalsData).
 
-- `data` (*table*) : Signaux indexés [groupe][?][?] avec un champ action.
+- `data` (*table*) : Signals indexed [group][?][?] with an action field.
 
 #### `mapmgr.setSurfaceNormalBelow(v, p, r)`
 
-Calcule la normale de la surface sous un point en échantillonnant la hauteur du sol en 3 points d'un triangle de rayon r autour de p (obj:getSurfaceHeightBelow). Précis jusqu'à environ 50° de pente ; renvoie (0,0,1) si le terrain est trop bas/irrégulier. Écrit le résultat dans v sans allocation.
+Computes the surface normal under a point by sampling the ground height at 3 points of a triangle of radius r around p (obj:getSurfaceHeightBelow). Accurate up to about 50° of slope; returns (0,0,1) if the terrain is too low/irregular. Writes the result into v without allocation.
 
-- `v` (*vec3*) : Vecteur de sortie (modifié ; utilisé aussi comme point d'échantillon temporaire).
-- `p` (*vec3*) : Point au-dessus de la surface.
-- `r` (*number|nil*) : Rayon d'échantillonnage en mètres (2 par défaut).
+- `v` (*vec3*) : Output vector (modified; also used as a temporary sample point).
+- `p` (*vec3*) : Point above the surface.
+- `r` (*number|nil*) : Sampling radius in meters (2 by default).
 
 #### `mapmgr.surfaceNormalBelow(p, r)`
 
-Version allouante de setSurfaceNormalBelow : renvoie un nouveau vec3.
+Allocating version of setSurfaceNormalBelow: returns a new vec3.
 
-- `p` (*vec3*) : Point au-dessus de la surface.
-- `r` (*number|nil*) : Rayon d'échantillonnage (2 par défaut).
-- **renvoie** : vec3 Normale unitaire de la surface.
+- `p` (*vec3*) : Point above the surface.
+- `r` (*number|nil*) : Sampling radius (2 by default).
+- **returns**: vec3 Unit normal of the surface.
 
 #### `mapmgr.updateSignals(data)`
 
-Met à jour l'action des signaux d'après un lot {clé1, clé2, clé3, action, …} (par groupes de 4).
+Updates the signals' action from a batch {key1, key2, key3, action, …} (in groups of 4).
 
-- `data` (*table|nil*) : Liste plate de mises à jour.
+- `data` (*table|nil*) : Flat list of updates.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `objectCollisionIds` | table | Ids des objets en collision avec ce véhicule, rafraîchi à chaque sendTracking. |
-| `objects` | table | Objets proches décodés depuis la mailbox 'objUpdate' (rempli par getObjects ; remis à {} par reset). |
-| `sendTracking` | function | nop tant que le suivi n'est pas activé (enableTracking), puis la fonction d'envoi d'état au GE. Appelée à chaque frame par main.lua. |
+| `objectCollisionIds` | table | Ids of the objects colliding with this vehicle, refreshed at each sendTracking. |
+| `objects` | table | Nearby objects decoded from the 'objUpdate' mailbox (filled by getObjects; reset to {} by reset). |
+| `sendTracking` | function | nop until tracking is enabled (enableTracking), then the function that sends the state to the GE. Called every frame by main.lua. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirectionVector`, `getLastMailbox`, `getLastMailboxToBuffer`, `getLastMailboxVersion`, `getObjectCollisionIds`, `getPosition`, `getSimTime`, `getSurfaceHeightBelow`, `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/mapmgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/mapmgr.lua`.*

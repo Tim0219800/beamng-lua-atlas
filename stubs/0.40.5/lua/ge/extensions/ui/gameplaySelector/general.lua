@@ -2,310 +2,310 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/gameplaySelector/general.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Backend « gameplaySelector » du sélecteur en grille : l'écran qui liste missions, scénarios, campagnes, expériences de démarrage rapide et sélecteurs de rallye. Il collecte les tuiles par le hook onGameplaySelectorGetTiles (validBackends doit contenir gameplaySelector), gère filtres, recherche, favoris, récents et options d'affichage (sauvegardées dans /settings/gameplaySelectorData.json), construit les détails via onGameplaySelectorGetDetails et envoie à l'interface des instantanés (GameplaySelectorDataLoaded, gameplaySelectorDisplayDataSnapshot, gameplaySelectorDetails). Il applique aussi des préréglages selon la route (menu.gameplay, menu.rallySelector, menu.experiencesSelector) et gère la navigation vers les « clusters ».
---- Accès : extension `ui_gameplaySelector_general` : `extensions.load("ui_gameplaySelector_general")`, puis la globale `ui_gameplaySelector_general`
+--- "gameplaySelector" backend of the grid selector: the screen that lists missions, scenarios, campaigns, quick-start experiences and rally selectors. It collects the tiles through the hook onGameplaySelectorGetTiles (validBackends must contain gameplaySelector), handles filters, search, favorites, recents and display options (saved in /settings/gameplaySelectorData.json), builds the details via onGameplaySelectorGetDetails and sends snapshots to the interface (GameplaySelectorDataLoaded, gameplaySelectorDisplayDataSnapshot, gameplaySelectorDetails). It also applies presets according to the route (menu.gameplay, menu.rallySelector, menu.experiencesSelector) and handles navigation to "clusters".
+--- Access: extension `ui_gameplaySelector_general`: `extensions.load("ui_gameplaySelector_general")`, then the global `ui_gameplaySelector_general`
 ---@class ui_gameplaySelector_general
----@field backendName string Nom du backend : « gameplaySelector ».
----@field dependencies string[] Extensions chargées avant celle-ci : ui_gameplaySelector_tiles et core_locales.
+---@field backendName string Backend name: "gameplaySelector".
+---@field dependencies string[] Extensions loaded before this one: ui_gameplaySelector_tiles and core_locales.
 ui_gameplaySelector_general = {}
 
---- Hook de fin du chargement asynchrone (util_asyncBulkLoader). Émet l'instantané GameplaySelectorDataLoaded de la route en attente, sauf si l'utilisateur a changé de route entre-temps.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1070
+--- End hook of the asynchronous loading (util_asyncBulkLoader). Emits the GameplaySelectorDataLoaded snapshot of the pending route, unless the user changed route in the meantime.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1070
 function ui_gameplaySelector_general.asyncGameplaySelectorLoadComplete() end
 
---- Efface tous les filtres.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:641
+--- Clears all filters.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:641
 function ui_gameplaySelector_general.clearAllFilters() end
 
---- Appelé quand l'interface ferme le sélecteur. Ne fait rien pour l'instant (TODO).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:821
+--- Called when the interface closes the selector. Does nothing for now (TODO).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:821
 function ui_gameplaySelector_general.closedFromUI() end
 
---- Reconstruit l'instantané de la vue courante (groupes, filtres, options d'affichage, détails de gestion, texte de recherche, en-tête) et l'envoie par l'évènement gameplaySelectorDisplayDataSnapshot avec le requestId. Renvoie false et journalise une erreur en cas d'échec.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1107
----@param requestId any Identifiant de requête de l'interface.
----@return boolean  true si l'évènement a été envoyé.
+--- Rebuilds the current view's snapshot (groups, filters, display options, management details, search text, header) and sends it via the event gameplaySelectorDisplayDataSnapshot with the requestId. Returns false and logs an error on failure.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1107
+---@param requestId any Interface request identifier.
+---@return boolean  true if the event was sent.
 function ui_gameplaySelector_general.emitDisplayDataSnapshot(requestId) end
 
---- Exécute le bouton de détails d'identifiant donné via le buttonModule.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:837
----@param buttonId any Identifiant du bouton.
----@param additionalData any Données supplémentaires passées au callback.
----@return any  Résultat de buttonInstance.executeButton.
+--- Runs the details button with the given identifier via the buttonModule.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:837
+---@param buttonId any Button identifier.
+---@param additionalData any Extra data passed to the callback.
+---@return any  Result of buttonInstance.executeButton.
 function ui_gameplaySelector_general.executeButton(buttonId, additionalData) end
 
---- Exécute le bouton marqué isDoubleClickAction des détails d'une tuile (ou l'unique bouton s'il n'y en a qu'un).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:850
----@param item table Données showDetails de la tuile.
+--- Runs the button marked isDoubleClickAction in a tile's details (or the only button if there is just one).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:850
+---@param item table The tile's showDetails data.
 function ui_gameplaySelector_general.executeDoubleClick(item) end
 
---- Ne fait rien (TODO).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:846
+--- Does nothing (TODO).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:846
 function ui_gameplaySelector_general.exitCallback() end
 
---- Journalise seulement le chemin (non implémenté).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:862
----@param path string Chemin de dossier.
+--- Only logs the path (not implemented).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:862
+---@param path string Folder path.
 function ui_gameplaySelector_general.exploreFolder(path) end
 
---- Renvoie les filtres actifs.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:676
----@return table  Filtres actifs.
+--- Returns the active filters.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:676
+---@return table  Active filters.
 function ui_gameplaySelector_general.getActiveFilters() end
 
---- Construit les détails d'une tuile en émettant le hook onGameplaySelectorGetDetails et renvoie le premier bloc.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:827
----@param item table Données showDetails de la tuile.
----@return table|nil  Bloc de détails, nil si aucun générateur n'a répondu.
+--- Builds a tile's details by emitting the hook onGameplaySelectorGetDetails and returns the first block.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:827
+---@param item table The tile's showDetails data.
+---@return table|nil  Details block, nil if no generator responded.
 function ui_gameplaySelector_general.getDetails(item) end
 
---- Renvoie les options d'affichage effectives, adaptées à la route (rallye ou expériences).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:626
----@param routeName string|nil Nom de la route.
----@return table  Valeurs d'options par clé.
+--- Returns the effective display options, adapted to the route (rally or experiences).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:626
+---@param routeName string|nil Name of the road.
+---@return table  Option values by key.
 function ui_gameplaySelector_general.getDisplayData(routeName) end
 
---- Renvoie la définition des options d'affichage adaptée à la route : masque groupMode et clusterMode en mode rallye ou expériences, et masque groupModeRally et clusterModeRally ailleurs.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:725
----@param routeName string|nil Nom de la route (par défaut la route active).
----@return table[]  Options visibles.
+--- Returns the display options definition adapted to the route: hides groupMode and clusterMode in rally or experiences mode, and hides groupModeRally and clusterModeRally elsewhere.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:725
+---@param routeName string|nil Route name (the active route by default).
+---@return table[]  Visible options.
 function ui_gameplaySelector_general.getDisplayDataOptions(routeName) end
 
---- Renvoie la définition des filtres après avoir chargé les données.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:671
----@return table  Résultat de filterInstance.getFilters().
+--- Returns the filter definition after loading the data.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:671
+---@return table  Result of filterInstance.getFilters().
 function ui_gameplaySelector_general.getFilters() end
 
---- Renvoie les données du sélecteur (tuiles dont validBackends contient gameplaySelector, filtres, options d'affichage), les recalcule si les mods ou les réglages ont changé, et les crée à la première demande.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:487
+--- Returns the selector data (tiles whose validBackends contains gameplaySelector, filters, display options), recomputes them if the mods or settings have changed, and creates them on first request.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:487
 ---@return table  Table items, filterList, activeFilters, lockedFiltersByProp, displayData.
 function ui_gameplaySelector_general.getGameplayData() end
 
---- Renvoie toujours { buttons = {} } (TODO dans le code).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:841
----@return table  Table avec buttons vide.
+--- Always returns { buttons = {} } (TODO in the code).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:841
+---@return table  Table with empty buttons.
 function ui_gameplaySelector_general.getManagementDetails() end
 
---- Construit le titre de l'écran et le fil d'Ariane (menu, sélecteur de gameplay, segment de filtres ou recherche, cluster ou page découverte). Ajoute « (filtré) » au titre si des filtres ou une recherche sont actifs.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:746
----@param path table Chemin courant { keys = {...} }.
+--- Builds the screen title and the breadcrumb (menu, gameplay selector, filters or search segment, cluster or discover page). Adds "(filtered)" to the title if filters or a search are active.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:746
+---@param path table Current path { keys = {...} }.
 ---@return table  Table title, isFiltered, pathSegments.
 function ui_gameplaySelector_general.getScreenHeaderTitleAndPath(path) end
 
---- Renvoie le texte de recherche courant.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:712
----@return string|nil  Texte saisi.
+--- Returns the current search text.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:712
+---@return string|nil  Entered text.
 function ui_gameplaySelector_general.getSearchText() end
 
---- Renvoie les groupes de tuiles pour un chemin, via ui_gameplaySelector_tiles.getTiles.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:510
----@param path table Chemin de navigation { keys = {...} }.
----@param routeName string|nil Nom de la route.
----@return table[]  Groupes de tuiles.
+--- Returns the tile groups for a path, via ui_gameplaySelector_tiles.getTiles.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:510
+---@param path table Navigation path { keys = {...} }.
+---@param routeName string|nil Name of the road.
+---@return table[]  Tile groups.
 function ui_gameplaySelector_general.getTiles(path, routeName) end
 
---- Renvoie les données du sélecteur : items, displayData (adaptées à la route : rallye ou expériences), filterList, activeFilters, lockedFiltersByProp et backendName. Charge les tuiles si nécessaire.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:440
----@param routeName string|nil Nom de la route, pour adapter groupMode et clusterMode.
----@return table  Table de données d'interface.
+--- Returns the selector data: items, displayData (adapted to the route: rally or experiences), filterList, activeFilters, lockedFiltersByProp and backendName. Loads the tiles if needed.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:440
+---@param routeName string|nil Route name, to adapt groupMode and clusterMode.
+---@return table  Interface data table.
 function ui_gameplaySelector_general.getUiData(routeName) end
 
---- Journalise seulement l'id du mod (non implémenté).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:867
----@param modId string Identifiant du mod.
+--- Only logs the mod id (not implemented).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:867
+---@param modId string Mod identifier.
 function ui_gameplaySelector_general.goToMod(modId) end
 
---- Indique si une tuile est en favori.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:647
----@param itemKey string Clé de la tuile.
----@return boolean  true si favori.
+--- Indicates whether a tile is a favorite.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:647
+---@param itemKey string Tile key.
+---@return boolean  true if favorite.
 function ui_gameplaySelector_general.isFavourite(itemKey) end
 
---- Indique si les données ont déjà été construites et sont à jour.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:498
----@return boolean|nil  Vrai si chargées et non invalidées (nil ou false sinon).
+--- Indicates whether the data has already been built and is up to date.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:498
+---@return boolean|nil  True if loaded and not invalidated (nil or false otherwise).
 function ui_gameplaySelector_general.isGameplayDataLoaded() end
 
---- Indique si une tuile fait partie des éléments récents.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:659
----@param itemKey string Clé de la tuile.
----@return boolean  true si récente.
+--- Indicates whether a tile is among the recent items.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:659
+---@param itemKey string Tile key.
+---@return boolean  true if recent.
 function ui_gameplaySelector_general.isRecent(itemKey) end
 
---- Prépare puis ouvre l'écran d'un cluster de tuiles. Calcule les clés du chemin (gotoPath, keys ou la table elle-même) et un titre, mémorise la sélection en attente et navigue vers menu.gameplay.type (ou menu.experiencesSelector.type depuis le sélecteur d'expériences).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:582
----@param input table Table de tuile ou de chemin : gotoPath, keys, ou liste de clés ; name, label ou title pour le titre.
----@return any  Résultat de ui_router.navigate.
+--- Prepares then opens a tile cluster's screen. Computes the path keys (gotoPath, keys or the table itself) and a title, stores the pending selection and navigates to menu.gameplay.type (or menu.experiencesSelector.type from the experiences selector).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:582
+---@param input table Tile or path table: gotoPath, keys, or list of keys; name, label or title for the title.
+---@return any  Result of ui_router.navigate.
 function ui_gameplaySelector_general.navigateToCluster(input) end
 
---- Hook de route appelé à l'entrée dans une route de cluster. Promeut la sélection préparée par navigateToCluster, sinon retombe sur le cluster par défaut.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1130
----@param context any Contexte du routeur.
----@param toRoute table Route d'arrivée.
----@param fromRoute table|nil Route de départ.
----@param data table Données de route.
+--- Route hook called on entering a cluster route. Promotes the selection prepared by navigateToCluster, otherwise falls back to the default cluster.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1130
+---@param context any Router context.
+---@param toRoute table Destination route.
+---@param fromRoute table|nil Origin route.
+---@param data table Route data.
 function ui_gameplaySelector_general.onClusterRouteEnter(context, toRoute, fromRoute, data) end
 
---- Hook de route appelé au montage d'une route de cluster. Démarre le chargement asynchrone avec les clés et le titre du cluster actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1142
----@param context any Contexte du routeur.
----@param toRoute table Route d'arrivée (name utilisé).
----@param fromRoute table|nil Route de départ.
----@param data table Données de route.
+--- Route hook called when a cluster route is mounted. Starts the asynchronous loading with the active cluster's keys and title.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1142
+---@param context any Router context.
+---@param toRoute table Destination route (name used).
+---@param fromRoute table|nil Origin route.
+---@param data table Route data.
 function ui_gameplaySelector_general.onClusterRouteMount(context, toRoute, fromRoute, data) end
 
---- Hook appelé quand un mod est activé : marque les données comme à recalculer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:504
+--- Hook called when a mod is activated: marks the data as needing recomputation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:504
 function ui_gameplaySelector_general.onModActivated() end
 
---- Hook appelé quand un mod est désactivé : marque les données comme à recalculer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:503
+--- Hook called when a mod is deactivated: marks the data as needing recomputation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:503
 function ui_gameplaySelector_general.onModDeactivated() end
 
---- Hook appelé quand le gestionnaire de mods est prêt : marque les données comme à recalculer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:505
+--- Hook called when the mod manager is ready: marks the data as needing recomputation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:505
 function ui_gameplaySelector_general.onModManagerReady() end
 
---- Hook appelé quand l'état du gestionnaire de mods change : marque les données comme à recalculer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:506
+--- Hook called when the mod manager state changes: marks the data as needing recomputation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:506
 function ui_gameplaySelector_general.onModManagerStateChanged() end
 
---- Hook de route appelé au montage d'une route racine du sélecteur. Réinitialise la sélection de cluster, mémorise la route active et démarre le chargement asynchrone avec le chemin allGameplay.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1122
----@param context any Contexte du routeur.
----@param toRoute table Route d'arrivée (name utilisé).
----@param fromRoute table|nil Route de départ.
----@param data table Données de route (non utilisées).
+--- Route hook called when a root route of the selector is mounted. Resets the cluster selection, stores the active route and starts the asynchronous loading with the allGameplay path.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1122
+---@param context any Router context.
+---@param toRoute table Destination route (name used).
+---@param fromRoute table|nil Origin route.
+---@param data table Route data (not used).
 function ui_gameplaySelector_general.onRouteMount(context, toRoute, fromRoute, data) end
 
---- Hook appelé quand les réglages changent : marque les données comme à recalculer.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:507
+--- Hook called when the settings change: marks the data as needing recomputation.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:507
 function ui_gameplaySelector_general.onSettingsChanged() end
 
---- Ouvre menu.experiencesSelector avec le filtre système quickStartExperiences.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1184
+--- Opens menu.experiencesSelector with the system filter quickStartExperiences.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1184
 function ui_gameplaySelector_general.openExperiencesSelector() end
 
---- Applique le préréglage de la route menu.gameplay (efface filtres et recherche) puis y navigue.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1176
+--- Applies the preset of the menu.gameplay route (clears filters and search) then navigates to it.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1176
 function ui_gameplaySelector_general.openGameplaySelector() end
 
---- Ouvre menu.rallySelector avec les filtres de type rallyStage et rallyLoop.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1180
+--- Opens menu.rallySelector with the type filters rallyStage and rallyLoop.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1180
 function ui_gameplaySelector_general.openRallySelector() end
 
---- Indique si une tuile passe les filtres et la recherche ; une tuile isCareerOnly est refusée tant que displayData.showCareerContent est faux.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:610
----@param item table Tuile testée.
----@return boolean  true si la tuile est affichée.
+--- Indicates whether a tile passes the filters and the search; an isCareerOnly tile is refused as long as displayData.showCareerContent is false.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:610
+---@param item table Tile tested.
+---@return boolean  true if the tile is displayed.
 function ui_gameplaySelector_general.passesFilters(item) end
 
---- Ne fait rien (TODO dans le code).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:817
+--- Does nothing (TODO in the code).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:817
 function ui_gameplaySelector_general.profilerFinish() end
 
---- Construit les détails d'une tuile et les envoie à l'interface par l'évènement gameplaySelectorDetails avec backendName, requestId, item et details.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:596
----@param item table Données showDetails de la tuile.
----@param requestId any Identifiant de requête de l'interface.
----@return table  Le payload envoyé.
+--- Builds a tile's details and sends them to the interface via the event gameplaySelectorDetails with backendName, requestId, item and details.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:596
+---@param item table The tile's showDetails data.
+---@param requestId any Interface request identifier.
+---@return table  The payload sent.
 function ui_gameplaySelector_general.requestDetails(item, requestId) end
 
---- Remet les options d'affichage à leurs valeurs par défaut. Émet un instantané si requestId est fourni.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:737
----@param requestId any|nil Identifiant de requête.
----@return table  Données d'affichage.
+--- Resets the display options to their default values. Emits a snapshot if requestId is provided.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:737
+---@param requestId any|nil Request identifier.
+---@return table  Display data.
 function ui_gameplaySelector_general.resetDisplayDataToDefaults(requestId) end
 
---- Réinitialise un filtre de plage. Émet un instantané si requestId est fourni.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:696
----@param filterKey string Nom du filtre.
----@param requestId any|nil Identifiant de requête.
----@return any  Résultat de filterInstance.resetRangeFilter.
+--- Resets a range filter. Emits a snapshot if requestId is provided.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:696
+---@param filterKey string Filter name.
+---@param requestId any|nil Request identifier.
+---@return any  Result of filterInstance.resetRangeFilter.
 function ui_gameplaySelector_general.resetRangeFilter(filterKey, requestId) end
 
---- Réinitialise un filtre à choix multiples. Émet un instantané si requestId est fourni.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:704
----@param filterKey string Nom du filtre.
----@param requestId any|nil Identifiant de requête.
----@return any  Résultat de filterInstance.resetSetFilter.
+--- Resets a multiple-choice filter. Emits a snapshot if requestId is provided.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:704
+---@param filterKey string Filter name.
+---@param requestId any|nil Request identifier.
+---@return any  Result of filterInstance.resetSetFilter.
 function ui_gameplaySelector_general.resetSetFilter(filterKey, requestId) end
 
---- Renvoie le titre du cluster actif, sinon clusterTitle s'il est une chaîne non vide, sinon nil.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1158
----@param clusterTitle string|nil Titre de repli.
----@return string|nil  Titre résolu.
+--- Returns the active cluster's title, otherwise clusterTitle if it is a non-empty string, otherwise nil.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1158
+---@param clusterTitle string|nil Fallback title.
+---@return string|nil  Resolved title.
 function ui_gameplaySelector_general.resolveClusterTitle(clusterTitle) end
 
---- Renvoie le chemin de la vue courante : celui du cluster actif, sinon le chemin racine { keys = {"allGameplay"} }.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:1092
----@return table  Chemin { keys = {...} }.
+--- Returns the current view's path: that of the active cluster, otherwise the root path { keys = {"allGameplay"} }.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:1092
+---@return table  Path { keys = {...} }.
 function ui_gameplaySelector_general.resolveCurrentSelectorPath() end
 
---- Définit une option d'affichage et renvoie les données d'affichage à jour. Émet un instantané si requestId est fourni.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:729
----@param key string Clé de l'option.
----@param value any Valeur.
----@param requestId any|nil Identifiant de requête.
----@return table  Données d'affichage.
+--- Sets a display option and returns the updated display data. Emits a snapshot if requestId is provided.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:729
+---@param key string Option key.
+---@param value any Value.
+---@param requestId any|nil Request identifier.
+---@return table  Display data.
 function ui_gameplaySelector_general.setDisplayDataOption(key, value, requestId) end
 
---- Définit le texte de recherche. Émet un instantané si requestId est fourni.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:716
----@param text string Texte de recherche.
----@param requestId any|nil Identifiant de requête.
----@return any  Résultat de filterInstance.setSearchText.
+--- Sets the search text. Emits a snapshot if requestId is provided.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:716
+---@param text string Search text.
+---@param requestId any|nil Request identifier.
+---@return any  Result of filterInstance.setSearchText.
 function ui_gameplaySelector_general.setSearchText(text, requestId) end
 
---- Bascule le statut de favori d'une tuile et renvoie le nouvel état.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:652
----@param itemDetails table Table avec le champ key.
----@return boolean  Nouvel état de favori.
+--- Toggles a tile's favorite status and returns the new state.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:652
+---@param itemDetails table Table with the field key.
+---@return boolean  New favorite state.
 function ui_gameplaySelector_general.toggleFavourite(itemDetails) end
 
---- Active ou désactive une valeur de filtre. Émet un instantané si requestId est fourni.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:680
----@param filterKey string Nom du filtre.
----@param value any Valeur de l'option.
----@param requestId any|nil Identifiant de requête.
----@return any  Résultat de filterInstance.toggleFilter.
+--- Enables or disables a filter value. Emits a snapshot if requestId is provided.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:680
+---@param filterKey string Filter name.
+---@param value any Option value.
+---@param requestId any|nil Request identifier.
+---@return any  Result of filterInstance.toggleFilter.
 function ui_gameplaySelector_general.toggleFilter(filterKey, value, requestId) end
 
---- Enregistre une tuile comme récemment utilisée.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:664
----@param itemKey string Clé de la tuile.
+--- Records a tile as recently used.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:664
+---@param itemKey string Tile key.
 function ui_gameplaySelector_general.trackRecent(itemKey) end
 
---- Modifie une option d'affichage (displayDataInstance.setDisplayDataOption).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:631
----@param key string Clé de l'option.
----@param value any Nouvelle valeur.
+--- Changes a display option (displayDataInstance.setDisplayDataOption).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:631
+---@param key string Option key.
+---@param value any New value.
 function ui_gameplaySelector_general.updateDisplayData(key, value) end
 
---- Met à jour une donnée interne du module de filtres (filterInstance.updateData).
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:636
----@param key string Clé de donnée.
----@param value any Valeur.
+--- Updates an internal datum of the filters module (filterInstance.updateData).
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:636
+---@param key string Data key.
+---@param value any Value.
 function ui_gameplaySelector_general.updateFilterData(key, value) end
 
---- Fixe les bornes d'un filtre de plage. Émet un instantané si requestId est fourni.
----Source : lua/ge/extensions/ui/gameplaySelector/general.lua:688
----@param filterKey string Nom du filtre.
----@param min number Borne basse.
----@param max number Borne haute.
----@param requestId any|nil Identifiant de requête.
----@return any  Résultat de filterInstance.updateRangeFilter.
+--- Sets the bounds of a range filter. Emits a snapshot if requestId is provided.
+---Source: lua/ge/extensions/ui/gameplaySelector/general.lua:688
+---@param filterKey string Filter name.
+---@param min number Bottom bound.
+---@param max number Top bound.
+---@param requestId any|nil Request identifier.
+---@return any  Result of filterInstance.updateRangeFilter.
 function ui_gameplaySelector_general.updateRangeFilter(filterKey, min, max, requestId) end
 

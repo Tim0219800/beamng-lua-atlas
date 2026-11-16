@@ -1,57 +1,57 @@
 # `editor_raceEditor_pathnodes`
 
-*Fichier : `lua/ge/extensions/editor/raceEditor/pathnodes.lua` · VM : Game Engine (GE) · 793 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/raceEditor/pathnodes.lua` · VM: Game Engine (GE) · 793 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/raceEditor/pathnodes")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/raceEditor/pathnodes")` (file under extensions/ but not a regular extension)
 
-Sous-fenêtre « Pathnodes » de l'éditeur de course (raceEditor) : édite les nœuds de chemin (path.pathnodes) du chemin courant. On peut créer un nœud manuel (Shift + glisser : position, rayon et direction), ajouter un nœud depuis le navgraph (Alt + clic), sélectionner, déplacer (gizmo ou « simple drag » si la préférence raceEditor.general.useSimpleDrag est active), supprimer, réordonner, basculer le mode manuel/navgraph, et régler position, rayon, normale, visibilité du marqueur, « Use as Split », positions de récupération avant/arrière et champs personnalisés. Toutes les modifications passent par editor.history (annuler/rétablir). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/pathnodes')(raceEditor).
+"Pathnodes" sub-window of the race editor (raceEditor): edits the path nodes (path.pathnodes) of the current path. You can create a manual node (Shift + drag: position, radius and direction), add a node from the navgraph (Alt + click), select, move (gizmo or "simple drag" if the raceEditor.general.useSimpleDrag preference is active), delete, reorder, toggle manual/navgraph mode, and set position, radius, normal, marker visibility, "Use as Split", forward/reverse recovery positions and custom fields. All changes go through editor.history (undo/redo). The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/pathnodes')(raceEditor).
 
-## Remarques
+## Notes
 
-- Création manuelle : si un nœud précédent existe, un segment est créé automatiquement entre le dernier nœud trié et le nouveau ; la route IA est recalculée (editor_raceEditor.calculateAiRoute).
-- La normale n'est créée à la création que si la préférence raceEditor.general.directionalNodes est vraie.
-- En mode navgraph, le gizmo ne déplace pas le nœud (message « Set node to manual to move via Gizmo. ») ; l'échelle agit sur navRadiusScale au lieu de radius.
-- Dans autoRecoverPos, la fonction « redo » utilise la variable locale node capturée à la création de l'action (pas data) pour le nom de la position.
-- C:onEditModeActivate teste self.node, champ jamais défini dans ce fichier : la resélection ne se produit donc jamais.
-- Raccourcis : Shift = ajouter un nœud manuel, Alt = ajouter un nœud du navgraph.
+- Manual creation: if a previous node exists, a segment is automatically created between the last sorted node and the new one; the AI route is recomputed (editor_raceEditor.calculateAiRoute).
+- The normal is only created at creation time if the raceEditor.general.directionalNodes preference is true.
+- In navgraph mode, the gizmo does not move the node (message "Set node to manual to move via Gizmo."); scaling acts on navRadiusScale instead of radius.
+- In autoRecoverPos, the "redo" function uses the local variable node captured when the action was created (not data) for the position name.
+- C:onEditModeActivate tests self.node, a field never set in this file: reselection therefore never happens.
+- Shortcuts: Shift = add a manual node, Alt = add a navgraph node.
 
-## Classe `C`
+## Class `C`
 
-Fenêtre Pathnodes (windowDescription = 'Pathnodes'). Instanciée par le constructeur du module avec init(raceEditor). raceEditor.lua appelle setPath, selected, unselect, draw et onEditModeActivate.
+Pathnodes window (windowDescription = 'Pathnodes'). Instantiated by the module constructor with init(raceEditor). raceEditor.lua calls setPath, selected, unselect, draw and onEditModeActivate.
 
-Le module renvoie un constructeur : `local obj = require("editor_raceEditor_pathnodes")(options)`.
+The module returns a constructor: `local obj = require("editor_raceEditor_pathnodes")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:autoRecoverPos(reverse)` | Crée automatiquement une position de départ de groupe « recovery » à l'emplacement du nœud (direction inversée si reverse) et l'affecte au champ recovery ou reverseRecovery du nœud. | 725 |
-| `C:beginDrag()` | Début de manipulation au gizmo : mémorise l'état sérialisé, la rotation et le rayon du nœud. | 80 |
-| `C:createManualPathnode()` | Affiche l'aide et l'aperçu (sphère, prismes de direction) pendant le glisser, puis au relâchement crée un nœud manuel (et un segment depuis le dernier nœud) via l'historique. | 271 |
-| `C:dragging()` | Pendant la manipulation : applique translation (mode manuel seulement), rotation de la normale (si le nœud en a une) ou échelle du rayon. | 94 |
-| `C:draw(mouseInfo)` | Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau du nœud. | 262 |
-| `C:drawCustomFields(fields)` | Dessine l'éditeur de champs personnalisés et les boutons Copy Fields / Paste Fields (copie dans self.cfData). | 705 |
-| `C:drawPathnodeList()` | Dessine la liste des nœuds (préfixe « * » si useAsSplit, parenthèses si non visible) et le panneau du nœud courant : suppression, déplacement dans la liste, nom, mode, position/rayon, normale, visibilité, split, positions de récupération. | 461 |
-| `C:endDragging()` | Fin de manipulation : valide l'action d'historique avec l'état avant/après du nœud. | 147 |
-| `C:handleMouseDown(hovered)` | Mode simple drag : au clic, autorise le glissement si on clique le nœud déjà sélectionné, sinon sélectionne le nœud survolé ou désélectionne. | 173 |
-| `C:handleMouseHold()` | Mode simple drag : pendant le maintien, calcule la position projetée au sol par lancer de rayon statique (forêt désactivée en collision) et dessine une sphère et le nom du nœud. | 224 |
-| `C:handleMouseUp()` | Mode simple drag : au relâchement, valide l'action « Manipulated Node via Simple Drag » avec la nouvelle position. | 234 |
-| `C:init(raceEditor)` | Mémorise raceEditor, index de sélection nil, mouseInfo vide et crée un utilitaire de champs personnalisés (customFieldsUtil). | 18 |
-| `C:input()` | Gère la souris : Alt = nœud navgraph, Shift = création manuelle, sinon sélection (clic simple, ou simple drag selon la préférence). | 416 |
-| `C:mouseOverPathnodes()` | Renvoie le nœud dont la sphère (rayon radius) est traversée par le rayon souris, le plus proche de la caméra. | 399 |
-| `C:onEditModeActivate()` | Appelé à l'activation du mode d'édition (voir notes : inopérant). | 256 |
-| `C:selectNavgraphNode()` | Mode Alt : survole les waypoints manuels du navgraph (map.getManualWaypoints) et permet d'en ajouter un comme pathnode. | 331 |
-| `C:selectPathnode(id)` | Sélectionne le nœud d'ID id (nil pour aucun) : met en surbrillance ce nœud, place le gizmo, charge le nom et les champs personnalisés. | 47 |
-| `C:selected()` | Appelé quand l'onglet devient actif : désélectionne, met tous les nœuds en dessin « normal », ajoute le raccourci Shift « Add New » et récupère la carte (map.getMap()). | 29 |
-| `C:selectedPathnode()` | Renvoie le nœud sélectionné s'il existe et n'est pas manquant. | 166 |
-| `C:selector(name, fieldName, clrI, tt)` | Liste déroulante pour choisir une position de départ (ou « None » = -1) dans un champ du nœud, avec aperçu du nom dans le monde et bouton « Auto-Place » si le champ est vide et le nœud a une normale. | 747 |
-| `C:setPath(path)` | Définit le chemin de course édité. | 25 |
-| `C:unselect()` | Appelé quand l'onglet est quitté : les nœuds passent en dessin « faded » et le raccourci Shift est retiré. | 39 |
-| `C:updateTransform(index)` | Place le gizmo d'axes sur le nœud (orienté selon sa normale en alignement local si le nœud en a une). Sans effet si le gizmo n'est pas autorisé. | 60 |
+| `C:autoRecoverPos(reverse)` | Automatically creates a "recovery" group start position at the node's location (direction reversed if reverse) and assigns it to the node's recovery or reverseRecovery field. | 725 |
+| `C:beginDrag()` | Start of gizmo manipulation: stores the serialized state, rotation and radius of the node. | 80 |
+| `C:createManualPathnode()` | Displays the help and the preview (sphere, direction prisms) during the drag, then on release creates a manual node (and a segment from the last node) via history. | 271 |
+| `C:dragging()` | During manipulation: applies translation (manual mode only), normal rotation (if the node has one) or radius scaling. | 94 |
+| `C:draw(mouseInfo)` | Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the list and the node panel. | 262 |
+| `C:drawCustomFields(fields)` | Draws the custom fields editor and the Copy Fields / Paste Fields buttons (copies into self.cfData). | 705 |
+| `C:drawPathnodeList()` | Draws the node list (prefix "*" if useAsSplit, parentheses if not visible) and the current node panel: delete, move in the list, name, mode, position/radius, normal, visibility, split, recovery positions. | 461 |
+| `C:endDragging()` | End of manipulation: commits the history action with the node's before/after state. | 147 |
+| `C:handleMouseDown(hovered)` | Simple drag mode: on click, allows dragging if the already selected node is clicked, otherwise selects the hovered node or deselects. | 173 |
+| `C:handleMouseHold()` | Simple drag mode: while held, computes the position projected onto the ground by static raycast (forest disabled in collision) and draws a sphere and the node name. | 224 |
+| `C:handleMouseUp()` | Simple drag mode: on release, commits the "Manipulated Node via Simple Drag" action with the new position. | 234 |
+| `C:init(raceEditor)` | Stores raceEditor, selection index nil, empty mouseInfo and creates a custom fields utility (customFieldsUtil). | 18 |
+| `C:input()` | Handles the mouse: Alt = navgraph node, Shift = manual creation, otherwise selection (single click, or simple drag depending on the preference). | 416 |
+| `C:mouseOverPathnodes()` | Returns the node whose sphere (radius radius) is crossed by the mouse ray, the one closest to the camera. | 399 |
+| `C:onEditModeActivate()` | Called when the edit mode is activated (see notes: ineffective). | 256 |
+| `C:selectNavgraphNode()` | Alt mode: hovers the navgraph's manual waypoints (map.getManualWaypoints) and lets you add one as a pathnode. | 331 |
+| `C:selectPathnode(id)` | Selects the node with ID id (nil for none): highlights that node, places the gizmo, loads the name and custom fields. | 47 |
+| `C:selected()` | Called when the tab becomes active: deselects, sets all nodes to "normal" drawing, adds the Shift shortcut "Add New" and fetches the map (map.getMap()). | 29 |
+| `C:selectedPathnode()` | Returns the selected node if it exists and is not missing. | 166 |
+| `C:selector(name, fieldName, clrI, tt)` | Dropdown to choose a start position (or "None" = -1) in a node field, with a name preview in the world and an "Auto-Place" button if the field is empty and the node has a normal. | 747 |
+| `C:setPath(path)` | Sets the race path being edited. | 25 |
+| `C:unselect()` | Called when the tab is left: nodes switch to "faded" drawing and the Shift shortcut is removed. | 39 |
+| `C:updateTransform(index)` | Places the axis gizmo on the node (oriented along its normal in local alignment if the node has one). No effect if the gizmo is not allowed. | 60 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`, `drawLine`, `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`
 - `scenetree.` `findClassObjects`
 - `worldEditorCppApi.` `getAxisGizmoScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/raceEditor/pathnodes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/raceEditor/pathnodes.lua`.*

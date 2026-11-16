@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crash/trackMultipleVehiclesCrash.lua",
+  "module": "Nœud flowgraph « Track Multiple Vehicles Crash » (catégorie repeat_instant). Ajoute plusieurs véhicules (pin vehIds, table d'ids) au suivi des crashs de gameplay_util_crashDetection.",
+  "notes": ["Plante si vehIds est nil (ipairs sur nil)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Appelle addTrackedVehicleById pour chaque id de vehIds."}
+      }
+    }
+  }
+}

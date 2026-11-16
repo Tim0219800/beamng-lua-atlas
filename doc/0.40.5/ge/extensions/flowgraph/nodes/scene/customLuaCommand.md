@@ -1,26 +1,26 @@
 # `flowgraph_nodes_scene_customLuaCommand`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/customLuaCommand.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/customLuaCommand.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/customLuaCommand")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/customLuaCommand")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Custom Lua Command » (once_instant). Compile avec loadstring le code Lua recu dans le pin func puis l'execute avec pcall. Sorties : flow (true si l'appel a reussi), return (any) valeur renvoyee par la fonction. Utile pour appeler du code arbitraire depuis un graphe.
+Flowgraph node "Custom Lua Command" (once_instant). Compiles with loadstring the Lua code received in the func pin then runs it with pcall. Outputs: flow (true if the call succeeded), return (any) value returned by the function. Useful for calling arbitrary code from a graph.
 
-## Remarques
+## Notes
 
-- Si le texte ne compile pas, loadstring renvoie nil et pcall(nil) echoue : flow sera false, return contiendra le message d'erreur.
-- Seule la premiere valeur de retour est conservee.
+- If the text does not compile, loadstring returns nil and pcall(nil) fails: flow will be false, return will contain the error message.
+- Only the first return value is kept.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet le pin return a nil au demarrage du graphe. | 25 |
-| `C:_onDeserialized(data)` | Compatibilite : convertit l'ancien data.func en pin code en dur 'func' de type string. | 38 |
-| `C:init()` | Desactive le vidage des pins de sortie au demarrage (clearOutPinsOnStart = false). | 21 |
-| `C:workOnce()` | Compile et execute le texte du pin func ; ecrit flow = succes du pcall et return = valeur retournee. | 29 |
+| `C:_executionStarted()` | Resets the return pin to nil when the graph starts. | 25 |
+| `C:_onDeserialized(data)` | Compatibility: converts the old data.func into the hard-coded string pin 'func'. | 38 |
+| `C:init()` | Disables clearing the output pins at start (clearOutPinsOnStart = false). | 21 |
+| `C:workOnce()` | Compiles and runs the text of the func pin; writes flow = pcall success and return = returned value. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/customLuaCommand.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/customLuaCommand.lua`.*

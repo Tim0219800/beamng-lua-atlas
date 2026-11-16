@@ -2,68 +2,68 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/router/transitionRecovery.test.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Tests ciblés du contrat de reprise au démarrage de Vue pour le routeur : renvoi de la transition toutes les secondes sans limite (phase startup), accusés de réception qui ne servent que de télémétrie (routeChangeReceived), arrêt des renvois par routeNavigationStarted, rejet des accusés à identifiant de transition périmé, conservation de l'identifiant à l'annulation et nettoyage de l'entrée en attente. Utilise Config, TransitionManager et NavigationState. Lancement : extensions.testFramework_TestManager:runTestFiles("transitionRecovery").
---- Accès : extension `ui_router_transitionRecovery.test` : `extensions.load("ui_router_transitionRecovery.test")`, puis la globale `ui_router_transitionRecovery.test`
+--- Targeted tests of the Vue startup recovery contract for the router: transition resent every second without limit (startup phase), acknowledgments that serve only as telemetry (routeChangeReceived), resends stopped by routeNavigationStarted, rejection of acknowledgments with a stale transition identifier, identifier kept on cancellation and cleanup of the pending entry. Uses Config, TransitionManager and NavigationState. Run with: extensions.testFramework_TestManager:runTestFiles("transitionRecovery").
+--- Access: extension `ui_router_transitionRecovery.test`: `extensions.load("ui_router_transitionRecovery.test")`, then the global `ui_router_transitionRecovery.test`
 ---@class ui_router_transitionRecovery.test
 ui_router_transitionRecovery.test = {}
 
---- L'annulation renvoie l'identifiant de la transition démarrée (utilisé dans la charge utile d'annulation).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:161
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- Cancellation returns the identifier of the started transition (used in the cancellation payload).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:161
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testCancelReturnsStartedTransitionId(ctx) end
 
---- Annuler sans transition en cours renvoie un identifiant nil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:175
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- Cancelling with no transition in progress returns a nil identifier.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:175
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testCancelWhenIdleReturnsNilId(ctx) end
 
---- NavigationState efface l'entrée en attente non validée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:185
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- NavigationState clears the uncommitted pending entry.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:185
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testClearPendingEntryRemovesUncommittedEntry(ctx) end
 
---- routeNavigationStarted arrête les renvois.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:87
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- routeNavigationStarted stops the resends.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:87
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testNavigationStartedStopsResends(ctx) end
 
---- Après un long démarrage, les minuteurs de fin de transition repartent à zéro une fois la navigation démarrée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:101
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- After a long startup, the end-of-transition timers restart from zero once navigation has started.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:101
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testPostStartTimersResetAfterLongStartup(ctx) end
 
---- routeChangeReceived est de la télémétrie : il n'arrête pas les renvois.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:71
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- routeChangeReceived is telemetry: it does not stop the resends.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:71
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testReceivedDoesNotStopStartupResends(ctx) end
 
---- Un accusé de fin avec un identifiant périmé est rejeté.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:146
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- A completion acknowledgment with a stale identifier is rejected.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:146
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnComplete(ctx) end
 
---- Un accusé de progression avec un identifiant de transition périmé est rejeté.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:129
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- A progress acknowledgment with a stale transition identifier is rejected.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:129
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testStaleTransitionIdIsRejectedOnProgress(ctx) end
 
---- L'intervalle de renvoi au démarrage dans Config vaut une seconde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:47
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- The startup resend interval in Config is one second.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:47
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testStartupResendIntervalIsOneSecond(ctx) end
 
---- En phase startup, la transition est renvoyée chaque seconde, indéfiniment.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/transitionRecovery.test.lua:54
----@param ctx table Contexte de test du testFramework (setDescription, assert, assertEqual).
+--- In the startup phase, the transition is resent every second, indefinitely.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/transitionRecovery.test.lua:54
+---@param ctx table Test framework context (setDescription, assert, assertEqual).
 function ui_router_transitionRecovery.test.testStartupResendsEverySecondIndefinitely(ctx) end
 

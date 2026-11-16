@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/gameplay/drag/dialPopup.lua",
+  "module": "Fenêtre ImGui « Drag - Set Dial » pour le bracket racing : le joueur local saisit son dial (temps annoncé, en secondes) dans un champ décimal, de 0 à 999 (10 par défaut, ou la valeur mémorisée dans le carnet de dial du véhicule). À la confirmation, en solo le callback applique le dial ; en multijoueur la valeur est envoyée à l'hôte via drag.updateTimerValue(raceId, vehId, 'dial', val). Ne s'affiche que si la piste est de type bracketRace.",
+  "usage": "gameplay_drag_dialPopup.requestDial(be:getPlayerVehicleID(0), function(dial) gameplay_drag_core.setRacerDial(be:getPlayerVehicleID(0), dial) end)",
+  "notes": [
+    "Un seul popup à la fois : requestDial est ignoré s'il est déjà ouvert ou si vehId est nil/-1.",
+    "Le commentaire de tick() dit qu'il est appelé depuis core.lua, mais aucun fichier de lua/ ne référence dialPopup (ni core.lua ni dragBridge) : dans 0.40.5 cette extension semble inutilisée (le dial passe par dragBridge.showDialControl et l'UI).",
+    "Une valeur saisie invalide ou hors [0, 999] est remplacée par 10 (DIAL_DEFAULT).",
+    "La fenêtre se ferme toute seule si dragData est absent ou si dragType n'est pas bracketRace.",
+    "Les textes de la fenêtre sont en anglais en dur (pas de traduction)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drag_core, gameplay_drag_saveSystem, ui_imgui."}
+  },
+  "functions": {
+    "requestDial": {
+      "desc": "Ouvre la fenêtre de saisie du dial pour un véhicule. Pré-remplit avec le dial mémorisé (clé importantTimerId, sinon time_1_4) ou 10.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "ID du véhicule du joueur (ignoré si nil ou -1)."},
+        "callback": {"type": "function|nil", "desc": "Appelé avec la valeur confirmée (number) après validation."}
+      },
+      "returns": []
+    },
+    "tick": {
+      "desc": "Dessine la fenêtre si elle est ouverte (une seule fois par frame). Prévu pour être appelé manuellement chaque frame, pas comme hook d'extension.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s), non utilisé."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (s), non utilisé."},
+        "dtRaw": {"type": "number", "desc": "Delta brut (s), non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

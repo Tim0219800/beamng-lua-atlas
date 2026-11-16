@@ -1,45 +1,45 @@
 # `editor_vehicleEditor_veToolbar`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/veToolbar.lua` · VM : Game Engine (GE) · 377 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/veToolbar.lua` · VM: Game Engine (GE) · 377 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_veToolbar` : `extensions.load("editor_vehicleEditor_veToolbar")`, puis la globale `editor_vehicleEditor_veToolbar`
+**Access:** extension `editor_vehicleEditor_veToolbar`: `extensions.load("editor_vehicleEditor_veToolbar")`, then the global `editor_vehicleEditor_veToolbar`
 
-Barre d'outils de l'éditeur de véhicule (Vehicle Editor). Elle affiche deux onglets, « Static Editor » et « Live Editor » (un clic change vEditor.editorMode), chacun avec des menus Apps et View (layouts de fenêtres, ajout d'une vue). L'onglet Live ajoute un menu Vehicles (faire apparaître un véhicule de type Car ou Truck à la position de la caméra, en retirer un ou tous) et des curseurs Camera Speed et Time of day. Elle gère aussi les fenêtres Save Layout, Delete Layout et Reset Layouts.
+Toolbar of the Vehicle Editor. It shows two tabs, "Static Editor" and "Live Editor" (a click changes vEditor.editorMode), each with Apps and View menus (window layouts, adding a view). The Live tab adds a Vehicles menu (spawn a Car or Truck vehicle at the camera position, remove one or all) and Camera Speed and Time of day sliders. It also handles the Save Layout, Delete Layout and Reset Layouts windows.
 
-## Remarques
+## Notes
 
-- N'affiche rien tant que vEditor n'existe pas ou que vEditor.editorActive est faux.
-- Le curseur Time of day lit core_environment.getTimeOfDay() (champ time entre 0 et 1, affiché 0 à 100) et écrit avec core_environment.setTimeOfDay(tod). Le curseur Camera Speed (2 à 100) lit core_camera.getSpeed() et écrit avec editor.setCameraSpeed.
-- Spawn depuis le menu : core_vehicles.spawnNewVehicle(model.key, {pos = caméra, rot = getCameraQuat()}) puis queueLuaCommand("input.event('parkingbrake', 0, 1)") pour serrer le frein à main.
-- Les layouts passent par editor_layoutManager (getWindowLayouts, loadWindowLayout, saveWindowLayout, deleteWindowLayout, resetLayouts) avec vEditor.getEditorName().
-- La seconde barre « Toolbar2 » (mode d'édition courant) n'est dessinée que si la préférence ui.general.singleLineToolbar est fausse ; onEditorGuiEditModeToolbar est alors diffusé aux extensions.
-- Bug mineur : le code teste une variable noDisplay jamais définie (toujours nil) avant le goto safeFinish.
-- Dans onEditorGuiToolBar, le commentaire indique que la fenêtre de la barre (toolName 'vehicleEditor') n'est pas restaurée avec les layouts Static/Live, donc elle est réaffichée de force.
+- Shows nothing as long as vEditor does not exist or vEditor.editorActive is false.
+- The Time of day slider reads core_environment.getTimeOfDay() (time field between 0 and 1, displayed 0 to 100) and writes with core_environment.setTimeOfDay(tod). The Camera Speed slider (2 to 100) reads core_camera.getSpeed() and writes with editor.setCameraSpeed.
+- Spawn from the menu: core_vehicles.spawnNewVehicle(model.key, {pos = camera, rot = getCameraQuat()}) then queueLuaCommand("input.event('parkingbrake', 0, 1)") to engage the parking brake.
+- Layouts go through editor_layoutManager (getWindowLayouts, loadWindowLayout, saveWindowLayout, deleteWindowLayout, resetLayouts) with vEditor.getEditorName().
+- The second bar "Toolbar2" (current edit mode) is drawn only if the preference ui.general.singleLineToolbar is false; onEditorGuiEditModeToolbar is then broadcast to extensions.
+- Minor bug: the code tests a variable noDisplay that is never defined (always nil) before the goto safeFinish.
+- In onEditorGuiToolBar, the comment states that the toolbar window (toolName 'vehicleEditor') is not restored with the Static/Live layouts, so it is forcibly shown again.
 
-**Dépendances (chargées avant) :** `core_environment`
+**Dependencies (loaded first):** `core_environment`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_veToolbar.onEditorGuiToolBar()` | Hook de l'éditeur appelé quand la barre d'outils principale doit être dessinée. Dessine la fenêtre « veToolbar » avec les onglets Static/Live, les menus et les fenêtres de layout, puis éventuellement la barre du mode d'édition courant. Sans effet si l'éditeur de véhicule n'est pas actif. *(interne)* *(hook)* | 262 |
-| `editor_vehicleEditor_veToolbar.onEditorInitialized()` | Hook de l'éditeur appelé à l'initialisation : construit la liste triée des véhicules de type Car ou Truck (core_vehicles.getVehicleList()), enregistre la fenêtre veToolbar (800x40, outil 'vehicleEditor') et l'affiche. *(interne)* *(hook)* | 353 |
+| `editor_vehicleEditor_veToolbar.onEditorGuiToolBar()` | Editor hook called when the main toolbar must be drawn. Draws the "veToolbar" window with the Static/Live tabs, the menus and the layout windows, then optionally the bar of the current edit mode. No effect if the vehicle editor is not active. *(internal)* *(hook)* | 262 |
+| `editor_vehicleEditor_veToolbar.onEditorInitialized()` | Editor hook called at initialization: builds the sorted list of Car or Truck vehicles (core_vehicles.getVehicleList()), registers the veToolbar window (800x40, 'vehicleEditor' tool) and shows it. *(internal)* *(hook)* | 353 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | {'core_environment'} : extension chargée avant celle-ci. |
+| `dependencies` | table<integer, string> | {'core_environment'}: extension loaded before this one. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEditorGuiEditModeToolbar`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getTimeOfDay`, `setTimeOfDay`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/veToolbar.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/veToolbar.lua`.*

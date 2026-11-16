@@ -1,45 +1,45 @@
 # `editor_heroRoadEditor_repairMgr`
 
-*Fichier : `lua/ge/extensions/editor/heroRoadEditor/repairMgr.lua` · VM : Game Engine (GE) · 171 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/heroRoadEditor/repairMgr.lua` · VM: Game Engine (GE) · 171 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_heroRoadEditor_repairMgr` : `extensions.load("editor_heroRoadEditor_repairMgr")`, puis la globale `editor_heroRoadEditor_repairMgr`
+**Access:** extension `editor_heroRoadEditor_repairMgr`: `extensions.load("editor_heroRoadEditor_repairMgr")`, then the global `editor_heroRoadEditor_repairMgr`
 
-Rendu des amas de réparations (patchs d'asphalte) d'une route du Hero Road Editor. Chaque amas group.repairs[i] (créé dans l'onglet Features) devient une dispersion pseudo-aléatoire à graine fixe d'instances de décalques posées sur la chaussée via editor.addDecalInstanceWithTan, avec un DecalData partagé par matériau. C'est de la surface seule : aucun impact sur maillage, trottoirs ou collision. Le résultat est une fonction pure des paramètres de l'amas et de sa graine, donc identique après sauvegarde ou annulation.
+Rendering of the repair patch clusters (asphalt patches) of a Hero Road Editor road. Each cluster group.repairs[i] (created in the Features tab) becomes a pseudo-random fixed-seed scatter of decal instances placed on the roadway via editor.addDecalInstanceWithTan, with a DecalData shared per material. It is surface only: no impact on mesh, sidewalks or collision. The result is a pure function of the cluster's parameters and its seed, so identical after save or undo.
 
-## Remarques
+## Notes
 
-- Les handles de décalques (userdata) sont gardés dans un store du module indexé par group.id, pas sur le groupe, car la table du groupe est encodée en buffer pour l'annulation/les sessions et ne peut pas sérialiser de userdata.
-- Paramètres d'un amas (valeurs par défaut) : coverage 0.7, offset 0.0, lengthM 8.0 (min 0.5), sizeMin 0.6, sizeMax 1.4, density 0.6, t 0.5 (position normalisée le long de la route), seed 1, rotJitter 1.0, material.
-- Nombre de patchs = round(density * lengthM * largeur de bande), borné entre 1 et 300.
-- Le matériau doit être un vrai matériau de décalque en atlas (asphalt_patches : 4 lignes x 2 colonnes) ; les frames 0 et 4 sont ignorées (patchFrames = 1,2,3,5,6,7). Priorité de rendu 6 (sous les marquages, 12+), décollement de 0.03 m.
-- Largeur de route : group.leftExtM / rightExtM, sinon la moitié de divWidths[1] (ou 5 m).
+- The decal handles (userdata) are kept in a module store indexed by group.id, not on the group, because the group table is encoded into a buffer for undo/sessions and cannot serialize userdata.
+- Cluster parameters (default values): coverage 0.7, offset 0.0, lengthM 8.0 (min 0.5), sizeMin 0.6, sizeMax 1.4, density 0.6, t 0.5 (normalized position along the road), seed 1, rotJitter 1.0, material.
+- Number of patches = round(density * lengthM * band width), clamped between 1 and 300.
+- The material must be a real atlas decal material (asphalt_patches: 4 rows x 2 columns); frames 0 and 4 are ignored (patchFrames = 1,2,3,5,6,7). Render priority 6 (below the markings, 12+), lift-off of 0.03 m.
+- Road width: group.leftExtM / rightExtM, otherwise half of divWidths[1] (or 5 m).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_heroRoadEditor_repairMgr.clearRepairs(group)` | Supprime les instances de décalques de réparation du groupe et leurs modèles DecalData, puis oublie son entrée du store. Appelé à chaque reconstruction et au démontage. | 41 |
-| `editor_heroRoadEditor_repairMgr.updateRepairs(group)` | Reconstruit la dispersion de décalques de chaque amas placé (appelle d'abord clearRepairs). Ne fait rien de plus si la route n'a pas de réparations, moins de 2 divPoints, pas de binormales, pas de dossier de scène ou une longueur nulle. | 144 |
+| `editor_heroRoadEditor_repairMgr.clearRepairs(group)` | Deletes the group's repair decal instances and their DecalData templates, then forgets its store entry. Called on every rebuild and at teardown. | 41 |
+| `editor_heroRoadEditor_repairMgr.updateRepairs(group)` | Rebuilds the decal scatter of each placed cluster (first calls clearRepairs). Does nothing more if the road has no repairs, fewer than 2 divPoints, no binormals, no scene folder or a zero length. | 144 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_heroRoadEditor_repairMgr.clearRepairs(group)`
 
-Supprime les instances de décalques de réparation du groupe et leurs modèles DecalData, puis oublie son entrée du store. Appelé à chaque reconstruction et au démontage.
+Deletes the group's repair decal instances and their DecalData templates, then forgets its store entry. Called on every rebuild and at teardown.
 
-- `group` (*table|nil*) : Groupe Hero Road.
+- `group` (*table|nil*) : Hero Road group.
 
 #### `editor_heroRoadEditor_repairMgr.updateRepairs(group)`
 
-Reconstruit la dispersion de décalques de chaque amas placé (appelle d'abord clearRepairs). Ne fait rien de plus si la route n'a pas de réparations, moins de 2 divPoints, pas de binormales, pas de dossier de scène ou une longueur nulle.
+Rebuilds the decal scatter of each placed cluster (first calls clearRepairs). Does nothing more if the road has no repairs, fewer than 2 divPoints, no binormals, no scene folder or a zero length.
 
-- `group` (*table|nil*) : Groupe Hero Road (repairs, divPoints, binormals, divWidths, sceneTreeFolderId).
+- `group` (*table|nil*) : Hero Road group (repairs, divPoints, binormals, divWidths, sceneTreeFolderId).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/heroRoadEditor/repairMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/heroRoadEditor/repairMgr.lua`.*

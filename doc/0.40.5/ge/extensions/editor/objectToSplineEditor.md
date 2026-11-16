@@ -1,25 +1,25 @@
 # `editor_objectToSplineEditor`
 
-*Fichier : `lua/ge/extensions/editor/objectToSplineEditor.lua` · VM : Game Engine (GE) · 498 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/objectToSplineEditor.lua` · VM: Game Engine (GE) · 498 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_objectToSplineEditor` : `extensions.load("editor_objectToSplineEditor")`, puis la globale `editor_objectToSplineEditor`
+**Access:** extension `editor_objectToSplineEditor`: `extensions.load("editor_objectToSplineEditor")`, then the global `editor_objectToSplineEditor`
 
-Outil « Object To Spline Editor » du World Editor : copie un objet (TSStatic ou BeamNGVehicle) le long d'une spline guide (DecalRoad ou MeshRoad). On choisit l'objet et la spline depuis la sélection, puis on règle l'écart (gap), les décalages de début et de fin, l'axe de l'objet, le nombre maximal de copies (500 par défaut), l'orientation selon la normale du terrain, un mode alternatif, le placement dans un SimGroup et des variations aléatoires (écart, position, rotation, gaussienne). La spline est dessinée en vert et les positions prévues en jaune avec debugDrawer.
+"Object To Spline Editor" tool of the World Editor: copies an object (TSStatic or BeamNGVehicle) along a guide spline (DecalRoad or MeshRoad). You choose the object and the spline from the selection, then set the gap, the start and end offsets, the object's axis, the maximum number of copies (500 by default), the orientation along the terrain normal, an alternate mode, placement in a SimGroup and random variations (gap, position, rotation, Gaussian). The spline is drawn in green and the planned positions in yellow with debugDrawer.
 
-## Remarques
+## Notes
 
-- L'outil crée de vrais objets dans la scène (copies de l'objet source via Sim.getUniqueName) et peut recharger la collision (be:reloadCollision).
-- Les identifiants objId et guideId sont remis à nil si l'objet n'existe plus dans le scenetree.
-- Le guide DecalRoad utilise getMiddleEdgePosition, le MeshRoad getTopMiddleEdgePosition (surélevés de 1 cm pour le dessin).
+- The tool creates real objects in the scene (copies of the source object via Sim.getUniqueName) and can reload the collision (be:reloadCollision).
+- The objId and guideId identifiers are set back to nil if the object no longer exists in the scenetree.
+- The DecalRoad guide uses getMiddleEdgePosition, the MeshRoad getTopMiddleEdgePosition (raised by 1 cm for drawing).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_objectToSplineEditor.onEditorGui()` | Hook d'éditeur appelé à chaque frame : dessine la fenêtre « Object To Spline Editor » (sélection de l'objet et de la spline, paramètres, création) et la spline guide. *(interne)* *(hook)* | 254 |
-| `editor_objectToSplineEditor.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre (420x500) et l'entrée de menu « Object To Spline Editor ». *(interne)* *(hook)* | 490 |
+| `editor_objectToSplineEditor.onEditorGui()` | Editor hook called every frame: draws the "Object To Spline Editor" window (object and spline selection, parameters, creation) and the guide spline. *(internal)* *(hook)* | 254 |
+| `editor_objectToSplineEditor.onEditorInitialized()` | Hook called at editor initialization: registers the window (420x500) and the "Object To Spline Editor" menu entry. *(internal)* *(hook)* | 490 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `be:` `getSurfaceHeightBelow`, `reloadCollision`
@@ -28,4 +28,4 @@ Outil « Object To Spline Editor » du World Editor : copie un objet (TSStatic o
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/objectToSplineEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/objectToSplineEditor.lua`.*

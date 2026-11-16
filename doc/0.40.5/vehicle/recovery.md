@@ -1,143 +1,143 @@
 # `recovery`
 
-*Fichier : `lua/vehicle/recovery.lua` · VM : Véhicule · 589 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/recovery.lua` · VM: Vehicle · 589 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `recovery`
+**Access:** global `recovery`
 
-Système de récupération (touche « recover ») du véhicule. En roulant, enregistre toutes les 0,2 s un historique de positions/orientations (jusqu'à 700 points, un point au moins 2 m après le précédent). Quand on maintient la récupération, le véhicule « rembobine » ce chemin à vitesse croissante (3 -> 20 -> 50 m/s) avec une caméra de récupération et un fil de fer des poutres, puis est téléporté au point atteint à la relâche. Gère aussi le point « home » (saveHome/loadHome) et le mode multijoueur (validation par le serveur).
+Vehicle recovery system ("recover" key). While driving, records a history of positions/orientations every 0.2 s (up to 700 points, a point at least 2 m after the previous one). When recovery is held, the vehicle "rewinds" this path at increasing speed (3 -> 20 -> 50 m/s) with a recovery camera and a beam wireframe, then is teleported to the point reached on release. Also handles the "home" point (saveHome/loadHome) and multiplayer mode (server validation).
 
-## Exemple
+## Example
 
 ```lua
-recovery.saveHome()        -- mémorise la position actuelle comme home
-recovery.loadHome(false)    -- y retourne
-recovery.recoverInPlace()   -- remet le véhicule d'aplomb sur place
+recovery.saveHome()        -- stores the current position as home
+recovery.loadHome(false)    -- returns to it
+recovery.recoverInPlace()   -- puts the vehicle upright in place
 ```
 
-## Remarques
+## Notes
 
-- Trois modes de M.updateGFX : updateGFXRecord (enregistrement, mode normal), updateGFXRecovery (rembobinage en cours), et nop (avant init). init() installe updateGFXRecord.
-- Réglages internes : intervalle d'enregistrement 0.2 s, séparation minimale 2 m, vitesses de rembobinage 3/20/50 m/s (rampes 2.5 s puis 10 s), délai avant téléportation visuelle 0.5 s, historique 700 points. Un segment de plus de 20 m (400 m²) coupe le rembobinage net.
-- Sans smart spawn : l'orientation est redressée si tangage > 80° ou roulis > 45° (la direction de cap est conservée). Avec smart spawn (réglage settings 'enableSmartRecovery', inversé par useAltMode) la téléportation passe par spawn.safeTeleport côté GE.
-- M.recoveryHooksOnly = true : start/stopRecovering n'émettent que les hooks GE onStartRecovering / onStopRecovering(0) sans toucher au véhicule (utilisé dans le tutoriel First Drive).
-- Hooks GE émis : onStartRecovering (début) et onStopRecovering(timer) (fin, timer = durée réelle de récupération en s). Appelle aussi core_recoveryCamera.beginRecoveryCamera / endRecoveryCamera / setRecoveryCameraPosRot.
-- En multijoueur, startRecovering passe par multiplayer_vehicleSync.requestRecoveringBegin ; la suite dépend de onRecoveringBeginAllowed / onRecoveringBeginDenied, et le point final est validé par requestRecoveringCommit puis appliqué par mpApplyRecoveryPoint.
-- Anomalie : M.recoveryPoints est un dequeue (pas un tableau simple) ; onDeserialized le reconstruit via dequeue.new(v.recoveryPoints). M.homePoint n'est pas déclaré à l'initialisation (nil jusqu'au premier saveHome ou au premier point d'enregistrement).
-- Anomalie mineure : dans finishStopRecovering le chemin non-MP appelle applyRecoveryPoint(lastRecoveryPoint, useSmartSpawn, nil, player) : l'argument player est passé à la place de moveTraffic (4e paramètre), le 3e paramètre player est nil.
+- Three modes of M.updateGFX: updateGFXRecord (recording, normal mode), updateGFXRecovery (rewind in progress), and nop (before init). init() installs updateGFXRecord.
+- Internal settings: recording interval 0.2 s, minimum separation 2 m, rewind speeds 3/20/50 m/s (ramps 2.5 s then 10 s), delay before visual teleport 0.5 s, history 700 points. A segment longer than 20 m (400 m²) cuts the rewind cleanly.
+- Without smart spawn: the orientation is straightened if pitch > 80° or roll > 45° (the heading direction is kept). With smart spawn (settings 'enableSmartRecovery', inverted by useAltMode) the teleport goes through spawn.safeTeleport on the GE side.
+- M.recoveryHooksOnly = true: start/stopRecovering only emit the GE hooks onStartRecovering / onStopRecovering(0) without touching the vehicle (used in the First Drive tutorial).
+- GE hooks emitted: onStartRecovering (start) and onStopRecovering(timer) (end, timer = real duration of the recovery in s). Also calls core_recoveryCamera.beginRecoveryCamera / endRecoveryCamera / setRecoveryCameraPosRot.
+- In multiplayer, startRecovering goes through multiplayer_vehicleSync.requestRecoveringBegin; the rest depends on onRecoveringBeginAllowed / onRecoveringBeginDenied, and the final point is validated by requestRecoveringCommit then applied by mpApplyRecoveryPoint.
+- Anomaly: M.recoveryPoints is a dequeue (not a simple array); onDeserialized rebuilds it via dequeue.new(v.recoveryPoints). M.homePoint is not declared at initialization (nil until the first saveHome or the first recording point).
+- Minor anomaly: in finishStopRecovering the non-MP path calls applyRecoveryPoint(lastRecoveryPoint, useSmartSpawn, nil, player): the player argument is passed in place of moveTraffic (4th parameter), the 3rd parameter player is nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `recovery.afterStopRecovering(timer)` | Finalise une récupération : remet à zéro les poutres de flexmesh cassées, libère les noeuds fixés par le grabber, affiche le message adapté, ferme la caméra et émet le hook GE onStopRecovering. *(interne)* | 283 |
-| `recovery.beginRecoveringPreview(useAltMode)` | Entre réellement en mode rembobinage : crée un point de départ, passe updateGFX sur updateGFXRecovery, émet le hook GE onStartRecovering. Appelé par startRecovering ou après autorisation MP. | 491 |
-| `recovery.cancelRecoveringPreview()` | Annule la récupération en cours sans téléporter : remet l'enregistrement, réinitialise les matériaux et ferme la caméra de récupération. | 260 |
-| `recovery.clear()` | Vide l'historique des points, supprime homePoint et invalide le dernier point de récupération. | 50 |
-| `recovery.init(path)` | Passe en mode enregistrement, mémorise le nombre de poutres et précalcule les positions relatives des noeuds par rapport au noeud de référence (pour dessiner le fil de fer). *(interne)* | 559 |
-| `recovery.loadHome(moveTraffic)` | Demande le retour au point home (ne fait rien s'il n'y en a pas). Passe par multiplayer_vehicleSync.requestLoadHome si présent, sinon rappelle loadHomeLocal côté véhicule. | 507 |
-| `recovery.loadHomeLocal(moveTraffic)` | Téléporte immédiatement le véhicule au point home et affiche 'vehicle.recovery.loadHome'. Appelé par loadHome (ou le serveur MP). | 521 |
-| `recovery.mpApplyRecoveryPoint(requestId, action, px, py, pz, fx, fy, fz, ux, uy, uz, useSmartSpawnParam, player, moveTraffic)` | Applique un point de récupération validé par le serveur multijoueur : téléporte le véhicule (smart spawn ou vehicleSetPositionRotation) puis notifie multiplayer_vehicleSync.onVehicleRecoveryApplied. *(interne)* | 180 |
-| `recovery.onDeserialized(v)` | Hook de désérialisation (rechargement du Lua véhicule) : fusionne l'état sauvegardé dans M et reconstruit la file recoveryPoints. *(interne)* *(hook)* | 56 |
-| `recovery.onRecoveringBeginAllowed(requestId, useAltMode)` | Hook appelé en multijoueur quand le serveur autorise la récupération : mémorise requestId et lance beginRecoveringPreview. *(interne)* *(hook)* | 546 |
-| `recovery.onRecoveringBeginDenied()` | Hook appelé en multijoueur quand le serveur refuse la récupération : annule l'état d'attente. *(interne)* *(hook)* | 551 |
-| `recovery.recoverInPlace()` | Remet le véhicule d'aplomb à sa position actuelle (point de récupération = état courant, appliqué tout de suite). | 555 |
-| `recovery.saveHome(point)` | Mémorise un point home. Sans argument, utilise la position/orientation actuelle et affiche le message 'vehicle.recovery.saveHome'. | 223 |
-| `recovery.startRecovering(useAltMode)` | Démarre la récupération (appui sur la touche). En solo lance directement beginRecoveringPreview ; en multijoueur demande d'abord l'autorisation au serveur. Ignoré si déjà en cours. | 527 |
-| `recovery.stopRecovering(player)` | Demande l'arrêt de la récupération (relâche de la touche) ; l'arrêt effectif et la téléportation ont lieu à la prochaine updateGFX. | 274 |
+| `recovery.afterStopRecovering(timer)` | Finalizes a recovery: resets broken flexmesh beams, releases the nodes fixed by the grabber, displays the appropriate message, closes the camera and emits the GE hook onStopRecovering. *(internal)* | 283 |
+| `recovery.beginRecoveringPreview(useAltMode)` | Actually enters rewind mode: creates a starting point, switches updateGFX to updateGFXRecovery, emits the GE hook onStartRecovering. Called by startRecovering or after MP authorization. | 491 |
+| `recovery.cancelRecoveringPreview()` | Cancels the current recovery without teleporting: resumes recording, resets the materials and closes the recovery camera. | 260 |
+| `recovery.clear()` | Empties the point history, removes homePoint and invalidates the last recovery point. | 50 |
+| `recovery.init(path)` | Switches to recording mode, stores the number of beams and precomputes the relative positions of the nodes with respect to the reference node (to draw the wireframe). *(internal)* | 559 |
+| `recovery.loadHome(moveTraffic)` | Requests the return to the home point (does nothing if there is none). Goes through multiplayer_vehicleSync.requestLoadHome if present, otherwise calls loadHomeLocal on the vehicle side. | 507 |
+| `recovery.loadHomeLocal(moveTraffic)` | Immediately teleports the vehicle to the home point and displays 'vehicle.recovery.loadHome'. Called by loadHome (or the MP server). | 521 |
+| `recovery.mpApplyRecoveryPoint(requestId, action, px, py, pz, fx, fy, fz, ux, uy, uz, useSmartSpawnParam, player, moveTraffic)` | Applies a recovery point validated by the multiplayer server: teleports the vehicle (smart spawn or vehicleSetPositionRotation) then notifies multiplayer_vehicleSync.onVehicleRecoveryApplied. *(internal)* | 180 |
+| `recovery.onDeserialized(v)` | Deserialization hook (vehicle Lua reload): merges the saved state into M and rebuilds the recoveryPoints queue. *(internal)* *(hook)* | 56 |
+| `recovery.onRecoveringBeginAllowed(requestId, useAltMode)` | Hook called in multiplayer when the server allows the recovery: stores requestId and launches beginRecoveringPreview. *(internal)* *(hook)* | 546 |
+| `recovery.onRecoveringBeginDenied()` | Hook called in multiplayer when the server denies the recovery: cancels the waiting state. *(internal)* *(hook)* | 551 |
+| `recovery.recoverInPlace()` | Puts the vehicle upright at its current position (recovery point = current state, applied immediately). | 555 |
+| `recovery.saveHome(point)` | Stores a home point. Without argument, uses the current position/orientation and displays the message 'vehicle.recovery.saveHome'. | 223 |
+| `recovery.startRecovering(useAltMode)` | Starts the recovery (key press). In solo mode directly launches beginRecoveringPreview; in multiplayer first requests authorization from the server. Ignored if already in progress. | 527 |
+| `recovery.stopRecovering(player)` | Requests the end of the recovery (key release); the actual stop and the teleport occur at the next updateGFX. | 274 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `recovery.afterStopRecovering(timer)`
 
-Finalise une récupération : remet à zéro les poutres de flexmesh cassées, libère les noeuds fixés par le grabber, affiche le message adapté, ferme la caméra et émet le hook GE onStopRecovering.
+Finalizes a recovery: resets broken flexmesh beams, releases the nodes fixed by the grabber, displays the appropriate message, closes the camera and emits the GE hook onStopRecovering.
 
-- `timer` (*number|string|nil*) : Durée de la récupération en secondes (défaut : durée mesurée).
+- `timer` (*number|string|nil*) : Recovery duration in seconds (default: measured duration).
 
 #### `recovery.beginRecoveringPreview(useAltMode)`
 
-Entre réellement en mode rembobinage : crée un point de départ, passe updateGFX sur updateGFXRecovery, émet le hook GE onStartRecovering. Appelé par startRecovering ou après autorisation MP.
+Actually enters rewind mode: creates a starting point, switches updateGFX to updateGFXRecovery, emits the GE hook onStartRecovering. Called by startRecovering or after MP authorization.
 
-- `useAltMode` (*boolean|nil*) : Voir startRecovering.
+- `useAltMode` (*boolean|nil*) : See startRecovering.
 
 #### `recovery.init(path)`
 
-Passe en mode enregistrement, mémorise le nombre de poutres et précalcule les positions relatives des noeuds par rapport au noeud de référence (pour dessiner le fil de fer).
+Switches to recording mode, stores the number of beams and precomputes the relative positions of the nodes with respect to the reference node (to draw the wireframe).
 
-- `path` (*string*) : Non utilisé (déduit du code).
+- `path` (*string*) : Unused (inferred from code).
 
 #### `recovery.loadHome(moveTraffic)`
 
-Demande le retour au point home (ne fait rien s'il n'y en a pas). Passe par multiplayer_vehicleSync.requestLoadHome si présent, sinon rappelle loadHomeLocal côté véhicule.
+Requests the return to the home point (does nothing if there is none). Goes through multiplayer_vehicleSync.requestLoadHome if present, otherwise calls loadHomeLocal on the vehicle side.
 
-- `moveTraffic` (*boolean|nil*) : Transmis à spawn.safeTeleport : déplacer aussi le trafic gênant.
+- `moveTraffic` (*boolean|nil*) : Passed to spawn.safeTeleport: also move obstructing traffic.
 
 #### `recovery.loadHomeLocal(moveTraffic)`
 
-Téléporte immédiatement le véhicule au point home et affiche 'vehicle.recovery.loadHome'. Appelé par loadHome (ou le serveur MP).
+Immediately teleports the vehicle to the home point and displays 'vehicle.recovery.loadHome'. Called by loadHome (or the MP server).
 
-- `moveTraffic` (*boolean|nil*) : Voir loadHome.
+- `moveTraffic` (*boolean|nil*) : See loadHome.
 
 #### `recovery.mpApplyRecoveryPoint(requestId, action, px, py, pz, fx, fy, fz, ux, uy, uz, useSmartSpawnParam, player, moveTraffic)`
 
-Applique un point de récupération validé par le serveur multijoueur : téléporte le véhicule (smart spawn ou vehicleSetPositionRotation) puis notifie multiplayer_vehicleSync.onVehicleRecoveryApplied.
+Applies a recovery point validated by the multiplayer server: teleports the vehicle (smart spawn or vehicleSetPositionRotation) then notifies multiplayer_vehicleSync.onVehicleRecoveryApplied.
 
-- `requestId` (*integer*) : Identifiant de la requête MP.
-- `action` (*string*) : Nom de l'action renvoyé au serveur.
-- `px` (*number*) : Position X (m).
-- `py` (*number*) : Position Y (m).
-- `pz` (*number*) : Position Z (m).
-- `fx` (*number*) : Direction avant X.
-- `fy` (*number*) : Direction avant Y.
-- `fz` (*number*) : Direction avant Z.
-- `ux` (*number*) : Direction haut X.
-- `uy` (*number*) : Direction haut Y.
-- `uz` (*number*) : Direction haut Z.
-- `useSmartSpawnParam` (*boolean|nil*) : Forcer/interdire le smart spawn (sinon valeur interne).
-- `player` (*any*) : Joueur concerné, transmis à safeTeleport.
-- `moveTraffic` (*boolean|nil*) : Déplacer le trafic gênant.
+- `requestId` (*integer*) : MP request identifier.
+- `action` (*string*) : Action name sent back to the server.
+- `px` (*number*) : X position (m).
+- `py` (*number*) : Y position (m).
+- `pz` (*number*) : Z position (m).
+- `fx` (*number*) : Front direction X.
+- `fy` (*number*) : Front direction Y.
+- `fz` (*number*) : Front direction Z.
+- `ux` (*number*) : Up direction X.
+- `uy` (*number*) : Up direction Y.
+- `uz` (*number*) : Up direction Z.
+- `useSmartSpawnParam` (*boolean|nil*) : Force/forbid smart spawn (otherwise internal value).
+- `player` (*any*) : Player concerned, passed to safeTeleport.
+- `moveTraffic` (*boolean|nil*) : Move obstructing traffic.
 
 #### `recovery.onDeserialized(v)`
 
-Hook de désérialisation (rechargement du Lua véhicule) : fusionne l'état sauvegardé dans M et reconstruit la file recoveryPoints.
+Deserialization hook (vehicle Lua reload): merges the saved state into M and rebuilds the recoveryPoints queue.
 
-- `v` (*table*) : Données sauvegardées.
+- `v` (*table*) : Saved data.
 
 #### `recovery.onRecoveringBeginAllowed(requestId, useAltMode)`
 
-Hook appelé en multijoueur quand le serveur autorise la récupération : mémorise requestId et lance beginRecoveringPreview.
+Hook called in multiplayer when the server allows the recovery: stores requestId and launches beginRecoveringPreview.
 
-- `requestId` (*integer*) : Identifiant de requête.
-- `useAltMode` (*boolean|string*) : Mode alternatif (true ou la chaîne 'true').
+- `requestId` (*integer*) : Request identifier.
+- `useAltMode` (*boolean|string*) : Alternative mode (true or the string 'true').
 
 #### `recovery.saveHome(point)`
 
-Mémorise un point home. Sans argument, utilise la position/orientation actuelle et affiche le message 'vehicle.recovery.saveHome'.
+Stores a home point. Without argument, uses the current position/orientation and displays the message 'vehicle.recovery.saveHome'.
 
-- `point` (*table|nil*) : Point {pos, dirFront, dirUp} ; position actuelle si nil.
+- `point` (*table|nil*) : Point {pos, dirFront, dirUp}; current position if nil.
 
 #### `recovery.startRecovering(useAltMode)`
 
-Démarre la récupération (appui sur la touche). En solo lance directement beginRecoveringPreview ; en multijoueur demande d'abord l'autorisation au serveur. Ignoré si déjà en cours.
+Starts the recovery (key press). In solo mode directly launches beginRecoveringPreview; in multiplayer first requests authorization from the server. Ignored if already in progress.
 
-- `useAltMode` (*boolean|nil*) : Mode alternatif : inverse le réglage 'enableSmartRecovery' (faux par défaut).
+- `useAltMode` (*boolean|nil*) : Alternative mode: inverts the 'enableSmartRecovery' setting (false by default).
 
 #### `recovery.stopRecovering(player)`
 
-Demande l'arrêt de la récupération (relâche de la touche) ; l'arrêt effectif et la téléportation ont lieu à la prochaine updateGFX.
+Requests the end of the recovery (key release); the actual stop and the teleport occur at the next updateGFX.
 
-- `player` (*any*) : Joueur à l'origine de la demande, transmis à la téléportation (déduit du code).
+- `player` (*any*) : Player that originated the request, passed to the teleport (inferred from code).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `recoveryHooksOnly` | boolean | Si vrai, l'entrée de récupération n'émet que les hooks sans modifier le véhicule (tutoriel First Drive). Faux par défaut. |
-| `recoveryPoints` | dequeue | Historique des points de récupération ({pos=vec3, dirFront=vec3, dirUp=vec3}), du plus ancien (gauche) au plus récent (droite). |
-| `updateGFX` | function | nop au chargement, puis remplacée par updateGFXRecord (enregistrement) ou updateGFXRecovery (rembobinage). ⚠ référence nop non définie dans le fichier (global du jeu). |
+| `recoveryHooksOnly` | boolean | If true, the recovery input only emits the hooks without modifying the vehicle (First Drive tutorial). False by default. |
+| `recoveryPoints` | dequeue | History of recovery points ({pos=vec3, dirFront=vec3, dirUp=vec3}), from oldest (left) to newest (right). |
+| `updateGFX` | function | nop at load, then replaced by updateGFXRecord (recording) or updateGFXRecovery (rewind). ⚠ nop reference not defined in the file (game global). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getDirectionVector`, `getDirectionVectorUp`, `getId`, `getPositionXYZ`, `getRealdt`, `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/recovery.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/recovery.lua`.*

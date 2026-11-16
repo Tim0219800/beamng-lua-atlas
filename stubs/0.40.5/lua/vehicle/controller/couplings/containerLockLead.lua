@@ -2,85 +2,85 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/couplings/containerLockLead.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Côté « leader » du système de verrouillage de conteneurs (twist-locks) : placé sur le véhicule qui porte les verrous (grue, portique, châssis porte-conteneur). Pour chaque site, un coupleur « tâteur » (feeler) cherche un conteneur, puis le leader interroge le contrôleur `containerLockFollow` du conteneur pour obtenir la position du verrou cible, calcule une force d'alignement dans un cône (appliquée aux deux véhicules) et, quand l'alignement vertical est suffisant, active le coupleur de verrou (lock). Gère les états feeling, locking, locked, la stabilité du verrouillage et les electrics de visibilité des props.
---- Accès : contrôleur `couplings/containerLockLead` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- "Leader" side of the container locking system (twist-locks): placed on the vehicle carrying the locks (crane, gantry, container chassis). For each site, a "feeler" coupler looks for a container, then the leader queries the container's `containerLockFollow` controller for the target lock position, computes an alignment force within a cone (applied to both vehicles) and, when the vertical alignment is sufficient, activates the lock coupler. Handles the feeling, locking, locked states, lock stability and the props visibility electrics.
+--- Access: controller `couplings/containerLockLead` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_couplings_containerLockLead
 ---@field type string "auxiliary".
 local controller_couplings_containerLockLead = {}
 
---- Hook de rupture de poutre, vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:388
----@param id integer cid de la poutre.
----@param energy number Énergie de rupture.
+--- Beam break hook, empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:388
+---@param id integer cid of the beam.
+---@param energy number Break energy.
 function controller_couplings_containerLockLead.beamBroken(id, energy) end
 
---- Lit les paramètres communs et les sites depuis le jbeam, résout les noeuds par nom, crée les tables de recherche et initialise les electrics.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:513
----@param jbeamData table Données jbeam du contrôleur.
+--- Reads the common parameters and the sites from the jbeam, resolves the nodes by name, creates the lookup tables and initializes the electrics.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:513
+---@param jbeamData table Controller jbeam data.
 function controller_couplings_containerLockLead.init(jbeamData) end
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:510
----@param jbeamData table Non utilisé.
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:510
+---@param jbeamData table Not used.
 function controller_couplings_containerLockLead.initSounds(jbeamData) end
 
---- Rappel venant du suiveur : enregistre la dernière position connue du verrou précédemment relâché, pour détecter que le leader s'en est éloigné.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:48
----@param lockCouplerNodeId integer cid du noeud verrou du suiveur.
----@param lastLockCouplerPosition vec3 Position monde.
+--- Callback from the follower: records the last known position of the previously released lock, to detect that the leader has moved away from it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:48
+---@param lockCouplerNodeId integer cid of the follower's lock node.
+---@param lastLockCouplerPosition vec3 World position.
 function controller_couplings_containerLockLead.lastLockCouplerPositionCallback(lockCouplerNodeId, lastLockCouplerPosition) end
 
---- Rappel venant du suiveur : enregistre la position monde du verrou du suiveur et si un prop visuel est requis.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:65
----@param lockSiteId integer Id du site (cid du noeud tâteur côté suiveur).
----@param lockCouplerPosition vec3 Position monde du verrou du suiveur.
----@param needsVisualLockProp boolean true si le prop visuel de verrou est nécessaire.
+--- Callback from the follower: records the world position of the follower's lock and whether a visual prop is required.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:65
+---@param lockSiteId integer Site id (cid of the feeler node on the follower side).
+---@param lockCouplerPosition vec3 World position of the follower's lock.
+---@param needsVisualLockProp boolean true if the visual lock prop is needed.
 function controller_couplings_containerLockLead.lockSitePositionCallback(lockSiteId, lockCouplerPosition, needsVisualLockProp) end
 
---- Hook : si le noeud est un tâteur, mémorise le véhicule suiveur et l'id du site, efface l'alignement ; si c'est un verrou, passe le site à locked et supprime la force d'alignement du suiveur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:394
----@param nodeId integer cid du noeud local.
----@param obj2id integer Id de l'autre véhicule.
----@param obj2nodeId integer cid du noeud de l'autre véhicule.
+--- Hook: if the node is a feeler, stores the follower vehicle and the site id, clears the alignment; if it is a lock, sets the site to locked and removes the follower's alignment force.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:394
+---@param nodeId integer cid of the local node.
+---@param obj2id integer Id of the other vehicle.
+---@param obj2nodeId integer cid of the other vehicle's node.
 function controller_couplings_containerLockLead.onCouplerAttached(nodeId, obj2id, obj2nodeId) end
 
---- Hook : oublie le suiveur pour un tâteur ; pour un verrou, mémorise la cible précédente si le détachement est normal et le verrou stable (sinon l'efface) et remet le site en feeling.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:427
----@param nodeId integer cid du noeud local.
----@param obj2id integer Id de l'autre véhicule.
----@param obj2nodeId integer cid du noeud de l'autre véhicule.
----@param breakForce number Force de rupture (> 0 si le verrou a cassé).
+--- Hook: forgets the follower for a feeler; for a lock, stores the previous target if the detachment is normal and the lock stable (otherwise clears it) and puts the site back to feeling.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:427
+---@param nodeId integer cid of the local node.
+---@param obj2id integer Id of the other vehicle.
+---@param obj2nodeId integer cid of the other vehicle's node.
+---@param breakForce number Break force (> 0 if the lock broke).
 function controller_couplings_containerLockLead.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce) end
 
---- Hook de coupleur trouvé, vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:391
----@param nodeId integer cid du noeud local.
----@param obj2id integer Id de l'autre véhicule.
----@param obj2nodeId integer cid du noeud de l'autre véhicule.
+--- Coupler found hook, empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:391
+---@param nodeId integer cid of the local node.
+---@param obj2id integer Id of the other vehicle.
+---@param obj2nodeId integer cid of the other vehicle's node.
 function controller_couplings_containerLockLead.onCouplerFound(nodeId, obj2id, obj2nodeId) end
 
---- Remet tous les sites en feeling avec des valeurs neutres et les electrics à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:482
----@param jbeamData table Données jbeam.
+--- Puts all sites back to feeling with neutral values and the electrics to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:482
+---@param jbeamData table Jbeam data.
 function controller_couplings_containerLockLead.reset(jbeamData) end
 
---- Ramène tous les sites en feeling (ce qui déverrouille s'ils sont verrouillés). Quand rien n'est verrouillé, efface aussi la mémoire de dernière cible pour permettre de reverrouiller la même.
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:464
+--- Brings all sites back to feeling (which unlocks them if they are locked). When nothing is locked, also clears the last target memory to allow locking the same one again.
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:464
 function controller_couplings_containerLockLead.toggleLockState() end
 
---- Chaque frame : fait tourner la recherche de tâteurs inactifs (10 Hz), interroge les suiveurs, calcule et applique la force d'alignement, fait passer les sites de feeling à locking, met à jour la stabilité du verrou et les electrics, et envoie les données de debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/couplings/containerLockLead.lua:231
----@param dt number Pas de temps en secondes.
+--- Every frame: runs the search of inactive feelers (10 Hz), queries the followers, computes and applies the alignment force, moves sites from feeling to locking, updates the lock stability and the electrics, and sends the debug data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/couplings/containerLockLead.lua:231
+---@param dt number Time step in seconds.
 function controller_couplings_containerLockLead.updateGFX(dt) end
 
 return controller_couplings_containerLockLead

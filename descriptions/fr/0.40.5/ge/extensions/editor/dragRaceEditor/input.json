@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/editor/dragRaceEditor/input.lua",
+  "module": "Gère l'entrée souris de l'éditeur de drag race pour l'édition de zones : à chaque mise à jour, calcule le rayon caméra-souris, le raycast sur la scène et les états clic/maintien/relâchement du bouton gauche. Le résultat est lu par l'éditeur de zone via getMouseInfo.",
+  "notes": ["Pendant le raycast, la collision de la forêt est désactivée puis réactivée.", "Un clic est pris en compte si ImGui ne capture pas la souris, ou si le mode d'édition courant est « Edit Drag Zone ».", "Quand rien n'est touché, la position du clic est à 100 m devant la caméra, normale (0,0,1).", "Au frame du clic (down), hold est forcé à false."],
+  "functions": {
+    "updateMouseInfo": {
+      "desc": "Recalcule la table mouseInfo : camPos, ray, rayDir, rayCast, valid, down, hold, up et les positions/normales _downPos, _holdPos, _upPos, _downNormal, _holdNormal, _upNormal.",
+      "params": {}
+    },
+    "getMouseInfo": {
+      "desc": "Renvoie la table mouseInfo courante.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "nil tant que updateMouseInfo n'a jamais été appelé."}]
+    }
+  }
+}

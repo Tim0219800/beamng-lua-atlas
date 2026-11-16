@@ -1,42 +1,42 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/recording/recordReplay.lua",
-  "module": "Noeud flowgraph 'Record Replay' (categorie repeat_f_duration). Doit enregistrer un replay du vehicule courant : l'impulsion 'start' puis 'stop' appellent core_replay.toggleRecording(false). Sortie 'filename' mise a jour par onReplayStateChanged quand l'etat devient 'recording'.",
+  "module": "Flowgraph node 'Record Replay' (repeat_f_duration category). Meant to record a replay of the current vehicle: the impulse 'start' then 'stop' call core_replay.toggleRecording(false). Output 'filename' updated by onReplayStateChanged when the state becomes 'recording'.",
   "notes": [
-    "Le champ C.todo du code signale que le systeme de replay ne permet pas de choisir d'autres vehicules.",
-    "start et stop appellent tous deux toggleRecording(false) (basculement) ; le pin 'prefix' n'est utilise que dans saveFile qui n'est jamais appelee."
+    "The C.todo field in the code notes that the replay system does not allow choosing other vehicles.",
+    "start and stop both call toggleRecording(false) (toggle); the 'prefix' pin is only used in saveFile, which is never called."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "state = 'none'.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Etat de duree 'inactive'.",
+          "desc": "Duration state 'inactive'.",
           "internal": true
         },
         "onReplayStateChanged": {
-          "desc": "Hook appele par le systeme de replay quand son etat change ; en enregistrement, memorise le fichier charge dans 'filename'.",
+          "desc": "Hook called by the replay system when its state changes; while recording, stores the loaded file in 'filename'.",
           "internal": true,
           "params": {
             "state": {
               "type": "table",
-              "desc": "etat du replay (state.state, state.loadedFile)"
+              "desc": "replay state (state.state, state.loadedFile)"
             }
           }
         },
         "saveFile": {
-          "desc": "Construit un nom de fichier (prefix ou 'Recording_<id>' suivi d'un numero) mais ne l'utilise pas : la fonction ne fait rien d'utile.",
+          "desc": "Builds a file name (prefix or 'Recording_<id>' followed by a number) but does not use it: the function does nothing useful.",
           "internal": true
         },
         "work": {
-          "desc": "Etat inactive : 'start' lance toggleRecording et passe a 'started'. Etat started : 'stop' relance toggleRecording et passe a 'finished'.",
+          "desc": "State inactive: 'start' launches toggleRecording and goes to 'started'. State started: 'stop' launches toggleRecording again and goes to 'finished'.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche l'etat de duree.",
+          "desc": "Displays the duration state.",
           "internal": true
         }
       }

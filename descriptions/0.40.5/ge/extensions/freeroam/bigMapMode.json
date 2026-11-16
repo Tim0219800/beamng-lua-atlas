@@ -1,320 +1,528 @@
 {
   "path": "lua/ge/extensions/freeroam/bigMapMode.lua",
-  "module": "Mode « grande carte » (big map) du jeu : ouvre et ferme la carte du niveau vue de dessus avec une transition de caméra, bascule la caméra 'bigMap', met le jeu en pause (pushPauseRequest 'bigMap'), modifie temporairement brouillard, nuages, heure, distance de vue et profondeur de champ, affiche les marqueurs de POI (via freeroam_bigMapMarkers), gère la sélection/survol de POI, le calcul et l'aperçu d'itinéraires (core_groundMarkers), le téléport rapide vers un POI et les commandes clavier/manette. L'interface Vue de la grande carte l'appelle pour la sélection (selectPoi, poiHovered…). Un moddeur s'en sert pour ouvrir la carte (enterBigMap, enterBigMapWithCustomPOIs), choisir un POI ou fixer une destination (setNavFocus).",
-  "usage": "-- ouvrir la grande carte avec uniquement deux POI, et recevoir le choix du joueur\nfreeroam_bigMapMode.enterBigMapWithCustomPOIs({'poiA', 'poiB'}, function(poiId)\n  log('I', 'mod', 'POI choisi : ' .. tostring(poiId))\nend, {instant = true})\n-- fermer\nfreeroam_bigMapMode.exitBigMap(true, true)",
+  "module": "The game's \"big map\" mode: opens and closes the top-down level map with a camera transition, switches to the 'bigMap' camera, pauses the game (pushPauseRequest 'bigMap'), temporarily changes fog, clouds, time of day, view distance and depth of field, displays the POI markers (via freeroam_bigMapMarkers), handles POI selection/hover, route computation and preview (core_groundMarkers), quick teleport to a POI and keyboard/gamepad controls. The big map's Vue UI calls it for selection (selectPoi, poiHovered...). A modder uses it to open the map (enterBigMap, enterBigMapWithCustomPOIs), pick a POI or set a destination (setNavFocus).",
+  "usage": "-- open the big map with only two POIs, and receive the player's choice\nfreeroam_bigMapMode.enterBigMapWithCustomPOIs({'poiA', 'poiB'}, function(poiId)\n  log('I', 'mod', 'POI chosen: ' .. tostring(poiId))\nend, {instant = true})\n-- close\nfreeroam_bigMapMode.exitBigMap(true, true)",
   "notes": [
-    "Constantes internes : useVueBigMap = true, useOrthoCamera = false (caméra 'bigMap' et non 'bigMapOrtho'), zoom minimal 20000 (facteur), simplification d'itinéraire 200, padding de cadrage 1,35.",
-    "M.onUpdate n'existe que pendant que la grande carte est active (setActive l'ajoute/le retire puis appelle extensions.hookUpdate('onUpdate')) : onUpdate n'est donc pas appelé quand la carte est fermée.",
-    "Pendant l'ouverture, les valeurs précédentes (brouillard, nuages, heure, distance de vue, interface, profondeur de champ, caméra, caméra libre) sont mémorisées puis restaurées par deactivateBigMapCallback.",
-    "Les actions d'entrée de la liste blockedInputActions (gameCam, freeCam, pause, photoMode, aiControls, resetPhysics, miniMap…) sont bloquées tant que la carte est ouverte.",
-    "Ordre des hooks à l'ouverture : onBeforeBigMapActivated, (transition : onBigmapStartTransition), onActivateBigMapCallback + UI bigmapTransitionFinished, onBigMapActivated. À la fermeture : onDeactivateBigMapCallback.",
-    "Options de enterBigMap : instant, missionId, autoSelectPoiId, autoSelectZoomFactor, cameraAdditionalHeightFactor, horizontalOffsetFactor, verticalOffsetFactor, navigationBoundariesFactor, uiOwnsFocus, ignoreUiStateChange, ignoreActionMaps, routeTarget, routeParams, mode. Une route déjà définie ou la caméra ortho/VR force instant.",
-    "Les rayons de fusion des marqueurs (clusterMergeRadius) sont recalculés par updateMergeRadius selon la hauteur de caméra et le champ de vision.",
-    "Bug : dans enterBigMap, `options.instant = true` est exécuté avant `options = options or {}` ; si la caméra de pause était active et que options vaut nil, erreur Lua.",
-    "Bug : navigateToMission retourne `marker` dans la boucle sur les POI bruts alors que cette variable n'est pas définie dans cette portée (vaut nil ; globale non déclarée).",
-    "setBigmapScreenBounds est une fonction vide (« testing for UI »). getAndClearPendingAutoSelectPoiId existe pour éviter une course avec le montage de l'UI.",
-    "navigateToMission(nil) efface la navigation (déclenche onNavigateToMission avec nil) ; utilisé par clickOnMap pour retirer l'itinéraire."
+    "Internal constants: useVueBigMap = true, useOrthoCamera = false ('bigMap' camera and not 'bigMapOrtho'), minimum zoom 20000 (factor), route simplification 200, framing padding 1.35.",
+    "M.onUpdate only exists while the big map is active (setActive adds/removes it then calls extensions.hookUpdate('onUpdate')): onUpdate is therefore not called when the map is closed.",
+    "During opening, the previous values (fog, clouds, time of day, view distance, UI, depth of field, camera, free camera) are stored then restored by deactivateBigMapCallback.",
+    "The input actions in the blockedInputActions list (gameCam, freeCam, pause, photoMode, aiControls, resetPhysics, miniMap...) are blocked while the map is open.",
+    "Hook order on opening: onBeforeBigMapActivated, (transition: onBigmapStartTransition), onActivateBigMapCallback + UI bigmapTransitionFinished, onBigMapActivated. On closing: onDeactivateBigMapCallback.",
+    "enterBigMap options: instant, missionId, autoSelectPoiId, autoSelectZoomFactor, cameraAdditionalHeightFactor, horizontalOffsetFactor, verticalOffsetFactor, navigationBoundariesFactor, uiOwnsFocus, ignoreUiStateChange, ignoreActionMaps, routeTarget, routeParams, mode. An already defined route or the ortho/VR camera forces instant.",
+    "The markers' merge radii (clusterMergeRadius) are recomputed by updateMergeRadius according to the camera height and the field of view.",
+    "Bug: in enterBigMap, `options.instant = true` is executed before `options = options or {}`; if the pause camera was active and options is nil, Lua error.",
+    "Bug: navigateToMission returns `marker` in the loop over the raw POIs while this variable is not defined in that scope (it is nil; undeclared global).",
+    "setBigmapScreenBounds is an empty function (\"testing for UI\"). getAndClearPendingAutoSelectPoiId exists to avoid a race with the UI mounting.",
+    "navigateToMission(nil) clears the navigation (triggers onNavigateToMission with nil); used by clickOnMap to remove the route."
   ],
   "fields": {
-    "clusterMergeRadius": {"type": "number", "desc": "Rayon de regroupement des marqueurs de POI en mètres (10 au départ ; recalculé par updateMergeRadius)."},
-    "dependencies": {"type": "string[]", "desc": "gameplay_rawPois, core_groundMarkers, core_camera, core_terrain, freeroam_bigMapMarkers, ui_pause_camera."},
-    "hoveredListItem": {"type": "string|nil", "desc": "Id du POI survolé dans la liste de l'interface (défini par poiHovered)."},
-    "hoveredPoiId": {"type": "string|nil", "desc": "Id du POI survolé sur la carte (mis à jour pendant onUpdate)."},
-    "selectedPoiId": {"type": "string|nil", "desc": "Id du POI sélectionné (selectPoi/deselect)."}
+    "clusterMergeRadius": {
+      "type": "number",
+      "desc": "Grouping radius of the POI markers in meters (10 initially; recomputed by updateMergeRadius)."
+    },
+    "dependencies": {
+      "type": "string[]",
+      "desc": "gameplay_rawPois, core_groundMarkers, core_camera, core_terrain, freeroam_bigMapMarkers, ui_pause_camera."
+    },
+    "hoveredListItem": {
+      "type": "string|nil",
+      "desc": "Id of the POI hovered in the UI list (set by poiHovered)."
+    },
+    "hoveredPoiId": {
+      "type": "string|nil",
+      "desc": "Id of the POI hovered on the map (updated during onUpdate)."
+    },
+    "selectedPoiId": {
+      "type": "string|nil",
+      "desc": "Id of the selected POI (selectPoi/deselect)."
+    }
   },
   "functions": {
     "bigMapActive": {
-      "desc": "Indique si la grande carte est ouverte.",
+      "desc": "Tells whether the big map is open.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si ouverte."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if open."
+        }
+      ],
       "internal": false
     },
     "camMoveController": {
-      "desc": "Déplace la caméra de la carte avec un stick de manette (valeur élevée au carré avec le signe conservé). Un mouvement > 0,01 rend le focus à la carte et envoie BigmapCameraMove à l'interface.",
+      "desc": "Moves the map camera with a gamepad stick (value squared with the sign kept). A movement > 0.01 gives focus back to the map and sends BigmapCameraMove to the UI.",
       "params": {
-        "upDown": {"type": "boolean", "desc": "true = avant/arrière, false = gauche/droite."},
-        "value": {"type": "number", "desc": "Valeur de l'axe (-1 à 1)."}
+        "upDown": {
+          "type": "boolean",
+          "desc": "true = forward/backward, false = left/right."
+        },
+        "value": {
+          "type": "number",
+          "desc": "Axis value (-1 to 1)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "camMoveKey": {
-      "desc": "Déplace la caméra de la carte avec les touches directionnelles.",
+      "desc": "Moves the map camera with the directional keys.",
       "params": {
-        "value": {"type": "number", "desc": "Valeur de la touche (1 appuyée, 0 relâchée)."},
-        "direction": {"type": "integer", "desc": "1 avant, 2 arrière, 3 gauche, autre valeur = droite."}
+        "value": {
+          "type": "number",
+          "desc": "Key value (1 pressed, 0 released)."
+        },
+        "direction": {
+          "type": "integer",
+          "desc": "1 forward, 2 backward, 3 left, any other value = right."
+        }
       },
       "returns": [],
       "internal": true
     },
     "clearRoutePreview": {
-      "desc": "Supprime l'aperçu d'itinéraire dessiné sur la carte.",
+      "desc": "Removes the route preview drawn on the map.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "controllerZoom": {
-      "desc": "Zoom avec la manette : transmet directement la valeur à core_camera.cameraZoom (le paramètre zoomIn est ignoré).",
+      "desc": "Gamepad zoom: passes the value directly to core_camera.cameraZoom (the zoomIn parameter is ignored).",
       "params": {
-        "value": {"type": "number", "desc": "Valeur de zoom."},
-        "zoomIn": {"type": "boolean", "desc": "Non utilisé."}
+        "value": {
+          "type": "number",
+          "desc": "Zoom value."
+        },
+        "zoomIn": {
+          "type": "boolean",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": true
     },
     "deselect": {
-      "desc": "Désélectionne le POI courant : envoie onReducedPoiList vide à l'interface, émet onPoiSelectedFromBigmap(nil), efface l'aperçu de route et appelle le callback de sélection avec nil.",
+      "desc": "Deselects the current POI: sends an empty onReducedPoiList to the UI, emits onPoiSelectedFromBigmap(nil), clears the route preview and calls the selection callback with nil.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "enableBigMapControls": {
-      "desc": "Active ou désactive les contrôles de la carte : pousse/retire l'action map « BigMap » et bloque/débloque les actions de jeu de la liste blockedInputActions ainsi que les actions d'interface.",
-      "params": {"enable": {"type": "boolean", "desc": "true pour activer les contrôles de la carte."}},
+      "desc": "Enables or disables the map controls: pushes/removes the \"BigMap\" action map and blocks/unblocks the game actions of the blockedInputActions list as well as the UI actions.",
+      "params": {
+        "enable": {
+          "type": "boolean",
+          "desc": "true to enable the map controls."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "enterBigMap": {
-      "desc": "Ouvre la grande carte. Ne fait rien si une tâche de mission démarre/s'arrête, si la carte est déjà ouverte ou en cours d'ouverture, ou s'il n'y a pas de niveau chargé. Voir les notes pour les options.",
-      "params": {"options": {"type": "table|nil", "desc": "Options : instant, missionId, autoSelectPoiId, autoSelectZoomFactor, cameraAdditionalHeightFactor, horizontalOffsetFactor, verticalOffsetFactor, navigationBoundariesFactor, uiOwnsFocus, ignoreUiStateChange, ignoreActionMaps, routeTarget, routeParams, mode, suppressUI (utilisé par enterBigMapWithCustomPOIs)."}},
+      "desc": "Opens the big map. Does nothing if a mission task is starting/stopping, if the map is already open or opening, or if no level is loaded. See the notes for the options.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "Options: instant, missionId, autoSelectPoiId, autoSelectZoomFactor, cameraAdditionalHeightFactor, horizontalOffsetFactor, verticalOffsetFactor, navigationBoundariesFactor, uiOwnsFocus, ignoreUiStateChange, ignoreActionMaps, routeTarget, routeParams, mode, suppressUI (used by enterBigMapWithCustomPOIs)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "enterBigMapWithCustomPOIs": {
-      "desc": "Ouvre la grande carte en ne montrant que les POI donnés ; le callback est appelé avec l'id du POI sélectionné (ou nil à la désélection). Avec options.suppressUI, le callback est remplacé par nop (pas d'interface de sélection).",
+      "desc": "Opens the big map showing only the given POIs; the callback is called with the selected POI's id (or nil on deselection). With options.suppressUI, the callback is replaced by nop (no selection UI).",
       "params": {
-        "poiIds": {"type": "string[]", "desc": "Ids de POI à afficher."},
-        "callback": {"type": "function|nil", "desc": "Appelé avec l'id sélectionné ou nil."},
-        "options": {"type": "table|nil", "desc": "Mêmes options que enterBigMap, plus suppressUI."}
+        "poiIds": {
+          "type": "string[]",
+          "desc": "POI ids to display."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Called with the selected id or nil."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "Same options as enterBigMap, plus suppressUI."
+        }
       },
       "returns": [],
       "internal": false
     },
     "exitBigMap": {
-      "desc": "Ferme la grande carte, avec transition de caméra sauf en mode instantané, en caméra ortho, en VR ou si la caméra libre était active. Restaure l'environnement et la caméra, arrête l'ambiance sonore et efface les icônes.",
+      "desc": "Closes the big map, with a camera transition except in instant mode, with the ortho camera, in VR or if the free camera was active. Restores the environment and the camera, stops the ambient sound and clears the icons.",
       "params": {
-        "instant": {"type": "boolean|nil", "desc": "true pour fermer sans transition."},
-        "closeEscMenu": {"type": "boolean|nil", "desc": "true pour naviguer vers la route UI 'play'."},
-        "forceGameCam": {"type": "boolean|nil", "desc": "true pour revenir à la caméra orbit si le joueur était en caméra libre."}
+        "instant": {
+          "type": "boolean|nil",
+          "desc": "true to close without a transition."
+        },
+        "closeEscMenu": {
+          "type": "boolean|nil",
+          "desc": "true to navigate to the UI route 'play'."
+        },
+        "forceGameCam": {
+          "type": "boolean|nil",
+          "desc": "true to go back to the orbit camera if the player was in free camera."
+        }
       },
       "returns": [],
       "internal": false
     },
     "frameActiveRoute": {
-      "desc": "Cadre la caméra de la carte sur l'itinéraire actif (pan + zoom pour que le trajet tienne dans l'écran hors barre latérale et barre d'infos). Ne fait rien en caméra ortho, si la carte est fermée, sans itinéraire, ou pendant une sélection automatique de POI.",
+      "desc": "Frames the map camera on the active route (pan + zoom so the trip fits on screen outside the sidebar and info bar). Does nothing with the ortho camera, if the map is closed, with no route, or during an automatic POI selection.",
       "params": {
-        "sidebarFraction": {"type": "number", "desc": "Fraction de l'écran occupée par la barre latérale (0 à 1)."},
-        "infobarFraction": {"type": "number", "desc": "Fraction de l'écran occupée par la barre d'infos (0 à 1)."}
+        "sidebarFraction": {
+          "type": "number",
+          "desc": "Fraction of the screen taken up by the sidebar (0 to 1)."
+        },
+        "infobarFraction": {
+          "type": "number",
+          "desc": "Fraction of the screen taken up by the info bar (0 to 1)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "getAndClearPendingAutoSelectPoiId": {
-      "desc": "Renvoie puis efface l'id demandé par enterBigMap({autoSelectPoiId = ...}) pour que l'interface Vue le sélectionne une fois montée (évite une course au montage).",
+      "desc": "Returns then clears the id requested by enterBigMap({autoSelectPoiId = ...}) so that the Vue UI selects it once mounted (avoids a race on mounting).",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Id de POI en attente, nil si aucun."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Pending POI id, nil if none."
+        }
+      ],
       "internal": false
     },
     "getVerticalResolution": {
-      "desc": "Hauteur de la fenêtre en pixels, lue à l'ouverture de la carte (1080 par défaut).",
+      "desc": "Window height in pixels, read when the map opens (1080 by default).",
       "params": {},
-      "returns": [{"type": "integer", "desc": "Résolution verticale."}],
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Vertical resolution."
+        }
+      ],
       "internal": false
     },
     "isTransitionActive": {
-      "desc": "Indique si une transition d'ouverture ou de fermeture est en cours.",
+      "desc": "Tells whether an opening or closing transition is in progress.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true pendant la transition (en interne 1 = vers la carte, 2 = depuis la carte)."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true during the transition (internally 1 = to the map, 2 = from the map)."
+        }
+      ],
       "internal": false
     },
     "isUsingOrthoCamera": {
-      "desc": "Indique si la caméra orthogonale est utilisée (constante, false dans cette version).",
+      "desc": "Tells whether the orthographic camera is used (constant, false in this version).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "false."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false."
+        }
+      ],
       "internal": false
     },
     "navigateToMission": {
-      "desc": "Définit la destination de navigation vers le POI donné (cherche d'abord dans les clusters de playmodeMarkers, puis dans les POI bruts avec bigmapMarker, éventuellement via customNavigationFunction) et émet onNavigateToMission. Sans trouvé ou avec nil, efface la navigation. Ne fait rien en test de conduite de carrière.",
-      "params": {"poiId": {"type": "string|nil", "desc": "Id du POI cible ; nil pour annuler la navigation."}},
-      "returns": [{"type": "table|nil", "desc": "Marqueur trouvé dans les clusters de playmodeMarkers, sinon nil (voir notes)."}],
+      "desc": "Sets the navigation destination to the given POI (searches first in the playmodeMarkers clusters, then in the raw POIs with bigmapMarker, possibly via customNavigationFunction) and emits onNavigateToMission. If nothing is found or with nil, clears the navigation. Does nothing during a career test drive.",
+      "params": {
+        "poiId": {
+          "type": "string|nil",
+          "desc": "Target POI id; nil to cancel the navigation."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Marker found in the playmodeMarkers clusters, otherwise nil (see notes)."
+        }
+      ],
       "internal": false
     },
     "onCameraPreRender": {
-      "desc": "Hook appelé avant le rendu de la caméra : positionne les icônes du réticule de manette et du marqueur de navigation selon la caméra de la carte. Ne fait rien si la carte est fermée.",
-      "params": {"camData": {"type": "table", "desc": "Données de caméra (camData.res.pos, rot, fov)."}},
+      "desc": "Hook called before the camera renders: positions the gamepad reticle and navigation marker icons according to the map camera. Does nothing if the map is closed.",
+      "params": {
+        "camData": {
+          "type": "table",
+          "desc": "Camera data (camData.res.pos, rot, fov)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onChangeUiFilter": {
-      "desc": "Hook appelé par l'action d'entrée de changement de filtre : avec hystérésis (déclenche à plus de 0,65, réarme sous 0,35) envoie onChangeBigmapFilterIndex avec {change = dir} à l'interface.",
+      "desc": "Hook called by the filter change input action: with hysteresis (triggers above 0.65, rearms below 0.35) sends onChangeBigmapFilterIndex with {change = dir} to the UI.",
       "params": {
-        "value": {"type": "number", "desc": "Valeur de l'entrée analogique."},
-        "dir": {"type": "integer", "desc": "Direction de changement (par ex. -1 ou 1, déduit du code)."}
+        "value": {
+          "type": "number",
+          "desc": "Analog input value."
+        },
+        "dir": {
+          "type": "integer",
+          "desc": "Change direction (e.g. -1 or 1, inferred from code)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin du niveau : efface le cache des cylindres de bordure, désélectionne et supprime le son d'ambiance.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau quitté (non utilisé)."}},
+      "desc": "Hook called at the end of the level: clears the border cylinder cache, deselects and removes the ambient sound.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Path of the level being left (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook appelé au démarrage du niveau : désactive le mode carte et crée la source sonore d'ambiance (event:>UI>Bigmap>Ambience).",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau (non utilisé)."}},
+      "desc": "Hook called when the level starts: disables map mode and creates the ambient sound source (event:>UI>Bigmap>Ambience).",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onControllerSelect": {
-      "desc": "Hook appelé quand le joueur appuie sur « sélection » à la manette : simule un clic sur la carte si la souris n'a pas bougé et que l'interface n'a pas le focus.",
+      "desc": "Hook called when the player presses \"select\" on the gamepad: simulates a click on the map if the mouse has not moved and the UI does not have focus.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement des extensions : rouvre la carte (si elle l'était) et rétablit la destination de navigation (hors carrière), après un délai de 0,1 s dans un job.",
-      "params": {"v": {"type": "table", "desc": "Données de onSerialize : bigMap, navDestinationForLuaReloads, showNavigationMarker, previousCamMode, previousFreeCamData."}},
+      "desc": "Hook called after an extension reload: reopens the map (if it was open) and restores the navigation destination (outside career), after a 0.1 s delay in a job.",
+      "params": {
+        "v": {
+          "type": "table",
+          "desc": "onSerialize data: bigMap, navDestinationForLuaReloads, showNavigationMarker, previousCamMode, previousFreeCamData."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement : supprime la source sonore d'ambiance.",
+      "desc": "Hook called on unload: removes the ambient sound source.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onMenuItemNavigation": {
-      "desc": "Hook appelé quand le joueur navigue dans les menus : redonne le focus à l'interface (setUiNavigationActive(true)).",
+      "desc": "Hook called when the player navigates the menus: gives focus back to the UI (setUiNavigationActive(true)).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onMouseButton": {
-      "desc": "Hook appelé aux clics de la souris sur la carte : au relâchement sans glisser, traite un clic (sélection de POI, destination, désélection) puis transmet l'évènement à la caméra de la carte.",
-      "params": {"buttonDown": {"type": "boolean", "desc": "true à l'appui, false au relâchement."}},
+      "desc": "Hook called on mouse clicks on the map: on release without a drag, handles a click (POI selection, destination, deselection) then forwards the event to the map camera.",
+      "params": {
+        "buttonDown": {
+          "type": "boolean",
+          "desc": "true on press, false on release."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onNavgraphReloaded": {
-      "desc": "Hook appelé quand le graphe de navigation est rechargé : ferme et rouvre la carte instantanément si elle est ouverte.",
+      "desc": "Hook called when the navigation graph is reloaded: closes and reopens the map instantly if it is open.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onReachedTargetPos": {
-      "desc": "Hook appelé quand le véhicule atteint la destination : efface la navigation (setNavFocus(nil)).",
+      "desc": "Hook called when the vehicle reaches the destination: clears the navigation (setNavFocus(nil)).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement des extensions : ferme la carte si ouverte (instantanément), vide le cache de cylindres et renvoie l'état à restaurer.",
+      "desc": "Hook called before an extension reload: closes the map if open (instantly), empties the cylinder cache and returns the state to restore.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{bigMap, navDestinationForLuaReloads, showNavigationMarker, previousCamMode, previousFreeCamData}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{bigMap, navDestinationForLuaReloads, showNavigationMarker, previousCamMode, previousFreeCamData}"
+        }
+      ],
       "internal": true
     },
     "panToPoi": {
-      "desc": "Déplace en douceur la caméra pour centrer un POI, sans changer la sélection ni la navigation. Applique une seule fois le zoom autoSelectZoomFactor s'il a été demandé à l'ouverture.",
-      "params": {"poiId": {"type": "string", "desc": "Id du POI ; les valeurs vides, 'null' et 'undefined' sont ignorées."}},
+      "desc": "Smoothly moves the camera to center a POI, without changing the selection or the navigation. Applies the autoSelectZoomFactor zoom only once if it was requested at opening.",
+      "params": {
+        "poiId": {
+          "type": "string",
+          "desc": "POI id; empty values, 'null' and 'undefined' are ignored."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "poiHovered": {
-      "desc": "Appelé par l'interface quand un POI de la liste est survolé : affiche l'aperçu d'itinéraire de la mission (si c'est une mission) ou rétablit celui du POI sélectionné.",
+      "desc": "Called by the UI when a POI in the list is hovered: shows the mission's route preview (if it is a mission) or restores the one for the selected POI.",
       "params": {
-        "poiIdInCluster": {"type": "string", "desc": "Id du POI."},
-        "hovered": {"type": "boolean", "desc": "true au survol, false à la sortie."}
+        "poiIdInCluster": {
+          "type": "string",
+          "desc": "POI id."
+        },
+        "hovered": {
+          "type": "boolean",
+          "desc": "true on hover, false on exit."
+        }
       },
       "returns": [],
       "internal": false
     },
     "resetRoute": {
-      "desc": "Recalcule le chemin simplifié affiché à partir de core_groundMarkers (ou cache le marqueur de navigation s'il n'y a plus de cible) et relance l'animation de l'itinéraire.",
+      "desc": "Recomputes the displayed simplified path from core_groundMarkers (or hides the navigation marker if there is no target anymore) and restarts the route animation.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "selectPoi": {
-      "desc": "Appelée par l'interface : sélectionne un POI (aperçu de route de mission, hook onPoiSelectedFromBigmap, callback de sélection). Une valeur vide, 'null' ou 'undefined' équivaut à deselect().",
-      "params": {"poiIdInCluster": {"type": "string|nil", "desc": "Id du POI."}},
+      "desc": "Called by the UI: selects a POI (mission route preview, onPoiSelectedFromBigmap hook, selection callback). An empty value, 'null' or 'undefined' is equivalent to deselect().",
+      "params": {
+        "poiIdInCluster": {
+          "type": "string|nil",
+          "desc": "POI id."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setBigmapScreenBounds": {
-      "desc": "Fonction vide, réservée à des tests d'interface.",
+      "desc": "Empty function, reserved for UI tests.",
       "params": {
-        "windowSize": {"type": "any", "desc": "Non utilisé."},
-        "mapSize": {"type": "any", "desc": "Non utilisé."}
+        "windowSize": {
+          "type": "any",
+          "desc": "Not used."
+        },
+        "mapSize": {
+          "type": "any",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": true
     },
     "setNavFocus": {
-      "desc": "Définit (ou efface avec nil) la destination de navigation de la carte via core_groundMarkers.setPath, avec effacement du chemin à l'arrivée. Émet d'abord le hook onSetBigmapNavFocus(pos). Sans véhicule joueur, la position est ignorée.",
+      "desc": "Sets (or clears with nil) the map's navigation destination via core_groundMarkers.setPath, with the path cleared on arrival. First emits the onSetBigmapNavFocus(pos) hook. Without a player vehicle, the position is ignored.",
       "params": {
-        "pos": {"type": "vec3|nil", "desc": "Destination dans le monde ; nil pour annuler."},
-        "options": {"type": "table|nil", "desc": "options.async = true calcule le chemin en asynchrone (resetRoute à la fin)."}
+        "pos": {
+          "type": "vec3|nil",
+          "desc": "Destination in the world; nil to cancel."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "options.async = true computes the path asynchronously (resetRoute at the end)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setOnlyIdsVisible": {
-      "desc": "Limite l'affichage aux POI de la liste : mémorise la liste, recalcule le rayon de fusion à facteur 1 et reconfigure le filtre de freeroam_bigMapMarkers.",
-      "params": {"list": {"type": "string[]|nil", "desc": "Ids de POI visibles (liste vide si nil)."}},
+      "desc": "Restricts the display to the POIs in the list: stores the list, recomputes the merge radius with factor 1 and reconfigures the freeroam_bigMapMarkers filter.",
+      "params": {
+        "list": {
+          "type": "string[]|nil",
+          "desc": "Visible POI ids (empty list if nil)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setRoutePreview": {
-      "desc": "Affiche un aperçu d'itinéraire sur la carte à partir d'un chemin non simplifié (liste de points avec .pos) ; nil l'efface.",
-      "params": {"unsimplifiedRoute": {"type": "table|nil", "desc": "Chemin issu d'un planificateur de route."}},
+      "desc": "Shows a route preview on the map from an unsimplified path (list of points with .pos); nil clears it.",
+      "params": {
+        "unsimplifiedRoute": {
+          "type": "table|nil",
+          "desc": "Path from a route planner."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setRoutePreviewSimple": {
-      "desc": "Calcule une route dans le monde entre deux positions (gameplay/route/route) et l'affiche en aperçu.",
+      "desc": "Computes a route in the world between two positions (gameplay/route/route) and shows it as a preview.",
       "params": {
-        "from": {"type": "vec3", "desc": "Départ."},
-        "to": {"type": "vec3", "desc": "Arrivée."}
+        "from": {
+          "type": "vec3",
+          "desc": "Start."
+        },
+        "to": {
+          "type": "vec3",
+          "desc": "End."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setUiNavigationActive": {
-      "desc": "Donne ou retire le focus à l'interface (bloque ou débloque les actions d'interface). Ne fait rien si la carte est fermée.",
-      "params": {"active": {"type": "boolean", "desc": "true si l'interface doit avoir le focus."}},
+      "desc": "Gives or removes focus from the UI (blocks or unblocks the UI actions). Does nothing if the map is closed.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "true if the UI should have focus."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "teleportToPoi": {
-      "desc": "Téléporte le véhicule du joueur vers un POI (via quickTravelPosRotFunction de son bigmapMarker), ferme la carte (exitBigMap(false, true, true)), recentre la caméra et émet teleportedFromBigmap. Marque aussi le cluster comme cible (hook onNavigateToMission). En carrière, le téléport est « sûr » sans resetBrokenFlexMesh.",
-      "params": {"poiId": {"type": "string", "desc": "Id du POI cible."}},
+      "desc": "Teleports the player's vehicle to a POI (via the quickTravelPosRotFunction of its bigmapMarker), closes the map (exitBigMap(false, true, true)), recenters the camera and emits teleportedFromBigmap. Also marks the cluster as the target (onNavigateToMission hook). In career, the teleport is \"safe\" without resetBrokenFlexMesh.",
+      "params": {
+        "poiId": {
+          "type": "string",
+          "desc": "Target POI id."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "toggleBigMap": {
-      "desc": "Ouvre ou ferme la carte (action d'entrée de la touche carte) : termine une transition en cours, refuse l'ouverture depuis une route UI autre que play/pause, pendant un pas de mission ou pendant une navigation UI protégée. Avec taxi ou livraison actifs, ouvre le dialogue correspondant au lieu de la carte.",
+      "desc": "Opens or closes the map (map key input action): ends a transition in progress, refuses to open from a UI route other than play/pause, during a mission step or during a protected UI navigation. With taxi or delivery active, opens the corresponding dialog instead of the map.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "updateMergeRadius": {
-      "desc": "Recalcule le rayon de fusion des marqueurs entre un minimum et un maximum proportionnels à la hauteur de caméra et au champ de vision, puis reconfigure le filtre des marqueurs.",
-      "params": {"factor": {"type": "number", "desc": "Facteur d'interpolation de 0 (rayon minimal) à 1 (maximal)."}},
+      "desc": "Recomputes the markers' merge radius between a minimum and a maximum proportional to the camera height and the field of view, then reconfigures the marker filter.",
+      "params": {
+        "factor": {
+          "type": "number",
+          "desc": "Interpolation factor from 0 (minimum radius) to 1 (maximum)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "zoom": {
-      "desc": "Zoom de la caméra de la carte (appelle camMode:zoom).",
-      "params": {"value": {"type": "number", "desc": "Valeur de zoom."}},
+      "desc": "Map camera zoom (calls camMode:zoom).",
+      "params": {
+        "value": {
+          "type": "number",
+          "desc": "Zoom value."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "zoomInOut": {
-      "desc": "Zoom par touches : mémorise séparément les valeurs de zoom avant (négative) et arrière, puis envoie leur somme à core_camera.cameraZoom.",
+      "desc": "Zoom by keys: stores the zoom-in (negative) and zoom-out values separately, then sends their sum to core_camera.cameraZoom.",
       "params": {
-        "value": {"type": "number", "desc": "Valeur de la touche."},
-        "zoomIn": {"type": "boolean", "desc": "true pour zoom avant, false pour arrière."}
+        "value": {
+          "type": "number",
+          "desc": "Key value."
+        },
+        "zoomIn": {
+          "type": "boolean",
+          "desc": "true for zoom in, false for zoom out."
+        }
       },
       "returns": [],
       "internal": true

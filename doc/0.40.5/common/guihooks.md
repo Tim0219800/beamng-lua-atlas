@@ -1,124 +1,124 @@
 # `guihooks`
 
-*Fichier : `lua/common/guihooks.lua` · VM : Commun (GE + véhicule) · 215 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/guihooks.lua` · VM: Common (GE + vehicle) · 215 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `guihooks`
+**Access:** global `guihooks`
 
-Passerelle Lua vers l'interface HTML/JS (CEF). Permet de déclencher des hooks JS côté UI (guihooks.trigger) et d'envoyer des flux de données (streams) à haute fréquence pour les applications d'UI. Présent dans la VM GE (via `be`) et dans la VM véhicule (via `obj`) ; les deux envoient par queueHookJS/queueStreamDataJS. Un moddeur s'en sert pour afficher un message, mettre à jour une app UI ou tracer des valeurs dans l'app 'Generic Graph'.
+Lua gateway to the HTML/JS interface (CEF). Allows triggering JS hooks on the UI side (guihooks.trigger) and sending high-frequency data streams to UI apps. Present in the GE VM (via `be`) and in the vehicle VM (via `obj`); both send through queueHookJS/queueStreamDataJS. A modder uses it to show a message, update a UI app or plot values in the 'Generic Graph' app.
 
-## Exemple
+## Example
 
 ```lua
-guihooks.trigger('MyUiHook', {speed = 12.5, gear = 'D'})  -- côté JS : $scope.$on('MyUiHook', function(ev, data) ... end)
+guihooks.trigger('MyUiHook', {speed = 12.5, gear = 'D'})  -- JS side: $scope.$on('MyUiHook', function(ev, data) ... end)
 guihooks.message('Hello', 5, 'myCategory')
-guihooks.graph({'vitesse', speed, 100, 'm/s'}, {'rpm', rpm, 8000})
+guihooks.graph({'speed', speed, 100, 'm/s'}, {'rpm', rpm, 8000})
 ```
 
-## Remarques
+## Notes
 
-- Les arguments nil sont supprimés de la liste envoyée à JS par trigger et triggerClient (les arguments sont compactés, pas de trou). trigger n'envoie '[]' s'il n'y a aucun argument non nil.
-- trigger utilise l'identifiant de contexte d'exécution execCtxWebId (global) comme cible, 0 par défaut ; triggerClient permet de viser un identifiant de client précis (targetDsmId).
-- Dans la VM véhicule, queueStream n'écrit dans le cache que si M.updateStreams est vrai ; reset() le remet à false. Côté GE, queueStream met toujours M.updateStreams à true. Le cache est envoyé par sendStreams.
-- sendStreams() doit être appelé depuis le onGraphicsStep du véhicule (indiqué dans le code) : dans la VM véhicule il appelle aussi streams.update() et déclenche VehicleChange/VehicleReset si v.data a changé.
-- M.queueStream et M.send sont des champs définis (alias) : l'extraction automatique les signale à tort comme nil, la variable locale queueStream est une fonction (nop si ni obj ni be n'existent).
-- Le commentaire du code prévoit que ce module sera revu : 'todo replace ui_message'. guihooks.message ne fait rien si le joueur n'est pas assis (playerInfo.firstPlayerSeated faux).
-- graph() renvoie la table values normalisée (clé, valeur, échelle, unité, renderNegatives, couleur RGBA issue de jetColor). graphWithCSV garde un fichier CSV ouvert au niveau du module : le premier appel fixe les colonnes.
+- nil arguments are removed from the list sent to JS by trigger and triggerClient (arguments are compacted, no holes). trigger sends '[]' if there are no non-nil arguments.
+- trigger uses the execution context identifier execCtxWebId (global) as target, 0 by default; triggerClient lets you target a specific client identifier (targetDsmId).
+- In the vehicle VM, queueStream only writes to the cache if M.updateStreams is true; reset() sets it back to false. On the GE side, queueStream always sets M.updateStreams to true. The cache is sent by sendStreams.
+- sendStreams() must be called from the vehicle's onGraphicsStep (stated in the code): in the vehicle VM it also calls streams.update() and triggers VehicleChange/VehicleReset if v.data changed.
+- M.queueStream and M.send are defined fields (aliases): automatic extraction wrongly reports them as nil, the local variable queueStream is a function (nop if neither obj nor be exists).
+- The code comment plans for this module to be reviewed: 'todo replace ui_message'. guihooks.message does nothing if the player is not seated (playerInfo.firstPlayerSeated false).
+- graph() returns the normalized values table (key, value, scale, unit, renderNegatives, RGBA color from jetColor). graphWithCSV keeps a CSV file open at module level: the first call sets the columns.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `guihooks.graph(a, ...)` | Alimente l'app UI 'Generic Graph' (stream 'genericGraphSimple'). Chaque argument est une table {clé, valeur, échelle, unité, renderNegatives, couleur}; valeurs par défaut : clé '#i', valeur 0, échelle 1, unité '', renderNegatives false, couleur RGBA dégradé jet. Renvoie la liste normalisée. Exemple : graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}). | 151 |
-| `guihooks.graphWithCSV(filename, ...)` | Comme graph, et enregistre aussi chaque appel comme une ligne d'un CSV en mémoire (csvlib). Le premier appel crée le fichier et fixe les colonnes (clé + unité). Écrire sur disque avec graphWithCSVWrite(). | 167 |
-| `guihooks.graphWithCSVWrite()` | Écrit le CSV accumulé par graphWithCSV dans le fichier ; journalise une erreur si aucun CSV n'existe. | 185 |
-| `guihooks.message(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex)` | Affiche un message dans l'UI via le hook 'Message' (données {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Ne fait rien si playerInfo.firstPlayerSeated est faux. | 126 |
-| `guihooks.messageForSeatedPlayers(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex)` | Envoie le hook 'Message' une fois pour chaque joueur assis (playerInfo.seatedPlayers), avec le champ data.player. Accepte soit les mêmes arguments que message, soit une seule table {msg=..., ...} passée en premier argument (ttl nil). | 132 |
-| `guihooks.reset()` | Remet updateStreams à false, vide le cache de streams et envoie le hook 'VehicleReset' si le premier joueur est assis. Appelé lors d'un reset du véhicule/de la VM. *(interne)* | 97 |
-| `guihooks.sendStreams()` | Envoie à l'UI tous les streams mis en cache par queueStream puis vide le cache. Appelé par le moteur (VM véhicule : depuis onGraphicsStep ; ne doit pas être appelé depuis GE d'après le commentaire du code). *(interne)* | 88 |
-| `guihooks.trigger(hookName, ...)` | Déclenche le hook JS `hookName` côté UI avec les arguments donnés (encodés en JSON dans un tableau). Les valeurs nil sont ignorées. Sensible au ramasse-miettes (réutilise une table temporaire) : ne pas la modifier à la légère. | 26 |
-| `guihooks.triggerClient(targetDsmId, hookName, ...)` | Comme trigger mais pour un client UI précis identifié par targetDsmId. | 41 |
-| `guihooks.triggerRawJS(hookName, rawJs)` | Déclenche un hook JS en passant du JS brut (inséré tel quel entre crochets, pas d'échappement ni d'encodage JSON). À n'utiliser qu'avec du texte de confiance. | 54 |
-| `guihooks.triggerStream(streamName, streamData)` | Envoie immédiatement une donnée de flux (stream) à l'UI sous le nom streamName (encodée en JSON). | 58 |
+| `guihooks.graph(a, ...)` | Feeds the 'Generic Graph' UI app (stream 'genericGraphSimple'). Each argument is a table {key, value, scale, unit, renderNegatives, color}; defaults: key '#i', value 0, scale 1, unit '', renderNegatives false, color RGBA jet gradient. Returns the normalized list. Example: graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}). | 151 |
+| `guihooks.graphWithCSV(filename, ...)` | Like graph, and also records each call as a row of an in-memory CSV (csvlib). The first call creates the file and sets the columns (key + unit). Write to disk with graphWithCSVWrite(). | 167 |
+| `guihooks.graphWithCSVWrite()` | Writes the CSV accumulated by graphWithCSV to the file; logs an error if no CSV exists. | 185 |
+| `guihooks.message(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex)` | Displays a message in the UI via the 'Message' hook (data {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Does nothing if playerInfo.firstPlayerSeated is false. | 126 |
+| `guihooks.messageForSeatedPlayers(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex)` | Sends the 'Message' hook once for each seated player (playerInfo.seatedPlayers), with the field data.player. Accepts either the same arguments as message, or a single table {msg=..., ...} passed as the first argument (ttl nil). | 132 |
+| `guihooks.reset()` | Sets updateStreams back to false, empties the stream cache and sends the 'VehicleReset' hook if the first player is seated. Called on a vehicle/VM reset. *(internal)* | 97 |
+| `guihooks.sendStreams()` | Sends to the UI all streams cached by queueStream then empties the cache. Called by the engine (vehicle VM: from onGraphicsStep; must not be called from GE according to the code comment). *(internal)* | 88 |
+| `guihooks.trigger(hookName, ...)` | Triggers the JS hook `hookName` on the UI side with the given arguments (JSON-encoded in an array). nil values are ignored. Garbage-collector sensitive (reuses a temporary table): do not modify it lightly. | 26 |
+| `guihooks.triggerClient(targetDsmId, hookName, ...)` | Like trigger but for a specific UI client identified by targetDsmId. | 41 |
+| `guihooks.triggerRawJS(hookName, rawJs)` | Triggers a JS hook by passing raw JS (inserted as is between brackets, no escaping or JSON encoding). To be used only with trusted text. | 54 |
+| `guihooks.triggerStream(streamName, streamData)` | Immediately sends stream data to the UI under the name streamName (JSON-encoded). | 58 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `guihooks.graph(a, ...)`
 
-Alimente l'app UI 'Generic Graph' (stream 'genericGraphSimple'). Chaque argument est une table {clé, valeur, échelle, unité, renderNegatives, couleur}; valeurs par défaut : clé '#i', valeur 0, échelle 1, unité '', renderNegatives false, couleur RGBA dégradé jet. Renvoie la liste normalisée. Exemple : graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}).
+Feeds the 'Generic Graph' UI app (stream 'genericGraphSimple'). Each argument is a table {key, value, scale, unit, renderNegatives, color}; defaults: key '#i', value 0, scale 1, unit '', renderNegatives false, color RGBA jet gradient. Returns the normalized list. Example: graph({'foo',foo}, {'bar',bar,100}, {'baz',baz,nil,'m/s',false,nil}).
 
-- `a` (*table|nil*) : premier graphe {clé, valeur, échelle, unité, renderNegatives, couleur} (ignoré si nil/false)
-- `...` (*table*) : autres graphes, même format
-- **renvoie** : table[] liste des graphes avec valeurs par défaut remplies
+- `a` (*table|nil*) : first graph {key, value, scale, unit, renderNegatives, color} (ignored if nil/false)
+- `...` (*table*) : other graphs, same format
+- **returns**: table[] list of graphs with default values filled in
 
 #### `guihooks.graphWithCSV(filename, ...)`
 
-Comme graph, et enregistre aussi chaque appel comme une ligne d'un CSV en mémoire (csvlib). Le premier appel crée le fichier et fixe les colonnes (clé + unité). Écrire sur disque avec graphWithCSVWrite().
+Like graph, and also records each call as a row of an in-memory CSV (csvlib). The first call creates the file and sets the columns (key + unit). Write to disk with graphWithCSVWrite().
 
-- `filename` (*string|nil*) : nom du fichier CSV (pris au premier appel ; défaut graphcsv.<date>.csv)
-- `...` (*table*) : graphes, mêmes arguments que graph
+- `filename` (*string|nil*) : CSV file name (taken at the first call; default graphcsv.<date>.csv)
+- `...` (*table*) : graphs, same arguments as graph
 
 #### `guihooks.message(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex)`
 
-Affiche un message dans l'UI via le hook 'Message' (données {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Ne fait rien si playerInfo.firstPlayerSeated est faux.
+Displays a message in the UI via the 'Message' hook (data {msg, ttl, category, icon, availableOptionsCount, currentOptionIndex}). Does nothing if playerInfo.firstPlayerSeated is false.
 
-- `msg` (*string*) : texte (clé de traduction possible, déduit du code UI)
-- `ttl` (*number|nil*) : durée d'affichage en secondes, défaut 5
-- `category` (*string|nil*) : catégorie du message, défaut ''
-- `icon` (*string|nil*) : icône
-- `availableOptionsCount` (*integer|nil*) : nombre d'options (menus de choix)
-- `currentOptionIndex` (*integer|nil*) : option courante
+- `msg` (*string*) : text (possibly a translation key, inferred from the UI code)
+- `ttl` (*number|nil*) : display duration in seconds, default 5
+- `category` (*string|nil*) : message category, default ''
+- `icon` (*string|nil*) : icon
+- `availableOptionsCount` (*integer|nil*) : number of options (choice menus)
+- `currentOptionIndex` (*integer|nil*) : current option
 
 #### `guihooks.messageForSeatedPlayers(msg, ttl, category, icon, availableOptionsCount, currentOptionIndex)`
 
-Envoie le hook 'Message' une fois pour chaque joueur assis (playerInfo.seatedPlayers), avec le champ data.player. Accepte soit les mêmes arguments que message, soit une seule table {msg=..., ...} passée en premier argument (ttl nil).
+Sends the 'Message' hook once for each seated player (playerInfo.seatedPlayers), with the field data.player. Accepts either the same arguments as message, or a single table {msg=..., ...} passed as the first argument (ttl nil).
 
-- `msg` (*string|table*) : texte ou table de données avec champ msg
-- `ttl` (*number|nil*) : durée, défaut 5
-- `category` (*string|nil*) : catégorie, défaut ''
-- `icon` (*string|nil*) : icône
-- `availableOptionsCount` (*integer|nil*) : nombre d'options
-- `currentOptionIndex` (*integer|nil*) : option courante
+- `msg` (*string|table*) : text or data table with a msg field
+- `ttl` (*number|nil*) : duration, default 5
+- `category` (*string|nil*) : category, default ''
+- `icon` (*string|nil*) : icon
+- `availableOptionsCount` (*integer|nil*) : number of options
+- `currentOptionIndex` (*integer|nil*) : current option
 
 #### `guihooks.trigger(hookName, ...)`
 
-Déclenche le hook JS `hookName` côté UI avec les arguments donnés (encodés en JSON dans un tableau). Les valeurs nil sont ignorées. Sensible au ramasse-miettes (réutilise une table temporaire) : ne pas la modifier à la légère.
+Triggers the JS hook `hookName` on the UI side with the given arguments (JSON-encoded in an array). nil values are ignored. Garbage-collector sensitive (reuses a temporary table): do not modify it lightly.
 
-- `hookName` (*string*) : nom du hook JS
-- `...` (*any*) : arguments sérialisables en JSON (nil ignorés)
+- `hookName` (*string*) : JS hook name
+- `...` (*any*) : JSON-serializable arguments (nil ignored)
 
 #### `guihooks.triggerClient(targetDsmId, hookName, ...)`
 
-Comme trigger mais pour un client UI précis identifié par targetDsmId.
+Like trigger but for a specific UI client identified by targetDsmId.
 
-- `targetDsmId` (*integer*) : identifiant du client/UI cible
-- `hookName` (*string*) : nom du hook JS
-- `...` (*any*) : arguments (nil ignorés)
+- `targetDsmId` (*integer*) : target client/UI identifier
+- `hookName` (*string*) : JS hook name
+- `...` (*any*) : arguments (nil ignored)
 
 #### `guihooks.triggerRawJS(hookName, rawJs)`
 
-Déclenche un hook JS en passant du JS brut (inséré tel quel entre crochets, pas d'échappement ni d'encodage JSON). À n'utiliser qu'avec du texte de confiance.
+Triggers a JS hook by passing raw JS (inserted as is between brackets, no escaping or JSON encoding). To be used only with trusted text.
 
-- `hookName` (*string*) : nom du hook JS
-- `rawJs` (*any*) : code JS brut converti avec tostring
+- `hookName` (*string*) : JS hook name
+- `rawJs` (*any*) : raw JS code converted with tostring
 
 #### `guihooks.triggerStream(streamName, streamData)`
 
-Envoie immédiatement une donnée de flux (stream) à l'UI sous le nom streamName (encodée en JSON).
+Immediately sends stream data to the UI under the name streamName (JSON-encoded).
 
-- `streamName` (*string*) : nom du stream
-- `streamData` (*any*) : donnée sérialisable en JSON
+- `streamName` (*string*) : stream name
+- `streamData` (*any*) : JSON-serializable data
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `queueStream` | function | queueStream(key, value) : met en cache la donnée de flux `key` pour envoi ultérieur par sendStreams (VM véhicule : seulement si updateStreams est vrai). nop si ni `obj` ni `be`. |
-| `send` | function | Alias de queueStream. |
+| `queueStream` | function | queueStream(key, value): caches the stream data `key` for later sending by sendStreams (vehicle VM: only if updateStreams is true). nop if neither `obj` nor `be` exists. |
+| `send` | function | Alias of queueStream. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `queueHookJS`, `queueStreamDataJS`
 - `obj:` `queueHookJS`, `queueStreamDataJS`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/guihooks.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/guihooks.lua`.*

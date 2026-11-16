@@ -1,45 +1,45 @@
 # `core_cameraModes_droneChase`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/droneChase.lua` · VM : Game Engine (GE) · 302 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/droneChase.lua` · VM: Game Engine (GE) · 302 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/droneChase")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/droneChase")` (file under extensions/ but not a regular extension)
 
-Caméra drone de poursuite aérienne (désactivée par défaut, icône cameraFocusOnVehicle1) : flotte au-dessus et derrière le véhicule du joueur selon son cap (smoothé), le regarde et penche dans les virages. Un ressort-amortisseur sous-amorti (survitesse visible, montée plus lente) la déplace ; elle suit le relief (consciente des tunnels/ponts) et garde safeDist mètres des bâtiments. Tout tourne sur dtSim (cohérent en avance rapide/ralenti). Les entrées de déplacement décalent la position souhaitée (positionOffset), les entrées de rotation la font orbiter. Renvoie un constructeur.
+Aerial chase drone camera (disabled by default, icon cameraFocusOnVehicle1): floats above and behind the player's vehicle according to its (smoothed) heading, looks at it and banks in turns. An underdamped spring-damper (visible overshoot, slower rise) moves it; it follows the terrain (aware of tunnels/bridges) and keeps safeDist meters from buildings. Everything runs on dtSim (consistent in fast-forward/slow motion). Movement inputs shift the desired position (positionOffset), rotation inputs make it orbit. Returns a constructor.
 
-## Remarques
+## Notes
 
-- data.res.collisionCompatible = false : le filtre de collision de caméra ne s'applique pas à ce mode.
-- Paramètres réglables (listParams) : dist 12 m (4 à 80), height 6 m (1-40), bank (0-2), float (0.2-3, inertie), safeDist (0-5 m), fov (10-140, 55 par défaut). Pas de véhicule joueur : la caméra garde la pose précédente.
-- Garde-fous : altitude minimale 2 m au-dessus du sol et 0.8 m sous un plafond (tunnel).
-- L'extraction signale une globale « i » : en réalité c'est la boucle `for i = 0, 5` de la table de sondes (variable locale) ; pas de vraie fuite.
+- data.res.collisionCompatible = false: the camera collision filter does not apply to this mode.
+- Adjustable parameters (listParams): dist 12 m (4 to 80), height 6 m (1-40), bank (0-2), float (0.2-3, inertia), safeDist (0-5 m), fov (10-140, 55 by default). No player vehicle: the camera keeps its previous pose.
+- Safeguards: minimum altitude 2 m above the ground and 0.8 m below a ceiling (tunnel).
+- The extraction reports a global "i": it is actually the `for i = 0, 5` loop of the probe table (local variable); no real leak.
 
-## Classe `C`
+## Class `C`
 
-Mode drone. Champs : camDist, height, fov, bank, floating, safeDist, positionOffset, orbitYaw, orbitPitch, pos, vel, head.
+Drone mode. Fields: camDist, height, fov, bank, floating, safeDist, positionOffset, orbitYaw, orbitPitch, pos, vel, head.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_droneChase")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_droneChase")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:avoid(x, y, z, car)` | Garde la distance de sécurité par rapport aux maillages statiques : reste du côté du véhicule d'un mur éventuel, et repousse hors de tout obstacle à moins de safeDist (6 sondes horizontales). | 158 |
-| `C:clampAltitude(x, y, z, car)` | Corrige l'altitude pour suivre le véhicule : sous couvert reste entre sol+2 m et plafond-0.8 m ; à ciel ouvert monte pour survoler les collines. | 96 |
-| `C:deserialize(s)` | Restaure l'état sauvegardé et force le replacement. | 141 |
-| `C:init()` | Définit les valeurs par défaut et appelle reset. | 57 |
-| `C:listParams()` | Liste des réglages exposés à l'UI de contrôle caméra / flux vidéo (dist, height, bank, float, safeDist, fov). | 114 |
-| `C:onCameraChanged(focused)` | Hook : au gain de focus, le drone est replacé. | 86 |
-| `C:placeInit(position)` | Place le drone instantanément à une position et annule sa vitesse. | 88 |
-| `C:reset()` | Remet le drone à replacer, annule vitesse, décalage et orbite. | 73 |
-| `C:serialize()` | Sauvegarde l'état du mode (distance, fov, hauteur, bank, float, safeDist, positionOffset, orbite). | 134 |
-| `C:setDistance(d)` | Fixe la distance de suivi bornée à [4, 80] m. | 84 |
-| `C:setFOV(fov)` | Fixe le champ de vision. | 85 |
-| `C:setParam(key, value)` | Modifie un réglage listParams (valeurs bornées). | 125 |
-| `C:update(data)` | Calcule la pose du drone et l'écrit dans data.res (pos, rot, fov, targetPos). | 183 |
+| `C:avoid(x, y, z, car)` | Keeps the safety distance from static meshes: stays on the vehicle's side of any wall, and pushes out of any obstacle closer than safeDist (6 horizontal probes). | 158 |
+| `C:clampAltitude(x, y, z, car)` | Corrects the altitude to follow the vehicle: under cover stays between ground+2 m and ceiling-0.8 m; in the open climbs to fly over hills. | 96 |
+| `C:deserialize(s)` | Restores the saved state and forces repositioning. | 141 |
+| `C:init()` | Sets the default values and calls reset. | 57 |
+| `C:listParams()` | List of settings exposed to the camera control UI / video stream (dist, height, bank, float, safeDist, fov). | 114 |
+| `C:onCameraChanged(focused)` | Hook: on focus gain, the drone is repositioned. | 86 |
+| `C:placeInit(position)` | Places the drone instantly at a position and cancels its velocity. | 88 |
+| `C:reset()` | Marks the drone to be repositioned, cancels velocity, offset and orbit. | 73 |
+| `C:serialize()` | Saves the mode state (distance, fov, height, bank, float, safeDist, positionOffset, orbit). | 134 |
+| `C:setDistance(d)` | Sets the follow distance clamped to [4, 80] m. | 84 |
+| `C:setFOV(fov)` | Sets the field of view. | 85 |
+| `C:setParam(key, value)` | Changes a listParams setting (values clamped). | 125 |
+| `C:update(data)` | Computes the drone pose and writes it to data.res (pos, rot, fov, targetPos). | 183 |
 
-**Globales affectées :** `i`
+**Globals assigned:** `i`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/droneChase.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/droneChase.lua`.*

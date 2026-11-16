@@ -1,52 +1,52 @@
 # `controller_powertrainControl_rimPullControl`
 
-*Fichier : `lua/vehicle/controller/powertrainControl/rimPullControl.lua` · VM : Véhicule · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/powertrainControl/rimPullControl.lua` · VM: Vehicle · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `powertrainControl/rimPullControl` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `powertrainControl/rimPullControl` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de « rim pull » (commande de traction sur jante, ex. engins ferroviaires/tracteurs) : un axe d'entrée input.rimPull (0..1) réduit progressivement l'embrayage de la turbine du convertisseur de couple (de 1 à 0.2 entre 0 et 0.5) puis ajoute du frein (de 0 à 1 entre 0.5 et 1). Il s'exécute avant vehicleController (defaultOrder 40) pour modifier input.brake avant son utilisation.
+Auxiliary "rim pull" controller (rim traction command, e.g. rail vehicles/tractors): an input axis input.rimPull (0..1) progressively reduces the torque converter's turbine clutch (from 1 to 0.2 between 0 and 0.5) then adds braking (from 0 to 1 between 0.5 and 1). It runs before vehicleController (defaultOrder 40) to modify input.brake before it is used.
 
-## Remarques
+## Notes
 
-- Clé jbeam lue : torqueConverterName ("torqueConverter").
-- Si le convertisseur est introuvable, log D et updateGFX devient nop.
-- input.rimPull est lu mais aucune action d'entrée dans ce fichier ne l'alimente ; il doit venir des actions/bindings.
-- Le contrôleur modifie input.brake (max avec la sortie frein) et relevantTorqueConverter.impellerClutchCoef.
+- jbeam key read: torqueConverterName ("torqueConverter").
+- If the converter is not found, log D and updateGFX becomes nop.
+- input.rimPull is read but no input action in this file feeds it; it must come from the actions/bindings.
+- The controller modifies input.brake (max with the brake output) and relevantTorqueConverter.impellerClutchCoef.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_powertrainControl_rimPullControl.init(jbeamData)` | Récupère le convertisseur de couple (jbeam torqueConverterName). *(interne)* | 34 |
-| `controller_powertrainControl_rimPullControl.reset(jbeamData)` | Ne fait rien. *(interne)* | 31 |
-| `controller_powertrainControl_rimPullControl.updateGFX(dt)` | Chaque frame : convertit input.rimPull en consigne d'embrayage de turbine et en frein additionnel. *(interne)* | 16 |
+| `controller_powertrainControl_rimPullControl.init(jbeamData)` | Gets the torque converter (jbeam torqueConverterName). *(internal)* | 34 |
+| `controller_powertrainControl_rimPullControl.reset(jbeamData)` | Does nothing. *(internal)* | 31 |
+| `controller_powertrainControl_rimPullControl.updateGFX(dt)` | Every frame: converts input.rimPull into a turbine clutch target and additional braking. *(internal)* | 16 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_powertrainControl_rimPullControl.init(jbeamData)`
 
-Récupère le convertisseur de couple (jbeam torqueConverterName).
+Gets the torque converter (jbeam torqueConverterName).
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_powertrainControl_rimPullControl.reset(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_powertrainControl_rimPullControl.updateGFX(dt)`
 
-Chaque frame : convertit input.rimPull en consigne d'embrayage de turbine et en frein additionnel.
+Every frame: converts input.rimPull into a turbine clutch target and additional braking.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | Ordre d'exécution (40). |
+| `defaultOrder` | number | Execution order (40). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/powertrainControl/rimPullControl.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/powertrainControl/rimPullControl.lua`.*

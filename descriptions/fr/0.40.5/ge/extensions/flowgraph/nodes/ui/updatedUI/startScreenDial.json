@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenDial.lua",
+  "module": "Nœud « StartScreen Drag Dial » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage le panneau de réglage du dial d'une course de dragster (le gagnant est celui qui termine au plus près de son dial sans le dépasser). Entrée flow ; sorties flow (chainFlow) et dials (table de {label, key, value, disabled, racerId}).",
+  "notes": [
+    "Le log d'avertissement utilise logTag, non défini dans ce fichier (nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Prépare le panneau {type='dragDial', header='Dial Setup', ...}.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Lit gameplay_drag_dragBridge.getData() ; pour chaque coureur crée une entrée de dial (valeur timers.dial.value ou 12 par défaut, désactivée si le coureur n'est pas jouable), ajoute le panneau à l'UI et publie la liste sur le pin dials. Sans données, logue un avertissement et ne fait rien d'autre.",
+          "internal": true
+        },
+        "onDialSetByDialPanel": {
+          "desc": "Appelé quand le joueur modifie un dial dans le panneau ; met à jour la valeur de l'entrée de même label et republie dials.",
+          "params": {
+            "dial": {
+              "type": "table",
+              "desc": "Table {label, value} envoyée par le panneau."
+            }
+          },
+          "internal": false
+        }
+      }
+    }
+  }
+}

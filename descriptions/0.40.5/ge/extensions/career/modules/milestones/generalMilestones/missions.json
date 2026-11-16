@@ -1,61 +1,101 @@
 {
   "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/missions.lua",
-  "module": "Jalons liés aux missions de la carrière. Pour l'ensemble des missions showInCareer puis pour chaque branche (déduite de gameplay_missions_unlocks.getForwardMissionInfo(...).branchTags), crée trois jalons : étoiles collectées (mission_totalStarCount / mission_totalStar_branch_<b>), missions réussies avec au moins une étoile par défaut (mission_passMissions[_<b>]) et missions complétées à 100 % des étoiles (mission_completeMissions[_<b>]). Six paliers : 10, 18, 30, 54, 74 et 100 % du total (arrondi au supérieur). Notifie à la fin d'une mission (état stopped).",
+  "module": "Milestones related to career missions. For the set of showInCareer missions, then for each branch (inferred from gameplay_missions_unlocks.getForwardMissionInfo(...).branchTags), creates three milestones: stars collected (mission_totalStarCount / mission_totalStar_branch_<b>), missions passed with at least one default star (mission_passMissions[_<b>]) and missions completed at 100% of stars (mission_completeMissions[_<b>]). Six tiers: 10, 18, 30, 54, 74 and 100% of the total (rounded up). Notifies at the end of a mission (stopped state).",
   "notes": [
-    "Seul mission_totalStarCount (global) a le filtre general et la récompense majorLinear ; les autres utilisent minorLinear.",
-    "makeUnlockMissionsMilestones (jalon mission_unlockMissions) est défini mais son appel est commenté dans onGeneralMilestonesCollect ; de même onMissionUnlocked n'est pas exporté (inactif).",
-    "missionIdToMilestonesList et milestoneConfigs ne sont jamais vidés entre deux onGeneralMilestonesCollect : une réactivation de la carrière peut dupliquer les jalons dans ces tables.",
-    "Les étoiles utilisent mission.careerSetup._activeStarCache (defaultStarCount + bonusStarCount) pour le total et gameplay_missions_progress.getUnlockedStarCountsForMissionById pour la progression."
+    "Only mission_totalStarCount (global) has the general filter and the majorLinear reward; the others use minorLinear.",
+    "makeUnlockMissionsMilestones (milestone mission_unlockMissions) is defined but its call is commented out in onGeneralMilestonesCollect; likewise onMissionUnlocked is not exported (inactive).",
+    "missionIdToMilestonesList and milestoneConfigs are never cleared between two onGeneralMilestonesCollect calls: reactivating the career may duplicate milestones in these tables.",
+    "Stars use mission.careerSetup._activeStarCache (defaultStarCount + bonusStarCount) for the total and gameplay_missions_progress.getUnlockedStarCountsForMissionById for progress."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : gameplay_missions_missions, gameplay_missions_progress."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: gameplay_missions_missions, gameplay_missions_progress."
+    }
   },
   "functions": {
     "onGeneralMilestonesCollect": {
-      "desc": "Hook : rassemble les missions de carrière, les groupe par branche et crée les jalons globaux puis par branche.",
-      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "desc": "Hook: gathers career missions, groups them by branch and creates the global then per-branch milestones.",
+      "params": {
+        "milestonesList": {
+          "type": "table[]",
+          "desc": "List to fill."
+        }
+      },
       "internal": true
     },
     "makeAllMissionStarMilestones": {
-      "desc": "Crée les trois jalons globaux (étoiles, missions réussies, missions complétées), les enregistre pour chaque mission concernée et les ajoute à milestonesList.",
+      "desc": "Creates the three global milestones (stars, missions passed, missions completed), registers them for each relevant mission and adds them to milestonesList.",
       "params": {
-        "missions": {"type": "table[]", "desc": "Missions de carrière."},
-        "milestonesList": {"type": "table[]", "desc": "Liste à compléter."}
+        "missions": {
+          "type": "table[]",
+          "desc": "Career missions."
+        },
+        "milestonesList": {
+          "type": "table[]",
+          "desc": "List to fill."
+        }
       },
       "internal": false
     },
     "makeBranchMissionStarMilestones": {
-      "desc": "Crée les trois mêmes jalons pour une branche (ou compétence) donnée, avec le nom de la branche dans les libellés.",
+      "desc": "Creates the same three milestones for a given branch (or skill), with the branch name in the labels.",
       "params": {
-        "missions": {"type": "table[]", "desc": "Missions de la branche."},
-        "branchKey": {"type": "string", "desc": "Identifiant de branche (career_branches.getBranchById)."},
-        "milestonesList": {"type": "table[]", "desc": "Liste à compléter."}
+        "missions": {
+          "type": "table[]",
+          "desc": "Branch missions."
+        },
+        "branchKey": {
+          "type": "string",
+          "desc": "Branch identifier (career_branches.getBranchById)."
+        },
+        "milestonesList": {
+          "type": "table[]",
+          "desc": "List to fill."
+        }
       },
       "internal": false
     },
     "makeUnlockMissionsMilestones": {
-      "desc": "Crée un jalon de déblocage de missions (mission_unlockMissions, cible (step+1)). Non utilisé : son appel est commenté.",
+      "desc": "Creates a mission unlock milestone (mission_unlockMissions, target (step+1)). Unused: its call is commented out.",
       "params": {
-        "missions": {"type": "table[]", "desc": "Missions de carrière."},
-        "milestonesList": {"type": "table[]", "desc": "Liste à compléter."}
+        "missions": {
+          "type": "table[]",
+          "desc": "Career missions."
+        },
+        "milestonesList": {
+          "type": "table[]",
+          "desc": "List to fill."
+        }
       },
       "internal": false
     },
     "onGeneralMilestonesSetupCallbacks": {
-      "desc": "Hook : fixe la cible de notification de chaque jalon de mission.",
+      "desc": "Hook: sets the notification target of each mission milestone.",
       "params": {},
       "internal": true
     },
     "setNotificationTarget": {
-      "desc": "Stocke dans milestone._target la cible du prochain palier à notifier (rien si tous notifiés).",
-      "params": {"milestone": {"type": "table", "desc": "Configuration du jalon."}},
+      "desc": "Stores in milestone._target the target of the next tier to notify (nothing if all are notified).",
+      "params": {
+        "milestone": {
+          "type": "table",
+          "desc": "Milestone configuration."
+        }
+      },
       "internal": false
     },
     "onAnyMissionChanged": {
-      "desc": "Hook appelé quand l'état d'une mission change ; à l'état \"stopped\", vérifie les jalons liés à cette mission, notifie les paliers atteints et avance notificationStep.",
+      "desc": "Hook called when a mission's state changes; in the \"stopped\" state, checks the milestones related to that mission, notifies the reached tiers and advances notificationStep.",
       "params": {
-        "state": {"type": "string", "desc": "État de la mission (stopped...)."},
-        "mission": {"type": "table", "desc": "Mission concernée (id)."}
+        "state": {
+          "type": "string",
+          "desc": "Mission state (stopped...)."
+        },
+        "mission": {
+          "type": "table",
+          "desc": "Mission concerned (id)."
+        }
       },
       "internal": true
     }

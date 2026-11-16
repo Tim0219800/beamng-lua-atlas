@@ -1,0 +1,165 @@
+{
+  "path": "lua/ge/extensions/render/skiaIcons.lua",
+  "module": "Icônes 3D (billboards Skia tournés vers la caméra) pour marquer des positions du monde : missions, stations, marqueurs de course. Chaque icône est dessinée avec la police bngIcons en quatre couches (contour de la forme, remplissage, liseré du motif, motif). Les icônes de même apparence partagent un pool de billboards : en libérer une la range pour la prochaine du même style au lieu de refaire une texture. Un moddeur appelle getIcon, puis update à chaque image, et release à la fin.",
+  "usage": "local icon = render_skiaIcons.getIcon('mission', pos)  -- preset d'un fichier *.skiaIcon.json\nlocal icon2 = render_skiaIcons.getIcon({shape = 'circle', motive = 'fuelPump', color = 'blue'})\nicon2:setVisible(true)\n-- à chaque image (onPreRender) :\nicon2:update(pos, render_skiaIcons.screenBoundedScale(pos, 0.8, 0.03, 0.12), dt)\n-- à la fin :\nicon2:release()",
+  "notes": [
+    "Spec d'icône (tous champs facultatifs) : shape, motive, text (court libellé comme '3' ou '9+' qui remplace le motif), motiveScale, motiveOffset, outline (en unités de police par 24 ; défaut 1.5), color, borderColor, motiveColor, et preset (nom d'une entrée des fichiers /art/skiaIcons/*.skiaIcon.json, clé 'presets'). Les noms de couleur sont résolus par la table de iconMarkerConfig.json, sinon la valeur est prise telle quelle.",
+    "Le module lit au chargement ui/ui-vue/src/assets/fonts/bngIcons/iconMarkerConfig.json et bngIcons.js ; si la config est illisible, le chargement de l'extension échoue (error).",
+    "Le moteur n'offre pas d'alpha sur les billboards : le fondu est simulé en réduisant la taille jusqu'à zéro (sous 0.005 m l'icône est cachée). La taille est une hauteur en mètres.",
+    "Le pool garde au plus 192 billboards libérés ; au-delà ils sont détruits.",
+    "Un billboard n'est construit qu'au premier update visible, ce qui évite de coûter une texture aux marqueurs jamais vus.",
+    "Après release() l'icône est 'morte' : demander une nouvelle icône avec getIcon.",
+    "Le renderer est un objet du scenetree nommé 'skiaIconBillboards' ; il disparaît avec la scène (onClientEndMission invalide tous les identifiants).",
+    "Le code de Icon:update a pour signature réelle (pos, scale, dt) ; la page extraite affiche par erreur (scale, dt) car la méthode est déclarée avec ':'.",
+    "Charge l'extension core_skiaTemplate à la demande."
+  ],
+  "fields": {},
+  "functions": {
+    "getIcon": {
+      "desc": "Renvoie une icône pour un nom de preset, une table de spec, ou un preset avec surcharges (spec.preset plus champs). Si le style ne peut pas être construit, renvoie une icône déjà morte (isLive faux).",
+      "params": {
+        "spec": {"type": "string|table", "desc": "Nom de preset ou table de spec (voir notes)."},
+        "pos": {"type": "vec3|nil", "desc": "Position monde. Si fournie, l'icône est construite et placée tout de suite ; sinon au premier update."}
+      },
+      "returns": [{"type": "Icon", "desc": "Objet icône avec update, setPos, setScale, setVisible, visibility, isLive, release."}],
+      "internal": false
+    },
+    "screenBoundedScale": {
+      "desc": "Calcule la hauteur monde d'une icône qui se comporte comme un objet réel en distance moyenne mais reste bornée à l'écran : jamais sous minScreen (lisible de loin), jamais au-dessus de maxScreen (n'envahit pas la vue de près). Bornes exprimées en fraction de la hauteur de l'écran ; des bornes égales donnent une taille constante à l'écran. Utilise la caméra core_camera ; sans caméra, renvoie worldSize.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Position de l'icône."},
+        "worldSize": {"type": "number", "desc": "Hauteur en mètres dans la plage intermédiaire."},
+        "minScreen": {"type": "number|nil", "desc": "Fraction minimale de la hauteur d'écran (défaut 0)."},
+        "maxScreen": {"type": "number|nil", "desc": "Fraction maximale de la hauteur d'écran (défaut 1)."}
+      },
+      "returns": [{"type": "number", "desc": "Hauteur monde à passer à Icon:update."}],
+      "internal": false
+    },
+    "reload": {
+      "desc": "Relit la config partagée, la table de glyphes et les presets depuis le disque. Supprime le renderer (toutes les textures) ; les icônes vivantes se reconstruisent à leur prochain update.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si la config a pu être relue."}],
+      "internal": false
+    },
+    "reloadPresets": {
+      "desc": "Oublie les presets chargés pour que le prochain getIcon relise les fichiers *.skiaIcon.json. Plus léger que reload : les textures déjà construites sont conservées.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getStats": {
+      "desc": "Statistiques du pool pour le débogage.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{live, looks, pooled, created, reused, destroyed, hasRenderer}."}],
+      "internal": false
+    },
+    "getMotives": {
+      "desc": "Liste triée de tous les noms de motifs (glyphes de bngIcons).",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms de motifs utilisables dans spec.motive."}],
+      "internal": false
+    },
+    "getPresets": {
+      "desc": "Renvoie la table des presets (nom -> spec) chargée depuis /art/skiaIcons/*.skiaIcon.json (champ 'presets').",
+      "params": {},
+      "returns": [{"type": "table<string, table>", "desc": "Presets."}],
+      "internal": false
+    },
+    "getFolders": {
+      "desc": "Dossiers lus par le système : presets (/art/skiaIcons) et font.",
+      "params": {},
+      "returns": [{"type": "table<string, string>", "desc": "{presets = ..., font = ...}."}],
+      "internal": false
+    },
+    "exploreFolder": {
+      "desc": "Ouvre un de ces dossiers dans l'explorateur de fichiers du système (confort de développement).",
+      "params": {"which": {"type": "string", "desc": "'presets', 'font', ou un chemin."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin ouvert, ou nil si la plateforme ne sait pas l'ouvrir."}],
+      "internal": false
+    },
+    "getColors": {
+      "desc": "Renvoie la table des couleurs nommées de la config d'icônes.",
+      "params": {},
+      "returns": [{"type": "table<string, string>", "desc": "Nom de couleur vers valeur (format de la config)."}],
+      "internal": false
+    },
+    "getShapes": {
+      "desc": "Liste triée des noms de formes disponibles.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms de formes utilisables dans spec.shape."}],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension : supprime un renderer 'skiaIconBillboards' laissé par une VM Lua précédente.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : identique à reload().",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de mission : la scène et son renderer sont perdus, tous les identifiants de billboards sont invalidés et les pools vidés.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "Icon": {
+      "desc": "Poignée d'icône renvoyée par getIcon. Chaque méthode d'état renvoie l'icône elle-même (sauf isLive, visibility, release).",
+      "functions": {
+        "sync": {
+          "desc": "S'assure que l'icône possède un billboard de son apparence actuelle : reconstruit après reload ou après la perte de la scène, récupère un billboard du pool ou en crée un.",
+          "params": {},
+          "returns": [{"type": "number|nil", "desc": "Identifiant du billboard, ou nil si rien à dessiner."}]
+        },
+        "update": {
+          "desc": "Appel par image. pos et scale gardent leur valeur actuelle quand ils sont nil ; dt fait avancer le fondu de visibilité (nil ou 0 le laisse en place).",
+          "params": {
+            "pos": {"type": "vec3|nil", "desc": "Position monde."},
+            "scale": {"type": "number|nil", "desc": "Hauteur monde en mètres."},
+            "dt": {"type": "number|nil", "desc": "Durée de l'image en secondes."}
+          },
+          "returns": [{"type": "Icon", "desc": "L'icône."}]
+        },
+        "setPos": {
+          "desc": "Raccourci pour update(pos, nil, nil).",
+          "params": {"pos": {"type": "vec3", "desc": "Nouvelle position."}},
+          "returns": [{"type": "Icon", "desc": "L'icône."}]
+        },
+        "setScale": {
+          "desc": "Raccourci pour update(nil, scale, nil).",
+          "params": {"scale": {"type": "number", "desc": "Nouvelle hauteur monde en mètres."}},
+          "returns": [{"type": "Icon", "desc": "L'icône."}]
+        },
+        "setVisible": {
+          "desc": "Affiche ou masque l'icône avec fondu. Avec instant, saute le fondu et pousse le résultat tout de suite (utile pour un marqueur caché qu'on ne met plus à jour).",
+          "params": {
+            "visible": {"type": "boolean", "desc": "true pour visible."},
+            "instant": {"type": "boolean|nil", "desc": "true pour supprimer le fondu."}
+          },
+          "returns": [{"type": "Icon", "desc": "L'icône."}]
+        },
+        "visibility": {
+          "desc": "Avancement actuel du fondu entre 0 et 1, pour caler d'autres éléments visuels dessus.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "0 à 1."}]
+        },
+        "isLive": {
+          "desc": "Faux si l'icône n'a pas de billboard : libérée, style impossible à construire, ou pas de renderer.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "État."}]
+        },
+        "release": {
+          "desc": "Range le billboard dans le pool pour une icône du même style. La poignée est inutilisable ensuite.",
+          "params": {},
+          "returns": []
+        }
+      }
+    }
+  }
+}

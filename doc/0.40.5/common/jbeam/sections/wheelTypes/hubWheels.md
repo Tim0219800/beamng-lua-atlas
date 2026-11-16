@@ -1,42 +1,42 @@
 # `jbeam_sections_wheelTypes_hubWheels`
 
-*Fichier : `lua/common/jbeam/sections/wheelTypes/hubWheels.lua` · VM : Commun (GE + véhicule) · 385 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sections/wheelTypes/hubWheels.lua` · VM: Common (GE + vehicle) · 385 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sections/wheelTypes/hubWheels")`
+**Access:** `require("jbeam/sections/wheelTypes/hubWheels")`
 
-Gestionnaire du type de roue 'hubWheels' : roue à moyeu séparé du pneu, avec pression d'air simulée par des poutres pressurisées entre le moyeu et le pneu. Il crée un anneau de nœuds de pneu, un anneau de nœuds de moyeu, éventuellement un enjoliveur (hubcap), puis les poutres de bande de roulement, de périphérie, de moyeu, d'axe, de pression, de renfort et de soutien. Appelé par jbeam/sections/wheels.lua pendant le chargement.
+Handler for the 'hubWheels' wheel type: a wheel with a hub separate from the tire, with air pressure simulated by pressurized beams between the hub and the tire. It creates a ring of tire nodes, a ring of hub nodes, optionally a hubcap, then the tread, periphery, hub, axle, pressure, reinforcement and support beams. Called by jbeam/sections/wheels.lua during loading.
 
-## Exemple
+## Example
 
 ```lua
--- appelé par le répartiteur : process(vehicle, wheelKey, wheel)
+-- called by the dispatcher: process(vehicle, wheelKey, wheel)
 ```
 
-## Remarques
+## Notes
 
-- Paramètres lus : node1, node2 (obligatoires), radius (0.5), hubRadius (0.65*radius), numRays (10), tireWidth, hubWidth, wheelOffset, treadCoef (1), pressurePSI (30), pressureSpring/Damp/Strength/Deform, reinforcementPressure*, wheelSide*, wheelTread*, wheelPeriphery*, wheelTreadReinforcement*, hub*, hubcap* (enableHubcaps, hubcapRadius, hubcapWidth, hubcapOffset, hubcapCenterNodeWeight, hubcapBreakGroup, enableExtraHubcapBeams), enableTireSideVBeams, wheelSideDisplacement, enableTreadReinforcementBeams, enableTireSideSupportBeams.
-- Les enjoliveurs ne sont créés que si enableHubcaps == true et numRays est pair. Si enableHubcaps est vrai et numRays impair, les nœuds/poutres d'enjoliveur sont ignorés.
-- Les poutres hub-pneu sont de type BEAM_PRESSURED (3) ; volumeCoef vaut 1 ; surface calculée avec tireWidth, hubWidth, radius et hubRadius. Les poutres de soutien (BEAM_SUPPORT = 7) utilisent beamPrecompression = 0.75*hubRadius/radius + 0.25.
-- Les nœuds de pneu sont reliés deux à deux par pairedNode (chaque nœud intérieur référence l'extérieur suivant). Résultat : wheel.nodes = nœuds du moyeu (vehicle.nodes[n]) et wheel.pressuredBeams = poutres pressurisées créées.
-- Constantes C codées en dur : NORMALTYPE = 0, BEAM_ANISOTROPIC = 1, BEAM_PRESSURED = 3, BEAM_SUPPORT = 7. wheel.collision est forcé à true.
-- Incohérence mineure : le code vérifie `i == 1` (au lieu de i == 0) pour ajouter les poutres d'axe de l'enjoliveur en mode enableExtraHubcapBeams ; elles ne sont donc ajoutées qu'au second rayon.
-- hubcapOffset est nil quand wheel.hubcapOffset n'est pas défini, mais l'expression `node1_pos + rayVec - hubcapOffset` l'utilise : un enjoliveur sans hubcapOffset provoque donc une erreur Lua (opérande nil) dans ce gestionnaire.
+- Parameters read: node1, node2 (required), radius (0.5), hubRadius (0.65*radius), numRays (10), tireWidth, hubWidth, wheelOffset, treadCoef (1), pressurePSI (30), pressureSpring/Damp/Strength/Deform, reinforcementPressure*, wheelSide*, wheelTread*, wheelPeriphery*, wheelTreadReinforcement*, hub*, hubcap* (enableHubcaps, hubcapRadius, hubcapWidth, hubcapOffset, hubcapCenterNodeWeight, hubcapBreakGroup, enableExtraHubcapBeams), enableTireSideVBeams, wheelSideDisplacement, enableTreadReinforcementBeams, enableTireSideSupportBeams.
+- Hubcaps are only created if enableHubcaps == true and numRays is even. If enableHubcaps is true and numRays is odd, the hubcap nodes/beams are skipped.
+- The hub-tire beams are of type BEAM_PRESSURED (3); volumeCoef is 1; surface computed with tireWidth, hubWidth, radius and hubRadius. The support beams (BEAM_SUPPORT = 7) use beamPrecompression = 0.75*hubRadius/radius + 0.25.
+- The tire nodes are linked in pairs by pairedNode (each inner node references the next outer one). Result: wheel.nodes = hub nodes (vehicle.nodes[n]) and wheel.pressuredBeams = the pressurized beams created.
+- Hardcoded C constants: NORMALTYPE = 0, BEAM_ANISOTROPIC = 1, BEAM_PRESSURED = 3, BEAM_SUPPORT = 7. wheel.collision is forced to true.
+- Minor inconsistency: the code checks `i == 1` (instead of i == 0) to add the hubcap axle beams in enableExtraHubcapBeams mode; they are therefore only added on the second ray.
+- hubcapOffset is nil when wheel.hubcapOffset is not defined, but the expression `node1_pos + rayVec - hubcapOffset` uses it: a hubcap without hubcapOffset therefore causes a Lua error (nil operand) in this handler.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sections_wheelTypes_hubWheels.process(vehicle, wheelKey, wheel)` | Crée tous les nœuds et poutres d'une roue hubWheels (alias de addHubWheel). Sort avec un avertissement 'invalid hubWheel' si node1 ou node2 n'existe pas. *(interne)* | 20 |
+| `jbeam_sections_wheelTypes_hubWheels.process(vehicle, wheelKey, wheel)` | Creates all the nodes and beams of a hubWheels wheel (alias of addHubWheel). Exits with an 'invalid hubWheel' warning if node1 or node2 does not exist. *(internal)* | 20 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sections_wheelTypes_hubWheels.process(vehicle, wheelKey, wheel)`
 
-Crée tous les nœuds et poutres d'une roue hubWheels (alias de addHubWheel). Sort avec un avertissement 'invalid hubWheel' si node1 ou node2 n'existe pas.
+Creates all the nodes and beams of a hubWheels wheel (alias of addHubWheel). Exits with an 'invalid hubWheel' warning if node1 or node2 does not exist.
 
-- `vehicle` (*table*) : véhicule en construction
-- `wheelKey` (*integer*) : indice de la roue dans sa section
-- `wheel` (*table*) : définition jbeam de la roue (modifiée : collision, treadCoef, radius, hubRadius, numRays, nodes, pressuredBeams)
+- `vehicle` (*table*) : vehicle under construction
+- `wheelKey` (*integer*) : index of the wheel in its section
+- `wheel` (*table*) : jbeam definition of the wheel (modified: collision, treadCoef, radius, hubRadius, numRays, nodes, pressuredBeams)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sections/wheelTypes/hubWheels.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sections/wheelTypes/hubWheels.lua`.*

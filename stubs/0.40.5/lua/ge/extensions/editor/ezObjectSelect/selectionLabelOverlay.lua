@@ -2,16 +2,16 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Dessine les étiquettes (panneaux sombres à bordure colorée) de l'outil Easy Select avec la drawList imgui. Les étiquettes « followMouse » sont empilées près du curseur (décalage 18 px, côté gauche si elles sortent du viewport) ; les autres sont ancrées au-dessus de leur position écran. Les étiquettes prioritaires (label.priority == true) passent en premier.
---- Accès : extension `editor_ezObjectSelect_selectionLabelOverlay` : `extensions.load("editor_ezObjectSelect_selectionLabelOverlay")`, puis la globale `editor_ezObjectSelect_selectionLabelOverlay`
+--- Draws the labels (dark panels with colored border) of the Easy Select tool with the imgui drawList. "followMouse" labels are stacked near the cursor (18 px offset, left side if they exit the viewport); the others are anchored above their screen position. Priority labels (label.priority == true) come first.
+--- Access: extension `editor_ezObjectSelect_selectionLabelOverlay`: `extensions.load("editor_ezObjectSelect_selectionLabelOverlay")`, then the global `editor_ezObjectSelect_selectionLabelOverlay`
 ---@class editor_ezObjectSelect_selectionLabelOverlay
 editor_ezObjectSelect_selectionLabelOverlay = {}
 
---- Dessine toutes les étiquettes de la liste.
----Source : lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua:68
----@param drawList ImDrawList* Liste de dessin imgui
----@param labels table Liste d'étiquettes {text, color (U32), followMouse, priority, position (ImVec2, si non followMouse)}
----@param mouse ImVec2 Position de la souris
----@param viewport ImGuiViewport Viewport (Pos et Size) servant à garder les étiquettes visibles
+--- Draws all labels of the list.
+---Source: lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua:68
+---@param drawList ImDrawList* imgui draw list
+---@param labels table List of labels {text, color (U32), followMouse, priority, position (ImVec2, if not followMouse)}
+---@param mouse ImVec2 Mouse position
+---@param viewport ImGuiViewport Viewport (Pos and Size) used to keep labels visible
 function editor_ezObjectSelect_selectionLabelOverlay.draw(drawList, labels, mouse, viewport) end
 

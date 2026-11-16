@@ -2,91 +2,91 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/raceEditor/pacenotes.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre Pacenotes. Créée par le constructeur renvoyé par le module, avec init(raceEditor). windowDescription = 'Pacenotes'. Les méthodes sont appelées par raceEditor.lua (setPath, selected, unselect, draw, onEditModeActivate).
+--- Pacenotes window. Created by the constructor returned by the module, with init(raceEditor). windowDescription = 'Pacenotes'. The methods are called by raceEditor.lua (setPath, selected, unselect, draw, onEditModeActivate).
 ---@class editor_raceEditor_pacenotes
 local editor_raceEditor_pacenotes = {}
 
---- Début de manipulation au gizmo : mémorise l'état sérialisé, la rotation et le rayon de la pacenote (navRadiusScale si mode navgraph).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:87
+--- Start of gizmo manipulation: stores the serialized state, rotation and radius of the pacenote (navRadiusScale in navgraph mode).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:87
 function editor_raceEditor_pacenotes:beginDrag() end
 
---- Affiche l'aide de création et l'aperçu (sphère, prismes) pendant le glisser, puis au relâchement crée une pacenote manuelle (rayon 5 si le glisser est ≤ 1 m) via l'historique ; la direction est donnée par le glisser.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:174
+--- Displays the creation help and the preview (sphere, prisms) during the drag, then on release creates a manual pacenote (radius 5 if the drag is ≤ 1 m) via history; the direction is given by the drag.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:174
 function editor_raceEditor_pacenotes:createManualPacenote() end
 
---- Pendant la manipulation : applique translation (pos), rotation (normal) ou mise à l'échelle (radius, jamais négatif) du gizmo à la pacenote.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:101
+--- During manipulation: applies gizmo translation (pos), rotation (normal) or scaling (radius, never negative) to the pacenote.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:101
 function editor_raceEditor_pacenotes:dragging() end
 
---- Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau de détail.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:165
----@param mouseInfo table Infos souris (valid, down, up, hold, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos).
+--- Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the list and the detail panel.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:165
+---@param mouseInfo table Mouse info (valid, down, up, hold, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos).
 function editor_raceEditor_pacenotes:draw(mouseInfo) end
 
---- Dessine la liste des pacenotes triées (+ entrée « New... ») et le panneau de la pacenote courante (suppression, déplacement, champs).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:273
+--- Draws the sorted pacenote list (+ "New..." entry) and the current pacenote panel (delete, move, fields).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:273
 function editor_raceEditor_pacenotes:drawPacenoteList() end
 
---- Fin de manipulation : valide l'action d'historique « Manipulated Note via Gizmo » (avant/après via onSerialize/onDeserialized).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:140
+--- End of manipulation: commits the "Manipulated Note via Gizmo" history action (before/after via onSerialize/onDeserialized).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:140
 function editor_raceEditor_pacenotes:endDragging() end
 
---- Initialise la fenêtre : mémorise raceEditor, index de sélection nil et mouseInfo vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:17
----@param raceEditor table Module editor_raceEditor (fournit allowGizmo).
+--- Initializes the window: stores raceEditor, selection index nil and empty mouseInfo.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:17
+---@param raceEditor table Module editor_raceEditor (provides allowGizmo).
 function editor_raceEditor_pacenotes:init(raceEditor) end
 
---- Gère la souris : avec Shift, création manuelle ; sinon clic sur une pacenote pour la sélectionner (ou aucune).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:247
+--- Handles the mouse: with Shift, manual creation; otherwise click on a pacenote to select it (or none).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:247
 function editor_raceEditor_pacenotes:input() end
 
---- Renvoie la pacenote dont la sphère est traversée par le rayon souris, la plus proche de la caméra.
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:230
----@return table|nil  Pacenote survolée ou nil.
+--- Returns the pacenote whose sphere is crossed by the mouse ray, the one closest to the camera.
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:230
+---@return table|nil  Hovered pacenote or nil.
 function editor_raceEditor_pacenotes:mouseOverPacenotes() end
 
---- Appelé à l'activation du mode d'édition de course (voir notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:159
+--- Called when the race edit mode is activated (see notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:159
 function editor_raceEditor_pacenotes:onEditModeActivate() end
 
---- Sélectionne la pacenote d'ID id (nil pour aucune). Voir notes sur le rappel récursif conditionnel à self.note.
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:49
----@param id integer|nil ID de la pacenote.
+--- Selects the pacenote with ID id (nil for none). See notes on the recursive call conditional on self.note.
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:49
+---@param id integer|nil Pacenote ID.
 function editor_raceEditor_pacenotes:selectPacenote(id) end
 
---- Appelé quand l'onglet devient actif : désélectionne, dessine les pacenotes en mode « normal », les segments en « faded », ajoute le raccourci Shift « Add New » et récupère la carte de navigation (map.getMap()).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:27
+--- Called when the tab becomes active: deselects, draws pacenotes in "normal" mode, segments in "faded" mode, adds the Shift shortcut "Add New" and fetches the navigation map (map.getMap()).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:27
 function editor_raceEditor_pacenotes:selected() end
 
---- Liste déroulante pour choisir un segment (ou « None » = -1) dans un champ de la pacenote courante, avec action d'historique.
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:401
----@param name string Libellé de la liste.
----@param fieldName string Champ de la pacenote modifié (contient un ID de segment).
----@param tt string|nil Infobulle.
+--- Dropdown to choose a segment (or "None" = -1) in a field of the current pacenote, with a history action.
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:401
+---@param name string Dropdown label.
+---@param fieldName string Modified pacenote field (contains a segment ID).
+---@param tt string|nil Tooltip.
 function editor_raceEditor_pacenotes:selector(name, fieldName, tt) end
 
---- Définit le chemin de course (gameplay/race/path) édité.
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:23
----@param path table Objet chemin de course.
+--- Sets the race path (gameplay/race/path) being edited.
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:23
+---@param path table Race path object.
 function editor_raceEditor_pacenotes:setPath(path) end
 
---- Appelé quand l'onglet est quitté : cache les pacenotes (_drawMode = 'none') et retire le raccourci Shift.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:41
+--- Called when the tab is left: hides pacenotes (_drawMode = 'none') and removes the Shift shortcut.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:41
 function editor_raceEditor_pacenotes:unselect() end
 
---- Place le gizmo d'axes sur la pacenote d'index donné, orienté selon sa normale en alignement local. Sans effet si le gizmo n'est pas autorisé.
----Source : lua/ge/extensions/editor/raceEditor/pacenotes.lua:67
----@param index integer ID de la pacenote.
+--- Places the axis gizmo on the pacenote at the given index, oriented along its normal in local alignment. No effect if the gizmo is not allowed.
+---Source: lua/ge/extensions/editor/raceEditor/pacenotes.lua:67
+---@param index integer Pacenote ID.
 function editor_raceEditor_pacenotes:updateTransform(index) end
 

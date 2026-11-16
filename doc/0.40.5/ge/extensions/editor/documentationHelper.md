@@ -1,38 +1,38 @@
 # `editor_documentationHelper`
 
-*Fichier : `lua/ge/extensions/editor/documentationHelper.lua` · VM : Game Engine (GE) · 23 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/documentationHelper.lua` · VM: Game Engine (GE) · 23 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_documentationHelper` : `extensions.load("editor_documentationHelper")`, puis la globale `editor_documentationHelper`
+**Access:** extension `editor_documentationHelper`: `extensions.load("editor_documentationHelper")`, then the global `editor_documentationHelper`
 
-Petite extension de l'éditeur qui ajoute à la table globale `editor` deux fonctions pour ouvrir la documentation en ligne de BeamNG dans le navigateur. Les autres outils de l'éditeur s'en servent pour leurs boutons d'aide.
+Small editor extension that adds to the global `editor` table two functions to open BeamNG's online documentation in the browser. The other editor tools use it for their help buttons.
 
-## Exemple
+## Example
 
 ```lua
-editor.openHelp("terrain_editor")  -- ouvre https://documentation.beamng.com/world_editor/terrain_editor.html
+editor.openHelp("terrain_editor")  -- opens https://documentation.beamng.com/world_editor/terrain_editor.html
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions ne sont installées dans `editor` qu'au moment du hook onEditorInitialized ; avant cela editor.openHelp vaut nil.
-- Sans argument, la page « index » est ouverte.
+- The functions are only installed in `editor` at the onEditorInitialized hook; before that editor.openHelp is nil.
+- Without an argument, the "index" page is opened.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_documentationHelper.onEditorInitialized()` | Hook appelé par l'éditeur quand il est initialisé. Installe editor.openHelp et editor.openCodingHelp. *(interne)* *(hook)* | 16 |
+| `editor_documentationHelper.onEditorInitialized()` | Hook called by the editor when it is initialized. Installs editor.openHelp and editor.openCodingHelp. *(internal)* *(hook)* | 16 |
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à la table globale `editor` par onEditorInitialized.
+Functions added to the global `editor` table by onEditorInitialized.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.openCodingHelp(contextPageName)` | Ouvre dans le navigateur la référence d'API de l'éditeur : https://documentation.beamng.com/world_editor/api_reference/<page>.html. | 12 |
-| `editor.openHelp(contextPageName)` | Ouvre dans le navigateur https://documentation.beamng.com/world_editor/<page>.html. | 8 |
+| `editor.openCodingHelp(contextPageName)` | Opens the editor API reference in the browser: https://documentation.beamng.com/world_editor/api_reference/<page>.html. | 12 |
+| `editor.openHelp(contextPageName)` | Opens https://documentation.beamng.com/world_editor/<page>.html in the browser. | 8 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/documentationHelper.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/documentationHelper.lua`.*

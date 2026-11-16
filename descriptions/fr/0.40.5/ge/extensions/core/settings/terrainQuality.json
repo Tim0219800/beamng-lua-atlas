@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/core/settings/terrainQuality.lua",
+  "module": "Préréglages de qualité du terrain, consommés par graphicsQualityGroup. Chaque niveau fixe $pref::Terrain::lodScale et $pref::Terrain::detailScale. Le hook onApply force la mise à jour des textures de tous les TerrainBlock.",
+  "notes": ["Niveaux : Lowest, Low, Normal, High (pas de Ultra). Une valeur plus petite de lodScale donne plus de détail."],
+  "fields": {
+    "qualityLevels": {
+      "type": "table<string, table<string, number>>",
+      "desc": "lodScale / detailScale : Lowest 2.0 / 0.5, Low 1.5 / 0.75, Normal 1.0 / 1, High 0.75 / 1.5."
+    }
+  },
+  "functions": {
+    "onApply": {
+      "desc": "Appelé par graphicsQualityGroup quand une valeur a changé. Parcourt les objets de classe TerrainBlock (scenetree.findClassObjects) et appelle updateAllTextures() sur chacun s'il existe.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

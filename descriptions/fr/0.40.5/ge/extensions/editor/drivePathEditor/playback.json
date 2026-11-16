@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/editor/drivePathEditor/playback.lua",
+  "module": "Lecture des chemins (splines) du Drive Path Editor : associe chaque véhicule à sa spline liée, le replace au départ, puis, une fois le délai de la spline écoulé, envoie au véhicule une commande vLua ai.driveUsingPath générée depuis la spline. Deux modes : libre (script de nœuds x,y,z,r[,v|vl] après lissage Catmull-Rom et simplification RDP, tolérance 1.0) ou graphe de navigation (wpTargetList et wpSpeeds).",
+  "notes": ["Un véhicule n'est pris en compte que si sa spline est liée (isVehicleLink), a l'id du lien (vehicle.linkSplineId), le bon linkVehId == vehicle.vid, et isEnabled.", "Le démarrage réel se fait dans handlePlayback, appelé chaque frame : startPlayback ne lance pas encore l'IA.", "Mode libre : les largeurs sont divisées par 2 (demi-largeurs) ; en boucle (isLoop) le premier nœud de départ est ajouté à la fin ; noOfLaps n'est transmis que pour les boucles.", "speedProfileMode : 0 aucun profil, 1 vitesses v par nœud, 2 limites de vitesse vl par nœud (mode libre) ; en mode graphe seul le mode 1 produit wpSpeeds.", "driveInLane n'est transmis qu'en mode graphe (mode libre : chaîne vide, avec commentaire du code).", "Les arguments passés à ai.driveUsingPath incluent aggression, routeSpeed/routeSpeedMode (si différent de off) et avoidCars."],
+  "functions": {
+    "getPlaybackTime": {"desc": "Temps écoulé depuis le début de la lecture.", "params": {}, "returns": [{"type": "number", "desc": "secondes"}]},
+    "startPlayback": {
+      "desc": "Prépare la lecture : vide la table des lectures en cours, y met chaque véhicule ayant une spline liée et activée, replace ces véhicules à leur pose de départ (splineMgr.resetVehiclePose), puis remet les compteurs de temps à zéro.",
+      "params": {
+        "splines": {"type": "table", "desc": "splines de chemin (champs id, isVehicleLink, linkVehId, isEnabled, delayTime…)"},
+        "vehicles": {"type": "table", "desc": "véhicules de la scène (champs vid, veh, linkSplineId)"}
+      }
+    },
+    "stopPlayback": {"desc": "Envoie ai.setState({mode = \"stop\"}) à chaque véhicule en cours de lecture, les replace à leur pose de départ, puis vide la table et remet les compteurs à zéro.", "params": {}},
+    "handlePlayback": {"desc": "À appeler chaque frame : démarre l'IA des véhicules dont le delayTime est atteint (une seule fois par véhicule) puis fait avancer le temps de lecture.", "params": {}, "internal": true}
+  }
+}

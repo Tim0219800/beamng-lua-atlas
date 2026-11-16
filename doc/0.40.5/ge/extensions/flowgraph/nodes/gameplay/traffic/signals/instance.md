@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_traffic_signals_instance`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instance.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instance.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instance")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/instance")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Signal Instance » (repeat_instant). Lit une instance de feu (signalInstanceData) : pos (position d'arrêt), dirVec, targetPos (pos si absent), stateName, stateAction, active, sequenceData et controllerData (tables vides si absents).
+Flowgraph node "Get Signal Instance" (repeat_instant). Reads a traffic light instance (signalInstanceData): pos (stop position), dirVec, targetPos (pos if absent), stateName, stateAction, active, sequenceData and controllerData (empty tables if absent).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Recopie les propriétés de l'instance et son état courant (instance:getState()) sur les sorties. | 29 |
+| `C:work(args)` | Copies the instance's properties and its current state (instance:getState()) to the outputs. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/instance.lua`.*

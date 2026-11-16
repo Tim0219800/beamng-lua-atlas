@@ -1,43 +1,43 @@
 # `editor_vehicleEditor_liveEditor_veRawData`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veRawData.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veRawData.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_veRawData` : `extensions.load("editor_vehicleEditor_liveEditor_veRawData")`, puis la globale `editor_vehicleEditor_liveEditor_veRawData`
+**Access:** extension `editor_vehicleEditor_liveEditor_veRawData`: `extensions.load("editor_vehicleEditor_liveEditor_veRawData")`, then the global `editor_vehicleEditor_liveEditor_veRawData`
 
-Fenêtre 'Raw Vehicle Data' du Vehicle Editor live : affiche sous forme d'arbre imgui récursif toute la table vEditor.vehData (données du véhicule courant, dont vdata jbeam) via imguiUtils.addRecursiveTreeTable. Utile à un moddeur pour inspecter la structure jbeam résolue.
+'Raw Vehicle Data' window of the live Vehicle Editor: displays as a recursive imgui tree the entire vEditor.vehData table (data of the current vehicle, including the jbeam vdata) via imguiUtils.addRecursiveTreeTable. Useful to a modder to inspect the resolved jbeam structure.
 
-## Remarques
+## Notes
 
-- Rien n'est dessiné tant que la fenêtre n'est pas ouverte ou que vEditor.vehicle/vehData sont absents.
+- Nothing is drawn until the window is open or if vEditor.vehicle/vehData are absent.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_veRawData.onDeserialized(data)` | Restaure l'état d'ouverture de la fenêtre. *(interne)* *(hook)* | 36 |
-| `editor_vehicleEditor_liveEditor_veRawData.onSerialize()` | Renvoie {windowOpen} pour restaurer l'état après rechargement Lua. *(interne)* *(hook)* | 30 |
-| `editor_vehicleEditor_liveEditor_veRawData.onUpdate()` | Appelé chaque frame : dessine la fenêtre et l'arbre des données si elle est ouverte. *(interne)* *(hook)* | 15 |
-| `editor_vehicleEditor_liveEditor_veRawData.open()` | Ouvre la fenêtre (utilisé par le menu du Vehicle Editor). | 26 |
+| `editor_vehicleEditor_liveEditor_veRawData.onDeserialized(data)` | Restores the open state of the window. *(internal)* *(hook)* | 36 |
+| `editor_vehicleEditor_liveEditor_veRawData.onSerialize()` | Returns {windowOpen} to restore the state after Lua reload. *(internal)* *(hook)* | 30 |
+| `editor_vehicleEditor_liveEditor_veRawData.onUpdate()` | Called every frame: draws the window and the data tree if it is open. *(internal)* *(hook)* | 15 |
+| `editor_vehicleEditor_liveEditor_veRawData.open()` | Opens the window (used by the Vehicle Editor menu). | 26 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_veRawData.onDeserialized(data)`
 
-Restaure l'état d'ouverture de la fenêtre.
+Restores the open state of the window.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_veRawData.onSerialize()`
 
-Renvoie {windowOpen} pour restaurer l'état après rechargement Lua.
+Returns {windowOpen} to restore the state after Lua reload.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `menuEntry` | string | 'Raw Vehicle Data' : libellé du menu lu par editor_veMain. |
+| `menuEntry` | string | 'Raw Vehicle Data': menu label read by editor_veMain. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veRawData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veRawData.lua`.*

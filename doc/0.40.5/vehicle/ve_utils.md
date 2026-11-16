@@ -1,55 +1,55 @@
 # `ve_utils`
 
-*Fichier : `lua/vehicle/ve_utils.lua` · VM : Véhicule · 293 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/ve_utils.lua` · VM: Vehicle · 293 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("ve_utils")`
+**Access:** `require("ve_utils")`
 
-Utilitaires globaux propres à la VM véhicule, chargés par require("ve_utils") : chronomètre haute précision, conversion de tables jbeam à en-tête en liste de dictionnaires, sauvegarde de jbeam compilé en texte, couleurs de contraste, génération de courbes interpolées (Catmull-Rom) et conversion psi -> Pa. Le module ne retourne pas de table M utile : tout est défini comme fonction globale.
+Global utilities specific to the vehicle VM, loaded by require("ve_utils"): high-precision timer, conversion of header-style jbeam tables to a list of dictionaries, saving compiled jbeam as text, contrast colors, generation of interpolated curves (Catmull-Rom) and psi -> Pa conversion. The module does not return a useful table M: everything is defined as a global function.
 
-## Exemple
+## Example
 
 ```lua
 local t = HighPerfTimer()
--- ... travail ...
-local ms = t:stop() -- durée en millisecondes
+-- ... work ...
+local ms = t:stop() -- duration in milliseconds
 local curve = createCurve({{0,0},{1000,50},{7000,200}})
 local torque = curve[floor(rpm)]
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions sont globales (pas de préfixe ve_utils.) ; un `require` suffit pour les définir.
-- HighPerfTimer : os.clockhp() est en secondes, getTime/stop/stopAndReset renvoient des millisecondes.
-- _HighPerfTimer:getTime() renvoie l'horloge absolue en ms (os.clockhp()*1000), pas le temps écoulé : pour la durée, utiliser stop().
-- createCurve : les x des points doivent être des entiers croissants (l'index du tableau résultat est x lui-même, de floor(x1) à floor(xn)). Avec returnArray=true et ffi dispo, renvoie un float[?] C de taille xn+1 indexé à partir de 0.
-- createCurve avec 3 points ou plus utilise un spline Catmull-Rom ; avec 2 points une droite ; avec moins de 2 renvoie nil.
-- PSItoPascal ajoute 101325 : le résultat est une pression absolue, pas relative.
-- getContrastColor/getContrastColorStringRGB cyclent sur 17 couleurs (i % 17) de la palette jetColor.
-- saveCompiledJBeamRecursive écrit un pseudo-JSON (ordre des clés non garanti car pairs()) et n'échappe pas les guillemets des chaînes.
+- The functions are global (no ve_utils. prefix); a `require` is enough to define them.
+- HighPerfTimer: os.clockhp() is in seconds, getTime/stop/stopAndReset return milliseconds.
+- _HighPerfTimer:getTime() returns the absolute clock in ms (os.clockhp()*1000), not the elapsed time: for the duration, use stop().
+- createCurve: the x of the points must be increasing integers (the index of the resulting array is x itself, from floor(x1) to floor(xn)). With returnArray=true and ffi available, returns a C float[?] of size xn+1, 0-based.
+- createCurve with 3 or more points uses a Catmull-Rom spline; with 2 points a straight line; with fewer than 2 returns nil.
+- PSItoPascal adds 101325: the result is an absolute pressure, not relative.
+- getContrastColor/getContrastColorStringRGB cycle over 17 colors (i % 17) of the jetColor palette.
+- saveCompiledJBeamRecursive writes a pseudo-JSON (key order not guaranteed because of pairs()) and does not escape the quotes of strings.
 
-## Classe `_HighPerfTimer`
+## Class `_HighPerfTimer`
 
-Chronomètre renvoyé par HighPerfTimer(). Stocke l'instant de départ en secondes dans self[1].
+Timer returned by HighPerfTimer(). Stores the start time in seconds in self[1].
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `_HighPerfTimer:getTime()` | Renvoie l'horloge haute précision absolue en millisecondes (pas la durée écoulée). | 33 |
-| `_HighPerfTimer:reset()` | Redémarre le chronomètre à l'instant présent. | 18 |
-| `_HighPerfTimer:stop()` | Renvoie le temps écoulé depuis le départ, en millisecondes, sans redémarrer. | 22 |
-| `_HighPerfTimer:stopAndReset()` | Renvoie le temps écoulé en millisecondes et redémarre le chronomètre. | 26 |
+| `_HighPerfTimer:getTime()` | Returns the absolute high-precision clock in milliseconds (not the elapsed duration). | 33 |
+| `_HighPerfTimer:reset()` | Restarts the timer at the present moment. | 18 |
+| `_HighPerfTimer:stop()` | Returns the time elapsed since the start, in milliseconds, without restarting. | 22 |
+| `_HighPerfTimer:stopAndReset()` | Returns the elapsed time in milliseconds and restarts the timer. | 26 |
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `HighPerfTimer()` | Crée un chronomètre haute précision démarré à l'instant de création (basé sur os.clockhp). | 14 |
-| `PSItoPascal(psi)` | Convertit une pression relative en psi en pression absolue en pascals : psi * 6894.757 + 101325. | 290 |
-| `createCurve(points, returnArray)` | Construit une table de recherche dense à partir de points {x, y} : un tableau dont l'index est x (entier) et la valeur y interpolée. Droite pour 2 points, spline Catmull-Rom pour 3 ou plus. Sert par exemple aux courbes de couple moteur. | 265 |
-| `getContrastColor(i, a)` | Renvoie une couleur du jeu tirée de la palette jet selon l'indice, pour distinguer des courbes ou des éléments de debug. | 224 |
-| `getContrastColorStringRGB(i)` | Même palette que getContrastColor mais renvoie une chaîne hexadécimale CSS. | 228 |
-| `saveCompiledJBeam(data, filename, lvl)` | Sauvegarde des données jbeam compilées dans un fichier texte (ouvre, écrit via saveCompiledJBeamRecursive, ferme). Sert au débogage. | 211 |
-| `saveCompiledJBeamRecursive(f, data, level)` | Écrit récursivement une table de données au format texte type JSON dans un fichier ouvert, avec une indentation dépendant du niveau et un commentaire d'en-tête pour chaque table ayant un partPath. | 119 |
-| `tableFromHeaderTable(entry)` | Convertit une table jbeam au format « première ligne = en-tête, lignes suivantes = valeurs » en liste de dictionnaires {colonne=valeur}. Une ligne qui est un dictionnaire seul définit des options communes appliquées aux lignes suivantes ; un dictionnaire placé en dernière colonne fusionne ses options dans la ligne. Si une ligne a un champ id, il est renommé name. | 37 |
+| `HighPerfTimer()` | Creates a high-precision timer started at the moment of creation (based on os.clockhp). | 14 |
+| `PSItoPascal(psi)` | Converts a relative pressure in psi to an absolute pressure in pascals: psi * 6894.757 + 101325. | 290 |
+| `createCurve(points, returnArray)` | Builds a dense lookup table from points {x, y}: an array whose index is x (integer) and whose value is the interpolated y. Straight line for 2 points, Catmull-Rom spline for 3 or more. Used for example for engine torque curves. | 265 |
+| `getContrastColor(i, a)` | Returns a game color taken from the jet palette according to the index, to distinguish curves or debug elements. | 224 |
+| `getContrastColorStringRGB(i)` | Same palette as getContrastColor but returns a CSS hexadecimal string. | 228 |
+| `saveCompiledJBeam(data, filename, lvl)` | Saves compiled jbeam data to a text file (opens, writes via saveCompiledJBeamRecursive, closes). Used for debugging. | 211 |
+| `saveCompiledJBeamRecursive(f, data, level)` | Recursively writes a data table in JSON-like text format to an open file, with indentation depending on the level and a header comment for each table having a partPath. | 119 |
+| `tableFromHeaderTable(entry)` | Converts a jbeam table in the "first row = header, following rows = values" format into a list of dictionaries {column=value}. A row that is a lone dictionary defines common options applied to the following rows; a dictionary placed in the last column merges its options into the row. If a row has an id field, it is renamed name. | 37 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/ve_utils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/ve_utils.lua`.*

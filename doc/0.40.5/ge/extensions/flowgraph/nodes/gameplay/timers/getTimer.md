@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_timers_getTimer`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/getTimer.lua` · VM : Game Engine (GE) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/getTimer.lua` · VM: Game Engine (GE) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/timers/getTimer")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/timers/getTimer")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Timer ». Lit l'état d'un timer (timerId). Sorties : flow, complete, completed (impulsion unique), incomplete, elapsed, remaining, duration, elapsedPercent (0 à 1). Si capTime est vrai, elapsed/remaining/elapsedPercent sont bornés quand le timer est terminé. Entrée reset : remet à zéro la détection de fin.
+Flowgraph node "Get Timer". Reads the state of a timer (timerId). Outputs: flow, complete, completed (single pulse), incomplete, elapsed, remaining, duration, elapsedPercent (0 to 1). If capTime is true, elapsed/remaining/elapsedPercent are clamped once the timer is complete. Input reset: resets the completion detection.
 
-## Remarques
+## Notes
 
-- elapsedPercent divise par la durée : durée 0 donne inf/NaN.
+- elapsedPercent divides by the duration: a duration of 0 gives inf/NaN.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud. | 26 |
-| `C:work()` | Si le timer existe, remplit les sorties et déclenche completed une seule fois à la fin ; sinon flow reste false. | 30 |
+| `C:_executionStarted()` | Called when the flowgraph project execution starts; resets the node's internal state. | 26 |
+| `C:work()` | If the timer exists, fills the outputs and fires completed only once at the end; otherwise flow stays false. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/timers/getTimer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/timers/getTimer.lua`.*

@@ -2,56 +2,56 @@
 -- tim19Atlas stub generated from lua/vehicle/protocols/outgauge.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Protocole UDP OutGauge (compatible Live For Speed) : envoie vitesse, régime, rapport, pression de turbo, températures, carburant, entrées pédales et voyants du véhicule pour des tableaux de bord externes. Chargé par protocols.lua ; adresse, port et fréquence viennent des réglages protocols_outgauge_address, _port, _maxUpdateRate. Utilise le pas graphique (coût faible).
---- Accès : `require("protocols/outgauge")`
+--- UDP OutGauge protocol (Live For Speed compatible): sends speed, RPM, gear, turbo pressure, temperatures, fuel, pedal inputs and warning lights of the vehicle for external dashboards. Loaded by protocols.lua; address, port and rate come from the settings protocols_outgauge_address, _port, _maxUpdateRate. Uses the graphics step (low cost).
+--- Access: `require("protocols/outgauge")`
 ---@class protocols_outgauge
 local protocols_outgauge = {}
 
---- Remplit le paquet à partir de electrics.values (vitesse, régime, rapport, turbo, températures, carburant, pédales, voyants).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:84
----@param o cdata Struct C du paquet à remplir (mise à zéro avant l'appel).
----@param dtSim number Temps de simulation accumulé depuis le dernier envoi (non utilisé).
+--- Fills the packet from electrics.values (speed, RPM, gear, turbo, temperatures, fuel, pedals, warning lights).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:84
+---@param o cdata C struct of the packet to fill (zeroed before the call).
+---@param dtSim number Simulation time accumulated since the last send (not used).
 function protocols_outgauge.fillStruct(o, dtSim) end
 
---- Adresse IP de destination (réglage protocols_outgauge_address).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:19
----@return string  Adresse IP.
+--- Destination IP address (setting protocols_outgauge_address).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:19
+---@return string  IP address.
 function protocols_outgauge.getAddress() end
 
---- Fréquence maximale d'envoi en Hz (réglage protocols_outgauge_maxUpdateRate).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:21
+--- Maximum sending rate in Hz (setting protocols_outgauge_maxUpdateRate).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:21
 ---@return number  Hz.
 function protocols_outgauge.getMaxUpdateRate() end
 
---- Port UDP de destination (réglage protocols_outgauge_port).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:20
----@return integer  Numéro de port.
+--- Destination UDP port (setting protocols_outgauge_port).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:20
+---@return integer  Port number.
 function protocols_outgauge.getPort() end
 
---- Renvoie la définition C du paquet OutGauge (texte passé à ffi.cdef).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:28
----@return string  Corps de la struct C.
+--- Returns the C definition of the OutGauge packet (text passed to ffi.cdef).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:28
+---@return string  Body of the C struct.
 function protocols_outgauge.getStructDefinition() end
 
---- Cherche les contrôleurs de type shiftLights pour savoir si le voyant de changement de rapport est disponible.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:13
+--- Looks for controllers of type shiftLights to know whether the shift light is available.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:13
 function protocols_outgauge.init() end
 
---- Indique que ce protocole est mis à jour dans la boucle graphique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:23
----@return boolean  Toujours false.
+--- Indicates that this protocol is updated in the graphics loop.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:23
+---@return boolean  Always false.
 function protocols_outgauge.isPhysicsStepUsed() end
 
---- Réinitialisation du protocole (ne fait rien).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/protocols/outgauge.lua:18
+--- Protocol reset (does nothing).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/protocols/outgauge.lua:18
 function protocols_outgauge.reset() end
 
 return protocols_outgauge

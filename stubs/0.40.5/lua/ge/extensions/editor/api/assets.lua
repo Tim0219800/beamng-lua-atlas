@@ -2,30 +2,30 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/assets.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- API de l'éditeur pour le glisser-déposer d'assets (chemins de fichiers sous forme de chaînes) entre fenêtres ImGui. À l'initialisation, ajoute à l'instance de l'éditeur : editor.dragDropAsset (état interne), editor.dragDropSource et editor.dragDropTarget. Une source et une cible se correspondent si elles utilisent le même dragDropId ; la donnée est transportée dans un tampon de 2048 caractères.
---- Accès : extension `editor_api_assets` : `extensions.load("editor_api_assets")`, puis la globale `editor_api_assets`
+--- Editor API for drag-and-drop of assets (file paths as strings) between ImGui windows. On initialization, adds to the editor instance: editor.dragDropAsset (internal state), editor.dragDropSource and editor.dragDropTarget. A source and a target match if they use the same dragDropId; the data is carried in a 2048-character buffer.
+--- Access: extension `editor_api_assets`: `extensions.load("editor_api_assets")`, then the global `editor_api_assets`
 ---@class editor_api_assets
 editor_api_assets = {}
 
---- Initialise le module : mémorise l'éditeur et y installe dragDropAsset, dragDropSource et dragDropTarget.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/assets.lua:39
----@param editorInstance table Instance de l'éditeur.
+--- Initializes the module: stores the editor and installs dragDropAsset, dragDropSource and dragDropTarget on it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/assets.lua:39
+---@param editorInstance table Editor instance.
 function editor_api_assets.initialize(editorInstance) end
 
---- Méthodes ajoutées à l'instance de l'éditeur par ce module.
+--- Methods added to the editor instance by this module.
 ---@class editor_api_assets_editor
 local editor_api_assets_editor = {}
 
---- À appeler pendant le dessin de l'élément ImGui qui sert de source : si un glissement commence, crée la charge utile (data, tampon de 2048 caractères), mémorise le callback et affiche le texte pendant le glissement.
----Source : lua/ge/extensions/editor/api/assets.lua:13
----@param dragDropId string Identifiant de type de charge utile ; les cibles n'acceptent que le même identifiant.
----@param data string Chaîne transportée (ex. chemin d'asset).
----@param callback function|nil Appelée avec la chaîne quand le dépôt a réussi.
+--- To be called while drawing the ImGui element that serves as the source: if a drag begins, creates the payload (data, 2048-character buffer), stores the callback and displays the text during the drag.
+---Source: lua/ge/extensions/editor/api/assets.lua:13
+---@param dragDropId string Payload type identifier; targets only accept the same identifier.
+---@param data string String carried (e.g. asset path).
+---@param callback function|nil Called with the string when the drop succeeded.
 function editor_api_assets_editor.dragDropSource(dragDropId, data, callback) end
 
---- À appeler après l'élément ImGui qui sert de cible : accepte une charge utile du même dragDropId, appelle le callback de la source avec la chaîne reçue puis réinitialise l'état.
----Source : lua/ge/extensions/editor/api/assets.lua:25
----@param dragDropId string Identifiant de type de charge utile accepté.
+--- To be called after the ImGui element that serves as the target: accepts a payload with the same dragDropId, calls the source's callback with the received string then resets the state.
+---Source: lua/ge/extensions/editor/api/assets.lua:25
+---@param dragDropId string Accepted payload type identifier.
 function editor_api_assets_editor.dragDropTarget(dragDropId) end
 

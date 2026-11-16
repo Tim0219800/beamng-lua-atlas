@@ -1,10 +1,15 @@
 {
   "path": "lua/ge/extensions/telemetry/core.test.lua",
-  "module": "Test unitaire de telemetry/core (extensions.testFramework_TestManager:runTestFiles(\"core\")).",
+  "module": "Unit test of telemetry/core (extensions.testFramework_TestManager:runTestFiles(\"core\")).",
   "functions": {
     "testTelemetryPlatformSupport": {
-      "desc": "Vérifie que isPlatformSupported renvoie false pour 'ps5' et 'ps5pro' et true pour la plateforme PC (chaîne vide).",
-      "params": {"ctx": {"type": "table", "desc": "Contexte du framework de test."}},
+      "desc": "Checks that isPlatformSupported returns false for 'ps5' and 'ps5pro' and true for the PC platform (empty string).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Test framework context."
+        }
+      },
       "returns": [],
       "internal": true
     }

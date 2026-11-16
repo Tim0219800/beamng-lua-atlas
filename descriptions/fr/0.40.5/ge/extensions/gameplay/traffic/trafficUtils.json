@@ -1,0 +1,210 @@
+{
+  "path": "lua/ge/extensions/gameplay/traffic/trafficUtils.lua",
+  "module": "Boîte à outils du système de trafic : création de groupes de véhicules de trafic ou de police (via core_multiSpawn), chargement de fichiers *.vehGroup.json, recherche de points d'apparition (spawn) sur une route, une ligne ou un cercle autour d'une position, placement des véhicules IA de trafic et recherche du véhicule de trafic le plus proche. Un moddeur s'en sert pour faire apparaître du trafic de façon réaliste à partir d'une position et d'une direction (par défaut celles de la caméra).",
+  "usage": "local data, valid = gameplay_traffic_trafficUtils.findSafeSpawnPoint(pos, dir, 80, 400, 200)\nif valid then --[[ data.pos, data.dir, data.n1, data.n2 ]] end",
+  "notes": [
+    "baseValues : minDrivability 0,5 ; minRadius 1,2 m ; lowDamage 1000 ; highDamage 30000 ; lowSpeed 2,5 m/s.",
+    "findSpawnPoint est un alias de findSpawnPointOnRoute ; findSafeSpawnPoint correspond à la fonction interne findSpawnPointActual.",
+    "Les fonctions findSpawnPoint* renvoient (spawnData, valid) où spawnData = {pos, dir, n1?, n2?} ; n1 et n2 sont absents si valid est false.",
+    "Les arguments de recherche sont tous facultatifs : startPos/startDir = caméra, minDist = 20 m, maxDist = 2000 m, targetDist = 0 (distance idéale jusqu'à laquelle on teste la visibilité par raycast).",
+    "getTrafficGroupFromFile : cherche d'abord les *.vehGroup.json du dossier du niveau, sinon dans /vehicleGroups/ ; choisit un fichier au hasard.",
+    "Dans createTrafficGroup, les paramètres allMods, allConfigs et simpleVehs sont écrasés au début de la fonction (valeurs des réglages trafficAllowMods et trafficSimpleVehicles, allConfigs forcé à true) : les arguments passés sont ignorés.",
+    "Dans getBaseGroupParams, maxYear/minPop et country dépendent du niveau ; seuls USA, Allemagne, Italie, France, Japon sont reconnus (sinon 'default').",
+    "getAheadPos renvoie un vecteur mis en cache : le copier si on doit le conserver.",
+    "findSafeSpawnPoint ne renvoie jamais nil : en dernier recours il téléporte loin (10 000 à 12 000 m) avec pos.z = 1 ; son second retour valid peut alors rester false.",
+    "Les fonctions checkRoad, checkRayCast, checkUsability, checkVehicles et getDefaultSpawnParams sont locales et non exportées."
+  ],
+  "fields": {
+    "debugMode": {"type": "boolean", "desc": "Si true, écrit dans le log les paramètres et résultats des recherches de point d'apparition. false par défaut."}
+  },
+  "functions": {
+    "getLevelInfo": {
+      "desc": "Lit le fichier d'infos du niveau courant et renvoie son pays (converti en nom anglais parmi une liste restreinte, sinon 'default') et sa région.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{country = string, region = string|nil}."}]
+    },
+    "getBaseValues": {
+      "desc": "Renvoie la table des valeurs de seuil partagées par les modules de trafic (référence directe).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{minDrivability, minRadius, lowDamage, highDamage, lowSpeed}."}]
+    },
+    "getBaseGroupParams": {
+      "desc": "Construit les paramètres de base d'un groupe de véhicules (filtre de types voiture/camion, pays du niveau, minPop 50 ; filtre de région si le réglage trafficSmartSelections est actif).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Paramètres à passer à core_multiSpawn.createGroup."}]
+    },
+    "createTrafficGroup": {
+      "desc": "Crée un groupe de véhicules de trafic selon les réglages du joueur (trafficSimpleVehicles, trafficAllowMods, trafficSmartSelections) : sans véhicules de police, ou uniquement des véhicules 'proptraffic' en mode simple.",
+      "params": {
+        "amount": {"type": "integer", "desc": "Nombre de véhicules du groupe."},
+        "allMods": {"type": "boolean", "desc": "Ignoré : écrasé par le réglage trafficAllowMods."},
+        "allConfigs": {"type": "boolean", "desc": "Ignoré : forcé à true."},
+        "simpleVehs": {"type": "boolean", "desc": "Ignoré : écrasé par le réglage trafficSimpleVehicles."}
+      },
+      "returns": [{"type": "table", "desc": "Groupe renvoyé par core_multiSpawn.createGroup."}]
+    },
+    "createPoliceGroup": {
+      "desc": "Crée un groupe de véhicules de police (configs de type 'police'), favorisant le pays du niveau, selon le réglage trafficAllowMods.",
+      "params": {
+        "amount": {"type": "integer", "desc": "Nombre de véhicules."},
+        "allMods": {"type": "boolean", "desc": "Ignoré : écrasé par le réglage trafficAllowMods."}
+      },
+      "returns": [{"type": "table", "desc": "Groupe renvoyé par core_multiSpawn.createGroup."}]
+    },
+    "getTrafficGroupFromFile": {
+      "desc": "Renvoie les données d'un fichier de groupe de véhicules (*.vehGroup.json), choisi au hasard parmi ceux du niveau (ou de /vehicleGroups/).",
+      "params": {
+        "options": {"type": "table|nil", "desc": "options.name = filtre sur le nom du fichier (sous-chaîne, en minuscules) ; options.useCustom = true pour forcer /vehicleGroups/."}
+      },
+      "returns": [
+        {"type": "table|nil", "desc": "Données du groupe (champ data du fichier si présent)."},
+        {"type": "string|nil", "desc": "Chemin du fichier choisi."}
+      ]
+    },
+    "getRoleConstructor": {
+      "desc": "Renvoie le constructeur d'un rôle de trafic (module sous traffic/roles/), mis en cache. Si le rôle n'existe pas, un avertissement est écrit et le rôle 'standard' est utilisé.",
+      "params": {"roleName": {"type": "string", "desc": "Nom du rôle (ex. 'standard', 'police', 'suspect', 'empty')."}},
+      "returns": [{"type": "function", "desc": "Constructeur de rôle."}]
+    },
+    "getAheadPos": {
+      "desc": "Renvoie une position située devant pos, dans la direction dir, à la distance scale. Sert à comparer à moindre coût les distances entre véhicules.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Position de départ."},
+        "dir": {"type": "vec3", "desc": "Direction."},
+        "scale": {"type": "number", "desc": "Distance en mètres ; si 0, renvoie pos tel quel."},
+        "useZ0": {"type": "boolean|nil", "desc": "Si true, aplatit la direction à l'horizontale (z = 0) avant de la normaliser."}
+      },
+      "returns": [{"type": "vec3", "desc": "Vecteur mis en cache (à copier si conservé) ; ou pos si scale == 0."}]
+    },
+    "checkSpawnPoint": {
+      "desc": "Vérifie qu'un point est utilisable : entre minDist et maxDist de l'origine, hors des carrefours, et sans conflit avec les autres véhicules actifs.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Point à tester."},
+        "origPos": {"type": "vec3|nil", "desc": "Origine des distances (caméra par défaut)."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale (80 m par défaut)."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale (illimitée par défaut)."},
+        "minVehDist": {"type": "number|nil", "desc": "Distance minimale aux autres véhicules (15 m par défaut)."},
+        "n1": {"type": "string|nil", "desc": "Premier nœud de route (pour exclure les carrefours)."},
+        "n2": {"type": "string|nil", "desc": "Second nœud de route."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si le point est valide."}]
+    },
+    "finalizeSpawnPoint": {
+      "desc": "Cale un point sur une voie de la route (position et direction), en tenant compte du sens de circulation (conduite à droite ou à gauche), des sens uniques et du nombre de voies estimé. Si aucune route n'est trouvée à moins de 30 m, renvoie les valeurs d'entrée.",
+      "params": {
+        "pos": {"type": "vec3", "desc": "Position à ajuster."},
+        "dir": {"type": "vec3|nil", "desc": "Direction ; si nil, prend le sens de la route (legalDirection = true)."},
+        "mapNode1": {"type": "string|nil", "desc": "Premier nœud de la route (recherché si absent)."},
+        "mapNode2": {"type": "string|nil", "desc": "Second nœud de la route."},
+        "options": {"type": "table|nil", "desc": "legalDirection (sens légal), minLane/maxLane (voies autorisées), roadDir (±1, vers/loin du joueur), roadLateralXnorm (décalage latéral direct de -1 à 1)."}
+      },
+      "returns": [
+        {"type": "vec3", "desc": "Nouvelle position."},
+        {"type": "vec3", "desc": "Nouvelle direction."}
+      ]
+    },
+    "findSpawnPointRadial": {
+      "desc": "Cherche un point d'apparition en testant des directions aléatoires autour de l'origine, de minDist à maxDist par pas de options.gap (50 m par défaut), jusqu'à trouver une route valide.",
+      "params": {
+        "startPos": {"type": "vec3|nil", "desc": "Origine (caméra par défaut)."},
+        "startDir": {"type": "vec3|nil", "desc": "Direction de départ (non utilisée par la méthode radiale, remise à z = 0)."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale (20 m)."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale (2000 m)."},
+        "targetDist": {"type": "number|nil", "desc": "Distance idéale ; en deçà, le point doit être caché à la caméra (raycast statique)."},
+        "options": {"type": "table|nil", "desc": "gap, usePrivateRoads, minDrivability, minRadius."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{pos, dir, n1, n2} (n1/n2 seulement si valide)."},
+        {"type": "boolean", "desc": "true si un point valide a été trouvé."}
+      ]
+    },
+    "findSpawnPointOnLine": {
+      "desc": "Cherche un point d'apparition le long d'une droite partant de l'origine dans la direction startDir, par pas de options.gap (50 m par défaut).",
+      "params": {
+        "startPos": {"type": "vec3|nil", "desc": "Origine (caméra par défaut)."},
+        "startDir": {"type": "vec3|nil", "desc": "Direction de la droite (avant de la caméra par défaut)."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale (20 m)."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale (2000 m)."},
+        "targetDist": {"type": "number|nil", "desc": "Distance idéale pour le test de visibilité."},
+        "options": {"type": "table|nil", "desc": "gap, usePrivateRoads, minDrivability, minRadius."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{pos, dir, n1, n2}."},
+        {"type": "boolean", "desc": "true si un point valide a été trouvé."}
+      ]
+    },
+    "findSpawnPointOnRoute": {
+      "desc": "Génère un chemin sur la route devant l'origine (aléatoire avec ramifications, ou options.route) et teste des points de ce chemin entre minDist et maxDist. Les pas peuvent être modulés par la limite de vitesse du tronçon (gapVehCoef, gapSpeedCoef, bornés à 20-50 m). Exportée aussi sous le nom findSpawnPoint.",
+      "params": {
+        "startPos": {"type": "vec3|nil", "desc": "Origine (caméra par défaut)."},
+        "startDir": {"type": "vec3|nil", "desc": "Direction de marche (avant de la caméra par défaut)."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale (20 m)."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale (2000 m)."},
+        "targetDist": {"type": "number|nil", "desc": "Distance idéale pour le test de visibilité."},
+        "options": {"type": "table|nil", "desc": "gap (20 m), usePrivateRoads, minDrivability, minRadius, pathRandomization (0,5), route (chemin fourni), gapVehCoef, gapSpeedCoef."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{pos, dir, n1, n2}."},
+        {"type": "boolean", "desc": "true si un point valide a été trouvé."}
+      ]
+    },
+    "findSpawnPoint": {
+      "desc": "Alias de findSpawnPointOnRoute (même fonction, mêmes paramètres et retours).",
+      "params": {
+        "startPos": {"type": "vec3|nil", "desc": "Origine."},
+        "startDir": {"type": "vec3|nil", "desc": "Direction de marche."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale."},
+        "targetDist": {"type": "number|nil", "desc": "Distance idéale."},
+        "options": {"type": "table|nil", "desc": "Voir findSpawnPointOnRoute."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{pos, dir, n1, n2}."},
+        {"type": "boolean", "desc": "true si valide."}
+      ]
+    },
+    "findSafeSpawnPoint": {
+      "desc": "Renvoie toujours un point d'apparition (téléportation forcée). Essaie d'abord la route devant, puis une recherche radiale proche (200-1000 m), une recherche large moins stricte (200-2000 m, drivability 0,5) et enfin très loin (10 000-12 000 m, z = 1).",
+      "params": {
+        "startPos": {"type": "vec3|nil", "desc": "Origine."},
+        "startDir": {"type": "vec3|nil", "desc": "Direction de marche."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale de la première recherche."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale de la première recherche."},
+        "targetDist": {"type": "number|nil", "desc": "Distance idéale de la première recherche."},
+        "options": {"type": "table|nil", "desc": "Mêmes options que findSpawnPointOnRoute (modifiée : minDrivability passe à 0,5 dans les recherches de repli)."}
+      },
+      "returns": [
+        {"type": "table", "desc": "{pos, dir, ...}, jamais nil."},
+        {"type": "boolean", "desc": "true si une méthode a trouvé un point valide."}
+      ]
+    },
+    "placeTrafficVehicles": {
+      "desc": "Téléporte tous les véhicules IA de trafic à la position donnée et les aligne (core_multiSpawn.placeGroup), par défaut en mode 'roadAhead' avec un écart de 15 m.",
+      "params": {
+        "pos": {"type": "vec3|nil", "desc": "Position (caméra par défaut)."},
+        "dir": {"type": "vec3|nil", "desc": "Direction (avant de la caméra par défaut)."},
+        "options": {"type": "table|nil", "desc": "Options de placeGroup ; mode ('roadAhead' par défaut) et gap (15 par défaut)."}
+      },
+      "returns": []
+    },
+    "getNearestTrafficVehicle": {
+      "desc": "Renvoie l'id du véhicule IA de trafic le plus proche d'une position, avec filtres optionnels sur les propriétés du véhicule de trafic.",
+      "params": {
+        "pos": {"type": "vec3|nil", "desc": "Position de référence (caméra par défaut)."},
+        "filters": {"type": "table|nil", "desc": "Paires propriété = valeur ; un véhicule est exclu si la propriété existe avec une autre valeur."}
+      },
+      "returns": [
+        {"type": "integer|nil", "desc": "Id du véhicule le plus proche."},
+        {"type": "number", "desc": "Distance en mètres (math.huge si aucun véhicule)."}
+      ]
+    },
+    "setTrafficSpeedFromApp": {
+      "desc": "Convertit une vitesse saisie dans l'application Trafic (km/h, mph ou auto) en m/s et l'applique comme limite de vitesse du trafic (setTrafficVars({speedLimit})). Le mode 'auto' envoie -1.",
+      "params": {
+        "speed": {"type": "number|nil", "desc": "Vitesse dans l'unité du mode (0 par défaut)."},
+        "mode": {"type": "string|nil", "desc": "'km/h', 'mph' ou 'auto' (défaut) ; autre valeur = m/s."}
+      },
+      "returns": [{"type": "number", "desc": "Vitesse appliquée en m/s (-1 en mode auto)."}]
+    }
+  }
+}

@@ -1,110 +1,110 @@
 # `editor_cameraV2_orbit`
 
-*Fichier : `lua/ge/extensions/editor/cameraV2/orbit.lua` · VM : Game Engine (GE) · 590 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/cameraV2/orbit.lua` · VM: Game Engine (GE) · 590 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_cameraV2_orbit` : `extensions.load("editor_cameraV2_orbit")`, puis la globale `editor_cameraV2_orbit`
+**Access:** extension `editor_cameraV2_orbit`: `extensions.load("editor_cameraV2_orbit")`, then the global `editor_cameraV2_orbit`
 
-Regard à la souris de Camera V2, de type éditeur : soit rotation sur place depuis la position actuelle de la caméra (mode 0), soit orbite autour de la surface au centre de la vue (mode 1). L'orbite est contrainte pour ne pas faire passer la caméra sous le terrain (recherche dichotomique sur le pitch) et dispose d'une inertie à la relâche du bouton. Utilisé par editor/cameraV2/controller qui lui transmet les entrées souris relatives et appelle update() à chaque frame.
+Camera V2 mouse look, editor style: either rotation in place from the current camera position (mode 0), or orbit around the surface at the view center (mode 1). The orbit is constrained so as not to put the camera under the terrain (binary search on the pitch) and has inertia when the button is released. Used by editor/cameraV2/controller, which passes it the relative mouse inputs and calls update() every frame.
 
-## Remarques
+## Notes
 
-- Mode : 1 = orbite autour du pivot (préférence orbitAroundViewCenter vraie), tout autre valeur = rotation sur place.
-- Pivot d'orbite : point touché par Engine.castRay au centre de la vue (source « center hit »), sinon point virtuel à lastOrbitDistance devant la caméra (source « virtual », 50 m au départ, borné à zoomMinDistance..zoomMaxDistance). Une source « focus » est posée par setPivot après une focalisation par double clic.
-- Pitch limité à ±85° ; vitesse angulaire limitée à 900°/s ; les deltas de souris > 250 sont ignorés (saut de curseur). Sensibilité : fov * value / 4500, puis x10 en degrés.
-- Lissage vers la cible : amount = 1 - exp(-zoomResponse * dt). Inertie : la vitesse décroît de 95 % en inertiaDuration secondes (préférence, bornée à 0,05..2 s).
-- Une orbite est abandonnée si la pose caméra ne correspond plus à celle attendue (reconcileOrbitTranslation) ; si seule la rotation a changé, le pivot est recalculé.
+- Mode: 1 = orbit around the pivot (orbitAroundViewCenter preference true), any other value = rotation in place.
+- Orbit pivot: point hit by Engine.castRay at the view center (source "center hit"), otherwise a virtual point at lastOrbitDistance in front of the camera (source "virtual", 50 m initially, clamped to zoomMinDistance..zoomMaxDistance). A "focus" source is set by setPivot after a double-click focus.
+- Pitch limited to ±85°; angular speed limited to 900°/s; mouse deltas > 250 are ignored (cursor jump). Sensitivity: fov * value / 4500, then x10 in degrees.
+- Smoothing toward the target: amount = 1 - exp(-zoomResponse * dt). Inertia: the speed decays by 95% in inertiaDuration seconds (preference, clamped to 0.05..2 s).
+- An orbit is abandoned if the camera pose no longer matches the expected one (reconcileOrbitTranslation); if only the rotation changed, the pivot is recomputed.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_cameraV2_orbit.cancel()` | Arrête le glisser et l'inertie d'orbite et abandonne la rotation sur place, en conservant la pose d'orbite. | 576 |
-| `editor_cameraV2_orbit.getDebugState()` | État de debug de l'orbite pour la fenêtre Camera V2 Debug. | 563 |
-| `editor_cameraV2_orbit.getPivot()` | Renvoie une copie du pivot d'orbite courant. | 528 |
-| `editor_cameraV2_orbit.getZoomPivot()` | Renvoie le pivot s'il est réel (source différente de « virtual »), pour que le zoom l'utilise comme point focal fixe. | 532 |
-| `editor_cameraV2_orbit.hasPose()` | Vrai si une pose d'orbite (pivot, distance) est mémorisée. | 524 |
-| `editor_cameraV2_orbit.isActive()` | Vrai si une orbite est en cours (glisser ou inertie) ou si une rotation sur place est en cours. | 515 |
-| `editor_cameraV2_orbit.isOrbitActive()` | Vrai seulement si une orbite autour d'un pivot est en cours (glisser ou inertie). | 520 |
-| `editor_cameraV2_orbit.markForReacquire()` | Marque l'orbite pour qu'un nouveau pivot soit recalculé au prochain début de glisser (après un déplacement WASD combiné). | 572 |
-| `editor_cameraV2_orbit.onMouseInput(axis, value, mode, mouseButton)` | Reçoit un mouvement de souris relatif pendant qu'un bouton d'orbite est enfoncé. Au clic initial, démarre l'orbite (mode 1) ou la rotation sur place ; ensuite accumule l'entrée yaw ou pitch, appliquée par update(). *(hook)* | 278 |
-| `editor_cameraV2_orbit.reset()` | Oublie complètement la pose d'orbite et la rotation sur place. | 584 |
-| `editor_cameraV2_orbit.setPivot(pivot, source)` | Définit le pivot d'orbite et recalcule yaw, pitch et distance à partir de la position de la caméra. Annule glisser et inertie. | 536 |
-| `editor_cameraV2_orbit.syncDistanceFromCamera()` | Recalcule la géométrie d'orbite (distance, yaw, pitch) depuis la position actuelle de la caméra en gardant le pivot et la source ; utilisé après un zoom vers le pivot. | 553 |
-| `editor_cameraV2_orbit.update(mode, mouseButton, deltaTime)` | Fait avancer la rotation sur place ou l'orbite d'une frame (lissage, inertie, contrainte terrain) et applique la pose à core_camera (setRotation ou setPosRot). *(interne)* | 495 |
+| `editor_cameraV2_orbit.cancel()` | Stops the orbit drag and inertia and abandons the rotation in place, keeping the orbit pose. | 576 |
+| `editor_cameraV2_orbit.getDebugState()` | Orbit debug state for the Camera V2 Debug window. | 563 |
+| `editor_cameraV2_orbit.getPivot()` | Returns a copy of the current orbit pivot. | 528 |
+| `editor_cameraV2_orbit.getZoomPivot()` | Returns the pivot if it is real (source other than "virtual"), so that zoom uses it as a fixed focal point. | 532 |
+| `editor_cameraV2_orbit.hasPose()` | True if an orbit pose (pivot, distance) is stored. | 524 |
+| `editor_cameraV2_orbit.isActive()` | True if an orbit is in progress (drag or inertia) or if a rotation in place is in progress. | 515 |
+| `editor_cameraV2_orbit.isOrbitActive()` | True only if an orbit around a pivot is in progress (drag or inertia). | 520 |
+| `editor_cameraV2_orbit.markForReacquire()` | Marks the orbit so that a new pivot is recomputed at the next drag start (after a combined WASD movement). | 572 |
+| `editor_cameraV2_orbit.onMouseInput(axis, value, mode, mouseButton)` | Receives a relative mouse movement while an orbit button is held. On the initial click, starts the orbit (mode 1) or rotation in place; then accumulates the yaw or pitch input, applied by update(). *(hook)* | 278 |
+| `editor_cameraV2_orbit.reset()` | Completely forgets the orbit pose and the rotation in place. | 584 |
+| `editor_cameraV2_orbit.setPivot(pivot, source)` | Sets the orbit pivot and recomputes yaw, pitch and distance from the camera position. Cancels drag and inertia. | 536 |
+| `editor_cameraV2_orbit.syncDistanceFromCamera()` | Recomputes the orbit geometry (distance, yaw, pitch) from the current camera position while keeping the pivot and the source; used after a zoom toward the pivot. | 553 |
+| `editor_cameraV2_orbit.update(mode, mouseButton, deltaTime)` | Advances the rotation in place or the orbit by one frame (smoothing, inertia, terrain constraint) and applies the pose to core_camera (setRotation or setPosRot). *(internal)* | 495 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_cameraV2_orbit.getDebugState()`
 
-État de debug de l'orbite pour la fenêtre Camera V2 Debug.
+Orbit debug state for the Camera V2 Debug window.
 
-- **renvoie** : table|nil {source, distance, pivot = vec3, moving = boolean}, ou nil sans pose
+- **returns**: table|nil {source, distance, pivot = vec3, moving = boolean}, or nil without a pose
 
 #### `editor_cameraV2_orbit.getPivot()`
 
-Renvoie une copie du pivot d'orbite courant.
+Returns a copy of the current orbit pivot.
 
-- **renvoie** : vec3|nil pivot, ou nil sans pose
+- **returns**: vec3|nil pivot, or nil without a pose
 
 #### `editor_cameraV2_orbit.getZoomPivot()`
 
-Renvoie le pivot s'il est réel (source différente de « virtual »), pour que le zoom l'utilise comme point focal fixe.
+Returns the pivot if it is real (source other than "virtual"), so that zoom uses it as a fixed focal point.
 
-- **renvoie** : vec3|nil pivot réel ou nil
+- **returns**: vec3|nil real pivot or nil
 
 #### `editor_cameraV2_orbit.hasPose()`
 
-Vrai si une pose d'orbite (pivot, distance) est mémorisée.
+True if an orbit pose (pivot, distance) is stored.
 
-- **renvoie** : boolean true si orbit existe
+- **returns**: boolean true if orbit exists
 
 #### `editor_cameraV2_orbit.isActive()`
 
-Vrai si une orbite est en cours (glisser ou inertie) ou si une rotation sur place est en cours.
+True if an orbit is in progress (drag or inertia) or if a rotation in place is in progress.
 
-- **renvoie** : boolean état d'activité
+- **returns**: boolean activity state
 
 #### `editor_cameraV2_orbit.isOrbitActive()`
 
-Vrai seulement si une orbite autour d'un pivot est en cours (glisser ou inertie).
+True only if an orbit around a pivot is in progress (drag or inertia).
 
-- **renvoie** : boolean état d'orbite
+- **returns**: boolean orbit state
 
 #### `editor_cameraV2_orbit.onMouseInput(axis, value, mode, mouseButton)`
 
-Reçoit un mouvement de souris relatif pendant qu'un bouton d'orbite est enfoncé. Au clic initial, démarre l'orbite (mode 1) ou la rotation sur place ; ensuite accumule l'entrée yaw ou pitch, appliquée par update().
+Receives a relative mouse movement while an orbit button is held. On the initial click, starts the orbit (mode 1) or rotation in place; then accumulates the yaw or pitch input, applied by update().
 
-- `axis` (*string*) : « yaw » pour l'axe horizontal ; toute autre valeur est traitée comme pitch
-- `value` (*number*) : Mouvement de souris ; non fini = refusé ; |value| > 250 = ignoré (mais consommé)
-- `mode` (*integer*) : 1 = orbite, sinon rotation sur place
-- `mouseButton` (*integer*) : Bouton imgui maintenu (1 droit, 2 milieu)
-- **renvoie** : boolean true si l'entrée est consommée, false si le bouton n'est pas actif/viewport non survolé
+- `axis` (*string*) : "yaw" for the horizontal axis; any other value is treated as pitch
+- `value` (*number*) : Mouse movement; not finite = rejected; |value| > 250 = ignored (but consumed)
+- `mode` (*integer*) : 1 = orbit, otherwise rotation in place
+- `mouseButton` (*integer*) : Held imgui button (1 right, 2 middle)
+- **returns**: boolean true if the input is consumed, false if the button is not active/viewport not hovered
 
 #### `editor_cameraV2_orbit.setPivot(pivot, source)`
 
-Définit le pivot d'orbite et recalcule yaw, pitch et distance à partir de la position de la caméra. Annule glisser et inertie.
+Sets the orbit pivot and recomputes yaw, pitch and distance from the camera position. Cancels drag and inertia.
 
-- `pivot` (*vec3*) : Nouveau pivot ; doit être un point raisonnable
-- `source` (*string|nil*) : Étiquette de source (défaut « focus »)
-- **renvoie** : boolean true si appliqué, false si pivot/caméra invalide ou distance nulle
+- `pivot` (*vec3*) : New pivot; must be a reasonable point
+- `source` (*string|nil*) : Source label (default "focus")
+- **returns**: boolean true if applied, false if pivot/camera invalid or distance zero
 
 #### `editor_cameraV2_orbit.syncDistanceFromCamera()`
 
-Recalcule la géométrie d'orbite (distance, yaw, pitch) depuis la position actuelle de la caméra en gardant le pivot et la source ; utilisé après un zoom vers le pivot.
+Recomputes the orbit geometry (distance, yaw, pitch) from the current camera position while keeping the pivot and the source; used after a zoom toward the pivot.
 
-- **renvoie** : boolean false sans pose d'orbite ou en cas de position invalide
+- **returns**: boolean false without an orbit pose or in case of an invalid position
 
 #### `editor_cameraV2_orbit.update(mode, mouseButton, deltaTime)`
 
-Fait avancer la rotation sur place ou l'orbite d'une frame (lissage, inertie, contrainte terrain) et applique la pose à core_camera (setRotation ou setPosRot).
+Advances the rotation in place or the orbit by one frame (smoothing, inertia, terrain constraint) and applies the pose to core_camera (setRotation or setPosRot).
 
-- `mode` (*integer*) : 1 = orbite, sinon rotation sur place
-- `mouseButton` (*integer*) : Bouton imgui de l'orbite
-- `deltaTime` (*number|nil*) : Secondes, bornées à [0 ; 0,05]
+- `mode` (*integer*) : 1 = orbit, otherwise rotation in place
+- `mouseButton` (*integer*) : Orbit imgui button
+- `deltaTime` (*number|nil*) : Seconds, clamped to [0; 0.05]
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/cameraV2/orbit.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/cameraV2/orbit.lua`.*

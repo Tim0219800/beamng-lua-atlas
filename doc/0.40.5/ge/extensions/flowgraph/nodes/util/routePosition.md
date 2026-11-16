@@ -1,21 +1,21 @@
 # `flowgraph_nodes_util_routePosition`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/routePosition.lua` · VM : Game Engine (GE) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/routePosition.lua` · VM: Game Engine (GE) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/routePosition")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/routePosition")` (file under extensions/ but not a regular extension)
 
-Nœud « Route Position » (once_instant). Donne la position le long d'un itinéraire à une distance donnée en avant. Entrées : navgraphRoute (type navgraphPath), distance. Sorties : pos (vec3), dirVec (direction du segment), n1 et n2 (nœuds du segment). Utilise gameplay/route/route.
+Node "Route Position" (once_instant). Gives the position along a route at a given distance ahead. Inputs: navgraphRoute (type navgraphPath), distance. Outputs: pos (vec3), dirVec (segment direction), n1 and n2 (segment nodes). Uses gameplay/route/route.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset. | 29 |
-| `C:init()` | Appelle onNodeReset (crée la route). | 25 |
-| `C:onNodeReset()` | Crée un nouvel objet route (variable locale du fichier, partagée entre instances). | 33 |
-| `C:workOnce()` | Initialise la route avec route:setupPathMultiWaypoints, avance de distance avec route:stepAhead et écrit n1, n2, pos et dirVec (direction normalisée de n1 vers n2). | 37 |
+| `C:_executionStopped()` | Calls onNodeReset. | 29 |
+| `C:init()` | Calls onNodeReset (creates the route). | 25 |
+| `C:onNodeReset()` | Creates a new route object (local variable of the file, shared between instances). | 33 |
+| `C:workOnce()` | Initializes the route with route:setupPathMultiWaypoints, advances by distance with route:stepAhead and writes n1, n2, pos and dirVec (normalized direction from n1 to n2). | 37 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/routePosition.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/routePosition.lua`.*

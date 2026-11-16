@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/welcome.lua",
+  "module": "Fenêtre d'accueil « Welcome » (fg_welcome) de l'éditeur Flowgraph. Affiche une image d'en-tête (welcomeHeader.png), une image latérale (welcomeSide.png), une colonne gauche (nouveau projet, ouvrir un projet, 10 derniers fichiers récents) et une colonne droite d'introduction. Un projet de démonstration « Simple Race » est chargé depuis flowgraph/examples/scenarios/simpleRace/race.flow.json.",
+  "notes": [
+    "Les fichiers récents viennent de la préférence flowgraph.general.recentFiles ; seuls ceux qui existent encore (FS:fileExists) sont listés.",
+    "La fenêtre prend le focus une seule fois à l'ouverture (self.focus)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre (windowName 'fg_welcome', windowDescription 'Welcome').",
+      "functions": {
+        "attach": {"desc": "Mémorise le manager courant.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": true},
+        "init": {"desc": "Enregistre la fenêtre (150x300, visible par défaut), charge les textures d'en-tête et latérale, prépare la liste des projets de démo.", "internal": true},
+        "drawLeftColumn": {"desc": "Dessine « Projects » (New Project via core_flowgraphManager.addManager, Open Project... via le dialogue de fichier) et « Recent Files ».", "internal": true},
+        "drawRightColumn": {"desc": "Dessine le texte d'introduction de l'éditeur.", "internal": true},
+        "drawContent": {"desc": "Assemble les images et les deux colonnes de la fenêtre.", "internal": true},
+        "draw": {"desc": "Dessine la fenêtre « Welcome » si elle est visible. Appelée à chaque frame.", "internal": true},
+        "_onSerialize": {"desc": "Hook de sérialisation : vide.", "params": {"data": {"type": "table", "desc": "Table de sauvegarde."}}, "internal": true},
+        "_onDeserialized": {"desc": "Hook de désérialisation : vide.", "params": {"data": {"type": "table", "desc": "Données restaurées."}}, "internal": true}
+      }
+    }
+  }
+}

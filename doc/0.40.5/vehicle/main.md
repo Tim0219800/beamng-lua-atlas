@@ -1,15 +1,15 @@
 # `main`
 
-*Fichier : `lua/vehicle/main.lua` · VM : Véhicule · 555 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/main.lua` · VM: Vehicle · 555 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("main")`
+**Access:** `require("main")`
 
-Point d'entrée de la VM Lua d'un véhicule : c'est le premier script exécuté. Il configure LuaJIT et package.path, charge les utilitaires communs, crée les globales de base (extensions, settings, playerInfo, lastDt, physicsDt), puis définit des fonctions GLOBALES que le moteur C++ appelle directement (init, onPhysicsStep, onGraphicsStep, onDebugDraw, onVehicleReset, callbacks de poutres/coupleurs, etc.). Chaque callback relaie l'évènement aux modules internes (wheels, powertrain, controller, beamstate…) puis, en général, aux extensions via extensions.hook. Un moddeur n'appelle presque jamais ces fonctions : il écrit des extensions qui reçoivent les hooks (updateGFX, onPhysicsStep, onReset…) ou lit les globales.
+Entry point of a vehicle's Lua VM: it is the first script run. It configures LuaJIT and package.path, loads the common utilities, creates the base globals (extensions, settings, playerInfo, lastDt, physicsDt), then defines GLOBAL functions that the C++ engine calls directly (init, onPhysicsStep, onGraphicsStep, onDebugDraw, onVehicleReset, beam/coupler callbacks, etc.). Each callback relays the event to the internal modules (wheels, powertrain, controller, beamstate…) then, in general, to the extensions via extensions.hook. A modder almost never calls these functions: they write extensions that receive the hooks (updateGFX, onPhysicsStep, onReset…) or read the globals.
 
-## Exemple
+## Example
 
 ```lua
--- une extension véhicule reçoit les hooks émis par main.lua
+-- a vehicle extension receives the hooks emitted by main.lua
 local M = {}
 M.onReset = function(retainDebug) end
 M.updateGFX = function(dtSim) end
@@ -17,83 +17,83 @@ M.onPlayersChanged = function(anyPlayerSeated) end
 return M
 ```
 
-## Remarques
+## Notes
 
-- ORDRE de la boucle graphique onGraphicsStep(dtSim) : sensors.updateGFX -> mapmgr.sendTracking -> wheels.updateGFX -> ai.updateGFX -> input.updateGFX -> electrics.updateGFX -> controller.updateGFX -> electrics.updateGFXSecondStep -> extensions.hook('updateGFX') -> hydros.updateGFX -> powertrain.updateGFX -> energyStorage.updateGFX -> drivetrain.updateGFX -> beamstate.updateGFX -> protocols.updateGFX -> sounds.updateGFX -> thrusters.updateGFX -> (guihooks.sendStreams si des flux sont actifs) -> damageTracker.updateGFX (seulement si le premier joueur est assis) -> props.updateGFX -> material.updateGFX -> fire.updateGFX -> recovery.updateGFX -> powertrain.updateGFXLastStage. Les commentaires du code imposent : sensors avant input et ai, input le plus tôt possible, extensions après electrics et avant drivetrain/hydros.
-- ORDRE de la boucle physique onPhysicsStep(dtPhys) : wheels.updateWheelVelocities -> powertrain.update -> controller.updateWheelsIntermediate -> wheels.updateWheelTorques -> controller.update -> thrusters.update -> hydros.update -> beamstate.update -> protocols.update -> extensions.hook('onPhysicsStep') (seulement si enablePhysicsStepHook() a été appelé). Le moteur C++ n'appelle onPhysicsStep que si obj:setPhysicsStepEnabled(true), calculé par updateCorePhysicsStepEnabled() (au moins un module ou le hook d'extension en a besoin).
-- ORDRE de l'initialisation (initSystems) : backwardsCompatibility.init, material.init, bdebug.init, electrics.init, damageTracker.init, beamstate.init, protocols.init, wheels.init, powertrain.init, energyStorage.init, input.init, controller.init, wheels.initSecondStage, controller.initSecondStage, drivetrain.init, sensors.reset, thrusters.init, hydros.init, sounds.init, props.init, input.initSecondStage, recovery.init, sensors.init, fire.init, wheels.initSounds, powertrain.initSounds, controller.initSounds, extensions.hook('onInit'), mapmgr.init, electrics.initLastStage, controller.initLastStage, powertrain.sendTorqueData, detectGlobalWrites(), updateCorePhysicsStepEnabled.
-- ORDRE du reset (onVehicleReset) : guihooks.reset, extensions.hook('onReset'), ai.reset, mapmgr.reset, damageTracker, beamstate, protocols, wheels, electrics, powertrain, energyStorage, controller, wheels.resetSecondStage, controller.resetSecondStage, drivetrain, props, sensors, bdebug, thrusters, input, hydros, material, fire, powertrain.resetSounds, controller.resetSounds, sounds, partCondition, electrics.resetLastStage, controller.resetLastStage, powertrain.sendTorqueData, updateCorePhysicsStepEnabled. Remarque : les extensions reçoivent onReset AVANT les modules cœur.
-- MODULES CHARGÉS EN GLOBALES par init() (dans cet ordre) : damageTracker, drivetrain, powertrain, energyStorage, controller, wheels, sounds, bdebug, input, props, particles, particlefilter, material, v (= require('jbeam/stage2')), electrics, beamstate, protocols, sensors, bullettime (à déprécier), thrusters, hydros, guihooks (nom à ne pas changer sinon le callback GUI casse), streams (= guistreams), gui (alias de guihooks), ai, recovery, mapmgr, fire, partCondition. Globales créées avant init : extensions, settings, backwardsCompatibility, playerInfo, lastDt, physicsDt, vehiclePath, ghostOnReset, ghostOnTp, float3 (alias de vec3), profilerPushEvent/PopEvent(1), shippingBuild, vmType='vehicle'.
-- Extensions chargées par init : toutes celles de <véhicule>/lua (sauf controller, powertrain, energyStorage), core_quickAccess, input_haptics (avant les modules), puis skeleton, tout le dossier lua/vehicle/extensions/auto, gameplayStatistic ; hook onVehicleLoaded émis juste après le dossier auto.
-- init renvoie false (le moteur décharge alors le Lua du véhicule) si les données de spawn sont invalides, si le chargement stage2 échoue ou si v.data.information.simpleObject == true. Si aucun noeud n'existe (nodesMissing), init lève error('nodesMissing') à la fin pour afficher l'échec du spawn.
-- playerInfo : seatedPlayers (table index joueur -> true, indexé depuis 0, nil au départ), persona, firstPlayerSeated (joueur 0 assis), anyPlayerSeated.
-- Bug repéré : `profilerPopEvent1 = profilerPushEvent or nop` et `profilerPushEvent1 = profilerPushEvent or nop` (le Pop1 reçoit en fait la fonction Push) ; si le profileur existe, profilerPopEvent1 empile au lieu de dépiler.
-- Bug mineur : init passe `retainDebug` à extensions.hook('onVehicleLoaded', retainDebug) alors que cette variable n'est définie nulle part dans main.lua (globale nil sauf si définie ailleurs).
-- print est redéfini : print(...) appelle log('A','print',tostring(...)) et n'affiche donc que le PREMIER argument.
-- onNodeCollision remplit la table partagée particlefilter.particleData (champs id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialID1, materialID2) puis la passe à wheels, fire, controller, particlefilter, bdebug (pas aux extensions).
-- onDynamicBeamAdded/onDynamicBeamDeleted/onDynamicBeamBroke existent mais sont vides.
+- ORDER of the graphics loop onGraphicsStep(dtSim): sensors.updateGFX -> mapmgr.sendTracking -> wheels.updateGFX -> ai.updateGFX -> input.updateGFX -> electrics.updateGFX -> controller.updateGFX -> electrics.updateGFXSecondStep -> extensions.hook('updateGFX') -> hydros.updateGFX -> powertrain.updateGFX -> energyStorage.updateGFX -> drivetrain.updateGFX -> beamstate.updateGFX -> protocols.updateGFX -> sounds.updateGFX -> thrusters.updateGFX -> (guihooks.sendStreams if streams are active) -> damageTracker.updateGFX (only if the first player is seated) -> props.updateGFX -> material.updateGFX -> fire.updateGFX -> recovery.updateGFX -> powertrain.updateGFXLastStage. The code comments require: sensors before input and ai, input as early as possible, extensions after electrics and before drivetrain/hydros.
+- ORDER of the physics loop onPhysicsStep(dtPhys): wheels.updateWheelVelocities -> powertrain.update -> controller.updateWheelsIntermediate -> wheels.updateWheelTorques -> controller.update -> thrusters.update -> hydros.update -> beamstate.update -> protocols.update -> extensions.hook('onPhysicsStep') (only if enablePhysicsStepHook() has been called). The C++ engine only calls onPhysicsStep if obj:setPhysicsStepEnabled(true), computed by updateCorePhysicsStepEnabled() (at least one module or the extension hook needs it).
+- ORDER of initialization (initSystems): backwardsCompatibility.init, material.init, bdebug.init, electrics.init, damageTracker.init, beamstate.init, protocols.init, wheels.init, powertrain.init, energyStorage.init, input.init, controller.init, wheels.initSecondStage, controller.initSecondStage, drivetrain.init, sensors.reset, thrusters.init, hydros.init, sounds.init, props.init, input.initSecondStage, recovery.init, sensors.init, fire.init, wheels.initSounds, powertrain.initSounds, controller.initSounds, extensions.hook('onInit'), mapmgr.init, electrics.initLastStage, controller.initLastStage, powertrain.sendTorqueData, detectGlobalWrites(), updateCorePhysicsStepEnabled.
+- ORDER of the reset (onVehicleReset): guihooks.reset, extensions.hook('onReset'), ai.reset, mapmgr.reset, damageTracker, beamstate, protocols, wheels, electrics, powertrain, energyStorage, controller, wheels.resetSecondStage, controller.resetSecondStage, drivetrain, props, sensors, bdebug, thrusters, input, hydros, material, fire, powertrain.resetSounds, controller.resetSounds, sounds, partCondition, electrics.resetLastStage, controller.resetLastStage, powertrain.sendTorqueData, updateCorePhysicsStepEnabled. Note: the extensions receive onReset BEFORE the core modules.
+- MODULES LOADED AS GLOBALS by init() (in this order): damageTracker, drivetrain, powertrain, energyStorage, controller, wheels, sounds, bdebug, input, props, particles, particlefilter, material, v (= require('jbeam/stage2')), electrics, beamstate, protocols, sensors, bullettime (to be deprecated), thrusters, hydros, guihooks (name must not be changed or the GUI callback breaks), streams (= guistreams), gui (alias of guihooks), ai, recovery, mapmgr, fire, partCondition. Globals created before init: extensions, settings, backwardsCompatibility, playerInfo, lastDt, physicsDt, vehiclePath, ghostOnReset, ghostOnTp, float3 (alias of vec3), profilerPushEvent/PopEvent(1), shippingBuild, vmType='vehicle'.
+- Extensions loaded by init: all those in <vehicle>/lua (except controller, powertrain, energyStorage), core_quickAccess, input_haptics (before the modules), then skeleton, the whole lua/vehicle/extensions/auto folder, gameplayStatistic; the onVehicleLoaded hook is emitted right after the auto folder.
+- init returns false (the engine then unloads the vehicle's Lua) if the spawn data is invalid, if the stage2 loading fails or if v.data.information.simpleObject == true. If no node exists (nodesMissing), init raises error('nodesMissing') at the end to show the spawn failure.
+- playerInfo: seatedPlayers (table player index -> true, 0-based, nil at start), persona, firstPlayerSeated (player 0 seated), anyPlayerSeated.
+- Bug spotted: `profilerPopEvent1 = profilerPushEvent or nop` and `profilerPushEvent1 = profilerPushEvent or nop` (Pop1 actually receives the Push function); if the profiler exists, profilerPopEvent1 pushes instead of popping.
+- Minor bug: init passes `retainDebug` to extensions.hook('onVehicleLoaded', retainDebug) although this variable is not defined anywhere in main.lua (nil global unless defined elsewhere).
+- print is redefined: print(...) calls log('A','print',tostring(...)) and therefore only prints the FIRST argument.
+- onNodeCollision fills the shared table particlefilter.particleData (fields id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialID1, materialID2) then passes it to wheels, fire, controller, particlefilter, bdebug (not to the extensions).
+- onDynamicBeamAdded/onDynamicBeamDeleted/onDynamicBeamBroke exist but are empty.
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `enablePhysicsStepHook()` | Fait en sorte que onPhysicsStep relaie extensions.hook('onPhysicsStep', dt) et force la réévaluation du flag moteur. À appeler dans onExtensionLoaded par toute extension qui définit onPhysicsStep (le hook n'est jamais désactivé ensuite). | 65 |
-| `exportPersistentData()` | Appelée par le moteur avant un rechargement du Lua : sérialise les extensions (serializePackages('reload')) et les confie au moteur via obj:setPersistentData. | 533 |
-| `importPersistentData(s)` | Appelée par le moteur après un rechargement : désérialise les données persistantes et les redonne aux extensions (deserializePackages). | 539 |
-| `init(path, initData)` | Appelée par le moteur au spawn du véhicule. Ajuste package.path vers le dossier du véhicule, charge les modules en globales, décode initData (lpack) et construit les données du véhicule (v.loadVehicleStage2), appelle initSystems, charge les extensions de base (skeleton, dossier auto, gameplayStatistic) et émet 'onVehicleLoaded'. | 206 |
-| `initSystems()` | Initialise tous les sous-systèmes dans l'ordre décrit en notes, émet le hook 'onInit', active la détection d'écritures globales (detectGlobalWrites) et règle le flag de step physique. Appelée par init(). | 139 |
-| `onBeamBroke(id, energy)` | Appelé par le moteur quand une poutre casse. Relaye à beamstate, wheels, powertrain, energyStorage, controller, bdebug, puis extensions.hook('onBeamBroke'). | 366 |
-| `onBeamDeformed(id, ratio)` | Appelé par le moteur seulement pour les poutres ayant des déclencheurs de déformation. Relaye à beamstate et controller puis au hook 'onBeamDeformed'. | 377 |
-| `onCallEvent(funName, data)` | Callback générique utilisé par le moteur pour appeler une fonction Lua par nom. Résout `funName` soit comme globale ("maFonction") soit comme "module.fonction" (un seul niveau, le module doit être une table globale) et l'appelle avec `data`. Ignore silencieusement tout ce qui n'est pas une fonction. | 345 |
-| `onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)` | Appelé par le moteur quand un coupleur s'attache. Relaye aux mêmes modules que onCouplerFound puis au hook 'onCouplerAttached'. | 397 |
-| `onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Appelé par le moteur quand un coupleur se détache. Relaye aux mêmes modules puis au hook 'onCouplerDetached'. | 406 |
-| `onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist)` | Appelé par le moteur quand un coupleur trouve un coupleur compatible à portée. Relaye à beamstate, controller, powertrain, energyStorage puis au hook 'onCouplerFound'. | 388 |
-| `onDebugDraw(x, y, z)` | Appelé par le moteur à chaque frame de dessin debug. Met à jour la position de focus partagée, appelle bdebug.debugDraw, ai.debugDraw, beamstate.debugDraw, controller.debugDraw, hydros.debugDraw, puis extensions.hook('onDebugDraw', focusPos) et, si un joueur est assis, 'onDebugDrawActive'. | 126 |
-| `onDespawnObject()` | Appelé par le moteur quand le véhicule est supprimé : hydros.destroy(), protocols.destroy() et, si la globale odometer existe, odometer.submitStatistic(). | 430 |
-| `onDynamicBeamAdded(dbId, nodeId, tag)` | Callback moteur lors de l'ajout d'une poutre dynamique ; corps vide. | 420 |
-| `onDynamicBeamBroke(dbId, energy)` | Callback moteur quand une poutre dynamique casse ; corps vide. | 426 |
-| `onDynamicBeamDeleted(dbId)` | Callback moteur lors de la suppression d'une poutre dynamique ; corps vide. | 423 |
-| `onGraphicsStep(dtSim)` | Appelé par le moteur à chaque frame graphique (une fois par rendu/frame de simulation). Mémorise lastDt, met à jour flux GUI, capteurs, roues, IA, entrées, electrics, contrôleurs, extensions (hook 'updateGFX'), hydros, powertrain, etc. dans l'ordre décrit dans les notes. | 86 |
-| `onNodeCollision(id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialId1, materialId2)` | Appelé par le moteur à chaque collision de noeud filtrée. Remplit particlefilter.particleData et le passe à wheels, fire, controller, particlefilter et bdebug. | 491 |
-| `onPhysicsStep(dtPhys)` | Appelé par le moteur à chaque pas de physique (haute fréquence) si le step est activé. Exécute la chaîne physique (voir notes) puis le hook d'extensions 'onPhysicsStep'. | 73 |
-| `onSetClusterPosRelRot(cNodeId, pos, relRot)` | Appelé par le moteur quand un cluster de noeuds est téléporté/repositionné. Active le mode fantôme (obj:setGhostEnabled(true)) si ghostOnTp, puis émet le hook 'onSetClusterPosRelRot'. | 439 |
-| `onSettingsChanged()` | Appelée par le moteur quand les réglages changent : settings.settingsChanged, hook 'onSettingsChanged', puis controller, input, wheels et protocols.settingsChanged. | 545 |
-| `onSlidenodeDetached(nodeId, railId, energy)` | Appelé par le moteur quand un slidenode quitte son rail ; relaye uniquement au hook d'extension 'onSlidenodeDetached'. | 415 |
-| `onTorsionbarBroken(id, energy)` | Appelé par le moteur quand une barre de torsion casse ; relaye à beamstate et au hook 'onTorsionbarBroken'. | 383 |
-| `onVehicleReset(retainDebug)` | Appelé par le moteur au reset du véhicule (touche I, récupération…). Réactive le mode fantôme si ghostOnReset, remet à zéro tous les modules (ordre dans les notes) et émet le hook 'onReset'. | 448 |
-| `print(...)` | Remplace print standard : envoie le premier argument converti en chaîne au log (niveau 'A', tag 'print'). | 16 |
-| `setControllingPlayers(players)` | Appelée par le moteur quand la liste des joueurs assis dans ce véhicule change. Met à jour playerInfo (seatedPlayers, anyPlayerSeated, firstPlayerSeated), prévient le contrôleur principal/powertrain/damageTracker si un joueur est assis, notifie bdebug, protocols, ai, sounds, puis émet 'onPlayersChanged'. | 504 |
-| `setPlayerPersona(persona)` | Définit playerInfo.persona (identifiant de persona du joueur). | 529 |
-| `updateCorePhysicsStepEnabled()` | Active ou désactive côté moteur l'appel de onPhysicsStep : obj:setPhysicsStepEnabled(true) si controller, powertrain, wheels, thrusters, hydros, beamstate ou protocols en ont besoin (isPhysicsStepUsed) ou si le hook d'extension est actif. Appelée en fin d'init et de reset. | 61 |
+| `enablePhysicsStepHook()` | Makes onPhysicsStep relay extensions.hook('onPhysicsStep', dt) and forces the re-evaluation of the engine flag. To be called in onExtensionLoaded by any extension that defines onPhysicsStep (the hook is never disabled afterwards). | 65 |
+| `exportPersistentData()` | Called by the engine before a Lua reload: serializes the extensions (serializePackages('reload')) and hands them to the engine via obj:setPersistentData. | 533 |
+| `importPersistentData(s)` | Called by the engine after a reload: deserializes the persistent data and gives it back to the extensions (deserializePackages). | 539 |
+| `init(path, initData)` | Called by the engine at vehicle spawn. Adjusts package.path to the vehicle folder, loads the modules as globals, decodes initData (lpack) and builds the vehicle data (v.loadVehicleStage2), calls initSystems, loads the base extensions (skeleton, auto folder, gameplayStatistic) and emits 'onVehicleLoaded'. | 206 |
+| `initSystems()` | Initializes all subsystems in the order described in the notes, emits the 'onInit' hook, enables global write detection (detectGlobalWrites) and sets the physics step flag. Called by init(). | 139 |
+| `onBeamBroke(id, energy)` | Called by the engine when a beam breaks. Relays to beamstate, wheels, powertrain, energyStorage, controller, bdebug, then extensions.hook('onBeamBroke'). | 366 |
+| `onBeamDeformed(id, ratio)` | Called by the engine only for beams that have deformation triggers. Relays to beamstate and controller then to the 'onBeamDeformed' hook. | 377 |
+| `onCallEvent(funName, data)` | Generic callback used by the engine to call a Lua function by name. Resolves `funName` either as a global ("maFonction") or as "module.function" (a single level, the module must be a global table) and calls it with `data`. Silently ignores anything that is not a function. | 345 |
+| `onCouplerAttached(nodeId, obj2id, obj2nodeId, attachSpeed, attachEnergy)` | Called by the engine when a coupler attaches. Relays to the same modules as onCouplerFound then to the 'onCouplerAttached' hook. | 397 |
+| `onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Called by the engine when a coupler detaches. Relays to the same modules then to the 'onCouplerDetached' hook. | 406 |
+| `onCouplerFound(nodeId, obj2id, obj2nodeId, nodeDist)` | Called by the engine when a coupler finds a compatible coupler in range. Relays to beamstate, controller, powertrain, energyStorage then to the 'onCouplerFound' hook. | 388 |
+| `onDebugDraw(x, y, z)` | Called by the engine every debug draw frame. Updates the shared focus position, calls bdebug.debugDraw, ai.debugDraw, beamstate.debugDraw, controller.debugDraw, hydros.debugDraw, then extensions.hook('onDebugDraw', focusPos) and, if a player is seated, 'onDebugDrawActive'. | 126 |
+| `onDespawnObject()` | Called by the engine when the vehicle is removed: hydros.destroy(), protocols.destroy() and, if the global odometer exists, odometer.submitStatistic(). | 430 |
+| `onDynamicBeamAdded(dbId, nodeId, tag)` | Engine callback when a dynamic beam is added; empty body. | 420 |
+| `onDynamicBeamBroke(dbId, energy)` | Engine callback when a dynamic beam breaks; empty body. | 426 |
+| `onDynamicBeamDeleted(dbId)` | Engine callback when a dynamic beam is removed; empty body. | 423 |
+| `onGraphicsStep(dtSim)` | Called by the engine every graphics frame (once per render/simulation frame). Stores lastDt, updates GUI streams, sensors, wheels, AI, inputs, electrics, controllers, extensions (hook 'updateGFX'), hydros, powertrain, etc. in the order described in the notes. | 86 |
+| `onNodeCollision(id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialId1, materialId2)` | Called by the engine on each filtered node collision. Fills particlefilter.particleData and passes it to wheels, fire, controller, particlefilter and bdebug. | 491 |
+| `onPhysicsStep(dtPhys)` | Called by the engine at each physics step (high frequency) if the step is enabled. Runs the physics chain (see notes) then the 'onPhysicsStep' extension hook. | 73 |
+| `onSetClusterPosRelRot(cNodeId, pos, relRot)` | Called by the engine when a node cluster is teleported/repositioned. Enables ghost mode (obj:setGhostEnabled(true)) if ghostOnTp, then emits the 'onSetClusterPosRelRot' hook. | 439 |
+| `onSettingsChanged()` | Called by the engine when the settings change: settings.settingsChanged, 'onSettingsChanged' hook, then controller, input, wheels and protocols.settingsChanged. | 545 |
+| `onSlidenodeDetached(nodeId, railId, energy)` | Called by the engine when a slidenode leaves its rail; relays only to the 'onSlidenodeDetached' extension hook. | 415 |
+| `onTorsionbarBroken(id, energy)` | Called by the engine when a torsion bar breaks; relays to beamstate and to the 'onTorsionbarBroken' hook. | 383 |
+| `onVehicleReset(retainDebug)` | Called by the engine on vehicle reset (I key, recovery…). Re-enables ghost mode if ghostOnReset, resets all modules (order in the notes) and emits the 'onReset' hook. | 448 |
+| `print(...)` | Replaces the standard print: sends the first argument converted to a string to the log (level 'A', tag 'print'). | 16 |
+| `setControllingPlayers(players)` | Called by the engine when the list of players seated in this vehicle changes. Updates playerInfo (seatedPlayers, anyPlayerSeated, firstPlayerSeated), notifies the main controller/powertrain/damageTracker if a player is seated, notifies bdebug, protocols, ai, sounds, then emits 'onPlayersChanged'. | 504 |
+| `setPlayerPersona(persona)` | Sets playerInfo.persona (the player's persona identifier). | 529 |
+| `updateCorePhysicsStepEnabled()` | Enables or disables, on the engine side, the call of onPhysicsStep: obj:setPhysicsStepEnabled(true) if controller, powertrain, wheels, thrusters, hydros, beamstate or protocols need it (isPhysicsStepUsed) or if the extension hook is active. Called at the end of init and reset. | 61 |
 
-**Globales affectées :** `backwardsCompatibility`, `extensions`, `float3`, `lastDt`, `physicsDt`, `playerInfo`, `profilerPopEvent`, `profilerPopEvent1`, `profilerPushEvent`, `profilerPushEvent1`, `settings`, `shippingBuild`, `vmType`
+**Globals assigned:** `backwardsCompatibility`, `extensions`, `float3`, `lastDt`, `physicsDt`, `playerInfo`, `profilerPopEvent`, `profilerPopEvent1`, `profilerPushEvent`, `profilerPushEvent1`, `settings`, `shippingBuild`, `vmType`
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onBeamBroke`
-- `onBeamDeformed` — écouté par 1 module(s)
-- `onCouplerAttached` — écouté par 10 module(s)
-- `onCouplerDetached` — écouté par 10 module(s)
-- `onCouplerFound` — écouté par 5 module(s)
-- `onDebugDraw` — écouté par 3 module(s)
+- `onBeamDeformed` — listened to by 1 module(s)
+- `onCouplerAttached` — listened to by 10 module(s)
+- `onCouplerDetached` — listened to by 10 module(s)
+- `onCouplerFound` — listened to by 5 module(s)
+- `onDebugDraw` — listened to by 3 module(s)
 - `onDebugDrawActive`
-- `onInit` — écouté par 14 module(s)
-- `onPlayersChanged` — écouté par 3 module(s)
-- `onReset` — écouté par 15 module(s)
+- `onInit` — listened to by 14 module(s)
+- `onPlayersChanged` — listened to by 3 module(s)
+- `onReset` — listened to by 15 module(s)
 - `onSetClusterPosRelRot`
 - `onSettingsChanged`
 - `onSlidenodeDetached`
 - `onTorsionbarBroken`
-- `onVehicleLoaded` — écouté par 1 module(s)
+- `onVehicleLoaded` — listened to by 1 module(s)
 - `updateGFX`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getPhysicsDt`, `getUpdateUIflag`, `setGhostEnabled`, `setPersistentData`, `setPhysicsStepEnabled`, `setSlipTireMarkThreshold`
 
-**Charge les extensions :** `core_quickAccess`, `gameplayStatistic`, `input_haptics`, `skeleton`
+**Loads extensions:** `core_quickAccess`, `gameplayStatistic`, `input_haptics`, `skeleton`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/main.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/main.lua`.*

@@ -2,93 +2,93 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/popup.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE qui ouvre les popups de tutoriel de l'interface (hook UI OpenTutorialPopup). Un popup est décrit par un dossier de contenu (par défaut /gameplay/tutorials/pages/<id>/) contenant content.json (titre, texte, image, lignes, composant Vue) ou content.html. Le module lit ces fichiers, traduit les textes et envoie la liste d'entrées à l'UI. Il propose aussi des popups prédéfinis (aides à la conduite, choix de défi, contrat, drag).
---- Accès : extension `ui_popup` : `extensions.load("ui_popup")`, puis la globale `ui_popup`
+--- GE extension that opens the UI tutorial popups (UI hook OpenTutorialPopup). A popup is described by a content folder (by default /gameplay/tutorials/pages/<id>/) containing content.json (title, text, image, rows, Vue component) or content.html. The module reads these files, translates the texts and sends the list of entries to the UI. It also offers predefined popups (driving assists, challenge selection, contract, drag).
+--- Access: extension `ui_popup`: `extensions.load("ui_popup")`, then the global `ui_popup`
 ---@class ui_popup
 ui_popup = {}
 
---- Ferme le popup de tutoriel affiché (hook UI CloseTutorialPopup).
----Source : lua/ge/extensions/ui/popup.lua:104
----@return boolean  Toujours true.
+--- Closes the displayed tutorial popup (UI hook CloseTutorialPopup).
+---Source: lua/ge/extensions/ui/popup.lua:104
+---@return boolean  Always true.
 function ui_popup.closeTutorialPopup() end
 
---- Parcourt récursivement une racine et renvoie les noms de sous-dossiers contenant content.json ou content.html, triés alphabétiquement.
----Source : lua/ge/extensions/ui/popup.lua:109
----@param root string|nil Dossier racine (défaut '/gameplay/tutorials/pages/v2/') ; un '/' final est ajouté si absent.
----@return string[]  Liste d'identifiants triée.
----@return string  La racine normalisée.
+--- Recursively scans a root and returns the names of subfolders containing content.json or content.html, sorted alphabetically.
+---Source: lua/ge/extensions/ui/popup.lua:109
+---@param root string|nil Root folder (default '/gameplay/tutorials/pages/v2/'); a trailing '/' is added if absent.
+---@return string[]  Sorted list of identifiers.
+---@return string  The normalized root.
 function ui_popup.collectPopupIdsFromRoot(root) end
 
---- Ouvre tous les popups trouvés sous une racine (utile pour tout prévisualiser).
----Source : lua/ge/extensions/ui/popup.lua:138
----@param options table|nil options.root pour la racine ; les autres options sont transmises à openPopupsByIds.
----@return boolean  false si aucun popup trouvé.
+--- Opens all popups found under a root (useful to preview everything).
+---Source: lua/ge/extensions/ui/popup.lua:138
+---@param options table|nil options.root for the root; the other options are passed to openPopupsByIds.
+---@return boolean  false if no popup found.
 function ui_popup.openAllPopupsFromRoot(options) end
 
---- Ouvre le popup de signature de contrat (composant Vue ContractSign), avec titre, texte, nom du joueur, somme et image configurables, puis d'éventuels popups supplémentaires.
----Source : lua/ge/extensions/ui/popup.lua:193
----@param options table|nil id, title, text, contractTitle, contractText, userName, money (défaut 10000), image, root ; textes par défaut issus des clés ui.career.tutorial.popup.contractSign.*.
----@param additionalIds string[]|nil Popups à ajouter à la suite.
----@return boolean  Résultat de openPopupEntries.
+--- Opens the contract signing popup (Vue component ContractSign), with configurable title, text, player name, amount and image, then any additional popups.
+---Source: lua/ge/extensions/ui/popup.lua:193
+---@param options table|nil id, title, text, contractTitle, contractText, userName, money (default 10000), image, root; default texts from the ui.career.tutorial.popup.contractSign.* keys.
+---@param additionalIds string[]|nil Popups to append.
+---@return boolean  Result of openPopupEntries.
 function ui_popup.openContractSignPopup(options, additionalIds) end
 
---- Ouvre l'intro du ticket de chronométrage drag ('v2/dragStripTimeslipIntro') suivie éventuellement d'autres popups. Voir la note sur le bug de la variable slip.
----Source : lua/ge/extensions/ui/popup.lua:171
----@param options table|nil Passé à openPopupEntries.
----@param additionalIds string[]|nil Identifiants de popups à ajouter à la suite.
----@return boolean  Résultat de openPopupEntries.
+--- Opens the drag timeslip intro ('v2/dragStripTimeslipIntro') optionally followed by other popups. See the note on the slip variable bug.
+---Source: lua/ge/extensions/ui/popup.lua:171
+---@param options table|nil Passed to openPopupEntries.
+---@param additionalIds string[]|nil Popup identifiers to append.
+---@return boolean  Result of openPopupEntries.
 function ui_popup.openDragTimeslipTutorialPopup(options, additionalIds) end
 
---- Ouvre le popup « aides à la conduite » (composant Vue GearboxSelect, id 'drivingAssists').
----Source : lua/ge/extensions/ui/popup.lua:152
----@param options table|nil Non utilisé.
+--- Opens the "driving assists" popup (Vue component GearboxSelect, id 'drivingAssists').
+---Source: lua/ge/extensions/ui/popup.lua:152
+---@param options table|nil Not used.
 ---@return boolean  true.
 function ui_popup.openDrivingAssistsPopup(options) end
 
---- Ouvre le popup de sélection de défi facultatif (composant Vue OptionalChallengeSelect).
----Source : lua/ge/extensions/ui/popup.lua:162
----@param options table|nil Non utilisé.
+--- Opens the optional challenge selection popup (Vue component OptionalChallengeSelect).
+---Source: lua/ge/extensions/ui/popup.lua:162
+---@param options table|nil Not used.
 ---@return boolean  true.
 function ui_popup.openOptionalChallengeSelectionPopup(options) end
 
---- Lit puis ouvre un seul popup.
----Source : lua/ge/extensions/ui/popup.lua:85
----@param id string Identifiant du popup.
----@param options table|nil Voir readPopupEntryById.
----@return boolean  false si le contenu est introuvable.
+--- Reads then opens a single popup.
+---Source: lua/ge/extensions/ui/popup.lua:85
+---@param id string Popup identifier.
+---@param options table|nil See readPopupEntryById.
+---@return boolean  false if the content is not found.
 function ui_popup.openPopupById(id, options) end
 
---- Envoie des entrées déjà construites à l'UI via guihooks.trigger('OpenTutorialPopup', {popups = entries}).
----Source : lua/ge/extensions/ui/popup.lua:77
----@param entries table[]|nil Liste d'entrées de popup.
----@param options table|nil Non utilisé.
----@return boolean  false si la liste est vide ou nil, sinon true.
+--- Sends already built entries to the UI via guihooks.trigger('OpenTutorialPopup', {popups = entries}).
+---Source: lua/ge/extensions/ui/popup.lua:77
+---@param entries table[]|nil List of popup entries.
+---@param options table|nil Not used.
+---@return boolean  false if the list is empty or nil, otherwise true.
 function ui_popup.openPopupEntries(entries, options) end
 
---- Lit plusieurs popups (en ignorant ceux introuvables) et les ouvre ensemble, dans l'ordre donné.
----Source : lua/ge/extensions/ui/popup.lua:91
----@param ids string[] Identifiants des popups.
----@param options table|nil Voir readPopupEntryById.
----@return boolean  false si ids est vide/invalide ou si aucun contenu n'a été trouvé.
+--- Reads several popups (skipping those not found) and opens them together, in the given order.
+---Source: lua/ge/extensions/ui/popup.lua:91
+---@param ids string[] Popup identifiers.
+---@param options table|nil See readPopupEntryById.
+---@return boolean  false if ids is empty/invalid or if no content was found.
 function ui_popup.openPopupsByIds(ids, options) end
 
---- Lit le contenu d'un popup : content.json (prioritaire) ou content.html, et renvoie une entrée {id, type='info', isPopup=true, title, text, image, aspectRatio, vueComponent, topics, rows…} ou {id, content, …} pour le HTML.
----Source : lua/ge/extensions/ui/popup.lua:15
----@param id string Identifiant du popup (sous-dossier de la racine).
----@param options table|nil root (défaut '/gameplay/tutorials/pages/'), context (contexte de traduction), slip, startingMoney/startMoney, endMoney/money.
----@return table|nil  L'entrée, ou nil si aucun des deux fichiers n'existe.
+--- Reads a popup's content: content.json (priority) or content.html, and returns an entry {id, type='info', isPopup=true, title, text, image, aspectRatio, vueComponent, topics, rows...} or {id, content, ...} for HTML.
+---Source: lua/ge/extensions/ui/popup.lua:15
+---@param id string Popup identifier (subfolder of the root).
+---@param options table|nil root (default '/gameplay/tutorials/pages/'), context (translation context), slip, startingMoney/startMoney, endMoney/money.
+---@return table|nil  The entry, or nil if neither file exists.
 function ui_popup.readPopupEntryById(id, options) end
 
---- Construit le chemin d'une ressource : renvoie assetPath tel quel s'il commence par '/', sinon basePath concaténé avec assetPath.
----Source : lua/ge/extensions/ui/popup.lua:7
----@param basePath string Dossier de base (avec '/' final).
----@param assetPath string|nil Chemin relatif ou absolu.
----@return string|nil  nil si assetPath est nil ou vide.
+--- Builds a resource path: returns assetPath as is if it starts with '/', otherwise basePath concatenated with assetPath.
+---Source: lua/ge/extensions/ui/popup.lua:7
+---@param basePath string Base folder (with trailing '/').
+---@param assetPath string|nil Relative or absolute path.
+---@return string|nil  nil if assetPath is nil or empty.
 function ui_popup.resolveAssetPath(basePath, assetPath) end
 
---- Ouvre en série les popups dragStripStageCar, dragTreeStages, dragTreeCountdown et dragStripTimeslipIntro.
----Source : lua/ge/extensions/ui/popup.lua:218
----@param options table|nil options.root (défaut '/gameplay/tutorials/pages/v2/').
----@return boolean  Résultat de openPopupsByIds.
+--- Opens in series the popups dragStripStageCar, dragTreeStages, dragTreeCountdown and dragStripTimeslipIntro.
+---Source: lua/ge/extensions/ui/popup.lua:218
+---@param options table|nil options.root (default '/gameplay/tutorials/pages/v2/').
+---@return boolean  Result of openPopupsByIds.
 function ui_popup.showDragTreeStagesPopup(options) end
 

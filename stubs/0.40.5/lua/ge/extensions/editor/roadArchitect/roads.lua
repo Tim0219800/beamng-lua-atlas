@@ -2,297 +2,297 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/roadArchitect/roads.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Conteneur central du Road Architect : il stocke la liste des routes de la session (chaque route = nœuds, profil latéral, options d'affichage, pont, tunnels) et fournit toutes les opérations d'édition (ajout/suppression de nœuds, déplacement, hauteur, rotation latérale, découpe, retournement, copie, sérialisation). Il gère aussi le passage entre l'état « edit » et l'état « finalised » (création des maillages procéduraux, statiques, tunnels et décalcomanies). Un moddeur s'en sert pour créer ou manipuler des routes par script depuis l'éditeur ; les modules du Road Architect (geometry, profiles, decals, roadMesh…) lisent ses tables.
---- Accès : extension `editor_roadArchitect_roads` : `extensions.load("editor_roadArchitect_roads")`, puis la globale `editor_roadArchitect_roads`
+--- Central container of Road Architect: it stores the list of the session's roads (each road = nodes, lateral profile, display options, bridge, tunnels) and provides all the editing operations (adding/removing nodes, moving, height, lateral rotation, cutting, flipping, copying, serialization). It also handles the transition between the "edit" and "finalised" states (creation of procedural meshes, static meshes, tunnels and decals). A modder uses it to create or manipulate roads by script from the editor; the Road Architect modules (geometry, profiles, decals, roadMesh...) read its tables.
+--- Access: extension `editor_roadArchitect_roads`: `extensions.load("editor_roadArchitect_roads")`, then the global `editor_roadArchitect_roads`
 ---@class editor_roadArchitect_roads
----@field isAuditionProfileDirty boolean Copie initiale (false) du flag d'audition de profil ; voir notes, la valeur réelle n'est pas exposée.
----@field map table<string, integer> Table de hachage nom de route -> indice dans roads. Reconstruite par recomputeMap().
----@field multi table<integer, {r: integer, n: integer}> Multi-sélection de nœuds : chaque entrée donne l'indice de route (r) et de nœud (n).
----@field roads table<integer, table> Liste des routes de la session (même table que celle utilisée en interne : la modifier agit directement).
+---@field isAuditionProfileDirty boolean Initial copy (false) of the profile audition flag; see notes, the real value is not exposed.
+---@field map table<string, integer> Hash table road name -> index in roads. Rebuilt by recomputeMap().
+---@field multi table<integer, {r: integer, n: integer}> Multi-selection of nodes: each entry gives the road index (r) and node index (n).
+---@field roads table<integer, table> List of the session's roads (same table as the one used internally: modifying it acts directly).
 editor_roadArchitect_roads = {}
 
---- Ajoute un nœud entre le nœud sélectionné et son voisin (point milieu, valeurs moyennées). Aux extrémités de la route, copie le nœud et le place 3 m plus loin dans l'axe de la route.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:404
----@param rIdx integer Indice de la route.
----@param nIdx integer Indice du nœud sélectionné.
----@param lie string 'above' (avec le nœud précédent) ou 'below' (avec le nœud suivant).
+--- Adds a node between the selected node and its neighbor (midpoint, averaged values). At the ends of the road, copies the node and places it 3 m further along the road axis.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:404
+---@param rIdx integer Index of the road.
+---@param nIdx integer Index of the selected node.
+---@param lie string 'above' (with the previous node) or 'below' (with the next node).
 function editor_roadArchitect_roads.addIntermediateNode(rIdx, nIdx, lie) end
 
---- Ajoute un nœud à la fin de la route, avec les largeurs/hauteurs par voie issues du profil. Marque la route dirty.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:191
----@param rIdx integer Indice de la route dans roads.
----@param pos vec3 Position monde du nœud.
+--- Adds a node at the end of the road, with the per-lane widths/heights from the profile. Marks the road dirty.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:191
+---@param rIdx integer Index of the road in roads.
+---@param pos vec3 World position of the node.
 function editor_roadArchitect_roads.addNodeToRoad(rIdx, pos) end
 
---- Insère un nœud à l'indice donné de la route. Marque la route dirty.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:210
----@param rIdx integer Indice de la route.
----@param pos vec3 Position monde.
----@param idx integer Indice d'insertion dans route.nodes (table.insert).
+--- Inserts a node at the given index of the road. Marks the road dirty.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:210
+---@param rIdx integer Index of the road.
+---@param pos vec3 World position.
+---@param idx integer Insertion index in route.nodes (table.insert).
 function editor_roadArchitect_roads.addNodeToRoadAtIdx(rIdx, pos, idx) end
 
---- Modifie la hauteur d'un nœud (bornée à ±1000 m) et propage la variation aux autres nœuds (rigide ou champ de force). Marque dirty.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:555
----@param hNew number Nouvelle hauteur du nœud central, en mètres.
----@param hOld number Ancienne hauteur (sert à calculer la variation dz).
----@param nIdx integer Indice du nœud central.
----@param rIdx integer Indice de la route.
+--- Changes the height of a node (bounded to ±1000 m) and propagates the change to the other nodes (rigid or force field). Marks dirty.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:555
+---@param hNew number New height of the central node, in meters.
+---@param hOld number Old height (used to compute the change dz).
+---@param nIdx integer Index of the central node.
+---@param rIdx integer Index of the road.
 function editor_roadArchitect_roads.adjustHeight(hNew, hOld, nIdx, rIdx) end
 
---- Modifie la rotation latérale (devers) d'un nœud et propage aux autres (bornée à ±50 degrés). Sans effet si le profil est en auto-banking.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:602
----@param rotNew number Nouvelle rotation du nœud central, en degrés.
----@param rotOld number Ancienne rotation.
----@param nIdx integer Indice du nœud central.
----@param rIdx integer Indice de la route.
+--- Changes the lateral rotation (banking) of a node and propagates it to the others (bounded to ±50 degrees). No effect if the profile is in auto-banking.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:602
+---@param rotNew number New rotation of the central node, in degrees.
+---@param rotOld number Old rotation.
+---@param nIdx integer Index of the central node.
+---@param rIdx integer Index of the road.
 function editor_roadArchitect_roads.adjustLateralRotation(rotNew, rotOld, nIdx, rIdx) end
 
---- Supprime toutes les routes qui ne sont pas des routes de jonction (isJctRoad).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:452
+--- Deletes all roads that are not junction roads (isJctRoad).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:452
 function editor_roadArchitect_roads.clearAllRoads() end
 
---- Vide la table des ponts du module roadMesh (sans supprimer les objets de scène).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:910
+--- Empties the bridges table of the roadMesh module (without deleting the scene objects).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:910
 function editor_roadArchitect_roads.clearBridges() end
 
---- Boîte englobante 2D des nœuds d'une route. Renvoie nil pour un pont ou un overlay. (Le commentaire annonce que la largeur du profil est incluse, mais le code ne prend en compte que les nœuds.)
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:314
----@param rIdx integer Indice de la route.
----@return table|nil  {xMin, xMax, yMin, yMax} ou nil.
+--- 2D bounding box of a road's nodes. Returns nil for a bridge or an overlay. (The comment says the profile width is included, but the code only takes the nodes into account.)
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:314
+---@param rIdx integer Index of the road.
+---@return table|nil  {xMin, xMax, yMin, yMax} or nil.
 function editor_roadArchitect_roads.computeAABB2D(rIdx) end
 
---- Recalcule le renderData de toutes les routes à 2 nœuds ou plus (via geometry).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1115
+--- Recomputes the renderData of all roads with 2 or more nodes (via geometry).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1115
 function editor_roadArchitect_roads.computeAllRoadRenderData() end
 
---- Calcule la boîte englobante 2D alignée sur les axes des nœuds d'une route (utilisée uniquement par l'arbre d'accélération).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:137
----@param r table Route.
+--- Computes the axis-aligned 2D bounding box of a road's nodes (used only by the acceleration tree).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:137
+---@param r table Road.
 ---@return number  xMin
 ---@return number  xMax
 ---@return number  yMin
 ---@return number  yMax
 function editor_roadArchitect_roads.computeRoadAABB_2D(r) end
 
---- Recalcule le renderData d'une seule route.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1126
----@param i integer Indice de la route.
+--- Recomputes the renderData of a single road.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1126
+---@param i integer Index of the road.
 function editor_roadArchitect_roads.computeRoadRenderDataSingle(i) end
 
---- Pour chaque DecalRoad sélectionné dans l'éditeur, crée une route Road Architect (nœuds re-paramétrés, profil selon lanesLeft/lanesRight) et l'ajoute à roads. Voir notes : les DecalRoad ne sont pas supprimés.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1213
+--- For each DecalRoad selected in the editor, creates a Road Architect road (re-parameterized nodes, profile according to lanesLeft/lanesRight) and adds it to roads. See notes: the DecalRoads are not deleted.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1213
 function editor_roadArchitect_roads.convertDecalRoads2RoadArchitect() end
 
---- Copie profonde d'un nœud (nouveaux pointeurs ImGui et nouveau vec3).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:285
----@param n table Nœud.
----@return table  Copie du nœud.
+--- Deep copy of a node (new ImGui pointers and new vec3).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:285
+---@param n table Node.
+---@return table  Copy of the node.
 function editor_roadArchitect_roads.copyNode(n) end
 
---- Copie profonde d'une route (nœuds, profil, options, paramètres de pont/tunnel). Le nom est conservé identique, renderData est vidé, tunnels est vide et isDirty = true.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:663
----@param r table Route.
----@return table  Copie de la route.
+--- Deep copy of a road (nodes, profile, options, bridge/tunnel parameters). The name is kept identical, renderData is emptied, tunnels is empty and isDirty = true.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:663
+---@param r table Road.
+---@return table  Copy of the road.
 function editor_roadArchitect_roads.copyRoad(r) end
 
---- Remplit roads.multi avec tous les nœuds de toutes les routes situés dans le polygone (en 2D).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1075
----@param gPolygon table<integer, vec3> Sommets du polygone de sélection.
+--- Fills roads.multi with all the nodes of all roads located inside the polygon (in 2D).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1075
+---@param gPolygon table<integer, vec3> Vertices of the selection polygon.
 function editor_roadArchitect_roads.createMultiSelect(gPolygon) end
 
---- Construit une nouvelle table route à partir d'un profil latéral (met à jour les drapeaux de voies du profil, calcule les clés de voies). La route n'a aucun nœud et n'est pas ajoutée à la liste.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:61
----@param profile table Profil latéral (voir editor/roadArchitect/profiles).
----@return table  La route créée (valeurs par défaut : visible, 15 divisions radiales de tunnel, pont de demi-largeur 5.5, profondeur 4, arche -6, etc.).
+--- Builds a new road table from a lateral profile (updates the profile's lane flags, computes the lane keys). The road has no nodes and is not added to the list.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:61
+---@param profile table Lateral profile (see editor/roadArchitect/profiles).
+---@return table  The created road (default values: visible, 15 radial tunnel divisions, bridge half-width 5.5, depth 4, arch -6, etc.).
 function editor_roadArchitect_roads.createRoadFromProfile(profile) end
 
---- Comme createRoadFromProfile, mais le profil est créé à partir du nom d'un modèle de profil (avec un identifiant généré par Engine.generateUUID()).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:129
----@param profileTemplateName string Nom du modèle de profil.
----@return table  La route créée.
+--- Like createRoadFromProfile, but the profile is created from the name of a profile template (with an identifier generated by Engine.generateUUID()).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:129
+---@param profileTemplateName string Profile template name.
+---@return table  The created road.
 function editor_roadArchitect_roads.createRoadFromTemplate(profileTemplateName) end
 
---- Reconstruit une route (avec pointeurs ImGui, isDirty = true) à partir d'une table sérialisée par serialiseRoad.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1505
----@param rSer table Route sérialisée.
----@return table  Route utilisable dans roads.
+--- Rebuilds a road (with ImGui pointers, isDirty = true) from a table serialized by serialiseRoad.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1505
+---@param rSer table Serialized road.
+---@return table  Road usable in roads.
 function editor_roadArchitect_roads.deserialiseRoad(rSer) end
 
---- Passe à l'état « finalised » : recalcule tous les renderData, crée un dossier de scène par route (« Road Architect - Road <i> »), génère les maillages de ponts puis de routes, les maillages statiques et les tunnels, recharge la collision (be:reloadCollision), pose les décalcomanies puis recharge le navgraph (map.reset()).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1270
+--- Switches to the "finalised" state: recomputes all renderData, creates a scene folder per road ("Road Architect - Road <i>"), generates the bridge meshes then road meshes, the static meshes and the tunnels, reloads the collision (be:reloadCollision), places the decals then reloads the navgraph (map.reset()).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1270
 function editor_roadArchitect_roads.finalise() end
 
---- Inverse le sens de la route (ordre des nœuds) et recalcule immédiatement son renderData. Utile pour corriger des imports.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:873
----@param rIdx integer Indice de la route.
+--- Reverses the direction of the road (node order) and immediately recomputes its renderData. Useful for fixing imports.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:873
+---@param rIdx integer Index of the road.
 function editor_roadArchitect_roads.flipRoad(rIdx) end
 
---- Renvoie le nom/identifiant de la carte (niveau) actuellement mémorisée par le module.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:55
----@return any  Valeur stockée par setCurrentMap (nil au départ).
+--- Returns the name/identifier of the map (level) currently stored by the module.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:55
+---@return any  Value stored by setCurrentMap (nil at start).
 function editor_roadArchitect_roads.getCurrentMap() end
 
---- Centre de la boîte englobante 3D des nœuds de la multi-sélection.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1100
----@return vec3  Centre (valeurs absurdes si la sélection est vide).
+--- Center of the 3D bounding box of the multi-selection nodes.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1100
+---@return vec3  Center (nonsensical values if the selection is empty).
 function editor_roadArchitect_roads.getMultiSelectionCentroid() end
 
---- Renvoie les routes (sans doublon) appartenant à un groupe placé ; si group est nil, renvoie toutes les routes de la session.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:330
----@param group table|nil Groupe avec group.list = liste d'entrées {r = nom de route, n = indice de nœud}.
----@return table  Liste de routes.
+--- Returns the roads (without duplicates) belonging to a placed group; if group is nil, returns all the session's roads.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:330
+---@param group table|nil Group with group.list = list of entries {r = road name, n = node index}.
+---@return table  List of roads.
 function editor_roadArchitect_roads.getRoadsFromGroup(group) end
 
---- Renvoie le quadtree 2D utilisé pour le culling de l'affichage en édition (nil s'il n'existe pas encore).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:182
----@return table|nil  Le quadtree.
+--- Returns the 2D quadtree used for display culling while editing (nil if it does not exist yet).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:182
+---@return table|nil  The quadtree.
 function editor_roadArchitect_roads.getTree() end
 
---- Place la caméra libre à la verticale du centre de la route, à une hauteur qui cadre toute la route (selon le champ de vision). Ne fait rien si la route est trop petite (moins de 0.1 m d'étendue).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:478
----@param rIdx integer Indice de la route.
+--- Places the free camera directly above the center of the road, at a height that frames the whole road (according to the field of view). Does nothing if the road is too small (less than 0.1 m extent).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:478
+---@param rIdx integer Index of the road.
 function editor_roadArchitect_roads.goToRoad(rIdx) end
 
---- Teste si la position de la souris est proche (tolérance 3.5 m en 2D) d'un segment de la route, entre deux nœuds, pour proposer l'insertion d'un nœud.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:230
----@param rIdx integer Indice de la route.
----@param mousePos vec3 Position de la souris sur la carte.
----@return boolean  true si la souris est sur un segment.
----@return vec3|nil  Position interpolée sur le segment.
----@return integer|nil  Indice du nœud qui suit le point trouvé.
+--- Tests whether the mouse position is close (2D tolerance 3.5 m) to a segment of the road, between two nodes, to offer node insertion.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:230
+---@param rIdx integer Index of the road.
+---@param mousePos vec3 Mouse position on the map.
+---@return boolean  true if the mouse is over a segment.
+---@return vec3|nil  Interpolated position on the segment.
+---@return integer|nil  Index of the node following the point found.
 function editor_roadArchitect_roads.isMouseAtIntermediatePos(rIdx, mousePos) end
 
---- Crée ou met à jour la route temporaire 'temp' (segment droit de 20 m à 1000 m d'altitude) qui montre le profil en cours d'édition, place la caméra libre dessus et la fait tourner autour. Appelée à chaque frame pendant l'audition.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:959
----@param pIdx integer Indice du profil dans profileMgr.profiles.
+--- Creates or updates the temporary road 'temp' (20 m straight segment at 1000 m altitude) that shows the profile being edited, places the free camera on it and makes it rotate around. Called every frame during the audition.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:959
+---@param pIdx integer Index of the profile in profileMgr.profiles.
 function editor_roadArchitect_roads.manageTempRoadSection(pIdx) end
 
---- Translate une route : soit rigide (tous les nœuds non verrouillés), soit en champ de force (le nœud central suit la souris, les autres bougent proportionnellement à la distance, jusqu'au premier nœud verrouillé). Marque la route dirty.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:515
----@param road table Route (table, pas un indice).
----@param nodeIdx integer Nœud saisi.
----@param mouseNow vec3 Position actuelle de la souris.
----@param mouseLast vec3 Position précédente.
+--- Translates a road: either rigidly (all unlocked nodes), or as a force field (the central node follows the mouse, the others move proportionally to the distance, up to the first locked node). Marks the road dirty.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:515
+---@param road table Road (table, not an index).
+---@param nodeIdx integer Grabbed node.
+---@param mouseNow vec3 Current mouse position.
+---@param mouseLast vec3 Previous position.
 function editor_roadArchitect_roads.moveRoad(road, nodeIdx, mouseNow, mouseLast) end
 
---- Ajoute un décalage vertical à tous les nœuds de toutes les routes et les marque dirty.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1257
----@param offset number Décalage en mètres (positif = vers le haut).
+--- Adds a vertical offset to all nodes of all roads and marks them dirty.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1257
+---@param offset number Offset in meters (positive = upward).
 function editor_roadArchitect_roads.offsetByValue(offset) end
 
---- Active isConformRoadToTerrain sur toutes les routes (elles se posent sur le terrain) et les marque dirty.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1249
+--- Enables isConformRoadToTerrain on all roads (they sit on the terrain) and marks them dirty.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1249
 function editor_roadArchitect_roads.offsetRoads2Terrain() end
 
---- Reconstruit la table nom -> indice (roads.map). À appeler après toute insertion/suppression manuelle dans roads.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:353
+--- Rebuilds the name -> index table (roads.map). To be called after any manual insertion/removal in roads.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:353
 function editor_roadArchitect_roads.recomputeMap() end
 
---- Supprime toutes les décalcomanies, maillages de routes, statiques, ponts et tunnels, puis vide roads et la map.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:913
+--- Deletes all decals, road meshes, statics, bridges and tunnels, then empties roads and the map.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:913
 function editor_roadArchitect_roads.removeAll() end
 
---- Retire un indice de groupe placé de la liste groupIdx de la route.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1129
----@param r table Route.
----@param groupIdx integer Indice de groupe à retirer.
+--- Removes a placed group index from the road's groupIdx list.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1129
+---@param r table Road.
+---@param groupIdx integer Group index to remove.
 function editor_roadArchitect_roads.removeGroupFromRoad(r, groupIdx) end
 
---- Supprime de roads toutes les routes masquées (isHidden) et leurs maillages, puis recalcule la map.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:462
+--- Removes from roads all hidden roads (isHidden) and their meshes, then recomputes the map.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:462
 function editor_roadArchitect_roads.removeHiddenRoads() end
 
---- Supprime un nœud d'une route (table.remove). Ne marque pas la route dirty.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:385
----@param rIdx integer Indice de la route.
----@param nIdx integer Indice du nœud.
+--- Removes a node from a road (table.remove). Does not mark the road dirty.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:385
+---@param rIdx integer Index of the road.
+---@param nIdx integer Index of the node.
 function editor_roadArchitect_roads.removeNode(rIdx, nIdx) end
 
---- Supprime une route par son nom : retire décalcomanies, maillages de route et statiques, entrée du quadtree, dossier de pont éventuel, puis l'entrée de roads et reconstruit la map.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:362
----@param roadName string Nom (identifiant) de la route, pas son displayName.
+--- Deletes a road by its name: removes decals, road and static meshes, quadtree entry, possible bridge folder, then the entry in roads and rebuilds the map.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:362
+---@param roadName string Name (identifier) of the road, not its displayName.
 function editor_roadArchitect_roads.removeRoad(roadName) end
 
---- Oublie le quadtree (il sera recréé au prochain setDirty).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:185
+--- Forgets the quadtree (it will be recreated on the next setDirty).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:185
 function editor_roadArchitect_roads.removeTree() end
 
---- Convertit une route en table simple (valeurs plain, sans pointeurs ImGui) pour la sauvegarde JSON.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1446
----@param r table Route.
----@return table  Route sérialisée.
+--- Converts a road to a plain table (plain values, without ImGui pointers) for JSON saving.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1446
+---@param r table Road.
+---@return table  Serialized road.
 function editor_roadArchitect_roads.serialiseRoad(r) end
 
---- Appelle setDirty sur toutes les routes.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:175
+--- Calls setDirty on all roads.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:175
 function editor_roadArchitect_roads.setAllDirty() end
 
---- Demande la reconstruction de la route temporaire d'audition de profil au prochain appel de manageTempRoadSection.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:188
+--- Requests the rebuild of the temporary profile audition road on the next call of manageTempRoadSection.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:188
 function editor_roadArchitect_roads.setAuditionProfileDirty() end
 
---- Affiche ou masque tous les ponts.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1426
----@param isShow boolean true pour afficher.
+--- Shows or hides all bridges.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1426
+---@param isShow boolean true to show.
 function editor_roadArchitect_roads.setBridgesVisibilityMaster(isShow) end
 
---- Mémorise la carte (niveau) actuellement chargée.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:58
----@param cMap any Valeur à mémoriser (déduit du code).
+--- Stores the map (level) currently loaded.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:58
+---@param cMap any Value to store (inferred from code).
 function editor_roadArchitect_roads.setCurrentMap(cMap) end
 
---- Marque la route comme à recalculer (isDirty), met à jour la condition du profil et réinsère la route dans le quadtree d'édition (créé à la demande avec l'étendue du terrain, ou 5000 m par défaut).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:149
----@param r table|nil Route ; ne fait rien si nil.
+--- Marks the road as needing recomputation (isDirty), updates the profile condition and reinserts the road into the editing quadtree (created on demand with the terrain extent, or 5000 m by default).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:149
+---@param r table|nil Road; does nothing if nil.
 function editor_roadArchitect_roads.setDirty(r) end
 
---- Modifie la largeur de toutes les voies de type 'road_lane' d'un nœud : nouvelle largeur = largeur de départ + offset, bornée à [0.5, 10].
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:260
----@param rIdx integer Indice de la route.
----@param nIdx integer Indice du nœud.
----@param offset number Variation de largeur de voie, en mètres.
+--- Changes the width of all 'road_lane' type lanes of a node: new width = starting width + offset, bounded to [0.5, 10].
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:260
+---@param rIdx integer Index of the road.
+---@param nIdx integer Index of the node.
+---@param offset number Lane width change, in meters.
 function editor_roadArchitect_roads.setLocalWidth(rIdx, nIdx, offset) end
 
---- Affiche ou masque tous les overlays.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1436
----@param isShow boolean true pour afficher.
+--- Shows or hides all overlays.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1436
+---@param isShow boolean true to show.
 function editor_roadArchitect_roads.setOverlaysVisibilityMaster(isShow) end
 
---- Affiche ou masque toutes les routes ordinaires (ni ponts ni overlays) en remplaçant leur isVis.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1416
----@param isShow boolean true pour afficher.
+--- Shows or hides all ordinary roads (neither bridges nor overlays) by overwriting their isVis.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1416
+---@param isShow boolean true to show.
 function editor_roadArchitect_roads.setRoadsVisibilityMaster(isShow) end
 
---- Coupe une route au nœud donné en deux nouvelles routes ([A] et [B], chacune avec une copie du nœud de coupure repoussé de 1 m), supprime l'ancienne route et les ajoute à roads. Utile pour créer des jonctions.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:737
----@param rIdx integer Indice de la route.
----@param nIdx integer Indice du nœud de coupure ; doit avoir un voisin de chaque côté (le code lit nodes[nIdx-1] et nodes[nIdx+1]).
+--- Cuts a road at the given node into two new roads ([A] and [B], each with a copy of the cut node pushed back by 1 m), deletes the old road and adds them to roads. Useful for creating junctions.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:737
+---@param rIdx integer Index of the road.
+---@param nIdx integer Index of the cut node; must have a neighbor on each side (the code reads nodes[nIdx-1] and nodes[nIdx+1]).
 function editor_roadArchitect_roads.splitRoad(rIdx, nIdx) end
 
---- Quitte l'état « finalised » : supprime décalcomanies, maillages, statiques et tunnels générés par finalise et revient à l'édition.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1334
+--- Leaves the "finalised" state: removes the decals, meshes, statics and tunnels generated by finalise and goes back to editing.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1334
 function editor_roadArchitect_roads.unfinalise() end
 
---- Applique la largeur et la profondeur de pont de la route aux deux premiers nœuds (voies -1 et 1). Voir notes : bug probable de pointeur.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1054
----@param road table Route de type pont.
+--- Applies the road's bridge width and depth to the first two nodes (lanes -1 and 1). See notes: probable pointer bug.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1054
+---@param road table Bridge type road.
 function editor_roadArchitect_roads.updateBridgeParameters(road) end
 
---- Retire de roads.multi les entrées dont la route ou le nœud n'existe plus.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1202
+--- Removes from roads.multi the entries whose road or node no longer exists.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1202
 function editor_roadArchitect_roads.updateMultiAfterRemove() end
 
---- Recalcule le renderData de chaque route dirty ayant au moins 2 nœuds ; pour les ponts, met à jour aussi le maillage de pont dans le dossier de scène « Road Architect - Bridge <nom> ». À appeler à chaque frame d'édition.
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:889
+--- Recomputes the renderData of each dirty road having at least 2 nodes; for bridges, also updates the bridge mesh in the scene folder "Road Architect - Bridge <name>". To be called every editing frame.
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:889
 function editor_roadArchitect_roads.updateRoads() end
 
---- Reconstruit les groupIdx de toutes les routes à partir de la liste des groupes placés restants (renumérotation après suppression d'un groupe).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:1188
----@param placedGroups table Liste des groupes placés, chacun avec list = {{r = nom, n = indice}, ...}.
+--- Rebuilds the groupIdx of all roads from the list of remaining placed groups (renumbering after a group is deleted).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:1188
+---@param placedGroups table List of placed groups, each with list = {{r = name, n = index}, ...}.
 function editor_roadArchitect_roads.updateRoadsAfterRemovingGroup(placedGroups) end
 
---- Réinitialise les largeurs et hauteurs par voie de tous les nœuds de la route selon son profil actuel (après changement de profil).
----Source : lua/ge/extensions/editor/roadArchitect/roads.lua:304
----@param road table Route.
+--- Resets the per-lane widths and heights of all the road's nodes according to its current profile (after a profile change).
+---Source: lua/ge/extensions/editor/roadArchitect/roads.lua:304
+---@param road table Road.
 function editor_roadArchitect_roads.updateWAndHToNewProfile(road) end
 

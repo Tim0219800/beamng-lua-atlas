@@ -1,25 +1,25 @@
 # `flowgraph_nodes_logic_edgeDetect`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/edgeDetect.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/edgeDetect.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/edgeDetect")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/edgeDetect")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Edge Detector' (categorie logic). Laisse passer le flux (une frame) quand la valeur du pin 'signal' change par rapport a la frame precedente. Pour des nombres (et des elements de tables), le changement doit depasser le pin 'threshold' (defaut 0). Si le type change, il y a toujours flux. La derniere valeur est conservee dans self.lastSignal.
+Flowgraph node 'Edge Detector' (logic category). Lets the flow through (for one frame) when the value of the 'signal' pin changes compared to the previous frame. For numbers (and table elements), the change must exceed the 'threshold' pin (default 0). If the type changes, there is always flow. The last value is kept in self.lastSignal.
 
-## Remarques
+## Notes
 
-- Pour les nombres : changement si |signal - dernier| > threshold ; si threshold est nil, le code utilise 0.0001 (mais le pin vaut 0 par defaut).
-- Dans la comparaison de tables, la branche 'elseif v ~= self.lastSignal' compare l'element a la table entiere (probable faute de frappe pour self.lastSignal[i]), donc elle est toujours vraie pour les elements non numeriques.
-- Pas de reinitialisation de lastSignal au demarrage de l'execution.
+- For numbers: change if |signal - last| > threshold; if threshold is nil, the code uses 0.0001 (but the pin defaults to 0).
+- In the table comparison, the 'elseif v ~= self.lastSignal' branch compares the element to the whole table (probably a typo for self.lastSignal[i]), so it is always true for non-numeric elements.
+- No reset of lastSignal when execution starts.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Affiche la derniere valeur memorisee (dumpsz). | 58 |
-| `C:work()` | Compare signal a lastSignal (nombres avec seuil, tables element par element, autres types par egalite), met pinOut.flow a true en cas de changement, puis memorise le signal. | 33 |
+| `C:drawMiddle(builder, style)` | Displays the last stored value (dumpsz). | 58 |
+| `C:work()` | Compares signal to lastSignal (numbers with threshold, tables element by element, other types by equality), sets pinOut.flow to true on change, then stores the signal. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/edgeDetect.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/edgeDetect.lua`.*

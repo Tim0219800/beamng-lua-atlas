@@ -1,50 +1,50 @@
 # `timeEvents`
 
-*Fichier : `lua/common/timeEvents.lua` · VM : Commun (GE + véhicule) · 53 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/timeEvents.lua` · VM: Common (GE + vehicle) · 53 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("timeEvents")`
+**Access:** `require("timeEvents")`
 
-Petit planificateur : permet de programmer l'exécution d'une fonction dans X secondes, à la manière de `schedule()`. On crée une liste d'événements avec require('timeEvents').create(), on y ajoute des événements, et on appelle process(dt) à chaque mise à jour.
+Small scheduler: lets you schedule the execution of a function in X seconds, like `schedule()`. You create an event list with require('timeEvents').create(), add events to it, and call process(dt) on every update.
 
-## Exemple
+## Example
 
 ```lua
 local events = require('timeEvents').create()
-events:addEvent(5, function() print('hello world!') end) -- dans 5 s
--- dans la boucle de mise à jour :
+events:addEvent(5, function() print('hello world!') end) -- in 5 s
+-- in the update loop:
 events:process(dtSim)
 ```
 
-## Remarques
+## Notes
 
-- La page extraite montre addEvent(fn) et process() sans argument, mais le code est addEvent(time, fn) et process(dt).
-- process(dt) retranche dt au temps de chaque événement, parcourus du dernier ajouté au premier, et exécute puis supprime celui dont le temps devient STRICTEMENT inférieur à 0 (pas d'ordre garanti entre événements échus simultanément : ordre inverse d'ajout).
-- Une erreur dans une fonction planifiée interrompt process (pas de pcall) et l'événement reste dans la liste.
-- L'objet renvoyé par create() est lui-même le tableau des événements ({fn=, time=}) avec la metatable mt.
+- The extracted page shows addEvent(fn) and process() without arguments, but the code is addEvent(time, fn) and process(dt).
+- process(dt) subtracts dt from the time of each event, traversed from the last added to the first, and runs then removes the one whose time becomes STRICTLY below 0 (no guaranteed order between simultaneously expired events: reverse order of addition).
+- An error in a scheduled function interrupts process (no pcall) and the event stays in the list.
+- The object returned by create() is itself the events array ({fn=, time=}) with the metatable mt.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `timeEvents.create()` | Crée et renvoie une nouvelle liste d'événements temporels vide. | 46 |
+| `timeEvents.create()` | Creates and returns a new empty list of timed events. | 46 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `timeEvents.create()`
 
-Crée et renvoie une nouvelle liste d'événements temporels vide.
+Creates and returns a new empty list of timed events.
 
-- **renvoie** : table objet avec méthodes addEvent, clear, process
+- **returns**: table object with methods addEvent, clear, process
 
-## Classe `mt`
+## Class `mt`
 
-Objet renvoyé par create(). Les événements sont stockés comme éléments du tableau.
+Object returned by create(). Events are stored as elements of the array.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `mt:addEvent(time, fn)` | Programme fn dans `time` secondes. | 27 |
-| `mt:clear()` | Supprime tous les événements en attente. | 31 |
-| `mt:process(dt)` | À appeler à chaque mise à jour : fait avancer les délais de dt et exécute les événements arrivés à échéance. | 35 |
+| `mt:addEvent(time, fn)` | Schedules fn in `time` seconds. | 27 |
+| `mt:clear()` | Removes all pending events. | 31 |
+| `mt:process(dt)` | To be called on every update: advances the delays by dt and runs the events that have expired. | 35 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/timeEvents.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/timeEvents.lua`.*

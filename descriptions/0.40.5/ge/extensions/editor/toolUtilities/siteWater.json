@@ -1,59 +1,132 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/siteWater.lua",
-  "module": "Eau stagnante et en chute d'un « site » (open space editor) : bassins d'une cascade, nappes qui débordent entre eux, jets, gerbes et jets d'écume (émetteur de particules BNGP_sprinkler). L'eau n'est pas un mesh et ne peut donc pas être cuite dans une coque ; le manifeste du site la porte sous forme de chiffres et tout ce qui monte le site recrée les objets (WaterBlock, River, ParticleEmitterNode). Tout part d'un enregistrement unique, exprimé dans le repère du site : un point d'ancrage et un angle règlent tout le placement.",
-  "usage": "local sw = extensions.editor_toolUtilities_siteWater\nlocal rec = sw.localise(ca, ox, oy, oz)      -- vers le manifeste\nlocal ca2 = sw.place(rec, px, py, pz, yaw, ox, oy) -- depuis le manifeste\nlocal ids, names = sw.build(ca2, folder, 'site1')",
+  "module": "Standing and falling water of a \"site\" (open space editor): waterfall basins, sheets that overflow between them, jets, sprays and foam jets (particle emitter BNGP_sprinkler). Water is not a mesh and therefore cannot be baked into a shell; the site manifest carries it as numbers and everything that assembles the site recreates the objects (WaterBlock, River, ParticleEmitterNode). Everything starts from a single record, expressed in the site's frame: an anchor point and an angle set the whole placement.",
+  "usage": "local sw = extensions.editor_toolUtilities_siteWater\nlocal rec = sw.localise(ca, ox, oy, oz)      -- to the manifest\nlocal ca2 = sw.place(rec, px, py, pz, yaw, ox, oy) -- from the manifest\nlocal ids, names = sw.build(ca2, folder, 'site1')",
   "notes": [
-    "build() commence par appeler remove(folder), donc reconstruit tout depuis zéro.",
-    "remove() balaie par classe (WaterBlock, River, ParticleEmitterNode) plutôt que par liste d'ids, car l'annulation restaure un document dont les ids peuvent désigner des objets supprimés.",
-    "Une nappe (fall) part de chacune des 8 arêtes du bord d'un bassin (4 plats et 4 coins coupés) ; le nombre de gerbes est plafonné à 8 par arête.",
-    "Les valeurs flow, sprayPow et sprayVar sont bornées à 0..1 dans build ; flow vaut 0.55 par défaut, sprayPow et sprayVar 0.5.",
-    "Les altitudes (z, jetZ, spoutZ, zTop, zBot) sont relatives à oz/pz dans le manifeste et absolues dans l'enregistrement de l'éditeur."
+    "build() starts by calling remove(folder), so it rebuilds everything from scratch.",
+    "remove() sweeps by class (WaterBlock, River, ParticleEmitterNode) rather than by id list, because undo restores a document whose ids may refer to deleted objects.",
+    "A sheet (fall) starts from each of the 8 edges of a basin's rim (4 flat and 4 cut corners); the number of sprays is capped at 8 per edge.",
+    "The flow, sprayPow and sprayVar values are clamped to 0..1 in build; flow is 0.55 by default, sprayPow and sprayVar 0.5.",
+    "The altitudes (z, jetZ, spoutZ, zTop, zBot) are relative to oz/pz in the manifest and absolute in the editor record."
   ],
   "functions": {
     "build": {
-      "desc": "Inonde ce que le centre d'intérêt a posé (bassins), puis accroche une nappe sur chaque face de chaque bassin qui déborde, avec gerbes d'écume, puis les couronnes (jets et déversoirs). Vide d'abord le dossier.",
+      "desc": "Floods what the point of interest has placed (basins), then attaches a sheet to each face of each basin that overflows, with foam sprays, then the crowns (jets and weirs). Empties the folder first.",
       "params": {
-        "ca": {"type": "table|nil", "desc": "Enregistrement de l'éditeur : pools, falls, crowns, flow, sprayPow, sprayVar, spraySeed."},
-        "folder": {"type": "userdata|nil", "desc": "Dossier de scène (SimGroup) qui reçoit les objets."},
-        "tag": {"type": "string|nil", "desc": "Nom du site qui monte l'eau, pour que deux sites identiques sur une carte n'aient pas les mêmes noms d'objets (défaut 'site')."}
+        "ca": {
+          "type": "table|nil",
+          "desc": "Editor record: pools, falls, crowns, flow, sprayPow, sprayVar, spraySeed."
+        },
+        "folder": {
+          "type": "userdata|nil",
+          "desc": "Scene folder (SimGroup) that receives the objects."
+        },
+        "tag": {
+          "type": "string|nil",
+          "desc": "Name of the site that assembles the water, so that two identical sites on a map do not have the same object names (default 'site')."
+        }
       },
       "returns": [
-        {"type": "table|nil", "desc": "Ids des objets créés (nil si pas de bassins ou de dossier)."},
-        {"type": "table|nil", "desc": "Noms des objets créés."}
+        {
+          "type": "table|nil",
+          "desc": "Ids of the created objects (nil if no basins or no folder)."
+        },
+        {
+          "type": "table|nil",
+          "desc": "Names of the created objects."
+        }
       ]
     },
     "remove": {
-      "desc": "Supprime tout ce qui est mouillé sous un dossier : objets des classes WaterBlock, River et ParticleEmitterNode.",
-      "params": {"folder": {"type": "userdata|nil", "desc": "Dossier de scène ; sans effet si nil."}},
+      "desc": "Removes everything wet under a folder: objects of the WaterBlock, River and ParticleEmitterNode classes.",
+      "params": {
+        "folder": {
+          "type": "userdata|nil",
+          "desc": "Scene folder; no effect if nil."
+        }
+      },
       "returns": []
     },
     "commit": {
-      "desc": "Passe chaque objet en persistant (canSave et cansave à true) et renvoie leurs noms, ce qui sert à l'annulation d'une gravure.",
-      "params": {"ids": {"type": "table|nil", "desc": "Ids renvoyés par build."}},
-      "returns": [{"type": "table<integer, string>", "desc": "Noms des objets retrouvés et nommés."}]
+      "desc": "Makes each object persistent (canSave and cansave set to true) and returns their names, which is used to undo a burn.",
+      "params": {
+        "ids": {
+          "type": "table|nil",
+          "desc": "Ids returned by build."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "Names of the objects found and named."
+        }
+      ]
     },
     "localise": {
-      "desc": "Produit l'enregistrement du manifeste, dans le repère du site : seulement ce que build lit (bassins, couronnes, nappes, débit, gerbes). Positions relatives à (ox, oy, oz), bassins et couronnes relatifs à l'ancre.",
+      "desc": "Produces the manifest record, in the site's frame: only what build reads (basins, crowns, sheets, flow, sprays). Positions relative to (ox, oy, oz), basins and crowns relative to the anchor.",
       "params": {
-        "ca": {"type": "table|nil", "desc": "Enregistrement de l'éditeur (doit avoir pools non vide)."},
-        "ox": {"type": "number", "desc": "X de l'origine du site."},
-        "oy": {"type": "number", "desc": "Y de l'origine du site."},
-        "oz": {"type": "number", "desc": "Z de l'origine du site."}
+        "ca": {
+          "type": "table|nil",
+          "desc": "Editor record (must have non-empty pools)."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "X of the site origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "Y of the site origin."
+        },
+        "oz": {
+          "type": "number",
+          "desc": "Z of the site origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Enregistrement du manifeste, nil s'il n'y a pas de bassin."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Manifest record, nil if there is no basin."
+        }
+      ]
     },
     "place": {
-      "desc": "Opération inverse : place un enregistrement de manifeste à une position et un cap, prêt pour build. L'ancre pivote autour du placement et l'angle s'ajoute au sien. (ox, oy) est le point du repère du site autour duquel pivote le placement (le milieu de l'emprise).",
+      "desc": "Inverse operation: places a manifest record at a position and heading, ready for build. The anchor rotates around the placement and the angle is added to its own. (ox, oy) is the point of the site's frame around which the placement rotates (the middle of the footprint).",
       "params": {
-        "rec": {"type": "table|nil", "desc": "Enregistrement du manifeste (avec pools)."},
-        "px": {"type": "number", "desc": "X monde du placement."},
-        "py": {"type": "number", "desc": "Y monde du placement."},
-        "pz": {"type": "number", "desc": "Z monde de base."},
-        "yaw": {"type": "number|nil", "desc": "Cap en radians (0 par défaut)."},
-        "ox": {"type": "number|nil", "desc": "X du point pivot dans le repère du site (0 par défaut)."},
-        "oy": {"type": "number|nil", "desc": "Y du point pivot dans le repère du site (0 par défaut)."}
+        "rec": {
+          "type": "table|nil",
+          "desc": "Manifest record (with pools)."
+        },
+        "px": {
+          "type": "number",
+          "desc": "World X of the placement."
+        },
+        "py": {
+          "type": "number",
+          "desc": "World Y of the placement."
+        },
+        "pz": {
+          "type": "number",
+          "desc": "Base world Z."
+        },
+        "yaw": {
+          "type": "number|nil",
+          "desc": "Heading in radians (0 by default)."
+        },
+        "ox": {
+          "type": "number|nil",
+          "desc": "X of the pivot point in the site's frame (0 by default)."
+        },
+        "oy": {
+          "type": "number|nil",
+          "desc": "Y of the pivot point in the site's frame (0 by default)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Enregistrement monde, avec ct et sn (cosinus et sinus du cap) ; nil si rec invalide."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "World record, with ct and sn (cosine and sine of the heading); nil if rec is invalid."
+        }
+      ]
     }
   }
 }

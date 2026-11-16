@@ -1,29 +1,56 @@
 {
   "path": "lua/common/utils/wsUtils.lua",
-  "module": "Outils pour les WebSockets du moteur (BNGWebWSServer / BNGWSClient). Fournit createOrGetWS qui crée (ou récupère) un serveur WebSocket et choisit l'adresse IP à donner aux clients, en testant par un aller-retour réel quelles cartes réseau sont joignables. Se charge avec require('utils/wsUtils'). Utilisé par les extensions qui exposent des données à des outils externes.",
-  "usage": "local ws = require('utils/wsUtils')\nlocal server, address = ws.createOrGetWS('0.0.0.0', 8081, '/', 'monProtocole', nil, true)",
+  "module": "Tools for the engine's WebSockets (BNGWebWSServer / BNGWSClient). Provides createOrGetWS, which creates (or retrieves) a WebSocket server and chooses the IP address to give to clients, by testing with a real round trip which network cards are reachable. Loaded with require('utils/wsUtils'). Used by extensions that expose data to external tools.",
+  "usage": "local ws = require('utils/wsUtils')\nlocal server, address = ws.createOrGetWS('0.0.0.0', 8081, '/', 'myProtocol', nil, true)",
   "notes": [
-    "Si listenAddr n'est ni '0.0.0.0' ni 'any', l'adresse renvoyée est toujours 'localhost'.",
-    "Si le bac à sable réseau (Engine.Sandbox.Network) est actif, l'adresse renvoyée est 'localhost' sans test.",
-    "Sinon, chaque carte réseau IPv4 (hors descriptions contenant virtualbox/vmware) est testée par testWSConnection (envoi d'une chaîne aléatoire, écho, 20 tentatives dans chaque sens) ; la première qui répond est retenue, sinon la première IPv4 réelle, sinon 'localhost'.",
-    "Le serveur est géré par son propre thread côté moteur : le test ne pompe que le client et lit la file d'évènements du serveur, jamais server:update()."
+    "If listenAddr is neither '0.0.0.0' nor 'any', the returned address is always 'localhost'.",
+    "If the network sandbox (Engine.Sandbox.Network) is active, the returned address is 'localhost' without testing.",
+    "Otherwise, each IPv4 network card (excluding descriptions containing virtualbox/vmware) is tested by testWSConnection (sending a random string, echo, 20 attempts in each direction); the first one that responds is kept, otherwise the first real IPv4, otherwise 'localhost'.",
+    "The server is managed by its own thread on the engine side: the test only pumps the client and reads the server's event queue, never server:update()."
   ],
   "fields": {},
   "functions": {
     "createOrGetWS": {
-      "desc": "Crée ou récupère un serveur WebSocket (BNGWebWSServer.getOrCreate), détermine l'adresse que les clients doivent utiliser, et active éventuellement les flux de données (server:enableDataStreams).",
+      "desc": "Creates or retrieves a WebSocket server (BNGWebWSServer.getOrCreate), determines the address clients must use, and optionally enables data streams (server:enableDataStreams).",
       "params": {
-        "listenAddr": {"type": "string", "desc": "Adresse d'écoute : '0.0.0.0'/'any' (réseau local) ou 'localhost'/127.0.0.1"},
-        "port": {"type": "integer", "desc": "Port du serveur"},
-        "path": {"type": "string", "desc": "Chemin WebSocket"},
-        "protocolName": {"type": "string", "desc": "Nom du protocole WebSocket"},
-        "redirPage": {"type": "string|nil", "desc": "Page vers laquelle rediriger les requêtes HTTP simples (transmis au moteur)"},
-        "enableDataStreams": {"type": "boolean|nil", "desc": "true par défaut (nil) : active enableDataStreams sur le serveur"},
-        "useTLS": {"type": "boolean|nil", "desc": "Seul true active TLS"}
+        "listenAddr": {
+          "type": "string",
+          "desc": "Listen address: '0.0.0.0'/'any' (local network) or 'localhost'/127.0.0.1"
+        },
+        "port": {
+          "type": "integer",
+          "desc": "Server port"
+        },
+        "path": {
+          "type": "string",
+          "desc": "WebSocket path"
+        },
+        "protocolName": {
+          "type": "string",
+          "desc": "WebSocket protocol name"
+        },
+        "redirPage": {
+          "type": "string|nil",
+          "desc": "Page to redirect plain HTTP requests to (passed to the engine)"
+        },
+        "enableDataStreams": {
+          "type": "boolean|nil",
+          "desc": "true by default (nil): enables enableDataStreams on the server"
+        },
+        "useTLS": {
+          "type": "boolean|nil",
+          "desc": "Only true enables TLS"
+        }
       },
       "returns": [
-        {"type": "userdata", "desc": "Serveur BNGWebWSServer"},
-        {"type": "string", "desc": "Adresse recommandée pour les clients"}
+        {
+          "type": "userdata",
+          "desc": "BNGWebWSServer server"
+        },
+        {
+          "type": "string",
+          "desc": "Recommended address for clients"
+        }
       ]
     }
   },

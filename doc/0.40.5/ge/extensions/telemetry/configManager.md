@@ -1,115 +1,115 @@
 # `telemetry_configManager`
 
-*Fichier : `lua/ge/extensions/telemetry/configManager.lua` · VM : Game Engine (GE) · 257 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/configManager.lua` · VM: Game Engine (GE) · 257 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_configManager` : `extensions.load("telemetry_configManager")`, puis la globale `telemetry_configManager`
+**Access:** extension `telemetry_configManager`: `extensions.load("telemetry_configManager")`, then the global `telemetry_configManager`
 
-Extension GE (dépend de telemetry_userIdentity) qui gère la configuration de la télémétrie : lecture du cache /telemetry/config.json, validation, récupération périodique auprès du serveur (s11/v1/telemetryConfig, avec les faits de clientFacts et l'identifiant anonyme), puis application via un callback. Elle indique quels modules/trackers sont activés (moduleConfigs). Le démarrage avec l'argument -telemetryLocal active tous les trackers avec leurs valeurs par défaut sans jamais contacter le serveur ni rien envoyer.
+GE extension (depends on telemetry_userIdentity) that manages the telemetry configuration: reading the /telemetry/config.json cache, validation, periodic fetching from the server (s11/v1/telemetryConfig, with the clientFacts facts and the anonymous identifier), then application via a callback. It indicates which modules/trackers are enabled (moduleConfigs). Starting with the -telemetryLocal argument enables all trackers with their default values without ever contacting the server or sending anything.
 
-## Remarques
+## Notes
 
-- Sans configuration valide, tout est désactivé : getModuleConfig renvoie toujours la même table {enabled = false} (pas d'allocation).
-- Validation : enabled booléen ; runIds liste de <= 32 chaînes de 4 à 64 caractères de forme ^R[A-Z0-9]+$ ; ttlHours et reportIntervalHours numériques entre 1/60 et 168 h.
-- Le cache est réutilisé tant que son âge est inférieur à ttlHours (24 h par défaut) ; nouvelle tentative de récupération au plus toutes les 300 s ; test d'expiration toutes les 60 s quand le polling est actif et que la session en ligne est authentifiée.
-- En cas d'échec réseau, la dernière configuration serveur connue est conservée.
-- La version du schéma de télémétrie est la chaîne '30'.
-- L'extension est en mode de déchargement 'manual'.
+- Without a valid configuration, everything is disabled: getModuleConfig always returns the same table {enabled = false} (no allocation).
+- Validation: enabled boolean; runIds list of <= 32 strings of 4 to 64 characters of the form ^R[A-Z0-9]+$; ttlHours and reportIntervalHours numeric between 1/60 and 168 h.
+- The cache is reused as long as its age is below ttlHours (24 h by default); a new fetch attempt at most every 300 s; expiry test every 60 s when polling is active and the online session is authenticated.
+- On a network failure, the last known server configuration is kept.
+- The telemetry schema version is the string '30'.
+- The extension is in 'manual' unload mode.
 
-**Dépendances (chargées avant) :** `telemetry_userIdentity`
+**Dependencies (loaded first):** `telemetry_userIdentity`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_configManager.checkConfigExpiry()` | Si le délai de reprise est écoulé et que le TTL de la config est dépassé, relance fetchConfigFromAPI et applique la nouvelle config. Au plus une tentative toutes les 300 s. | 145 |
-| `telemetry_configManager.fetchConfigFromAPI(callback)` | Appelle core_online.apiCall('s11/v1/telemetryConfig') en envoyant les faits client et l'identifiant anonyme. Si la réponse est valide, la sauvegarde dans /telemetry/config.json et appelle callback ; sinon, appelle callback avec une config par défaut désactivée (sauf si une config existe déjà). | 105 |
-| `telemetry_configManager.getConfig()` | Renvoie la configuration actuellement appliquée. | 158 |
-| `telemetry_configManager.getModuleConfig(moduleName)` | Renvoie la configuration d'un module de télémétrie : {enabled = true} en mode local, la table moduleConfigs[moduleName] si elle existe, sinon la table partagée {enabled = false}. | 162 |
-| `telemetry_configManager.getSurveyIntervalHours(moduleName, defaultHours)` | Intervalle d'échantillonnage d'un module en heures : surveyIntervalHours, ou surveyIntervalDays * 24 pour les anciens caches, sinon la valeur par défaut. Les anciens caches en jours restent lus jusqu'à ce que toutes les installations aient récupéré le format en heures. | 176 |
-| `telemetry_configManager.getTelemetryVersion()` | Renvoie la version du schéma de télémétrie. | 187 |
-| `telemetry_configManager.initializeConfig(callback)` | Charge la configuration : en mode local, applique une config par défaut activée ; sinon active le polling, applique le cache s'il est valide et récent, sinon une config par défaut désactivée (la récupération réelle a lieu après authentification en ligne). *(interne)* | 191 |
-| `telemetry_configManager.isLocalOnly()` | Indique si le jeu a été lancé avec -telemetryLocal : tous les trackers sont actifs avec leurs valeurs par défaut, le serveur n'est jamais interrogé et rien n'est envoyé. | 31 |
-| `telemetry_configManager.isModuleEnabled(moduleName)` | Indique si un module est activé (getModuleConfig(...).enabled == true). | 170 |
-| `telemetry_configManager.onExtensionLoaded()` | Hook de chargement : passe l'extension en mode de déchargement manuel. *(interne)* *(hook)* | 241 |
-| `telemetry_configManager.setPollingEnabled(enabled)` | Active ou coupe le polling : installe/retire les hooks onUpdate (test d'expiration toutes les 60 s si la session en ligne est authentifiée) et onOnlineStateChanged (test dès la connexion), puis appelle extensions.hookUpdate. | 230 |
+| `telemetry_configManager.checkConfigExpiry()` | If the retry delay has elapsed and the config's TTL is exceeded, relaunches fetchConfigFromAPI and applies the new config. At most one attempt every 300 s. | 145 |
+| `telemetry_configManager.fetchConfigFromAPI(callback)` | Calls core_online.apiCall('s11/v1/telemetryConfig') sending the client facts and the anonymous identifier. If the response is valid, saves it to /telemetry/config.json and calls callback; otherwise, calls callback with a disabled default config (unless a config already exists). | 105 |
+| `telemetry_configManager.getConfig()` | Returns the currently applied configuration. | 158 |
+| `telemetry_configManager.getModuleConfig(moduleName)` | Returns the configuration of a telemetry module: {enabled = true} in local mode, the moduleConfigs[moduleName] table if it exists, otherwise the shared table {enabled = false}. | 162 |
+| `telemetry_configManager.getSurveyIntervalHours(moduleName, defaultHours)` | Sampling interval of a module in hours: surveyIntervalHours, or surveyIntervalDays * 24 for old caches, otherwise the default value. Old caches in days are still read until all installations have picked up the hours format. | 176 |
+| `telemetry_configManager.getTelemetryVersion()` | Returns the telemetry schema version. | 187 |
+| `telemetry_configManager.initializeConfig(callback)` | Loads the configuration: in local mode, applies an enabled default config; otherwise enables polling, applies the cache if it is valid and recent, otherwise a disabled default config (the actual fetch happens after online authentication). *(internal)* | 191 |
+| `telemetry_configManager.isLocalOnly()` | Indicates whether the game was launched with -telemetryLocal: all trackers are active with their default values, the server is never queried and nothing is sent. | 31 |
+| `telemetry_configManager.isModuleEnabled(moduleName)` | Indicates whether a module is enabled (getModuleConfig(...).enabled == true). | 170 |
+| `telemetry_configManager.onExtensionLoaded()` | Load hook: sets the extension to manual unload mode. *(internal)* *(hook)* | 241 |
+| `telemetry_configManager.setPollingEnabled(enabled)` | Enables or turns off polling: installs/removes the onUpdate hooks (expiry test every 60 s if the online session is authenticated) and onOnlineStateChanged (test as soon as connected), then calls extensions.hookUpdate. | 230 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_configManager.fetchConfigFromAPI(callback)`
 
-Appelle core_online.apiCall('s11/v1/telemetryConfig') en envoyant les faits client et l'identifiant anonyme. Si la réponse est valide, la sauvegarde dans /telemetry/config.json et appelle callback ; sinon, appelle callback avec une config par défaut désactivée (sauf si une config existe déjà).
+Calls core_online.apiCall('s11/v1/telemetryConfig') sending the client facts and the anonymous identifier. If the response is valid, saves it to /telemetry/config.json and calls callback; otherwise, calls callback with a disabled default config (unless a config already exists).
 
-- `callback` (*function|nil*) : Appelée avec la configuration obtenue.
+- `callback` (*function|nil*) : Called with the obtained configuration.
 
 #### `telemetry_configManager.getConfig()`
 
-Renvoie la configuration actuellement appliquée.
+Returns the currently applied configuration.
 
-- **renvoie** : table|nil Config (enabled, ttlHours, reportIntervalHours, runIds, moduleConfigs) ou nil avant initializeConfig.
+- **returns**: table|nil Config (enabled, ttlHours, reportIntervalHours, runIds, moduleConfigs) or nil before initializeConfig.
 
 #### `telemetry_configManager.getModuleConfig(moduleName)`
 
-Renvoie la configuration d'un module de télémétrie : {enabled = true} en mode local, la table moduleConfigs[moduleName] si elle existe, sinon la table partagée {enabled = false}.
+Returns the configuration of a telemetry module: {enabled = true} in local mode, the moduleConfigs[moduleName] table if it exists, otherwise the shared table {enabled = false}.
 
-- `moduleName` (*string*) : Nom du module/tracker.
-- **renvoie** : table Config du module (ne pas la modifier : elle peut être partagée).
+- `moduleName` (*string*) : Module/tracker name.
+- **returns**: table Module config (do not modify it: it may be shared).
 
 #### `telemetry_configManager.getSurveyIntervalHours(moduleName, defaultHours)`
 
-Intervalle d'échantillonnage d'un module en heures : surveyIntervalHours, ou surveyIntervalDays * 24 pour les anciens caches, sinon la valeur par défaut. Les anciens caches en jours restent lus jusqu'à ce que toutes les installations aient récupéré le format en heures.
+Sampling interval of a module in hours: surveyIntervalHours, or surveyIntervalDays * 24 for old caches, otherwise the default value. Old caches in days are still read until all installations have picked up the hours format.
 
-- `moduleName` (*string*) : Nom du module.
-- `defaultHours` (*number*) : Valeur renvoyée si rien n'est configuré.
-- **renvoie** : number Intervalle en heures.
+- `moduleName` (*string*) : Module name.
+- `defaultHours` (*number*) : Value returned if nothing is configured.
+- **returns**: number Interval in hours.
 
 #### `telemetry_configManager.getTelemetryVersion()`
 
-Renvoie la version du schéma de télémétrie.
+Returns the telemetry schema version.
 
-- **renvoie** : string Actuellement '30'.
+- **returns**: string Currently '30'.
 
 #### `telemetry_configManager.initializeConfig(callback)`
 
-Charge la configuration : en mode local, applique une config par défaut activée ; sinon active le polling, applique le cache s'il est valide et récent, sinon une config par défaut désactivée (la récupération réelle a lieu après authentification en ligne).
+Loads the configuration: in local mode, applies an enabled default config; otherwise enables polling, applies the cache if it is valid and recent, otherwise a disabled default config (the actual fetch happens after online authentication).
 
-- `callback` (*function|nil*) : Appelée avec la config à chaque application (et mémorisée pour les mises à jour ultérieures).
+- `callback` (*function|nil*) : Called with the config on each application (and stored for later updates).
 
 #### `telemetry_configManager.isLocalOnly()`
 
-Indique si le jeu a été lancé avec -telemetryLocal : tous les trackers sont actifs avec leurs valeurs par défaut, le serveur n'est jamais interrogé et rien n'est envoyé.
+Indicates whether the game was launched with -telemetryLocal: all trackers are active with their default values, the server is never queried and nothing is sent.
 
-- **renvoie** : boolean true si l'argument est présent.
+- **returns**: boolean true if the argument is present.
 
 #### `telemetry_configManager.isModuleEnabled(moduleName)`
 
-Indique si un module est activé (getModuleConfig(...).enabled == true).
+Indicates whether a module is enabled (getModuleConfig(...).enabled == true).
 
-- `moduleName` (*string*) : Nom du module/tracker.
-- **renvoie** : boolean true si activé.
+- `moduleName` (*string*) : Module/tracker name.
+- **returns**: boolean true if enabled.
 
 #### `telemetry_configManager.setPollingEnabled(enabled)`
 
-Active ou coupe le polling : installe/retire les hooks onUpdate (test d'expiration toutes les 60 s si la session en ligne est authentifiée) et onOnlineStateChanged (test dès la connexion), puis appelle extensions.hookUpdate.
+Enables or turns off polling: installs/removes the onUpdate hooks (expiry test every 60 s if the online session is authenticated) and onOnlineStateChanged (test as soon as connected), then calls extensions.hookUpdate.
 
-- `enabled` (*boolean*) : true pour activer.
+- `enabled` (*boolean*) : true to enable.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'telemetry_userIdentity'}. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onOnlineStateChanged` — écouté par 3 module(s)
-- `onUpdate` — écouté par 186 module(s)
+- `onOnlineStateChanged` — listened to by 3 module(s)
+- `onUpdate` — listened to by 186 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getStartingArgs`
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/configManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/configManager.lua`.*

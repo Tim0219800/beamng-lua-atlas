@@ -1,0 +1,88 @@
+{
+  "path": "lua/ge/extensions/editor/raceEditor/tools.lua",
+  "module": "Sous-fenêtre « Tools » de l'éditeur de course (raceEditor). Section « Side Decorators » : génère des décorations (TSStatic .dae ou prefab) de part et d'autre des pathnodes, avec décalages de position/rotation/échelle et mode d'alignement (terrain, pathnode, absolute), aperçu en lignes colorées et boutons Create / Replace / Remove (groupe SimGroup « <nom>_decoration » dans MissionGroup). Section « Pathnode Tools » : poser tous les nœuds au sol, aligner les normales sur le terrain, fixer tous les rayons, supprimer les BeamNGWaypoint redondants, aligner sur la grille, supprimer tous les segments. Section « Debug Tools » : ouvrir la fenêtre de test et dumps de chemin/autoConfig. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/tools')(raceEditor).",
+  "notes": [
+    "Valeurs initiales : décalage de position (0, 0, 0.2), rotation (0, 15, 0) en degrés (convertis en radians), échelle (1, 1, 1), mode d'alignement « terrain ».",
+    "Forme par défaut gauche et droite : art/shapes/race/sign_checkpoint.dae.",
+    "Bug probable : « Drop All Pathnodes to Terrain Height » écrit via changeFieldMulti('pos', ...) un nombre (hauteur du terrain) dans le champ pos des nœuds, qui est un vec3 ; seul z devrait changer.",
+    "Bug : setFieldsUndo parcourt oldDataMap avec ipairs alors que les clés sont des IDs de nœuds (table creuse) ; l'annulation ne restaure alors que les IDs consécutifs à partir de 1.",
+    "Bug : C:selector utilise la variable « value » (non définie) et appelle self:changeField qui n'existe pas dans ce fichier ; la méthode n'est pas appelée par le module.",
+    "« Align All Pathnodes to Grid », « Remove Redundant BeamNGWaypoints » et « Remove All Segments » modifient directement sans passer par l'historique (non annulables).",
+    "Le mode de la forme gauche vaut « unknown » et celui de droite « none » si l'extension n'est ni dae ni prefab ; dans ce cas aucune décoration n'est créée pour ce côté (createDecoration ne gère que 'dae' et 'prefab')."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Fenêtre Tools (windowDescription = 'Tools'). Instanciée avec init(raceEditor).",
+      "functions": {
+        "init": {
+          "desc": "Mémorise raceEditor et initialise les décalages de position, rotation et échelle des décorations.",
+          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor."}},
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Définit le chemin de course édité.",
+          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+        },
+        "selected": {
+          "desc": "Appelé quand l'onglet devient actif ; ne fait rien.",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Appelé quand l'onglet est quitté ; ne fait rien.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Appelé à chaque frame : dessine l'interface des outils.",
+          "internal": true
+        },
+        "createDecoration": {
+          "desc": "Crée un SimGroup « <nom du chemin>_decoration » (suffixe numérique si le nom existe déjà) dans MissionGroup et y place un objet par transformée : TSStatic pour un .dae, prefab (spawnPrefab) pour un .prefab / .prefab.json, selon le côté (l/r). Mémorise le groupe comme dernier groupe créé.",
+          "params": {"transforms": {"type": "table", "desc": "Liste de transformées {side='l'|'r', pos, rot, scl} issues de pathnode:getSideTransforms."}}
+        },
+        "existsIcon": {
+          "desc": "Affiche une icône coche si le fichier existe (FS:fileExists), sinon une icône d'erreur, avec infobulle du chemin.",
+          "params": {"f": {"type": "string", "desc": "Chemin de fichier."}}
+        },
+        "changeFieldMulti": {
+          "desc": "Modifie le même champ de plusieurs pathnodes en une seule action d'historique (valeurs anciennes mémorisées pour l'annulation).",
+          "params": {
+            "field": {"type": "string", "desc": "Champ du pathnode (pos, normal, radius…)."},
+            "newDataMap": {"type": "table<integer, any>", "desc": "Associe l'ID du pathnode à la nouvelle valeur."}
+          }
+        },
+        "getSideTransformParameters": {
+          "desc": "Renvoie les paramètres de décoration latérale saisis dans la fenêtre, à passer à pathnode:getSideTransforms.",
+          "returns": [
+            {"type": "vec3", "desc": "Décalage de position."},
+            {"type": "vec3", "desc": "Décalage de rotation en radians (degrés saisis × π/180)."},
+            {"type": "vec3", "desc": "Échelle."},
+            {"type": "string", "desc": "Mode d'alignement : terrain, pathnode ou absolute."}
+          ]
+        },
+        "drawGeneralInfo": {
+          "desc": "Dessine tout le contenu : décorations latérales, outils sur les pathnodes et outils de debug.",
+          "internal": true
+        },
+        "displayClassification": {
+          "desc": "Affiche une ligne « nom » avec icône coche ou croix selon classification[field].",
+          "params": {
+            "classification": {"type": "table", "desc": "Résultat de path:classify()."},
+            "name": {"type": "string", "desc": "Libellé."},
+            "field": {"type": "string", "desc": "Clé testée."},
+            "tt": {"type": "string|nil", "desc": "Infobulle."}
+          }
+        },
+        "selector": {
+          "desc": "Liste déroulante de sélection d'un objet du chemin pour un champ (voir notes : non fonctionnelle et inutilisée ici).",
+          "params": {
+            "name": {"type": "string", "desc": "Libellé."},
+            "objects": {"type": "table", "desc": "Collection (objects, sorted) de nœuds ou positions."},
+            "fieldName": {"type": "string", "desc": "Champ du chemin."},
+            "clrI": {"type": "ColorI|nil", "desc": "Couleur de fond du texte."},
+            "tt": {"type": "string|nil", "desc": "Infobulle."}
+          }
+        }
+      }
+    }
+  }
+}

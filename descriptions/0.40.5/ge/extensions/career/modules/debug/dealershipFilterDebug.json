@@ -1,20 +1,29 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/dealershipFilterDebug.lua",
-  "module": "Outil de debug « General > Filter Debug » : fenêtre ImGui où l'on colle un JSON de filtre de concessionnaire (filter avec whiteList/blackList, subFilters avec probability…) ; le JSON est décodé à chaque modification, le filtre est appliqué (via util/configListGenerator) et le résultat est affiché en tableau. Utile pour régler les filtres de véhicules d'un concessionnaire.",
+  "module": "\"General > Filter Debug\" debug tool: ImGui window where you paste a dealership filter JSON (filter with whiteList/blackList, subFilters with probability…); the JSON is decoded on every change, the filter is applied (via util/configListGenerator) and the result is shown in a table. Useful for tuning a dealership's vehicle filters.",
   "usage": "extensions.load(\"career/modules/debug/dealershipFilterDebug\")\ncareer_modules_debug_dealershipFilterDebug.show()",
-  "notes": ["show() permet d'ouvrir l'outil hors carrière : elle branche drawDebugMenu sur le hook onUpdate.", "Le message d'erreur de décodage est stocké dans une variable globale nommée 'error' (masque la fonction Lua error)."],
+  "notes": [
+    "show() lets you open the tool outside career: it hooks drawDebugMenu onto the onUpdate hook.",
+    "The decoding error message is stored in a global variable named 'error' (shadows the Lua function error)."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri dans la fenêtre de debug (11)."},
-    "debugName": {"type": "string", "desc": "'General > Filter Debug'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order in the debug window (11)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'General > Filter Debug'."
+    }
   },
   "functions": {
     "drawDebugMenu": {
-      "desc": "Dessine la fenêtre 'Filter Debug Input' (zone de texte JSON, statut 'All Good :)' ou 'Decoding Error') puis les résultats du filtre.",
+      "desc": "Draws the 'Filter Debug Input' window (JSON text area, status 'All Good :)' or 'Decoding Error') then the filter results.",
       "params": {},
       "returns": []
     },
     "show": {
-      "desc": "Affiche l'outil hors carrière : M.onUpdate = drawDebugMenu puis extensions.hookUpdate('onUpdate').",
+      "desc": "Shows the tool outside career: M.onUpdate = drawDebugMenu then extensions.hookUpdate('onUpdate').",
       "params": {},
       "returns": []
     }

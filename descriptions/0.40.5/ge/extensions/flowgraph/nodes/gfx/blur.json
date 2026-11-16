@@ -1,40 +1,40 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gfx/blur.lua",
-  "module": "Nœud flowgraph « Blur » (repeat_instant, tags gfx/blur). Floute la scène : pin blurAmount (0 à 1, défaut 1) devient l'alpha d'un rectangle plein écran ajouté à l'effet ScreenBlurFX à chaque frame de rendu. Ne dessine rien si l'UI CEF n'est pas visible ou si work n'a pas tourné depuis plus de 10 frames.",
+  "module": "Flowgraph node \"Blur\" (repeat_instant, tags gfx/blur). Blurs the scene: pin blurAmount (0 to 1, default 1) becomes the alpha of a full-screen rectangle added to the ScreenBlurFX effect every render frame. Draws nothing if the CEF UI is not visible or if work has not run for more than 10 frames.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "init": {
-          "desc": "Initialise lastWorking, blurAmount et blurColor.",
+          "desc": "Initializes lastWorking, blurAmount and blurColor.",
           "internal": true,
           "params": {
             "mgr": {
               "type": "table",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           }
         },
         "onPreRender": {
-          "desc": "Hook appelé avant le rendu (dt, dtSim) ; ajoute un rectangle de flou plein écran à ScreenBlurFX si le nœud a été actif dans les 10 dernières frames.",
+          "desc": "Hook called before rendering (dt, dtSim); adds a full-screen blur rectangle to ScreenBlurFX if the node was active within the last 10 frames.",
           "internal": false,
           "params": {
             "dt": {
               "type": "any",
-              "desc": "temps réel écoulé depuis la dernière frame (s)"
+              "desc": "real time elapsed since the last frame (s)"
             },
             "dtSim": {
               "type": "any",
-              "desc": "temps de simulation écoulé (s)"
+              "desc": "simulation elapsed time (s)"
             }
           }
         },
         "postInit": {
-          "desc": "Configure le pin blurAmount comme curseur float entre 0 et 1.",
+          "desc": "Configures the blurAmount pin as a float slider between 0 and 1.",
           "internal": true
         },
         "work": {
-          "desc": "Mémorise la quantité de flou, la couleur correspondante et le numéro de frame courant.",
+          "desc": "Stores the blur amount, the corresponding color and the current frame number.",
           "internal": true
         }
       }

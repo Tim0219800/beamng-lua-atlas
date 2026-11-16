@@ -1,35 +1,35 @@
 # `flowgraph_nodes_ui_updatedUI_startScreenBegin`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin.lua` · VM : Game Engine (GE) · 126 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin.lua` · VM: Game Engine (GE) · 126 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin")` (file under extensions/ but not a regular extension)
 
-Nœud « StartScreen Begin » (couleur ui). Commence la construction de l'écran de démarrage d'une mission : à la première frame avec flow actif, il appelle modules.ui:startUIBuilding('startScreen'), ajoute l'en-tête (nom du projet), fixe le texte du bouton Start et, si simple est vrai, passe l'écran en mode simple. Entrées : flow, reset (impulsion), triggerStart (impulsion, simule un clic sur Start), startButtonText (string, défaut « ui.scenarios.start.start »), simple (bool). Sorties : flow (true une fois le bouton Start cliqué), build (chainFlow, une frame pour chaîner les panneaux). Se termine avec un nœud « Screen Finish ».
+Node "StartScreen Begin" (color ui). Starts building the start screen of a mission: on the first frame with flow active, it calls modules.ui:startUIBuilding('startScreen'), adds the header (project name), sets the Start button text and, if simple is true, switches the screen to simple mode. Inputs: flow, reset (pulse), triggerStart (pulse, simulates a click on Start), startButtonText (string, default "ui.scenarios.start.start"), simple (bool). Outputs: flow (true once the Start button is clicked), build (chainFlow, one frame to chain the panels). Ends with a "Screen Finish" node.
 
-## Remarques
+## Notes
 
-- Le code de repli par minuterie (started/startTime) et le hook onUILayoutLoaded sont commentés dans le fichier.
+- The timer fallback code (started/startTime) and the onUILayoutLoaded hook are commented out in the file.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet à zéro started/done/built et l'auto-skip au démarrage du projet. | 25 |
-| `C:_executionStopped()` | Appelé à l'arrêt du projet ; appelle closeDialogue (sans effet réel). | 34 |
-| `C:closeDialogue()` | Ne fait rien en pratique : la navigation vers « play » est commentée. | 42 |
-| `C:onClientEndMission()` | Hook de fin de mission côté client ; appelle closeDialogue. | 38 |
-| `C:onNodeReset()` | Appelé quand le nœud est réinitialisé (pin reset ou reset du graphe). | 48 |
-| `C:startFromUi()` | Simule le clic sur Start : met done=true, émet le hook onUIStartButtonClicked, navigue vers l'écran « play » et efface modules.ui.uiLayout. | 107 |
-| `C:work()` | Gère reset, construit l'écran au premier flow, active build une frame, publie done sur le pin flow de sortie, déclenche startFromUi si triggerStart est reçu, et applique l'auto-skip (startingOptions.autoSkipStartScreen, après 2 s de temps réel). | 60 |
-| `C:workOnce()` | Variante exécutée une seule fois par le moteur flowgraph (corps vide ici). | 57 |
+| `C:_executionStarted()` | Resets started/done/built and auto-skip when the project starts. | 25 |
+| `C:_executionStopped()` | Called when the project stops; calls closeDialogue (no real effect). | 34 |
+| `C:closeDialogue()` | Does nothing in practice: the navigation to "play" is commented out. | 42 |
+| `C:onClientEndMission()` | End-of-mission hook on the client side; calls closeDialogue. | 38 |
+| `C:onNodeReset()` | Called when the node is reset (reset pin or graph reset). | 48 |
+| `C:startFromUi()` | Simulates the click on Start: sets done=true, emits the onUIStartButtonClicked hook, navigates to the "play" screen and clears modules.ui.uiLayout. | 107 |
+| `C:work()` | Handles reset, builds the screen at the first flow, activates build for one frame, publishes done on the output flow pin, triggers startFromUi if triggerStart is received, and applies auto-skip (startingOptions.autoSkipStartScreen, after 2 s of real time). | 60 |
+| `C:workOnce()` | Variant executed only once by the flowgraph engine (empty body here). | 57 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onUIStartButtonClicked` — écouté par 2 module(s)
+- `onUIStartButtonClicked` — listened to by 2 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenBegin.lua`.*

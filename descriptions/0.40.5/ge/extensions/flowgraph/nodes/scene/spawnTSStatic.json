@@ -1,56 +1,56 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/spawnTSStatic.lua",
-  "module": "Noeud flowgraph « Spawn TSStatic » (once_instant, auteur BeamNG). Crée un objet TSStatic avec shapeName, position, rotation et scale. Entrées : flow, reset, shapeName, position, rotation, scale. Sorties : flow, created (impulsion d'une frame), lastId. L'objet est supprimé à l'arrêt, à la fin de mission ou à la destruction.",
+  "module": "Flowgraph node \"Spawn TSStatic\" (once_instant, author BeamNG). Creates a TSStatic object with shapeName, position, rotation and scale. Inputs: flow, reset, shapeName, position, rotation, scale. Outputs: flow, created (one-frame impulse), lastId. The object is deleted on stop, at the end of the mission or on destruction.",
   "notes": [
-    "Le code d'un décalage (pin offset) est commenté dans createObject et n'a aucun effet.",
-    "maxObjectCount n'est pas utilisé."
+    "The code for an offset (pin offset) is commented out in createObject and has no effect.",
+    "maxObjectCount is not used."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise la liste d'objets et data.maxObjectCount = 1.",
+          "desc": "Initializes the object list and data.maxObjectCount = 1.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "createObject": {
-          "desc": "Crée le TSStatic (canSave = false), l'enregistre sous spawnedObj_<time>_<id>_<n>, écrit lastId et notifie l'éditeur.",
+          "desc": "Creates the TSStatic (canSave = false), registers it under spawnedObj_<time>_<id>_<n>, writes lastId and notifies the editor.",
           "params": {
             "objectName": {
               "type": "any",
-              "desc": "non utilisé"
+              "desc": "unused"
             }
           },
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelle onNodeReset.",
+          "desc": "Calls onNodeReset.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Supprime tous les objets créés.",
+          "desc": "Deletes all created objects.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Crée l'objet et lève created.",
+          "desc": "Creates the object and raises created.",
           "internal": false
         },
         "work": {
-          "desc": "Retombe created à false à la frame suivante.",
+          "desc": "Drops created back to false on the next frame.",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "desc": "End-of-mission hook: cleans up the objects created by the node.",
           "internal": true
         },
         "destroy": {
-          "desc": "Appelé à la destruction du noeud : nettoie les objets créés.",
+          "desc": "Called when the node is destroyed: cleans up the created objects.",
           "internal": true
         }
       }

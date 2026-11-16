@@ -1,0 +1,62 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/selectionModel.lua",
+  "module": "Modèle de sélection de l'outil « Easy Object Select » de l'éditeur. À chaque frame il interroge selectionQuery.gather, regroupe les candidats sous le curseur en pile (empilement d'objets), choisit automatiquement le gagnant (avec hystérésis pour éviter le clignotement), et gère le cycle manuel à la molette ainsi que le « gel » du pick. Il produit un snapshot (camera, mouse, candidates, pick, activeIndex, cycleActive, stackCount…) lu par les modules de dessin et d'interaction.",
+  "notes": [
+    "État temporel (cible automatique, cycle, pick gelé) conservé dans un upvalue local ; activate() et deactivate() le remettent à zéro.",
+    "Le cycle de molette se réinitialise quand la souris sort de la zone morte (cycleDeadZone, 6 px par défaut) ou quand la caméra a bougé (cycleShouldReset).",
+    "Si le premier candidat est plus loin que options.maxStackDistance, la pile est réduite à ce seul candidat (stackLimited = true) et le cycle est annulé.",
+    "Le sens du cycle : wheelDelta > 0 recule d'un cran dans la pile, wheelDelta < 0 avance (modulo stackCount)."
+  ],
+  "functions": {
+    "activate": {
+      "desc": "Réinitialise l'état temporel (cible automatique, cycle, pick gelé, snapshot) et active le cache de selectionQuery. À appeler à l'ouverture de l'outil.",
+      "params": {},
+      "internal": false
+    },
+    "deactivate": {
+      "desc": "Réinitialise l'état temporel (cible, cycle, pick gelé, snapshot) à la fermeture de l'outil.",
+      "params": {},
+      "internal": false
+    },
+    "update": {
+      "desc": "Calcule le snapshot de la frame : appelle selectionQuery.gather(options), groupe et trie les candidats, applique la limite de pile, gère la réinitialisation du cycle, le pick gelé et le gagnant automatique. Renvoie un snapshot vide si la requête échoue (pas de caméra).",
+      "params": {
+        "options": {"type": "table|nil", "desc": "Options transmises à gather (discoveryPixels, nearQueryDistance, maxDistance, maxVolume, namePattern, ignorePattern, collectFilteredLarge) plus preferUnselected (boolean : favoriser les objets non sélectionnés), maxStackDistance (number, m) et cycleDeadZone (number, px)."}
+      },
+      "returns": [{"type": "table", "desc": "Snapshot : camera, mouse, queryRadius, discoveryRadius, nearQueryDistance, candidates, discovery, filteredLarge, queryStats, rejected, sourceCount, stackCount, stackLimited, activeIndex, pick, cycleActive, cycleAnchor, cycleDeadZone, frozenTargetId."}],
+      "internal": false
+    },
+    "cycle": {
+      "desc": "Fait avancer le pick actif dans la pile de candidats suivant le sens de la molette. Sans effet s'il y a moins de 2 candidats ou si wheelDelta vaut 0. Mémorise l'ancre souris et la caméra pour détecter plus tard un mouvement.",
+      "params": {
+        "wheelDelta": {"type": "number", "desc": "Delta de molette ; > 0 recule dans la pile, < 0 avance."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Le snapshot courant (modifié en place), ou nil s'il n'y en a pas."}],
+      "internal": false
+    },
+    "freezePick": {
+      "desc": "Fige le pick actuel : tant qu'il est gelé, il reste la cible même si le curseur bouge (utile pendant un glisser).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Le candidat gelé, ou nil s'il n'y a pas de pick."}],
+      "internal": false
+    },
+    "releasePick": {
+      "desc": "Libère le pick gelé par freezePick.",
+      "params": {},
+      "internal": false
+    },
+    "getSnapshot": {
+      "desc": "Renvoie le dernier snapshot calculé par update.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Snapshot courant."}],
+      "internal": false
+    },
+    "invalidateCache": {
+      "desc": "Invalide le cache de sélection de selectionQuery (le cache sera reconstruit à la prochaine requête).",
+      "params": {
+        "reason": {"type": "string|nil", "desc": "Raison de l'invalidation (diagnostic)."}
+      },
+      "internal": false
+    }
+  }
+}

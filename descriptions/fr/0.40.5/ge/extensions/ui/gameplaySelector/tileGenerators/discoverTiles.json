@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/ui/gameplaySelector/tileGenerators/discoverTiles.lua",
+  "module": "Générateur de tuiles du sélecteur de gameplay pour les « expériences de démarrage rapide » (système quickStartExperiences). Il lit les pages et cartes de gameplay_discover.getDiscoverPages(), crée une tuile par page, regroupe les cartes d'une page en « Experiences » et « Challenges » (missions), et fournit les détails et le bouton de lancement d'une carte.",
+  "notes": [
+    "Les pages avec showMultiseatControllers ou sans carte ne produisent pas de tuile.",
+    "Une carte de type mission avec missionId reçoit la clé mission_<id> et un showDetails.missionId (détails gérés par missionTiles) ; les autres reçoivent discover_<discoverId>.",
+    "Le bouton de lancement navigue vers card.preStartRoute si elle existe, sinon appelle gameplay_discover.startDiscover(discoverId) avec écran de chargement."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : gameplay_discover."}
+  },
+  "functions": {
+    "getPageGroups": {
+      "desc": "Renvoie les groupes de tuiles d'une page découverte : un groupe « discoverExperiences » (cartes non mission) et un groupe « discoverChallenges » (cartes mission), chacun seulement s'il n'est pas vide. Renvoie une table vide si la page est introuvable.",
+      "params": {"pageKey": {"type": "string", "desc": "Clé de la page (page.folder, sinon page.title, sinon son index)."}},
+      "returns": [{"type": "table[]", "desc": "Liste de groupes {key, label, tiles}."}],
+      "internal": false
+    },
+    "onGameplaySelectorGetTiles": {
+      "desc": "Hook appelé quand le sélecteur collecte ses tuiles. Pour le backend gameplaySelector uniquement, ajoute une tuile de type discoverPage par page contenant au moins une carte, avec gotoPath, nombre de sous-éléments et icônes officiel ou mod.",
+      "params": {
+        "items": {"type": "table", "desc": "Liste de tuiles à compléter."},
+        "backend": {"type": "table", "desc": "Backend appelant."}
+      },
+      "internal": true
+    },
+    "onGameplaySelectorGetDetails": {
+      "desc": "Hook appelé à l'ouverture des détails. Si itemDetails.discoverId désigne une carte connue, ajoute dans details un bloc (titre, description, aperçu, favori, étiquettes) avec un bouton « play » qui enregistre l'élément comme récent puis lance la carte.",
+      "params": {
+        "itemDetails": {"type": "table", "desc": "Données showDetails (discoverId, key)."},
+        "details": {"type": "table", "desc": "Liste de blocs de détails à compléter."},
+        "buttonInstance": {"type": "table", "desc": "Objet fournissant addButton."},
+        "backend": {"type": "table", "desc": "Backend offrant isFavourite et trackRecent."}
+      },
+      "internal": true
+    }
+  }
+}

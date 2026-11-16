@@ -1,44 +1,44 @@
 # `editor_dynamicDecals_meshes`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/meshes.lua` · VM : Game Engine (GE) · 62 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/meshes.lua` · VM: Game Engine (GE) · 62 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_meshes` : `extensions.load("editor_dynamicDecals_meshes")`, puis la globale `editor_dynamicDecals_meshes`
+**Access:** extension `editor_dynamicDecals_meshes`: `extensions.load("editor_dynamicDecals_meshes")`, then the global `editor_dynamicDecals_meshes`
 
-Module (expérimental, désactivé) de l'outil Dynamic Decals pour changer le fichier de forme (.dae) sur lequel les decals sont projetés. Le code de la section existe mais l'enregistrement de la section « Meshes (Experimental) » est commenté dans setup : aucune interface n'est visible.
+Module (experimental, disabled) of the Dynamic Decals tool to change the shape file (.dae) onto which decals are projected. The section code exists but the registration of the "Meshes (Experimental)" section is commented out in setup: no interface is visible.
 
-## Remarques
+## Notes
 
-- sectionGui appelle api.getShapepath() (casse différente de api.getShapePath() utilisé juste avant) : probable faute de frappe qui lèverait une erreur si la section était activée.
-- Le logTag est bien « editor_dynamicDecals_meshes ».
+- sectionGui calls api.getShapepath() (different casing from api.getShapePath() used just before): probable typo that would raise an error if the section were enabled.
+- The logTag is indeed "editor_dynamicDecals_meshes".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_meshes.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 46 |
-| `editor_dynamicDecals_meshes.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (corps commenté). *(interne)* | 40 |
-| `editor_dynamicDecals_meshes.setup(tool_in)` | Appelé par l'outil : mémorise l'outil, l'API et le module settings. N'enregistre aucune section (ligne commentée). *(interne)* | 50 |
+| `editor_dynamicDecals_meshes.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 46 |
+| `editor_dynamicDecals_meshes.registerEditorPreferences(prefsRegistry)` | Declares no preference (body commented out). *(internal)* | 40 |
+| `editor_dynamicDecals_meshes.setup(tool_in)` | Called by the tool: stores the tool, the API and the settings module. Registers no section (commented line). *(internal)* | 50 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_meshes.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_meshes.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (corps commenté).
+Declares no preference (body commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_meshes.setup(tool_in)`
 
-Appelé par l'outil : mémorise l'outil, l'API et le module settings. N'enregistre aucune section (ligne commentée).
+Called by the tool: stores the tool, the API and the settings module. Registers no section (commented line).
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/meshes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/meshes.lua`.*

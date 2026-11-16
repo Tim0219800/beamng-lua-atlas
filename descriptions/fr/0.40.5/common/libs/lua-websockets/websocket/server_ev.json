@@ -1,0 +1,30 @@
+{
+  "path": "lua/common/libs/lua-websockets/websocket/server_ev.lua",
+  "module": "Backend serveur WebSocket de lua-websockets pour la boucle d'événements lua-ev (module 'ev', non fourni par le jeu). listen accepte les connexions de façon asynchrone, effectue la poignée de main, puis crée un objet client piloté par callbacks (on_message, on_close, on_error).",
+  "usage": "local srv = require('libs/lua-websockets/websocket/server_ev').listen({\n  port = 8080,\n  default = function(client)\n    client:on_message(function(c, msg, opcode) c:send(msg) end)\n  end\n})",
+  "notes": [
+    "Nécessite le module 'ev' (lua-ev) ; sans lui le require échoue. Probablement non utilisé dans le jeu (déduit du code).",
+    "Plusieurs messages d'erreur sont affichés avec print() plutôt que remontés au callback."
+  ],
+  "functions": {
+    "listen": {
+      "desc": "Démarre un serveur WebSocket asynchrone sur la boucle ev. Lève une erreur si le bind échoue.",
+      "params": {"opts": {"type": "table", "desc": "port (défaut 80), interface (défaut '*'), loop (défaut ev.Loop.default), protocols (sous-protocole -> fonction(client)), default (fonction(client)). protocols ou default est obligatoire."}},
+      "returns": [{"type": "table", "desc": "Objet serveur : on_error(self, f), sock() (socket d'écoute), close(keep_clients)."}]
+    }
+  },
+  "classes": {
+    "client": {
+      "desc": "Objet client passé au gestionnaire (state 'OPEN'). Les callbacks se posent avec les méthodes on_*.",
+      "functions": {
+        "send": {"desc": "Envoie un message de façon asynchrone (tampon d'écriture).", "params": {"message": {"type": "string", "desc": "Données."}, "opcode": {"type": "integer", "desc": "Opcode de trame (TEXT par défaut)."}}},
+        "on_message": {"desc": "Définit le callback de réception.", "params": {"on_message": {"type": "function", "desc": "fonction(client, message, opcode)."}}},
+        "on_close": {"desc": "Définit le callback de fermeture.", "params": {"on_close": {"type": "function", "desc": "fonction(client, ...) ."}}},
+        "on_error": {"desc": "Définit le callback d'erreur.", "params": {"on_error": {"type": "function", "desc": "fonction(client, erreur)."}}},
+        "broadcast": {"desc": "Envoie à tous les clients du même sous-protocole.", "params": {"...": {"type": "any", "desc": "Arguments de send."}}},
+        "close": {"desc": "Ferme la connexion proprement (trame CLOSE) avec un délai d'expiration.", "params": {"code": {"type": "integer", "desc": "Code de fermeture (défaut 1000)."}, "reason": {"type": "string", "desc": "Raison."}, "timeout": {"type": "number", "desc": "Secondes avant fermeture forcée (défaut 3)."}}},
+        "start": {"desc": "Démarre la lecture asynchrone des messages ; appelé par listen après l'appel du gestionnaire.", "internal": true}
+      }
+    }
+  }
+}

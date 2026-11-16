@@ -1,0 +1,21 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/buttonModule.lua",
+  "module": "Module flowgraph (moduleOrder 0) qui gère des boutons personnalisés affichés dans l'interface pendant un projet flowgraph. Chaque bouton a un label, un style, un état actif, un ordre, et des variables clicked/complete stockées dans un variableStorage. Dans afterTrigger, la liste des boutons actifs, triée par ordre puis id, est envoyée à l'UI via guihooks.trigger('CustomFGButtons', data). Le clic revient par une commande Lua qui appelle buttonClicked.",
+  "notes": [
+    "La variable 'clicked' est remise à false à chaque afterTrigger : elle n'est vraie que pendant un tick.",
+    "La liste n'est renvoyée à l'UI que si buttonsChanged est vrai (ajout ou set).",
+    "Le module est appelé 'button' dans mgr.modules (cf. getCmd)."
+  ],
+  "functions": {
+    "getFreeId": {"desc": "Incrémente et renvoie un id de bouton.", "returns": [{"type": "integer", "desc": "id"}]},
+    "init": {"desc": "Crée le variableStorage et appelle clear().", "internal": true},
+    "clear": {"desc": "Vide variables et boutons, remet le compteur d'ids à 0 et envoie une liste vide à l'UI (CustomFGButtons).", "internal": true},
+    "addButton": {"desc": "Ajoute un bouton et renvoie son id.", "params": {"data": {"type": "table", "desc": "champs facultatifs label (défaut 'Button <id>'), style (défaut 'default'), active (défaut true), order (défaut id)"}}, "returns": [{"type": "integer", "desc": "id du bouton"}]},
+    "getButton": {"desc": "Renvoie la table du bouton (champs de type variable : label, style, active, order, clicked, complete).", "params": {"id": {"type": "integer", "desc": "id du bouton"}}, "returns": [{"type": "table|nil", "desc": "bouton"}]},
+    "set": {"desc": "Change un champ du bouton via le variableStorage (appliqué à la fin du tick) et marque la liste comme modifiée.", "params": {"id": {"type": "integer", "desc": "id du bouton"}, "field": {"type": "string", "desc": "label, style, active, order, clicked ou complete"}, "val": {"type": "any", "desc": "nouvelle valeur"}}},
+    "buttonClicked": {"desc": "Appelé quand l'UI signale un clic : met clicked et complete à true.", "params": {"id": {"type": "integer", "desc": "id du bouton"}}},
+    "getCmd": {"desc": "Construit la chaîne de commande Lua exécutée par l'UI au clic : récupère le module 'button' du manager et appelle buttonClicked(id).", "params": {"id": {"type": "integer", "desc": "id du bouton"}}, "returns": [{"type": "string", "desc": "code Lua"}]},
+    "afterTrigger": {"desc": "Appelé après le tick du graphe : finalise les variables, envoie les boutons actifs triés à l'UI si modifiés, puis remet clicked à false.", "internal": true},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : appelle clear() (les boutons disparaissent de l'UI).", "internal": true}
+  }
+}

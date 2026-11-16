@@ -1,254 +1,254 @@
 # `ui_appSelector_general`
 
-*Fichier : `lua/ge/extensions/ui/appSelector/general.lua` · VM : Game Engine (GE) · 761 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/appSelector/general.lua` · VM: Game Engine (GE) · 761 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_appSelector_general` : `extensions.load("ui_appSelector_general")`, puis la globale `ui_appSelector_general`
+**Access:** extension `ui_appSelector_general`: `extensions.load("ui_appSelector_general")`, then the global `ui_appSelector_general`
 
-Backend (`backendName = "appSelector"`) du sélecteur d'apps de l'interface, branché sur le composant générique GridSelector. Il liste les apps connues de `ui_apps.getUIAppsData()` sous forme de tuiles groupées par catégorie (Dashboard, Telemetry, General, Gameplay, Debug, puis les autres par ordre alphabétique), gère la recherche, le filtre par type, les options d'affichage (taille, contenu auxiliaire, enregistrées dans `/settings/appSelectorData.json`) et la fiche de détails avec le bouton « Ajouter au layout ». Utile pour comprendre comment l'écran d'édition des apps est alimenté ; peu utile directement à un moddeur.
+Backend (`backendName = "appSelector"`) of the interface's app selector, plugged into the generic GridSelector component. It lists the apps known from `ui_apps.getUIAppsData()` as tiles grouped by category (Dashboard, Telemetry, General, Gameplay, Debug, then the others in alphabetical order), handles search, filtering by type, display options (size, auxiliary content, saved in `/settings/appSelectorData.json`) and the details sheet with the "Add to layout" button. Useful to understand how the app editing screen is fed; of little direct use to a modder.
 
-## Remarques
+## Notes
 
-- En menu simple (`Engine.UI.isSimpleMenu()`), les apps auxiliaires, celles à interactivité obligatoire (`required`) et celles de type Debug sont masquées du sélecteur.
-- getTiles écarte aussi les apps `photomode == true` et, sauf option `includeAuxContent`, les apps auxiliaires.
-- Le bouton « Ajouter au layout » (et le double-clic) déclenche le hook UI `appContainer:spawn` puis navigue vers la route `pause.hudApps.editlayout`.
-- Les données sont recalculées au prochain accès après onModActivated, onModDeactivated ou onModManagerReady.
-- setDisplayDataOption et resetDisplayDataToDefaults utilisent directement `displayDataInstance`, qui n'est créé que paresseusement par getDisplayDataInstance (appelé via getAppData) : appelées avant tout accès aux données, elles échoueraient sur nil.
-- toggleFavourite, getManagementDetails, exploreFolder, goToMod, profilerFinish et closedFromUI sont des coquilles vides, présentes pour satisfaire l'API de GridSelector.
+- In simple menu (`Engine.UI.isSimpleMenu()`), auxiliary apps, those with mandatory interactivity (`required`) and Debug-type apps are hidden from the selector.
+- getTiles also discards `photomode == true` apps and, unless the `includeAuxContent` option is set, auxiliary apps.
+- The "Add to layout" button (and the double-click) triggers the UI hook `appContainer:spawn` then navigates to the route `pause.hudApps.editlayout`.
+- The data is recomputed on the next access after onModActivated, onModDeactivated or onModManagerReady.
+- setDisplayDataOption and resetDisplayDataToDefaults use `displayDataInstance` directly, which is only created lazily by getDisplayDataInstance (called via getAppData): called before any data access, they would fail on nil.
+- toggleFavourite, getManagementDetails, exploreFolder, goToMod, profilerFinish and closedFromUI are empty shells, present to satisfy the GridSelector API.
 
-**Dépendances (chargées avant) :** `ui_apps`
+**Dependencies (loaded first):** `ui_apps`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_appSelector_general.clearAllFilters(requestId)` | Efface tous les filtres. | 487 |
-| `ui_appSelector_general.closedFromUI()` | Fonction vide, présente pour l'API de GridSelector. *(interne)* | 756 |
-| `ui_appSelector_general.emitDisplayDataSnapshot(requestId)` | Reconstruit l'instantané complet (tuiles, filtres, options, en-tête) et l'envoie à l'UI par `appSelectorDisplayDataSnapshot`. | 736 |
-| `ui_appSelector_general.executeButton(buttonId, data)` | Exécute le callback d'un bouton de la fiche via le module de boutons. | 665 |
-| `ui_appSelector_general.executeDoubleClick(details)` | Sur double-clic d'une tuile, exécute le bouton « Ajouter au layout » de l'app. | 690 |
-| `ui_appSelector_general.exploreFolder(path)` | Sans effet : écrit seulement un message dans le log. | 680 |
-| `ui_appSelector_general.getActiveFilters()` | Renvoie les filtres actuellement actifs. | 446 |
-| `ui_appSelector_general.getAppData()` | Renvoie les données du sélecteur (apps, instance de filtres, liste de filtres, options d'affichage), en les (ré)initialisant si nécessaire. | 287 |
-| `ui_appSelector_general.getDetails(details)` | Construit la fiche d'une app : titre, aperçu, description, spécifications (interactivité, version, types, dossier hors build shipping) et bouton « Ajouter au layout ». Renvoie un titre de secours si l'app est inconnue. | 565 |
-| `ui_appSelector_general.getDisplayDataOptions()` | Renvoie les options d'affichage (taille des tuiles : list/tiny/small/medium/large/huge ; inclusion du contenu auxiliaire). | 496 |
-| `ui_appSelector_general.getFilters()` | Renvoie les filtres disponibles (filtre de type « set » sur les types d'apps). | 441 |
-| `ui_appSelector_general.getManagementDetails()` | Fonction facultative de l'API GridSelector : renvoie toujours `{buttons = {}}`. | 671 |
-| `ui_appSelector_general.getScreenHeaderTitleAndPath(path)` | Construit le titre et le fil d'Ariane de l'écran (Menu, Édition des apps, Apps, puis « Filtré »/« Recherche : … » si besoin). | 530 |
-| `ui_appSelector_general.getSearchText()` | Renvoie le texte de recherche courant. | 516 |
-| `ui_appSelector_general.getTiles(path)` | Construit les groupes de tuiles d'apps (filtrés, triés : non auxiliaires d'abord puis par nom, groupés par catégorie). | 354 |
-| `ui_appSelector_general.goToMod(modId)` | Sans effet : écrit seulement un message dans le log. | 685 |
-| `ui_appSelector_general.onModActivated()` | Hook appelé quand un mod est activé : force le rechargement des données au prochain accès. *(interne)* *(hook)* | 301 |
-| `ui_appSelector_general.onModDeactivated()` | Hook appelé quand un mod est désactivé : force le rechargement des données au prochain accès. *(interne)* *(hook)* | 300 |
-| `ui_appSelector_general.onModManagerReady()` | Hook appelé quand le gestionnaire de mods est prêt : force le rechargement des données. *(interne)* *(hook)* | 302 |
-| `ui_appSelector_general.onRouteMount(context, toRoute, fromRoute, data)` | Hook appelé par le routeur UI au montage de la route : attache à `data.appSelector` un instantané du sélecteur. *(interne)* *(hook)* | 751 |
-| `ui_appSelector_general.profilerFinish()` | Fonction vide, présente pour l'API de GridSelector. *(interne)* | 755 |
-| `ui_appSelector_general.requestDetails(item, requestId)` | Calcule la fiche d'une app et l'envoie à l'UI par le hook `appSelectorDetails`. | 653 |
-| `ui_appSelector_general.resetDisplayDataToDefaults(requestId)` | Remet les options d'affichage à leurs valeurs par défaut. | 508 |
-| `ui_appSelector_general.resetRangeFilter(filterKey, requestId)` | Réinitialise un filtre par intervalle. | 469 |
-| `ui_appSelector_general.resetSetFilter(filterKey, requestId)` | Réinitialise un filtre de type « set ». | 478 |
-| `ui_appSelector_general.resolveCurrentSelectorPath()` | Renvoie le chemin par défaut du sélecteur : `{keys = {"allApps"}}`. | 732 |
-| `ui_appSelector_general.setDisplayDataOption(key, value, requestId)` | Modifie une option d'affichage et la sauvegarde. | 500 |
-| `ui_appSelector_general.setSearchText(val, requestId)` | Définit le texte de recherche (comparé en minuscules au nom, au nom d'app et à la description traduits). | 521 |
-| `ui_appSelector_general.toggleFavourite(itemDetails)` | Sans effet : les apps n'ont pas de favoris. Renvoie false. | 675 |
-| `ui_appSelector_general.toggleFilter(filterKey, value, requestId)` | Active ou désactive une valeur d'un filtre. Si `requestId` est fourni, renvoie aussi un instantané à l'UI. | 451 |
-| `ui_appSelector_general.updateRangeFilter(filterKey, min, max, requestId)` | Met à jour un filtre par intervalle (non utilisé par les filtres actuels, qui sont tous de type « set »). | 460 |
+| `ui_appSelector_general.clearAllFilters(requestId)` | Clears all filters. | 487 |
+| `ui_appSelector_general.closedFromUI()` | Empty function, present for the GridSelector API. *(internal)* | 756 |
+| `ui_appSelector_general.emitDisplayDataSnapshot(requestId)` | Rebuilds the complete snapshot (tiles, filters, options, header) and sends it to the UI via `appSelectorDisplayDataSnapshot`. | 736 |
+| `ui_appSelector_general.executeButton(buttonId, data)` | Runs the callback of a details sheet button via the buttons module. | 665 |
+| `ui_appSelector_general.executeDoubleClick(details)` | On a tile double-click, runs the app's "Add to layout" button. | 690 |
+| `ui_appSelector_general.exploreFolder(path)` | No effect: only writes a message to the log. | 680 |
+| `ui_appSelector_general.getActiveFilters()` | Returns the currently active filters. | 446 |
+| `ui_appSelector_general.getAppData()` | Returns the selector data (apps, filter instance, filter list, display options), (re)initializing them if needed. | 287 |
+| `ui_appSelector_general.getDetails(details)` | Builds an app's details sheet: title, preview, description, specifications (interactivity, version, types, folder outside the shipping build) and "Add to layout" button. Returns a fallback title if the app is unknown. | 565 |
+| `ui_appSelector_general.getDisplayDataOptions()` | Returns the display options (tile size: list/tiny/small/medium/large/huge; inclusion of auxiliary content). | 496 |
+| `ui_appSelector_general.getFilters()` | Returns the available filters ("set" type filter on app types). | 441 |
+| `ui_appSelector_general.getManagementDetails()` | Optional function of the GridSelector API: always returns `{buttons = {}}`. | 671 |
+| `ui_appSelector_general.getScreenHeaderTitleAndPath(path)` | Builds the screen's title and breadcrumb (Menu, Edit apps, Apps, then "Filtered"/"Search: …" if needed). | 530 |
+| `ui_appSelector_general.getSearchText()` | Returns the current search text. | 516 |
+| `ui_appSelector_general.getTiles(path)` | Builds the app tile groups (filtered, sorted: non-auxiliary first then by name, grouped by category). | 354 |
+| `ui_appSelector_general.goToMod(modId)` | No effect: only writes a message to the log. | 685 |
+| `ui_appSelector_general.onModActivated()` | Hook called when a mod is activated: forces the data to reload on next access. *(internal)* *(hook)* | 301 |
+| `ui_appSelector_general.onModDeactivated()` | Hook called when a mod is deactivated: forces the data to reload on next access. *(internal)* *(hook)* | 300 |
+| `ui_appSelector_general.onModManagerReady()` | Hook called when the mod manager is ready: forces the data to reload. *(internal)* *(hook)* | 302 |
+| `ui_appSelector_general.onRouteMount(context, toRoute, fromRoute, data)` | Hook called by the UI router when the route is mounted: attaches a selector snapshot to `data.appSelector`. *(internal)* *(hook)* | 751 |
+| `ui_appSelector_general.profilerFinish()` | Empty function, present for the GridSelector API. *(internal)* | 755 |
+| `ui_appSelector_general.requestDetails(item, requestId)` | Computes an app's details sheet and sends it to the UI via the `appSelectorDetails` hook. | 653 |
+| `ui_appSelector_general.resetDisplayDataToDefaults(requestId)` | Resets the display options to their default values. | 508 |
+| `ui_appSelector_general.resetRangeFilter(filterKey, requestId)` | Resets a range filter. | 469 |
+| `ui_appSelector_general.resetSetFilter(filterKey, requestId)` | Resets a "set" type filter. | 478 |
+| `ui_appSelector_general.resolveCurrentSelectorPath()` | Returns the selector's default path: `{keys = {"allApps"}}`. | 732 |
+| `ui_appSelector_general.setDisplayDataOption(key, value, requestId)` | Changes a display option and saves it. | 500 |
+| `ui_appSelector_general.setSearchText(val, requestId)` | Sets the search text (compared in lowercase against the translated name, app name and description). | 521 |
+| `ui_appSelector_general.toggleFavourite(itemDetails)` | No effect: apps have no favorites. Returns false. | 675 |
+| `ui_appSelector_general.toggleFilter(filterKey, value, requestId)` | Enables or disables a filter value. If `requestId` is provided, also returns a snapshot to the UI. | 451 |
+| `ui_appSelector_general.updateRangeFilter(filterKey, min, max, requestId)` | Updates a range filter (not used by the current filters, which are all of "set" type). | 460 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_appSelector_general.clearAllFilters(requestId)`
 
-Efface tous les filtres.
+Clears all filters.
 
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : any Résultat du module de filtres.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: any Result of the filters module.
 
 #### `ui_appSelector_general.emitDisplayDataSnapshot(requestId)`
 
-Reconstruit l'instantané complet (tuiles, filtres, options, en-tête) et l'envoie à l'UI par `appSelectorDisplayDataSnapshot`.
+Rebuilds the complete snapshot (tiles, filters, options, header) and sends it to the UI via `appSelectorDisplayDataSnapshot`.
 
-- `requestId` (*any*) : Identifiant de requête côté UI.
-- **renvoie** : boolean true si envoyé, false si la construction a échoué (erreur loggée).
+- `requestId` (*any*) : UI-side request identifier.
+- **returns**: boolean true if sent, false if the build failed (error logged).
 
 #### `ui_appSelector_general.executeButton(buttonId, data)`
 
-Exécute le callback d'un bouton de la fiche via le module de boutons.
+Runs the callback of a details sheet button via the buttons module.
 
-- `buttonId` (*any*) : Identifiant du bouton.
-- `data` (*any*) : Données transmises au callback.
-- **renvoie** : any Retour du callback.
+- `buttonId` (*any*) : Button identifier.
+- `data` (*any*) : Data passed to the callback.
+- **returns**: any Callback return.
 
 #### `ui_appSelector_general.executeDoubleClick(details)`
 
-Sur double-clic d'une tuile, exécute le bouton « Ajouter au layout » de l'app.
+On a tile double-click, runs the app's "Add to layout" button.
 
-- `details` (*table*) : Table contenant `appName`.
+- `details` (*table*) : Table containing `appName`.
 
 #### `ui_appSelector_general.exploreFolder(path)`
 
-Sans effet : écrit seulement un message dans le log.
+No effect: only writes a message to the log.
 
-- `path` (*any*) : Chemin (loggé).
+- `path` (*any*) : Path (logged).
 
 #### `ui_appSelector_general.getActiveFilters()`
 
-Renvoie les filtres actuellement actifs.
+Returns the currently active filters.
 
-- **renvoie** : table Filtres actifs.
+- **returns**: table Active filters.
 
 #### `ui_appSelector_general.getAppData()`
 
-Renvoie les données du sélecteur (apps, instance de filtres, liste de filtres, options d'affichage), en les (ré)initialisant si nécessaire.
+Returns the selector data (apps, filter instance, filter list, display options), (re)initializing them if needed.
 
-- **renvoie** : table Table avec `apps`, `filterInstance`, `filterList`, `activeFilters`, `lockedFiltersByProp`, `displayData`.
+- **returns**: table Table with `apps`, `filterInstance`, `filterList`, `activeFilters`, `lockedFiltersByProp`, `displayData`.
 
 #### `ui_appSelector_general.getDetails(details)`
 
-Construit la fiche d'une app : titre, aperçu, description, spécifications (interactivité, version, types, dossier hors build shipping) et bouton « Ajouter au layout ». Renvoie un titre de secours si l'app est inconnue.
+Builds an app's details sheet: title, preview, description, specifications (interactivity, version, types, folder outside the shipping build) and "Add to layout" button. Returns a fallback title if the app is unknown.
 
-- `details` (*table*) : Table contenant `appName`.
-- **renvoie** : table `{headerTitle, preview, description, specifications, buttonInfo, appName}`.
+- `details` (*table*) : Table containing `appName`.
+- **returns**: table `{headerTitle, preview, description, specifications, buttonInfo, appName}`.
 
 #### `ui_appSelector_general.getDisplayDataOptions()`
 
-Renvoie les options d'affichage (taille des tuiles : list/tiny/small/medium/large/huge ; inclusion du contenu auxiliaire).
+Returns the display options (tile size: list/tiny/small/medium/large/huge; inclusion of auxiliary content).
 
-- **renvoie** : table Options d'affichage.
+- **returns**: table Display options.
 
 #### `ui_appSelector_general.getFilters()`
 
-Renvoie les filtres disponibles (filtre de type « set » sur les types d'apps).
+Returns the available filters ("set" type filter on app types).
 
-- **renvoie** : table Filtres du module de filtres.
+- **returns**: table Filters of the filters module.
 
 #### `ui_appSelector_general.getManagementDetails()`
 
-Fonction facultative de l'API GridSelector : renvoie toujours `{buttons = {}}`.
+Optional function of the GridSelector API: always returns `{buttons = {}}`.
 
-- **renvoie** : table `{buttons = {}}`.
+- **returns**: table `{buttons = {}}`.
 
 #### `ui_appSelector_general.getScreenHeaderTitleAndPath(path)`
 
-Construit le titre et le fil d'Ariane de l'écran (Menu, Édition des apps, Apps, puis « Filtré »/« Recherche : … » si besoin).
+Builds the screen's title and breadcrumb (Menu, Edit apps, Apps, then "Filtered"/"Search: …" if needed).
 
-- `path` (*table*) : Chemin courant (non utilisé).
-- **renvoie** : table `{title, pathSegments, isFiltered}`.
+- `path` (*table*) : Current path (not used).
+- **returns**: table `{title, pathSegments, isFiltered}`.
 
 #### `ui_appSelector_general.getSearchText()`
 
-Renvoie le texte de recherche courant.
+Returns the current search text.
 
-- **renvoie** : string|nil Texte de recherche.
+- **returns**: string|nil Search text.
 
 #### `ui_appSelector_general.getTiles(path)`
 
-Construit les groupes de tuiles d'apps (filtrés, triés : non auxiliaires d'abord puis par nom, groupés par catégorie).
+Builds the app tile groups (filtered, sorted: non-auxiliary first then by name, grouped by category).
 
-- `path` (*table*) : Chemin de navigation (non utilisé pour le contenu).
-- **renvoie** : table<integer, table> Liste de `{label, tiles}`.
+- `path` (*table*) : Navigation path (not used for the content).
+- **returns**: table<integer, table> List of `{label, tiles}`.
 
 #### `ui_appSelector_general.goToMod(modId)`
 
-Sans effet : écrit seulement un message dans le log.
+No effect: only writes a message to the log.
 
-- `modId` (*any*) : Id du mod (loggé).
+- `modId` (*any*) : Mod ID (logged).
 
 #### `ui_appSelector_general.onRouteMount(context, toRoute, fromRoute, data)`
 
-Hook appelé par le routeur UI au montage de la route : attache à `data.appSelector` un instantané du sélecteur.
+Hook called by the UI router when the route is mounted: attaches a selector snapshot to `data.appSelector`.
 
-- `context` (*any*) : Contexte de la route (non utilisé).
-- `toRoute` (*any*) : Route d'arrivée (non utilisé).
-- `fromRoute` (*any*) : Route de départ (non utilisé).
-- `data` (*table*) : Données de route auxquelles l'instantané est ajouté.
+- `context` (*any*) : Route context (not used).
+- `toRoute` (*any*) : Destination route (not used).
+- `fromRoute` (*any*) : Source route (not used).
+- `data` (*table*) : Route data to which the snapshot is added.
 
 #### `ui_appSelector_general.requestDetails(item, requestId)`
 
-Calcule la fiche d'une app et l'envoie à l'UI par le hook `appSelectorDetails`.
+Computes an app's details sheet and sends it to the UI via the `appSelectorDetails` hook.
 
-- `item` (*table*) : Élément sélectionné (avec `appName`).
-- `requestId` (*any*) : Identifiant de requête côté UI.
-- **renvoie** : table Charge envoyée : `{backendName, requestId, item, details}`.
+- `item` (*table*) : Selected item (with `appName`).
+- `requestId` (*any*) : UI-side request identifier.
+- **returns**: table Payload sent: `{backendName, requestId, item, details}`.
 
 #### `ui_appSelector_general.resetDisplayDataToDefaults(requestId)`
 
-Remet les options d'affichage à leurs valeurs par défaut.
+Resets the display options to their default values.
 
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : table Données d'affichage à jour.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: table Updated display data.
 
 #### `ui_appSelector_general.resetRangeFilter(filterKey, requestId)`
 
-Réinitialise un filtre par intervalle.
+Resets a range filter.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : any Résultat du module de filtres.
+- `filterKey` (*string*) : Filter name.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: any Result of the filters module.
 
 #### `ui_appSelector_general.resetSetFilter(filterKey, requestId)`
 
-Réinitialise un filtre de type « set ».
+Resets a "set" type filter.
 
-- `filterKey` (*string*) : Nom du filtre.
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : any Résultat du module de filtres.
+- `filterKey` (*string*) : Filter name.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: any Result of the filters module.
 
 #### `ui_appSelector_general.resolveCurrentSelectorPath()`
 
-Renvoie le chemin par défaut du sélecteur : `{keys = {"allApps"}}`.
+Returns the selector's default path: `{keys = {"allApps"}}`.
 
-- **renvoie** : table Chemin normalisé.
+- **returns**: table Normalized path.
 
 #### `ui_appSelector_general.setDisplayDataOption(key, value, requestId)`
 
-Modifie une option d'affichage et la sauvegarde.
+Changes a display option and saves it.
 
-- `key` (*string*) : Clé de l'option (displaySize, includeAuxContent).
-- `value` (*any*) : Nouvelle valeur.
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : table Données d'affichage à jour.
+- `key` (*string*) : Option key (displaySize, includeAuxContent).
+- `value` (*any*) : New value.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: table Updated display data.
 
 #### `ui_appSelector_general.setSearchText(val, requestId)`
 
-Définit le texte de recherche (comparé en minuscules au nom, au nom d'app et à la description traduits).
+Sets the search text (compared in lowercase against the translated name, app name and description).
 
-- `val` (*string*) : Texte recherché.
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : any Résultat du module de filtres.
+- `val` (*string*) : Searched text.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: any Result of the filters module.
 
 #### `ui_appSelector_general.toggleFavourite(itemDetails)`
 
-Sans effet : les apps n'ont pas de favoris. Renvoie false.
+No effect: apps have no favorites. Returns false.
 
-- `itemDetails` (*table*) : Non utilisé.
-- **renvoie** : boolean Toujours false.
+- `itemDetails` (*table*) : Not used.
+- **returns**: boolean Always false.
 
 #### `ui_appSelector_general.toggleFilter(filterKey, value, requestId)`
 
-Active ou désactive une valeur d'un filtre. Si `requestId` est fourni, renvoie aussi un instantané à l'UI.
+Enables or disables a filter value. If `requestId` is provided, also returns a snapshot to the UI.
 
-- `filterKey` (*string*) : Nom du filtre (par exemple "Type").
-- `value` (*any*) : Valeur à basculer.
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : any Résultat du module de filtres.
+- `filterKey` (*string*) : Filter name (for example "Type").
+- `value` (*any*) : Value to toggle.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: any Result of the filters module.
 
 #### `ui_appSelector_general.updateRangeFilter(filterKey, min, max, requestId)`
 
-Met à jour un filtre par intervalle (non utilisé par les filtres actuels, qui sont tous de type « set »).
+Updates a range filter (not used by the current filters, which are all of "set" type).
 
-- `filterKey` (*string*) : Nom du filtre.
+- `filterKey` (*string*) : Filter name.
 - `min` (*number*) : Minimum.
 - `max` (*number*) : Maximum.
-- `requestId` (*any|nil*) : Identifiant de requête côté UI.
-- **renvoie** : any Résultat du module de filtres.
+- `requestId` (*any|nil*) : UI-side request identifier.
+- **returns**: any Result of the filters module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `backendName` | string | Nom du backend : "appSelector". |
-| `dependencies` | table<integer, string> | Extensions chargées avant : `{'ui_apps'}`. |
+| `backendName` | string | Backend name: "appSelector". |
+| `dependencies` | table<integer, string> | Extensions loaded before: `{'ui_apps'}`. |
 
-**Évènements UI (guihooks.trigger) :** `appContainer:spawn`, `appSelectorDetails`, `appSelectorDisplayDataSnapshot`
+**UI events (guihooks.trigger):** `appContainer:spawn`, `appSelectorDetails`, `appSelectorDisplayDataSnapshot`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/appSelector/general.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/appSelector/general.lua`.*

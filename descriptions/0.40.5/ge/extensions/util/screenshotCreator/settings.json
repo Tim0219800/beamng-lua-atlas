@@ -1,208 +1,488 @@
 {
   "path": "lua/ge/extensions/util/screenshotCreator/settings.lua",
-  "module": "Réglages et fenêtre de paramètres du créateur de captures/vignettes. Il conserve dans des pointeurs ImGui (getControls) tous les réglages : destination de sortie, résolution (préréglages thumbnail 800x448, 720p, 1080p, 4k, 8k…), supersampling, FOV, hauteur de caméra, marges de cadrage, qualité des réflexions dynamiques, exposition, feux de croisement, délai de stabilisation, gel de la physique, rig d'éclairage, SSAO. Il fabrique les contextes (getFramingContext, getCaptureContext, getJobSettings) consommés par job.lua, les modes de cadrage et la capture, applique/restaure l'environnement du showroom (exposition locale, réflexions, plaques, occupants de sièges) et dessine les surcouches de marges dans la vue 3D.",
+  "module": "Settings and settings window of the screenshot/thumbnail creator. It keeps all the settings in ImGui pointers (getControls): output destination, resolution (presets thumbnail 800x448, 720p, 1080p, 4k, 8k…), supersampling, FOV, camera height, framing margins, dynamic reflection quality, exposure, low beams, settle delay, physics freeze, lighting rig, SSAO. It builds the contexts (getFramingContext, getCaptureContext, getJobSettings) consumed by job.lua, the framing modes and the capture, applies/restores the showroom environment (local exposure, reflections, plates, seat occupants) and draws the margin overlays in the 3D view.",
   "notes": [
-    "Les valeurs par défaut : destination « Vehicle thumbnails » (vehicles/), résolution 800x448, supersampling 3, FOV 20, hauteur de caméra 1,1 m, marge horizontale 32 px, exposition manuelle 8,3 EV, réflexions Ultra, délai de stabilisation 2 s, physique gelée, configs livrées uniquement.",
-    "ctrls.resolution est un index de préréglage avec 0 = « custom » ; les indices d'interface vont de 1 à 9 (getResolutions est indexé à partir de 1). outputDestination et selectedMargin sont indexés à partir de 0.",
-    "Les marges de sécurité sont définies pour la résolution de référence 500x281 (cibles tiny, small, medium, large, huge, list, minimal) puis mises à l'échelle (scaleMargin). La cible « minimal » est le maximum de toutes les autres. L'indice par défaut safeMargins.defaultTargetIndex vaut 6, ce qui désigne la 7e cible (« minimal ») puisque getMarginTarget ajoute 1.",
-    "applyEnvironment, applyReflections et applyLicensePlates n'agissent que dans les niveaux showroom_v2_lighting et showroom_v2_lighting_simple ; ailleurs ils ne font rien (applyReflections/applyLicensePlates renvoient false). L'exposition fixe n'est appliquée que dans le showroom.",
-    "L'environnement d'origine (plaques, réflexions dynamiques VariableRegistry, exposition PostEffectLocalExposureObject, occupants de sièges) est mémorisé au premier applyEnvironment et rétabli par restoreEnvironment/finishWork ; en cas d'échec de restauration, l'état mémorisé est conservé.",
-    "applyLowBeams n'allume les feux que si enabled est vrai ; il ne les éteint jamais.",
-    "Incohérence mineure : le curseur « Procedural camera height » est décrit comme « hauteur au-dessus du nœud activé le plus bas », alors que framing/procedural place le rail à groundHeight + cameraHeight.",
-    "deserialize accepte d'anciens états (resolutionPtr, selectedCameraOverlayMargin, cameraCompositionOverlayEnabled, dynamicReflectionsEnabled) et migre l'ancienne numérotation de qualité de réflexion (version de sérialisation 2)."
+    "Default values: destination \"Vehicle thumbnails\" (vehicles/), resolution 800x448, supersampling 3, FOV 20, camera height 1.1 m, horizontal margin 32 px, manual exposure 8.3 EV, Ultra reflections, settle delay 2 s, physics frozen, shipped configs only.",
+    "ctrls.resolution is a preset index with 0 = \"custom\"; UI indices go from 1 to 9 (getResolutions is 1-based). outputDestination and selectedMargin are 0-based.",
+    "Safety margins are defined for the 500x281 reference resolution (targets tiny, small, medium, large, huge, list, minimal) then scaled (scaleMargin). The \"minimal\" target is the maximum of all the others. The default index safeMargins.defaultTargetIndex is 6, which designates the 7th target (\"minimal\") since getMarginTarget adds 1.",
+    "applyEnvironment, applyReflections and applyLicensePlates act only in the showroom_v2_lighting and showroom_v2_lighting_simple levels; elsewhere they do nothing (applyReflections/applyLicensePlates return false). Fixed exposure is applied only in the showroom.",
+    "The original environment (plates, VariableRegistry dynamic reflections, PostEffectLocalExposureObject exposure, seat occupants) is stored at the first applyEnvironment and restored by restoreEnvironment/finishWork; if restoration fails, the stored state is kept.",
+    "applyLowBeams turns on the lights only if enabled is true; it never turns them off.",
+    "Minor inconsistency: the \"Procedural camera height\" slider is described as \"height above the lowest enabled node\", whereas framing/procedural places the rail at groundHeight + cameraHeight.",
+    "deserialize accepts old states (resolutionPtr, selectedCameraOverlayMargin, cameraCompositionOverlayEnabled, dynamicReflectionsEnabled) and migrates the old reflection quality numbering (serialization version 2)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : ui_imgui et core_camera."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded before: ui_imgui and core_camera."
+    }
   },
   "functions": {
     "getControls": {
-      "desc": "Renvoie la table de tous les pointeurs ImGui des réglages (outputDestination, resolution, imageResolution, superSampling, fieldOfView, cameraHeight, selectedMargin, lightRoleIntensity, etc.). Modifier ces pointeurs modifie directement les réglages.",
-      "returns": [{"type": "table", "desc": "ctrls (im.BoolPtr, im.FloatPtr, im.IntPtr, im.ArrayInt…)."}]
+      "desc": "Returns the table of all ImGui pointers of the settings (outputDestination, resolution, imageResolution, superSampling, fieldOfView, cameraHeight, selectedMargin, lightRoleIntensity, etc.). Modifying these pointers directly modifies the settings.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "ctrls (im.BoolPtr, im.FloatPtr, im.IntPtr, im.ArrayInt…)."
+        }
+      ]
     },
     "getOutputControls": {
-      "desc": "Renvoie le sous-ensemble des pointeurs de sortie : outputDestination, resolution, imageResolution, shippedConfigsOnly, keepAspectRatio, resolutionMultiplier.",
-      "returns": [{"type": "table", "desc": "Pointeurs ImGui."}]
+      "desc": "Returns the subset of output pointers: outputDestination, resolution, imageResolution, shippedConfigsOnly, keepAspectRatio, resolutionMultiplier.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "ImGui pointers."
+        }
+      ]
     },
     "getRenderControls": {
-      "desc": "Renvoie les pointeurs de rendu : superSampling, shippedConfigsOnly, fieldOfView, cameraHeight, dynamicReflectionQuality, lowBeamsEnabled, settleDelay, freezePhysics, autoExposure, manualExposure.",
-      "returns": [{"type": "table", "desc": "Pointeurs ImGui."}]
+      "desc": "Returns the render pointers: superSampling, shippedConfigsOnly, fieldOfView, cameraHeight, dynamicReflectionQuality, lowBeamsEnabled, settleDelay, freezePhysics, autoExposure, manualExposure.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "ImGui pointers."
+        }
+      ]
     },
     "getDefaults": {
-      "desc": "Renvoie une copie des valeurs par défaut des réglages.",
-      "returns": [{"type": "table", "desc": "Valeurs par défaut."}]
+      "desc": "Returns a copy of the settings' default values.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Default values."
+        }
+      ]
     },
     "getThumbnailConfig": {
-      "desc": "Renvoie une copie de la config de vignette : {fileEnding = \".jpg\", fov = 20, nearPlane = 0.1}.",
-      "returns": [{"type": "table", "desc": "Config de vignette."}]
+      "desc": "Returns a copy of the thumbnail config: {fileEnding = \".jpg\", fov = 20, nearPlane = 0.1}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Thumbnail config."
+        }
+      ]
     },
     "getFramingDefaults": {
-      "desc": "Renvoie une copie des défauts de cadrage : {cameraAxisDownOffset = 0.10, cameraHeight = 1.1, settleDelay = 1}.",
-      "returns": [{"type": "table", "desc": "Défauts de cadrage."}]
+      "desc": "Returns a copy of the framing defaults: {cameraAxisDownOffset = 0.10, cameraHeight = 1.1, settleDelay = 1}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Framing defaults."
+        }
+      ]
     },
     "getOutputDestinations": {
-      "desc": "Renvoie les noms des destinations de sortie : « Vehicle thumbnails » et « Screenshot/showroom folder ».",
-      "returns": [{"type": "string[]", "desc": "Destinations."}]
+      "desc": "Returns the names of the output destinations: \"Vehicle thumbnails\" and \"Screenshot/showroom folder\".",
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Destinations."
+        }
+      ]
     },
     "getResolutions": {
-      "desc": "Renvoie les préréglages de résolution {nom, largeur, hauteur}.",
-      "returns": [{"type": "table[]", "desc": "Préréglages."}]
+      "desc": "Returns the resolution presets {name, width, height}.",
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Presets."
+        }
+      ]
     },
     "getSafeMargins": {
-      "desc": "Renvoie la définition des marges de sécurité : {width = 500, height = 281, defaultTargetIndex, targets = [{name, left, right, top, bottom, extraBottom, color}]}.",
-      "returns": [{"type": "table", "desc": "Marges de référence."}]
+      "desc": "Returns the safety margin definition: {width = 500, height = 281, defaultTargetIndex, targets = [{name, left, right, top, bottom, extraBottom, color}]}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Reference margins."
+        }
+      ]
     },
     "getVehicleSafeMargin": {
-      "desc": "Renvoie la marge supplémentaire autour du véhicule : {top = 4, bottom = 2} (en pixels de référence).",
-      "returns": [{"type": "table", "desc": "{top, bottom}."}]
+      "desc": "Returns the extra margin around the vehicle: {top = 4, bottom = 2} (in reference pixels).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{top, bottom}."
+        }
+      ]
     },
     "getDynamicReflectionQualities": {
-      "desc": "Renvoie les niveaux de qualité des réflexions : Lowest, Low, Normal, High, Ultra.",
-      "returns": [{"type": "string[]", "desc": "Niveaux de qualité."}]
+      "desc": "Returns the reflection quality levels: Lowest, Low, Normal, High, Ultra.",
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Quality levels."
+        }
+      ]
     },
     "getThumbnailResolution": {
-      "desc": "Renvoie la résolution correcte d'une vignette de véhicule (préréglage « thumbnail », 800 x 448).",
-      "returns": [{"type": "integer[]", "desc": "{largeur, hauteur}."}]
+      "desc": "Returns the correct resolution of a vehicle thumbnail (\"thumbnail\" preset, 800 x 448).",
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "{width, height}."
+        }
+      ]
     },
     "getCurrentResolution": {
-      "desc": "Renvoie la résolution finale choisie : celle du préréglage sélectionné, ou la résolution personnalisée si « custom ».",
-      "returns": [{"type": "integer[]", "desc": "{largeur, hauteur}."}]
+      "desc": "Returns the final chosen resolution: that of the selected preset, or the custom resolution if \"custom\".",
+      "returns": [
+        {
+          "type": "integer[]",
+          "desc": "{width, height}."
+        }
+      ]
     },
     "setImageResolution": {
-      "desc": "Fixe la résolution personnalisée (arrondie, minimum 1) et sélectionne le préréglage correspondant s'il existe, sinon « custom ».",
+      "desc": "Sets the custom resolution (rounded, minimum 1) and selects the matching preset if there is one, otherwise \"custom\".",
       "params": {
-        "width": {"type": "number", "desc": "Largeur en pixels."},
-        "height": {"type": "number", "desc": "Hauteur en pixels."}
+        "width": {
+          "type": "number",
+          "desc": "Width in pixels."
+        },
+        "height": {
+          "type": "number",
+          "desc": "Height in pixels."
+        }
       }
     },
     "getMarginTarget": {
-      "desc": "Renvoie la cible de marge d'indice donné (base 0). La cible « minimal » est remplacée par le maximum de toutes les autres. Retombe sur la cible par défaut si l'indice est invalide.",
-      "params": {"index": {"type": "integer|nil", "desc": "Indice de cible, base 0 (défaut safeMargins.defaultTargetIndex)."}},
-      "returns": [{"type": "table", "desc": "{name, left, right, top, bottom, extraBottom, color} en pixels de référence 500x281."}]
+      "desc": "Returns the margin target of the given index (0-based). The \"minimal\" target is replaced by the maximum of all the others. Falls back to the default target if the index is invalid.",
+      "params": {
+        "index": {
+          "type": "integer|nil",
+          "desc": "Target index, 0-based (default safeMargins.defaultTargetIndex)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{name, left, right, top, bottom, extraBottom, color} in 500x281 reference pixels."
+        }
+      ]
     },
     "addVehicleMargin": {
-      "desc": "Ajoute à une cible de marge la marge horizontale réglée par l'utilisateur (gauche et droite) et les marges véhicule (haut +4, bas +2).",
-      "params": {"margin": {"type": "table|nil", "desc": "Cible de marge."}},
-      "returns": [{"type": "table|nil", "desc": "Nouvelle marge, ou nil si margin est nil."}]
+      "desc": "Adds to a margin target the horizontal margin set by the user (left and right) and the vehicle margins (top +4, bottom +2).",
+      "params": {
+        "margin": {
+          "type": "table|nil",
+          "desc": "Margin target."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "New margin, or nil if margin is nil."
+        }
+      ]
     },
     "scaleMargin": {
-      "desc": "Met à l'échelle une marge exprimée pour 500x281 vers la résolution donnée.",
+      "desc": "Scales a margin expressed for 500x281 to the given resolution.",
       "params": {
-        "margin": {"type": "table", "desc": "Marge de référence."},
-        "resolution": {"type": "integer[]", "desc": "{largeur, hauteur} cible."}
+        "margin": {
+          "type": "table",
+          "desc": "Reference margin."
+        },
+        "resolution": {
+          "type": "integer[]",
+          "desc": "Target {width, height}."
+        }
       },
-      "returns": [{"type": "table", "desc": "Marge en pixels de la résolution cible (renvoyée telle quelle si un argument est absent)."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Margin in pixels of the target resolution (returned as is if an argument is missing)."
+        }
+      ]
     },
     "getFramingMargin": {
-      "desc": "Calcule la marge de cadrage finale pour une résolution : cible choisie + marges véhicule, mise à l'échelle. Renvoie une marge nulle si « useFramingMargins » est décoché.",
-      "params": {"resolution": {"type": "integer[]", "desc": "{largeur, hauteur}."}},
-      "returns": [{"type": "table", "desc": "{left, right, top, bottom, extraBottom, ...}."}]
+      "desc": "Computes the final framing margin for a resolution: chosen target + vehicle margins, scaled. Returns a zero margin if \"useFramingMargins\" is unchecked.",
+      "params": {
+        "resolution": {
+          "type": "integer[]",
+          "desc": "{width, height}."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{left, right, top, bottom, extraBottom, ...}."
+        }
+      ]
     },
     "getFramingContext": {
-      "desc": "Construit le contexte transmis aux modes de cadrage : fieldOfView/fov, nearPlane, cameraHeight, cameraAxisDownOffset, settleDelay, resolution, aspectRatio, useMargins, margin et debug {drawBounds, drawOobb, drawInputs}. L'appelant ajoute vehicle, configName, etc.",
-      "params": {"resolution": {"type": "integer[]|nil", "desc": "{largeur, hauteur} ; défaut la résolution courante."}},
-      "returns": [{"type": "table", "desc": "Contexte de cadrage."}]
+      "desc": "Builds the context passed to the framing modes: fieldOfView/fov, nearPlane, cameraHeight, cameraAxisDownOffset, settleDelay, resolution, aspectRatio, useMargins, margin and debug {drawBounds, drawOobb, drawInputs}. The caller adds vehicle, configName, etc.",
+      "params": {
+        "resolution": {
+          "type": "integer[]|nil",
+          "desc": "{width, height}; default the current resolution."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Framing context."
+        }
+      ]
     },
     "getCaptureContext": {
-      "desc": "Construit le contexte de capture : destination, extension de fichier, résolution, superSampling (et supersampling), internalResolution (résolution × supersampling), qualité des réflexions, feux, délai, gel de la physique, exposition, options sample/comparison.",
-      "returns": [{"type": "table", "desc": "Contexte de capture."}]
+      "desc": "Builds the capture context: destination, file extension, resolution, superSampling (and supersampling), internalResolution (resolution × supersampling), reflection quality, lights, delay, physics freeze, exposure, sample/comparison options.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Capture context."
+        }
+      ]
     },
     "getJobSettings": {
-      "desc": "Fusionne contexte de cadrage et de capture en un seul tableau de réglages de travail (outputFolder, resolution, fov, margin, captureTimeout min 0,1 s…). Les options remplacent certains réglages de l'interface.",
-      "params": {"options": {"type": "table|nil", "desc": "{resolution, outputFolder, lowBeamsEnabled, shippedConfigsOnly, sample, comparison, captureTimeout}."}},
-      "returns": [{"type": "table", "desc": "Réglages du travail."}]
+      "desc": "Merges the framing and capture contexts into a single table of job settings (outputFolder, resolution, fov, margin, captureTimeout min 0.1 s…). Options override some UI settings.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{resolution, outputFolder, lowBeamsEnabled, shippedConfigsOnly, sample, comparison, captureTimeout}."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Job settings."
+        }
+      ]
     },
     "getLightingRig": {
-      "desc": "Renvoie les réglages du rig d'éclairage lus dans l'interface : enabled, exposureCorrection, ssaoMode (« on », « reduced » ou « off »), parkingMarkup, roles[id] = {intensity, shadows} pour key, fill, rim, top, groundFill, horizonFill.",
-      "returns": [{"type": "table", "desc": "Réglages du rig."}]
+      "desc": "Returns the lighting rig settings read from the UI: enabled, exposureCorrection, ssaoMode (\"on\", \"reduced\" or \"off\"), parkingMarkup, roles[id] = {intensity, shadows} for key, fill, rim, top, groundFill, horizonFill.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Rig settings."
+        }
+      ]
     },
     "drawLightingControls": {
-      "desc": "Dessine les contrôles ImGui d'éclairage : couleur du cyclorama (matériau showroom_v2_lighting_backdrop), rig relatif à la caméra, ombres et intensité par rôle, correction d'exposition, marquage de parking, mode SSAO."
+      "desc": "Draws the lighting ImGui controls: cyclorama color (showroom_v2_lighting_backdrop material), camera-relative rig, shadows and intensity per role, exposure correction, parking markup, SSAO mode."
     },
     "drawOutputControls": {
-      "desc": "Dessine les contrôles ImGui de sortie : bouton « Restore thumbnail defaults », destination, FOV et hauteur de caméra procéduraux, marge horizontale, résolutions, supersampling, réflexions, exposition, feux, délai de stabilisation, gel de la physique, et un résumé de la taille d'image.",
-      "params": {"options": {"type": "table|nil", "desc": "{drawToggleUiApps = function} dessiné à côté du bouton d'aperçu de résolution."}}
+      "desc": "Draws the output ImGui controls: \"Restore thumbnail defaults\" button, destination, procedural FOV and camera height, horizontal margin, resolutions, supersampling, reflections, exposure, lights, settle delay, physics freeze, and an image size summary.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{drawToggleUiApps = function} drawn next to the resolution preview button."
+        }
+      }
     },
-    "drawOutput": {"desc": "Alias de drawOutputControls.", "params": {"options": {"type": "table|nil", "desc": "Voir drawOutputControls."}}},
+    "drawOutput": {
+      "desc": "Alias of drawOutputControls.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "See drawOutputControls."
+        }
+      }
+    },
     "drawOverlayControls": {
-      "desc": "Dessine les contrôles ImGui des surcouches : marges, boîte de cadrage, OOBB, entrées de cadrage, composition, ainsi que les cases Sample et Comparison."
+      "desc": "Draws the overlay ImGui controls: margins, framing box, OOBB, framing inputs, composition, as well as the Sample and Comparison checkboxes."
     },
     "drawCameraOverlay": {
-      "desc": "Dessine dans la vue 3D, devant la caméra courante, le cadre de l'image finale (rouge), les marges de sécurité (vert), les marges véhicule (bleu) et optionnellement la grille de composition (tiers et centre). À appeler à chaque frame.",
-      "params": {"fovOverride": {"type": "number|nil", "desc": "FOV en degrés à utiliser à la place du FOV réglé."}}
+      "desc": "Draws in the 3D view, in front of the current camera, the frame of the final image (red), the safety margins (green), the vehicle margins (blue) and optionally the composition grid (thirds and center). To be called every frame.",
+      "params": {
+        "fovOverride": {
+          "type": "number|nil",
+          "desc": "FOV in degrees to use instead of the set FOV."
+        }
+      }
     },
-    "drawOverlays": {"desc": "Alias de drawCameraOverlay.", "params": {"fovOverride": {"type": "number|nil", "desc": "Voir drawCameraOverlay."}}},
+    "drawOverlays": {
+      "desc": "Alias of drawCameraOverlay.",
+      "params": {
+        "fovOverride": {
+          "type": "number|nil",
+          "desc": "See drawCameraOverlay."
+        }
+      }
+    },
     "isDefaultConfig": {
-      "desc": "Indique si les réglages de sortie/rendu principaux sont aux valeurs par défaut des vignettes.",
-      "returns": [{"type": "boolean", "desc": "true si tout est par défaut."}]
+      "desc": "Indicates whether the main output/render settings are at the thumbnail default values.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if everything is default."
+        }
+      ]
     },
     "isThumbnailConfigGood": {
-      "desc": "Vérifie que, pour la destination « Vehicle thumbnails », la résolution est bien le préréglage vignette.",
-      "returns": [{"type": "boolean", "desc": "false si la taille ne convient pas pour des vignettes du jeu."}]
+      "desc": "Checks that, for the \"Vehicle thumbnails\" destination, the resolution is indeed the thumbnail preset.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the size is not suitable for game thumbnails."
+        }
+      ]
     },
     "resetToDefaults": {
-      "desc": "Remet aux valeurs par défaut les réglages de sortie et de rendu (pas ceux de l'éclairage ni des surcouches)."
+      "desc": "Resets the output and render settings to their default values (not those of the lighting or the overlays)."
     },
     "setPreviewResolution": {
-      "desc": "Passe la fenêtre du jeu en mode sans bordure à la résolution finale choisie (aperçu), ou rétablit le mode vidéo d'origine.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour activer l'aperçu."}}
+      "desc": "Switches the game window to borderless mode at the final chosen resolution (preview), or restores the original video mode.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to enable the preview."
+        }
+      }
     },
     "applyExposure": {
-      "desc": "Écrit l'exposition (auto ou manuelle en EV) dans l'objet PostEffectLocalExposureObject de la scène.",
-      "returns": [{"type": "boolean", "desc": "true si l'objet existe et a pris les valeurs demandées."}]
+      "desc": "Writes the exposure (auto or manual in EV) to the scene's PostEffectLocalExposureObject.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the object exists and took the requested values."
+        }
+      ]
     },
     "applyReflections": {
-      "desc": "Applique la qualité de réflexion dynamique choisie via dynCaptureQuality (showroom uniquement).",
-      "returns": [{"type": "boolean", "desc": "false hors showroom."}]
+      "desc": "Applies the chosen dynamic reflection quality via dynCaptureQuality (showroom only).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false outside the showroom."
+        }
+      ]
     },
     "applyLicensePlates": {
-      "desc": "Active le réglage SkipGenerateLicencePlate (showroom uniquement).",
-      "returns": [{"type": "boolean", "desc": "false hors showroom."}]
+      "desc": "Enables the SkipGenerateLicencePlate setting (showroom only).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false outside the showroom."
+        }
+      ]
     },
     "applyEnvironment": {
-      "desc": "Mémorise l'environnement actuel puis applique celui des captures : exposition, réflexions, plaques non générées, occupants de sièges désactivés. Ne fait rien hors showroom.",
-      "params": {"options": {"type": "table|nil", "desc": "{applyExposure = false} pour ne pas toucher à l'exposition."}}
+      "desc": "Stores the current environment then applies that of the captures: exposure, reflections, ungenerated plates, seat occupants disabled. Does nothing outside the showroom.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{applyExposure = false} to leave the exposure untouched."
+        }
+      }
     },
     "getEnvironmentSnapshot": {
-      "desc": "Renvoie une copie de l'environnement mémorisé (skipLicensePlates, dynamicReflectionRuntime, autoExposure, manualExposure, seatOccupants).",
-      "returns": [{"type": "table|nil", "desc": "Instantané, nil si rien n'a été mémorisé."}]
+      "desc": "Returns a copy of the stored environment (skipLicensePlates, dynamicReflectionRuntime, autoExposure, manualExposure, seatOccupants).",
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Snapshot, nil if nothing was stored."
+        }
+      ]
     },
     "applyEnvironmentSnapshot": {
-      "desc": "Réapplique un instantané d'environnement en vérifiant chaque valeur ; journalise une erreur pour chaque réglage non restauré.",
-      "params": {"snapshot": {"type": "table", "desc": "Instantané (voir getEnvironmentSnapshot)."}},
-      "returns": [{"type": "boolean", "desc": "true si tout a été restauré."}]
+      "desc": "Reapplies an environment snapshot while checking each value; logs an error for each setting not restored.",
+      "params": {
+        "snapshot": {
+          "type": "table",
+          "desc": "Snapshot (see getEnvironmentSnapshot)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if everything was restored."
+        }
+      ]
     },
     "restoreEnvironment": {
-      "desc": "Restaure l'environnement mémorisé puis l'oublie.",
-      "returns": [{"type": "boolean", "desc": "true si tout est restauré ou si rien n'avait été mémorisé."}]
+      "desc": "Restores the stored environment then forgets it.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if everything is restored or if nothing had been stored."
+        }
+      ]
     },
     "beginWork": {
-      "desc": "Début d'un travail de capture : appelle applyEnvironment.",
-      "params": {"options": {"type": "table|nil", "desc": "Passé à applyEnvironment."}}
+      "desc": "Start of a capture job: calls applyEnvironment.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "Passed to applyEnvironment."
+        }
+      }
     },
     "finishWork": {
-      "desc": "Fin d'un travail de capture : appelle restoreEnvironment."
+      "desc": "End of a capture job: calls restoreEnvironment."
     },
     "applyLowBeams": {
-      "desc": "Allume les feux de croisement du véhicule (electrics.setLightsState(1)) si activé ; ne fait rien sinon.",
+      "desc": "Turns on the vehicle's low beams (electrics.setLightsState(1)) if enabled; does nothing otherwise.",
       "params": {
-        "vehicle": {"type": "table", "desc": "Objet véhicule."},
-        "enabled": {"type": "boolean|nil", "desc": "Valeur imposée ; par défaut le réglage de l'interface."}
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "enabled": {
+          "type": "boolean|nil",
+          "desc": "Imposed value; by default the UI setting."
+        }
       }
     },
     "serialize": {
-      "desc": "Renvoie tous les réglages sous forme de table sérialisable (alias onSerialize).",
-      "returns": [{"type": "table", "desc": "État des réglages."}]
+      "desc": "Returns all the settings as a serializable table (alias onSerialize).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Settings state."
+        }
+      ]
     },
     "deserialize": {
-      "desc": "Restaure les réglages depuis une table (valeurs bornées, anciens formats acceptés), puis applique exposition et réflexions si on est dans le showroom (alias onDeserialized).",
-      "params": {"data": {"type": "table|nil", "desc": "État sérialisé ; ignoré si ce n'est pas une table."}}
+      "desc": "Restores the settings from a table (clamped values, old formats accepted), then applies exposure and reflections if in the showroom (alias onDeserialized).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Serialized state; ignored if it is not a table."
+        }
+      }
     },
-    "onSerialize": {"desc": "Hook de sérialisation avant rechargement des extensions ; identique à serialize.", "returns": [{"type": "table", "desc": "État des réglages."}], "internal": true},
-    "onDeserialized": {"desc": "Hook appelé après rechargement avec l'état sérialisé ; identique à deserialize.", "params": {"data": {"type": "table|nil", "desc": "État sérialisé."}}, "internal": true},
-    "onExtensionLoaded": {"desc": "Hook : remet les réglages par défaut et applique l'environnement (showroom).", "internal": true},
-    "onClientPostStartMission": {"desc": "Hook appelé après le démarrage d'un niveau : dans le showroom, force les réflexions sur Ultra et applique l'environnement.", "internal": true},
-    "onExtensionUnloaded": {"desc": "Hook : rétablit la résolution de la fenêtre si l'aperçu était actif, puis restaure l'environnement. Aussi utilisé comme onClientEndMission et onExit.", "internal": true},
-    "onClientEndMission": {"desc": "Hook de fin de niveau ; même fonction que onExtensionUnloaded.", "internal": true},
-    "onExit": {"desc": "Hook de fermeture du jeu ; même fonction que onExtensionUnloaded.", "internal": true}
+    "onSerialize": {
+      "desc": "Serialization hook before extension reload; identical to serialize.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Settings state."
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook called after reload with the serialized state; identical to deserialize.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Serialized state."
+        }
+      },
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook: resets the settings to default and applies the environment (showroom).",
+      "internal": true
+    },
+    "onClientPostStartMission": {
+      "desc": "Hook called after a level starts: in the showroom, forces reflections to Ultra and applies the environment.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook: restores the window resolution if the preview was active, then restores the environment. Also used as onClientEndMission and onExit.",
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "End-of-level hook; same function as onExtensionUnloaded.",
+      "internal": true
+    },
+    "onExit": {
+      "desc": "Game close hook; same function as onExtensionUnloaded.",
+      "internal": true
+    }
   }
 }

@@ -1,14 +1,26 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/selectionLabelOverlay.lua",
-  "module": "Dessine les étiquettes (panneaux sombres à bordure colorée) de l'outil Easy Select avec la drawList imgui. Les étiquettes « followMouse » sont empilées près du curseur (décalage 18 px, côté gauche si elles sortent du viewport) ; les autres sont ancrées au-dessus de leur position écran. Les étiquettes prioritaires (label.priority == true) passent en premier.",
+  "module": "Draws the labels (dark panels with colored border) of the Easy Select tool with the imgui drawList. \"followMouse\" labels are stacked near the cursor (18 px offset, left side if they exit the viewport); the others are anchored above their screen position. Priority labels (label.priority == true) come first.",
   "functions": {
     "draw": {
-      "desc": "Dessine toutes les étiquettes de la liste.",
+      "desc": "Draws all labels of the list.",
       "params": {
-        "drawList": {"type": "ImDrawList*", "desc": "Liste de dessin imgui"},
-        "labels": {"type": "table", "desc": "Liste d'étiquettes {text, color (U32), followMouse, priority, position (ImVec2, si non followMouse)}"},
-        "mouse": {"type": "ImVec2", "desc": "Position de la souris"},
-        "viewport": {"type": "ImGuiViewport", "desc": "Viewport (Pos et Size) servant à garder les étiquettes visibles"}
+        "drawList": {
+          "type": "ImDrawList*",
+          "desc": "imgui draw list"
+        },
+        "labels": {
+          "type": "table",
+          "desc": "List of labels {text, color (U32), followMouse, priority, position (ImVec2, if not followMouse)}"
+        },
+        "mouse": {
+          "type": "ImVec2",
+          "desc": "Mouse position"
+        },
+        "viewport": {
+          "type": "ImGuiViewport",
+          "desc": "Viewport (Pos and Size) used to keep labels visible"
+        }
       }
     }
   }

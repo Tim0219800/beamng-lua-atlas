@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_race_pathDefaultStartTransform`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform.lua` · VM : Game Engine (GE) · 76 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform.lua` · VM: Game Engine (GE) · 76 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Race Start Transform » (catégorie repeat_instant, tags scenario et race). Donne la transformation d'une position de départ d'un pathData, utile pour créer des triggers personnalisés. Entrées : pathData et name (string ou number : nom ou id de la position ; défaut = defaultStartPosition). Sorties : existing, pos (position décalée vers l'arrière de la moitié de startBoxLength et relevée de la moitié de startBoxHeight, donc centre de la boîte de départ), origPos (position d'origine), rot (quat), scl ({largeur, longueur, hauteur}). Calculé une seule fois (tant que self.path est nil).
+Flowgraph node "Race Start Transform" (category repeat_instant, tags scenario and race). Gives the transform of a start position of a pathData, useful for creating custom triggers. Inputs: pathData and name (string or number: name or id of the position; default = defaultStartPosition). Outputs: existing, pos (position shifted backward by half of startBoxLength and raised by half of startBoxHeight, hence the center of the start box), origPos (original position), rot (quat), scl ({width, length, height}). Computed only once (as long as self.path is nil).
 
-## Remarques
+## Notes
 
-- Options data : startBoxWidth = 2, startBoxLength = 5, startBoxHeight = 1.5, useStringMatch = false (si vrai, la première position dont le nom contient la chaîne donnée est utilisée).
-- Si la position est absente ou 'missing', existing vaut false et les autres sorties ne sont pas mises à jour.
+- Data options: startBoxWidth = 2, startBoxLength = 5, startBoxHeight = 1.5, useStringMatch = false (if true, the first position whose name contains the given string is used).
+- If the position is absent or 'missing', existing is false and the other outputs are not updated.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Oublie le chemin mémorisé. | 36 |
-| `C:init(mgr, ...)` | Initialise self.path, désactive clearOutPinsOnStart et définit les options de boîte de départ. | 27 |
-| `C:work(args)` | Cherche la position de départ et calcule pos, origPos, rot, scl et existing. | 40 |
+| `C:_executionStopped()` | Forgets the stored path. | 36 |
+| `C:init(mgr, ...)` | Initializes self.path, disables clearOutPinsOnStart and sets the start box options. | 27 |
+| `C:work(args)` | Looks for the start position and computes pos, origPos, rot, scl and existing. | 40 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/race/pathDefaultStartTransform.lua`.*

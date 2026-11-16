@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/handleLapChange.lua",
+  "module": "Nœud flowgraph « Rally Mode Handle Lap Change » (tag rally). Prévu pour mettre à jour les infos de tour. Entrées : lapChange (impulsion), currLap, maxLap.",
+  "notes": ["Nœud vide en pratique : work() teste lapChange mais n'exécute rien (corps du if vide, code commenté)."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Ne fait rien : le traitement du changement de tour est vide.", "internal": true}
+      }
+    }
+  }
+}

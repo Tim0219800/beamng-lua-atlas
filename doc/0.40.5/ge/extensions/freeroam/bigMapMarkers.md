@@ -1,91 +1,91 @@
 # `freeroam_bigMapMarkers`
 
-*Fichier : `lua/ge/extensions/freeroam/bigMapMarkers.lua` · VM : Game Engine (GE) · 333 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/freeroam/bigMapMarkers.lua` · VM: Game Engine (GE) · 333 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `freeroam_bigMapMarkers` : `extensions.load("freeroam_bigMapMarkers")`, puis la globale `freeroam_bigMapMarkers`
+**Access:** extension `freeroam_bigMapMarkers`: `extensions.load("freeroam_bigMapMarkers")`, then the global `freeroam_bigMapMarkers`
 
-Gère les marqueurs de la grande carte (big map) : regroupe les points d'intérêt (POI) bruts de gameplay_rawPois qui ont un bigmapMarker en grappes (clusters) selon un rayon, crée un marqueur par grappe (gameplay/markers/bigmapMarker), les met à jour/affiche à chaque image et détecte quel marqueur est survolé par la souris ou le réticule. Utilisé par freeroam_bigMapMode ; un moddeur n'y touche normalement pas.
+Manages the big map markers: groups the raw gameplay POIs (points of interest) from gameplay_rawPois that have a bigmapMarker into clusters according to a radius, creates one marker per cluster (gameplay/markers/bigmapMarker), updates/displays them every frame and detects which marker is hovered by the mouse or the reticle. Used by freeroam_bigMapMode; a modder does not normally touch it.
 
-## Remarques
+## Notes
 
-- Un « filtre » (setupFilter) = rayon de regroupement + liste d'ids de POI valides. Son identifiant est « rayon#-ids concaténés » ; les anciens filtres restent en mémoire et leurs marqueurs sont masqués en fondu puis nettoyés.
-- Les grappes sont recalculées quand la génération de gameplay_rawPois augmente (getAllClustersBySettings).
-- Bug/incohérence : M.buildPoiList = buildPoiList référence une variable locale jamais définie, donc vaut nil.
-- displayBigMapMarkers commence par profilerPopEvent("BigMapMarkers parkingSpeedFactor") sans push correspondant dans ce fichier (reste d'un ancien code de profilage).
-- Champs iconCounter, iconsById et printNext existent mais ne sont pas utilisés dans ce fichier (debug).
-- Dans clusterBySettings, un POI ne contient jamais de .cluster avant fusion, donc chaque grappe ne reçoit en pratique que son POI de départ (les voisins du rayon ne sont ajoutés que si bmi.cluster est défini) ; comportement à vérifier en jeu.
+- A "filter" (setupFilter) = grouping radius + list of valid POI ids. Its identifier is "radius#-concatenated ids"; old filters stay in memory and their markers are faded out then cleaned up.
+- Clusters are recomputed when the generation of gameplay_rawPois increases (getAllClustersBySettings).
+- Bug/inconsistency: M.buildPoiList = buildPoiList references a local variable that is never defined, so it is nil.
+- displayBigMapMarkers starts with profilerPopEvent("BigMapMarkers parkingSpeedFactor") with no matching push in this file (leftover from old profiling code).
+- The fields iconCounter, iconsById and printNext exist but are not used in this file (debug).
+- In clusterBySettings, a POI never contains a .cluster before merging, so each cluster in practice only gets its starting POI (neighbors within the radius are only added if bmi.cluster is set); behavior to check in game.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `freeroam_bigMapMarkers.clearMarkers()` | Détruit les objets de rendu de tous les marqueurs (courants et anciens) et vide les listes. | 225 |
-| `freeroam_bigMapMarkers.displayBigMapMarkers(dtReal)` | À appeler à chaque image tant que la grande carte est affichée : met à jour tous les marqueurs des grappes du filtre actif (affichés) et des filtres précédents (masqués en fondu), ainsi que les anciens marqueurs en cours de disparition. | 72 |
-| `freeroam_bigMapMarkers.getAllClustersBySettings(settingsId)` | Renvoie (en calculant si besoin) les grappes de POI pour un filtre : POI dont l'id est valide et qui ont un bigmapMarker, triés par id, regroupés par quadtree puis fusionnés via bigmapMarker.merge. | 314 |
-| `freeroam_bigMapMarkers.getClusterMarker(cluster)` | Renvoie le marqueur d'une grappe, en le créant s'il n'existe pas (ou en réutilisant l'ancien marqueur de même id). | 191 |
-| `freeroam_bigMapMarkers.getIdsFromHoveredPoiId(id)` | Pour un id de POI, renvoie les ids de tous les POI de sa grappe dans le filtre actif. | 182 |
-| `freeroam_bigMapMarkers.handleMouse(camMode, mouseMoved, poiIsSelected)` | Détermine quelle grappe est survolée : lance un rayon depuis la souris (si elle a bougé) ou depuis le centre de la caméra, et teste la distance rayon/icône avec une sphère dont le rayon dépend du zoom (fov) et de la distance (ou fixe en caméra orthogonale). Ne fait rien en mode manette quand un POI est déjà sélectionné. | 145 |
-| `freeroam_bigMapMarkers.hideMarkers()` | Masque (fondu) tous les marqueurs courants et anciens, sans les détruire. | 214 |
-| `freeroam_bigMapMarkers.setNextMarkersFullAlphaInstant()` | Fait apparaître instantanément en pleine opacité les marqueurs actifs lors de la prochaine mise à jour (une seule fois). | 328 |
-| `freeroam_bigMapMarkers.setupFilter(validIds, radius)` | Définit le filtre actif : le rayon de regroupement est arrondi au multiple de 5 (20 par défaut), les ids sont triés, et les marqueurs actuels sont déplacés vers la liste des anciens et masqués pour une transition douce. Les anciens marqueurs invisibles sont détruits. | 23 |
+| `freeroam_bigMapMarkers.clearMarkers()` | Destroys the render objects of all markers (current and old) and empties the lists. | 225 |
+| `freeroam_bigMapMarkers.displayBigMapMarkers(dtReal)` | To be called every frame while the big map is displayed: updates all markers of the active filter's clusters (displayed) and of the previous filters (faded out), as well as the old markers that are disappearing. | 72 |
+| `freeroam_bigMapMarkers.getAllClustersBySettings(settingsId)` | Returns (computing if needed) the POI clusters for a filter: POIs whose id is valid and that have a bigmapMarker, sorted by id, grouped by quadtree then merged via bigmapMarker.merge. | 314 |
+| `freeroam_bigMapMarkers.getClusterMarker(cluster)` | Returns a cluster's marker, creating it if it does not exist (or reusing the old marker with the same id). | 191 |
+| `freeroam_bigMapMarkers.getIdsFromHoveredPoiId(id)` | For a POI id, returns the ids of all the POIs in its cluster in the active filter. | 182 |
+| `freeroam_bigMapMarkers.handleMouse(camMode, mouseMoved, poiIsSelected)` | Determines which cluster is hovered: casts a ray from the mouse (if it moved) or from the camera center, and tests the ray/icon distance with a sphere whose radius depends on the zoom (fov) and distance (or is fixed in an orthographic camera). Does nothing in gamepad mode when a POI is already selected. | 145 |
+| `freeroam_bigMapMarkers.hideMarkers()` | Hides (fades out) all current and old markers, without destroying them. | 214 |
+| `freeroam_bigMapMarkers.setNextMarkersFullAlphaInstant()` | Makes the active markers appear instantly at full opacity on the next update (only once). | 328 |
+| `freeroam_bigMapMarkers.setupFilter(validIds, radius)` | Sets the active filter: the grouping radius is rounded to a multiple of 5 (20 by default), the ids are sorted, and the current markers are moved to the old list and hidden for a smooth transition. Invisible old markers are destroyed. | 23 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `freeroam_bigMapMarkers.displayBigMapMarkers(dtReal)`
 
-À appeler à chaque image tant que la grande carte est affichée : met à jour tous les marqueurs des grappes du filtre actif (affichés) et des filtres précédents (masqués en fondu), ainsi que les anciens marqueurs en cours de disparition.
+To be called every frame while the big map is displayed: updates all markers of the active filter's clusters (displayed) and of the previous filters (faded out), as well as the old markers that are disappearing.
 
-- `dtReal` (*number*) : Temps réel écoulé (s).
+- `dtReal` (*number*) : Elapsed real time (s).
 
 #### `freeroam_bigMapMarkers.getAllClustersBySettings(settingsId)`
 
-Renvoie (en calculant si besoin) les grappes de POI pour un filtre : POI dont l'id est valide et qui ont un bigmapMarker, triés par id, regroupés par quadtree puis fusionnés via bigmapMarker.merge.
+Returns (computing if needed) the POI clusters for a filter: POIs whose id is valid and that have a bigmapMarker, sorted by id, grouped by quadtree then merged via bigmapMarker.merge.
 
-- `settingsId` (*string*) : Identifiant de filtre créé par setupFilter (nommé currentClusterSettingsId en interne).
-- **renvoie** : table[] Liste de grappes (champs id, containedIds, containedIdsLookup…).
+- `settingsId` (*string*) : Filter identifier created by setupFilter (internally named currentClusterSettingsId).
+- **returns**: table[] List of clusters (fields id, containedIds, containedIdsLookup...).
 
 #### `freeroam_bigMapMarkers.getClusterMarker(cluster)`
 
-Renvoie le marqueur d'une grappe, en le créant s'il n'existe pas (ou en réutilisant l'ancien marqueur de même id).
+Returns a cluster's marker, creating it if it does not exist (or reusing the old marker with the same id).
 
-- `cluster` (*table*) : Grappe issue de getAllClustersBySettings.
-- **renvoie** : table Objet marqueur de la grande carte.
+- `cluster` (*table*) : Cluster from getAllClustersBySettings.
+- **returns**: table Big map marker object.
 
 #### `freeroam_bigMapMarkers.getIdsFromHoveredPoiId(id)`
 
-Pour un id de POI, renvoie les ids de tous les POI de sa grappe dans le filtre actif.
+For a POI id, returns the ids of all the POIs in its cluster in the active filter.
 
-- `id` (*string*) : Id d'un POI.
-- **renvoie** : string[]|nil Ids contenus dans la grappe, nil si le POI n'est dans aucune grappe.
+- `id` (*string*) : POI id.
+- **returns**: string[]|nil Ids contained in the cluster, nil if the POI is in no cluster.
 
 #### `freeroam_bigMapMarkers.handleMouse(camMode, mouseMoved, poiIsSelected)`
 
-Détermine quelle grappe est survolée : lance un rayon depuis la souris (si elle a bougé) ou depuis le centre de la caméra, et teste la distance rayon/icône avec une sphère dont le rayon dépend du zoom (fov) et de la distance (ou fixe en caméra orthogonale). Ne fait rien en mode manette quand un POI est déjà sélectionné.
+Determines which cluster is hovered: casts a ray from the mouse (if it moved) or from the camera center, and tests the ray/icon distance with a sphere whose radius depends on the zoom (fov) and distance (or is fixed in an orthographic camera). Does nothing in gamepad mode when a POI is already selected.
 
-- `camMode` (*table*) : Mode caméra de la grande carte (utilise camMode.manualzoom.fov).
-- `mouseMoved` (*boolean*) : true si le rayon vient de la souris, false si de la caméra.
-- `poiIsSelected` (*boolean*) : true si un POI est déjà sélectionné.
-- **renvoie** : string|nil Id du premier POI de la grappe survolée, nil sinon.
+- `camMode` (*table*) : Big map camera mode (uses camMode.manualzoom.fov).
+- `mouseMoved` (*boolean*) : true if the ray comes from the mouse, false if from the camera.
+- `poiIsSelected` (*boolean*) : true if a POI is already selected.
+- **returns**: string|nil Id of the first POI of the hovered cluster, nil otherwise.
 
 #### `freeroam_bigMapMarkers.setupFilter(validIds, radius)`
 
-Définit le filtre actif : le rayon de regroupement est arrondi au multiple de 5 (20 par défaut), les ids sont triés, et les marqueurs actuels sont déplacés vers la liste des anciens et masqués pour une transition douce. Les anciens marqueurs invisibles sont détruits.
+Sets the active filter: the grouping radius is rounded to a multiple of 5 (20 by default), the ids are sorted, and the current markers are moved to the old list and hidden for a smooth transition. Invisible old markers are destroyed.
 
-- `validIds` (*string[]*) : Ids de POI à afficher (la table est triée sur place).
-- `radius` (*number|nil*) : Rayon de regroupement en mètres monde (20 par défaut).
+- `validIds` (*string[]*) : POI ids to display (the table is sorted in place).
+- `radius` (*number|nil*) : Grouping radius in world meters (20 by default).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `buildPoiList` | nil | Toujours nil (référence à une variable non définie). ⚠ référence `buildPoiList` non définie dans le fichier (vaut probablement nil) |
-| `iconCounter` | number | Compteur d'icônes, initialisé à 0 (non utilisé dans ce fichier). |
-| `iconsById` | table | Table vide réservée au debug. |
-| `printNext` | boolean | Drapeau de debug (impressions commentées), false. |
+| `buildPoiList` | nil | Always nil (reference to an undefined variable). ⚠ reference `buildPoiList` not defined in the file (probably nil) |
+| `iconCounter` | number | Icon counter, initialized to 0 (not used in this file). |
+| `iconsById` | table | Empty table reserved for debug. |
+| `printNext` | boolean | Debug flag (commented-out prints), false. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/freeroam/bigMapMarkers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/freeroam/bigMapMarkers.lua`.*

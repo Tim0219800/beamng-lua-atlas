@@ -1,48 +1,48 @@
 # `util_nodeBeamExport`
 
-*Fichier : `lua/ge/extensions/util/nodeBeamExport.lua` · VM : Game Engine (GE) · 125 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/nodeBeamExport.lua` · VM: Game Engine (GE) · 125 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_nodeBeamExport` : `extensions.load("util_nodeBeamExport")`, puis la globale `util_nodeBeamExport`
+**Access:** extension `util_nodeBeamExport`: `extensions.load("util_nodeBeamExport")`, then the global `util_nodeBeamExport`
 
-Exporteur minimal du véhicule du joueur : écrit dans un fichier JSON (.nbexport.json) la liste des nœuds (position et nom éventuel) et des poutres (identifiants de nœuds) du véhicule actif, sous forme d'un graphe point/arête. Utile pour visualiser ou analyser la structure physique d'un véhicule dans un outil externe. Les noms de fichier sont numérotés automatiquement (export_<N>.nbexport.json) dans le dossier du véhicule.
+Minimal export of the player's vehicle: writes to a JSON file (.nbexport.json) the list of nodes (position and optional name) and beams (node ids) of the active vehicle, as a point/edge graph. Useful to visualize or analyze a vehicle's physical structure in an external tool. File names are numbered automatically (export_<N>.nbexport.json) in the vehicle folder.
 
-## Exemple
+## Example
 
 ```lua
 extensions.util_nodeBeamExport.exportFile()
 ```
 
-## Remarques
+## Notes
 
-- Les positions viennent de veh:getNodePosition(id) (coordonnées relatives au nœud de référence du véhicule) et sont converties en {x, z, -y} avant écriture (commentaire du code : « Z-up »).
-- Les poutres sont lues depuis vdata.vdata.beams (champs id1, id2, cid) ; l'id vaut -1 si cid est absent.
-- Le fichier contient aussi vehicle = {id, jbeam, name} ; exportFile renvoie false si aucun véhicule joueur ou aucune donnée n'est disponible.
+- Positions come from veh:getNodePosition(id) (coordinates relative to the vehicle's reference node) and are converted to {x, z, -y} before writing (code comment: "Z-up").
+- Beams are read from vdata.vdata.beams (fields id1, id2, cid); the id is -1 if cid is missing.
+- The file also contains vehicle = {id, jbeam, name}; exportFile returns false if there is no player vehicle or no data available.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_nodeBeamExport.exportFile(filename)` | Construit le graphe du véhicule actif et l'écrit en JSON. Sans nom de fichier, utilise suggestFilename(). Crée le dossier de destination si nécessaire et logue le résultat. | 97 |
-| `util_nodeBeamExport.suggestFilename()` | Propose le prochain nom libre export_<N>.nbexport.json dans le dossier du véhicule actif (cherche les fichiers existants pour incrémenter N) ; crée le dossier au besoin. | 70 |
+| `util_nodeBeamExport.exportFile(filename)` | Builds the graph of the active vehicle and writes it as JSON. Without a file name, uses suggestFilename(). Creates the destination folder if needed and logs the result. | 97 |
+| `util_nodeBeamExport.suggestFilename()` | Suggests the next free name export_<N>.nbexport.json in the active vehicle's folder (looks up existing files to increment N); creates the folder if needed. | 70 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_nodeBeamExport.exportFile(filename)`
 
-Construit le graphe du véhicule actif et l'écrit en JSON. Sans nom de fichier, utilise suggestFilename(). Crée le dossier de destination si nécessaire et logue le résultat.
+Builds the graph of the active vehicle and writes it as JSON. Without a file name, uses suggestFilename(). Creates the destination folder if needed and logs the result.
 
-- `filename` (*string|nil*) : Chemin du fichier de sortie (défaut : export_<N>.nbexport.json dans le dossier du véhicule)
-- **renvoie** : boolean true si l'écriture a réussi, false sinon
+- `filename` (*string|nil*) : Output file path (default: export_<N>.nbexport.json in the vehicle folder)
+- **returns**: boolean true if the write succeeded, false otherwise
 
 #### `util_nodeBeamExport.suggestFilename()`
 
-Propose le prochain nom libre export_<N>.nbexport.json dans le dossier du véhicule actif (cherche les fichiers existants pour incrémenter N) ; crée le dossier au besoin.
+Suggests the next free name export_<N>.nbexport.json in the active vehicle's folder (looks up existing files to increment N); creates the folder if needed.
 
-- **renvoie** : string|nil Chemin proposé, ou nil (erreur loguée) si aucun dossier de véhicule n'est disponible
+- **returns**: string|nil Suggested path, or nil (error logged) if no vehicle folder is available
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/nodeBeamExport.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/nodeBeamExport.lua`.*

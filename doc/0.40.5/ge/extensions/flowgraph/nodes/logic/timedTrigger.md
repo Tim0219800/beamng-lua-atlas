@@ -1,29 +1,29 @@
 # `flowgraph_nodes_logic_timedTrigger`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/timedTrigger.lua` · VM : Game Engine (GE) · 93 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/timedTrigger.lua` · VM: Game Engine (GE) · 93 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/timedTrigger")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/timedTrigger")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Timed Trigger' (categorie logic, behaviour once+duration). Il faut maintenir du flux sur 'charge' pendant data.duration secondes (3 par defaut) pour declencher ; si 'charge' est coupe plus de data.resetTimer secondes (1 par defaut), la charge est remise a zero. Sorties : flow (tant que charge complete) et impulsion 'complete' une seule fois.
+Flowgraph node 'Timed Trigger' (logic category, behaviour once+duration). Flow must be held on 'charge' for data.duration seconds (3 by default) to trigger; if 'charge' is cut for more than data.resetTimer seconds (1 by default), the charge is reset to zero. Outputs: flow (while the charge is complete) and impulse 'complete' only once.
 
-## Remarques
+## Notes
 
-- Seule data.duration est sauvegardee ; resetTimer retombe sur 1 au chargement (valeur d'init).
-- Le pin d'entree 'flow' n'est pas lu dans work.
+- Only data.duration is saved; resetTimer falls back to 1 on load (init value).
+- The input pin 'flow' is not read in work.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Remet tous les compteurs a zero. | 35 |
-| `C:_onDeserialized(res)` | Relit data.duration. | 47 |
-| `C:_onSerialize(res)` | Sauvegarde data.duration. | 43 |
-| `C:drawMiddle(builder, style)` | Deux barres de progression (charge et reset) avec temps restant. | 70 |
-| `C:init(mgr, ...)` | Initialise resetTimer=1, duration=3 et l'etat interne. | 25 |
-| `C:updateCharge()` | Incremente timer (dtSim) quand charge est actif, declenche completeTrigger a la duree ; sinon incremente reset et remet le timer a zero apres resetTimer. | 50 |
-| `C:work(args)` | Appelle updateCharge, flow = (timer >= duration), complete = impulsion une seule fois (completeReady). | 80 |
+| `C:_executionStopped()` | Resets all counters to zero. | 35 |
+| `C:_onDeserialized(res)` | Reads data.duration back. | 47 |
+| `C:_onSerialize(res)` | Saves data.duration. | 43 |
+| `C:drawMiddle(builder, style)` | Two progress bars (charge and reset) with remaining time. | 70 |
+| `C:init(mgr, ...)` | Initializes resetTimer=1, duration=3 and the internal state. | 25 |
+| `C:updateCharge()` | Increments timer (dtSim) when charge is active, fires completeTrigger at the duration; otherwise increments reset and resets the timer to zero after resetTimer. | 50 |
+| `C:work(args)` | Calls updateCharge, flow = (timer >= duration), complete = impulse only once (completeReady). | 80 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/timedTrigger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/timedTrigger.lua`.*

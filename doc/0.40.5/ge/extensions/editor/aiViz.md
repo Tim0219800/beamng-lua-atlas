@@ -1,52 +1,52 @@
 # `editor_aiViz`
 
-*Fichier : `lua/ge/extensions/editor/aiViz.lua` · VM : Game Engine (GE) · 410 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/aiViz.lua` · VM: Game Engine (GE) · 410 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_aiViz` : `extensions.load("editor_aiViz")`, puis la globale `editor_aiViz`
+**Access:** extension `editor_aiViz`: `extensions.load("editor_aiViz")`, then the global `editor_aiViz`
 
-Visualisation du navgraph de l'IA dans l'éditeur. Quand un mode de dessin est actif, dessine les nœuds de la carte de navigation (map.getMap().nodes) sous forme de sphères, les liens (prismes colorés selon le mode), les voies et flèches de sens (lanes ou oneWay), et surligne le nœud ou le lien survolé par la souris. Quatre modes exclusifs : drivability, type (public/private), speedLimit et hiddenInNavi. Les liens proches (moins de 100 m en distance de chemin depuis le nœud survolé) sont aussi tracés en vert. Les nœuds sont indexés dans un quadtree.
+Visualization of the AI navgraph in the editor. When a draw mode is active, draws the navigation map nodes (map.getMap().nodes) as spheres, the links (prisms colored according to the mode), the lanes and direction arrows (lanes or oneWay), and highlights the node or link hovered by the mouse. Four exclusive modes: drivability, type (public/private), speedLimit and hiddenInNavi. Nearby links (less than 100 m in path distance from the hovered node) are also drawn in green. Nodes are indexed in a quadtree.
 
-## Exemple
+## Example
 
 ```lua
 editor_aiViz.enableDrawMode("speedLimit", true)
 print(editor_aiViz.getDrawMode())
 ```
 
-## Remarques
+## Notes
 
-- enableDrawMode désactive les autres modes quand on en active un ; avec un mode inconnu, une erreur est loggée.
-- Couleurs : drivability en arc-en-ciel (valeur bornée 0-1), speedLimit borné à 0-36 m/s, texte du lien en g ou « m/s » (valeur en m/s).
-- Les nœuds ne sont pas dessinés en sphère quand le mode d'édition courant est « Edit Road ».
-- Les listes de nœuds sont rechargées après le hook onNavgraphReloaded.
+- enableDrawMode disables the other modes when one is enabled; with an unknown mode, an error is logged.
+- Colors: drivability as a rainbow (value clamped 0-1), speedLimit clamped to 0-36 m/s, link text in g or "m/s" (value in m/s).
+- Nodes are not drawn as spheres when the current edit mode is "Edit Road".
+- The node lists are reloaded after the onNavgraphReloaded hook.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_aiViz.enableDrawMode(mode, enabled)` | Active ou désactive un mode de dessin ; activer un mode désactive les autres. | 389 |
-| `editor_aiViz.getDrawMode()` | Retourne le mode de dessin actif. | 401 |
-| `editor_aiViz.onEditorGui()` | Hook de dessin de l'éditeur : gère le survol (rayon caméra/souris contre nœuds et liens) et dessine les nœuds proches de la caméra selon le mode. *(interne)* *(hook)* | 305 |
-| `editor_aiViz.onNavgraphReloaded()` | Hook émis quand le navgraph est rechargé : vide le cache de nœuds et reconstruit le quadtree. *(interne)* *(hook)* | 300 |
+| `editor_aiViz.enableDrawMode(mode, enabled)` | Enables or disables a draw mode; enabling a mode disables the others. | 389 |
+| `editor_aiViz.getDrawMode()` | Returns the active draw mode. | 401 |
+| `editor_aiViz.onEditorGui()` | Editor drawing hook: handles hovering (camera/mouse ray against nodes and links) and draws the nodes near the camera according to the mode. *(internal)* *(hook)* | 305 |
+| `editor_aiViz.onNavgraphReloaded()` | Hook emitted when the navgraph is reloaded: empties the node cache and rebuilds the quadtree. *(internal)* *(hook)* | 300 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_aiViz.enableDrawMode(mode, enabled)`
 
-Active ou désactive un mode de dessin ; activer un mode désactive les autres.
+Enables or disables a draw mode; enabling a mode disables the others.
 
-- `mode` (*string*) : "drivability", "type", "speedLimit" ou "hiddenInNavi".
-- `enabled` (*boolean*) : Activer ou désactiver.
+- `mode` (*string*) : "drivability", "type", "speedLimit" or "hiddenInNavi".
+- `enabled` (*boolean*) : Enable or disable.
 
 #### `editor_aiViz.getDrawMode()`
 
-Retourne le mode de dessin actif.
+Returns the active draw mode.
 
-- **renvoie** : string|nil Nom du mode ou nil si rien n'est dessiné.
+- **returns**: string|nil Mode name or nil if nothing is drawn.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`, `drawSphere`, `drawSquarePrism`, `drawText`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/aiViz.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/aiViz.lua`.*

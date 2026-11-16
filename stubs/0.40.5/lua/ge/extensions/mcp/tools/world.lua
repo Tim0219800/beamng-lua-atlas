@@ -2,50 +2,50 @@
 -- tim19Atlas stub generated from lua/ge/extensions/mcp/tools/world.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outils MCP « monde » : lister et charger des niveaux, déclencher une action d'entrée liée (comme une touche), récupérer ou supprimer un véhicule, et interroger le sol (hauteur, adhérence/drivabilité) en un point.
---- Accès : extension `mcp_tools_world` : `extensions.load("mcp_tools_world")`, puis la globale `mcp_tools_world`
+--- MCP "world" tools: list and load levels, trigger a bound input action (like a key press), recover or delete a vehicle, and query the ground (height, grip/drivability) at a point.
+--- Access: extension `mcp_tools_world`: `extensions.load("mcp_tools_world")`, then the global `mcp_tools_world`
 ---@class mcp_tools_world
----@field schemas table<string, table> Schémas des outils monde.
+---@field schemas table<string, table> Schemas of the world tools.
 mcp_tools_world = {}
 
---- Hauteur de surface sous un point (be:getSurfaceHeightBelow) et drivabilité du terrain (be:getTerrainDrivability) dans un rayon.
----Source : lua/ge/extensions/mcp/tools/world.lua:67
----@param args table|nil {pos?: {x,y,z} (défaut position du véhicule joueur), radius?: number m (défaut 2)}
+--- Surface height under a point (be:getSurfaceHeightBelow) and terrain drivability (be:getTerrainDrivability) within a radius.
+---Source: lua/ge/extensions/mcp/tools/world.lua:67
+---@param args table|nil {pos?: {x,y,z} (default player vehicle position), radius?: number m (default 2)}
 ---@return string  JSON {pos, surfaceHeight, drivability}.
----@return boolean  true si aucun point.
+---@return boolean  true if no point.
 function mcp_tools_world.get_ground_at_point(args) end
 
---- Liste les niveaux installés : name (levelName), title, file (fullfilename ou misFilePath).
----Source : lua/ge/extensions/mcp/tools/world.lua:12
+--- Lists the installed levels: name (levelName), title, file (fullfilename or misFilePath).
+---Source: lua/ge/extensions/mcp/tools/world.lua:12
 ---@return string  JSON.
----@return boolean  true si core_levels indisponible.
+---@return boolean  true if core_levels is unavailable.
 function mcp_tools_world.list_levels() end
 
---- Charge un niveau (core_levels.startLevel) par chemin ou par nom.
----Source : lua/ge/extensions/mcp/tools/world.lua:22
+--- Loads a level (core_levels.startLevel) by path or by name.
+---Source: lua/ge/extensions/mcp/tools/world.lua:22
 ---@param args table {path?: string, name?: string}
----@return string  « loading level: … ».
----@return boolean  true en cas d'erreur.
+---@return string  "loading level: …".
+---@return boolean  true on error.
 function mcp_tools_world.load_level(args) end
 
---- Replace le véhicule sur la dernière route et le répare (spawn.teleportToLastRoad avec resetVehicle).
----Source : lua/ge/extensions/mcp/tools/world.lua:49
+--- Puts the vehicle back on the last road and repairs it (spawn.teleportToLastRoad with resetVehicle).
+---Source: lua/ge/extensions/mcp/tools/world.lua:49
 ---@param args table|nil {id?: integer}
 ---@return string  Message.
----@return boolean  true en cas d'erreur.
+---@return boolean  true on error.
 function mcp_tools_world.recover_vehicle(args) end
 
---- Supprime un véhicule (veh:delete()).
----Source : lua/ge/extensions/mcp/tools/world.lua:58
+--- Deletes a vehicle (veh:delete()).
+---Source: lua/ge/extensions/mcp/tools/world.lua:58
 ---@param args table|nil {id?: integer}
 ---@return string  Message.
----@return boolean  true si le véhicule n'existe pas.
+---@return boolean  true if the vehicle does not exist.
 function mcp_tools_world.remove_vehicle(args) end
 
---- Déclenche une action d'entrée du jeu par son nom (ex. recover_vehicle, toggleCamera, switch_next_vehicle).
----Source : lua/ge/extensions/mcp/tools/world.lua:38
+--- Triggers a game input action by its name (e.g. recover_vehicle, toggleCamera, switch_next_vehicle).
+---Source: lua/ge/extensions/mcp/tools/world.lua:38
 ---@param args table {action: string, state?: 'down'|'up'}
 ---@return string  Message.
----@return boolean  true en cas d'erreur.
+---@return boolean  true on error.
 function mcp_tools_world.trigger_action(args) end
 

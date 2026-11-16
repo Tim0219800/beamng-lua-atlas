@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.lua",
+  "module": "Fenêtre 'General Data' du Vehicle Editor live. Chaque frame, elle envoie au VM du véhicule une commande qui renvoie (via obj:queueGameEngineLua) une table dans vEditor.generalData : position, rotation, direction, roll/pitch/yaw, vitesse, accélérations (sensors.gx2/gy2/gz2), vitesse air/sol, température, pression, densité de l'air et dégâts. Elle les affiche avec des unités lisibles.",
+  "notes": [
+    "Unités affichées : position m, vitesse m/s, accélération m/s², température convertie de K en °C (-273.15), pression convertie de Pa en kPa (*0.001), densité kg/m³, dégâts en $.",
+    "Les données arrivent avec un frame de retard (commande asynchrone queueLuaCommand).",
+    "La commande est envoyée à chaque frame où la fenêtre est ouverte (im.Begin vrai)."
+  ],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'General Data'."}
+  },
+  "functions": {
+    "onUpdate": {"desc": "Appelé chaque frame : demande les données au véhicule et dessine le tableau à deux colonnes.", "internal": true},
+    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

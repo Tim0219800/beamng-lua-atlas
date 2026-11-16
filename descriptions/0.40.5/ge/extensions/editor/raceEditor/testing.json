@@ -1,61 +1,90 @@
 {
   "path": "lua/ge/extensions/editor/raceEditor/testing.lua",
-  "module": "Fenêtre « Race Test » de l'éditeur de course : permet d'essayer la course en cours d'édition. Elle crée un objet gameplay/race/race à partir du chemin courant (debug draw activé), propose nombre de tours, téléportation du véhicule sur une position de départ, départ normal ou lancé (Start / Start Rolling, qui désactive l'éditeur), tests de conduite IA (véhicule courant ou tous), puis affiche temps et journal d'événements. Machine à états : setup, race, stopped. Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/testing')(raceEditor).",
+  "module": "\"Race Test\" window of the race editor: lets you try the race being edited. It creates a gameplay/race/race object from the current path (debug draw enabled), offers lap count, teleporting the vehicle to a start position, normal or rolling start (Start / Start Rolling, which disables the editor), AI driving tests (current vehicle or all), then displays times and an event log. State machine: setup, race, stopped. The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/testing')(raceEditor).",
   "notes": [
-    "C:draw n'est appelé que quand la fenêtre est ouverte (editor_raceEditor.onUpdate) ; en état « race », elle appelle race:onUpdate(dt) à chaque frame.",
-    "« AI Drive Test All Vehicles » ne retient que les véhicules à moins de 100 m (distance au carré ≤ 10000) de la position de départ par défaut, si elle existe ; sinon tous les véhicules.",
-    "L'IA est lancée avec startAiVehicle(id, 0.8).",
-    "Les fonctions drawSetup, drawRace, drawStopped utilisent self.race : setupRace doit avoir été appelé avant draw, sinon self.race est nil."
+    "C:draw is only called when the window is open (editor_raceEditor.onUpdate); in \"race\" state, it calls race:onUpdate(dt) every frame.",
+    "\"AI Drive Test All Vehicles\" only keeps vehicles within 100 m (squared distance ≤ 10000) of the default start position, if it exists; otherwise all vehicles.",
+    "The AI is started with startAiVehicle(id, 0.8).",
+    "The functions drawSetup, drawRace, drawStopped use self.race: setupRace must have been called before draw, otherwise self.race is nil."
   ],
   "classes": {
     "C": {
-      "desc": "Fenêtre de test de course (windowDescription = 'General'). Instanciée avec init(raceEditor). Champs : race (objet gameplay/race/race), state ('setup', 'race' ou 'stopped'), path.",
+      "desc": "Race test window (windowDescription = 'General'). Instantiated with init(raceEditor). Fields: race (gameplay/race/race object), state ('setup', 'race' or 'stopped'), path.",
       "functions": {
         "init": {
-          "desc": "Mémorise raceEditor, startIndex = -1 et l'état 'setup'.",
-          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor (utilise show())."}},
+          "desc": "Stores raceEditor, startIndex = -1 and the 'setup' state.",
+          "params": {
+            "raceEditor": {
+              "type": "table",
+              "desc": "Module editor_raceEditor (uses show())."
+            }
+          },
           "internal": true
         },
         "setPath": {
-          "desc": "Définit le chemin de course à tester.",
-          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+          "desc": "Sets the race path to test.",
+          "params": {
+            "path": {
+              "type": "table",
+              "desc": "gameplay/race/path object."
+            }
+          }
         },
         "setupRace": {
-          "desc": "Crée un nouvel objet race pour le chemin (en conservant le nombre de tours précédent, sinon 1), active useDebugDraw, assigne le véhicule joueur et passe à l'état 'setup'.",
+          "desc": "Creates a new race object for the path (keeping the previous lap count, otherwise 1), enables useDebugDraw, assigns the player vehicle and switches to the 'setup' state.",
           "internal": false
         },
         "startRace": {
-          "desc": "Démarre la course : applique config.rollingStart au chemin, assigne les véhicules, appelle race:startRace(), passe à l'état 'race' et, si enableAi, lance l'IA sur chaque véhicule (vitesse relative 0.8).",
+          "desc": "Starts the race: applies config.rollingStart to the path, assigns the vehicles, calls race:startRace(), switches to the 'race' state and, if enableAi, starts the AI on each vehicle (relative speed 0.8).",
           "params": {
-            "vehIds": {"type": "table<integer, integer>|nil", "desc": "IDs des véhicules ; par défaut le véhicule joueur (be:getPlayerVehicleID(0))."},
-            "enableAi": {"type": "boolean", "desc": "true pour que l'IA conduise les véhicules."},
-            "rollingStart": {"type": "boolean", "desc": "true pour un départ lancé (rollingStart)."}
+            "vehIds": {
+              "type": "table<integer, integer>|nil",
+              "desc": "Vehicle IDs; by default the player vehicle (be:getPlayerVehicleID(0))."
+            },
+            "enableAi": {
+              "type": "boolean",
+              "desc": "true to have the AI drive the vehicles."
+            },
+            "rollingStart": {
+              "type": "boolean",
+              "desc": "true for a rolling start (rollingStart)."
+            }
           }
         },
         "draw": {
-          "desc": "Dessine l'interface selon l'état (setup, race avec mise à jour de la course, stopped).",
-          "params": {"dt": {"type": "number", "desc": "Delta temps de simulation (secondes)."}},
+          "desc": "Draws the UI according to the state (setup, race with race update, stopped).",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Simulation time delta (seconds)."
+            }
+          },
           "internal": true
         },
         "drawSetup": {
-          "desc": "Interface de préparation : nombre de tours, boutons « Move to <départ> », Start, Start Rolling, déplacer tous les véhicules aux positions de départ, tests IA.",
+          "desc": "Setup UI: lap count, \"Move to <start>\" buttons, Start, Start Rolling, move all vehicles to the start positions, AI tests.",
           "internal": true
         },
         "drawRace": {
-          "desc": "Interface en course : boutons Stop (abandonne la course pour tous les véhicules et rouvre l'éditeur), State (dump de l'état), Recover (requestRecover), puis temps et journal.",
-          "params": {"dt": {"type": "number|nil", "desc": "Non utilisé."}},
+          "desc": "In-race UI: Stop button (aborts the race for all vehicles and reopens the editor), State (state dump), Recover (requestRecover), then times and log.",
+          "params": {
+            "dt": {
+              "type": "number|nil",
+              "desc": "Not used."
+            }
+          },
           "internal": true
         },
         "drawStopped": {
-          "desc": "Interface après arrêt : bouton Restart (retour à la préparation), temps et journal.",
+          "desc": "After-stop UI: Restart button (back to setup), times and log.",
           "internal": true
         },
         "drawTimes": {
-          "desc": "Affiche les temps du premier véhicule via race:inDrawTimes ; un clic bascule l'affichage détaillé.",
+          "desc": "Displays the first vehicle's times via race:inDrawTimes; a click toggles the detailed display.",
           "internal": true
         },
         "drawEventLog": {
-          "desc": "Affiche le journal d'événements du premier véhicule via race:inDrawEventlog.",
+          "desc": "Displays the first vehicle's event log via race:inDrawEventlog.",
           "internal": true
         }
       }

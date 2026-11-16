@@ -2,106 +2,106 @@
 -- tim19Atlas stub generated from lua/objectpool/main.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Métatable de _G : la lecture d'une globale absente est cherchée dans objData.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:100
+--- Metatable of _G: reading a missing global is looked up in objData.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:100
 ---@param t table _G
----@param key any nom de la globale
----@return any  valeur trouvée dans objData, ou nil
+---@param key any name of the global
+---@return any  value found in objData, or nil
 function __indexHandler(t, key) end
 
---- Métatable de _G : une affectation de globale est stockée dans objData au lieu de _G.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:96
+--- Metatable of _G: a global assignment is stored in objData instead of _G.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:96
 ---@param t table _G
----@param key any nom de la globale
----@param val any valeur
+---@param key any name of the global
+---@param val any value
 function __newIndexHandler(t, key, val) end
 
---- Sélectionne l'objet courant : pose les globales obj, objectId et objData (= objPool[objId]) avec rawset.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:90
----@param objId integer identifiant de l'objet
----@param _obj any handle moteur de l'objet
+--- Selects the current object: sets the globals obj, objectId and objData (= objPool[objId]) with rawset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:90
+---@param objId integer object identifier
+---@param _obj any engine handle of the object
 function _setObj(objId, _obj) end
 
---- Supprime l'objet du pool.
----Source : lua/objectpool/main.lua:40
----@param objId integer identifiant de l'objet
+--- Removes the object from the pool.
+---Source: lua/objectpool/main.lua:40
+---@param objId integer object identifier
 function deleteObject(objId) end
 
---- Retourne l'objet du pool encodé en chaîne lpack, sans le retirer.
----Source : lua/objectpool/main.lua:24
----@param objId integer identifiant de l'objet
----@return string  données encodées
+--- Returns the pool object encoded as an lpack string, without removing it.
+---Source: lua/objectpool/main.lua:24
+---@param objId integer object identifier
+---@return string  encoded data
 function getObject(objId) end
 
---- Appelée dans la VM Lua de l'objet : décode initData (lpack), charge le véhicule avec jbeam/stage2 (loadVehicleStage2) et le range dans objPool[obj:getId()] = {v = objet}. Journalise une erreur et retourne false (décharge la Lua) si les données sont invalides.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:49
----@param path string chemin de l'objet (non utilisé)
----@param initData string données de spawn encodées par lpack, avec un champ vdata
----@return boolean  vrai si l'objet est chargé, faux sinon
+--- Called in the object's Lua VM: decodes initData (lpack), loads the vehicle with jbeam/stage2 (loadVehicleStage2) and stores it in objPool[obj:getId()] = {v = object}. Logs an error and returns false (unloads the Lua) if the data is invalid.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:49
+---@param path string object path (unused)
+---@param initData string spawn data encoded by lpack, with a vdata field
+---@return boolean  true if the object is loaded, false otherwise
 function init(path, initData) end
 
---- Initialisation de la VM « thread » du pool ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:45
+--- Initialization of the pool's "thread" VM; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:45
 function initPool() end
 
---- Retourne l'objet encodé et le retire du pool (transfert vers une autre VM).
----Source : lua/objectpool/main.lua:28
----@param objId integer identifiant de l'objet
----@return string  données encodées
+--- Returns the encoded object and removes it from the pool (transfer to another VM).
+---Source: lua/objectpool/main.lua:28
+---@param objId integer object identifier
+---@return string  encoded data
 function moveObject(objId) end
 
---- Hook appelé par le moteur quand une poutre casse ; corps vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:81
----@param id integer identifiant de la poutre
----@param energy number énergie de la rupture
+--- Hook called by the engine when a beam breaks; empty body.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:81
+---@param id integer beam identifier
+---@param energy number break energy
 function onBeamBroke(id, energy) end
 
---- Hook appelé par le moteur quand une poutre se déforme ; corps vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:84
----@param id integer identifiant de la poutre
----@param ratio number taux de déformation
+--- Hook called by the engine when a beam deforms; empty body.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:84
+---@param id integer beam identifier
+---@param ratio number deformation rate
 function onBeamDeformed(id, ratio) end
 
---- Hook de collision de nœud appelé par le moteur ; corps vide dans cette VM.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:74
----@param id1 integer identifiant du nœud
----@param pos any position du contact (déduit du code)
----@param normal any normale du contact
----@param nodeVel any vitesse du nœud
----@param perpendicularVel any vitesse perpendiculaire
----@param slipVec any vecteur de glissement
----@param slipVel number vitesse de glissement
----@param slipForce number force de glissement
----@param normalForce number force normale
----@param depth number profondeur de pénétration
----@param materialId1 integer matériau du nœud
----@param materialId2 integer matériau de l'autre surface
+--- Node collision hook called by the engine; empty body in this VM.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:74
+---@param id1 integer node identifier
+---@param pos any contact position (inferred from code)
+---@param normal any contact normal
+---@param nodeVel any node velocity
+---@param perpendicularVel any perpendicular velocity
+---@param slipVec any slip vector
+---@param slipVel number slip velocity
+---@param slipForce number slip force
+---@param normalForce number normal force
+---@param depth number penetration depth
+---@param materialId1 integer node material
+---@param materialId2 integer material of the other surface
 function onNodeCollision(id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialId1, materialId2) end
 
---- Hook appelé par le moteur lors d'un reset ; corps vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:78
----@param retainDebug boolean indicateur de conservation du debug (non utilisé)
+--- Hook called by the engine on a reset; empty body.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:78
+---@param retainDebug boolean debug retention flag (unused)
 function onVehicleReset(retainDebug) end
 
---- Remplace print : écrit dans le journal avec le niveau 'A' et le tag 'print'. Seul le premier argument est converti (tostring(...)).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/objectpool/main.lua:18
+--- Replaces print: writes to the log with level 'A' and tag 'print'. Only the first argument is converted (tostring(...)).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/objectpool/main.lua:18
 ---@param ... any
 function print(...) end
 
---- Décode une chaîne lpack et la range dans le pool sous objId.
----Source : lua/objectpool/main.lua:35
----@param objId integer identifiant de l'objet
----@param objDataStr string données encodées par lpack
+--- Decodes an lpack string and stores it in the pool under objId.
+---Source: lua/objectpool/main.lua:35
+---@param objId integer object identifier
+---@param objDataStr string data encoded by lpack
 function setObject(objId, objDataStr) end
 
 ---@type vec3

@@ -1,69 +1,69 @@
 # `gameplay_rallyStartClock`
 
-*Fichier : `lua/ge/extensions/gameplay/rallyStartClock.lua` · VM : Game Engine (GE) · 528 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rallyStartClock.lua` · VM: Game Engine (GE) · 528 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_rallyStartClock` : `extensions.load("gameplay_rallyStartClock")`, puis la globale `gameplay_rallyStartClock`
+**Access:** extension `gameplay_rallyStartClock`: `extensions.load("gameplay_rallyStartClock")`, then the global `gameplay_rallyStartClock`
 
-Gère les horloges de départ de spéciale (panneaux physiques présents dans les niveaux) pour le rallye. Il charge les types d'horloges depuis `lua/ge/extensions/gameplay/rally/startClocks/*.lua` (chacun doit exposer `textures`, `findClocks` et `draw`), crée un objet TSStatic d'affichage par horloge trouvée, dessine l'heure murale, le libellé « SS<n> » et le compte à rebours (avec code de feu R, A ou G) dans des textures dynamiques, puis, si le réglage `rallyStartCountdownDisplay` vaut '3d', affiche l'horloge la plus proche de la ligne de départ dans une vue de rendu incrustée en haut de l'écran avec un cadre coloré selon le feu. Il alimente son état à partir du hook `onRallyDataUpdated`.
+Manages the special stage start clocks (physical signs present in the levels) for rally. It loads the clock types from `lua/ge/extensions/gameplay/rally/startClocks/*.lua` (each must expose `textures`, `findClocks` and `draw`), creates a display TSStatic object for each clock found, draws the wall time, the "SS<n>" label and the countdown (with light code R, A or G) into dynamic textures, then, if the `rallyStartCountdownDisplay` setting is '3d', shows the clock nearest to the start line in an inset render view at the top of the screen with a frame colored according to the light. It feeds its state from the `onRallyDataUpdated` hook.
 
-## Remarques
+## Notes
 
-- Un type d'horloge valide est un module de startClocks/ qui renvoie une table avec `textures` (table clé -> {tag, width, height, clearColor}), `findClocks()` (liste d'horloges {shapeName, transform, scale, anchor}) et `draw(textures, display)`. getView(clock, startLine, targetPos) est optionnel. Les modules invalides sont journalisés en erreur.
-- Table `display` passée à draw : {clock = 'HH:MM:SS', clockSeconds, label = 'SSn', countdown, countdownSeconds, semaphore = 'R'|'A'|'G'}.
-- Compte à rebours : feu R au-delà de 5 s, A à 5 s ou moins, G après le départ (affiche '0' puis '-1' à '-5', 6 s au total) ; ensuite '-' en rouge. Au-delà de 60 s, affiché en m:ss.
-- L'heure murale vient du RallyLoopManager (getWallClockTimeSecs) si une boucle est active, sinon de rallyClock.wallClockSecs reçu par onRallyDataUpdated, sinon de core_environment.getTimeOfDay (décalée de 12 h : (time + 0.5) % 1 x 86400).
-- Les horloges sont recherchées une fois par seconde tant qu'aucune n'est valide ; les textures sont re-liées 4 fois (toutes les 0,5 s) après la création.
-- La vue 3D s'efface 1,5 s après la fin du compte à rebours et n'est disponible (isRenderViewAvailable) qu'à partir de la deuxième image valide. L'horloge choisie est celle à moins de 20 m de la ligne de départ de la spéciale (gameplay_rally:getRallyManager():getSSStartLinePos()).
-- Bogue mineur : getStageDisplay écrit 'SS' .. tostring(label):gsub(...) : gsub renvoie deux valeurs mais la concaténation n'en garde qu'une, donc sans effet visible.
+- A valid clock type is a startClocks/ module that returns a table with `textures` (key -> {tag, width, height, clearColor} table), `findClocks()` (list of clocks {shapeName, transform, scale, anchor}) and `draw(textures, display)`. getView(clock, startLine, targetPos) is optional. Invalid modules are logged as errors.
+- `display` table passed to draw: {clock = 'HH:MM:SS', clockSeconds, label = 'SSn', countdown, countdownSeconds, semaphore = 'R'|'A'|'G'}.
+- Countdown: light R beyond 5 s, A at 5 s or less, G after the start (shows '0' then '-1' to '-5', 6 s in total); then '-' in red. Beyond 60 s, shown as m:ss.
+- The wall time comes from the RallyLoopManager (getWallClockTimeSecs) if a loop is active, otherwise from rallyClock.wallClockSecs received by onRallyDataUpdated, otherwise from core_environment.getTimeOfDay (shifted by 12 h: (time + 0.5) % 1 x 86400).
+- The clocks are searched once per second while none is valid; the textures are re-bound 4 times (every 0.5 s) after creation.
+- The 3D view fades out 1.5 s after the end of the countdown and is available (isRenderViewAvailable) only from the second valid frame. The chosen clock is the one within 20 m of the special stage start line (gameplay_rally:getRallyManager():getSSStartLinePos()).
+- Minor bug: getStageDisplay writes 'SS' .. tostring(label):gsub(...): gsub returns two values but the concatenation keeps only one, so with no visible effect.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_rallyStartClock.getClockTypes()` | Types d'horloges chargés. | 525 |
-| `gameplay_rallyStartClock.isRenderViewAvailable()` | Indique si la vue de rendu 3D du compte à rebours est active ; rallyLoop s'en sert pour masquer le compte à rebours 2D. | 524 |
-| `gameplay_rallyStartClock.onExtensionLoaded()` | Hook de chargement : charge (ou recharge) les types d'horloges depuis le dossier startClocks. *(interne)* *(hook)* | 69 |
-| `gameplay_rallyStartClock.onExtensionUnloaded()` | Hook de déchargement : détruit la vue de rendu, les affichages et réinitialise l'état. *(interne)* *(hook)* | 426 |
-| `gameplay_rallyStartClock.onPreRender(dtReal, dtSim)` | Appelé avant le rendu, après tous les onUpdate : avance l'horloge locale si aucune donnée fraîche n'est arrivée, redessine les textures si l'affichage a changé et trace le cadre coloré de la vue 3D. *(interne)* *(hook)* | 499 |
-| `gameplay_rallyStartClock.onRallyDataUpdated(data)` | Hook appelé quand les données de rallye changent. Lit activeState (début et fin du compte à rebours, délai de 1,5 s de la vue 3D), rallyClock.wallClockSecs et startClockCountdownData (ou countdownData) pour calculer l'heure de départ (timeUntilLaunch en secondes, state 'launched'). *(interne)* *(hook)* | 440 |
-| `gameplay_rallyStartClock.onRallySessionEnd()` | Hook émis à la fin d'une session de rallye : même nettoyage que le déchargement. *(interne)* *(hook)* | 426 |
-| `gameplay_rallyStartClock.onUpdate(dtReal, dtSim)` | Hook de mise à jour : (re)détecte les horloges du niveau toutes les secondes si besoin, relie les textures, fait tourner le délai de la vue et met à jour la vue de rendu 3D. *(interne)* *(hook)* | 476 |
+| `gameplay_rallyStartClock.getClockTypes()` | Loaded clock types. | 525 |
+| `gameplay_rallyStartClock.isRenderViewAvailable()` | Indicates whether the countdown's 3D render view is active; rallyLoop uses it to hide the 2D countdown. | 524 |
+| `gameplay_rallyStartClock.onExtensionLoaded()` | Load hook: loads (or reloads) the clock types from the startClocks folder. *(internal)* *(hook)* | 69 |
+| `gameplay_rallyStartClock.onExtensionUnloaded()` | Unload hook: destroys the render view, the displays and resets the state. *(internal)* *(hook)* | 426 |
+| `gameplay_rallyStartClock.onPreRender(dtReal, dtSim)` | Called before rendering, after all onUpdate: advances the local clock if no fresh data has arrived, redraws the textures if the display changed and draws the colored frame of the 3D view. *(internal)* *(hook)* | 499 |
+| `gameplay_rallyStartClock.onRallyDataUpdated(data)` | Hook called when the rally data changes. Reads activeState (start and end of the countdown, 1.5 s delay of the 3D view), rallyClock.wallClockSecs and startClockCountdownData (or countdownData) to compute the start time (timeUntilLaunch in seconds, state 'launched'). *(internal)* *(hook)* | 440 |
+| `gameplay_rallyStartClock.onRallySessionEnd()` | Hook emitted at the end of a rally session: same cleanup as unload. *(internal)* *(hook)* | 426 |
+| `gameplay_rallyStartClock.onUpdate(dtReal, dtSim)` | Update hook: (re)detects the level's clocks every second if needed, rebinds the textures, runs the view delay and updates the 3D render view. *(internal)* *(hook)* | 476 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_rallyStartClock.getClockTypes()`
 
-Types d'horloges chargés.
+Loaded clock types.
 
-- **renvoie** : table[] Liste de {name, module} (name = nom du fichier sans extension).
+- **returns**: table[] List of {name, module} (name = file name without extension).
 
 #### `gameplay_rallyStartClock.isRenderViewAvailable()`
 
-Indique si la vue de rendu 3D du compte à rebours est active ; rallyLoop s'en sert pour masquer le compte à rebours 2D.
+Indicates whether the countdown's 3D render view is active; rallyLoop uses it to hide the 2D countdown.
 
-- **renvoie** : boolean true si la vue 3D est disponible.
+- **returns**: boolean true if the 3D view is available.
 
 #### `gameplay_rallyStartClock.onPreRender(dtReal, dtSim)`
 
-Appelé avant le rendu, après tous les onUpdate : avance l'horloge locale si aucune donnée fraîche n'est arrivée, redessine les textures si l'affichage a changé et trace le cadre coloré de la vue 3D.
+Called before rendering, after all onUpdate: advances the local clock if no fresh data has arrived, redraws the textures if the display changed and draws the colored frame of the 3D view.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_rallyStartClock.onRallyDataUpdated(data)`
 
-Hook appelé quand les données de rallye changent. Lit activeState (début et fin du compte à rebours, délai de 1,5 s de la vue 3D), rallyClock.wallClockSecs et startClockCountdownData (ou countdownData) pour calculer l'heure de départ (timeUntilLaunch en secondes, state 'launched').
+Hook called when the rally data changes. Reads activeState (start and end of the countdown, 1.5 s delay of the 3D view), rallyClock.wallClockSecs and startClockCountdownData (or countdownData) to compute the start time (timeUntilLaunch in seconds, state 'launched').
 
-- `data` (*table*) : Données de rallye (activeState, rallyClock, startClockCountdownData, countdownData).
+- `data` (*table*) : Rally data (activeState, rallyClock, startClockCountdownData, countdownData).
 
 #### `gameplay_rallyStartClock.onUpdate(dtReal, dtSim)`
 
-Hook de mise à jour : (re)détecte les horloges du niveau toutes les secondes si besoin, relie les textures, fait tourner le délai de la vue et met à jour la vue de rendu 3D.
+Update hook: (re)detects the level's clocks every second if needed, rebinds the textures, runs the view delay and updates the 3D render view.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `Sim.` `getUniqueName`
@@ -72,4 +72,4 @@ Hook de mise à jour : (re)détecte les horloges du niveau toutes les secondes s
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rallyStartClock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rallyStartClock.lua`.*

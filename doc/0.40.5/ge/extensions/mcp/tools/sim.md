@@ -1,74 +1,74 @@
 # `mcp_tools_sim`
 
-*Fichier : `lua/ge/extensions/mcp/tools/sim.lua` · VM : Game Engine (GE) · 59 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/sim.lua` · VM: Game Engine (GE) · 59 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_sim` : `extensions.load("mcp_tools_sim")`, puis la globale `mcp_tools_sim`
+**Access:** extension `mcp_tools_sim`: `extensions.load("mcp_tools_sim")`, then the global `mcp_tools_sim`
 
-Outils MCP de contrôle de la simulation : lire l'état, changer l'échelle de temps, mettre la physique en pause, la reprendre, ou l'avancer pas à pas. S'appuie sur l'objet moteur `be`.
+MCP simulation control tools: read the state, change the time scale, pause the physics, resume it, or advance it step by step. Relies on the engine object `be`.
 
-## Remarques
+## Notes
 
-- La pause ne gèle que la physique : le rendu et la caméra continuent.
-- step_physics laisse toujours la physique en pause après les ticks demandés.
+- Pause only freezes the physics: rendering and the camera continue.
+- step_physics always leaves the physics paused after the requested ticks.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_sim.get_simulation_state()` | État de la simulation en JSON : physicsRunning, timeScale, speedFactor, deterministic, enabled (be:getPhysicsRunning, getSimulationTimeScale, getPhysicsSpeedFactor, getPhysicsDeterministic, getEnabled). | 9 |
-| `mcp_tools_sim.pause_physics()` | Met la physique en pause (be:setPhysicsRunning(false)). | 26 |
-| `mcp_tools_sim.resume_physics()` | Reprend la physique (be:setPhysicsRunning(true)). | 31 |
-| `mcp_tools_sim.set_simulation_speed(args)` | Règle l'échelle de temps de la simulation (be:setSimulationTimeScale). | 19 |
-| `mcp_tools_sim.step_physics(args)` | Met la physique en pause puis avance de N ticks (be:physicsStep) ; elle reste en pause. | 37 |
+| `mcp_tools_sim.get_simulation_state()` | Simulation state as JSON: physicsRunning, timeScale, speedFactor, deterministic, enabled (be:getPhysicsRunning, getSimulationTimeScale, getPhysicsSpeedFactor, getPhysicsDeterministic, getEnabled). | 9 |
+| `mcp_tools_sim.pause_physics()` | Pauses the physics (be:setPhysicsRunning(false)). | 26 |
+| `mcp_tools_sim.resume_physics()` | Resumes the physics (be:setPhysicsRunning(true)). | 31 |
+| `mcp_tools_sim.set_simulation_speed(args)` | Sets the simulation time scale (be:setSimulationTimeScale). | 19 |
+| `mcp_tools_sim.step_physics(args)` | Pauses the physics then advances N ticks (be:physicsStep); it stays paused. | 37 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_sim.get_simulation_state()`
 
-État de la simulation en JSON : physicsRunning, timeScale, speedFactor, deterministic, enabled (be:getPhysicsRunning, getSimulationTimeScale, getPhysicsSpeedFactor, getPhysicsDeterministic, getEnabled).
+Simulation state as JSON: physicsRunning, timeScale, speedFactor, deterministic, enabled (be:getPhysicsRunning, getSimulationTimeScale, getPhysicsSpeedFactor, getPhysicsDeterministic, getEnabled).
 
-- **renvoie** : string JSON.
-- **renvoie** : boolean false.
+- **returns**: string JSON.
+- **returns**: boolean false.
 
 #### `mcp_tools_sim.pause_physics()`
 
-Met la physique en pause (be:setPhysicsRunning(false)).
+Pauses the physics (be:setPhysicsRunning(false)).
 
-- **renvoie** : string Message.
-- **renvoie** : boolean false.
+- **returns**: string Message.
+- **returns**: boolean false.
 
 #### `mcp_tools_sim.resume_physics()`
 
-Reprend la physique (be:setPhysicsRunning(true)).
+Resumes the physics (be:setPhysicsRunning(true)).
 
-- **renvoie** : string Message.
-- **renvoie** : boolean false.
+- **returns**: string Message.
+- **returns**: boolean false.
 
 #### `mcp_tools_sim.set_simulation_speed(args)`
 
-Règle l'échelle de temps de la simulation (be:setSimulationTimeScale).
+Sets the simulation time scale (be:setSimulationTimeScale).
 
-- `args` (*table*) : {scale: number} 1 = normal, <1 ralenti, >1 accéléré.
-- **renvoie** : string Confirmation.
-- **renvoie** : boolean true si scale manquant.
+- `args` (*table*) : {scale: number} 1 = normal, <1 slow motion, >1 sped up.
+- **returns**: string Confirmation.
+- **returns**: boolean true if scale is missing.
 
 #### `mcp_tools_sim.step_physics(args)`
 
-Met la physique en pause puis avance de N ticks (be:physicsStep) ; elle reste en pause.
+Pauses the physics then advances N ticks (be:physicsStep); it stays paused.
 
-- `args` (*table|nil*) : {steps?: integer} nombre de ticks physiques (défaut 1, minimum 1).
-- **renvoie** : string Message.
-- **renvoie** : boolean false.
+- `args` (*table|nil*) : {steps?: integer} number of physics ticks (default 1, minimum 1).
+- **returns**: string Message.
+- **returns**: boolean false.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils de simulation. |
+| `schemas` | table<string, table> | Schemas of the simulation tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getEnabled`, `getPhysicsDeterministic`, `getPhysicsRunning`, `getPhysicsSpeedFactor`, `getSimulationTimeScale`, `physicsStep`, `setPhysicsRunning`, `setSimulationTimeScale`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/sim.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/sim.lua`.*

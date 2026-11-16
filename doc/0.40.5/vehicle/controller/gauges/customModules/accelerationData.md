@@ -1,57 +1,57 @@
 # `controller_gauges_customModules_accelerationData`
 
-*Fichier : `lua/vehicle/controller/gauges/customModules/accelerationData.lua` · VM : Véhicule · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/gauges/customModules/accelerationData.lua` · VM: Vehicle · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `gauges/customModules/accelerationData` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `gauges/customModules/accelerationData` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Module de données pour genericGauges (type "auxiliary") : fournit les accélérations du capteur du véhicule. À référencer dans displayData.customModules avec le nom de module accelerationData.
+Data module for genericGauges (type "auxiliary"): provides the vehicle sensor's accelerations. To be referenced in displayData.customModules with the module name accelerationData.
 
-## Remarques
+## Notes
 
-- Les unités sont celles de sensors.gx/gy/gz (non précisées dans ce fichier).
+- The units are those of sensors.gx/gy/gz (not specified in this file).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_gauges_customModules_accelerationData.init(jbeamData)` | Ne fait rien. *(interne)* | 37 |
-| `controller_gauges_customModules_accelerationData.reset()` | Réinitialise l'état interne du module. *(interne)* | 34 |
-| `controller_gauges_customModules_accelerationData.setupGaugeData(properties)` | Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : acceleration (x, y, z = sensors.gx/gy/gz) et accelerationSmooth (xSmooth, ySmooth, zSmooth = sensors.gx2/gy2/gz2). *(interne)* | 29 |
-| `controller_gauges_customModules_accelerationData.updateGFX(dt)` | Ne fait rien (la mise à jour se fait par updateGaugeData). *(interne)* | 13 |
-| `controller_gauges_customModules_accelerationData.updateGaugeData(moduleData, dt)` | Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées. *(interne)* | 16 |
+| `controller_gauges_customModules_accelerationData.init(jbeamData)` | Does nothing. *(internal)* | 37 |
+| `controller_gauges_customModules_accelerationData.reset()` | Resets the module's internal state. *(internal)* | 34 |
+| `controller_gauges_customModules_accelerationData.setupGaugeData(properties)` | Called by genericGauges with the properties requested in displayData.customModules: acceleration (x, y, z = sensors.gx/gy/gz) and accelerationSmooth (xSmooth, ySmooth, zSmooth = sensors.gx2/gy2/gz2). *(internal)* | 29 |
+| `controller_gauges_customModules_accelerationData.updateGFX(dt)` | Does nothing (the update is done by updateGaugeData). *(internal)* | 13 |
+| `controller_gauges_customModules_accelerationData.updateGaugeData(moduleData, dt)` | Called by genericGauges before each send: fills moduleData with the requested values. *(internal)* | 16 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_gauges_customModules_accelerationData.init(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_gauges_customModules_accelerationData.setupGaugeData(properties)`
 
-Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : acceleration (x, y, z = sensors.gx/gy/gz) et accelerationSmooth (xSmooth, ySmooth, zSmooth = sensors.gx2/gy2/gz2).
+Called by genericGauges with the properties requested in displayData.customModules: acceleration (x, y, z = sensors.gx/gy/gz) and accelerationSmooth (xSmooth, ySmooth, zSmooth = sensors.gx2/gy2/gz2).
 
-- `properties` (*table<string, boolean>*) : Ensemble des propriétés demandées (clé = nom, valeur = true).
+- `properties` (*table<string, boolean>*) : Set of requested properties (key = name, value = true).
 
 #### `controller_gauges_customModules_accelerationData.updateGFX(dt)`
 
-Ne fait rien (la mise à jour se fait par updateGaugeData).
+Does nothing (the update is done by updateGaugeData).
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_gauges_customModules_accelerationData.updateGaugeData(moduleData, dt)`
 
-Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.
+Called by genericGauges before each send: fills moduleData with the requested values.
 
-- `moduleData` (*table*) : Table de données du module, envoyée ensuite à la page HTML.
-- `dt` (*number*) : Temps écoulé depuis le dernier envoi (s).
+- `moduleData` (*table*) : Module data table, then sent to the HTML page.
+- `dt` (*number*) : Time elapsed since the last send (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/gauges/customModules/accelerationData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/gauges/customModules/accelerationData.lua`.*

@@ -1,29 +1,29 @@
 # `editor_missionEditor_progressSingle`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/progressSingle.lua` · VM : Game Engine (GE) · 171 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/progressSingle.lua` · VM: Game Engine (GE) · 171 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/progressSingle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/progressSingle")` (file under extensions/ but not a regular extension)
 
-Onglet « Progress Single » de l'éditeur de missions : montre la progression sauvegardée d'une mission (étoiles débloquées par défaut et au total, clé de progression par défaut, tableau des tentatives par clé). Les données viennent de gameplay_missions_progress.formatSaveDataForUi(mission.id). Un mode « Raw » permet d'éditer le JSON de saveData, et un bouton « Reload » relit les données. Le module renvoie un constructeur : require(...)(missionEditor).
+"Progress Single" tab of the mission editor: shows a mission's saved progress (stars unlocked by default and in total, default progress key, table of attempts per key). The data comes from gameplay_missions_progress.formatSaveDataForUi(mission.id). A "Raw" mode lets you edit the saveData JSON, and a "Reload" button rereads the data. The module returns a constructor: require(...)(missionEditor).
 
-## Remarques
+## Notes
 
-- Le mode Raw affiche missionInstance.saveData mais écrit le JSON validé dans mission.saveData.
-- Dans le mode Raw, pushStyle/popStyle sont définies localement ici (contrairement à objectives.lua).
-- Les cases à cocher des étoiles sont créées avec une copie (im.BoolPtr) : cliquer dessus ne modifie pas la sauvegarde.
+- Raw mode displays missionInstance.saveData but writes the validated JSON into mission.saveData.
+- In Raw mode, pushStyle/popStyle are defined locally here (unlike objectives.lua).
+- The star checkboxes are created with a copy (im.BoolPtr): clicking them does not modify the save.
 
-## Classe `C`
+## Class `C`
 
-Instance de l'onglet. Champs : missionEditor, tabName = 'Progress Single', mission, missionInstance, formattedSaveData, currentProgressKey.
+Instance of the tab. Fields: missionEditor, tabName = 'Progress Single', mission, missionInstance, formattedSaveData, currentProgressKey.
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_progressSingle")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_progressSingle")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw()` | Dessine l'en-tête (case Raw, bouton Reload) puis drawProgress ou l'éditeur JSON brut. | 105 |
-| `C:drawProgress()` | Affiche le nombre d'étoiles débloquées, la clé de progression par défaut, un combo de clés et le tableau des tentatives (ou un dump brut si aucune tentative n'est disponible). | 46 |
-| `C:init(missionEditor)` | Constructeur. | 25 |
-| `C:setMission(mission)` | Définit la mission courante, son instance et les données de progression formatées. | 34 |
+| `C:draw()` | Draws the header (Raw checkbox, Reload button) then drawProgress or the raw JSON editor. | 105 |
+| `C:drawProgress()` | Displays the number of unlocked stars, the default progress key, a key combo and the attempts table (or a raw dump if no attempt is available). | 46 |
+| `C:init(missionEditor)` | Constructor. | 25 |
+| `C:setMission(mission)` | Sets the current mission, its instance and the formatted progress data. | 34 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/progressSingle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/progressSingle.lua`.*

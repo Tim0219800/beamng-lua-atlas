@@ -1,23 +1,23 @@
 # `flowgraph_nodes_logic_wait`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/wait.lua` · VM : Game Engine (GE) · 84 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/wait.lua` · VM: Game Engine (GE) · 84 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/wait")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/wait")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Wait' (categorie logic, behaviour duration+once). Quand le flux arrive, attend 'duration' secondes (3 par defaut) avant de sortir du flux ; necessite un flux d'entree continu. Pin 'reset' (impulsion), 'useDtSim' (utilise dtSim au lieu de dtReal). Sorties : flow (apres l'attente) et impulsion 'impulse' une seule fois.
+Flowgraph node 'Wait' (logic category, behaviour duration+once). When the flow arrives, waits 'duration' seconds (3 by default) before outputting flow; requires a continuous input flow. Pin 'reset' (impulse), 'useDtSim' (uses dtSim instead of dtReal). Outputs: flow (after the wait) and impulse 'impulse' only once.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet timer et running a zero. | 32 |
-| `C:_onDeserialized(res)` | Migre l'ancien champ 'duration' vers le pin code en dur 'duration'. | 37 |
-| `C:drawMiddle(builder, style)` | Barre de progression et bouton Reset. | 53 |
+| `C:_executionStarted()` | Resets timer and running to zero. | 32 |
+| `C:_onDeserialized(res)` | Migrates the old field 'duration' to the hard-coded pin 'duration'. | 37 |
+| `C:drawMiddle(builder, style)` | Progress bar and Reset button. | 53 |
 | `C:init(mgr, ...)` | timer=0, running=false. | 27 |
-| `C:updateTimer()` | Si en cours, ajoute dtSim ou dtReal au timer ; a la fin arrete et emet l'impulsion. | 44 |
-| `C:work(args)` | Gere flux/reset, appelle updateTimer ; flow = (timer >= duration) ET flux d'entree. | 64 |
+| `C:updateTimer()` | If running, adds dtSim or dtReal to the timer; at the end stops and emits the impulse. | 44 |
+| `C:work(args)` | Handles flow/reset, calls updateTimer; flow = (timer >= duration) AND input flow. | 64 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/wait.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/wait.lua`.*

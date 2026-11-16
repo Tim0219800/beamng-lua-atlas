@@ -1,0 +1,133 @@
+{
+  "path": "lua/ge/extensions/gameplay/discover.lua",
+  "module": "Gère les « discovers » (expériences de l'écran Découvrir/Play). Il charge tous les fichiers *.lua de /gameplay/discover/ : chacun peut exporter pageInfo (page avec sections et discoverIds), experiences (liste d'expériences avec id, type 'mission' ou 'freeroam', trigger, onLoaded, onUnloaded, playerCount…) et getProgressTag. getDiscoverPages assemble les pages pour l'UI (cartes, images, tags officiel/mod/joueurs/durée), startDiscover lance une expérience (mission ou fonction trigger), et le module gère la navigation après le fondu de chargement, des popups d'introduction et la configuration d'écran partagé (splitscreen).",
+  "usage": "gameplay_discover.startDiscover('myExperienceId')",
+  "notes": [
+    "Peut être lancé en ligne de commande : -discover <id> ; -discover firstStart réaffiche la fenêtre d'accueil (onboardingPopupShown = false).",
+    "Les extensions chargées via discover (loadExt) sont suivies ; la fonction onUnloaded de l'expérience est appelée quand l'extension est déchargée (onExtensionUnloaded est enveloppé).",
+    "Une seule expérience en chargement à la fois : startDiscover ignore l'appel s'il y en a déjà une (lastDiscover non nil).",
+    "Après le chargement d'un niveau, la route UI (playRoute, 'play' par défaut) est ouverte au fondu de l'écran de chargement (onLoadingScreenFadeout), sauf si un écran de début/fin de mission est actif.",
+    "Image de repli : /gameplay/discover/images/freeroamTBD.jpg quand l'image est absente.",
+    "Dans formatDiscover, la variable locale 'mission' n'est définie que dans une branche interne (portée locale) : le second bloc 'if mission' ne la voit pas, donc l'info officielle/mod d'une mission est toujours déduite du chemin du dossier et jamais du mission.modID. Incohérence du jeu.",
+    "Le commentaire de loadDiscovers (extrait de code pour lister positions/partConfig des véhicules) est un bloc d'aide laissé là par les développeurs, sans rapport avec la fonction.",
+    "startDiscover retourne false (en logguant) si la configuration de joueurs en écran partagé n'est pas valide ; dans les autres cas d'échec, il retourne nil."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : {'ui_multiseat_multiseatConfiguration'}."}
+  },
+  "functions": {
+    "loadDiscovers": {
+      "desc": "Charge une fois tous les fichiers /gameplay/discover/*.lua : enregistre leurs pageInfo (avec dossier et métadonnées officiel/mod), leurs experiences par id et leurs tags de progression. Appelé automatiquement par getDiscoverPages et startDiscover.",
+      "internal": false
+    },
+    "getDiscoverPages": {
+      "desc": "Construit la liste des pages pour l'UI : chaque page est copiée, ses sections remplies de cartes (formatDiscover), les tags (joueurs, version, durée, type, progression, officiel, mod) ajoutés, l'image choisie, puis le tout est trié par date décroissante puis sortBias.",
+      "returns": [{"type": "table[]", "desc": "Pages avec title, image, description, sections[].cards[], tagList, pageKind ('minor' par défaut), date, version, duration, isOfficial, isMod, modID, modName, modTitle, showMultiseatControllers."}],
+      "internal": false
+    },
+    "startDiscover": {
+      "desc": "Lance une expérience par id. Pour une mission (missionId), démarre via gameplay_missions_missionManager.startWithLoadingLevel ; pour une expérience à fonction trigger, appelle trigger(M) puis onLoaded(M). Valide d'abord la configuration d'écran partagé si playerCount est défini.",
+      "params": {"discoverId": {"type": "string", "desc": "Id de l'expérience (clé id dans experiences)."}},
+      "returns": [{"type": "boolean|nil", "desc": "false si la configuration d'écran partagé est invalide ; nil sinon (même en cas d'échec ou de succès)."}],
+      "internal": false
+    },
+    "navigateToPostLoadRoute": {
+      "desc": "Libère lastDiscover et, si une navigation était attendue, ouvre la route UI de fin de chargement (playRoute ou 'play'), sauf si un écran de début/fin de mission est actif.",
+      "returns": [{"type": "boolean", "desc": "true si la navigation a eu lieu."}],
+      "internal": true
+    },
+    "onLoadingScreenFadeout": {
+      "desc": "Hook appelé au fondu de l'écran de chargement ; même fonction que navigateToPostLoadRoute.",
+      "returns": [{"type": "boolean", "desc": "true si la navigation a eu lieu."}],
+      "internal": true
+    },
+    "clearTasksOnClientEndMission": {
+      "desc": "Demande d'envoyer l'évènement UI 'ClearTasklist' à la prochaine fin de niveau.",
+      "internal": false
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin d'un niveau : réinitialise la navigation si aucune expérience n'est en chargement, et vide la liste de tâches si demandé.",
+      "internal": true
+    },
+    "loadExt": {
+      "desc": "Charge une extension une seule fois (extensions.load) et, si l'expérience en cours possède onUnloaded, enveloppe le onExtensionUnloaded de l'extension pour appeler onUnloaded à son déchargement.",
+      "params": {"extensionName": {"type": "string", "desc": "Nom de l'extension à charger."}},
+      "internal": false
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation : passe le mode de déchargement en manuel et traite les arguments de ligne de commande -discover <id> et -discover firstStart.",
+      "internal": true
+    },
+    "onLanguageChanged": {
+      "desc": "Hook appelé au changement de langue : oublie les expériences chargées pour les recharger (traductions).",
+      "internal": true
+    },
+    "basicControlsIntroPopup": {
+      "desc": "Affiche la fenêtre d'introduction des commandes de base, en choisissant le premier popup basicDriving_<imagePack> existant selon les périphériques détectés (volant, joystick, xinput, gamepad, souris, clavier, puis fallback).",
+      "internal": false
+    },
+    "introPopup": {
+      "desc": "Ouvre un popup d'introduction (/gameplay/discover/popups/<id>/content.json) via ui_popup, une seule fois par id et par session.",
+      "params": {"id": {"type": "string", "desc": "Identifiant du popup."}},
+      "internal": false
+    },
+    "getSplitscreenPlayerOptIns": {
+      "desc": "Retourne l'état d'inscription des joueurs à l'écran partagé (module gameplay/discover/multiseat/splitscreen).",
+      "returns": [{"type": "table", "desc": "État des inscriptions (déduit du code)."}],
+      "internal": false
+    },
+    "cycleSplitscreenDevicePlayer": {
+      "desc": "Change le joueur associé à un périphérique : 'toggle' bascule, 'move' déplace selon direction, sinon passe au joueur suivant.",
+      "params": {
+        "deviceId": {"type": "any", "desc": "Identifiant du périphérique."},
+        "operation": {"type": "string|nil", "desc": "'toggle', 'move' ou autre pour cycler."},
+        "direction": {"type": "any", "desc": "Direction pour 'move'."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de la fonction du module splitscreen."}],
+      "internal": false
+    },
+    "setSplitscreenDevicePlayer": {
+      "desc": "Associe un périphérique à un joueur (persona).",
+      "params": {
+        "deviceId": {"type": "any", "desc": "Identifiant du périphérique."},
+        "personaNumber": {"type": "integer", "desc": "Numéro du joueur."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de la fonction du module splitscreen."}],
+      "internal": false
+    },
+    "joinSplitscreenDeviceGroup": {
+      "desc": "Fait rejoindre un groupe de périphériques dans la configuration d'écran partagé.",
+      "params": {"groupId": {"type": "any", "desc": "Identifiant du groupe."}},
+      "returns": [{"type": "any", "desc": "Résultat de la fonction du module splitscreen."}],
+      "internal": false
+    },
+    "setSplitscreenPlayerOptIn": {
+      "desc": "Inscrit ou désinscrit un joueur de l'écran partagé.",
+      "params": {
+        "player": {"type": "integer", "desc": "Index du joueur."},
+        "optedIn": {"type": "boolean", "desc": "true pour inscrire."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de la fonction du module splitscreen."}],
+      "internal": false
+    },
+    "getSplitscreenOptedInPlayers": {
+      "desc": "Liste les joueurs inscrits à l'écran partagé.",
+      "returns": [{"type": "any", "desc": "Joueurs inscrits (déduit du code)."}],
+      "internal": false
+    },
+    "canStartSplitscreenDiscover": {
+      "desc": "Indique si l'expérience peut démarrer avec le nombre de joueurs inscrits.",
+      "params": {
+        "minPlayers": {"type": "integer", "desc": "Nombre minimal de joueurs."},
+        "maxPlayers": {"type": "integer", "desc": "Nombre maximal de joueurs."}
+      },
+      "returns": [{"type": "boolean", "desc": "Résultat de canStartWithOptIns (déduit du code)."}],
+      "internal": false
+    },
+    "leaveSplitscreenMenuSetup": {
+      "desc": "Quitte la configuration d'écran partagé du menu.",
+      "returns": [{"type": "any", "desc": "Résultat de la fonction du module splitscreen."}],
+      "internal": false
+    }
+  }
+}

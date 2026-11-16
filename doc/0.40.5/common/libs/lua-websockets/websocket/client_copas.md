@@ -1,36 +1,36 @@
 # `libs_lua_websockets_websocket_client_copas`
 
-*Fichier : `lua/common/libs/lua-websockets/websocket/client_copas.lua` · VM : Commun (GE + véhicule) · 45 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-websockets/websocket/client_copas.lua` · VM: Common (GE + vehicle) · 45 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lua-websockets/websocket/client_copas")`
+**Access:** `require("libs/lua-websockets/websocket/client_copas")`
 
-Backend client WebSocket de lua-websockets pour la bibliothèque coopérative 'copas' (sockets non bloquants dans des coroutines). Le module renvoie une fonction constructeur ; l'objet renvoyé est étendu par websocket/sync (méthodes connect, send, receive, close).
+WebSocket client backend of lua-websockets for the cooperative 'copas' library (non-blocking sockets in coroutines). The module returns a constructor function; the returned object is extended by websocket/sync (connect, send, receive, close methods).
 
-## Exemple
+## Example
 
 ```lua
 local newClient = require('libs/lua-websockets/websocket/client_copas')
 local ws = newClient({timeout = 2})
--- à appeler dans une coroutine copas :
+-- to be called in a copas coroutine:
 ws:connect('ws://127.0.0.1:8080', 'proto')
 ```
 
-## Remarques
+## Notes
 
-- Nécessite libs/copas/copas et libs/luasocket/socket.socket.
-- Les entrées/sorties passent par copas.connect/send/receive/dohandshake, donc les appels doivent se faire depuis une coroutine gérée par copas.
+- Requires libs/copas/copas and libs/luasocket/socket.socket.
+- I/O goes through copas.connect/send/receive/dohandshake, so calls must be made from a coroutine managed by copas.
 
-## Classe `client`
+## Class `client`
 
-Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (champ timeout en secondes). Les méthodes connect/send/receive/close viennent de websocket/sync ; les méthodes sock_* ci-dessous fournissent le transport.
+Object returned by the constructor new(ws). ws is an optional options table (timeout field in seconds). The connect/send/receive/close methods come from websocket/sync; the sock_* methods below provide the transport.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `client:dohandshake()` | Délègue à copas.dohandshake (négociation TLS) sur le socket. | dyn |
-| `client:sock_close()` | Ferme le socket. | dyn |
-| `client:sock_connect(host, port)` | Crée un socket TCP (luasocket), applique ws.timeout et se connecte via copas.connect. Renvoie nil et l'erreur en cas d'échec (sauf 'already connected'). | dyn |
-| `client:sock_receive()` | Lit des données via copas.receive sur le socket. | dyn |
-| `client:sock_send()` | Envoie des données via copas.send sur le socket. | dyn |
+| `client:dohandshake()` | Delegates to copas.dohandshake (TLS negotiation) on the socket. | dyn |
+| `client:sock_close()` | Closes the socket. | dyn |
+| `client:sock_connect(host, port)` | Creates a TCP socket (luasocket), applies ws.timeout and connects via copas.connect. Returns nil and the error on failure (except 'already connected'). | dyn |
+| `client:sock_receive()` | Reads data via copas.receive on the socket. | dyn |
+| `client:sock_send()` | Sends data via copas.send on the socket. | dyn |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-websockets/websocket/client_copas.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-websockets/websocket/client_copas.lua`.*

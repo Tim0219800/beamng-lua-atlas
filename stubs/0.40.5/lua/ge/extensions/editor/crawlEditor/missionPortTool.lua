@@ -2,24 +2,24 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/crawlEditor/missionPortTool.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil de migration de l'éditeur de crawl : convertit d'anciennes missions crawl (dossier /gameplay/missions/<niveau>/crawl/<mission>/ contenant bounds.sites.json et race.race.json) vers le nouveau système de crawl. Pour chaque mission il génère un fichier .boundary.json (zone issue de bounds.sites.json), un .path.json (nœuds issus des pathnodes de race.race.json, avec drapeaux de recovery), un .startingPosition.json (position de départ) dans /levels/<niveau>/crawls/, puis un .trail.json dans le dossier de la mission, qui relie le tout. Passe par gameplay/crawl/saveSystem (saveBoundary, savePath, saveStartingPosition, saveTrail).
---- Accès : extension `editor_crawlEditor_missionPortTool` : `extensions.load("editor_crawlEditor_missionPortTool")`, puis la globale `editor_crawlEditor_missionPortTool`
+--- Migration tool of the crawl editor: converts old crawl missions (folder /gameplay/missions/<level>/crawl/<mission>/ containing bounds.sites.json and race.race.json) to the new crawl system. For each mission it generates a .boundary.json file (zone from bounds.sites.json), a .path.json (nodes from the pathnodes of race.race.json, with recovery flags), a .startingPosition.json (starting position) in /levels/<level>/crawls/, then a .trail.json in the mission folder, which links everything. Goes through gameplay/crawl/saveSystem (saveBoundary, savePath, saveStartingPosition, saveTrail).
+--- Access: extension `editor_crawlEditor_missionPortTool`: `extensions.load("editor_crawlEditor_missionPortTool")`, then the global `editor_crawlEditor_missionPortTool`
 ---@class editor_crawlEditor_missionPortTool
 editor_crawlEditor_missionPortTool = {}
 
---- Rescanne les missions du niveau courant et ouvre la fenêtre de portage.
----Source : lua/ge/extensions/editor/crawlEditor/missionPortTool.lua:492
+--- Rescans the missions of the current level and opens the porting window.
+---Source: lua/ge/extensions/editor/crawlEditor/missionPortTool.lua:492
 function editor_crawlEditor_missionPortTool.openPortingDialog() end
 
---- Convertit une mission crawl : lit bounds.sites.json, race.race.json, crée boundary/path/startingPosition dans /levels/<niveau>/crawls/ et le trail dans le dossier de la mission. Journalise chaque erreur avec le tag mission_port_tool.
----Source : lua/ge/extensions/editor/crawlEditor/missionPortTool.lua:132
----@param missionDir string Chemin du dossier de la mission (le nom de la mission est son dernier segment)
----@param targetLevel string|nil Identifiant du niveau de destination ; par défaut le niveau chargé
----@return boolean  true si boundary, path et trail ont été sauvés ; false en cas d'échec (la position de départ est facultative)
+--- Converts a crawl mission: reads bounds.sites.json, race.race.json, creates boundary/path/startingPosition in /levels/<level>/crawls/ and the trail in the mission folder. Logs each error with the tag mission_port_tool.
+---Source: lua/ge/extensions/editor/crawlEditor/missionPortTool.lua:132
+---@param missionDir string Path of the mission folder (the mission name is its last segment)
+---@param targetLevel string|nil Destination level identifier; defaults to the loaded level
+---@return boolean  true if boundary, path and trail were saved; false on failure (the starting position is optional)
 function editor_crawlEditor_missionPortTool.portMission(missionDir, targetLevel) end
 
---- Dessine la fenêtre imgui « Mission Port Tool » (Port All Missions, liste des missions convertibles du niveau courant avec un bouton par mission, Refresh, Close) si le dialogue est ouvert. À appeler à chaque frame (depuis l'éditeur).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor/missionPortTool.lua:409
+--- Draws the imgui window "Mission Port Tool" (Port All Missions, list of convertible missions of the current level with one button per mission, Refresh, Close) if the dialog is open. To be called every frame (from the editor).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor/missionPortTool.lua:409
 function editor_crawlEditor_missionPortTool.showPortingDialog() end
 

@@ -1,19 +1,43 @@
 {
   "path": "lua/vehicle/controller/steering/rearWheelSteering.lua",
-  "module": "Contrôleur auxiliaire de direction des roues arrière. En mode feedForward, il calcule une sortie de braquage arrière à partir d'une carte (vitesse des roues, braquage avant) et la publie dans electrics.values.rws (nom configurable) pour qu'un contrôle de direction jbeam l'utilise. Le mode closedLoop n'est pas implémenté.",
+  "module": "Auxiliary rear wheel steering controller. In feedForward mode, it computes a rear steering output from a map (wheel speed, front steering) and publishes it in electrics.values.rws (configurable name) for a jbeam steering control to use. The closedLoop mode is not implemented.",
   "notes": [
-    "Clés jbeam lues : mode (\"feedForward\" ou \"closedLoop\", défaut feedForward), rearSteeringOutputElectricsName (\"rws\"), feedForwardMapData (données d'interpolatedMap : x = vitesse en m/s, y = braquage avant electrics steering_input -> sortie), obligatoire en feedForward.",
-    "Lit electrics.values.steering_input et wheelspeed.",
-    "closedLoop : log W « not implemented » et updateGFX ne fait rien.",
-    "Mode invalide : log E mais M.updateGFX reçoit nil.",
-    "Sans feedForwardMapData : log E, init retourne, la carte reste nil et updateGFX (déjà affecté) échouera à l'appel de feedForwardMap:get."
+    "jbeam keys read: mode (\"feedForward\" or \"closedLoop\", default feedForward), rearSteeringOutputElectricsName (\"rws\"), feedForwardMapData (interpolatedMap data: x = speed in m/s, y = front steering electrics steering_input -> output), required in feedForward.",
+    "Reads electrics.values.steering_input and wheelspeed.",
+    "closedLoop: log W \"not implemented\" and updateGFX does nothing.",
+    "Invalid mode: log E but M.updateGFX receives nil.",
+    "Without feedForwardMapData: log E, init returns, the map stays nil and updateGFX (already assigned) will fail on the call to feedForwardMap:get."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "updateGFX": {"type": "function|nil", "desc": "Affecté dans init selon le mode."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "updateGFX": {
+      "type": "function|nil",
+      "desc": "Assigned in init depending on the mode."
+    }
   },
   "functions": {
-    "init": {"desc": "Choisit la fonction de mise à jour selon le mode et charge la carte feedForward.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "reset": {"desc": "Remet l'electric de sortie à 0.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true}
+    "init": {
+      "desc": "Chooses the update function depending on the mode and loads the feedForward map.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the output electric to 0.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    }
   }
 }

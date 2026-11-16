@@ -1,78 +1,78 @@
 # `ui_router_models_PendingTransition`
 
-*Fichier : `lua/ge/extensions/ui/router/models/PendingTransition.lua` · VM : Game Engine (GE) · 165 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/models/PendingTransition.lua` · VM: Game Engine (GE) · 165 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_models_PendingTransition` : `extensions.load("ui_router_models_PendingTransition")`, puis la globale `ui_router_models_PendingTransition`
+**Access:** extension `ui_router_models_PendingTransition`: `extensions.load("ui_router_models_PendingTransition")`, then the global `ui_router_models_PendingTransition`
 
-Modèle de données « PendingTransition » : représente une transition de navigation en cours {transitionId, action, toRoute, fromRoute, options}. Fournit un constructeur, une validation et des prédicats sur l'action (retour, avant, mise à jour de l'historique, effacement de la pile avant).
+"PendingTransition" data model: represents a navigation transition in progress {transitionId, action, toRoute, fromRoute, options}. Provides a constructor, validation and predicates on the action (back, forward, history update, forward stack clearing).
 
-## Remarques
+## Notes
 
-- Dans router.lua actuel, les transitions sont gérées par transitionManager : ce modèle semble peu ou pas utilisé par le routeur (déduit du code ; non vérifié ailleurs).
-- Actions valides : push, replace, back, forward (Constants.NavigationAction) ; une action invalide devient push avec un avertissement. L'identifiant est « transition_<compteur>_<UUID> ».
+- In the current router.lua, transitions are handled by transitionManager: this model seems little or not used by the router (inferred from code; not verified elsewhere).
+- Valid actions: push, replace, back, forward (Constants.NavigationAction); an invalid action becomes push with a warning. The identifier is "transition_<counter>_<UUID>".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_models_PendingTransition.create(action, toRoute, fromRoute, options)` | Crée une PendingTransition. Renvoie nil (erreur journalisée) si toRoute est absent. | 53 |
-| `ui_router_models_PendingTransition.isBackward(transition)` | Indique si l'action est « back ». | 115 |
-| `ui_router_models_PendingTransition.isForward(transition)` | Indique si l'action est « forward ». | 125 |
-| `ui_router_models_PendingTransition.shouldClearForward(transition)` | Indique si la navigation efface la pile « avant » (push et replace). | 152 |
-| `ui_router_models_PendingTransition.shouldUpdateHistory(transition)` | Indique si la navigation ajoute une entrée à l'historique (uniquement push). | 135 |
-| `ui_router_models_PendingTransition.validate(transition)` | Vérifie la présence de transitionId, action et toRoute. | 86 |
+| `ui_router_models_PendingTransition.create(action, toRoute, fromRoute, options)` | Creates a PendingTransition. Returns nil (error logged) if toRoute is missing. | 53 |
+| `ui_router_models_PendingTransition.isBackward(transition)` | Indicates whether the action is "back". | 115 |
+| `ui_router_models_PendingTransition.isForward(transition)` | Indicates whether the action is "forward". | 125 |
+| `ui_router_models_PendingTransition.shouldClearForward(transition)` | Indicates whether the navigation clears the "forward" stack (push and replace). | 152 |
+| `ui_router_models_PendingTransition.shouldUpdateHistory(transition)` | Indicates whether the navigation adds an entry to the history (push only). | 135 |
+| `ui_router_models_PendingTransition.validate(transition)` | Checks the presence of transitionId, action and toRoute. | 86 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_models_PendingTransition.create(action, toRoute, fromRoute, options)`
 
-Crée une PendingTransition. Renvoie nil (erreur journalisée) si toRoute est absent.
+Creates a PendingTransition. Returns nil (error logged) if toRoute is missing.
 
-- `action` (*string*) : push, replace, back ou forward.
-- `toRoute` (*table*) : ResolvedRoute de destination.
-- `fromRoute` (*table|nil*) : Entrée d'historique d'origine.
-- `options` (*table|nil*) : Options de navigation ({} par défaut).
-- **renvoie** : table|nil {transitionId, action, toRoute, fromRoute, options}.
+- `action` (*string*) : push, replace, back or forward.
+- `toRoute` (*table*) : Destination ResolvedRoute.
+- `fromRoute` (*table|nil*) : Origin history entry.
+- `options` (*table|nil*) : Navigation options ({} by default).
+- **returns**: table|nil {transitionId, action, toRoute, fromRoute, options}.
 
 #### `ui_router_models_PendingTransition.isBackward(transition)`
 
-Indique si l'action est « back ».
+Indicates whether the action is "back".
 
 - `transition` (*table|nil*) : Transition.
-- **renvoie** : boolean|nil true si action == back (nil/false si transition nil).
+- **returns**: boolean|nil true if action == back (nil/false if transition is nil).
 
 #### `ui_router_models_PendingTransition.isForward(transition)`
 
-Indique si l'action est « forward ».
+Indicates whether the action is "forward".
 
 - `transition` (*table|nil*) : Transition.
-- **renvoie** : boolean|nil true si action == forward.
+- **returns**: boolean|nil true if action == forward.
 
 #### `ui_router_models_PendingTransition.shouldClearForward(transition)`
 
-Indique si la navigation efface la pile « avant » (push et replace).
+Indicates whether the navigation clears the "forward" stack (push and replace).
 
 - `transition` (*table|nil*) : Transition.
-- **renvoie** : boolean true pour push et replace.
+- **returns**: boolean true for push and replace.
 
 #### `ui_router_models_PendingTransition.shouldUpdateHistory(transition)`
 
-Indique si la navigation ajoute une entrée à l'historique (uniquement push).
+Indicates whether the navigation adds an entry to the history (push only).
 
 - `transition` (*table|nil*) : Transition.
-- **renvoie** : boolean true pour push.
+- **returns**: boolean true for push.
 
 #### `ui_router_models_PendingTransition.validate(transition)`
 
-Vérifie la présence de transitionId, action et toRoute.
+Checks the presence of transitionId, action and toRoute.
 
-- `transition` (*table|nil*) : Transition à valider.
-- **renvoie** : boolean true si valide.
-- **renvoie** : string[] Liste des erreurs.
+- `transition` (*table|nil*) : Transition to validate.
+- **returns**: boolean true if valid.
+- **returns**: string[] List of errors.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/models/PendingTransition.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/models/PendingTransition.lua`.*

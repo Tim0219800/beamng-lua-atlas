@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/missions/poiTest.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension de test du système de points d'intérêt (POI). Elle ajoute un POI factice « poiTest » sur chaque place de parking définie dans le fichier gameplay/parkingSpotTests.sites.json, et un bouton « Do the Test » dans la fenêtre de détail du POI qui affiche seulement « Test Successfull! » dans le log. Elle ne sert qu'aux développeurs du jeu pour tester gameplay_markerInteraction / rawPois ; un moddeur peut s'en inspirer comme exemple minimal de fournisseur de POI.
---- Accès : extension `gameplay_missions_poiTest` : `extensions.load("gameplay_missions_poiTest")`, puis la globale `gameplay_missions_poiTest`
+--- Test extension for the point-of-interest (POI) system. It adds a dummy "poiTest" POI on each parking spot defined in the file gameplay/parkingSpotTests.sites.json, and a "Do the Test" button in the POI detail window that only prints "Test Successfull!" to the log. It is only for the game's developers to test gameplay_markerInteraction / rawPois; a modder can use it as a minimal example of a POI provider.
+--- Access: extension `gameplay_missions_poiTest`: `extensions.load("gameplay_missions_poiTest")`, then the global `gameplay_missions_poiTest`
 ---@class gameplay_missions_poiTest
 gameplay_missions_poiTest = {}
 
---- Appelé au chargement de l'extension : vide le cache de gameplay_markerInteraction (clearCache) pour que les POI de test apparaissent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/poiTest.lua:50
+--- Called when the extension loads: clears the gameplay_markerInteraction cache (clearCache) so that the test POIs appear.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/poiTest.lua:50
 function gameplay_missions_poiTest.onExtensionLoaded() end
 
---- Hook appelé par le système de POI (gameplay_rawPois) quand il reconstruit la liste des POI d'un niveau. Ajoute dans `elements` un POI de type « poiTest » par place de parking du fichier de test (champs id, pos, rot, scl, radius=3, visibleInPlayMode, interactableInPlayMode, clusterType, data).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/poiTest.lua:7
----@param levelIdentifier string Identifiant du niveau (non utilisé par cette fonction).
----@param elements table Liste de POI à compléter (table.insert).
+--- Hook called by the POI system (gameplay_rawPois) when it rebuilds a level's POI list. Adds to `elements` one "poiTest" type POI per parking spot of the test file (fields id, pos, rot, scl, radius=3, visibleInPlayMode, interactableInPlayMode, clusterType, data).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/poiTest.lua:7
+---@param levelIdentifier string Level identifier (not used by this function).
+---@param elements table POI list to fill (table.insert).
 function gameplay_missions_poiTest.onGetRawPoiListForLevel(levelIdentifier, elements) end
 
---- Hook appelé à l'ouverture de la fenêtre de détail d'un POI. Si un des éléments est de type « poiTest », ajoute dans `promptData` un bouton « Do the Test » dont l'action écrit « Test Successfull! » dans la console.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/missions/poiTest.lua:31
----@param elemData table Liste des données (`data`) des POI sous le curseur / dans le cluster.
----@param promptData table Liste des boutons à compléter ({label, buttonText, buttonFun}).
+--- Hook called when a POI's detail window opens. If one of the elements is of type "poiTest", adds to `promptData` a "Do the Test" button whose action writes "Test Successfull!" to the console.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/missions/poiTest.lua:31
+---@param elemData table List of the POI data (`data`) under the cursor / in the cluster.
+---@param promptData table List of buttons to complete ({label, buttonText, buttonFun}).
 function gameplay_missions_poiTest.onPoiDetailPromptOpening(elemData, promptData) end
 

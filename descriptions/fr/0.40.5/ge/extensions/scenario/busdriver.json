@@ -1,0 +1,117 @@
+{
+  "path": "lua/ge/extensions/scenario/busdriver.lua",
+  "module": "Scénario de conduite de bus (itinéraire de ligne avec arrêts). À partir de la configuration scenario.busdriver (routeID, variance, strictStop, simulatePassengers, traffic), il récupère la ligne via core_busRouteManager.setLine, trace le chemin au sol (core_groundMarkers), suit les déclencheurs d'arrêts de bus (BeamNGTrigger de type 'busstop' et 'buswp'), gère le temps d'attente de 5 s à l'arrêt, les portes et la position agenouillée, déplace 4 marqueurs de cadre d'arrêt et termine le scénario en réussite au dernier arrêt ou en échec si un arrêt est sauté. Le joueur est le véhicule 'scenario_player0'.",
+  "usage": "-- dans le JSON du scénario :\n-- \"busdriver\": {\"routeID\": \"ligne1\", \"variance\": \"a\", \"strictStop\": true, \"simulatePassengers\": true, \"traffic\": true}",
+  "notes": [
+    "Dépend de scenario_scenarios et core_groundMarkers. Le joueur est supposé être le véhicule nommé 'scenario_player0'.",
+    "Une tâche (arrêt) de currentLine.tasklist est une liste : [1] nom du déclencheur, [2] nom affiché, [3] position {x,y,z}, [4] rotation (quaternion), [5] taille {longueur, largeur} (déduit du code).",
+    "Les déclencheurs ont data.type 'busstop' (arrêts de la ligne) ou 'buswp' (points de passage) ; data.event vaut 'enter' ou 'exit', data.subjectName le véhicule, data.triggerName le déclencheur.",
+    "Entrer dans un arrêt sans avoir passé le précédent fait échouer le scénario (clé 'scenarios.busRoutes.skip'). Quitter avant la fin de l'attente (stopTimer < 5) ou avant stopComplete n'accomplit pas l'arrêt.",
+    "Avec busConfig.strictStop, il faut ouvrir les portes (bus_dooropen) et s'agenouiller (bus_kneel) à l'arrêt, sinon des messages invitent à le faire. La caméra passe en 'onboard.rider' puis 'external' pendant l'arrêt, et la caméra précédente est restaurée à la fin.",
+    "Messages UI envoyés via ScenarioRealtimeDisplay : clés scenarios.busRoutes.alreadyStop, stop, kneel, open, wait (context.remaining), close, raise, proceed, success. Évènements UI : BusDisplayUpdate (ligne restante) et BusRouteStats (désactivé).",
+    "Le calcul de statistiques (douceur, angle d'arrêt, distance d'arrêt, dégâts) est exécuté dans onPreRender mais son envoi à l'UI et à statistics_statistics est désactivé (if false, ticket #2783).",
+    "Bug probable : dans onPreRender, la variable playerVehicle utilisée pour calculer vehPos (près de la gestion de navhelp) n'est pas déclarée localement (seul pv l'est) : si elle n'existe pas comme globale, l'appel plante.",
+    "Dans onPreRender, la variable debugPath est toujours nil (sa déclaration est commentée) : le dessin debug des sphères ne s'exécute jamais. Utiliser M.enabledLineDebug à la place pour tracer la ligne complète.",
+    "requestState modifie en place currentLine.tasklist (tmp = currentLine n'est pas une copie) : après un appel, la liste est tronquée aux arrêts restants.",
+    "onVehicleStoppedMoving et computeStats existent mais le hook n'est pas exporté (M.onVehicleStoppedMoving est commenté).",
+    "onExtensionUnloaded dégèle le véhicule joueur (controller.setFreeze(0)) et efface le chemin de groundMarkers ; reset() le gèle (setFreeze(1))."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : scenario_scenarios, core_groundMarkers."},
+    "enabledLineDebug": {"type": "boolean", "desc": "Si true, onPreRender dessine tout l'itinéraire (renderDebugLine) avec des textes debug. Faux par défaut."}
+  },
+  "functions": {
+    "fail": {
+      "desc": "Termine le scénario en échec (scenario_scenarios.finish({failed = reason})) puis réinitialise l'état du module.",
+      "params": {"reason": {"type": "string|table", "desc": "Message ou clé de traduction d'échec."}},
+      "returns": [],
+      "internal": false
+    },
+    "onScenarioLoaded": {
+      "desc": "Hook appelé quand le scénario est chargé. Si busdriver.simulatePassengers, ajoute la pièce 'citybus_seats_ballast' à la configuration du véhicule joueur ; si busdriver.traffic et que le trafic est éteint, démarre le trafic avec trafficAmount (ou le maximum pour 12 véhicules si 0).",
+      "params": {"scenario": {"type": "table", "desc": "Scénario chargé (scenario.busdriver)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onScenarioRestarted": {
+      "desc": "Hook appelé au redémarrage du scénario : réinitialise l'état et recharge la ligne.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario redémarré."}},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceStart": {
+      "desc": "Hook de début de course : réinitialise, charge la ligne, dégèle le joueur, crée les 4 marqueurs TSStatic (busMarkerTL, TR, BL, BR, modèle position_marker.dae) dans ScenarioObjectsGroup, vérifie les points navhelp de la carte routière et trace le chemin vers le premier arrêt (couleur routeColor de la ligne). Met running à true.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onBeamNGTrigger": {
+      "desc": "Hook appelé quand un BeamNGTrigger est franchi. Gère l'entrée et la sortie des arrêts de bus de la ligne (type 'busstop') et l'enregistrement des points de passage (type 'buswp').",
+      "params": {"data": {"type": "table", "desc": "{type, event ('enter'|'exit'), subjectName, triggerName}."}},
+      "returns": [],
+      "internal": true
+    },
+    "onBusUpdate": {
+      "desc": "Hook envoyé par le contrôleur du bus (véhicule) avec des évènements : 'onTriggerTick' (progression de l'arrêt : vitesse, portes, agenouillement), 'onApproachStop' (affiche les marqueurs d'arrêt, alpha cible 1) et 'onDepartedStop' (restaure la boîte englobante d'origine).",
+      "params": {"state": {"type": "table", "desc": "{event, triggerName, speed, bus_dooropen, bus_kneel}."}},
+      "returns": [],
+      "internal": true
+    },
+    "onRaceResult": {
+      "desc": "Hook de fin de course : si playerWon est vrai, enregistre le temps final dans les highscores (core_highscores.setScenarioHighscoresCustom, clé 'busRoute').",
+      "params": {"final": {"type": "table", "desc": "Résultat, final.finalTime en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule. Pour le joueur 0, réinitialise, gèle le nouveau véhicule et recharge la ligne ; échoue si la ligne est introuvable.",
+      "params": {
+        "oldId": {"type": "integer", "desc": "Ancien identifiant de véhicule."},
+        "newId": {"type": "integer", "desc": "Nouvel identifiant."},
+        "player": {"type": "integer", "desc": "Indice du joueur."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook appelé avant chaque image. Anime l'alpha des marqueurs, calcule les statistiques de conduite (accélération, à-coups, dégâts, distance et angle d'arrêt), met à jour le chemin au sol vers le prochain arrêt (core_groundMarkers.setPath) et colore les marqueurs selon que le bus est dans la zone d'arrêt.",
+      "params": {
+        "dt": {"type": "number", "desc": "Durée réelle de l'image (s)."},
+        "dtSim": {"type": "number", "desc": "Durée simulée (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook de déchargement : vide les marqueurs, efface le chemin de groundMarkers et dégèle le véhicule joueur.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPhysicsPaused": {
+      "desc": "Hook : la physique est en pause ; le chronomètre d'arrêt ne progresse plus.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onPhysicsUnpaused": {
+      "desc": "Hook : la physique reprend.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "requestState": {
+      "desc": "Demandé par l'UI : envoie à l'évènement BusDisplayUpdate la ligne courante réduite aux arrêts restants (à partir du prochain). Journalise une erreur et sort si aucune ligne n'est chargée.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de mission : vide la liste des marqueurs.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

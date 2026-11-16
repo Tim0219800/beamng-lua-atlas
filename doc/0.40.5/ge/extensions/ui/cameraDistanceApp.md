@@ -1,37 +1,37 @@
 # `ui_cameraDistanceApp`
 
-*Fichier : `lua/ge/extensions/ui/cameraDistanceApp.lua` · VM : Game Engine (GE) · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/cameraDistanceApp.lua` · VM: Game Engine (GE) · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_cameraDistanceApp` : `extensions.load("ui_cameraDistanceApp")`, puis la globale `ui_cameraDistanceApp`
+**Access:** extension `ui_cameraDistanceApp`: `extensions.load("ui_cameraDistanceApp")`, then the global `ui_cameraDistanceApp`
 
-Application UI de debug « distance caméra ». À chaque frame, mesure la distance entre le véhicule joueur et la caméra, la pousse à l'UI via guihooks.trigger('cameraDistance', distance) et dessine dans le monde une sphère rouge de rayon 0,5 m sur le véhicule avec l'étiquette « camera distance target ».
+"Camera distance" debug UI app. Every frame, measures the distance between the player vehicle and the camera, pushes it to the UI via guihooks.trigger('cameraDistance', distance) and draws in the world a red sphere of radius 0.5 m on the vehicle with the label "camera distance target".
 
-## Remarques
+## Notes
 
-- Sans véhicule joueur, envoie cameraDistance(-1, "no vehicle") et ne dessine rien.
-- Distance en mètres. Un TODO dans le code prévoit de remplacer le guihooks.trigger par un stream.
+- Without a player vehicle, sends cameraDistance(-1, "no vehicle") and draws nothing.
+- Distance in meters. A TODO in the code plans to replace the guihooks.trigger with a stream.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_cameraDistanceApp.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque frame : dessine la sphère et le texte de debug sur le véhicule joueur et envoie la distance véhicule-caméra à l'UI. *(interne)* *(hook)* | 11 |
+| `ui_cameraDistanceApp.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: draws the sphere and the debug text on the player vehicle and sends the vehicle-camera distance to the UI. *(internal)* *(hook)* | 11 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_cameraDistanceApp.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque frame : dessine la sphère et le texte de debug sur le véhicule joueur et envoie la distance véhicule-caméra à l'UI.
+Hook called every frame: draws the sphere and the debug text on the player vehicle and sends the vehicle-camera distance to the UI.
 
-- `dtReal` (*number*) : Temps réel écoulé (s), inutilisé.
-- `dtSim` (*number*) : Temps de simulation écoulé (s), inutilisé.
-- `dtRaw` (*number*) : Temps brut écoulé (s), inutilisé.
+- `dtReal` (*number*) : Elapsed real time (s), unused.
+- `dtSim` (*number*) : Elapsed simulation time (s), unused.
+- `dtRaw` (*number*) : Elapsed raw time (s), unused.
 
-**Évènements UI (guihooks.trigger) :** `cameraDistance`
+**UI events (guihooks.trigger):** `cameraDistance`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/cameraDistanceApp.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/cameraDistanceApp.lua`.*

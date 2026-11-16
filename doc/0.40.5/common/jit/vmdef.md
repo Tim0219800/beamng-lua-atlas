@@ -1,27 +1,27 @@
 # `jit_vmdef`
 
-*Fichier : `lua/common/jit/vmdef.lua` · VM : Commun (GE + véhicule) · 399 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jit/vmdef.lua` · VM: Common (GE + vehicle) · 399 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jit/vmdef")`
+**Access:** `require("jit/vmdef")`
 
-Fichier généré (« DO NOT EDIT ») de LuaJIT : tables de noms internes utilisées par les modules jit.dump, jit.bc, jit.v et le profileur pour afficher bytecodes, instructions IR, fonctions rapides (fast functions) et causes d'abandon de trace. Le fichier vérifie au chargement que jit.version == « LuaJIT 2.1.1788767029 », sinon l'assertion échoue (« LuaJIT core/library version mismatch »). Un moddeur n'a normalement aucune raison de l'utiliser.
+Generated file ("DO NOT EDIT") of LuaJIT: tables of internal names used by the jit.dump, jit.bc, jit.v modules and the profiler to display bytecodes, IR instructions, fast functions and trace abort causes. The file checks at load time that jit.version == "LuaJIT 2.1.1788767029", otherwise the assertion fails ("LuaJIT core/library version mismatch"). A modder normally has no reason to use it.
 
-## Remarques
+## Notes
 
-- L'assertion de version lie ce fichier au LuaJIT embarqué ; ne pas le remplacer par une autre version.
-- bcnames et irnames sont de longues chaînes de noms à largeur fixe (6 caractères) et non des tables.
+- The version assertion ties this file to the embedded LuaJIT; do not replace it with another version.
+- bcnames and irnames are long strings of fixed-width names (6 characters) and not tables.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `bcnames` | string | Noms des opcodes de bytecode LuaJIT concaténés (6 caractères chacun). |
-| `ffnames` | table | Noms des fonctions rapides (fast functions) de LuaJIT. |
-| `ircall` | table | Noms des fonctions C appelées depuis l'IR. |
-| `irfield` | table | Noms des champs de structures pour l'IR (FLOAD/XLOAD). |
-| `irfpm` | table | Noms des fonctions math pour FPMATH. |
-| `irnames` | string | Noms des opcodes de la représentation intermédiaire (IR) concaténés. |
-| `traceerr` | table | Messages d'erreur des traces abandonnées. |
+| `bcnames` | string | Names of the LuaJIT bytecode opcodes concatenated (6 characters each). |
+| `ffnames` | table | Names of LuaJIT's fast functions. |
+| `ircall` | table | Names of the C functions called from the IR. |
+| `irfield` | table | Names of the structure fields for the IR (FLOAD/XLOAD). |
+| `irfpm` | table | Names of the math functions for FPMATH. |
+| `irnames` | string | Names of the intermediate representation (IR) opcodes concatenated. |
+| `traceerr` | table | Error messages of aborted traces. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jit/vmdef.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jit/vmdef.lua`.*

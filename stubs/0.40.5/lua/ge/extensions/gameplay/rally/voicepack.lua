@@ -2,338 +2,338 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/voicepack.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module sans état qui gère les « voicepacks » du copilote de rallye : paquets de voix (audio .ogg + metadata.json + voicepack.json) situés soit en global (`/lua/ge/extensions/gameplay/rally/compositors/voicepacks/<dirname>/`), soit dans une mission (`<missionDir>/rally/voicepacks/<dirname>/`). Il fournit les chemins de fichiers, la lecture et le cache de l'inventaire (scan), le choix d'un voicepack à partir d'un « pick » ou des préférences (liste MRU des derniers utilisés stockée dans le réglage `rallyCodriverVoicepackMRU`), la résolution du notebook d'une mission, les candidats audio (variantes) d'une note, et la construction des réglages utilisateur de type liste déroulante (clé `rallyVoicepackPick`) pour étapes et boucles.
---- Accès : extension `gameplay_rally_voicepack` : `extensions.load("gameplay_rally_voicepack")`, puis la globale `gameplay_rally_voicepack`
+--- Stateless module that manages the rally co-driver "voicepacks": voice packages (.ogg audio + metadata.json + voicepack.json) located either globally (`/lua/ge/extensions/gameplay/rally/compositors/voicepacks/<dirname>/`) or in a mission (`<missionDir>/rally/voicepacks/<dirname>/`). It provides the file paths, reading and caching of the inventory (scan), choosing a voicepack from a "pick" or from the preferences (MRU list of the most recently used, stored in the `rallyCodriverVoicepackMRU` setting), resolution of a mission's notebook, the audio candidates (variants) of a note, and building the dropdown-type user settings (key `rallyVoicepackPick`) for stages and loops.
+--- Access: extension `gameplay_rally_voicepack`: `extensions.load("gameplay_rally_voicepack")`, then the global `gameplay_rally_voicepack`
 ---@class gameplay_rally_voicepack
----@field audioSubdir string 'audio' : sous-dossier des fichiers .ogg.
----@field defaultVoicepackId string 'global:ak_2026-04-16' : premier élément de la MRU si elle est vide.
----@field globalDir string '/lua/ge/extensions/gameplay/rally/compositors/voicepacks/' : dossier des voicepacks globaux (avec `/` final).
+---@field audioSubdir string 'audio': subfolder of the .ogg files.
+---@field defaultVoicepackId string 'global:ak_2026-04-16': first MRU element if it is empty.
+---@field globalDir string '/lua/ge/extensions/gameplay/rally/compositors/voicepacks/': folder of the global voicepacks (with trailing `/`).
 ---@field infoBasename string 'voicepack.json'.
----@field missionSubdir string 'rally/voicepacks' : sous-dossier des voicepacks d'une mission.
----@field mruLimit integer 10 : taille maximale de la MRU.
+---@field missionSubdir string 'rally/voicepacks': subfolder of a mission's voicepacks.
+---@field mruLimit integer 10: maximum size of the MRU.
 gameplay_rally_voicepack = {}
 
---- Ajoute à la MRU le voicepack choisi pour une boucle : directement pour un pick 'voicepack', ou celui de la première étape où la famille est trouvée.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1059
----@param missionTypeData table Données de la mission boucle (stageN_rallyStage).
----@param value string|nil Valeur de réglage.
+--- Adds to the MRU the voicepack chosen for a loop: directly for a 'voicepack' pick, or the one from the first stage where the family is found.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1059
+---@param missionTypeData table Loop mission data (stageN_rallyStage).
+---@param value string|nil Setting value.
 function gameplay_rally_voicepack.addLoopMissionSettingToMRU(missionTypeData, value) end
 
---- Place un voicepack en tête de la MRU (sans doublon, limite 10) et enregistre le réglage. Résout l'entrée via resolveEntry si on ne donne pas une entrée complète.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1164
----@param entryOrPick table Entrée ou pick.
----@param missionDir string|nil Dossier de la mission.
----@param missionId string|nil Id de la mission.
+--- Puts a voicepack at the head of the MRU (no duplicates, limit 10) and saves the setting. Resolves the entry via resolveEntry if a full entry is not given.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1164
+---@param entryOrPick table Entry or pick.
+---@param missionDir string|nil Mission folder.
+---@param missionId string|nil Mission id.
 function gameplay_rally_voicepack.addToMRU(entryOrPick, missionDir, missionId) end
 
---- Construit le réglage utilisateur (liste déroulante) du voicepack pour une boucle : voicepacks globaux, plus les familles de voicepacks de mission communes à toutes les spéciales de la boucle. Sélection : valeur courante, sinon première correspondance MRU, sinon premier élément.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1094
----@param missionTypeData table Données de la boucle.
----@param currentValue string|nil Valeur actuelle.
----@return table|nil  {key = 'rallyVoicepackPick', label, type = 'select', values = {{l, v, shortLabel, detail}}, value, currentOption} ; nil si aucune entrée.
+--- Builds the user setting (dropdown) for the voicepack of a loop: global voicepacks, plus the mission voicepack families common to all stages of the loop. Selection: current value, otherwise first MRU match, otherwise first item.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1094
+---@param missionTypeData table Loop data.
+---@param currentValue string|nil Current value.
+---@return table|nil  {key = 'rallyVoicepackPick', label, type = 'select', values = {{l, v, shortLabel, detail}}, value, currentOption}; nil if there are no entries.
 function gameplay_rally_voicepack.buildLoopMissionUserSetting(missionTypeData, currentValue) end
 
---- Construit le réglage utilisateur (liste déroulante) du voicepack pour une spéciale : « Resolve from Settings » puis chaque voicepack disponible. Sélection : valeur courante, sinon voicepack résolu par préférences, sinon premier élément.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1213
----@param missionDir string Dossier de la mission.
----@param missionId string Id de la mission.
----@param currentValue string|nil Valeur actuelle.
----@return table|nil  Même structure que buildLoopMissionUserSetting ; nil si aucune entrée.
+--- Builds the user setting (dropdown) for the voicepack of a stage: "Resolve from Settings" then each available voicepack. Selection: current value, otherwise voicepack resolved by preferences, otherwise first item.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1213
+---@param missionDir string Mission folder.
+---@param missionId string Mission id.
+---@param currentValue string|nil Current value.
+---@return table|nil  Same structure as buildLoopMissionUserSetting; nil if there are no entries.
 function gameplay_rally_voicepack.buildMissionUserSetting(missionDir, missionId, currentValue) end
 
---- Construit les entrées d'un sélecteur de voicepack pour une mission : éventuellement « Resolve from Settings » en tête (includePreferences), puis chaque voicepack disponible avec son label et son pick.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:871
----@param missionDir string|nil Dossier de la mission.
+--- Builds the entries of a voicepack selector for a mission: optionally "Resolve from Settings" at the top (includePreferences), then each available voicepack with its label and pick.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:871
+---@param missionDir string|nil Mission folder.
 ---@param opts table|nil {includePreferences, includeAuto, missionId, missionSuffix, globalOnly, requireMissionNotebook}.
----@return table[]  Liste de {label, entry, pick}.
+---@return table[]  List of {label, entry, pick}.
 function gameplay_rally_voicepack.buildPickerEntries(missionDir, opts) end
 
---- Choisit un candidat au hasard (math.random).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:197
----@param candidates table[] Liste de candidats.
----@return table|nil  Candidat, nil si la liste est vide.
+--- Picks a candidate at random (math.random).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:197
+---@param candidates table[] List of candidates.
+---@return table|nil  Candidate, nil if the list is empty.
 function gameplay_rally_voicepack.chooseAudioCandidate(candidates) end
 
---- Si la MRU est vide, y met defaultVoicepackId. Ne fait rien avec opts.writeSettings == false.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:714
+--- If the MRU is empty, puts defaultVoicepackId in it. Does nothing with opts.writeSettings == false.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:714
 ---@param opts table|nil {writeSettings}.
 function gameplay_rally_voicepack.ensureSettingsInitialized(opts) end
 
---- Liste les variantes audio d'une note d'après metadata. Sans allowedVariants, prend toutes les variantes indexées (`<stem>.ogg` = variante 1 et `<stem>_<n>.ogg`). Avec allowedVariants, ne prend que celles-ci. Résultat trié par variante puis par nom.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:142
----@param metadata table Table basename -> métadonnées (contenu de metadata.json), avec audioLen.
----@param basename string Nom de base de la note (avec ou sans .ogg).
----@param pathForBasename function|nil Fonction basename -> chemin ; sinon fname = basename.
----@param allowedVariants integer[]|nil Numéros de variantes autorisés.
----@return table[]  Liste de {basename, fname, audioLen, metadata, variantIndex}.
+--- Lists the audio variants of a note from metadata. Without allowedVariants, takes all the indexed variants (`<stem>.ogg` = variant 1 and `<stem>_<n>.ogg`). With allowedVariants, takes only those. Result sorted by variant then by name.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:142
+---@param metadata table Table basename -> metadata (content of metadata.json), with audioLen.
+---@param basename string Base name of the note (with or without .ogg).
+---@param pathForBasename function|nil Function basename -> path; otherwise fname = basename.
+---@param allowedVariants integer[]|nil Allowed variant numbers.
+---@return table[]  List of {basename, fname, audioLen, metadata, variantIndex}.
 function gameplay_rally_voicepack.getAudioCandidates(metadata, basename, pathForBasename, allowedVariants) end
 
---- getAudioCandidates avec les chemins résolus par getEntryAudioFile.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:185
----@param entry table Entrée de voicepack.
----@param metadata table Métadonnées audio.
----@param basename string Nom de base.
----@param allowedVariants integer[]|nil Variantes autorisées.
----@return table[]  Candidats.
+--- getAudioCandidates with the paths resolved by getEntryAudioFile.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:185
+---@param entry table Voicepack entry.
+---@param metadata table Audio metadata.
+---@param basename string Base name.
+---@param allowedVariants integer[]|nil Allowed variants.
+---@return table[]  Candidates.
 function gameplay_rally_voicepack.getAudioCandidatesForEntry(entry, metadata, basename, allowedVariants) end
 
---- getAudioCandidates avec les chemins d'un voicepack global (getAudioFile).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:191
----@param voicepack string Dossier du voicepack.
----@param metadata table Métadonnées audio.
----@param basename string Nom de base.
----@param allowedVariants integer[]|nil Variantes autorisées.
----@return table[]  Candidats.
+--- getAudioCandidates with the paths of a global voicepack (getAudioFile).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:191
+---@param voicepack string Voicepack folder.
+---@param metadata table Audio metadata.
+---@param basename string Base name.
+---@param allowedVariants integer[]|nil Allowed variants.
+---@return table[]  Candidates.
 function gameplay_rally_voicepack.getAudioCandidatesForVoicepack(voicepack, metadata, basename, allowedVariants) end
 
---- Chemin d'un fichier audio d'un voicepack global (sous audio/).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:38
----@param voicepack string Nom de dossier du voicepack.
----@param basename string Nom du fichier audio.
----@return string  Chemin.
+--- Path of an audio file of a global voicepack (under audio/).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:38
+---@param voicepack string Voicepack folder name.
+---@param basename string Audio file name.
+---@return string  Path.
 function gameplay_rally_voicepack.getAudioFile(voicepack, basename) end
 
---- Compatibilité avec l'ancien système : langue, persona et styleLabel du voicepack global résolu par les préférences.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:849
----@return string|nil  Langue.
+--- Compatibility with the old system: language, persona and styleLabel of the global voicepack resolved by the preferences.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:849
+---@return string|nil  Language.
 ---@return string|nil  Persona.
 ---@return string|nil  styleLabel.
 function gameplay_rally_voicepack.getCascadeKeys() end
 
---- Dossier de l'entrée suivi de ceux de ses sources audio.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:480
----@param entry table|nil Entrée.
----@return string[]  Dossiers.
+--- Entry folder followed by those of its audio sources.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:480
+---@param entry table|nil Entry.
+---@return string[]  Folders.
 function gameplay_rally_voicepack.getEntryAssetDirs(entry) end
 
---- Chemin d'un fichier audio d'une entrée : d'abord son propre dossier, puis ceux des voicepacks de reuseAudioFrom. Si le fichier n'existe nulle part, renvoie le chemin local (si le dossier audio existe) ou le premier chemin source.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:46
----@param entry table Entrée de voicepack (issue de scan/scanMission).
----@param basename string Nom du fichier audio.
----@return string|nil  Chemin, nil si entry ou basename manque.
+--- Path of an entry's audio file: first its own folder, then those of the reuseAudioFrom voicepacks. If the file exists nowhere, returns the local path (if the audio folder exists) or the first source path.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:46
+---@param entry table Voicepack entry (from scan/scanMission).
+---@param basename string Audio file name.
+---@return string|nil  Path, nil if entry or basename is missing.
 function gameplay_rally_voicepack.getEntryAudioFile(entry, basename) end
 
---- Entrées globales dont l'audio est réutilisé (reuseAudioFrom), lues une fois puis mises en cache dans entry.audioSourceEntries. Ignore les doublons, soi-même et les dirnames invalides (avec avertissement).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:452
----@param entry table|nil Entrée.
----@return table[]  Entrées sources.
+--- Global entries whose audio is reused (reuseAudioFrom), read once then cached in entry.audioSourceEntries. Ignores duplicates, itself and invalid dirnames (with a warning).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:452
+---@param entry table|nil Entry.
+---@return table[]  Source entries.
 function gameplay_rally_voicepack.getEntryAudioSourceEntries(entry) end
 
---- Fusionne les metadata.json de l'entrée puis de ses sources (la première valeur d'un basename l'emporte), avec cache dans entry._mergedAudioMetadata.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:504
----@param entry table|nil Entrée.
----@return table  Table basename -> métadonnées.
+--- Merges the metadata.json of the entry then of its sources (the first value of a basename wins), with cache in entry._mergedAudioMetadata.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:504
+---@param entry table|nil Entry.
+---@return table  Table basename -> metadata.
 function gameplay_rally_voicepack.getEntryMetadata(entry) end
 
---- Chemin du metadata.json de l'entrée, ou de la première source qui en a un.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:490
----@param entry table|nil Entrée.
----@return string|nil  Chemin.
+--- Path of the entry's metadata.json, or of the first source that has one.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:490
+---@param entry table|nil Entry.
+---@return string|nil  Path.
 function gameplay_rally_voicepack.getEntryMetadataFile(entry) end
 
---- Chemin audio d'une note système pour une entrée (avec repli reuseAudioFrom).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:210
----@param entry table Entrée de voicepack.
----@param systemKey string Clé de la note système.
----@param variantIndex integer|nil Variante.
----@return string|nil  Chemin.
+--- Audio path of a system note for an entry (with reuseAudioFrom fallback).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:210
+---@param entry table Voicepack entry.
+---@param systemKey string System note key.
+---@param variantIndex integer|nil Variant.
+---@return string|nil  Path.
 function gameplay_rally_voicepack.getEntrySystemPacenoteFile(entry, systemKey, variantIndex) end
 
---- Chemin d'un fichier d'un voicepack global.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:34
----@param voicepack string Nom de dossier du voicepack.
----@param basename string Nom de fichier.
----@return string  Chemin complet.
+--- Path of a file of a global voicepack.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:34
+---@param voicepack string Voicepack folder name.
+---@param basename string File name.
+---@return string  Full path.
 function gameplay_rally_voicepack.getFile(voicepack, basename) end
 
---- Lit le voicepack.json d'un voicepack global (brut, sans validation).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:218
----@param voicepack string Dossier du voicepack.
----@return table|nil  Contenu JSON, nil si absent.
+--- Reads the voicepack.json of a global voicepack (raw, without validation).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:218
+---@param voicepack string Voicepack folder.
+---@return table|nil  JSON content, nil if absent.
 function gameplay_rally_voicepack.getInfo(voicepack) end
 
---- Langue déclarée d'un voicepack global.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:226
----@param voicepack string Dossier du voicepack.
----@return string|nil  Langue.
+--- Declared language of a global voicepack.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:226
+---@param voicepack string Voicepack folder.
+---@return string|nil  Language.
 function gameplay_rally_voicepack.getLanguage(voicepack) end
 
---- Chemin de metadata.json d'un voicepack global.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:214
----@param voicepack string Dossier du voicepack.
----@return string  Chemin.
+--- Path of the metadata.json of a global voicepack.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:214
+---@param voicepack string Voicepack folder.
+---@return string  Path.
 function gameplay_rally_voicepack.getMetadataFile(voicepack) end
 
---- Chemin audio d'une note par son hash dans un voicepack global.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:202
----@param voicepack string Dossier du voicepack.
----@param pacenoteHash string Hash de la note.
----@return string  Chemin.
+--- Audio path of a note by its hash in a global voicepack.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:202
+---@param voicepack string Voicepack folder.
+---@param pacenoteHash string Note hash.
+---@return string  Path.
 function gameplay_rally_voicepack.getPacenoteFile(voicepack, pacenoteHash) end
 
---- Champ `styles` du voicepack.json d'un voicepack global.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:232
----@param voicepack string Dossier du voicepack.
----@return table  Styles, table vide si absent.
+--- `styles` field of the voicepack.json of a global voicepack.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:232
+---@param voicepack string Voicepack folder.
+---@return table  Styles, empty table if absent.
 function gameplay_rally_voicepack.getStyles(voicepack) end
 
---- Chemin audio d'une note système dans un voicepack global.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:206
----@param voicepack string Dossier du voicepack.
----@param systemKey string Clé de la note système.
----@param variantIndex integer|nil Variante ; défaut 1.
----@return string  Chemin.
+--- Audio path of a system note in a global voicepack.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:206
+---@param voicepack string Voicepack folder.
+---@param systemKey string System note key.
+---@param variantIndex integer|nil Variant; default 1.
+---@return string  Path.
 function gameplay_rally_voicepack.getSystemPacenoteFile(voicepack, systemKey, variantIndex) end
 
---- Lit la liste MRU (réglage rallyCodriverVoicepackMRU, CSV ou ancien JSON).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:331
----@return string[]  Ids, du plus récent au plus ancien.
+--- Reads the MRU list (setting rallyCodriverVoicepackMRU, CSV or old JSON).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:331
+---@return string[]  Ids, from most recent to oldest.
 function gameplay_rally_voicepack.getVoicepackMRU() end
 
---- Hook dev/test : oublie l'inventaire global pour forcer un nouveau scan. Les changements de préférences ne doivent pas l'appeler.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:246
+--- Dev/test hook: forgets the global inventory to force a new scan. Preference changes must not call it.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:246
 function gameplay_rally_voicepack.invalidateCache() end
 
---- Oublie le cache d'inventaire d'une mission (ou de toutes si missionDir est nil).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:255
----@param missionDir string|nil Dossier de la mission.
+--- Forgets the inventory cache of a mission (or of all if missionDir is nil).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:255
+---@param missionDir string|nil Mission folder.
 function gameplay_rally_voicepack.invalidateMissionCache(missionDir) end
 
---- Libellé d'affichage « persona [(dialecte)] - style [suffixe] ».
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:704
----@param entry table Entrée.
----@param dirname string Repli pour le persona.
----@param suffix string|nil Suffixe ajouté (ex. '(mission)').
----@return string  Libellé.
+--- Display label "persona [(dialect)] - style [suffix]".
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:704
+---@param entry table Entry.
+---@param dirname string Fallback for the persona.
+---@param suffix string|nil Suffix added (e.g. '(mission)').
+---@return string  Label.
 function gameplay_rally_voicepack.labelForEntry(entry, dirname, suffix) end
 
---- Liste triée par label des entrées disponibles : globales et, si missionDir est donné, celles de la mission. Filtrées par enableAnimalCodrivers et, par défaut, par la présence d'un notebook candidat dans la mission.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:629
----@param missionDir string|nil Dossier de la mission.
+--- List sorted by label of the available entries: global ones and, if missionDir is given, those of the mission. Filtered by enableAnimalCodrivers and, by default, by the presence of a candidate notebook in the mission.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:629
+---@param missionDir string|nil Mission folder.
 ---@param opts table|nil {missionId, globalOnly, requireMissionNotebook}.
----@return table[]  Entrées.
+---@return table[]  Entries.
 function gameplay_rally_voicepack.listInventory(missionDir, opts) end
 
---- Comme resolveMissionNotebook mais renvoie tous les noms de notebooks candidats (sans suffixe) qui existent dans la mission, dans l'ordre de préférence.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:687
----@param missionDir string|nil Dossier de la mission.
----@param vpInfo table|nil Entrée du voicepack.
----@return string[]  Noms de notebooks.
+--- Like resolveMissionNotebook but returns all the candidate notebook names (without suffix) that exist in the mission, in order of preference.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:687
+---@param missionDir string|nil Mission folder.
+---@param vpInfo table|nil Voicepack entry.
+---@return string[]  Notebook names.
 function gameplay_rally_voicepack.listMissionNotebookCandidates(missionDir, vpInfo) end
 
---- Construit l'id d'un voicepack : 'global:<dirname>', 'mission:<missionId>:<dirname>' ou 'mission:<dirname>'.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:270
----@param scope string 'global' ou 'mission'.
----@param dirname string Nom de dossier.
----@param missionId string|nil Id de mission (scope mission).
+--- Builds the id of a voicepack: 'global:<dirname>', 'mission:<missionId>:<dirname>' or 'mission:<dirname>'.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:270
+---@param scope string 'global' or 'mission'.
+---@param dirname string Folder name.
+---@param missionId string|nil Mission id (mission scope).
 ---@return string  Id.
 function gameplay_rally_voicepack.makeId(scope, dirname, missionId) end
 
---- Dossier des voicepacks d'une mission : <missionDir>/rally/voicepacks.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:549
----@param missionDir string|nil Dossier de la mission.
----@return string|nil  Chemin.
+--- Folder of a mission's voicepacks: <missionDir>/rally/voicepacks.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:549
+---@param missionDir string|nil Mission folder.
+---@return string|nil  Path.
 function gameplay_rally_voicepack.missionFullDir(missionDir) end
 
---- Noms de notebooks chargeables dans la mission pour un pick de type 'voicepack'.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1140
----@param missionDir string Dossier de la mission.
+--- Names of notebooks that can be loaded in the mission for a 'voicepack' type pick.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1140
+---@param missionDir string Mission folder.
 ---@param pick table|nil Pick.
----@return string[]  Noms sans suffixe ; vide sinon.
+---@return string[]  Names without suffix; empty otherwise.
 function gameplay_rally_voicepack.notebookBasenamesForPick(missionDir, pick) end
 
---- Décompose un id en {scope, dirname, missionId}.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:277
+--- Decomposes an id into {scope, dirname, missionId}.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:277
 ---@param id string Id.
----@return table|nil  Parties, nil si le format est invalide.
+---@return table|nil  Parts, nil if the format is invalid.
 function gameplay_rally_voicepack.parseId(id) end
 
---- Convertit une valeur de réglage en pick : '', 'preferences', 'auto' donnent {type='preferences'} ; 'loop:<clé>' donne un loopVoicepack ; un id valide donne un voicepack ; le reste redevient preferences.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1183
----@param value string|nil Valeur de réglage.
+--- Converts a setting value into a pick: '', 'preferences', 'auto' give {type='preferences'}; 'loop:<key>' gives a loopVoicepack; a valid id gives a voicepack; anything else falls back to preferences.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1183
+---@param value string|nil Setting value.
 ---@return table  Pick.
 function gameplay_rally_voicepack.pickFromSettingValue(value) end
 
---- Compare deux picks : même type ; 'preferences' (ou 'auto') égaux entre eux ; sinon même id, ou même dirname, scope et missionId compatibles.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1150
----@param a table|nil Premier pick.
+--- Compares two picks: same type; 'preferences' (or 'auto') are equal to each other; otherwise same id, or same dirname with compatible scope and missionId.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1150
+---@param a table|nil First pick.
 ---@param b table|nil Second pick.
----@return boolean  true si équivalents.
+---@return boolean  true if equivalent.
 function gameplay_rally_voicepack.picksMatch(a, b) end
 
---- Résout le voicepack à utiliser. Pick de type 'voicepack' : correspondance exacte dans l'inventaire, sinon repli sur les préférences (mode 'invalidExactFallback'). Autre pick ou nil : préférences (MRU puis niveau de détail).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:798
----@param missionDir string|nil Dossier de la mission.
+--- Resolves the voicepack to use. Pick of type 'voicepack': exact match in the inventory, otherwise fallback to the preferences ('invalidExactFallback' mode). Other pick or nil: preferences (MRU then detail level).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:798
+---@param missionDir string|nil Mission folder.
 ---@param pick table|nil Pick.
 ---@param opts table|nil {missionId, globalOnly, requireMissionNotebook, writeSettings}.
 ---@return table  {entry, dirname, reason, mode, detail, candidates}.
 function gameplay_rally_voicepack.resolve(missionDir, pick, opts) end
 
---- Premier voicepack global correspondant à une langue, un persona et un styleLabel (chaque critère facultatif). L'ordre est indéfini (pairs).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:617
----@param language string|nil Langue.
+--- First global voicepack matching a language, a persona and a styleLabel (each criterion optional). The order is undefined (pairs).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:617
+---@param language string|nil Language.
 ---@param persona string|nil Persona.
 ---@param styleLabel string|nil Style.
 ---@return string|nil  dirname.
----@return table|nil  Entrée.
+---@return table|nil  Entry.
 function gameplay_rally_voicepack.resolveDir(language, persona, styleLabel) end
 
---- Résout un pick ('auto' équivaut à 'preferences'; nil = préférences).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:859
----@param missionDir string|nil Dossier de la mission.
+--- Resolves a pick ('auto' is equivalent to 'preferences'; nil = preferences).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:859
+---@param missionDir string|nil Mission folder.
 ---@param pick table|nil Pick.
----@param opts table|nil Voir resolve.
+---@param opts table|nil See resolve.
 ---@return string|nil  dirname.
----@return table|nil  Entrée.
----@return table  Résultat complet de resolve.
+---@return table|nil  Entry.
+---@return table  Full result of resolve.
 function gameplay_rally_voicepack.resolveEffectiveEntry(missionDir, pick, opts) end
 
---- Retrouve l'entrée d'un pick (ou d'un id) : l'index de mission pour scope 'mission', l'index global sinon.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:601
----@param missionDir string|nil Dossier de la mission.
----@param pick table|string Pick ou id.
----@param missionId string|nil Id de la mission.
----@return table|nil  Entrée.
+--- Finds the entry of a pick (or an id): the mission index for scope 'mission', the global index otherwise.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:601
+---@param missionDir string|nil Mission folder.
+---@param pick table|string Pick or id.
+---@param missionId string|nil Mission id.
+---@return table|nil  Entry.
 ---@return string|nil  dirname.
 function gameplay_rally_voicepack.resolveEntry(missionDir, pick, missionId) end
 
---- Entrée de voicepack correspondant à une valeur de réglage de boucle.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1077
----@param missionTypeData table Données de la boucle.
----@param value string|nil Valeur de réglage.
----@return table|nil  Entrée, nil pour preferences ou si introuvable.
+--- Voicepack entry matching a loop setting value.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1077
+---@param missionTypeData table Loop data.
+---@param value string|nil Setting value.
+---@return table|nil  Entry, nil for preferences or if not found.
 function gameplay_rally_voicepack.resolveLoopMissionSettingEntry(missionTypeData, value) end
 
---- Transforme une valeur de réglage de boucle en pick concret pour une mission : un pick 'voicepack' est gardé ; un pick 'loopVoicepack' est cherché par famille dans les voicepacks de la mission.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1049
----@param missionDir string Dossier de la mission.
----@param missionId string Id de la mission.
----@param value string Valeur de réglage.
----@return table|nil  Pick concret, nil pour preferences ou si introuvable.
+--- Turns a loop setting value into a concrete pick for a mission: a 'voicepack' pick is kept; a 'loopVoicepack' pick is looked up by family in the mission's voicepacks.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1049
+---@param missionDir string Mission folder.
+---@param missionId string Mission id.
+---@param value string Setting value.
+---@return table|nil  Concrete pick, nil for preferences or if not found.
 function gameplay_rally_voicepack.resolveLoopVoicepackPick(missionDir, missionId, value) end
 
---- Chemin du premier notebook déclaré par le voicepack (vpInfo.notebooks) qui existe dans la mission.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:673
----@param missionDir string|nil Dossier de la mission.
----@param vpInfo table|nil Entrée ou info du voicepack avec `notebooks`.
----@return string|nil  Chemin <missionDir>/rally/notebooks/<nom>.notebook.json.
+--- Path of the first notebook declared by the voicepack (vpInfo.notebooks) that exists in the mission.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:673
+---@param missionDir string|nil Mission folder.
+---@param vpInfo table|nil Voicepack entry or info with `notebooks`.
+---@return string|nil  Path <missionDir>/rally/notebooks/<name>.notebook.json.
 function gameplay_rally_voicepack.resolveMissionNotebook(missionDir, vpInfo) end
 
---- Scanne les voicepacks globaux (hors dossiers `_`) et renvoie l'index dirname -> entrée, mis en cache.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:530
----@return table<string, table>  Index des entrées globales.
+--- Scans the global voicepacks (excluding `_` folders) and returns the dirname -> entry index, cached.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:530
+---@return table<string, table>  Index of the global entries.
 function gameplay_rally_voicepack.scan() end
 
---- Scanne les voicepacks d'une mission (avec cache).
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:554
----@param missionDir string Dossier de la mission.
----@param missionId string|nil Id de la mission (entre dans la clé de cache et l'id des entrées).
----@return table<string, table>  Index dirname -> entrée.
+--- Scans a mission's voicepacks (with cache).
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:554
+---@param missionDir string Mission folder.
+---@param missionId string|nil Mission id (part of the cache key and of the entries' id).
+---@return table<string, table>  Index dirname -> entry.
 function gameplay_rally_voicepack.scanMission(missionDir, missionId) end
 
---- Opération inverse de pickFromSettingValue.
----Source : lua/ge/extensions/gameplay/rally/voicepack.lua:1203
+--- Inverse operation of pickFromSettingValue.
+---Source: lua/ge/extensions/gameplay/rally/voicepack.lua:1203
 ---@param pick table|nil Pick.
----@return string  Valeur de réglage.
+---@return string  Setting value.
 function gameplay_rally_voicepack.settingValueForPick(pick) end
 

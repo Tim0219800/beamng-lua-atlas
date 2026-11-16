@@ -1,12 +1,12 @@
 # `editor_crawlEditor`
 
-*Fichier : `lua/ge/extensions/editor/crawlEditor.lua` · VM : Game Engine (GE) · 1444 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/crawlEditor.lua` · VM: Game Engine (GE) · 1444 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_crawlEditor` : `extensions.load("editor_crawlEditor")`, puis la globale `editor_crawlEditor`
+**Access:** extension `editor_crawlEditor`: `extensions.load("editor_crawlEditor")`, then the global `editor_crawlEditor`
 
-Éditeur de données de « crawl » (escalade/rock crawling) du World Editor, fenêtre « Crawl Data Editor » (menu Gameplay). Il charge, édite et sauvegarde quatre types d'objets via gameplay/crawl/saveSystem : trails (parcours reliant un chemin, une frontière et une position de départ), paths (nœuds), boundaries (zones) et starting positions. Il liste aussi les objets venant de missions (/gameplay/missions/<niveau>/crawl/<mission>/). Il délègue l'édition aux sous-modules crawlEditor/paths, boundaries, trails, startingPositions, input et missionPortTool, enregistre quatre modes d'édition (pathEditMode, boundaryEditMode, startingPositionEditMode, trailEditMode) et dessine en permanence les nœuds, frontières et positions de départ sélectionnés. Utile à un moddeur qui crée des parcours de crawl pour un niveau ou veut lire les données chargées depuis une autre extension.
+World Editor "crawl" (rock crawling) data editor, "Crawl Data Editor" window (Gameplay menu). It loads, edits and saves four kinds of objects via gameplay/crawl/saveSystem: trails (routes linking a path, a boundary and a starting position), paths (nodes), boundaries (zones) and starting positions. It also lists objects coming from missions (/gameplay/missions/<level>/crawl/<mission>/). It delegates editing to the submodules crawlEditor/paths, boundaries, trails, startingPositions, input and missionPortTool, registers four edit modes (pathEditMode, boundaryEditMode, startingPositionEditMode, trailEditMode) and permanently draws the selected nodes, boundaries and starting positions. Useful to a modder who creates crawl routes for a level or wants to read the loaded data from another extension.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_crawlEditor')
@@ -14,202 +14,202 @@ local trails = editor_crawlEditor.getAllTrails()
 local p = editor_crawlEditor.getSelectedPath()
 ```
 
-## Remarques
+## Notes
 
-- Les index de sélection (selectedTrailIndex…) commencent à 1 ; 0 ou -1 = aucune sélection. Pour trails, paths et boundaries, les index > #allX désignent les objets de mission (missionX[index - #allX]) ; les starting positions n'ont pas d'équivalent mission.
-- markAsDirty(objectType, index) met le drapeau _dirty sur l'objet ; ses types valides sont « trail », « path », « boundary » et « startingPosition ». Un index hors limites est ignoré sans erreur.
-- Les objets de mission sont marqués _isFromMission = true et _missionName. Le bouton Save d'un trail déplace le trail entre dossier de mission et dossier de niveau selon l'écart entre isFromMission (voulu) et _isFromMission (actuel) ; moveTrailToMission est local, seul moveTrailToLevel est exporté.
-- renameObjectFile refuse de renommer si la cible existe déjà, renomme le fichier avec FS:renameFile, met à jour les références pathId/boundaryId/startingPositionId(/Reversed) des trails du niveau puis resauvegarde l'objet renommé.
-- Dossiers : fichiers de niveau dans /levels/<niveau>/crawls/ (*.trail.json, *.path.json, *.boundary.json, *.startingPosition.json) ; fichiers de mission dans /gameplay/missions/<niveau>/crawl/<mission>/. Le chargement n'a lieu qu'à la première ouverture de la fenêtre quand un niveau est chargé, ou en appelant loadAllObjects().
-- onSerialize/onDeserialized conservent entre rechargements Lua : currentFileDir, currentFileName, crawlData, currentTab et les quatre index de sélection.
-- Incohérence : getAllX() renvoie les tables internes (modifiables) ; les getters getSelectedX() renvoient nil si l'index est hors limites.
+- Selection indices (selectedTrailIndex...) start at 1; 0 or -1 = no selection. For trails, paths and boundaries, indices > #allX designate mission objects (missionX[index - #allX]); starting positions have no mission equivalent.
+- markAsDirty(objectType, index) sets the _dirty flag on the object; its valid types are "trail", "path", "boundary" and "startingPosition". An out-of-range index is ignored without error.
+- Mission objects are marked _isFromMission = true and _missionName. A trail's Save button moves the trail between the mission folder and the level folder according to the difference between isFromMission (wanted) and _isFromMission (current); moveTrailToMission is local, only moveTrailToLevel is exported.
+- renameObjectFile refuses to rename if the target already exists, renames the file with FS:renameFile, updates the pathId/boundaryId/startingPositionId(/Reversed) references of the level's trails then resaves the renamed object.
+- Folders: level files in /levels/<level>/crawls/ (*.trail.json, *.path.json, *.boundary.json, *.startingPosition.json); mission files in /gameplay/missions/<level>/crawl/<mission>/. Loading only happens the first time the window is opened when a level is loaded, or by calling loadAllObjects().
+- onSerialize/onDeserialized preserve across Lua reloads: currentFileDir, currentFileName, crawlData, currentTab and the four selection indices.
+- Inconsistency: getAllX() returns the internal (modifiable) tables; the getSelectedX() getters return nil if the index is out of range.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_crawlEditor.getAllBoundaries()` | Renvoie la liste des frontières de niveau. | 1419 |
-| `editor_crawlEditor.getAllMissionBoundaries()` | Renvoie la liste des frontières issues des missions. | 1420 |
-| `editor_crawlEditor.getAllMissionPaths()` | Renvoie la liste des chemins issus des missions. | 1418 |
-| `editor_crawlEditor.getAllMissionTrails()` | Renvoie la liste des trails provenant des missions crawl du niveau courant. | 1416 |
-| `editor_crawlEditor.getAllPaths()` | Renvoie la liste des chemins de niveau. | 1417 |
-| `editor_crawlEditor.getAllStartingPositions()` | Renvoie la liste des positions de départ. | 1421 |
-| `editor_crawlEditor.getAllTrails()` | Renvoie la liste des trails de niveau chargés. | 1415 |
-| `editor_crawlEditor.getSelectedBoundary()` | Renvoie la frontière sélectionnée (de niveau ou de mission). | 280 |
-| `editor_crawlEditor.getSelectedBoundaryIndex()` | Renvoie l'index de la frontière sélectionnée. | 1424 |
-| `editor_crawlEditor.getSelectedPath()` | Renvoie le chemin sélectionné (de niveau ou de mission). | 271 |
-| `editor_crawlEditor.getSelectedPathIndex()` | Renvoie l'index du chemin sélectionné. | 1423 |
-| `editor_crawlEditor.getSelectedStartingPosition()` | Renvoie la position de départ sélectionnée. | 289 |
-| `editor_crawlEditor.getSelectedStartingPositionIndex()` | Renvoie l'index de la position de départ sélectionnée. | 1425 |
-| `editor_crawlEditor.getSelectedTrail()` | Renvoie le trail sélectionné (de niveau ou de mission). | 262 |
-| `editor_crawlEditor.getSelectedTrailIndex()` | Renvoie l'index du trail sélectionné. | 1422 |
-| `editor_crawlEditor.loadAllObjects()` | Recharge depuis le disque trails, paths, boundaries et starting positions (via saveSystem.getAll...Files / get...ById), ainsi que ceux des missions crawl du niveau courant. Vide d'abord les listes en mémoire. | 167 |
-| `editor_crawlEditor.markAsDirty(objectType, index)` | Marque un objet comme modifié (non sauvegardé). | 304 |
-| `editor_crawlEditor.moveTrailToLevel(trail)` | Déplace un trail de mission vers /levels/<niveau>/crawls/ : réécrit pathId et boundaryId vers ce dossier, sauve le trail, supprime l'ancien fichier, puis recharge tout. Échoue si le trail n'est pas de mission, si aucun niveau n'est chargé ou si le fichier existe déjà. | 456 |
-| `editor_crawlEditor.onDeserialized(data)` | Restaure l'état renvoyé par onSerialize (index à -1 par défaut). *(interne)* *(hook)* | 860 |
-| `editor_crawlEditor.onEditorGui()` | Appelé à chaque frame : met à jour la souris (crawlEditor/input), dessine les surcouches permanentes (nœuds, frontières, positions de départ), la fenêtre (menu File avec Save All, listes à gauche, détails à droite, boutons Save/Delete) et la fenêtre de portage de missions. *(interne)* *(hook)* | 873 |
-| `editor_crawlEditor.onEditorInitialized()` | Enregistre la fenêtre « Crawl Data Editor » (1800x900), l'entrée de menu (groupe Gameplay) et les quatre modes d'édition avec leurs raccourcis auxiliaires. Appelé une fois à l'initialisation de l'éditeur. *(interne)* *(hook)* | 781 |
-| `editor_crawlEditor.onSerialize()` | Hook de sérialisation avant rechargement Lua : renvoie dossier/nom de fichier courants, crawlData, onglet courant et index de sélection. *(interne)* *(hook)* | 846 |
-| `editor_crawlEditor.renameObjectFile(oldFilePath, newFilePath, objectType)` | Renomme le fichier d'un objet crawl et met à jour les références des trails. | 74 |
-| `editor_crawlEditor.setSelectedBoundaryIndex(index)` | Définit l'index de la frontière sélectionnée. | 1428 |
-| `editor_crawlEditor.setSelectedPathIndex(index)` | Définit l'index du chemin sélectionné. | 1427 |
-| `editor_crawlEditor.setSelectedStartingPositionIndex(index)` | Définit l'index de la position de départ sélectionnée. | 1429 |
-| `editor_crawlEditor.setSelectedTrailIndex(index)` | Définit l'index du trail sélectionné sans toucher aux autres sélections. | 1426 |
+| `editor_crawlEditor.getAllBoundaries()` | Returns the list of level boundaries. | 1419 |
+| `editor_crawlEditor.getAllMissionBoundaries()` | Returns the list of boundaries coming from missions. | 1420 |
+| `editor_crawlEditor.getAllMissionPaths()` | Returns the list of paths coming from missions. | 1418 |
+| `editor_crawlEditor.getAllMissionTrails()` | Returns the list of trails coming from the crawl missions of the current level. | 1416 |
+| `editor_crawlEditor.getAllPaths()` | Returns the list of level paths. | 1417 |
+| `editor_crawlEditor.getAllStartingPositions()` | Returns the list of starting positions. | 1421 |
+| `editor_crawlEditor.getAllTrails()` | Returns the list of loaded level trails. | 1415 |
+| `editor_crawlEditor.getSelectedBoundary()` | Returns the selected boundary (level or mission). | 280 |
+| `editor_crawlEditor.getSelectedBoundaryIndex()` | Returns the index of the selected boundary. | 1424 |
+| `editor_crawlEditor.getSelectedPath()` | Returns the selected path (level or mission). | 271 |
+| `editor_crawlEditor.getSelectedPathIndex()` | Returns the index of the selected path. | 1423 |
+| `editor_crawlEditor.getSelectedStartingPosition()` | Returns the selected starting position. | 289 |
+| `editor_crawlEditor.getSelectedStartingPositionIndex()` | Returns the index of the selected starting position. | 1425 |
+| `editor_crawlEditor.getSelectedTrail()` | Returns the selected trail (level or mission). | 262 |
+| `editor_crawlEditor.getSelectedTrailIndex()` | Returns the index of the selected trail. | 1422 |
+| `editor_crawlEditor.loadAllObjects()` | Reloads from disk the trails, paths, boundaries and starting positions (via saveSystem.getAll...Files / get...ById), as well as those of the crawl missions of the current level. First clears the in-memory lists. | 167 |
+| `editor_crawlEditor.markAsDirty(objectType, index)` | Marks an object as modified (unsaved). | 304 |
+| `editor_crawlEditor.moveTrailToLevel(trail)` | Moves a mission trail to /levels/<level>/crawls/: rewrites pathId and boundaryId to point to this folder, saves the trail, deletes the old file, then reloads everything. Fails if the trail is not from a mission, if no level is loaded or if the file already exists. | 456 |
+| `editor_crawlEditor.onDeserialized(data)` | Restores the state returned by onSerialize (indices default to -1). *(internal)* *(hook)* | 860 |
+| `editor_crawlEditor.onEditorGui()` | Called every frame: updates the mouse (crawlEditor/input), draws the permanent overlays (nodes, boundaries, starting positions), the window (File menu with Save All, lists on the left, details on the right, Save/Delete buttons) and the mission porting window. *(internal)* *(hook)* | 873 |
+| `editor_crawlEditor.onEditorInitialized()` | Registers the "Crawl Data Editor" window (1800x900), the menu entry (Gameplay group) and the four edit modes with their auxiliary shortcuts. Called once at editor initialization. *(internal)* *(hook)* | 781 |
+| `editor_crawlEditor.onSerialize()` | Serialization hook before Lua reload: returns the current folder/file name, crawlData, current tab and selection indices. *(internal)* *(hook)* | 846 |
+| `editor_crawlEditor.renameObjectFile(oldFilePath, newFilePath, objectType)` | Renames the file of a crawl object and updates the trails' references. | 74 |
+| `editor_crawlEditor.setSelectedBoundaryIndex(index)` | Sets the index of the selected boundary. | 1428 |
+| `editor_crawlEditor.setSelectedPathIndex(index)` | Sets the index of the selected path. | 1427 |
+| `editor_crawlEditor.setSelectedStartingPositionIndex(index)` | Sets the index of the selected starting position. | 1429 |
+| `editor_crawlEditor.setSelectedTrailIndex(index)` | Sets the index of the selected trail without touching the other selections. | 1426 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_crawlEditor.getAllBoundaries()`
 
-Renvoie la liste des frontières de niveau.
+Returns the list of level boundaries.
 
-- **renvoie** : table Liste de frontières
+- **returns**: table List of boundaries
 
 #### `editor_crawlEditor.getAllMissionBoundaries()`
 
-Renvoie la liste des frontières issues des missions.
+Returns the list of boundaries coming from missions.
 
-- **renvoie** : table Liste de frontières de mission
+- **returns**: table List of mission boundaries
 
 #### `editor_crawlEditor.getAllMissionPaths()`
 
-Renvoie la liste des chemins issus des missions.
+Returns the list of paths coming from missions.
 
-- **renvoie** : table Liste de chemins de mission
+- **returns**: table List of mission paths
 
 #### `editor_crawlEditor.getAllMissionTrails()`
 
-Renvoie la liste des trails provenant des missions crawl du niveau courant.
+Returns the list of trails coming from the crawl missions of the current level.
 
-- **renvoie** : table Liste de trails de mission
+- **returns**: table List of mission trails
 
 #### `editor_crawlEditor.getAllPaths()`
 
-Renvoie la liste des chemins de niveau.
+Returns the list of level paths.
 
-- **renvoie** : table Liste de chemins
+- **returns**: table List of paths
 
 #### `editor_crawlEditor.getAllStartingPositions()`
 
-Renvoie la liste des positions de départ.
+Returns the list of starting positions.
 
-- **renvoie** : table Liste de positions de départ
+- **returns**: table List of starting positions
 
 #### `editor_crawlEditor.getAllTrails()`
 
-Renvoie la liste des trails de niveau chargés.
+Returns the list of loaded level trails.
 
-- **renvoie** : table Liste de trails (table interne)
+- **returns**: table List of trails (internal table)
 
 #### `editor_crawlEditor.getSelectedBoundary()`
 
-Renvoie la frontière sélectionnée (de niveau ou de mission).
+Returns the selected boundary (level or mission).
 
-- **renvoie** : table|nil Frontière ou nil
+- **returns**: table|nil Boundary or nil
 
 #### `editor_crawlEditor.getSelectedBoundaryIndex()`
 
-Renvoie l'index de la frontière sélectionnée.
+Returns the index of the selected boundary.
 
-- **renvoie** : integer Index
+- **returns**: integer Index
 
 #### `editor_crawlEditor.getSelectedPath()`
 
-Renvoie le chemin sélectionné (de niveau ou de mission).
+Returns the selected path (level or mission).
 
-- **renvoie** : table|nil Chemin ou nil
+- **returns**: table|nil Path or nil
 
 #### `editor_crawlEditor.getSelectedPathIndex()`
 
-Renvoie l'index du chemin sélectionné.
+Returns the index of the selected path.
 
-- **renvoie** : integer Index
+- **returns**: integer Index
 
 #### `editor_crawlEditor.getSelectedStartingPosition()`
 
-Renvoie la position de départ sélectionnée.
+Returns the selected starting position.
 
-- **renvoie** : table|nil Position de départ ou nil
+- **returns**: table|nil Starting position or nil
 
 #### `editor_crawlEditor.getSelectedStartingPositionIndex()`
 
-Renvoie l'index de la position de départ sélectionnée.
+Returns the index of the selected starting position.
 
-- **renvoie** : integer Index
+- **returns**: integer Index
 
 #### `editor_crawlEditor.getSelectedTrail()`
 
-Renvoie le trail sélectionné (de niveau ou de mission).
+Returns the selected trail (level or mission).
 
-- **renvoie** : table|nil Trail ou nil
+- **returns**: table|nil Trail or nil
 
 #### `editor_crawlEditor.getSelectedTrailIndex()`
 
-Renvoie l'index du trail sélectionné.
+Returns the index of the selected trail.
 
-- **renvoie** : integer Index (> 0 si sélectionné)
+- **returns**: integer Index (> 0 if selected)
 
 #### `editor_crawlEditor.markAsDirty(objectType, index)`
 
-Marque un objet comme modifié (non sauvegardé).
+Marks an object as modified (unsaved).
 
-- `objectType` (*string*) : « trail », « path », « boundary » ou « startingPosition »
-- `index` (*integer*) : Index global (objets de mission inclus sauf pour startingPosition)
+- `objectType` (*string*) : "trail", "path", "boundary" or "startingPosition"
+- `index` (*integer*) : Global index (mission objects included except for startingPosition)
 
 #### `editor_crawlEditor.moveTrailToLevel(trail)`
 
-Déplace un trail de mission vers /levels/<niveau>/crawls/ : réécrit pathId et boundaryId vers ce dossier, sauve le trail, supprime l'ancien fichier, puis recharge tout. Échoue si le trail n'est pas de mission, si aucun niveau n'est chargé ou si le fichier existe déjà.
+Moves a mission trail to /levels/<level>/crawls/: rewrites pathId and boundaryId to point to this folder, saves the trail, deletes the old file, then reloads everything. Fails if the trail is not from a mission, if no level is loaded or if the file already exists.
 
-- `trail` (*table*) : Trail avec _isFromMission = true
-- **renvoie** : boolean true si déplacé
+- `trail` (*table*) : Trail with _isFromMission = true
+- **returns**: boolean true if moved
 
 #### `editor_crawlEditor.onDeserialized(data)`
 
-Restaure l'état renvoyé par onSerialize (index à -1 par défaut).
+Restores the state returned by onSerialize (indices default to -1).
 
-- `data` (*table|nil*) : Données de onSerialize
+- `data` (*table|nil*) : Data from onSerialize
 
 #### `editor_crawlEditor.onSerialize()`
 
-Hook de sérialisation avant rechargement Lua : renvoie dossier/nom de fichier courants, crawlData, onglet courant et index de sélection.
+Serialization hook before Lua reload: returns the current folder/file name, crawlData, current tab and selection indices.
 
-- **renvoie** : table Données à restaurer
+- **returns**: table Data to restore
 
 #### `editor_crawlEditor.renameObjectFile(oldFilePath, newFilePath, objectType)`
 
-Renomme le fichier d'un objet crawl et met à jour les références des trails.
+Renames the file of a crawl object and updates the trails' references.
 
-- `oldFilePath` (*string*) : Ancien chemin
-- `newFilePath` (*string*) : Nouveau chemin (ne doit pas exister)
-- `objectType` (*string*) : « trail », « path », « boundary » ou « startingPosition »
-- **renvoie** : boolean true si renommé ; false si chemins identiques/nil, cible existante ou échec
+- `oldFilePath` (*string*) : Old path
+- `newFilePath` (*string*) : New path (must not exist)
+- `objectType` (*string*) : "trail", "path", "boundary" or "startingPosition"
+- **returns**: boolean true if renamed; false if identical/nil paths, existing target or failure
 
 #### `editor_crawlEditor.setSelectedBoundaryIndex(index)`
 
-Définit l'index de la frontière sélectionnée.
+Sets the index of the selected boundary.
 
 - `index` (*integer*) : Index
 
 #### `editor_crawlEditor.setSelectedPathIndex(index)`
 
-Définit l'index du chemin sélectionné.
+Sets the index of the selected path.
 
 - `index` (*integer*) : Index
 
 #### `editor_crawlEditor.setSelectedStartingPositionIndex(index)`
 
-Définit l'index de la position de départ sélectionnée.
+Sets the index of the selected starting position.
 
 - `index` (*integer*) : Index
 
 #### `editor_crawlEditor.setSelectedTrailIndex(index)`
 
-Définit l'index du trail sélectionné sans toucher aux autres sélections.
+Sets the index of the selected trail without touching the other selections.
 
-- `index` (*integer*) : Index (1 = premier)
+- `index` (*integer*) : Index (1 = first)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`, `findFiles`, `removeFile`, `renameFile`, `stat`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/crawlEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/crawlEditor.lua`.*

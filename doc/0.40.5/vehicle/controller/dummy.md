@@ -1,39 +1,39 @@
 # `controller_dummy`
 
-*Fichier : `lua/vehicle/controller/dummy.lua` · VM : Véhicule · 84 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/dummy.lua` · VM: Vehicle · 84 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `dummy` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `dummy` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur principal (type "main") minimal pour les véhicules sans moteur (remorques, objets). Il fournit l'API obligatoire d'un contrôleur principal (changements de rapport, démarreur, etc., tous en nop) et écrit chaque image des valeurs electrics neutres : throttle, brake, clutch issus des entrées, gear "N", gearIndex 0, rpm/fuel/températures à 0, ignition false, gearboxMode "none".
+Minimal main controller (type "main") for vehicles without an engine (trailers, objects). It provides the mandatory main controller API (gear changes, starter, etc., all nop) and writes neutral electrics values every frame: throttle, brake, clutch from the inputs, gear "N", gearIndex 0, rpm/fuel/temperatures at 0, ignition false, gearboxMode "none".
 
-## Remarques
+## Notes
 
-- Aucune clé jbeam n'est lue. M.engineInfo est un tableau de 21 valeurs (index 3 et 4 = 1000, index 14 = "manual", index 15 = id de l'objet) dont l'index 11 est mis à jour avec la vitesse sol (obj:getGroundSpeed()) uniquement si le flux engineInfo est écouté.
-- Champs throttle, brake, clutchRatio, fireEngineTemperature, drivingAggression, shiftingAggression : constantes à 0 pour l'API de contrôleur principal. nop = fonction globale du moteur qui ne fait rien.
+- No jbeam key is read. M.engineInfo is an array of 21 values (index 3 and 4 = 1000, index 14 = "manual", index 15 = object id) whose index 11 is updated with the ground speed (obj:getGroundSpeed()) only if the engineInfo stream is listened to.
+- Fields throttle, brake, clutchRatio, fireEngineTemperature, drivingAggression, shiftingAggression: constants at 0 for the main controller API. nop = global engine function that does nothing.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_dummy.updateGFX(dt)` | Chaque image : copie les entrées throttle/brake/clutch (bornées 0..1) dans electrics.values et force les autres valeurs à leur état neutre. *(interne)* | 42 |
+| `controller_dummy.updateGFX(dt)` | Every frame: copies the throttle/brake/clutch inputs (bounded 0..1) into electrics.values and forces the other values to their neutral state. *(internal)* | 42 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_dummy.updateGFX(dt)`
 
-Chaque image : copie les entrées throttle/brake/clutch (bornées 0..1) dans electrics.values et force les autres valeurs à leur état neutre.
+Every frame: copies the throttle/brake/clutch inputs (bounded 0..1) into electrics.values and forces the other values to their neutral state.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `brake` | number | 0. |
 | `clutchRatio` | number | 0. |
 | `cycleGearboxModes` | function | nop. |
 | `drivingAggression` | number | 0. |
-| `engineInfo` | table | Tableau d'info moteur de 21 valeurs statiques (voir notes). |
+| `engineInfo` | table | Engine info array of 21 static values (see notes). |
 | `fireEngineTemperature` | number | 0. |
 | `init` | function | nop. |
 | `sendTorqueData` | function | nop. |
@@ -49,9 +49,9 @@ Chaque image : copie les entrées throttle/brake/clutch (bornées 0..1) dans ele
 | `type` | string | "main". |
 | `vehicleActivated` | function | nop. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getGroundSpeed`, `getId`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/dummy.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/dummy.lua`.*

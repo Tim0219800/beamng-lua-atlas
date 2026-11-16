@@ -1,128 +1,233 @@
 {
   "path": "lua/vehicle/recovery.lua",
-  "module": "Système de récupération (touche « recover ») du véhicule. En roulant, enregistre toutes les 0,2 s un historique de positions/orientations (jusqu'à 700 points, un point au moins 2 m après le précédent). Quand on maintient la récupération, le véhicule « rembobine » ce chemin à vitesse croissante (3 -> 20 -> 50 m/s) avec une caméra de récupération et un fil de fer des poutres, puis est téléporté au point atteint à la relâche. Gère aussi le point « home » (saveHome/loadHome) et le mode multijoueur (validation par le serveur).",
-  "usage": "recovery.saveHome()        -- mémorise la position actuelle comme home\nrecovery.loadHome(false)    -- y retourne\nrecovery.recoverInPlace()   -- remet le véhicule d'aplomb sur place",
+  "module": "Vehicle recovery system (\"recover\" key). While driving, records a history of positions/orientations every 0.2 s (up to 700 points, a point at least 2 m after the previous one). When recovery is held, the vehicle \"rewinds\" this path at increasing speed (3 -> 20 -> 50 m/s) with a recovery camera and a beam wireframe, then is teleported to the point reached on release. Also handles the \"home\" point (saveHome/loadHome) and multiplayer mode (server validation).",
+  "usage": "recovery.saveHome()        -- stores the current position as home\nrecovery.loadHome(false)    -- returns to it\nrecovery.recoverInPlace()   -- puts the vehicle upright in place",
   "notes": [
-    "Trois modes de M.updateGFX : updateGFXRecord (enregistrement, mode normal), updateGFXRecovery (rembobinage en cours), et nop (avant init). init() installe updateGFXRecord.",
-    "Réglages internes : intervalle d'enregistrement 0.2 s, séparation minimale 2 m, vitesses de rembobinage 3/20/50 m/s (rampes 2.5 s puis 10 s), délai avant téléportation visuelle 0.5 s, historique 700 points. Un segment de plus de 20 m (400 m²) coupe le rembobinage net.",
-    "Sans smart spawn : l'orientation est redressée si tangage > 80° ou roulis > 45° (la direction de cap est conservée). Avec smart spawn (réglage settings 'enableSmartRecovery', inversé par useAltMode) la téléportation passe par spawn.safeTeleport côté GE.",
-    "M.recoveryHooksOnly = true : start/stopRecovering n'émettent que les hooks GE onStartRecovering / onStopRecovering(0) sans toucher au véhicule (utilisé dans le tutoriel First Drive).",
-    "Hooks GE émis : onStartRecovering (début) et onStopRecovering(timer) (fin, timer = durée réelle de récupération en s). Appelle aussi core_recoveryCamera.beginRecoveryCamera / endRecoveryCamera / setRecoveryCameraPosRot.",
-    "En multijoueur, startRecovering passe par multiplayer_vehicleSync.requestRecoveringBegin ; la suite dépend de onRecoveringBeginAllowed / onRecoveringBeginDenied, et le point final est validé par requestRecoveringCommit puis appliqué par mpApplyRecoveryPoint.",
-    "Anomalie : M.recoveryPoints est un dequeue (pas un tableau simple) ; onDeserialized le reconstruit via dequeue.new(v.recoveryPoints). M.homePoint n'est pas déclaré à l'initialisation (nil jusqu'au premier saveHome ou au premier point d'enregistrement).",
-    "Anomalie mineure : dans finishStopRecovering le chemin non-MP appelle applyRecoveryPoint(lastRecoveryPoint, useSmartSpawn, nil, player) : l'argument player est passé à la place de moveTraffic (4e paramètre), le 3e paramètre player est nil."
+    "Three modes of M.updateGFX: updateGFXRecord (recording, normal mode), updateGFXRecovery (rewind in progress), and nop (before init). init() installs updateGFXRecord.",
+    "Internal settings: recording interval 0.2 s, minimum separation 2 m, rewind speeds 3/20/50 m/s (ramps 2.5 s then 10 s), delay before visual teleport 0.5 s, history 700 points. A segment longer than 20 m (400 m²) cuts the rewind cleanly.",
+    "Without smart spawn: the orientation is straightened if pitch > 80° or roll > 45° (the heading direction is kept). With smart spawn (settings 'enableSmartRecovery', inverted by useAltMode) the teleport goes through spawn.safeTeleport on the GE side.",
+    "M.recoveryHooksOnly = true: start/stopRecovering only emit the GE hooks onStartRecovering / onStopRecovering(0) without touching the vehicle (used in the First Drive tutorial).",
+    "GE hooks emitted: onStartRecovering (start) and onStopRecovering(timer) (end, timer = real duration of the recovery in s). Also calls core_recoveryCamera.beginRecoveryCamera / endRecoveryCamera / setRecoveryCameraPosRot.",
+    "In multiplayer, startRecovering goes through multiplayer_vehicleSync.requestRecoveringBegin; the rest depends on onRecoveringBeginAllowed / onRecoveringBeginDenied, and the final point is validated by requestRecoveringCommit then applied by mpApplyRecoveryPoint.",
+    "Anomaly: M.recoveryPoints is a dequeue (not a simple array); onDeserialized rebuilds it via dequeue.new(v.recoveryPoints). M.homePoint is not declared at initialization (nil until the first saveHome or the first recording point).",
+    "Minor anomaly: in finishStopRecovering the non-MP path calls applyRecoveryPoint(lastRecoveryPoint, useSmartSpawn, nil, player): the player argument is passed in place of moveTraffic (4th parameter), the 3rd parameter player is nil."
   ],
   "fields": {
-    "recoveryPoints": {"type": "dequeue", "desc": "Historique des points de récupération ({pos=vec3, dirFront=vec3, dirUp=vec3}), du plus ancien (gauche) au plus récent (droite)."},
-    "recoveryHooksOnly": {"type": "boolean", "desc": "Si vrai, l'entrée de récupération n'émet que les hooks sans modifier le véhicule (tutoriel First Drive). Faux par défaut."},
-    "homePoint": {"type": "table|nil", "desc": "Point « home » {pos, dirFront, dirUp} défini par saveHome ; nil tant qu'aucun n'est défini (champ créé dynamiquement)."},
-    "updateGFX": {"type": "function", "desc": "nop au chargement, puis remplacée par updateGFXRecord (enregistrement) ou updateGFXRecovery (rembobinage). ⚠ référence nop non définie dans le fichier (global du jeu)."}
+    "recoveryPoints": {
+      "type": "dequeue",
+      "desc": "History of recovery points ({pos=vec3, dirFront=vec3, dirUp=vec3}), from oldest (left) to newest (right)."
+    },
+    "recoveryHooksOnly": {
+      "type": "boolean",
+      "desc": "If true, the recovery input only emits the hooks without modifying the vehicle (First Drive tutorial). False by default."
+    },
+    "homePoint": {
+      "type": "table|nil",
+      "desc": "\"Home\" point {pos, dirFront, dirUp} set by saveHome; nil as long as none is set (dynamically created field)."
+    },
+    "updateGFX": {
+      "type": "function",
+      "desc": "nop at load, then replaced by updateGFXRecord (recording) or updateGFXRecovery (rewind). ⚠ nop reference not defined in the file (game global)."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Passe en mode enregistrement, mémorise le nombre de poutres et précalcule les positions relatives des noeuds par rapport au noeud de référence (pour dessiner le fil de fer).",
-      "params": {"path": {"type": "string", "desc": "Non utilisé (déduit du code)."}},
+      "desc": "Switches to recording mode, stores the number of beams and precomputes the relative positions of the nodes with respect to the reference node (to draw the wireframe).",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Unused (inferred from code)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "clear": {
-      "desc": "Vide l'historique des points, supprime homePoint et invalide le dernier point de récupération.",
+      "desc": "Empties the point history, removes homePoint and invalidates the last recovery point.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "onDeserialized": {
-      "desc": "Hook de désérialisation (rechargement du Lua véhicule) : fusionne l'état sauvegardé dans M et reconstruit la file recoveryPoints.",
-      "params": {"v": {"type": "table", "desc": "Données sauvegardées."}},
+      "desc": "Deserialization hook (vehicle Lua reload): merges the saved state into M and rebuilds the recoveryPoints queue.",
+      "params": {
+        "v": {
+          "type": "table",
+          "desc": "Saved data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "saveHome": {
-      "desc": "Mémorise un point home. Sans argument, utilise la position/orientation actuelle et affiche le message 'vehicle.recovery.saveHome'.",
-      "params": {"point": {"type": "table|nil", "desc": "Point {pos, dirFront, dirUp} ; position actuelle si nil."}},
+      "desc": "Stores a home point. Without argument, uses the current position/orientation and displays the message 'vehicle.recovery.saveHome'.",
+      "params": {
+        "point": {
+          "type": "table|nil",
+          "desc": "Point {pos, dirFront, dirUp}; current position if nil."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "loadHome": {
-      "desc": "Demande le retour au point home (ne fait rien s'il n'y en a pas). Passe par multiplayer_vehicleSync.requestLoadHome si présent, sinon rappelle loadHomeLocal côté véhicule.",
-      "params": {"moveTraffic": {"type": "boolean|nil", "desc": "Transmis à spawn.safeTeleport : déplacer aussi le trafic gênant."}},
+      "desc": "Requests the return to the home point (does nothing if there is none). Goes through multiplayer_vehicleSync.requestLoadHome if present, otherwise calls loadHomeLocal on the vehicle side.",
+      "params": {
+        "moveTraffic": {
+          "type": "boolean|nil",
+          "desc": "Passed to spawn.safeTeleport: also move obstructing traffic."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "loadHomeLocal": {
-      "desc": "Téléporte immédiatement le véhicule au point home et affiche 'vehicle.recovery.loadHome'. Appelé par loadHome (ou le serveur MP).",
-      "params": {"moveTraffic": {"type": "boolean|nil", "desc": "Voir loadHome."}},
+      "desc": "Immediately teleports the vehicle to the home point and displays 'vehicle.recovery.loadHome'. Called by loadHome (or the MP server).",
+      "params": {
+        "moveTraffic": {
+          "type": "boolean|nil",
+          "desc": "See loadHome."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "recoverInPlace": {
-      "desc": "Remet le véhicule d'aplomb à sa position actuelle (point de récupération = état courant, appliqué tout de suite).",
+      "desc": "Puts the vehicle upright at its current position (recovery point = current state, applied immediately).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "startRecovering": {
-      "desc": "Démarre la récupération (appui sur la touche). En solo lance directement beginRecoveringPreview ; en multijoueur demande d'abord l'autorisation au serveur. Ignoré si déjà en cours.",
-      "params": {"useAltMode": {"type": "boolean|nil", "desc": "Mode alternatif : inverse le réglage 'enableSmartRecovery' (faux par défaut)."}},
+      "desc": "Starts the recovery (key press). In solo mode directly launches beginRecoveringPreview; in multiplayer first requests authorization from the server. Ignored if already in progress.",
+      "params": {
+        "useAltMode": {
+          "type": "boolean|nil",
+          "desc": "Alternative mode: inverts the 'enableSmartRecovery' setting (false by default)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "stopRecovering": {
-      "desc": "Demande l'arrêt de la récupération (relâche de la touche) ; l'arrêt effectif et la téléportation ont lieu à la prochaine updateGFX.",
-      "params": {"player": {"type": "any", "desc": "Joueur à l'origine de la demande, transmis à la téléportation (déduit du code)."}},
+      "desc": "Requests the end of the recovery (key release); the actual stop and the teleport occur at the next updateGFX.",
+      "params": {
+        "player": {
+          "type": "any",
+          "desc": "Player that originated the request, passed to the teleport (inferred from code)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "beginRecoveringPreview": {
-      "desc": "Entre réellement en mode rembobinage : crée un point de départ, passe updateGFX sur updateGFXRecovery, émet le hook GE onStartRecovering. Appelé par startRecovering ou après autorisation MP.",
-      "params": {"useAltMode": {"type": "boolean|nil", "desc": "Voir startRecovering."}},
+      "desc": "Actually enters rewind mode: creates a starting point, switches updateGFX to updateGFXRecovery, emits the GE hook onStartRecovering. Called by startRecovering or after MP authorization.",
+      "params": {
+        "useAltMode": {
+          "type": "boolean|nil",
+          "desc": "See startRecovering."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "cancelRecoveringPreview": {
-      "desc": "Annule la récupération en cours sans téléporter : remet l'enregistrement, réinitialise les matériaux et ferme la caméra de récupération.",
+      "desc": "Cancels the current recovery without teleporting: resumes recording, resets the materials and closes the recovery camera.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "afterStopRecovering": {
-      "desc": "Finalise une récupération : remet à zéro les poutres de flexmesh cassées, libère les noeuds fixés par le grabber, affiche le message adapté, ferme la caméra et émet le hook GE onStopRecovering.",
-      "params": {"timer": {"type": "number|string|nil", "desc": "Durée de la récupération en secondes (défaut : durée mesurée)."}},
+      "desc": "Finalizes a recovery: resets broken flexmesh beams, releases the nodes fixed by the grabber, displays the appropriate message, closes the camera and emits the GE hook onStopRecovering.",
+      "params": {
+        "timer": {
+          "type": "number|string|nil",
+          "desc": "Recovery duration in seconds (default: measured duration)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "mpApplyRecoveryPoint": {
-      "desc": "Applique un point de récupération validé par le serveur multijoueur : téléporte le véhicule (smart spawn ou vehicleSetPositionRotation) puis notifie multiplayer_vehicleSync.onVehicleRecoveryApplied.",
+      "desc": "Applies a recovery point validated by the multiplayer server: teleports the vehicle (smart spawn or vehicleSetPositionRotation) then notifies multiplayer_vehicleSync.onVehicleRecoveryApplied.",
       "params": {
-        "requestId": {"type": "integer", "desc": "Identifiant de la requête MP."},
-        "action": {"type": "string", "desc": "Nom de l'action renvoyé au serveur."},
-        "px": {"type": "number", "desc": "Position X (m)."},
-        "py": {"type": "number", "desc": "Position Y (m)."},
-        "pz": {"type": "number", "desc": "Position Z (m)."},
-        "fx": {"type": "number", "desc": "Direction avant X."},
-        "fy": {"type": "number", "desc": "Direction avant Y."},
-        "fz": {"type": "number", "desc": "Direction avant Z."},
-        "ux": {"type": "number", "desc": "Direction haut X."},
-        "uy": {"type": "number", "desc": "Direction haut Y."},
-        "uz": {"type": "number", "desc": "Direction haut Z."},
-        "useSmartSpawnParam": {"type": "boolean|nil", "desc": "Forcer/interdire le smart spawn (sinon valeur interne)."},
-        "player": {"type": "any", "desc": "Joueur concerné, transmis à safeTeleport."},
-        "moveTraffic": {"type": "boolean|nil", "desc": "Déplacer le trafic gênant."}
+        "requestId": {
+          "type": "integer",
+          "desc": "MP request identifier."
+        },
+        "action": {
+          "type": "string",
+          "desc": "Action name sent back to the server."
+        },
+        "px": {
+          "type": "number",
+          "desc": "X position (m)."
+        },
+        "py": {
+          "type": "number",
+          "desc": "Y position (m)."
+        },
+        "pz": {
+          "type": "number",
+          "desc": "Z position (m)."
+        },
+        "fx": {
+          "type": "number",
+          "desc": "Front direction X."
+        },
+        "fy": {
+          "type": "number",
+          "desc": "Front direction Y."
+        },
+        "fz": {
+          "type": "number",
+          "desc": "Front direction Z."
+        },
+        "ux": {
+          "type": "number",
+          "desc": "Up direction X."
+        },
+        "uy": {
+          "type": "number",
+          "desc": "Up direction Y."
+        },
+        "uz": {
+          "type": "number",
+          "desc": "Up direction Z."
+        },
+        "useSmartSpawnParam": {
+          "type": "boolean|nil",
+          "desc": "Force/forbid smart spawn (otherwise internal value)."
+        },
+        "player": {
+          "type": "any",
+          "desc": "Player concerned, passed to safeTeleport."
+        },
+        "moveTraffic": {
+          "type": "boolean|nil",
+          "desc": "Move obstructing traffic."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onRecoveringBeginAllowed": {
-      "desc": "Hook appelé en multijoueur quand le serveur autorise la récupération : mémorise requestId et lance beginRecoveringPreview.",
+      "desc": "Hook called in multiplayer when the server allows the recovery: stores requestId and launches beginRecoveringPreview.",
       "params": {
-        "requestId": {"type": "integer", "desc": "Identifiant de requête."},
-        "useAltMode": {"type": "boolean|string", "desc": "Mode alternatif (true ou la chaîne 'true')."}
+        "requestId": {
+          "type": "integer",
+          "desc": "Request identifier."
+        },
+        "useAltMode": {
+          "type": "boolean|string",
+          "desc": "Alternative mode (true or the string 'true')."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onRecoveringBeginDenied": {
-      "desc": "Hook appelé en multijoueur quand le serveur refuse la récupération : annule l'état d'attente.",
+      "desc": "Hook called in multiplayer when the server denies the recovery: cancels the waiting state.",
       "params": {},
       "returns": [],
       "internal": true

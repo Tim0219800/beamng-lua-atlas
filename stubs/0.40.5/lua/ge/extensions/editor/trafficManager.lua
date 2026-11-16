@@ -2,81 +2,81 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/trafficManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Éditeur « Traffic Manager » : permet de composer une session de trafic (véhicules et props placés sur la carte, feux de signalisation, panneaux), de lancer/arrêter la simulation (IA des véhicules non verrouillés, signaux), puis de sauvegarder la session en JSON avec un prefab associé. Fenêtres : principale (mode d'édition trafficEditMode), « Traffic Vehicles & Props », « Traffic Lights », « Traffic Signs » et « Options ». Les objets créés sont rangés dans le SimGroup « TrafficSession ». Un moddeur s'en sert via le menu de l'éditeur ; l'API Lua publique se limite au chargement/sauvegarde de session, à la lecture des données et à la simulation.
---- Accès : extension `editor_trafficManager` : `extensions.load("editor_trafficManager")`, puis la globale `editor_trafficManager`
+--- Editor "Traffic Manager": lets you compose a traffic session (vehicles and props placed on the map, traffic lights, signs), start/stop the simulation (AI of unlocked vehicles, signals), then save the session as JSON with an associated prefab. Windows: main (trafficEditMode edit mode), "Traffic Vehicles & Props", "Traffic Lights", "Traffic Signs" and "Options". Created objects are stored in the "TrafficSession" SimGroup. A modder uses it through the editor menu; the public Lua API is limited to loading/saving a session, reading the data and the simulation.
+--- Access: extension `editor_trafficManager`: `extensions.load("editor_trafficManager")`, then the global `editor_trafficManager`
 ---@class editor_trafficManager
----@field assertLevel boolean Vrai par défaut : loadSession compare le niveau du fichier au niveau courant et demande confirmation en cas de différence.
----@field debugMode boolean Faux par défaut : active le dessin de debug (cible IA, boîte sous le véhicule) même pour les véhicules actifs ; recopié depuis le fichier chargé.
+---@field assertLevel boolean True by default: loadSession compares the file's level with the current level and asks for confirmation if they differ.
+---@field debugMode boolean False by default: enables debug drawing (AI target, box under the vehicle) even for active vehicles; copied from the loaded file.
 editor_trafficManager = {}
 
---- Arrête la simulation : désactive l'IA des véhicules non verrouillés et les signaux, met session.play à false.
----Source : lua/ge/extensions/editor/trafficManager.lua:603
----@return boolean  Faux si aucune session n'existe, vrai sinon.
+--- Stops the simulation: disables the AI of unlocked vehicles and the signals, sets session.play to false.
+---Source: lua/ge/extensions/editor/trafficManager.lua:603
+---@return boolean  False if no session exists, true otherwise.
 function editor_trafficManager.disableSimulation() end
 
---- Démarre la simulation : active l'IA de tous les véhicules non verrouillés et les signaux, recharge la collision si l'éditeur est modifié, met session.play à true.
----Source : lua/ge/extensions/editor/trafficManager.lua:586
----@return boolean  Faux si aucune session n'existe, vrai sinon.
+--- Starts the simulation: enables the AI of all unlocked vehicles and the signals, reloads the collision if the editor is modified, sets session.play to true.
+---Source: lua/ge/extensions/editor/trafficManager.lua:586
+---@return boolean  False if no session exists, true otherwise.
 function editor_trafficManager.enableSimulation() end
 
---- Renvoie la table de session courante (véhicules, feux, panneaux, nom, auteur, play…), non copiée.
----Source : lua/ge/extensions/editor/trafficManager.lua:2305
----@return table|nil  Session, nil tant qu'elle n'est pas créée.
+--- Returns the current session table (vehicles, lights, signs, name, author, play...), not copied.
+---Source: lua/ge/extensions/editor/trafficManager.lua:2305
+---@return table|nil  Session, nil until it is created.
 function editor_trafficManager.getSessionData() end
 
---- Charge une session depuis un fichier JSON : réinitialise la session, restaure options et métadonnées, charge le prefab associé s'il existe puis recrée véhicules et signaux. Sans argument, reprend le fichier mémorisé après une demande de confirmation de niveau (et désactive assertLevel). Notification d'échec si le fichier est illisible.
----Source : lua/ge/extensions/editor/trafficManager.lua:2088
----@param filePath string|nil Chemin du fichier .json (ou .prefab.json, converti).
+--- Loads a session from a JSON file: resets the session, restores options and metadata, loads the associated prefab if it exists then recreates vehicles and signals. Without an argument, resumes the remembered file after a level confirmation request (and disables assertLevel). Failure notification if the file is unreadable.
+---Source: lua/ge/extensions/editor/trafficManager.lua:2088
+---@param filePath string|nil Path of the .json file (or .prefab.json, converted).
 function editor_trafficManager.loadSession(filePath) end
 
---- Hook après rechargement Lua ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2554
----@param data table Valeur de onSerialize.
+--- Hook after Lua reload; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2554
+---@param data table Value of onSerialize.
 function editor_trafficManager.onDeserialized(data) end
 
---- Hook de frame de l'éditeur : dessine les fenêtres du Traffic Manager (seulement quand le mode d'édition courant est Traffic Manager) et le debug.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2341
+--- Editor frame hook: draws the Traffic Manager windows (only when the current edit mode is Traffic Manager) and the debug.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2341
 function editor_trafficManager.onEditorGui() end
 
---- Hook d'initialisation de l'éditeur : crée le mode d'édition trafficEditMode (raccourcis clic, Maj+clic déplacer, Alt) et enregistre les fenêtres.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2566
+--- Editor initialization hook: creates the trafficEditMode edit mode (shortcuts click, Shift+click move, Alt) and registers the windows.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2566
 function editor_trafficManager.onEditorInitialized() end
 
---- Hook avant rechargement Lua ; renvoie une table vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2549
----@return table  Table vide.
+--- Hook before Lua reload; returns an empty table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2549
+---@return table  Empty table.
 function editor_trafficManager.onSerialize() end
 
---- Hook de mise à jour : si le SimGroup a disparu, réinitialise la session ; sinon range les véhicules apparus dans le SimGroup, met à jour les statistiques et un minuteur de 0.25 s.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2423
----@param dt number Delta de temps réel (s).
----@param dtSim number Delta de temps de simulation (s).
+--- Update hook: if the SimGroup has disappeared, resets the session; otherwise stores the vehicles that appeared in the SimGroup, updates the statistics and a 0.25 s timer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2423
+---@param dt number Real-time delta (s).
+---@param dtSim number Simulation time delta (s).
 function editor_trafficManager.onUpdate(dt, dtSim) end
 
---- Hook appelé quand un véhicule est réinitialisé : recrée ses données de session (statistiques remises à zéro).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2526
----@param vehId integer Identifiant du véhicule.
+--- Hook called when a vehicle is reset: recreates its session data (statistics reset to zero).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2526
+---@param vehId integer Vehicle identifier.
 function editor_trafficManager.onVehicleResetted(vehId) end
 
---- Hook appelé quand un véhicule apparaît : si la fenêtre véhicules ou panneaux est active, crée le SimGroup au besoin et met le véhicule en file pour l'ajouter à la session à la frame suivante.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2513
----@param vehId integer Identifiant du véhicule.
+--- Hook called when a vehicle spawns: if the vehicles or signs window is active, creates the SimGroup if needed and queues the vehicle to be added to the session on the next frame.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2513
+---@param vehId integer Vehicle identifier.
 function editor_trafficManager.onVehicleSpawned(vehId) end
 
---- Hook du menu : crée la session et vérifie le SimGroup si besoin, vide la sélection et affiche la fenêtre principale.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/trafficManager.lua:2557
+--- Menu hook: creates the session and checks the SimGroup if needed, clears the selection and shows the main window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/trafficManager.lua:2557
 function editor_trafficManager.onWindowMenuItem() end
 
---- Sauvegarde la session dans un fichier JSON et un prefab du même nom. Sans effet sans chemin.
----Source : lua/ge/extensions/editor/trafficManager.lua:2212
----@param filePath string Chemin du fichier .json (ou .prefab.json, converti).
+--- Saves the session to a JSON file and a prefab of the same name. No effect without a path.
+---Source: lua/ge/extensions/editor/trafficManager.lua:2212
+---@param filePath string Path of the .json file (or .prefab.json, converted).
 function editor_trafficManager.saveSession(filePath) end
 

@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/editor/gizmoHelper.lua",
+  "module": "Petit utilitaire pour savoir si le gizmo d'axes de l'éditeur est dessiné. Un outil appelle gizmoDrawCalled() chaque frame où il dessine le gizmo ; à la frame suivante, si plus personne ne l'a dessiné, le module désélectionne l'élément du gizmo côté moteur (setAxisGizmoSelectedElement(-1)).",
+  "usage": "-- dans le onEditorGui d'un outil qui dessine le gizmo\neditor_gizmoHelper.gizmoDrawCalled()\nif editor_gizmoHelper.isGizmoVisible() then ... end",
+  "notes": ["isGizmoVisible reflète la frame précédente (gizmoDrawnLastFrame), pas la frame courante."],
+  "functions": {
+    "gizmoDrawCalled": {
+      "desc": "À appeler depuis un outil à chaque frame où il dessine le gizmo d'axes ; marque le gizmo comme dessiné pour la frame courante.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "isGizmoVisible": {
+      "desc": "Indique si le gizmo a été dessiné à la frame précédente.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si gizmoDrawCalled a été appelé à la frame précédente"}],
+      "internal": false
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé chaque frame par l'éditeur : si le gizmo était dessiné à la frame précédente mais pas à celle-ci, désélectionne l'élément du gizmo (-1) ; puis fait glisser l'indicateur de frame et le remet à faux.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

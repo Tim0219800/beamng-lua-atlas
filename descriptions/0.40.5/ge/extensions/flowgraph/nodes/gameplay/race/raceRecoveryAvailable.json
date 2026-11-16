@@ -1,12 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceRecoveryAvailable.lua",
-  "module": "Nœud flowgraph « Race Recovery Available » (catégorie logic). Teste si un véhicule dispose d'un point de recovery (race:hasRecoveryPosition(vehId)). Sorties flow 'true' (recovery disponible) et 'false' (sinon).",
-  "notes": ["Le code assigne C.tags deux fois ; la seconde (tableau vide) écrase {'scenario'}."],
+  "module": "Flowgraph node \"Race Recovery Available\" (category logic). Tests whether a vehicle has a recovery point (race:hasRecoveryPosition(vehId)). Flow outputs 'true' (recovery available) and 'false' (otherwise).",
+  "notes": [
+    "The code assigns C.tags twice; the second (empty table) overwrites {'scenario'}."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Met à jour les sorties 'true' et 'false' selon hasRecoveryPosition.", "internal": true}
+        "work": {
+          "desc": "Updates the 'true' and 'false' outputs according to hasRecoveryPosition.",
+          "internal": true
+        }
       }
     }
   }

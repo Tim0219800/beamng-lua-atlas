@@ -1,0 +1,66 @@
+{
+  "path": "lua/ge/extensions/util/worker.lua",
+  "module": "Exécuteur de tâches hors ligne : lit un fichier JSON `/work.json` contenant une liste d'éléments de travail ({type=..., ...}) et les exécute un par un (compilation de maillages .dae en .cdae, compilation d'imposteurs, rendu d'aperçus de véhicules, test de mods, mesures de performances, calibrage de l'ESC), puis quitte le jeu avec `shutdown(0)` quand plus aucun job n'est en cours. Prévu pour des lancements automatisés (ligne de commande), pas pour le jeu normal.",
+  "usage": "-- ligne de commande du jeu : -lua extensions.load('util_worker') -console -nouserpath",
+  "notes": [
+    "Le travail ne démarre qu'après 120 images de rendu (compteur frame dans onPreRender).",
+    "Types de tâche reconnus : compileMesh, testImage, compileImposters, testMod, renderVehiclePreview, testVehiclesPerformances, calibrateESC. Un type inconnu ou absent est journalisé en erreur.",
+    "L'extension se met en déchargement manuel (setExtensionUnloadMode(M, 'manual')).",
+    "Bug : dans loadWork, si /work.json est illisible, workItems vaut nil et `#workItems` provoque ensuite une erreur Lua.",
+    "Le fichier contient aussi des fonctions locales (loadMaterialsInPath, compileDae) non exportées : compileDae appelle compileCollada puis Engine.Render.updateImposters(false)."
+  ],
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Passe l'extension en déchargement manuel, charge les extensions test/renderVehiclePreview, util/saveDynamicData, util/calibrateESC et util/compileImposters, puis lit le fichier de tâches.",
+      "internal": true
+    },
+    "onJobDone": {
+      "desc": "Hook appelé quand un job du système de jobs se termine : si les tâches ont déjà été mises en file et qu'il ne reste plus aucun job, quitte le jeu (shutdown(0)).",
+      "params": {
+        "job": {"type": "any", "desc": "job terminé (non utilisé)"},
+        "totalRunning": {"type": "integer", "desc": "nombre de jobs encore en cours"}
+      },
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Après 120 images, exécute tous les éléments de travail via la table N, puis, quand core_jobsystem n'a plus de job en cours, arrête le jeu.",
+      "params": {"dt": {"type": "number", "desc": "temps écoulé (non utilisé)"}},
+      "internal": true
+    }
+  },
+  "classes": {
+    "N": {
+      "desc": "Table des gestionnaires de tâches, indexée par le champ `type` d'un élément de work.json. Chaque méthode reçoit l'élément `w` (table JSON).",
+      "functions": {
+        "compileMesh": {
+          "desc": "Charge les matériaux du dossier de w.filename, puis compile ce fichier .dae en .cdae (avec un fichier *meshes.json). Erreur si w.filename est absent.",
+          "params": {"w": {"type": "table", "desc": "élément de travail ; champ filename = chemin du .dae"}}
+        },
+        "testImage": {
+          "desc": "Vérifie que w.filename existe ; le test réel n'est pas implémenté (TODO dans le code).",
+          "params": {"w": {"type": "table", "desc": "élément de travail ; champ filename"}}
+        },
+        "compileImposters": {
+          "desc": "Met en file la compilation des imposteurs des niveaux w.levels via util_compileImposters.",
+          "params": {"w": {"type": "table", "desc": "élément de travail ; champ levels"}}
+        },
+        "testMod": {
+          "desc": "Appelle extensions.test_testMods.work avec w.tagid, w.resource_version_id et w.disableSpinScr.",
+          "params": {"w": {"type": "table", "desc": "élément de travail ; champs tagid, resource_version_id, disableSpinScr"}}
+        },
+        "renderVehiclePreview": {
+          "desc": "Affiche w.vehicles dans le journal puis lance test_renderVehiclePreview.renderVehiclePreview.",
+          "params": {"w": {"type": "table", "desc": "élément de travail ; champ vehicles"}}
+        },
+        "testVehiclesPerformances": {
+          "desc": "Lance util_saveDynamicData.work(w.pcFile, w.vehicle) pour mesurer les performances des véhicules.",
+          "params": {"w": {"type": "table", "desc": "élément de travail ; champs pcFile, vehicle"}}
+        },
+        "calibrateESC": {
+          "desc": "Lance util_calibrateESC.work(w.pcFile, w.vehicle) pour calibrer l'ESC.",
+          "params": {"w": {"type": "table", "desc": "élément de travail ; champs pcFile, vehicle"}}
+        }
+      }
+    }
+  }
+}

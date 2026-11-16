@@ -1,11 +1,13 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/drift/setDriftChallengeMode.lua",
-  "module": "Nœud flowgraph « Set Drift Challenge Mode » (catégorie repeat_instant). Règle le mode de défi de drift via gameplay_drift_general.setChallengeMode. Pin d'entrée : driftChallengeMode (string ; l'aide du pin cite « A to B », « A to B with stunt zone », « Gymkhana »).",
+  "module": "Flowgraph node \"Set Drift Challenge Mode\" (category repeat_instant). Sets the drift challenge mode via gameplay_drift_general.setChallengeMode. Input pin: driftChallengeMode (string; the pin help cites \"A to B\", \"A to B with stunt zone\", \"Gymkhana\").",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Appelle gameplay_drift_general.setChallengeMode(driftChallengeMode)."}
+        "work": {
+          "desc": "Calls gameplay_drift_general.setChallengeMode(driftChallengeMode)."
+        }
       }
     }
   }

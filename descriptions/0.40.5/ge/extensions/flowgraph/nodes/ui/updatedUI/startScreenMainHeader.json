@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenMainHeader.lua",
-  "module": "Nœud « Screen Main Header » (repeat_instant, couleur ui). Ajoute un grand en-tête à l'écran (en général le nom de la mission). Entrées : flow, header (string), preHeader (string, par ex. le type de mission). Sortie : flow (chainFlow).",
+  "module": "Node \"Screen Main Header\" (repeat_instant, color ui). Adds a large header to the screen (usually the mission name). Inputs: flow, header (string), preHeader (string, e.g. the mission type). Output: flow (chainFlow).",
   "notes": [
-    "Le pin preHeader a « Header » comme valeur par défaut (même que header)."
+    "The preHeader pin has \"Header\" as its default value (same as header)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "work": {
-          "desc": "Recopie flow puis appelle modules.ui:addHeader({header=..., preHeader=...}).",
+          "desc": "Copies flow then calls modules.ui:addHeader({header=..., preHeader=...}).",
           "internal": true
         }
       }

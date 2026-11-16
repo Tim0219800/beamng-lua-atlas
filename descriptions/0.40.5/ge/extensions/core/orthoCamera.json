@@ -1,51 +1,81 @@
 {
   "path": "lua/ge/extensions/core/orthoCamera.lua",
-  "module": "Extension GE `core_orthoCamera` : active une vue orthographique (sans perspective) sur la vue principale de l'objet OnlyGui, via scenetree.OnlyGui:setOrthoMainView. On définit les plans proches et lointains et la taille de la fenêtre orthographique (soit left/right/top/bottom, soit une taille `size` avec le ratio de la fenêtre). Contient aussi une fenêtre ImGui de débogage (debugMode, désactivé en dur).",
-  "usage": "core_orthoCamera.enable(true, {size = 20, nearClip = 1, farClip = 5000})\n-- puis\ncore_orthoCamera.enable(false)",
+  "module": "GE extension `core_orthoCamera`: enables an orthographic view (no perspective) on the main view of the OnlyGui object, via scenetree.OnlyGui:setOrthoMainView. You set the near and far planes and the size of the orthographic window (either left/right/top/bottom, or a `size` with the window ratio). Also contains an ImGui debug window (debugMode, hardcoded off).",
+  "usage": "core_orthoCamera.enable(true, {size = 20, nearClip = 1, farClip = 5000})\n-- then\ncore_orthoCamera.enable(false)",
   "notes": [
-    "Avec useWindowAspectRatio (vrai par défaut), left/right/top/bottom sont recalculés à partir de `size` : hauteur = size, largeur = size * ratio de la résolution du réglage GraphicDisplayResolutions (1280x720 si absent). Le ratio est recalculé à chaque onWindowResized.",
-    "Si useWindowAspectRatio est faux, les bornes left/right/top/bottom données à enable sont utilisées telles quelles (défauts -1, 1, 1, -1).",
-    "Valeurs par défaut de enable : nearClip 1, farClip 5000, size 1. setOptions ne modifie ni les bornes ni l'état activé, seulement size, nearClip et farClip, puis recalcule les bornes si le ratio fenêtre est utilisé.",
-    "Les unités des tailles et plans de clip sont les unités du monde (mètres), déduit du code.",
-    "Aucun code de désactivation spécifique : enable(false) envoie simplement enabled = false à setOrthoMainView. Avant le premier enable, les hooks ne font rien (enabled == nil).",
-    "Bug potentiel : updateAspectRatio fait w, h = resolutionString:match(...) puis tonumber(w) ; si la chaîne ne correspond pas au motif, w est nil et le calcul w / h échoue.",
-    "Le paramètre `size` du hook onWindowResized masque la variable locale `size` du module (non utilisé)."
+    "With useWindowAspectRatio (true by default), left/right/top/bottom are recomputed from `size`: height = size, width = size * ratio of the GraphicDisplayResolutions setting resolution (1280x720 if absent). The ratio is recomputed on every onWindowResized.",
+    "If useWindowAspectRatio is false, the left/right/top/bottom bounds given to enable are used as is (defaults -1, 1, 1, -1).",
+    "Default values of enable: nearClip 1, farClip 5000, size 1. setOptions changes neither the bounds nor the enabled state, only size, nearClip and farClip, then recomputes the bounds if the window ratio is used.",
+    "The units of sizes and clip planes are world units (meters), inferred from code.",
+    "No specific disable code: enable(false) simply sends enabled = false to setOrthoMainView. Before the first enable, the hooks do nothing (enabled == nil).",
+    "Potential bug: updateAspectRatio does w, h = resolutionString:match(...) then tonumber(w); if the string does not match the pattern, w is nil and the w / h computation fails.",
+    "The `size` parameter of the onWindowResized hook shadows the module's local variable `size` (unused)."
   ],
   "fields": {},
   "functions": {
     "enable": {
-      "desc": "Active ou désactive la vue orthographique principale et fixe ses paramètres (bornes, plans de clip, taille).",
+      "desc": "Enables or disables the main orthographic view and sets its parameters (bounds, clip planes, size).",
       "params": {
-        "_enabled": {"type": "boolean", "desc": "true pour activer."},
-        "options": {"type": "table|nil", "desc": "{ left, right, top, bottom, nearClip, farClip, size, useWindowAspectRatio } ; useWindowAspectRatio vaut true si absent."}
+        "_enabled": {
+          "type": "boolean",
+          "desc": "true to enable."
+        },
+        "options": {
+          "type": "table|nil",
+          "desc": "{ left, right, top, bottom, nearClip, farClip, size, useWindowAspectRatio }; useWindowAspectRatio is true if absent."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setOptions": {
-      "desc": "Met à jour size, nearClip et farClip (défauts 1, 1, 5000) et réapplique la vue orthographique si elle a déjà été configurée.",
-      "params": {"options": {"type": "table|nil", "desc": "{ size, nearClip, farClip }"}},
+      "desc": "Updates size, nearClip and farClip (defaults 1, 1, 5000) and reapplies the orthographic view if it has already been configured.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{ size, nearClip, farClip }"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getSize": {
-      "desc": "Renvoie la taille verticale courante de la vue orthographique.",
+      "desc": "Returns the current vertical size of the orthographic view.",
       "params": {},
-      "returns": [{"type": "number", "desc": "size (1 par défaut)."}],
+      "returns": [
+        {
+          "type": "number",
+          "desc": "size (1 by default)."
+        }
+      ],
       "internal": false
     },
     "onWindowResized": {
-      "desc": "Hook appelé quand la fenêtre est redimensionnée : recalcule le ratio et réapplique la vue.",
-      "params": {"size": {"type": "any", "desc": "Nouvelle taille de fenêtre (non utilisée)."}},
+      "desc": "Hook called when the window is resized: recomputes the ratio and reapplies the view.",
+      "params": {
+        "size": {
+          "type": "any",
+          "desc": "New window size (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook par frame : affiche la fenêtre de débogage ImGui 'OnlyGui OrthoMainView' uniquement si debugMode est vrai (faux dans le code livré, donc inactif).",
+      "desc": "Per-frame hook: displays the ImGui debug window 'OnlyGui OrthoMainView' only if debugMode is true (false in the shipped code, so inactive).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Non utilisé."},
-        "dtSim": {"type": "number", "desc": "Non utilisé."},
-        "dtRaw": {"type": "number", "desc": "Non utilisé."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Not used."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Not used."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": true

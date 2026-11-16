@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/timetrials/onRaceComplete.lua",
+  "module": "Noeud « Race Complete » (repeat_instant, tag input). Pins de sortie : complete (flow quand la course est terminée) et ongoing (flow tant qu'elle ne l'est pas). Passe à terminé sur le hook onScenarioFinished.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "complete = false.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "complete = false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit complete et ongoing.",
+          "internal": false
+        },
+        "onScenarioFinished": {
+          "desc": "Hook de fin de scénario : marque la course comme terminée.",
+          "internal": true
+        },
+        "onScenarioRestarted": {
+          "desc": "Hook de redémarrage : réinitialise.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

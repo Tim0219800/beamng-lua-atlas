@@ -1,183 +1,183 @@
 # `gameplay_markerInteraction`
 
-*Fichier : `lua/ge/extensions/gameplay/markerInteraction.lua` · VM : Game Engine (GE) · 718 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markerInteraction.lua` · VM: Game Engine (GE) · 718 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markerInteraction` : `extensions.load("gameplay_markerInteraction")`, puis la globale `gameplay_markerInteraction`
+**Access:** extension `gameplay_markerInteraction`: `extensions.load("gameplay_markerInteraction")`, then the global `gameplay_markerInteraction`
 
-Gère chaque frame (onPreRender) l'affichage et l'interaction des marqueurs de mission/activité en freeroam et en carrière : sélectionne les clusters de marqueurs proches (rayon 100 m) via le quadtree de gameplay_playmodeMarkers, les affiche, met à jour leurs décalques au sol, et ouvre la fenêtre d'acceptation d'activité quand le joueur est à l'arrêt (moins de 1 km/h, avec hystérésis jusqu'à 3 km/h) ou à pied dans une zone. Gère aussi l'effacement du guidage à l'arrivée (moins de 7 m), le mode multi-joueur sur un écran (multiseat) et le formatage des missions pour l'UI. Les anciennes fonctions de lancement de mission sont dépréciées.
+Manages every frame (onPreRender) the display and interaction of mission/activity markers in freeroam and career: selects the clusters of nearby markers (radius 100 m) via the gameplay_playmodeMarkers quadtree, displays them, updates their ground decals, and opens the activity acceptance window when the player is stopped (less than 1 km/h, with hysteresis up to 3 km/h) or on foot in a zone. Also handles clearing the guidance on arrival (less than 7 m), single-screen multiplayer mode (multiseat) and mission formatting for the UI. The old mission launch functions are deprecated.
 
-## Remarques
+## Notes
 
-- Déprécié : startMissionById, stopMissionById et changeUserSettings ne font que loguer une erreur et une trace de pile ; utiliser gameplay_missions_missionManager.
-- Incohérence : M.restartCurrent, M.abandonCurrent et M.getClusterMarker sont assignés à des variables locales jamais définies : ces champs valent nil.
-- Bug probable : formatMission lit « mission.missionType » alors que la variable est m (la globale mission est nil dans ce fichier) ; si m.missionTypeLabel est nil, l'évaluation provoque une erreur.
-- Bug probable : formatDataForUi appelle M.isStateWithPlaymodeMarkers, qui n'est pas défini dans ce module (il existe dans gameplay_playmodeMarkers) ; l'appel échouerait.
-- Vitesses seuils : arrêt < 1/3.6 puis > 3/3.6 m/s ; croisière 20 à 30 km/h (en m/s, 20/3.6 et 30/3.6).
-- Les marqueurs ne sont montrés que si la caméra n'est pas en mode photo, l'éditeur n'est pas actif et le réglage showMissionMarkers (ou carrière, tutoriel, premier trajet) l'autorise, sauf pour un cluster pris en focus (navigation).
-- Émet les hooks onActivityAcceptGatherData(elemData, activityData), onMissionAvailabilityChanged({missionCount}) et onReachedTargetPos.
+- Deprecated: startMissionById, stopMissionById and changeUserSettings only log an error and a stack trace; use gameplay_missions_missionManager.
+- Inconsistency: M.restartCurrent, M.abandonCurrent and M.getClusterMarker are assigned to local variables that are never defined: these fields are nil.
+- Probable bug: formatMission reads "mission.missionType" while the variable is m (the global mission is nil in this file); if m.missionTypeLabel is nil, the evaluation causes an error.
+- Probable bug: formatDataForUi calls M.isStateWithPlaymodeMarkers, which is not defined in this module (it exists in gameplay_playmodeMarkers); the call would fail.
+- Threshold speeds: stop < 1/3.6 then > 3/3.6 m/s; cruising 20 to 30 km/h (in m/s, 20/3.6 and 30/3.6).
+- Markers are only shown if the camera is not in photo mode, the editor is not active and the showMissionMarkers setting (or career, tutorial, first drive) allows it, except for a cluster taken in focus (navigation).
+- Emits the hooks onActivityAcceptGatherData(elemData, activityData), onMissionAvailabilityChanged({missionCount}) and onReachedTargetPos.
 
-**Dépendances (chargées avant) :** `gameplay_missions_missions`, `gameplay_missions_missionManager`, `freeroam_bigMapMode`, `gameplay_playmodeMarkers`, `freeroam_bigMapPoiProvider`, `ui_missionInfo`
+**Dependencies (loaded first):** `gameplay_missions_missions`, `gameplay_missions_missionManager`, `freeroam_bigMapMode`, `gameplay_playmodeMarkers`, `freeroam_bigMapPoiProvider`, `ui_missionInfo`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markerInteraction.changeUserSettings(id, settings)` | Déprécié : logge une erreur et une trace de pile. | 138 |
-| `gameplay_markerInteraction.clearCache()` | Force la réévaluation de la fenêtre d'acceptation au prochain passage. | 651 |
-| `gameplay_markerInteraction.closeViewDetailPrompt(force)` | Si force est vrai, ferme la fenêtre d'acceptation, envoie onMissionAvailabilityChanged avec missionCount = 0 à l'UI et aux extensions. | 211 |
-| `gameplay_markerInteraction.formatDataForUi()` | Formate les missions des éléments interactifs courants pour l'UI, triées par gameplay_missions_unlocks.depthIdSort. | 114 |
-| `gameplay_markerInteraction.formatMission(m)` | Construit la table de données d'une mission pour l'UI (nom, description, aperçu, réglages, attributs, progression, déblocages, boutons de contexte). | 66 |
-| `gameplay_markerInteraction.getCurrentInteractableElements()` | Renvoie la liste des éléments actuellement interactifs (ceux de la fenêtre d'acceptation ouverte). | 61 |
-| `gameplay_markerInteraction.getGameContext(fromMissionMenu)` | Renvoie les données de l'écran de mission via gameplay_missions_missionScreen.getMissionScreenData(). | 149 |
-| `gameplay_markerInteraction.onAnyMissionChanged(state)` | Hook : à tout changement d'état de mission, force le renvoi des POI ; au démarrage (state == "started"), désélectionne la grande carte, retire les focus et ferme la fenêtre d'acceptation si ouverte. *(interne)* *(hook)* | 666 |
-| `gameplay_markerInteraction.onClientEndMission(levelPath)` | Hook de fin de niveau : oublie le POI de navigation. *(interne)* *(hook)* | 685 |
-| `gameplay_markerInteraction.onNavigateToMission(poiId)` | Hook : remet à zéro les focus de marqueurs puis mémorise le POI vers lequel on navigue. *(interne)* *(hook)* | 678 |
-| `gameplay_markerInteraction.onPreRender(dtReal, dtSim)` | Hook avant rendu, chaque frame : si l'état de jeu a des marqueurs de mode jeu, gère l'arrivée à la cible, le guidage et appelle l'affichage des marqueurs de mission du niveau courant ; sinon vide gameplay_playmodeMarkers. *(interne)* *(hook)* | 603 |
-| `gameplay_markerInteraction.onSelectDetailPromptClicked(idx)` | Appelée par l'UI quand le joueur choisit une entrée de la fenêtre d'acceptation : ferme le dialogue, vide ActivityAcceptUpdate et exécute le buttonFun de l'entrée choisie. *(hook)* | 199 |
-| `gameplay_markerInteraction.onSettingsChanged()` | Hook de changement de réglages : relit la résolution (GFXDevice.getVideoMode) et le rapport d'aspect. *(interne)* *(hook)* | 221 |
-| `gameplay_markerInteraction.onUIPlayStateChanged(enteredPlay)` | Hook : à l'entrée en mode jeu (enteredPlay vrai), force la réévaluation de la fenêtre d'acceptation. *(interne)* *(hook)* | 713 |
-| `gameplay_markerInteraction.setForceReevaluateOpenPrompt()` | Force la réévaluation de la fenêtre d'acceptation à la prochaine frame. | 709 |
-| `gameplay_markerInteraction.setMarkersVisibleTemporary(visible)` | Affiche ou cache temporairement tous les marqueurs (sauf cluster en focus). | 689 |
-| `gameplay_markerInteraction.setPreselectedMissionId(mId)` | Mémorise un ID de mission présélectionné (la variable n'est lue nulle part dans ce fichier). | 144 |
-| `gameplay_markerInteraction.showMissionMarkersToggled(active)` | À appeler quand le réglage d'affichage des marqueurs change : vide les POI bruts (gameplay_rawPois.clear) et force le renvoi des POI de grande carte. | 660 |
-| `gameplay_markerInteraction.skipNextIconFading()` | Active un drapeau local skipIconFading remis à false à la fin de la frame suivante (aucune lecture dans ce fichier). | 656 |
-| `gameplay_markerInteraction.startMissionById(id, userSettings, startingOptions)` | Déprécié : logge une erreur et une trace de pile, ne démarre rien. | 128 |
-| `gameplay_markerInteraction.stopMissionById(id, force)` | Déprécié : logge une erreur et une trace de pile. | 133 |
+| `gameplay_markerInteraction.changeUserSettings(id, settings)` | Deprecated: logs an error and a stack trace. | 138 |
+| `gameplay_markerInteraction.clearCache()` | Forces the acceptance window to be re-evaluated on the next pass. | 651 |
+| `gameplay_markerInteraction.closeViewDetailPrompt(force)` | If force is true, closes the acceptance window, sends onMissionAvailabilityChanged with missionCount = 0 to the UI and the extensions. | 211 |
+| `gameplay_markerInteraction.formatDataForUi()` | Formats the missions of the current interactive elements for the UI, sorted by gameplay_missions_unlocks.depthIdSort. | 114 |
+| `gameplay_markerInteraction.formatMission(m)` | Builds a mission's data table for the UI (name, description, preview, settings, attributes, progress, unlocks, context buttons). | 66 |
+| `gameplay_markerInteraction.getCurrentInteractableElements()` | Returns the list of currently interactive elements (those of the open acceptance window). | 61 |
+| `gameplay_markerInteraction.getGameContext(fromMissionMenu)` | Returns the mission screen data via gameplay_missions_missionScreen.getMissionScreenData(). | 149 |
+| `gameplay_markerInteraction.onAnyMissionChanged(state)` | Hook: on any mission state change, forces the POIs to be sent again; at start (state == "started"), deselects the big map, removes the focuses and closes the acceptance window if open. *(internal)* *(hook)* | 666 |
+| `gameplay_markerInteraction.onClientEndMission(levelPath)` | Level end hook: forgets the navigation POI. *(internal)* *(hook)* | 685 |
+| `gameplay_markerInteraction.onNavigateToMission(poiId)` | Hook: resets the marker focuses then stores the POI being navigated to. *(internal)* *(hook)* | 678 |
+| `gameplay_markerInteraction.onPreRender(dtReal, dtSim)` | Pre-render hook, every frame: if the game state has play mode markers, handles arrival at the target, guidance and calls the display of the current level's mission markers; otherwise clears gameplay_playmodeMarkers. *(internal)* *(hook)* | 603 |
+| `gameplay_markerInteraction.onSelectDetailPromptClicked(idx)` | Called by the UI when the player chooses an entry of the acceptance window: closes the dialog, clears ActivityAcceptUpdate and executes the chosen entry's buttonFun. *(hook)* | 199 |
+| `gameplay_markerInteraction.onSettingsChanged()` | Settings change hook: re-reads the resolution (GFXDevice.getVideoMode) and the aspect ratio. *(internal)* *(hook)* | 221 |
+| `gameplay_markerInteraction.onUIPlayStateChanged(enteredPlay)` | Hook: on entering play mode (enteredPlay true), forces the acceptance window to be re-evaluated. *(internal)* *(hook)* | 713 |
+| `gameplay_markerInteraction.setForceReevaluateOpenPrompt()` | Forces the acceptance window to be re-evaluated on the next frame. | 709 |
+| `gameplay_markerInteraction.setMarkersVisibleTemporary(visible)` | Temporarily shows or hides all markers (except the focused cluster). | 689 |
+| `gameplay_markerInteraction.setPreselectedMissionId(mId)` | Stores a preselected mission ID (the variable is not read anywhere in this file). | 144 |
+| `gameplay_markerInteraction.showMissionMarkersToggled(active)` | To be called when the marker display setting changes: clears the raw POIs (gameplay_rawPois.clear) and forces the big map POIs to be sent again. | 660 |
+| `gameplay_markerInteraction.skipNextIconFading()` | Enables a local flag skipIconFading reset to false at the end of the next frame (no read in this file). | 656 |
+| `gameplay_markerInteraction.startMissionById(id, userSettings, startingOptions)` | Deprecated: logs an error and a stack trace, starts nothing. | 128 |
+| `gameplay_markerInteraction.stopMissionById(id, force)` | Deprecated: logs an error and a stack trace. | 133 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markerInteraction.changeUserSettings(id, settings)`
 
-Déprécié : logge une erreur et une trace de pile.
+Deprecated: logs an error and a stack trace.
 
-- `id` (*string*) : ID de mission (ignoré).
-- `settings` (*table*) : Ignoré.
+- `id` (*string*) : Mission ID (ignored).
+- `settings` (*table*) : Ignored.
 
 #### `gameplay_markerInteraction.closeViewDetailPrompt(force)`
 
-Si force est vrai, ferme la fenêtre d'acceptation, envoie onMissionAvailabilityChanged avec missionCount = 0 à l'UI et aux extensions.
+If force is true, closes the acceptance window, sends onMissionAvailabilityChanged with missionCount = 0 to the UI and the extensions.
 
-- `force` (*boolean|nil*) : Sans true, ne fait rien.
+- `force` (*boolean|nil*) : Without true, does nothing.
 
 #### `gameplay_markerInteraction.formatDataForUi()`
 
-Formate les missions des éléments interactifs courants pour l'UI, triées par gameplay_missions_unlocks.depthIdSort.
+Formats the missions of the current interactive elements for the UI, sorted by gameplay_missions_unlocks.depthIdSort.
 
-- **renvoie** : table[]|nil Liste de missions formatées, ou nil.
+- **returns**: table[]|nil List of formatted missions, or nil.
 
 #### `gameplay_markerInteraction.formatMission(m)`
 
-Construit la table de données d'une mission pour l'UI (nom, description, aperçu, réglages, attributs, progression, déblocages, boutons de contexte).
+Builds a mission's data table for the UI (name, description, preview, settings, attributes, progress, unlocks, context buttons).
 
-- `m` (*table*) : Objet mission.
-- **renvoie** : table Informations de mission formatées pour l'interface.
+- `m` (*table*) : Mission object.
+- **returns**: table Mission information formatted for the interface.
 
 #### `gameplay_markerInteraction.getCurrentInteractableElements()`
 
-Renvoie la liste des éléments actuellement interactifs (ceux de la fenêtre d'acceptation ouverte).
+Returns the list of currently interactive elements (those of the open acceptance window).
 
-- **renvoie** : table[] Éléments d'interaction des marqueurs.
+- **returns**: table[] Marker interaction elements.
 
 #### `gameplay_markerInteraction.getGameContext(fromMissionMenu)`
 
-Renvoie les données de l'écran de mission via gameplay_missions_missionScreen.getMissionScreenData().
+Returns the mission screen data via gameplay_missions_missionScreen.getMissionScreenData().
 
-- `fromMissionMenu` (*boolean|nil*) : Non utilisé.
-- **renvoie** : table Données de l'écran de mission.
+- `fromMissionMenu` (*boolean|nil*) : Not used.
+- **returns**: table Mission screen data.
 
 #### `gameplay_markerInteraction.onAnyMissionChanged(state)`
 
-Hook : à tout changement d'état de mission, force le renvoi des POI ; au démarrage (state == "started"), désélectionne la grande carte, retire les focus et ferme la fenêtre d'acceptation si ouverte.
+Hook: on any mission state change, forces the POIs to be sent again; at start (state == "started"), deselects the big map, removes the focuses and closes the acceptance window if open.
 
-- `state` (*string*) : État de la mission (par exemple "started").
+- `state` (*string*) : Mission state (for example "started").
 
 #### `gameplay_markerInteraction.onClientEndMission(levelPath)`
 
-Hook de fin de niveau : oublie le POI de navigation.
+Level end hook: forgets the navigation POI.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `gameplay_markerInteraction.onNavigateToMission(poiId)`
 
-Hook : remet à zéro les focus de marqueurs puis mémorise le POI vers lequel on navigue.
+Hook: resets the marker focuses then stores the POI being navigated to.
 
-- `poiId` (*string*) : ID du POI cible.
+- `poiId` (*string*) : ID of the target POI.
 
 #### `gameplay_markerInteraction.onPreRender(dtReal, dtSim)`
 
-Hook avant rendu, chaque frame : si l'état de jeu a des marqueurs de mode jeu, gère l'arrivée à la cible, le guidage et appelle l'affichage des marqueurs de mission du niveau courant ; sinon vide gameplay_playmodeMarkers.
+Pre-render hook, every frame: if the game state has play mode markers, handles arrival at the target, guidance and calls the display of the current level's mission markers; otherwise clears gameplay_playmodeMarkers.
 
-- `dtReal` (*number*) : Delta temps réel en secondes.
-- `dtSim` (*number*) : Delta temps de simulation en secondes.
+- `dtReal` (*number*) : Real-time delta in seconds.
+- `dtSim` (*number*) : Simulation time delta in seconds.
 
 #### `gameplay_markerInteraction.onSelectDetailPromptClicked(idx)`
 
-Appelée par l'UI quand le joueur choisit une entrée de la fenêtre d'acceptation : ferme le dialogue, vide ActivityAcceptUpdate et exécute le buttonFun de l'entrée choisie.
+Called by the UI when the player chooses an entry of the acceptance window: closes the dialog, clears ActivityAcceptUpdate and executes the chosen entry's buttonFun.
 
-- `idx` (*integer*) : Indice de l'entrée (1-based) dans promptData.
+- `idx` (*integer*) : Index of the entry (1-based) in promptData.
 
 #### `gameplay_markerInteraction.onUIPlayStateChanged(enteredPlay)`
 
-Hook : à l'entrée en mode jeu (enteredPlay vrai), force la réévaluation de la fenêtre d'acceptation.
+Hook: on entering play mode (enteredPlay true), forces the acceptance window to be re-evaluated.
 
-- `enteredPlay` (*boolean*) : true si l'UI passe en mode jeu.
+- `enteredPlay` (*boolean*) : true if the UI switches to play mode.
 
 #### `gameplay_markerInteraction.setMarkersVisibleTemporary(visible)`
 
-Affiche ou cache temporairement tous les marqueurs (sauf cluster en focus).
+Temporarily shows or hides all markers (except the focused cluster).
 
-- `visible` (*boolean*) : true pour afficher.
+- `visible` (*boolean*) : true to show.
 
 #### `gameplay_markerInteraction.setPreselectedMissionId(mId)`
 
-Mémorise un ID de mission présélectionné (la variable n'est lue nulle part dans ce fichier).
+Stores a preselected mission ID (the variable is not read anywhere in this file).
 
-- `mId` (*string|nil*) : ID de mission.
+- `mId` (*string|nil*) : Mission ID.
 
 #### `gameplay_markerInteraction.showMissionMarkersToggled(active)`
 
-À appeler quand le réglage d'affichage des marqueurs change : vide les POI bruts (gameplay_rawPois.clear) et force le renvoi des POI de grande carte.
+To be called when the marker display setting changes: clears the raw POIs (gameplay_rawPois.clear) and forces the big map POIs to be sent again.
 
-- `active` (*boolean*) : Nouvel état (non utilisé).
+- `active` (*boolean*) : New state (unused).
 
 #### `gameplay_markerInteraction.startMissionById(id, userSettings, startingOptions)`
 
-Déprécié : logge une erreur et une trace de pile, ne démarre rien.
+Deprecated: logs an error and a stack trace, starts nothing.
 
-- `id` (*string*) : ID de mission (ignoré).
-- `userSettings` (*table|nil*) : Ignoré.
-- `startingOptions` (*table|nil*) : Ignoré.
+- `id` (*string*) : Mission ID (ignored).
+- `userSettings` (*table|nil*) : Ignored.
+- `startingOptions` (*table|nil*) : Ignored.
 
 #### `gameplay_markerInteraction.stopMissionById(id, force)`
 
-Déprécié : logge une erreur et une trace de pile.
+Deprecated: logs an error and a stack trace.
 
-- `id` (*string*) : ID de mission (ignoré).
-- `force` (*boolean|nil*) : Ignoré.
+- `id` (*string*) : Mission ID (ignored).
+- `force` (*boolean|nil*) : Ignored.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `abandonCurrent` | nil | Toujours nil : référence à une variable locale non définie. ⚠ référence `abandonCurrent` non définie dans le fichier (vaut probablement nil) |
+| `abandonCurrent` | nil | Always nil: reference to an undefined local variable. ⚠ reference `abandonCurrent` not defined in the file (probably nil) |
 | `dependencies` | string[] | gameplay_missions_missions, gameplay_missions_missionManager, freeroam_bigMapMode, gameplay_playmodeMarkers, freeroam_bigMapPoiProvider, ui_missionInfo. |
-| `getClusterMarker` | nil | Toujours nil : référence à une variable locale non définie. ⚠ référence `getClusterMarker` non définie dans le fichier (vaut probablement nil) |
-| `restartCurrent` | nil | Toujours nil : référence à une variable locale non définie. ⚠ référence `restartCurrent` non définie dans le fichier (vaut probablement nil) |
+| `getClusterMarker` | nil | Always nil: reference to an undefined local variable. ⚠ reference `getClusterMarker` not defined in the file (probably nil) |
+| `restartCurrent` | nil | Always nil: reference to an undefined local variable. ⚠ reference `restartCurrent` not defined in the file (probably nil) |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onActivityAcceptGatherData` — écouté par 7 module(s)
-- `onMissionAvailabilityChanged` — écouté par 1 module(s)
-- `onReachedTargetPos` — écouté par 2 module(s)
+- `onActivityAcceptGatherData` — listened to by 7 module(s)
+- `onMissionAvailabilityChanged` — listened to by 1 module(s)
+- `onReachedTargetPos` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `ActivityAcceptUpdate`, `onMissionAvailabilityChanged`
+**UI events (guihooks.trigger):** `ActivityAcceptUpdate`, `onMissionAvailabilityChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getObjectVelocityXYZ`
 - `debugDrawer:` `drawCylinder`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markerInteraction.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markerInteraction.lua`.*

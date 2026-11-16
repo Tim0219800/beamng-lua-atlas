@@ -1,35 +1,46 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartTree.lua",
-  "module": "Fenêtre « Part Tree » du Static Editor. Elle lit le fichier JBeam de la partie sélectionnée, le parse en AST (json-ast, avec les données Lua dans ast.transient.luaData / luaDataRaw) et l'affiche en arbre (clé, valeur, éléments). Pour chaque table, on peut la sélectionner (met en surbrillance les nœuds AST correspondants dans Part Text View), la masquer, ou l'envoyer dans Part Properties. Elle dessine aussi les nodes et beams de la partie dans la vue de rendu statique (debugDrawer) et permet de les picker à la souris (Maj pour multi-sélection) ; les nœuds référencés mais définis dans d'autres parties sont retrouvés et dessinés en bleu transparent (« virtuels »). Un bouton « Spawn » ré-instancie le véhicule avec la partie sélectionnée comme partie principale.",
+  "module": "\"Part Tree\" window of the Static Editor. It reads the JBeam file of the selected part, parses it into an AST (json-ast, with the Lua data in ast.transient.luaData / luaDataRaw) and displays it as a tree (key, value, elements). For each table, you can select it (highlights the matching AST nodes in Part Text View), hide it, or send it to Part Properties. It also draws the part's nodes and beams in the static render view (debugDrawer) and lets you pick them with the mouse (Shift for multi-selection); nodes that are referenced but defined in other parts are looked up and drawn in transparent blue (\"virtual\"). A \"Spawn\" button re-instantiates the vehicle with the selected part as the main part.",
   "usage": "extensions.load('editor_vehicleEditor_staticEditor_vePartTree')\neditor_vehicleEditor_staticEditor_vePartTree.open()",
   "notes": [
-    "Écrit dans l'état partagé vEditor : ast, astFilename, selectedASTNodeMap, scrollToNode, selectedBeams, propertyTableEditTarget ; lit vEditor.selectedPart, vehicle, vehData.ioCtx.",
-    "Les champs internes __astNodeIdx, __selected, __hidden, __schemaProcessed, maxIDs et validTables sont écrits dans les tables de données et masqués dans l'affichage.",
-    "Rayons de dessin : nodes 0,02 m (survol 0,04, sélection 0,03, collision 0,035) ; beams 0,0025 m (survol 0,01, collision 0,01).",
-    "getNodefromAllParts parcourt toutes les parties disponibles en les copiant et en appliquant jbeam/tableSchema ; les nodes introuvables sont mémorisés dans brokenNodes pour ne pas répéter l'avertissement.",
-    "Le bouton « Spawn » modifie playerVehicle.config.mainPartName, sérialise la config dans veh.partConfig et respawn l'objet (spawnObjectWithPosRot) à la position initiale du nœud de référence.",
-    "Le bouton « Sync with AST » existe mais son corps est vide dans le code.",
-    "Bug : le menu contextuel 'part_tree_ctx_menu' lit rightClickedPart qui n'est pas défini dans ce fichier (variable globale nil) ; ce menu n'est jamais ouvert dans ce fichier et provoquerait une erreur s'il l'était.",
-    "Le fichier est relu quand le nom du fichier de la partie change ou que vEditor.ast est nil (par exemple après « Reload » de Part Text View)."
+    "Writes into the shared vEditor state: ast, astFilename, selectedASTNodeMap, scrollToNode, selectedBeams, propertyTableEditTarget; reads vEditor.selectedPart, vehicle, vehData.ioCtx.",
+    "The internal fields __astNodeIdx, __selected, __hidden, __schemaProcessed, maxIDs and validTables are written into the data tables and hidden in the display.",
+    "Drawing radii: nodes 0.02 m (hover 0.04, selection 0.03, collision 0.035); beams 0.0025 m (hover 0.01, collision 0.01).",
+    "getNodefromAllParts iterates over all available parts, copying them and applying jbeam/tableSchema; nodes that cannot be found are remembered in brokenNodes so the warning is not repeated.",
+    "The \"Spawn\" button modifies playerVehicle.config.mainPartName, serializes the config into veh.partConfig and respawns the object (spawnObjectWithPosRot) at the initial position of the reference node.",
+    "The \"Sync with AST\" button exists but its body is empty in the code.",
+    "Bug: the context menu 'part_tree_ctx_menu' reads rightClickedPart, which is not defined in this file (nil global variable); this menu is never opened in this file and would raise an error if it were.",
+    "The file is re-read when the part's file name changes or when vEditor.ast is nil (for example after \"Reload\" in Part Text View)."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « Part Tree »."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "Apps menu entry text: \"Part Tree\"."
+    }
   },
   "functions": {
-    "open": {"desc": "Affiche la fenêtre « Part Tree » (editor.showWindow)."},
+    "open": {
+      "desc": "Shows the \"Part Tree\" window (editor.showWindow)."
+    },
     "onEditorGui": {
-      "desc": "Hook de l'éditeur appelé à chaque frame : charge l'AST de la partie sélectionnée, dessine l'arbre et appelle le rendu/picking des nodes et beams dans la vue statique. Sans effet sans véhicule, vehData ou partie sélectionnée.",
+      "desc": "Editor hook called every frame: loads the AST of the selected part, draws the tree and calls the node and beam rendering/picking in the static view. No effect without a vehicle, vehData or selected part.",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook de l'éditeur appelé à l'initialisation : enregistre la fenêtre (500x400, outil vehicleEditor).",
+      "desc": "Editor hook called at initialization: registers the window (500x400, vehicleEditor tool).",
       "internal": true
     },
     "onFileChanged": {
-      "desc": "Hook d'extension appelé quand un fichier surveillé change sur le disque. Si c'est le fichier JBeam actuellement chargé, invalide l'AST (ast = nil, vEditor.ast = nil) pour le relire au prochain frame.",
+      "desc": "Extension hook called when a watched file changes on disk. If it is the currently loaded JBeam file, invalidates the AST (ast = nil, vEditor.ast = nil) so it is re-read on the next frame.",
       "params": {
-        "filename": {"type": "string", "desc": "chemin du fichier modifié"},
-        "type": {"type": "string", "desc": "type de changement (non utilisé)"}
+        "filename": {
+          "type": "string",
+          "desc": "path of the modified file"
+        },
+        "type": {
+          "type": "string",
+          "desc": "change type (unused)"
+        }
       },
       "internal": true
     }

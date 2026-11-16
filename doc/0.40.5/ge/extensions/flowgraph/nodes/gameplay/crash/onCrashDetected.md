@@ -1,27 +1,27 @@
 # `flowgraph_nodes_gameplay_crash_onCrashDetected`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crash/onCrashDetected.lua` · VM : Game Engine (GE) · 60 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crash/onCrashDetected.lua` · VM: Game Engine (GE) · 60 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crash/onCrashDetected")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crash/onCrashDetected")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On Crash Detected » (catégorie repeat_instant). Émet un flux quand un véhicule suivi commence ou finit un crash (hooks onVehicleCrashStarted/onVehicleCrashEnded de gameplay_util_crashDetection). Sorties : startCrash, endCrash (impulsions) et vehId. Les crashs simultanés sont mis en file et sortis un par frame.
+Flowgraph node "On Crash Detected" (category repeat_instant). Emits flow when a tracked vehicle starts or ends a crash (onVehicleCrashStarted/onVehicleCrashEnded hooks of gameplay_util_crashDetection). Outputs: startCrash, endCrash (pulses) and vehId. Simultaneous crashes are queued and output one per frame.
 
-## Remarques
+## Notes
 
-- Si début et fin sortent la même frame, vehId est écrasé par celui de la fin.
+- If a start and an end are output in the same frame, vehId is overwritten by the one from the end.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle reset. | 24 |
-| `C:init()` | Appelle reset. | 20 |
-| `C:onVehicleCrashEnded(crashEndData)` | Hook : ajoute vehId à la file de fins de crash. | 55 |
-| `C:onVehicleCrashStarted(crashStartData)` | Hook : ajoute vehId à la file de débuts de crash. | 51 |
-| `C:reset()` | Vide les files crashStartQueue et crashEndQueue. | 28 |
-| `C:work()` | Dépile un crash début et un crash fin par frame et renseigne startCrash, endCrash, vehId. | 33 |
+| `C:_executionStopped()` | Calls reset. | 24 |
+| `C:init()` | Calls reset. | 20 |
+| `C:onVehicleCrashEnded(crashEndData)` | Hook: adds vehId to the crash end queue. | 55 |
+| `C:onVehicleCrashStarted(crashStartData)` | Hook: adds vehId to the crash start queue. | 51 |
+| `C:reset()` | Empties the crashStartQueue and crashEndQueue queues. | 28 |
+| `C:work()` | Pops one crash start and one crash end per frame and fills startCrash, endCrash, vehId. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crash/onCrashDetected.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crash/onCrashDetected.lua`.*

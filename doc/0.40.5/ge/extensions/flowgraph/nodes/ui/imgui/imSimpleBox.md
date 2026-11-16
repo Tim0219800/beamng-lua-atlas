@@ -1,19 +1,19 @@
 # `flowgraph_nodes_ui_imgui_imSimpleBox`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/imgui/imSimpleBox.lua` · VM : Game Engine (GE) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/imgui/imSimpleBox.lua` · VM: Game Engine (GE) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/imgui/imSimpleBox")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/imgui/imSimpleBox")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « im Simple Text Box » (catégorie repeat_instant, tag imgui) : fenêtre imgui minimale avec un titre et un texte. Entrées : « title » (défaut 'Some Title'), « text » (défaut 'Some Text').
+Flowgraph node "im Simple Text Box" (category repeat_instant, tag imgui): minimal imgui window with a title and a text. Inputs: "title" (default 'Some Title'), "text" (default 'Some Text').
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Zone centrale vide. | 23 |
-| `C:work()` | Ouvre une fenêtre imgui, affiche le texte et la ferme. | 27 |
+| `C:drawMiddle(builder, style)` | Empty central area. | 23 |
+| `C:work()` | Opens an imgui window, displays the text and closes it. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/imgui/imSimpleBox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/imgui/imSimpleBox.lua`.*

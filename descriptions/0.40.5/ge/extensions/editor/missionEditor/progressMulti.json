@@ -1,27 +1,37 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/progressMulti.lua",
-  "module": "Onglet « Progress Multi » de l'éditeur de missions : affiche la progression sauvegardée d'une mission à progression multiple. Il lit gameplay_missions_progress.formatSaveDataForUi(mission.id), propose un combo de clé de progression et un tableau des agrégats de la mission (ownAggregate : labels et lignes). Lecture seule. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"Progress Multi\" tab of the mission editor: displays the saved progress of a multi-progress mission. It reads gameplay_missions_progress.formatSaveDataForUi(mission.id), offers a progress key combo and a table of the mission's aggregates (ownAggregate: labels and rows). Read-only. The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "Les fonctions pushStyle/popStyle et la case Raw sont déclarées mais pas utilisées dans ce fichier (code hérité de progressSingle).",
-    "draw lève une erreur si formattedProgressByKey[currentProgressKey] est nil (pas de test avant l'accès à ownAggregate).",
-    "Le commentaire du code précise que seule la mission courante est affichée depuis un changement de formatSaveDataForUi."
+    "The pushStyle/popStyle functions and the Raw checkbox are declared but not used in this file (code inherited from progressSingle).",
+    "draw raises an error if formattedProgressByKey[currentProgressKey] is nil (no test before accessing ownAggregate).",
+    "The code comment states that only the current mission is displayed since a change to formatSaveDataForUi."
   ],
   "classes": {
     "C": {
-      "desc": "Instance de l'onglet. Champs : missionEditor, tabName = 'Progress Multi', mission, missionInstance, formattedSaveData, currentProgressKey.",
+      "desc": "Instance of the tab. Fields: missionEditor, tabName = 'Progress Multi', mission, missionInstance, formattedSaveData, currentProgressKey.",
       "functions": {
         "init": {
-          "desc": "Constructeur.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "setMission": {
-          "desc": "Définit la mission courante, recharge les données de progression formatées et choisit la clé de progression (currentProgressKey, defaultProgressKey ou 'default').",
-          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "desc": "Sets the current mission, reloads the formatted progress data and chooses the progress key (currentProgressKey, defaultProgressKey or 'default').",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Current mission."
+            }
+          },
           "internal": true
         },
         "draw": {
-          "desc": "Affiche le combo de clé de progression et le tableau d'agrégats.",
+          "desc": "Displays the progress key combo and the aggregates table.",
           "internal": true
         }
       }

@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/etkGauges.lua",
-  "module": "Ancien contrôleur d'instruments HTML (type \"auxiliary\"), déprécié : init journalise une erreur demandant de passer à genericGauges. Il crée une texture HTML (htmlTexture.create) et envoie 30 fois par seconde : rapport engagé, consommation moyenne, affichage de consommation, température extérieure, heure (HH:MM), vitesse de roue. À ne pas utiliser pour de nouveaux véhicules.",
+  "module": "Old HTML instruments controller (type \"auxiliary\"), deprecated: init logs an error asking to switch to genericGauges. It creates an HTML texture (htmlTexture.create) and sends 30 times per second: engaged gear, average consumption, consumption display, outside temperature, time (HH:MM), wheel speed. Not to be used for new vehicles.",
   "notes": [
-    "Clés jbeam : materialName (obligatoire), htmlPath (obligatoire), unitType (\"metric\" par défaut), textureWidth (512), textureHeight (256). Sans materialName ou htmlPath, updateGFX est remplacé par nop.",
-    "La page HTML doit définir setUnits et updateData ; les données ne sont envoyées qu'après l'appel de uiReady et seulement si un joueur est assis et que l'UI est à mettre à jour.",
-    "Consommation en l/100 km déduite de la variation de electrics.values.fuelVolume ; averageFuelConsumption est bornée à 30, fuelDisplay à -1..3. Température en °C (obj:getEnvTemperature() - 273.15), vitesse en m/s."
+    "jbeam keys: materialName (required), htmlPath (required), unitType (\"metric\" by default), textureWidth (512), textureHeight (256). Without materialName or htmlPath, updateGFX is replaced by nop.",
+    "The HTML page must define setUnits and updateData; data is only sent after uiReady is called and only if a player is seated and the UI needs updating.",
+    "Consumption in l/100 km inferred from the variation of electrics.values.fuelVolume; averageFuelConsumption is bounded to 30, fuelDisplay to -1..3. Temperature in °C (obj:getEnvTemperature() - 273.15), speed in m/s."
   ],
   "fields": {
     "type": {
@@ -14,29 +14,29 @@
   },
   "functions": {
     "init": {
-      "desc": "Journalise l'avertissement de dépréciation, remet à zéro les lisseurs et crée la texture HTML.",
+      "desc": "Logs the deprecation warning, resets the smoothers and creates the HTML texture.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Envoie périodiquement les données au tableau de bord HTML via htmlTexture.call(\"updateData\").",
+      "desc": "Periodically sends the data to the HTML dashboard via htmlTexture.call(\"updateData\").",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "uiReady": {
-      "desc": "À appeler quand la page HTML est chargée : envoie setUnits avec unitType et autorise les mises à jour.",
+      "desc": "To be called when the HTML page is loaded: sends setUnits with unitType and allows updates.",
       "params": {},
       "returns": [],
       "internal": false

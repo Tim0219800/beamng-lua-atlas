@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/pointsBarSetPoints.lua",
-  "module": "Nœud flowgraph « PointsBar Points » (catégorie repeat_instant, couleur/icône ui). Fixe les points et le libellé de l'app UI pointsBar via ui_apps_pointsBar.setPoints(points, pointsLabel), puis marque self.mgr.modules.ui.pointsBarChanged = true. Entrées : points (number, longueur de remplissage de la barre) et pointsLabel (string, texte affiché). S'exécute à chaque frame où il reçoit du flux.",
+  "module": "Flowgraph node \"PointsBar Points\" (category repeat_instant, ui color/icon). Sets the points and the label of the pointsBar UI app via ui_apps_pointsBar.setPoints(points, pointsLabel), then marks self.mgr.modules.ui.pointsBarChanged = true. Inputs: points (number, fill length of the bar) and pointsLabel (string, displayed text). Runs every frame it receives flow.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Appelle ui_apps_pointsBar.setPoints avec les pins points et pointsLabel et signale le changement au module ui du flowgraph.", "internal": true}
+        "work": {
+          "desc": "Calls ui_apps_pointsBar.setPoints with the points and pointsLabel pins and signals the change to the flowgraph ui module.",
+          "internal": true
+        }
       }
     }
   }

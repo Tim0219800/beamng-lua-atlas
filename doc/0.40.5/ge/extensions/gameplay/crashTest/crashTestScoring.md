@@ -1,79 +1,79 @@
 # `gameplay_crashTest_crashTestScoring`
 
-*Fichier : `lua/ge/extensions/gameplay/crashTest/crashTestScoring.lua` · VM : Game Engine (GE) · 165 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crashTest/crashTestScoring.lua` · VM: Game Engine (GE) · 165 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crashTest_crashTestScoring` : `extensions.load("gameplay_crashTest_crashTestScoring")`, puis la globale `gameplay_crashTest_crashTestScoring`
+**Access:** extension `gameplay_crashTest_crashTestScoring`: `extensions.load("gameplay_crashTest_crashTestScoring")`, then the global `gameplay_crashTest_crashTestScoring`
 
-Calcul des scores du scénario de crash test. Pour chaque étape réussie, calcule des sous-scores (temps avant impact, vitesse d'impact, dégâts, zone d'impact, redirection de la cible dans la zone) et les range par étape. Les barèmes sont dans scoreParameters (1000 points max par critère, temps mini 500, tolérance de vitesse 3 km/h). Utilise gameplay_util_damageAssessment pour la gravité des dégâts.
+Score computation for the crash test scenario. For each successful step, computes sub-scores (time before impact, impact speed, damage, impact zone, target redirection into the zone) and stores them per step. The scales are in scoreParameters (1000 points max per criterion, minimum time 500, speed tolerance 3 km/h). Uses gameplay_util_damageAssessment for damage severity.
 
-## Remarques
+## Notes
 
-- Score de temps : max si temps <= objectif ; décroît linéairement jusqu'à 500 à +30 % de l'objectif ; 500 au-delà.
-- Score de vitesse : les vitesses (km/h) sont converties en m/s puis par translateVelocity (unité du joueur), l'écart est mis à l'échelle de 1000 à 0 sur 3 km/h.
-- Gravité des dégâts : Minor = 1, Moderate = 2, A lot = 3. Conditions : 'At least' ou 'No more than' ; écart de 0 -> 1000, 1 palier -> 500, 2 paliers -> 200, sinon 0.
-- Bug probable : calculateIndividualDamageScore retourne nil si damageCondition n'est ni 'At least' ni 'No more than' (l'addition dans calculateDamageScore planterait).
-- calculateDamageScore divise par #vehIds : division par zéro (nan) si damageTargets ne correspond à aucune valeur connue.
-- getTotalScoreData ajoute la clé 'totalScore' directement dans le tableau scoringDataPerStep, qui mélange alors indices et clé ; un second appel ignore la clé (ipairs) mais la table renvoyée est partagée.
-- calculateStepScore insère les données dans la liste mais ne retourne rien, malgré son commentaire (« appelé seulement si l'étape est réussie »).
-- Les fonctions calculateTimeScore, calculateSpeedScore et calculateDamageScore sont locales (non exportées).
+- Time score: max if time <= target; decreases linearly down to 500 at +30% of the target; 500 beyond.
+- Speed score: speeds (km/h) are converted to m/s then by translateVelocity (player's unit), the difference is scaled from 1000 to 0 over 3 km/h.
+- Damage severity: Minor = 1, Moderate = 2, A lot = 3. Conditions: 'At least' or 'No more than'; difference of 0 -> 1000, 1 level -> 500, 2 levels -> 200, otherwise 0.
+- Probable bug: calculateIndividualDamageScore returns nil if damageCondition is neither 'At least' nor 'No more than' (the addition in calculateDamageScore would crash).
+- calculateDamageScore divides by #vehIds: division by zero (nan) if damageTargets does not match any known value.
+- getTotalScoreData adds the 'totalScore' key directly into the scoringDataPerStep array, which then mixes indices and a key; a second call ignores the key (ipairs) but the returned table is shared.
+- calculateStepScore inserts the data into the list but returns nothing, despite its comment ("only called if the step is successful").
+- The functions calculateTimeScore, calculateSpeedScore and calculateDamageScore are local (not exported).
 
-**Dépendances (chargées avant) :** `gameplay_util_damageAssessment`
+**Dependencies (loaded first):** `gameplay_util_damageAssessment`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crashTest_crashTestScoring.calculateDamageLocationScore(damageLocationGoal, damageLocationData)` | Score de précision de la zone d'impact : part des dégâts totaux située dans la zone visée, ramenée à 1000. Retourne aussi la zone réellement la plus touchée et la précision en pourcentage. | 55 |
-| `gameplay_crashTest_crashTestScoring.calculateIndividualDamageScore(damageGoal, damageCondition, vehId)` | Compare la gravité de dégâts d'un véhicule (getDamageAssessment(vehId).damageSeverity) à l'objectif et renvoie 1000, 500, 200 ou 0 selon l'écart de paliers. | 64 |
-| `gameplay_crashTest_crashTestScoring.calculateStepScore(stepData, stepCrashData)` | Calcule tous les sous-scores d'une étape réussie et ajoute le résultat à la liste des scores par étape. Sauf pour l'objectif 'Crash target vehicle into target area', calcule scores de temps (si timeToImpact existe) et de vitesse ; ajoute selon les cas les scores de dégâts, de zone d'impact ou de zone cible (1000). | 117 |
-| `gameplay_crashTest_crashTestScoring.getStepScoreData(stepIndex)` | Retourne les données de score d'une étape. | 148 |
-| `gameplay_crashTest_crashTestScoring.getTotalScoreData()` | Additionne tous les scores de toutes les étapes et stocke le total dans la clé 'totalScore' de la table retournée. | 137 |
-| `gameplay_crashTest_crashTestScoring.reset()` | Efface tous les scores enregistrés. | 152 |
+| `gameplay_crashTest_crashTestScoring.calculateDamageLocationScore(damageLocationGoal, damageLocationData)` | Impact zone accuracy score: share of the total damage located in the targeted zone, scaled to 1000. Also returns the zone actually most hit and the accuracy as a percentage. | 55 |
+| `gameplay_crashTest_crashTestScoring.calculateIndividualDamageScore(damageGoal, damageCondition, vehId)` | Compares a vehicle's damage severity (getDamageAssessment(vehId).damageSeverity) to the target and returns 1000, 500, 200 or 0 depending on the level difference. | 64 |
+| `gameplay_crashTest_crashTestScoring.calculateStepScore(stepData, stepCrashData)` | Computes all the sub-scores of a successful step and adds the result to the per-step score list. Except for the objective 'Crash target vehicle into target area', computes time scores (if timeToImpact exists) and speed scores; depending on the case adds the damage, impact zone or target zone scores (1000). | 117 |
+| `gameplay_crashTest_crashTestScoring.getStepScoreData(stepIndex)` | Returns a step's score data. | 148 |
+| `gameplay_crashTest_crashTestScoring.getTotalScoreData()` | Adds up all the scores of all the steps and stores the total in the 'totalScore' key of the returned table. | 137 |
+| `gameplay_crashTest_crashTestScoring.reset()` | Clears all recorded scores. | 152 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crashTest_crashTestScoring.calculateDamageLocationScore(damageLocationGoal, damageLocationData)`
 
-Score de précision de la zone d'impact : part des dégâts totaux située dans la zone visée, ramenée à 1000. Retourne aussi la zone réellement la plus touchée et la précision en pourcentage.
+Impact zone accuracy score: share of the total damage located in the targeted zone, scaled to 1000. Also returns the zone actually most hit and the accuracy as a percentage.
 
-- `damageLocationGoal` (*string*) : Zone d'impact requise (clé de damagedLocations).
-- `damageLocationData` (*table*) : Données d'impact : totalDamage, damageStateDiff (damagedLocations, mostDamagedLocation), mostDamagedLocation.
-- **renvoie** : table {score, scoreName, maxScore, requiredImpactLocation, actualImpactLocation}.
+- `damageLocationGoal` (*string*) : Required impact zone (key of damagedLocations).
+- `damageLocationData` (*table*) : Impact data: totalDamage, damageStateDiff (damagedLocations, mostDamagedLocation), mostDamagedLocation.
+- **returns**: table {score, scoreName, maxScore, requiredImpactLocation, actualImpactLocation}.
 
 #### `gameplay_crashTest_crashTestScoring.calculateIndividualDamageScore(damageGoal, damageCondition, vehId)`
 
-Compare la gravité de dégâts d'un véhicule (getDamageAssessment(vehId).damageSeverity) à l'objectif et renvoie 1000, 500, 200 ou 0 selon l'écart de paliers.
+Compares a vehicle's damage severity (getDamageAssessment(vehId).damageSeverity) to the target and returns 1000, 500, 200 or 0 depending on the level difference.
 
-- `damageGoal` (*string*) : 'Minor', 'Moderate' ou 'A lot'.
-- `damageCondition` (*string*) : 'At least' ou 'No more than'.
-- `vehId` (*integer*) : Identifiant du véhicule évalué.
-- **renvoie** : integer|nil Score ; nil si la condition est inconnue.
+- `damageGoal` (*string*) : 'Minor', 'Moderate' or 'A lot'.
+- `damageCondition` (*string*) : 'At least' or 'No more than'.
+- `vehId` (*integer*) : Identifier of the evaluated vehicle.
+- **returns**: integer|nil Score; nil if the condition is unknown.
 
 #### `gameplay_crashTest_crashTestScoring.calculateStepScore(stepData, stepCrashData)`
 
-Calcule tous les sous-scores d'une étape réussie et ajoute le résultat à la liste des scores par étape. Sauf pour l'objectif 'Crash target vehicle into target area', calcule scores de temps (si timeToImpact existe) et de vitesse ; ajoute selon les cas les scores de dégâts, de zone d'impact ou de zone cible (1000).
+Computes all the sub-scores of a successful step and adds the result to the per-step score list. Except for the objective 'Crash target vehicle into target area', computes time scores (if timeToImpact exists) and speed scores; depending on the case adds the damage, impact zone or target zone scores (1000).
 
-- `stepData` (*table*) : Définition de l'étape (objective, timeToImpact, impactSpeed, plVehId, jbeamTargets, damageAmount, impactLocation…).
-- `stepCrashData` (*table<integer, table>*) : Données de crash par id de véhicule (stepElapsedTime, crashStartData, crashEndData).
+- `stepData` (*table*) : Step definition (objective, timeToImpact, impactSpeed, plVehId, jbeamTargets, damageAmount, impactLocation...).
+- `stepCrashData` (*table<integer, table>*) : Crash data by vehicle id (stepElapsedTime, crashStartData, crashEndData).
 
 #### `gameplay_crashTest_crashTestScoring.getStepScoreData(stepIndex)`
 
-Retourne les données de score d'une étape.
+Returns a step's score data.
 
-- `stepIndex` (*integer*) : Indice de l'étape (à partir de 1).
-- **renvoie** : table|nil Sous-scores de l'étape.
+- `stepIndex` (*integer*) : Step index (starting at 1).
+- **returns**: table|nil Step sub-scores.
 
 #### `gameplay_crashTest_crashTestScoring.getTotalScoreData()`
 
-Additionne tous les scores de toutes les étapes et stocke le total dans la clé 'totalScore' de la table retournée.
+Adds up all the scores of all the steps and stores the total in the 'totalScore' key of the returned table.
 
-- **renvoie** : table Liste des scores par étape, avec la clé totalScore.
+- **returns**: table List of per-step scores, with the totalScore key.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : {"gameplay_util_damageAssessment"}. |
+| `dependencies` | table<integer, string> | Extensions loaded before: {"gameplay_util_damageAssessment"}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crashTest/crashTestScoring.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crashTest/crashTestScoring.lua`.*

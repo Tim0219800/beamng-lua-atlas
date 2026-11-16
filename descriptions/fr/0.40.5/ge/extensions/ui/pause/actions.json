@@ -1,0 +1,68 @@
+{
+  "path": "lua/ge/extensions/ui/pause/actions.lua",
+  "module": "Registre des actions du menu pause. Il enregistre des boutons (via ui/gridSelectorUtils/buttonModule) exécutables par id, gère l'enchaînement « sauvegarder la carrière puis exécuter un callback », et maintient les onglets et boutons ajoutés par des mods au menu pause. Un mod peut y déclarer un onglet et des boutons ; le module notifie l'UI par le hook GUI PauseModActionsChanged.",
+  "usage": "ui_pause_actions.registerModButton({id = \"monBouton\", tabId = \"mods\", label = \"Mon outil\", icon = \"wrench\", componentName = \"MonComposant\"})",
+  "notes": [
+    "Si tabId vaut \"mods\" et que l'onglet n'existe pas, il est créé automatiquement (label ui.dashboard.mods, icône wrench) puis supprimé quand il n'a plus de bouton. Tout autre tabId inconnu donne reason = \"unknown_tab\".",
+    "getVisibleModTabs ne renvoie que les onglets ayant au moins un bouton ; leur tabId est préfixé par \"mod:\".",
+    "saveCareerThen : le callback expire après 30 s (une sauvegarde échouée ne déclenche jamais onSaveFinished) ; il est alors ignoré.",
+    "L'extension passe en déchargement manuel (setExtensionUnloadMode manual) à son chargement."
+  ],
+  "functions": {
+    "clearActions": {"desc": "Efface tous les boutons enregistrés via registerButton et annule le callback de sauvegarde en attente. Ne touche pas aux onglets/boutons de mods.", "params": {}, "returns": [], "internal": false},
+    "saveCareerThen": {
+      "desc": "Mémorise un callback puis lance career_saveSystem.saveCurrent(). Le callback est appelé dans onSaveFinished s'il n'a pas plus de 30 s.",
+      "params": {"callback": {"type": "function", "desc": "Fonction sans argument appelée après la sauvegarde."}},
+      "returns": [],
+      "internal": false
+    },
+    "onSaveFinished": {"desc": "Hook appelé quand une sauvegarde de carrière se termine ; exécute le callback en attente de saveCareerThen s'il n'a pas expiré.", "params": {}, "returns": [], "internal": true},
+    "executeAction": {
+      "desc": "Exécute le bouton enregistré portant cet id.",
+      "params": {"buttonId": {"type": "any", "desc": "Id attribué par registerButton."}, "payload": {"type": "any", "desc": "Données transmises au callback du bouton."}},
+      "returns": [{"type": "any", "desc": "Résultat de buttonInstance.executeButton."}],
+      "internal": false
+    },
+    "registerButton": {
+      "desc": "Enregistre un bouton d'action et renvoie une copie des métadonnées avec buttonId. Si metadata.visible == false, rien n'est enregistré et les métadonnées sont renvoyées telles quelles.",
+      "params": {
+        "metadata": {"type": "table|nil", "desc": "Description du bouton (nil devient {})."},
+        "callback": {"type": "function|nil", "desc": "Fonction appelée à l'exécution ; défaut : fonction renvoyant false."}
+      },
+      "returns": [{"type": "table", "desc": "Copie des métadonnées, avec buttonId si enregistré."}],
+      "internal": false
+    },
+    "getAllButtonInfos": {"desc": "Renvoie les infos de tous les boutons enregistrés.", "params": {}, "returns": [{"type": "table", "desc": "Résultat de buttonInstance.getAllButtonInfos."}], "internal": false},
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement ; met le mode de déchargement en manuel.", "params": {}, "returns": [], "internal": true},
+    "registerModTab": {
+      "desc": "Crée ou met à jour un onglet de mod (conserve l'ordre des boutons existants) et notifie l'UI.",
+      "params": {"tab": {"type": "table", "desc": "Champs : id (requis), label (défaut id), icon, card2ComponentName, card2Props."}},
+      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"missing_id\"}."}],
+      "internal": false
+    },
+    "unregisterModTab": {
+      "desc": "Supprime un onglet de mod et ses boutons, puis notifie l'UI.",
+      "params": {"id": {"type": "string", "desc": "Id de l'onglet."}},
+      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"not_found\"}."}],
+      "internal": false
+    },
+    "registerModButton": {
+      "desc": "Ajoute ou met à jour un bouton de mod dans un onglet (déplace le bouton si son tabId change) et notifie l'UI.",
+      "params": {"button": {"type": "table", "desc": "Champs : id et tabId (requis), label, icon, componentName, props, card2ComponentName, card2Props."}},
+      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"missing_id_or_tab\" | \"unknown_tab\"}."}],
+      "internal": false
+    },
+    "unregisterModButton": {
+      "desc": "Retire un bouton de mod ; supprime l'onglet \"mods\" s'il devient vide ; notifie l'UI.",
+      "params": {"id": {"type": "string", "desc": "Id du bouton."}},
+      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"not_found\"}."}],
+      "internal": false
+    },
+    "getVisibleModTabs": {
+      "desc": "Renvoie les onglets de mods non vides, au format attendu par buildPauseTabs (tabId \"mod:<id>\", isModTab, label, icon, buttons, visible, enabled).",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste d'onglets."}],
+      "internal": false
+    }
+  }
+}

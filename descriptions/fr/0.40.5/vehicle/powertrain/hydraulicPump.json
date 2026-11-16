@@ -1,0 +1,155 @@
+{
+  "path": "lua/vehicle/powertrain/hydraulicPump.lua",
+  "module": "Composant powertrain `hydraulicPump` : pompe hydraulique (à cylindrée variable ou fixe) entraînée par un arbre, avec un accumulateur intégré et une soupape de décharge. C'est un consommateur de couple sans port de sortie (feuille de l'arbre powertrain). Il crée aussi les consommateurs hydrauliques (`hydraulicCylinder`) déclarés dans `v.data.powertrainHydros` avec `connectedPump` = nom de la pompe, et les met à jour. Il peut alimenter un autre véhicule par un coupleur (PTO hydraulique) grâce à des valeurs electrics partagées.",
+  "usage": "local pump = powertrain.getDevice(\"hydraulicPump\")\npump:setConnected(true) -- embrayer la pompe (prise de force)\nprint(pump.accumulatorPressure, pump.pumpFlowRate) -- Pa, m^3/s",
+  "notes": [
+    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio (1), friction, dynamicFriction, electricsName, visualShaftAVName, node, isConnected (si absent ou false, la pompe démarre DÉBRAYÉE : isConnectedCoef = 0), stallProtectionPumpRPM (500), showDebugGraph, showDebugGraphSound, pumpMaxDisplacement (m³/tr, 0.0002), pumpType ('variableDisplacement' par défaut ou 'fixedDisplacement'), pumpRegulationRange (Pa, 10000000), pumpWorkingPressure (Pa, 25000000), accumulatorMaxVolume (m³, 0.001), initialAccumulatorPressure (Pa) ou initialAccumulatorOilVolume (m³) (sinon 90 % de la pression et du volume), reliefOpeningPressure (1.05 * pression de travail), reliefPressureRange (2000000), reliefValveArea (m², 0.00001), unloadValveMaxFlow (m³/s, 0), hydraulicPTOPressureBaseSyncName ('hydraulicPTOPressure'), hydraulicPTOFlowBaseSyncName ('hydraulicPTOFlow'), hydraulicPTOMaxFlowRateBaseSyncName ('hydraulicPTOMaxFlowRate'), hydraulicPTOConsumerCouplerNodeNames (liste de noms de nœuds de coupleur), breakTriggerBeam, et pour les sons : pumpLoopEvent, pumpLoopNode, pumpSoundVolume (0.5), pumpSoundMaxFlowRate, pumpSoundMinRPM, pumpSoundMaxRPM, pumpSoundMinPitch, pumpSoundMaxPitch.",
+    "Champs principaux : inputAV (rad/s, vitesse d'entrée = parent / gearRatio * isConnectedCoef), torqueDiff (N·m, couple résistant renvoyé à l'entraîneur), currentDisplacement (m³/tr), pumpFlowRate (m³/s), accumulatorPressure (Pa), accumulatorOilVolume (m³, borné à 2 * accumulatorMaxVolume), accumulatorMaxVolume, accumulatorOutFlow (m³/s sortant vers les consommateurs), reliefFlow, unloadFlow, pumpWorkingPressure, connectedConsumers (liste de consommateurs hydrauliques), isConnectedCoef, isBroken. outputTorque1/outputAV1 existent à 0.",
+    "Pression de l'accumulateur : accumulatorPressure = pumpWorkingPressure * accumulatorOilVolume / accumulatorMaxVolume (modèle linéaire). La cylindrée variable diminue linéairement de 100 % à 10 % entre (pression de travail - plage de régulation) et la pression de travail, et est coupée progressivement sous 500 tr/min de pompe (protection anti-calage).",
+    "La pompe publie sur electrics.values : <PressureBase>_<objectId> (pression, Pa) et <MaxFlowRateBase>_<objectId> (débit max, m³/s) ; un consommateur sur un autre véhicule envoie son débit via <FlowBase>_<objectId>_<objectId2>. Le coupleur doit être l'un des nœuds listés dans hydraulicPTOConsumerCouplerNodeNames.",
+    "Les consommateurs sont construits par factory.new(consumerJbeamData, device) ; seul le type 'hydraulicCylinder' existe (hydraulicRotator est en commentaire). Un type inconnu ou un nom de consommateur dupliqué écrit une erreur dans le log.",
+    "Incohérences : applyDeformGroupDamage est vide ; un pump cassé (isBroken) passe à updateVelocityBroken qui vide l'accumulateur ; hydraulicPTOPressureElectricsName, hydraulicPTOMaxFlowRateElectricsName et hydraulicPTOFlowElectricsName sont lus mais jamais utilisés (seuls les noms avec suffixe d'objet servent). M.requiredExternalInertiaOutputs n'est pas défini dans ce module."
+  ],
+  "fields": {
+    "outputPorts": {"type": "table", "desc": "Table vide : aucun port de sortie."},
+    "deviceCategories": {"type": "table<string, boolean>", "desc": "{clutchlike=true, clutch=true, hydraulicPowerSource=true, torqueConsumer=true}."}
+  },
+  "functions": {
+    "new": {
+      "desc": "Construit la pompe : paramètres de cylindrée, pression de travail, accumulateur, soupape de décharge et PTO, puis crée les consommateurs hydrauliques déclarés pour cette pompe dans v.data.powertrainHydros.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "device": {
+      "desc": "Objet renvoyé par new(jbeamData).",
+      "functions": {
+        "velocityUpdate": {
+          "desc": "Appelée à chaque pas physique : calcule la cylindrée courante (variable ou fixe), inputAV = vitesse du parent / gearRatio * isConnectedCoef, le débit de la pompe et met à jour le volume d'huile de l'accumulateur (débit entrant moins sorties, décharge, déchargeur). Version cassée : tout à 0 et vidange.",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "torqueUpdate": {
+          "desc": "Appelée à chaque pas physique : calcule la pression d'accumulateur, le couple résistant torqueDiff = pression * cylindrée / (2π) / gearRatio, interroge chaque consommateur (consumer:update) pour obtenir ses débits, puis calcule le débit de décharge (déchargeur et soupape de décharge progressive).",
+          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "updateGFX": {
+          "desc": "Mise à jour par image : met à jour les consommateurs (updateGFX), publie la pression et le débit max sur electrics, soustrait le débit demandé par les consommateurs distants (PTO) de l'accumulateur et affiche un graphe de débogage si showDebugGraph.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "updateSounds": {
+          "desc": "Règle volume, hauteur (selon la vitesse de la pompe) et couleur (selon la puissance hydraulique) du son de pompe et appelle updateSounds des consommateurs.",
+          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes."}},
+          "returns": [],
+          "internal": true
+        },
+        "onCouplerAttached": {
+          "desc": "Hook de coupleur : quand un coupleur de prise PTO de cette pompe s'attache à un autre véhicule, crée la valeur electrics de débit pour ce véhicule et lui envoie son nom via beamstate.sendExportCouplerData.",
+          "params": {
+            "nodeId": {"type": "integer", "desc": "Nœud de ce véhicule portant le coupleur."},
+            "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+            "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."},
+            "attachForce": {"type": "number", "desc": "Force d'attache (non utilisée)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "onCouplerDetached": {
+          "desc": "Hook de coupleur : quand le coupleur PTO de cette pompe se détache, supprime la valeur electrics de débit de l'autre véhicule.",
+          "params": {
+            "nodeId": {"type": "integer", "desc": "Nœud de ce véhicule portant le coupleur."},
+            "obj2id": {"type": "integer", "desc": "Id de l'autre véhicule."},
+            "obj2nodeId": {"type": "integer", "desc": "Nœud de l'autre véhicule."},
+            "breakForce": {"type": "number", "desc": "Force de rupture (non utilisée)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "setConnected": {
+          "desc": "Embraye (true) ou débraye (false) la pompe de son entraîneur : isConnectedCoef = 1 ou 0. Peut être appelée par un contrôleur de PTO.",
+          "params": {"isConnected": {"type": "boolean", "desc": "true pour entraîner la pompe."}},
+          "returns": [],
+          "internal": false
+        },
+        "applyDeformGroupDamage": {
+          "desc": "Ne fait rien (corps vide).",
+          "params": {"damageAmount": {"type": "number", "desc": "Ignoré."}},
+          "returns": [],
+          "internal": true
+        },
+        "setPartCondition": {
+          "desc": "Applique isBroken de l'intégrité (nombre : pas cassé ; table : champ isBroken) en appelant onBreak si besoin.",
+          "params": {
+            "subSystem": {"type": "any", "desc": "Non utilisé."},
+            "odometer": {"type": "number", "desc": "Non utilisé."},
+            "integrity": {"type": "number|table", "desc": "Nombre 0..1 ou table {isBroken}."},
+            "visual": {"type": "any", "desc": "Non utilisé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getPartCondition": {
+          "desc": "Renvoie 1 (0 si cassé) et la table {isBroken}.",
+          "params": {},
+          "returns": [{"type": "number", "desc": "Intégrité."}, {"type": "table", "desc": "{isBroken}."}],
+          "internal": true
+        },
+        "validate": {
+          "desc": "Appelée après construction du powertrain ; renvoie toujours true.",
+          "params": {},
+          "returns": [{"type": "boolean", "desc": "true."}],
+          "internal": true
+        },
+        "onBreak": {
+          "desc": "Marque isBroken = true et passe à la version « cassée » de velocityUpdate (l'accumulateur se vide).",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "calculateInertia": {
+          "desc": "Inertie purement virtuelle : cumulativeInertia = virtualInertia / gearRatio² ; rapports cumulés = gearRatio.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "getState": {
+          "desc": "Renvoie l'état sauvegardable : volume d'huile de l'accumulateur (clé '<nom>_accumulatorOilVolume') fusionné avec les états des consommateurs.",
+          "params": {},
+          "returns": [{"type": "table", "desc": "Table stateData."}],
+          "internal": false
+        },
+        "setState": {
+          "desc": "Restaure le volume d'huile de l'accumulateur (nombre fini, borné à 2 * accumulatorMaxVolume) et la pression correspondante, puis transmet l'état aux consommateurs.",
+          "params": {"data": {"type": "table|nil", "desc": "Table d'état produite par getState."}},
+          "returns": [],
+          "internal": false
+        },
+        "initSounds": {
+          "desc": "Crée la boucle sonore de la pompe (volume 0), calcule vitesse et débit maxima pour le son à partir du moteur entraîneur, lit les réglages de son du jbeam et initialise les sons des consommateurs.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        },
+        "resetSounds": {
+          "desc": "Appelle resetSounds de chaque consommateur ; ne touche pas au son de la pompe elle-même.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "returns": [],
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet à zéro vitesses, débits, accumulateur (pression et volume initiaux), état, valeurs electrics du PTO, puis réinitialise chaque consommateur.",
+          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant (gearRatio, friction, isConnected)."}},
+          "returns": [{"type": "table", "desc": "Le device."}],
+          "internal": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "path": "lua/ge/extensions/scenario/positionGoal.lua",
+  "module": "Objectif de scénario « position » (goals.vehicles avec id = 'position') : en fin de course, le véhicule doit se trouver dans la zone d'un objet du scenetree (par exemple une zone de freinage). La zone est définie par la distance au centre de l'objet endPoint, comparée à son scale.x.",
+  "usage": "-- JSON du scénario :\n-- {\"id\":\"position\", \"value\":{\"endPoint\":\"brake_zone\", \"purpose\":\"fail\", \"msg\":\"Vous n'êtes pas dans la zone\"}}",
+  "notes": [
+    "Options de instance.value : endPoint (nom d'objet du scenetree), purpose ('fail' par défaut ou 'win'), msg.",
+    "La vérification n'a lieu que sur l'état 'onRaceResult' : si la distance au centre de endPoint dépasse endPoint.scale.x, showMsg termine le scénario ; sinon status.result = 'passed'.",
+    "Bug probable : en purpose 'win', instance.value.msg .. timeStr plante si msg est nil (le 'or' de repli est évalué trop tard).",
+    "Le message d'échec par défaut ('Not in brake area') est en anglais codé en dur."
+  ],
+  "fields": {
+    "instances": {"type": "table", "desc": "Liste des goals 'position' valides, remplie par init()."}
+  },
+  "functions": {
+    "init": {
+      "desc": "Réinitialise instances et ajoute chaque goal id='position' ; purpose vaut 'fail' si absent.",
+      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "returns": [],
+      "internal": true
+    },
+    "processState": {
+      "desc": "Appelé à chaque état du scénario. Sur 'onRaceResult', vérifie que le véhicule est dans la zone de l'objet endPoint.",
+      "params": {
+        "scenario": {"type": "table", "desc": "Scénario courant."},
+        "state": {"type": "string", "desc": "Nom de l'état."},
+        "stateData": {"type": "table", "desc": "Données de l'état (non utilisées)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFinalStatus": {
+      "desc": "Envoie le résultat de chaque instance à statistics_statistics.setGoalProgress.",
+      "params": {
+        "scenario": {"type": "table", "desc": "Scénario courant."},
+        "instance": {"type": "table|nil", "desc": "Non utilisé."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

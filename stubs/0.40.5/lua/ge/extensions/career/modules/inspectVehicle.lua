@@ -2,139 +2,139 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/inspectVehicle.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère l'inspection d'un véhicule à vendre (concession ou vendeur privé) en mode carrière avant achat. startInspection fait apparaître le véhicule gelé sur une place de parking, soit en téléportant le joueur, soit en lui donnant un trajet GPS à parcourir dans un temps limité ; une fois arrivé, un « tether » (laisse de distance) limite l'éloignement. Le module définit les règles d'essai (testDriveInfo : durée 60 s, zone, route, frais d'abandon), ouvre le menu d'achat, démarre l'essai via career_modules_testDrive, publie un point d'intérêt (POI) et nettoie à la fin (achat, abandon, trop loin, véhicule déplacé, mode livraison ou mission lancé).
---- Accès : extension `career_modules_inspectVehicle` : `extensions.load("career_modules_inspectVehicle")`, puis la globale `career_modules_inspectVehicle`
+--- Handles the inspection of a vehicle for sale (dealership or private seller) in career mode before purchase. startInspection spawns the frozen vehicle on a parking spot, either by teleporting the player or by giving them a GPS route to follow within a time limit; once arrived, a "tether" (distance leash) limits how far they can move away. The module defines the test drive rules (testDriveInfo: duration 60 s, zone, route, abandonment fee), opens the purchase menu, starts the test via career_modules_testDrive, publishes a point of interest (POI) and cleans up at the end (purchase, abandonment, too far, vehicle moved, delivery mode or mission started).
+--- Access: extension `career_modules_inspectVehicle`: `extensions.load("career_modules_inspectVehicle")`, then the global `career_modules_inspectVehicle`
 ---@class career_modules_inspectVehicle
----@field dependencies table Table vide : aucune dépendance.
+---@field dependencies table Empty table: no dependency.
 career_modules_inspectVehicle = {}
 
---- Achète le véhicule inspecté via career_modules_vehicleShopping puis quitte la vente en le conservant.
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:293
----@param buyVehicleOptions table Options d'achat transmises à vehicleShopping.buySpawnedVehicle.
+--- Buys the inspected vehicle via career_modules_vehicleShopping then leaves the sale, keeping it.
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:293
+---@param buyVehicleOptions table Purchase options passed to vehicleShopping.buySpawnedVehicle.
 function career_modules_inspectVehicle.buySpawnedVehicle(buyVehicleOptions) end
 
---- Indique si le joueur a fait l'essai pendant cette inspection.
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:471
----@return boolean|nil  true si un essai a eu lieu.
+--- Indicates whether the player did the test drive during this inspection.
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:471
+---@return boolean|nil  true if a test took place.
 function career_modules_inspectVehicle.getDidTestDrive() end
 
---- Construit le POI du véhicule inspecté (marqueur inspectVehicleMarker sur la place de départ ; marqueur de grande carte si le joueur doit s'y rendre).
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:403
----@return table|nil  POI ou nil si carrière inactive / pas d'essai défini.
+--- Builds the POI of the inspected vehicle (inspectVehicleMarker marker on the starting spot; big map marker if the player must go there).
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:403
+---@return table|nil  POI or nil if career is inactive / no test defined.
 function career_modules_inspectVehicle.getInspectVehiclePoi() end
 
---- Infos du véhicule actuellement inspecté.
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:388
----@return table|nil  {shopId, vehId, name, value} ou nil.
+--- Info of the vehicle currently being inspected.
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:388
+---@return table|nil  {shopId, vehId, name, value} or nil.
 function career_modules_inspectVehicle.getSpawnedVehicleInfo() end
 
---- Indique si des dégâts ont été détectés pendant l'essai.
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:368
----@return boolean  true si oui.
+--- Indicates whether damage was detected during the test.
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:368
+---@return boolean  true if so.
 function career_modules_inspectVehicle.isTestDriveDamageDetected() end
 
---- Termine la vente en cours (laisse dépassée, abandon, achat…) : ferme les menus, abandonne l'essai si actif, déclare une réclamation de dégâts d'essai s'il y a lieu, gère le véhicule selon despawnPreviousVehMode, puis réinitialise l'état. Ignoré sans véhicule inspecté ou si un départ est déjà en cours.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:157
----@param despawnPreviousVehMode string|nil 'despawn', 'flagForDeletion' ou 'dontDespawn' (défaut).
----@param freezePreviousVeh boolean|nil Geler le véhicule s'il est gardé ; true par défaut.
----@param checkDamage boolean|nil Vérifier les dégâts après un essai ; true par défaut.
----@param defaultLeaveMessage string|nil Message affiché si aucun essai actif ; « leftSale » par défaut.
+--- Ends the current sale (leash exceeded, abandonment, purchase…): closes the menus, abandons the test if active, files a test drive damage claim if applicable, handles the vehicle according to despawnPreviousVehMode, then resets the state. Ignored without an inspected vehicle or if a departure is already in progress.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:157
+---@param despawnPreviousVehMode string|nil 'despawn', 'flagForDeletion' or 'dontDespawn' (default).
+---@param freezePreviousVeh boolean|nil Freeze the vehicle if it is kept; true by default.
+---@param checkDamage boolean|nil Check for damage after a test; true by default.
+---@param defaultLeaveMessage string|nil Message shown if no test is active; "leftSale" by default.
 function career_modules_inspectVehicle.leaveSaleCallback(despawnPreviousVehMode, freezePreviousVeh, checkDamage, defaultLeaveMessage) end
 
---- Hook du prompt d'activité : pour un élément de type inspectVehicle, ajoute une carte avec le nom du véhicule, le vendeur et un bouton qui ouvre le menu d'achat avec tether.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:443
----@param elemData table Éléments proches.
----@param activityData table Données d'activité à compléter.
+--- Activity prompt hook: for an element of type inspectVehicle, adds a card with the vehicle name, the seller and a button that opens the purchase menu with a tether.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:443
+---@param elemData table Nearby elements.
+---@param activityData table Activity data to complete.
 function career_modules_inspectVehicle.onActivityAcceptGatherData(elemData, activityData) end
 
---- Hook : quand une mission démarre en carrière, quitte la vente et supprime le véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:372
----@param status string État de la mission ('started'…).
----@param id string Identifiant de la mission.
+--- Hook: when a mission starts in career, leaves the sale and removes the vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:372
+---@param status string Mission state ('started'…).
+---@param id string Mission identifier.
 function career_modules_inspectVehicle.onAnyMissionChanged(status, id) end
 
---- Hook : le début du mode livraison termine l'inspection et supprime le véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:379
+--- Hook: the start of delivery mode ends the inspection and removes the vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:379
 function career_modules_inspectVehicle.onDeliveryModeStarted() end
 
---- Hook de collecte des POI : ajoute le POI d'inspection à la liste.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:436
----@param levelIdentifier string Niveau courant.
----@param elements table Liste de POI à compléter.
+--- POI collection hook: adds the inspection POI to the list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:436
+---@param levelIdentifier string Current level.
+---@param elements table POI list to complete.
 function career_modules_inspectVehicle.onGetRawPoiListForLevel(levelIdentifier, elements) end
 
---- Hook : le menu d'achat est fermé ; retire le tether sphérique du menu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:475
+--- Hook: the purchase menu is closed; removes the menu's spherical tether.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:475
 function career_modules_inspectVehicle.onPurchaseMenuClosed() end
 
---- Hook : essai abandonné ; quitte la vente (véhicule marqué pour suppression).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:482
+--- Hook: test abandoned; leaves the sale (vehicle marked for deletion).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:482
 function career_modules_inspectVehicle.onTestDriveAbandoned() end
 
---- Hook : un dégât a été détecté pendant l'essai.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:364
+--- Hook: damage was detected during the test.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:364
 function career_modules_inspectVehicle.onTestDriveDamageDetected() end
 
---- Hook : essai terminé après fondu ; réarme les tethers et rouvre le menu d'achat.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:486
+--- Hook: test finished after fade; re-arms the tethers and reopens the purchase menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:486
 function career_modules_inspectVehicle.onTestDriveEndedAfterFade() end
 
---- Hook de début d'essai : note qu'un essai a eu lieu et retire les tethers.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:356
+--- Test start hook: notes that a test took place and removes the tethers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:356
 function career_modules_inspectVehicle.onTestDriveStarted() end
 
---- Hook par image : détecte le déplacement du véhicule à vendre, décompte le temps imparti pour arriver et détecte l'arrivée du joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:333
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps de simulation (s).
----@param dtRaw number Delta temps brut (s).
+--- Per-frame hook: detects the movement of the vehicle for sale, counts down the time allowed to arrive and detects the player's arrival.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:333
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation time delta (s).
+---@param dtRaw number Raw time delta (s).
 function career_modules_inspectVehicle.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook : si le véhicule inspecté est détruit, réinitialise l'inspection.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:349
----@param vehId integer Véhicule supprimé.
+--- Hook: if the inspected vehicle is destroyed, resets the inspection.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:349
+---@param vehId integer Removed vehicle.
 function career_modules_inspectVehicle.onVehicleDestroyed(vehId) end
 
---- Hook : si le joueur passe dans le véhicule inspecté hors essai, le regèle.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:502
----@param oldId integer Ancien véhicule.
----@param newId integer Nouveau véhicule.
----@param player integer Joueur concerné.
+--- Hook: if the player gets into the inspected vehicle outside a test, freezes it again.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:502
+---@param oldId integer Old vehicle.
+---@param newId integer New vehicle.
+---@param player integer Player concerned.
 function career_modules_inspectVehicle.onVehicleSwitched(oldId, newId, player) end
 
---- Utilisé seulement dans le tutoriel : fondu d'écran puis paiement de la réparation d'un véhicule générique (voir bug dans notes : vehId non défini).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:393
+--- Only used in the tutorial: screen fade then payment of the repair of a generic vehicle (see the bug in the notes: vehId not defined).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:393
 function career_modules_inspectVehicle.repairVehicle() end
 
---- Fait apparaître le véhicule à vendre (shopId) sans l'activer (contact coupé, gelé, conditions de pièces initialisées) et mémorise ses infos (shopId, vehId, nom, valeur).
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:98
----@param vehicleInfo table|nil Infos de l'annonce (shopId, Brand, Name, Value…).
----@return userdata|nil  Objet véhicule, nil en cas d'échec.
+--- Spawns the vehicle for sale (shopId) without activating it (ignition off, frozen, part conditions initialized) and stores its info (shopId, vehId, name, value).
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:98
+---@param vehicleInfo table|nil Listing info (shopId, Brand, Name, Value…).
+---@return userdata|nil  Vehicle object, nil on failure.
 function career_modules_inspectVehicle.showVehicle(vehicleInfo) end
 
---- Démarre l'inspection : ferme une inspection précédente, fait apparaître le véhicule, choisit la place de parking (celle du vendeur privé, ou la meilleure place de la concession), déplace d'éventuels véhicules gênants, place le véhicule, puis téléporte le joueur (quickTravel) ou lui trace un chemin GPS avec limite de temps. Définit les règles d'essai.
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:222
----@param vehicleInfo table Annonce (shopId, sellerId, parkingSpotName pour un privé…).
----@param teleportToVehicle boolean true pour téléporter le joueur à la place du véhicule.
----@param job table|nil Job coroutine existant ; sinon un job est créé.
----@return boolean|nil  Avec un job fourni : true si démarré, false si le spawn échoue ; sans job : nil (asynchrone).
+--- Starts the inspection: closes a previous inspection, spawns the vehicle, chooses the parking spot (the private seller's, or the dealership's best spot), moves any obstructing vehicles, places the vehicle, then teleports the player (quickTravel) or draws them a GPS path with a time limit. Defines the test drive rules.
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:222
+---@param vehicleInfo table Listing (shopId, sellerId, parkingSpotName for a private seller…).
+---@param teleportToVehicle boolean true to teleport the player to the vehicle's spot.
+---@param job table|nil Existing coroutine job; otherwise a job is created.
+---@return boolean|nil  With a job provided: true if started, false if the spawn fails; without a job: nil (asynchronous).
 function career_modules_inspectVehicle.startInspection(vehicleInfo, teleportToVehicle, job) end
 
---- Ferme les menus et démarre l'essai du véhicule inspecté avec les règles testDriveInfo.
----Source : lua/ge/extensions/career/modules/inspectVehicle.lua:383
+--- Closes the menus and starts the test drive of the inspected vehicle with the testDriveInfo rules.
+---Source: lua/ge/extensions/career/modules/inspectVehicle.lua:383
 function career_modules_inspectVehicle.startTestDrive() end
 

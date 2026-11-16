@@ -1,23 +1,23 @@
 # `flowgraph_nodes_ui_updatedUI_endScreenTimeSlip`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip.lua` · VM : Game Engine (GE) · 48 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip.lua` · VM: Game Engine (GE) · 48 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip")` (file under extensions/ but not a regular extension)
 
-Nœud « EndScreen Drag Time Slip » (repeat_instant, couleur ui). Affiche dans l'écran de fin le ticket de chronométrage (time slip) d'une course de dragster. Entrée flow, sortie flow (chainFlow).
+Node "EndScreen Drag Time Slip" (repeat_instant, color ui). Displays the timing slip (time slip) of a drag race on the end screen. Input flow, output flow (chainFlow).
 
-## Remarques
+## Notes
 
-- Le log d'avertissement utilise la variable logTag qui n'est pas définie dans ce fichier (valeur nil).
+- The warning log uses the variable logTag, which is not defined in this file (nil value).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Prépare le panneau {type='dragTimeSlip', header='Timeslip', pages={timeslip=true}}. | 21 |
-| `C:work()` | Récupère gameplay_drag_dragBridge.createTimeslipData() et l'ajoute au panneau via modules.ui:addUIElement ; sans données, ajoute le panneau vide et logue un avertissement. | 32 |
+| `C:init()` | Prepares the panel {type='dragTimeSlip', header='Timeslip', pages={timeslip=true}}. | 21 |
+| `C:work()` | Gets gameplay_drag_dragBridge.createTimeslipData() and adds it to the panel via modules.ui:addUIElement; without data, adds the empty panel and logs a warning. | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenTimeSlip.lua`.*

@@ -1,42 +1,42 @@
 # `editor_roadArchitect_tunnelMesh`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/tunnelMesh.lua` · VM : Game Engine (GE) · 410 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/tunnelMesh.lua` · VM: Game Engine (GE) · 410 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_tunnelMesh` : `extensions.load("editor_roadArchitect_tunnelMesh")`, puis la globale `editor_roadArchitect_tunnelMesh`
+**Access:** extension `editor_roadArchitect_tunnelMesh`: `extensions.load("editor_roadArchitect_tunnelMesh")`, then the global `editor_roadArchitect_tunnelMesh`
 
-Génère les tunnels automatiques du Road Architect : un maillage procédural (ProceduralMesh) en forme de tube autour de la route, et il perce la holemap du terrain pour que le tunnel traverse le relief. À la suppression du tunnel, il restaure la holemap d'origine. Appelé par roads.finalise (création) et unfinalise/removeAll (suppression).
+Generates the automatic tunnels of Road Architect: a procedural mesh (ProceduralMesh) shaped as a tube around the road, and it punches the terrain holemap so that the tunnel passes through the relief. When the tunnel is removed, it restores the original holemap. Called by roads.finalise (creation) and unfinalise/removeAll (removal).
 
-## Remarques
+## Notes
 
-- Les maillages sont stockés par indice de route puis par nom de tunnel ; l'API est donc basée sur l'indice de route (et non sur le nom).
-- createTunnel modifie la holemap du terrain (editHolemap) ; tryRemove la rétablit (recoverHolemap) : toujours supprimer le tunnel par tryRemove pour ne pas laisser de trous.
-- Les paramètres du tunnel viennent de la route : radGran, radOffset, thickness, zOffsetFromRoad, protrudeS/E, extraS/E.
+- The meshes are stored by road index then by tunnel name; the API is therefore based on the road index (and not on the name).
+- createTunnel modifies the terrain holemap (editHolemap); tryRemove restores it (recoverHolemap): always delete the tunnel with tryRemove so as not to leave holes.
+- The tunnel parameters come from the road: radGran, radOffset, thickness, zOffsetFromRoad, protrudeS/E, extraS/E.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_tunnelMesh.createTunnel(roadIdx, name, rData, tunnel, folder)` | Crée le maillage procédural du tunnel à partir du renderData de la route (centre et bords latéraux, section circulaire) et perce la holemap du terrain le long du tunnel. | 200 |
-| `editor_roadArchitect_tunnelMesh.tryRemove(roadIdx, name)` | Si le tunnel existe : restaure la holemap, supprime l'objet maillage et oublie l'entrée. | 393 |
+| `editor_roadArchitect_tunnelMesh.createTunnel(roadIdx, name, rData, tunnel, folder)` | Creates the tunnel's procedural mesh from the road's renderData (center and lateral edges, circular section) and punches the terrain holemap along the tunnel. | 200 |
+| `editor_roadArchitect_tunnelMesh.tryRemove(roadIdx, name)` | If the tunnel exists: restores the holemap, deletes the mesh object and forgets the entry. | 393 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_tunnelMesh.createTunnel(roadIdx, name, rData, tunnel, folder)`
 
-Crée le maillage procédural du tunnel à partir du renderData de la route (centre et bords latéraux, section circulaire) et perce la holemap du terrain le long du tunnel.
+Creates the tunnel's procedural mesh from the road's renderData (center and lateral edges, circular section) and punches the terrain holemap along the tunnel.
 
-- `roadIdx` (*integer*) : Indice de la route dans roads.
-- `name` (*string*) : Nom du tunnel (clé dans la table des maillages).
-- `rData` (*table*) : renderData de la route.
-- `tunnel` (*table*) : Description du tunnel (indices de début s et de fin e, etc.).
-- `folder` (*userdata*) : SimGroup de scène qui reçoit le maillage.
+- `roadIdx` (*integer*) : Index of the road in roads.
+- `name` (*string*) : Name of the tunnel (key in the meshes table).
+- `rData` (*table*) : renderData of the road.
+- `tunnel` (*table*) : Description of the tunnel (start index s and end index e, etc.).
+- `folder` (*userdata*) : Scene SimGroup that receives the mesh.
 
 #### `editor_roadArchitect_tunnelMesh.tryRemove(roadIdx, name)`
 
-Si le tunnel existe : restaure la holemap, supprime l'objet maillage et oublie l'entrée.
+If the tunnel exists: restores the holemap, deletes the mesh object and forgets the entry.
 
-- `roadIdx` (*integer*) : Indice de la route.
-- `name` (*string|nil*) : Nom du tunnel ; ne fait rien si nil.
+- `roadIdx` (*integer*) : Index of the road.
+- `name` (*string|nil*) : Name of the tunnel; does nothing if nil.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/tunnelMesh.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/tunnelMesh.lua`.*

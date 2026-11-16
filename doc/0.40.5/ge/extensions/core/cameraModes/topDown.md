@@ -1,32 +1,32 @@
 # `core_cameraModes_topDown`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/topDown.lua` · VM : Game Engine (GE) · 133 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/topDown.lua` · VM: Game Engine (GE) · 133 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/topDown")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/topDown")` (file under extensions/ but not a regular extension)
 
-Caméra vue de dessus (désactivée par défaut), présentée dans le code comme « un exemple de mode de caméra personnalisé ». Suit le véhicule d'en haut avec une anticipation vers la direction réelle de déplacement (jusqu'à 10 m), lisse la position et le cap. Options : alignToCar (le haut de l'écran suit le cap du véhicule au lieu du nord +Y), tilt (0 à 80 degrés par rapport à la verticale ; 45 + ortho = isométrique), ortho (projection orthographique, data.res.ortho). Distance de la caméra = 50 + 0.9 * vitesse lissée. FOV par défaut 20. Renvoie un constructeur.
+Top-down camera (disabled by default), presented in the code as "an example of a custom camera mode". Follows the vehicle from above with look-ahead toward the actual direction of travel (up to 10 m), smooths position and heading. Options: alignToCar (the top of the screen follows the vehicle's heading instead of north +Y), tilt (0 to 80 degrees from vertical; 45 + ortho = isometric), ortho (orthographic projection, data.res.ortho). Camera distance = 50 + 0.9 * smoothed speed. Default FOV 20. Returns a constructor.
 
-## Remarques
+## Notes
 
-- Un mode minimal à copier pour créer sa caméra : update doit remplir data.res.pos (vec3), data.res.rot (quat), data.res.fov, et peut remplir targetPos ; renvoyer true.
-- init appelle `C:onVehicleCameraConfigChanged()` (avec la classe C, pas self) : le FOV par défaut est donc écrit dans la classe C et pas sur l'instance, ce qui fonctionne seulement parce que self.fov retombe sur C.fov par métatable (déduit du code).
+- A minimal mode to copy to create your own camera: update must fill data.res.pos (vec3), data.res.rot (quat), data.res.fov, and may fill targetPos; return true.
+- init calls `C:onVehicleCameraConfigChanged()` (with the class C, not self): the default FOV is therefore written to the class C and not to the instance, which only works because self.fov falls back to C.fov through the metatable (inferred from code).
 
-## Classe `C`
+## Class `C`
 
-Mode vue de dessus. Champs : alignToCar, tilt, ortho, fov, refNodes.
+Top-down mode. Fields: alignToCar, tilt, ortho, fov, refNodes.
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_topDown")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_topDown")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:deserialize(s)` | Restaure l'état de serialize. | 99 |
-| `C:init()` | Crée les lisseurs et valeurs par défaut. | 10 |
-| `C:listParams()` | Réglages UI : align, tilt (0-80), ortho, fov (10-140). | 109 |
-| `C:onVehicleCameraConfigChanged()` | Hook : FOV par défaut à 20. | 28 |
-| `C:serialize()` | État pour les vues flux vidéo : alignToCar, fov, tilt, ortho. | 95 |
-| `C:setParam(key, value)` | Modifie align, tilt, ortho ou fov. | 118 |
-| `C:setRefNodes(centerNodeID, leftNodeID, backNodeID)` | Définit les nœuds de référence du véhicule (utilisés pour alignToCar). | 86 |
-| `C:update(data)` | Calcule la pose d'après la vitesse et le cap, écrit data.res (pos, rot, fov, targetPos, ortho). | 32 |
+| `C:deserialize(s)` | Restores the state from serialize. | 99 |
+| `C:init()` | Creates the smoothers and default values. | 10 |
+| `C:listParams()` | UI settings: align, tilt (0-80), ortho, fov (10-140). | 109 |
+| `C:onVehicleCameraConfigChanged()` | Hook: default FOV to 20. | 28 |
+| `C:serialize()` | State for video stream views: alignToCar, fov, tilt, ortho. | 95 |
+| `C:setParam(key, value)` | Changes align, tilt, ortho or fov. | 118 |
+| `C:setRefNodes(centerNodeID, leftNodeID, backNodeID)` | Sets the vehicle's reference nodes (used for alignToCar). | 86 |
+| `C:update(data)` | Computes the pose from speed and heading, writes data.res (pos, rot, fov, targetPos, ortho). | 32 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/topDown.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/topDown.lua`.*

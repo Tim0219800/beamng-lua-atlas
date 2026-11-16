@@ -1,39 +1,39 @@
 # `core_forest`
 
-*Fichier : `lua/ge/extensions/core/forest.lua` · VM : Game Engine (GE) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/forest.lua` · VM: Game Engine (GE) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_forest` : `extensions.load("core_forest")`, puis la globale `core_forest`
+**Access:** extension `core_forest`: `extensions.load("core_forest")`, then the global `core_forest`
 
-Extension GE `core_forest` : fournit un accès mis en cache à l'objet `Forest` de la scène (la forêt/végétation instanciée du niveau). Un moddeur l'utilise pour obtenir cet objet sans refaire une recherche dans la scène.
+GE extension `core_forest`: provides cached access to the scene's `Forest` object (the level's instanced forest/vegetation). A modder uses it to get this object without searching the scene again.
 
-## Exemple
+## Example
 
 ```lua
 local forest = core_forest.getForestObject()
 if forest then print(forest:getId()) end
 ```
 
-## Remarques
+## Notes
 
-- L'id du premier objet de classe Forest trouvé est mémorisé dans forestId ; si l'objet est supprimé, une nouvelle recherche est faite au prochain appel. Seul le premier Forest de la scène est utilisé.
+- The id of the first object of class Forest found is stored in forestId; if the object is deleted, a new search is done at the next call. Only the first Forest in the scene is used.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_forest.getForestObject()` | Renvoie l'objet Forest de la scène (premier de classe 'Forest'), avec cache de son id. | 9 |
+| `core_forest.getForestObject()` | Returns the scene's Forest object (first of class 'Forest'), with its id cached. | 9 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_forest.getForestObject()`
 
-Renvoie l'objet Forest de la scène (premier de classe 'Forest'), avec cache de son id.
+Returns the scene's Forest object (first of class 'Forest'), with its id cached.
 
-- **renvoie** : userdata|nil Objet Forest, nil s'il n'y en a pas dans le niveau.
+- **returns**: userdata|nil Forest object, nil if there is none in the level.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/forest.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/forest.lua`.*

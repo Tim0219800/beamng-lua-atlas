@@ -1,59 +1,59 @@
 # `controller_trailerFeet`
 
-*Fichier : `lua/vehicle/controller/trailerFeet.lua` · VM : Véhicule · 40 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/trailerFeet.lua` · VM: Vehicle · 40 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `trailerFeet` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `trailerFeet` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire pour les béquilles de remorque : écrit un electric (« feet » par défaut) à une valeur « attachée » quand un coupleur de ce véhicule s'accroche à un AUTRE véhicule et à une valeur « détachée » quand il s'en détache. L'electric sert à animer/rétracter les béquilles.
+Auxiliary controller for trailer kickstands: writes an electric ("feet" by default) to an "attached" value when a coupler of this vehicle attaches to ANOTHER vehicle and to a "detached" value when it detaches. The electric is used to animate/retract the kickstands.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : electricsName ("feet"), attachedValue (1), detachedValue (0), startValue (0, valeur initiale).
-- Les coupleurs accrochés au même véhicule (obj2id == obj:getId()) sont ignorés.
-- Piège : l'expression `jbeamData.attachedValue or 1` donne 1 si la valeur jbeam est false, mais 0 est une valeur valide en Lua donc OK ; attention seulement aux valeurs nil.
+- jbeam keys read: electricsName ("feet"), attachedValue (1), detachedValue (0), startValue (0, initial value).
+- Couplers attached to the same vehicle (obj2id == obj:getId()) are ignored.
+- Pitfall: the expression `jbeamData.attachedValue or 1` gives 1 if the jbeam value is false, but 0 is a valid value in Lua so it is OK; only watch out for nil values.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_trailerFeet.init(jbeamData)` | Lit la configuration et initialise l'electric à startValue. *(interne)* | 26 |
-| `controller_trailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook appelé par le moteur quand un coupleur s'accroche ; si l'autre objet est un autre véhicule, passe l'electric à attachedValue. *(interne)* *(hook)* | 14 |
-| `controller_trailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook appelé quand un coupleur se détache ; si l'autre objet est un autre véhicule, passe l'electric à detachedValue. *(interne)* *(hook)* | 20 |
+| `controller_trailerFeet.init(jbeamData)` | Reads the configuration and initializes the electric to startValue. *(internal)* | 26 |
+| `controller_trailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)` | Hook called by the engine when a coupler attaches; if the other object is another vehicle, sets the electric to attachedValue. *(internal)* *(hook)* | 14 |
+| `controller_trailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)` | Hook called when a coupler detaches; if the other object is another vehicle, sets the electric to detachedValue. *(internal)* *(hook)* | 20 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_trailerFeet.init(jbeamData)`
 
-Lit la configuration et initialise l'electric à startValue.
+Reads the configuration and initializes the electric to startValue.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_trailerFeet.onCouplerAttached(nodeId, obj2id, obj2nodeId)`
 
-Hook appelé par le moteur quand un coupleur s'accroche ; si l'autre objet est un autre véhicule, passe l'electric à attachedValue.
+Hook called by the engine when a coupler attaches; if the other object is another vehicle, sets the electric to attachedValue.
 
-- `nodeId` (*integer*) : Nœud coupleur de ce véhicule.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : Nœud de l'autre véhicule.
+- `nodeId` (*integer*) : Coupler node of this vehicle.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : Node of the other vehicle.
 
 #### `controller_trailerFeet.onCouplerDetached(nodeId, obj2id, obj2nodeId, breakForce)`
 
-Hook appelé quand un coupleur se détache ; si l'autre objet est un autre véhicule, passe l'electric à detachedValue.
+Hook called when a coupler detaches; if the other object is another vehicle, sets the electric to detachedValue.
 
-- `nodeId` (*integer*) : Nœud coupleur de ce véhicule.
-- `obj2id` (*integer*) : Id de l'autre véhicule.
-- `obj2nodeId` (*integer*) : Nœud de l'autre véhicule.
-- `breakForce` (*number*) : Force de rupture (non utilisée).
+- `nodeId` (*integer*) : Coupler node of this vehicle.
+- `obj2id` (*integer*) : Id of the other vehicle.
+- `obj2nodeId` (*integer*) : Node of the other vehicle.
+- `breakForce` (*number*) : Breaking force (unused).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getId`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/trailerFeet.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/trailerFeet.lua`.*

@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/events/onUpdate.lua",
+  "module": "Nœud flowgraph « on Update » (catégorie logic, événement). Émet du flux à chaque frame. Pins de sortie : enterState (impulsion à l'entrée dans l'état du projet), flow (chaque frame), exitState (impulsion à la sortie de l'état), dtReal, dtSim, dtRaw (delta times, cachés). Met aussi à jour mgr.dtReal/dtSim/dtRaw.",
+  "notes": ["Aux événements d'état (début et fin) les trois delta times sont remis à 0."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "onUpdate": {"desc": "Hook appelé à chaque frame : met flow à vrai, copie les delta times dans mgr et les pins, déclenche le nœud.", "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)"}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)"}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)"}}, "internal": true},
+        "onStateStartedTrigger": {"desc": "Appelé quand le projet entre dans l'état : enterState vrai, delta times à 0.", "internal": true},
+        "onStateStoppedTrigger": {"desc": "Appelé quand le projet quitte l'état : exitState vrai, delta times à 0.", "internal": true},
+        "work": {"desc": "Vide.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}, "internal": true}
+      }
+    }
+  }
+}

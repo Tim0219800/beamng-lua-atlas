@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/editor/crawlEditor/trails.lua",
+  "module": "Sous-outil « Trails » de l'éditeur Crawl. Le module renvoie un constructeur de classe C. Un trail relie un chemin (pathId), une frontière (boundaryId) et des positions de départ (startingPositionId, startingPositionIdReversed) avec des prefabs, une miniature, un aperçu et des règles. L'outil affiche la liste et le détail dans ImGui (nom, fichier, description, propriétés de mission, références manquantes en couleur, prefabs, règles) et dessine dans la vue 3D la position de départ référencée.",
+  "notes": [
+    "Le menu contextuel Delete d'un trail supprime aussi son fichier sur disque (trail._filePath) via FS:removeFile.",
+    "Le bouton « Test From Start » lance gameplay_crawl_general.startCrawlFreeroam(trail, véhicule joueur) ; sans véhicule joueur, un avertissement est loggé.",
+    "Les prefabs sont cherchés dans /levels/<niveau>/crawls/*.prefab.json (niveau courant uniquement, non récursif).",
+    "Les modifications marquent le trail comme modifié via editor_crawlEditor.markAsDirty(\"trail\", index)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'outil. Champs : currentTab (\"paths\" par défaut), trail (trail édité), snapToTerrain (true), buffers ImGui (name, fileName, description, rules, thumbnail, preview, missionName, pathReversed, isFromMission).",
+      "functions": {
+        "init": {"desc": "Initialise l'onglet courant à \"paths\", aucun trail sélectionné, snapToTerrain = true.", "internal": true},
+        "getPrefabFiles": {"desc": "Liste les fichiers *.prefab.json du dossier /levels/<niveau>/crawls/ du niveau courant.", "returns": [{"type": "string[]", "desc": "chemins de fichiers (vide si aucun niveau)"}]},
+        "drawTrailsList": {"desc": "Dessine le bouton « Add Trail » et la liste sélectionnable ; le clic droit propose Delete (efface aussi le fichier du trail).", "params": {"allTrails": {"type": "table[]", "desc": "tous les trails (modifiée en place)"}, "selection": {"type": "table", "desc": "{index, clicked}"}}},
+        "setFields": {"desc": "Remplit les buffers ImGui à partir du trail.", "params": {"trail": {"type": "table", "desc": "trail"}}},
+        "drawTrailDetail": {"desc": "Dessine le panneau de détail du trail : boutons Goto (caméra vers la position de départ ou le premier nœud du chemin) et Test From Start, champs, sélecteurs de miniature/aperçu, références chemin/frontière/positions, prefabs, règles.", "params": {"trail": {"type": "table", "desc": "trail affiché"}}},
+        "getNewTrail": {"desc": "Crée un trail par défaut (nom « New Trail », références vides, pathReversed false, prefabs vide, règles par défaut, métadonnées version \"1.0\").", "returns": [{"type": "table", "desc": "nouveau trail"}]},
+        "setTrail": {"desc": "Définit le trail en cours d'édition.", "params": {"trailParam": {"type": "table|nil", "desc": "trail"}}},
+        "clearSelection": {"desc": "Ne fait rien (aucune sélection à effacer pour les trails)."},
+        "setCurrentTab": {"desc": "Mémorise l'onglet courant de l'éditeur.", "params": {"tab": {"type": "string", "desc": "nom d'onglet"}}},
+        "input": {"desc": "Gestion de la souris : vide pour les trails.", "params": {"mouseInfo": {"type": "table", "desc": "infos souris (inutilisé)"}}, "internal": true},
+        "draw": {"desc": "Dessine la sphère de zone (vert translucide) et l'icône (rouge) de la position de départ référencée par le trail, avec étiquettes.", "params": {"mouseInfo": {"type": "table", "desc": "infos souris"}}, "internal": true}
+      }
+    }
+  }
+}

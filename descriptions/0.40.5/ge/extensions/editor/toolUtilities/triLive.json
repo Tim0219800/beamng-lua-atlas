@@ -1,43 +1,73 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/triLive.lua",
-  "module": "Compteur de triangles réellement dessinés par un « kit » (pièces instanciées), vu depuis la caméra : chaque instance est comptée au LOD qu'elle dessine vraiment, moins celles hors écran. Sert au pied de page statsFooter. Garde une seule réponse à la fois (l'éditeur n'a qu'un mode d'édition). Les échelles de LOD mesurées, coûteuses, sont partagées et mises en cache sur disque dans /temp/massingEditor/shapeLods.json (avec la date de modification du fichier de forme).",
-  "usage": "local tl = require('editor/toolUtilities/triLive')\ntl.note(instances)     -- à chaque reconstruction\ntl.scanStep()          -- chaque frame\ntl.update(instances)\nlocal tris, dist, live, placed, toScan = tl.get()",
+  "module": "Counter of the triangles actually drawn by a \"kit\" (instanced pieces), as seen from the camera: each instance is counted at the LOD it really draws, minus those off screen. Used by the statsFooter footer. Keeps a single answer at a time (the editor has only one edit mode). The measured LOD scales, which are costly, are shared and cached on disk in /temp/massingEditor/shapeLods.json (with the shape file's modification date).",
+  "usage": "local tl = require('editor/toolUtilities/triLive')\ntl.note(instances)     -- on every rebuild\ntl.scanStep()          -- every frame\ntl.update(instances)\nlocal tris, dist, live, placed, toScan = tl.get()",
   "notes": [
-    "Chaque instance doit avoir shape (chemin de forme), px, py, pz.",
-    "Mise à jour limitée à 4 Hz, et 10000 instances traitées par frame pour ne pas figer l'éditeur sur une grande ville.",
-    "Le calcul suppose une constante moteur ENGINE_SCALE = 4.48 mesurée à 1920x1009 et 65 degrés, avec le FOV et la taille de fenêtre réels. La visibilité est testée par un cône autour de la diagonale de l'écran.",
-    "Une forme impossible à mesurer est comptée comme ne dessinant rien pour la session, avec un avertissement loggé, et réessayée au prochain rechargement.",
-    "Une forme dont le fichier a été réécrit depuis la mesure est remesurée."
+    "Each instance must have shape (shape path), px, py, pz.",
+    "Update limited to 4 Hz, and 10000 instances processed per frame so as not to freeze the editor on a large city.",
+    "The computation assumes an engine constant ENGINE_SCALE = 4.48 measured at 1920x1009 and 65 degrees, with the real FOV and window size. Visibility is tested by a cone around the screen diagonal.",
+    "A shape that cannot be measured is counted as drawing nothing for the session, with a logged warning, and retried at the next reload.",
+    "A shape whose file has been rewritten since the measurement is measured again."
   ],
   "functions": {
     "note": {
-      "desc": "Met en file les formes de `instances` jamais mesurées (ou dont le fichier a changé). Assez peu coûteux pour être appelé à chaque reconstruction.",
-      "params": {"instances": {"type": "table", "desc": "Liste d'entrées avec champ shape."}},
+      "desc": "Queues the shapes of `instances` never measured (or whose file has changed). Cheap enough to be called on every rebuild.",
+      "params": {
+        "instances": {
+          "type": "table",
+          "desc": "List of entries with a shape field."
+        }
+      },
       "returns": []
     },
     "scanStep": {
-      "desc": "Mesure UNE forme par appel (échelle de LOD), appelé depuis la frame de l'éditeur pour que le scan à froid apparaisse comme une progression et non comme un gel. Sauvegarde le cache quand la file est vide.",
+      "desc": "Measures ONE shape per call (LOD scale), called from the editor frame so that the cold scan shows up as progress rather than a freeze. Saves the cache when the queue is empty.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "Vrai si une forme a été traitée."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "True if a shape was processed."
+        }
+      ]
     },
     "update": {
-      "desc": "Calcule le total de triangles instanciés à l'écran et la distance caméra - centroïde des instances. Limité en fréquence et découpé en tranches de 10000 instances par frame.",
-      "params": {"instances": {"type": "table", "desc": "Liste d'entrées { shape, px, py, pz }."}},
+      "desc": "Computes the total of instanced triangles on screen and the camera - instance centroid distance. Rate-limited and split into slices of 10000 instances per frame.",
+      "params": {
+        "instances": {
+          "type": "table",
+          "desc": "List of entries { shape, px, py, pz }."
+        }
+      },
       "returns": []
     },
     "get": {
-      "desc": "Dernier résultat : triangles instanciés dessinés, distance au centroïde des instances (m), instances dessinées, instances placées, formes restant à scanner.",
+      "desc": "Last result: instanced triangles drawn, distance to the instances' centroid (m), instances drawn, instances placed, shapes left to scan.",
       "params": {},
       "returns": [
-        {"type": "number", "desc": "Triangles dessinés."},
-        {"type": "number", "desc": "Distance au centroïde (m)."},
-        {"type": "integer", "desc": "Instances dessinées."},
-        {"type": "integer", "desc": "Instances placées."},
-        {"type": "integer", "desc": "Formes encore à scanner."}
+        {
+          "type": "number",
+          "desc": "Triangles drawn."
+        },
+        {
+          "type": "number",
+          "desc": "Distance to the centroid (m)."
+        },
+        {
+          "type": "integer",
+          "desc": "Instances drawn."
+        },
+        {
+          "type": "integer",
+          "desc": "Instances placed."
+        },
+        {
+          "type": "integer",
+          "desc": "Shapes still to scan."
+        }
       ]
     },
     "rescan": {
-      "desc": "Vide le cache de mesures, les rayons, la file et les échecs : « tout réessayer ». Le cache sera réécrit.",
+      "desc": "Clears the measurement cache, the scales, the queue and the failures: \"retry everything\". The cache will be rewritten.",
       "params": {},
       "returns": []
     }

@@ -1,21 +1,84 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/onVehicleShoppingEvent.lua",
-  "module": "Nœud flowgraph « On Vehicle Shopping Event » (catégorie repeat_instant, couleur/icône ui). Détecte les évènements d'achat de véhicule en carrière. Sorties en impulsion : openedMenu, closedMenu (aussi levé au retour en jeu), vehicleSpawned (véhicule généré pour inspection), openedDetail (menu d'achat détaillé), vehicleBought ; plus vehId (number, id du véhicule acheté) et testDriveActive (bool, career_modules_testDrive.isActive).",
-  "notes": ["Utilise career_modules_testDrive et career_modules_inventory : nécessite la carrière.", "Les descriptions de vehicleBought et vehId contiennent des fautes de frappe dans le jeu (« buyign »).", "vehId garde sa dernière valeur après l'impulsion."],
+  "module": "Flowgraph node \"On Vehicle Shopping Event\" (category repeat_instant, ui color/icon). Detects career vehicle shopping events. Impulse outputs: openedMenu, closedMenu (also raised when returning to the game), vehicleSpawned (vehicle generated for inspection), openedDetail (detailed shopping menu), vehicleBought; plus vehId (number, id of the purchased vehicle) and testDriveActive (bool, career_modules_testDrive.isActive).",
+  "notes": [
+    "Uses career_modules_testDrive and career_modules_inventory: requires career.",
+    "The descriptions of vehicleBought and vehId contain typos in the game (\"buyign\").",
+    "vehId keeps its last value after the impulse."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
-        "work": {"desc": "Chaque frame : remet à faux cinq sorties flow, applique et efface les drapeaux, met à jour testDriveActive.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
-        "onVehicleShoppingMenuOpened": {"desc": "Hook : lève openedMenu.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onVehicleShoppingVehicleShown": {"desc": "Hook : lève vehicleSpawned.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onVehicleShoppingPurchaseMenuOpened": {"desc": "Hook : lève openedDetail.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onVehicleAddedToInventory": {"desc": "Hook : lève vehicleBought et convertit data.inventoryId en id de véhicule (vehId).", "params": {"data": {"type": "table", "desc": "contient inventoryId"}}, "internal": true},
-        "onVehicleShoppingMenuClosed": {"desc": "Hook : lève closedMenu.", "internal": true},
-        "onUIPlayStateChanged": {"desc": "Hook : lève closedMenu quand le joueur revient en jeu.", "params": {"enteredPlay": {"type": "boolean", "desc": "vrai si on entre dans l'état de jeu"}}, "internal": true}
+        "init": {
+          "desc": "Creates the flag table.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: sets five flow outputs back to false, applies and clears the flags, updates testDriveActive.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        },
+        "onVehicleShoppingMenuOpened": {
+          "desc": "Hook: raises openedMenu.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onVehicleShoppingVehicleShown": {
+          "desc": "Hook: raises vehicleSpawned.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onVehicleShoppingPurchaseMenuOpened": {
+          "desc": "Hook: raises openedDetail.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onVehicleAddedToInventory": {
+          "desc": "Hook: raises vehicleBought and converts data.inventoryId into a vehicle id (vehId).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "contains inventoryId"
+            }
+          },
+          "internal": true
+        },
+        "onVehicleShoppingMenuClosed": {
+          "desc": "Hook: raises closedMenu.",
+          "internal": true
+        },
+        "onUIPlayStateChanged": {
+          "desc": "Hook: raises closedMenu when the player returns to the game.",
+          "params": {
+            "enteredPlay": {
+              "type": "boolean",
+              "desc": "true if entering the play state"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

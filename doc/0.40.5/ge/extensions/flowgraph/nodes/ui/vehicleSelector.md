@@ -1,41 +1,41 @@
 # `flowgraph_nodes_ui_vehicleSelector`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/vehicleSelector.lua` · VM : Game Engine (GE) · 307 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/vehicleSelector.lua` · VM: Game Engine (GE) · 307 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/vehicleSelector")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/vehicleSelector")` (file under extensions/ but not a regular extension)
 
-Nœud « Vehicle Selector » (couleur ui, singleActive, dépend de core_input_bindings). Ouvre un écran de démarrage (via le module ui) avec un sélecteur de véhicule pour un adversaire : panneau texte, panneau vehicleSelector (nom, miniature, stats Power/Weight/Top Speed), boutons « Change Opponent » et « Abandon ». Entrées : flow, reset (impulsion), title, text, startButtonText (caché), changeOpponentLabel, abandonLabel, saveSelection (garde le dernier choix entre redémarrages ; sinon retour au véhicule du joueur). Sorties : flow (une fois Start pressé), exit (Abandon pressé), model, config, color, dial (caché, temps 1/4 de mile, 12 par défaut).
+Node "Vehicle Selector" (color ui, singleActive, depends on core_input_bindings). Opens a start screen (via the ui module) with a vehicle selector for an opponent: text panel, vehicleSelector panel (name, thumbnail, Power/Weight/Top Speed stats), "Change Opponent" and "Abandon" buttons. Inputs: flow, reset (pulse), title, text, startButtonText (hidden), changeOpponentLabel, abandonLabel, saveSelection (keeps the last choice between restarts; otherwise returns to the player's vehicle). Outputs: flow (once Start is pressed), exit (Abandon pressed), model, config, color, dial (hidden, 1/4-mile time, 12 by default).
 
-## Remarques
+## Notes
 
-- Fonctions locales : getVehicleDial (core_vehicles config « Performance Data »/« Drag Times » .time_1_4, sinon 12), getVehicleColor (peinture par défaut du modèle/config), getVehicleDisplayData.
-- Les statistiques sont obtenues via ui_vehicleSelector_vehicleSpecifications.makeSpec, chargée à la demande.
+- Local functions: getVehicleDial (core_vehicles config "Performance Data"/"Drag Times" .time_1_4, otherwise 12), getVehicleColor (default paint of the model/config), getVehicleDisplayData.
+- The stats are obtained via ui_vehicleSelector_vehicleSpecifications.makeSpec, loaded on demand.
 
-**Dépendances (chargées avant) :** `core_input_bindings`
+**Dependencies (loaded first):** `core_input_bindings`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet les pins de sortie à false et réinitialise l'état. | 129 |
-| `C:_executionStopped()` | Ferme le dialogue et réinitialise l'état. | 140 |
-| `C:abandonFromUi()` | Marque exited=true et ferme le dialogue. | 257 |
-| `C:buildScreen()` | Construit l'écran de démarrage via le module ui (en-tête, bouton Start, panneaux, boutons Change Opponent / Abandon) puis finishUIBuilding. Logue une erreur si le module ui est absent. | 185 |
-| `C:closeDialogue()` | Si l'écran est construit, navigue vers « play » et efface modules.ui.uiLayout. | 163 |
-| `C:getDefaultVehicle()` | Renvoie {model, config} du véhicule actuel du joueur (core_vehicles.getCurrentVehicleDetails) ou nil. | 177 |
-| `C:getSavedVehData()` | Renvoie la sélection mémorisée sur le gestionnaire flowgraph (mgr._vehicleSelectorSavedVeh), partagée entre tous les Vehicle Selector du projet. | 119 |
-| `C:getSelectedVehicleDisplayData()` | Renvoie les données d'affichage (nom, miniature, stats) du véhicule sélectionné, ou nil. | 172 |
-| `C:init()` | Initialise built/done/exited/_needsRebuild et la sélection. | 109 |
-| `C:onClientEndMission()` | Hook de fin de mission côté client ; ferme le dialogue. | 149 |
-| `C:requestChangeOpponent()` | Ouvre le sélecteur de véhicules du jeu (ui_vehicleSelector_general.openVehicleSelectorForChallenge, chargé au besoin). Au retour, mémorise le choix et demande une reconstruction de l'écran. | 234 |
-| `C:reset()` | Réinitialise built/done/exited et remet les pins de sortie à false (appelée via le pin reset). | 153 |
-| `C:setSavedVehData(vehData)` | Mémorise la sélection sur le gestionnaire flowgraph. | 123 |
-| `C:startFromUi()` | Marque le choix comme validé (done=true) et ferme le dialogue. | 252 |
-| `C:work()` | Gère reset ; à la première frame choisit le véhicule (sauvegardé si saveSelection, sinon défaut) et construit l'écran ; reconstruit si demandé ; publie model, config, color, dial, flow (done) et exit. | 262 |
+| `C:_executionStarted()` | Resets the output pins to false and resets the state. | 129 |
+| `C:_executionStopped()` | Closes the dialogue and resets the state. | 140 |
+| `C:abandonFromUi()` | Sets exited=true and closes the dialogue. | 257 |
+| `C:buildScreen()` | Builds the start screen via the ui module (header, Start button, panels, Change Opponent / Abandon buttons) then finishUIBuilding. Logs an error if the ui module is missing. | 185 |
+| `C:closeDialogue()` | If the screen is built, navigates to "play" and clears modules.ui.uiLayout. | 163 |
+| `C:getDefaultVehicle()` | Returns {model, config} of the player's current vehicle (core_vehicles.getCurrentVehicleDetails) or nil. | 177 |
+| `C:getSavedVehData()` | Returns the selection stored on the flowgraph manager (mgr._vehicleSelectorSavedVeh), shared by all Vehicle Selector nodes of the project. | 119 |
+| `C:getSelectedVehicleDisplayData()` | Returns the display data (name, thumbnail, stats) of the selected vehicle, or nil. | 172 |
+| `C:init()` | Initializes built/done/exited/_needsRebuild and the selection. | 109 |
+| `C:onClientEndMission()` | End-of-mission hook on the client side; closes the dialogue. | 149 |
+| `C:requestChangeOpponent()` | Opens the game's vehicle selector (ui_vehicleSelector_general.openVehicleSelectorForChallenge, loaded if needed). On return, stores the choice and requests a rebuild of the screen. | 234 |
+| `C:reset()` | Resets built/done/exited and resets the output pins to false (called via the reset pin). | 153 |
+| `C:setSavedVehData(vehData)` | Stores the selection on the flowgraph manager. | 123 |
+| `C:startFromUi()` | Marks the choice as confirmed (done=true) and closes the dialogue. | 252 |
+| `C:work()` | Handles reset; on the first frame chooses the vehicle (saved if saveSelection, otherwise default) and builds the screen; rebuilds if requested; publishes model, config, color, dial, flow (done) and exit. | 262 |
 
-**Charge les extensions :** `ui_vehicleSelector_general`, `ui_vehicleSelector_vehicleSpecifications`
+**Loads extensions:** `ui_vehicleSelector_general`, `ui_vehicleSelector_vehicleSpecifications`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/vehicleSelector.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/vehicleSelector.lua`.*

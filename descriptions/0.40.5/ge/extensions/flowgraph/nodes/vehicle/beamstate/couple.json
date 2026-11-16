@@ -1,33 +1,33 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/couple.lua",
-  "module": "Nœud « Toggle Coupling » (catégorie `repeat_p_duration`, tags attach/detach/trailer/couple). Pilote les attelages (coupleurs) d'un véhicule selon la propriété `data.mode` : `toggle` (`beamstate.toggleCouplers()`), `activate` (`activateAutoCoupling()`, défaut), `disable` (`disableAutoCoupling()`), `detach` (`detachCouplers()`). Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).",
+  "module": "Node \"Toggle Coupling\" (category `repeat_p_duration`, tags attach/detach/trailer/couple). Controls a vehicle's couplers according to the `data.mode` property: `toggle` (`beamstate.toggleCouplers()`), `activate` (`activateAutoCoupling()`, default), `disable` (`disableAutoCoupling()`), `detach` (`detachCouplers()`). Input pin: `vehId`. If `vehId` is not connected, the node takes the player vehicle (`getPlayerVehicle(0)`).",
   "notes": [
-    "Le mode n'est pas un pin : c'est `self.data.mode`, réglé dans l'éditeur. Une valeur inconnue affiche « (!) » dans le nœud et ne fait rien."
+    "The mode is not a pin: it is `self.data.mode`, set in the editor. An unknown value displays \"(!)\" in the node and does nothing."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "drawMiddle": {
-          "desc": "Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel.",
+          "desc": "ImGui display in the center of the node in the flowgraph editor; purely visual.",
           "internal": true,
           "params": {
             "builder": {
               "type": "any",
-              "desc": "Constructeur de nœud de l'éditeur (builder:Middle())."
+              "desc": "Editor node builder (builder:Middle())."
             },
             "style": {
               "type": "any",
-              "desc": "Style ImGui de l'éditeur."
+              "desc": "Editor ImGui style."
             }
           }
         },
         "init": {
-          "desc": "Constructeur ; fixe `data.mode = \"activate\"` (paramètres `mgr, ...` ignorés).",
+          "desc": "Constructor; sets `data.mode = \"activate\"` (parameters `mgr, ...` ignored).",
           "internal": true
         },
         "work": {
-          "desc": "Envoie au véhicule la commande beamstate correspondant à `data.mode`.",
+          "desc": "Sends the beamstate command matching `data.mode` to the vehicle.",
           "internal": true
         }
       }

@@ -1,44 +1,44 @@
 # `editor_toolUtilities_siteLibrary`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/siteLibrary.lua` · VM : Game Engine (GE) · 181 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/siteLibrary.lua` · VM: Game Engine (GE) · 181 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_siteLibrary` : `extensions.load("editor_toolUtilities_siteLibrary")`, puis la globale `editor_toolUtilities_siteLibrary`
+**Access:** extension `editor_toolUtilities_siteLibrary`: `extensions.load("editor_toolUtilities_siteLibrary")`, then the global `editor_toolUtilities_siteLibrary`
 
-Save, Save As et Open pour les outils de site à document unique. Un bâtiment massing, un espace ouvert et un parking sont chacun UN document dont la maison est un dossier d'étagère de bibliothèque (voir siteAssets) : Save réécrit par-dessus sans demander, Save As nomme un nouveau dossier et le suit, Open remplace tout le document. Le placeur de sites dresse les copies, l'éditeur découpe l'original. new(cfg) fabrique, pour chaque outil, une liaison avec les mêmes trois boutons, icônes et libellés.
+Save, Save As and Open for single-document site tools. A massing building, an open space and a parking lot are each ONE document whose home is a library shelf folder (see siteAssets): Save rewrites over it without asking, Save As names a new folder and follows it, Open replaces the whole document. The site placer stands up the copies, the editor carves the original. new(cfg) builds, for each tool, a binding with the same three buttons, icons and labels.
 
-## Exemple
+## Example
 
 ```lua
 local siteLibrary = require('editor/toolUtilities/siteLibrary')
 local lib = siteLibrary.new({toolId = 'openSpaceEditor', kind = 'openSpace', noun = 'open space',
   stateKey = 'openSpace', editMode = 'openSpace', hasContent = hasContent,
   bakeRun = bakeRun, applyState = applyState, rename = rename})
--- chaque frame, au début : lib.settle()
--- dans la fenêtre : lib.buttons(doc)
+-- every frame, at the start: lib.settle()
+-- in the window: lib.buttons(doc)
 ```
 
-## Remarques
+## Notes
 
-- cfg : toolId (clé de session et étiquette de model.json), kind ('building', 'openSpace', 'carPark'), noun (nom dans les info-bulles), stateKey (clé du document dans model.json state), editMode (mode d'édition à choisir à l'ouverture), hasContent(doc), bakeRun(doc) -> ok, dossier écrit ou raison, applyState(state) -> ok, raison, rename(doc, name) (nom posé via l'annulation de l'outil).
-- Les dossiers choisis et les noms saisis sont traités en haut de la frame suivante (settle / buttons), car le dialogue qui les a produits est encore en train de se dessiner et ouvrir un site remplace le document entier.
-- open refuse un dossier dont model.json a été écrit par un autre outil (« that folder holds a <tool> document ») ou sans état éditable (« no editable model saved with this <noun> »).
-- Save, Save As et Open passent par le dialogue extensions.editor_fileDialog, enraciné sur l'étagère (siteAssets.ensureRoot). Le dialogue d'ouverture sélectionne un dossier, pas un fichier.
-- Le module dépend de session (liaison au dossier via reattach, boundPath, attachment, unbind, markEdited) et de siteAssets.
+- cfg: toolId (session key and model.json label), kind ('building', 'openSpace', 'carPark'), noun (name in tooltips), stateKey (document key in model.json state), editMode (edit mode to choose on opening), hasContent(doc), bakeRun(doc) -> ok, folder written or reason, applyState(state) -> ok, reason, rename(doc, name) (name set via the tool's undo).
+- The chosen folders and typed names are processed at the top of the next frame (settle / buttons), because the dialog that produced them is still being drawn and opening a site replaces the whole document.
+- open refuses a folder whose model.json was written by another tool ("that folder holds a <tool> document") or without an editable state ("no editable model saved with this <noun>").
+- Save, Save As and Open go through the extensions.editor_fileDialog dialog, rooted on the shelf (siteAssets.ensureRoot). The open dialog selects a folder, not a file.
+- The module depends on session (folder binding via reattach, boundPath, attachment, unbind, markEdited) and on siteAssets.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_siteLibrary.new(cfg)` | Fabrique la liaison d'un outil à son étagère. Renvoie une table avec les fonctions : save(doc, name) (écrit le document dans la bibliothèque sous un nom, qui est aussi son dossier ; un seul chemin pour Save, Save As et Rename ; renvoie ok), open(dir) (rouvre un site cuit depuis son model.json et s'y lie ; renvoie ok, erreur), buttons(doc) (dessine Save, Save As, Open), settle() (ouvre le dossier choisi avant tout dessin), unbind() (détache du site ouvert et marque modifié), saveOnLeave(doc) (à la sortie de l'éditeur : réécrit le site s'il a changé, ou lui donne un nom libre, avec suffixe numérique), boundName() (nom du dossier lié ou nil), boundPath() (dossier lié), attachment() (liaison et état modifié), reattach(at) et setOnOpened(fn) (à lancer une fois un document chargé). | 35 |
+| `editor_toolUtilities_siteLibrary.new(cfg)` | Builds a tool's binding to its shelf. Returns a table with the functions: save(doc, name) (writes the document into the library under a name, which is also its folder; a single path for Save, Save As and Rename; returns ok), open(dir) (reopens a baked site from its model.json and binds to it; returns ok, error), buttons(doc) (draws Save, Save As, Open), settle() (opens the chosen folder before any drawing), unbind() (detaches from the open site and marks modified), saveOnLeave(doc) (on leaving the editor: rewrites the site if it changed, or gives it a free name, with numeric suffix), boundName() (name of the bound folder or nil), boundPath() (bound folder), attachment() (binding and modified state), reattach(at) and setOnOpened(fn) (to run once a document is loaded). | 35 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_siteLibrary.new(cfg)`
 
-Fabrique la liaison d'un outil à son étagère. Renvoie une table avec les fonctions : save(doc, name) (écrit le document dans la bibliothèque sous un nom, qui est aussi son dossier ; un seul chemin pour Save, Save As et Rename ; renvoie ok), open(dir) (rouvre un site cuit depuis son model.json et s'y lie ; renvoie ok, erreur), buttons(doc) (dessine Save, Save As, Open), settle() (ouvre le dossier choisi avant tout dessin), unbind() (détache du site ouvert et marque modifié), saveOnLeave(doc) (à la sortie de l'éditeur : réécrit le site s'il a changé, ou lui donne un nom libre, avec suffixe numérique), boundName() (nom du dossier lié ou nil), boundPath() (dossier lié), attachment() (liaison et état modifié), reattach(at) et setOnOpened(fn) (à lancer une fois un document chargé).
+Builds a tool's binding to its shelf. Returns a table with the functions: save(doc, name) (writes the document into the library under a name, which is also its folder; a single path for Save, Save As and Rename; returns ok), open(dir) (reopens a baked site from its model.json and binds to it; returns ok, error), buttons(doc) (draws Save, Save As, Open), settle() (opens the chosen folder before any drawing), unbind() (detaches from the open site and marks modified), saveOnLeave(doc) (on leaving the editor: rewrites the site if it changed, or gives it a free name, with numeric suffix), boundName() (name of the bound folder or nil), boundPath() (bound folder), attachment() (binding and modified state), reattach(at) and setOnOpened(fn) (to run once a document is loaded).
 
 - `cfg` (*table*) : { toolId, kind, noun, stateKey, editMode, hasContent, bakeRun, applyState, rename }.
-- **renvoie** : table Liaison avec save, open, buttons, settle, unbind, saveOnLeave, boundName, boundPath, attachment, reattach, setOnOpened.
+- **returns**: table Binding with save, open, buttons, settle, unbind, saveOnLeave, boundName, boundPath, attachment, reattach, setOnOpened.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/siteLibrary.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/siteLibrary.lua`.*

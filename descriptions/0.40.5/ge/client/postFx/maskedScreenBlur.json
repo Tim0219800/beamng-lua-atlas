@@ -1,4 +1,4 @@
 {
   "path": "lua/ge/client/postFx/maskedScreenBlur.lua",
-  "module": "Flou d'écran masqué. Crée l'objet « ScreenBlurFX » (type PostEffectMaskedBlur, activé, rendu après OverlayRender, cible à 40 % de l'écran) avec trois sous-effets : flou Y, flou X (shader DOF_Gausian.cs.hlsl) puis SimpleBlendShader qui mélange l'écran net et l'image floue selon le masque #screenBlurMask. Sert par exemple à flouter l'arrière-plan sous des menus. Aucune fonction exportée."
+  "module": "Masked screen blur. Creates the object \"ScreenBlurFX\" (type PostEffectMaskedBlur, enabled, rendered after OverlayRender, target at 40% of the screen) with three sub-effects: Y blur, X blur (shader DOF_Gausian.cs.hlsl) then SimpleBlendShader which mixes the sharp screen and the blurred image according to the #screenBlurMask mask. Used for example to blur the background under menus. No exported function."
 }

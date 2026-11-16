@@ -2,29 +2,29 @@
 -- tim19Atlas stub generated from lua/common/devUtils.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Écrit en JSON un instantané des variables globales, des modules (contenu et locales) et des extensions chargées. Les fonctions et userdata sont retirés, les tables aplaties (flattenTable).
----Source : lua/common/devUtils.lua:145
----@param filename string Fichier JSON de sortie (via jsonWriteFile).
+--- Writes as JSON a snapshot of the global variables, the modules (contents and locals) and the loaded extensions. Functions and userdata are removed, tables flattened (flattenTable).
+---Source: lua/common/devUtils.lua:145
+---@param filename string Output JSON file (via jsonWriteFile).
 function createGlobalSnapshot(filename) end
 
---- Compile puis exécute la chaîne cmd avec xpcall, en remplaçant temporairement print pour capturer les sorties. En cas d'erreur de syntaxe ou d'exécution, renvoie une chaîne commençant par 'Error: '.
----Source : lua/common/devUtils.lua:10
----@param cmd string Code Lua à exécuter.
----@param source string|nil Nom de chunk pour les messages d'erreur (défaut 'executeLuaSandboxed').
----@return any  Résultat de l'exécution (1re valeur renvoyée par le chunk), ou chaîne 'Error: ...'.
----@return string[]|nil  Lignes capturées par print ; nil en cas d'erreur.
+--- Compiles then runs the string cmd with xpcall, temporarily replacing print to capture output. On a syntax or runtime error, returns a string starting with 'Error: '.
+---Source: lua/common/devUtils.lua:10
+---@param cmd string Lua code to execute.
+---@param source string|nil Chunk name for error messages (default 'executeLuaSandboxed').
+---@return any  Execution result (1st value returned by the chunk), or the string 'Error: ...'.
+---@return string[]|nil  Lines captured by print; nil on error.
 function executeLuaSandboxed(cmd, source) end
 
---- Renvoie les variables locales (upvalues) utilisées par les fonctions d'un module, en parcourant récursivement les fonctions, leurs upvalues et la métatable. Ignore les globales, les champs du module, le module lui-même et ___locals.
----Source : lua/common/devUtils.lua:89
----@param moduleTbl table Table du module à inspecter.
----@return table<string, any>  Nom d'upvalue vers valeur.
+--- Returns the local variables (upvalues) used by a module's functions, recursively walking the functions, their upvalues and the metatable. Ignores globals, module fields, the module itself and ___locals.
+---Source: lua/common/devUtils.lua:89
+---@param moduleTbl table Module table to inspect.
+---@return table<string, any>  Upvalue name to value.
 function getModuleLocals(moduleTbl) end
 
---- Parcourt tbl et détecte les sous-tables atteintes par plusieurs chemins (références partagées ou cycles).
----Source : lua/common/devUtils.lua:200
----@param tbl table Table à analyser.
----@return integer|nil  Nombre de tables vues plus d'une fois ; nil si tbl n'est pas une table.
----@return table<string, string[]>  Pour chaque table dupliquée (adresse en texte), la liste de ses chemins.
+--- Walks tbl and detects sub-tables reached through several paths (shared references or cycles).
+---Source: lua/common/devUtils.lua:200
+---@param tbl table Table to analyze.
+---@return integer|nil  Number of tables seen more than once; nil if tbl is not a table.
+---@return table<string, string[]>  For each duplicated table (address as text), the list of its paths.
 function tableFindRecursion(tbl) end
 

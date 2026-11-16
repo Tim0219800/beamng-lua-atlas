@@ -2,109 +2,109 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/raceEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre principale « Race Tool » de l'éditeur de courses/chemins (menu Gameplay > Race/Path Editor, mode d'édition « Edit Races »). Elle gère le fichier de course courant (*.race.json, dossier par défaut /gameplay/races/) : charger, sauvegarder, nouvelle course, copie depuis un Time Trials de scénario, liste de toutes les courses. Elle héberge les sous-fenêtres (pathnodes, segments, startPositions, trackLayout, timeTrials, tools) et une fenêtre « Race Test » (testing). Les chargements passent par l'historique d'édition (annuler/rétablir). Le chemin courant est un objet gameplay/race/path.
---- Accès : extension `editor_raceEditor` : `extensions.load("editor_raceEditor")`, puis la globale `editor_raceEditor`
+--- Main "Race Tool" window of the race/path editor (menu Gameplay > Race/Path Editor, edit mode "Edit Races"). It manages the current race file (*.race.json, default folder /gameplay/races/): load, save, new race, copy from a scenario Time Trials, list of all races. It hosts the sub-windows (pathnodes, segments, startPositions, trackLayout, timeTrials, tools) and a "Race Test" window (testing). Loads go through the edit history (undo/redo). The current path is a gameplay/race/path object.
+--- Access: extension `editor_raceEditor`: `extensions.load("editor_raceEditor")`, then the global `editor_raceEditor`
 ---@class editor_raceEditor
 editor_raceEditor = {}
 
---- Indique si le gizmo d'édition est autorisé : vrai quand le mode d'édition courant est « Edit Races ».
----Source : lua/ge/extensions/editor/raceEditor.lua:551
----@return boolean  true si le mode d'édition courant est celui de l'éditeur de course.
+--- Returns whether the edit gizmo is allowed: true when the current edit mode is "Edit Races".
+---Source: lua/ge/extensions/editor/raceEditor.lua:551
+---@return boolean  true if the current edit mode is the race editor's.
 function editor_raceEditor.allowGizmo() end
 
---- Appelle autoConfig() puis getAiPath() sur le chemin courant pour recalculer la route IA (et la distance aiPathDistance).
----Source : lua/ge/extensions/editor/raceEditor.lua:28
+--- Calls autoConfig() then getAiPath() on the current path to recompute the AI route (and the aiPathDistance distance).
+---Source: lua/ge/extensions/editor/raceEditor.lua:28
 function editor_raceEditor.calculateAiRoute() end
 
---- À appeler quand le chemin courant a été modifié hors de la fenêtre : redonne le chemin à la sous-fenêtre active (setPath).
----Source : lua/ge/extensions/editor/raceEditor.lua:555
+--- Call when the current path was modified outside the window: gives the path back to the active sub-window (setPath).
+---Source: lua/ge/extensions/editor/raceEditor.lua:555
 function editor_raceEditor.changedFromExternal() end
 
---- Renvoie le chemin complet du fichier de course courant (dossier + nom).
----Source : lua/ge/extensions/editor/raceEditor.lua:552
----@return string  Par défaut « /gameplay/races/NewRace.race.json ».
+--- Returns the full path of the current race file (folder + name).
+---Source: lua/ge/extensions/editor/raceEditor.lua:552
+---@return string  Default "/gameplay/races/NewRace.race.json".
 function editor_raceEditor.getCurrentFilename() end
 
---- Renvoie l'objet gameplay/race/path en cours d'édition.
----Source : lua/ge/extensions/editor/raceEditor.lua:553
----@return table  Objet chemin de course (pathnodes, segments, startPositions…).
+--- Returns the gameplay/race/path object being edited.
+---Source: lua/ge/extensions/editor/raceEditor.lua:553
+---@return table  Race path object (pathnodes, segments, startPositions...).
 function editor_raceEditor.getCurrentPath() end
 
---- Renvoie la sous-fenêtre « tools » de l'éditeur de course.
----Source : lua/ge/extensions/editor/raceEditor.lua:567
----@return table  Instance du module raceEditor/tools.
+--- Returns the race editor's "tools" sub-window.
+---Source: lua/ge/extensions/editor/raceEditor.lua:567
+---@return table  Instance of the raceEditor/tools module.
 function editor_raceEditor.getToolsWindow() end
 
---- Indique si la fenêtre « Race Tool » est affichée.
----Source : lua/ge/extensions/editor/raceEditor.lua:554
----@return boolean  Visibilité de la fenêtre raceEditorTool.
+--- Returns whether the "Race Tool" window is displayed.
+---Source: lua/ge/extensions/editor/raceEditor.lua:554
+---@return boolean  Visibility of the raceEditorTool window.
 function editor_raceEditor.isVisible() end
 
---- Lit un fichier .race.json, construit un nouveau chemin (onDeserialized), recalcule la route IA et valide une action d'historique « Set path to <nom> » pour le remplacer. Ne fait rien si filename est nil ; logue une erreur si le fichier est introuvable.
----Source : lua/ge/extensions/editor/raceEditor.lua:79
----@param filename string|nil Chemin du fichier .race.json.
----@return table|nil  currentPath (voir notes : peut être l'ancien chemin).
+--- Reads a .race.json file, builds a new path (onDeserialized), recomputes the AI route and commits a "Set path to <name>" history action to replace it. Does nothing if filename is nil; logs an error if the file is not found.
+---Source: lua/ge/extensions/editor/raceEditor.lua:79
+---@param filename string|nil Path of the .race.json file.
+---@return table|nil  currentPath (see notes: may be the old path).
 function editor_raceEditor.loadRace(filename) end
 
---- Appelé après un rechargement Lua avec l'état sauvegardé ; restaure le chemin, le nom et le dossier du fichier, puis recalcule la route IA.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:520
----@param data table|nil Table de onSerialize : path, previousFilepath, previousFilename.
+--- Called after a Lua reload with the saved state; restores the path, the file name and folder, then recomputes the AI route.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:520
+---@param data table|nil onSerialize table: path, previousFilepath, previousFilename.
 function editor_raceEditor.onDeserialized(data) end
 
---- Appelé à chaque frame. Dessine la fenêtre Race Tool (menu File, listes, onglets des sous-fenêtres) et repasse en mode objectSelect si la fenêtre est masquée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:254
+--- Called every frame. Draws the Race Tool window (File menu, lists, sub-window tabs) and switches back to objectSelect mode if the window is hidden.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:254
 function editor_raceEditor.onEditorGui() end
 
---- Déclare le mode d'édition raceEditMode, enregistre la fenêtre (500x500) et l'entrée de menu, puis instancie les sous-fenêtres et la fenêtre de test.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:471
+--- Declares the raceEditMode edit mode, registers the window (500x500) and the menu entry, then instantiates the sub-windows and the test window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:471
 function editor_raceEditor.onEditorInitialized() end
 
---- Déclare la catégorie de préférences raceEditor (directionalNodes, showAiRoute, showCustomFields, useSimpleDrag).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:535
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Declares the raceEditor preferences category (directionalNodes, showAiRoute, showCustomFields, useSimpleDrag).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:535
+---@param prefsRegistry table Editor preferences registry.
 function editor_raceEditor.onEditorRegisterPreferences(prefsRegistry) end
 
---- Si la fenêtre masquée est raceEditorTool, repasse en mode objectSelect.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:499
----@param windowName string Nom de la fenêtre masquée.
+--- If the hidden window is raceEditorTool, switches back to objectSelect mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:499
+---@param windowName string Name of the hidden window.
 function editor_raceEditor.onEditorToolWindowHide(windowName) end
 
---- Appelé avant un rechargement Lua ; sérialise le chemin courant et le dernier dossier/nom de fichier.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:511
+--- Called before a Lua reload; serializes the current path and the last folder/file name.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:511
 ---@return table  {path, previousFilepath, previousFilename}.
 function editor_raceEditor.onSerialize() end
 
---- Hook de mise à jour ; dessine la fenêtre « Race Test » (testingWindow:draw(dtSim)) quand elle est ouverte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:113
----@param dtReal number Delta temps réel (non utilisé).
----@param dtSim number Delta temps de simulation passé à la fenêtre de test.
----@param dtRaw number Delta temps brut (non utilisé).
+--- Update hook; draws the "Race Test" window (testingWindow:draw(dtSim)) when it is open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:113
+---@param dtReal number Real-time delta (unused).
+---@param dtSim number Simulation time delta passed to the test window.
+---@param dtRaw number Raw time delta (unused).
 function editor_raceEditor.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Si la fenêtre qui prend le focus est raceEditorTool, active le mode d'édition raceEditMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor.lua:505
----@param windowName string Nom de la fenêtre.
+--- If the window gaining focus is raceEditorTool, activates the raceEditMode edit mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor.lua:505
+---@param windowName string Window name.
 function editor_raceEditor.onWindowGotFocus(windowName) end
 
---- Sérialise une course et l'écrit en JSON (jsonWriteFile, joli format). Met à jour le dossier et le nom de fichier mémorisés.
----Source : lua/ge/extensions/editor/raceEditor.lua:67
----@param race table|nil Chemin de course à sauvegarder ; si nil, utilise le chemin courant.
----@param savePath string Chemin complet du fichier de sortie.
+--- Serializes a race and writes it as JSON (jsonWriteFile, pretty format). Updates the remembered folder and file name.
+---Source: lua/ge/extensions/editor/raceEditor.lua:67
+---@param race table|nil Race path to save; if nil, uses the current path.
+---@param savePath string Full path of the output file.
 function editor_raceEditor.saveRace(race, savePath) end
 
---- Ouvre la fenêtre « Race Test », lui donne le chemin courant et prépare la course de test (testingWindow:setupRace).
----Source : lua/ge/extensions/editor/raceEditor.lua:106
+--- Opens the "Race Test" window, gives it the current path and prepares the test race (testingWindow:setupRace).
+---Source: lua/ge/extensions/editor/raceEditor.lua:106
 function editor_raceEditor.setupRace() end
 
---- Vide la sélection, affiche la fenêtre Race Tool et active le mode d'édition raceEditMode.
----Source : lua/ge/extensions/editor/raceEditor.lua:447
+--- Clears the selection, shows the Race Tool window and activates the raceEditMode edit mode.
+---Source: lua/ge/extensions/editor/raceEditor.lua:447
 function editor_raceEditor.show() end
 

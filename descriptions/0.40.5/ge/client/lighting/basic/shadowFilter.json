@@ -1,9 +1,9 @@
 {
   "path": "lua/ge/client/lighting/basic/shadowFilter.lua",
-  "module": "Crée le filtre de flou des ombres de l'éclairage basique : deux ShaderData (BL_ShadowFilterShaderV et BL_ShadowFilterShaderH, même compute shader shadowFilter.cs.hlsl avec BLUR_DIR = (1,0) puis (0,1)) et un PostEffect « BL_ShadowFilterPostFx » qui enchaîne les deux passes. Chargé par lighting/basic/init.lua. Aucune fonction exportée.",
+  "module": "Creates the shadow blur filter of basic lighting: two ShaderData (BL_ShadowFilterShaderV and BL_ShadowFilterShaderH, same compute shader shadowFilter.cs.hlsl with BLUR_DIR = (1,0) then (0,1)) and a PostEffect \"BL_ShadowFilterPostFx\" that chains the two passes. Loaded by lighting/basic/init.lua. No exported function.",
   "notes": [
-    "La variable du second passage s'appelle aussi bl_ShadowFilterShaderH dans le code mais désigne un PostEffect (nom réutilisé) ; il est enregistré sans nom.",
-    "Le shader nommé « ...V » reçoit la direction horizontale (1,0) et le « ...H » la verticale (0,1) : les suffixes ne correspondent pas à la direction réelle."
+    "The variable of the second pass is also named bl_ShadowFilterShaderH in the code but refers to a PostEffect (reused name); it is registered without a name.",
+    "The shader named \"...V\" receives the horizontal direction (1,0) and the \"...H\" the vertical (0,1): the suffixes do not match the actual direction."
   ],
   "fields": {},
   "functions": {}

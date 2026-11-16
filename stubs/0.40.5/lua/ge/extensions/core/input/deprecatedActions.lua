@@ -2,8 +2,8 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/input/deprecatedActions.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Table de données (le fichier retourne une table) qui associe d'anciens noms d'actions d'entrée à leur remplaçant (`replacement`) ou les déclare abandonnés (`obsolete = true`). Consultée par core_input_actions.upgradeAction pour migrer les anciens fichiers de bindings. Un moddeur ne l'appelle pas directement ; il peut y chercher le nom actuel d'une ancienne action.
---- Accès : extension `core_input_deprecatedActions` : `extensions.load("core_input_deprecatedActions")`, puis la globale `core_input_deprecatedActions`
+--- Data table (the file returns a table) that maps old input action names to their replacement (`replacement`) or declares them abandoned (`obsolete = true`). Consulted by core_input_actions.upgradeAction to migrate old bindings files. A modder does not call it directly; they can look in it for the current name of an old action.
+--- Access: extension `core_input_deprecatedActions`: `extensions.load("core_input_deprecatedActions")`, then the global `core_input_deprecatedActions`
 ---@class core_input_deprecatedActions
 ---@field accelerate_direct table {replacement = 'accelerate'}.
 ---@field annotatedScreenShot table
@@ -75,8 +75,8 @@
 ---@field select_all_road_nodes table
 ---@field setZoomFOV table
 ---@field show_metrics table
----@field slow_motion table {replacement = 'toggle_slow_motion'} (idem realtime_motion).
----@field steer table {replacement = 'steering'} (idem steer_direct).
+---@field slow_motion table {replacement = 'toggle_slow_motion'} (same as realtime_motion).
+---@field steer table {replacement = 'steering'} (same as steer_direct).
 ---@field steer_direct table
 ---@field switch_camera table {replacement = 'switch_camera_next'}.
 ---@field switch_next_vehicle_multiseat table

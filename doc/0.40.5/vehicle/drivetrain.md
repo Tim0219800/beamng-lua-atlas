@@ -1,12 +1,12 @@
 # `drivetrain`
 
-*Fichier : `lua/vehicle/drivetrain.lua` · VM : Véhicule · 83 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/drivetrain.lua` · VM: Vehicle · 83 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `drivetrain`
+**Access:** global `drivetrain`
 
-Couche de compatibilité ascendante : reproduit l'ancienne API `drivetrain` en lisant les périphériques du nouveau système `powertrain` ('mainEngine' et 'gearbox') à chaque frame. Un vieux mod ou script qui lit drivetrain.rpm, drivetrain.gear, drivetrain.torque… continue de fonctionner. Les nouveaux développements devraient utiliser powertrain directement.
+Backward compatibility layer: reproduces the old `drivetrain` API by reading the devices of the new `powertrain` system ('mainEngine' and 'gearbox') every frame. An old mod or script that reads drivetrain.rpm, drivetrain.gear, drivetrain.torque... keeps working. New developments should use powertrain directly.
 
-## Exemple
+## Example
 
 ```lua
 local rpm = drivetrain.rpm
@@ -14,65 +14,65 @@ local gear = drivetrain.gear
 drivetrain.shiftToGear(1)
 ```
 
-## Remarques
+## Notes
 
-- Les champs sont recalculés par updateProxy (updateGFX) à chaque frame depuis powertrain.getDevice('mainEngine') et ('gearbox'). rpm = outputAV1 du moteur * 9.5493 (rad/s vers tr/min).
-- updateProxy écrit aussi electrics.values.gear_M = gearIndex de la boîte (clé lue par l'UI).
-- Champs jamais mis à jour par updateProxy (restent à leur valeur initiale) : brake, fuelLeakRate, fuel, fuelCapacity, fuelUsage, shifterPosition, wheelCount, avgAV. M.shifterMode est forcé à 2 à chaque frame. M.esc est un tableau de fonctions nop.
-- M.engineAV vaut nil si le moteur 'mainEngine' n'existe pas (les autres champs ont un repli à 0) ; init ne le remet pas à zéro.
-- setShifterMode : seul le mode 2 donne 'arcade', tout autre mode donne 'realistic' (les modes 0, 1 et 3 ne sont pas distingués).
+- The fields are recomputed by updateProxy (updateGFX) every frame from powertrain.getDevice('mainEngine') and ('gearbox'). rpm = engine outputAV1 * 9.5493 (rad/s to RPM).
+- updateProxy also writes electrics.values.gear_M = gearbox gearIndex (key read by the UI).
+- Fields never updated by updateProxy (keep their initial value): brake, fuelLeakRate, fuel, fuelCapacity, fuelUsage, shifterPosition, wheelCount, avgAV. M.shifterMode is forced to 2 every frame. M.esc is an array of nop functions.
+- M.engineAV is nil if the 'mainEngine' engine does not exist (the other fields fall back to 0); init does not reset it to zero.
+- setShifterMode: only mode 2 gives 'arcade', any other mode gives 'realistic' (modes 0, 1 and 3 are not distinguished).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `drivetrain.init()` | Appelé à l'init et au reset : assigne M.wheels et remet rpm, engineDisabled, gear, torqueTransmission et engineLoad à zéro. *(interne)* | 66 |
-| `drivetrain.reset()` | Identique à init. *(interne)* | 66 |
-| `drivetrain.setShifterMode(v)` | Fixe le mode de boîte : mode 2 donne 'arcade', tout autre valeur 'realistic' (controller.mainController.setGearboxMode). | 49 |
-| `drivetrain.shiftToGear(gear)` | Demande un rapport via controller.mainController.shiftToGearIndex. | 62 |
-| `drivetrain.updateGFX()` | Appelé chaque frame (updateProxy) : recopie l'état du moteur principal et de la boîte dans les champs drivetrain. *(interne)* | 31 |
+| `drivetrain.init()` | Called at init and reset: assigns M.wheels and resets rpm, engineDisabled, gear, torqueTransmission and engineLoad to zero. *(internal)* | 66 |
+| `drivetrain.reset()` | Same as init. *(internal)* | 66 |
+| `drivetrain.setShifterMode(v)` | Sets the gearbox mode: mode 2 gives 'arcade', any other value 'realistic' (controller.mainController.setGearboxMode). | 49 |
+| `drivetrain.shiftToGear(gear)` | Requests a gear via controller.mainController.shiftToGearIndex. | 62 |
+| `drivetrain.updateGFX()` | Called every frame (updateProxy): copies the state of the main engine and gearbox into the drivetrain fields. *(internal)* | 31 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `drivetrain.setShifterMode(v)`
 
-Fixe le mode de boîte : mode 2 donne 'arcade', tout autre valeur 'realistic' (controller.mainController.setGearboxMode).
+Sets the gearbox mode: mode 2 gives 'arcade', any other value 'realistic' (controller.mainController.setGearboxMode).
 
-- `v` (*integer*) : 0 manuel, 1 manuel embrayage auto, 2 arcade, 3 automatique réaliste (commentaire du code).
+- `v` (*integer*) : 0 manual, 1 manual with auto clutch, 2 arcade, 3 realistic automatic (code comment).
 
 #### `drivetrain.shiftToGear(gear)`
 
-Demande un rapport via controller.mainController.shiftToGearIndex.
+Requests a gear via controller.mainController.shiftToGearIndex.
 
-- `gear` (*integer*) : Index de rapport voulu.
+- `gear` (*integer*) : Wanted gear index.
 
 #### `drivetrain.updateGFX()`
 
-Appelé chaque frame (updateProxy) : recopie l'état du moteur principal et de la boîte dans les champs drivetrain.
+Called every frame (updateProxy): copies the state of the main engine and gearbox into the drivetrain fields.
 
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `avgAV` | number | Jamais mis à jour. |
-| `brake` | number | Jamais mis à jour (reste à 0). |
-| `engineAV` | number|nil | Vitesse angulaire du moteur (rad/s) ou nil sans moteur principal. |
-| `engineDisabled` | boolean | isDisabled du moteur principal. |
-| `engineLoad` | number | engineLoad du moteur principal. |
-| `esc` | table | Faux objet ESC de compatibilité : update, updateGFX, toggleESCMode, getCarData valent nop, escPulse = 0. |
-| `fuel` | number | Valeur par défaut 100, jamais mise à jour. |
-| `fuelCapacity` | number | Valeur par défaut 100, jamais mise à jour. |
-| `fuelLeakRate` | number | Débit de fuite de carburant (L/s) ; jamais mis à jour. |
-| `fuelUsage` | number | Jamais mis à jour. |
-| `gear` | integer | Index de rapport de la boîte ('gearbox'). |
-| `rpm` | number | Régime moteur en tr/min. |
-| `shifterMode` | integer | Toujours 2 (arcade) après updateGFX. |
-| `shifterPosition` | number | Jamais mis à jour. |
-| `throttle` | number | Copie de electrics.values.throttle. |
-| `torque` | number | Couple de sortie du moteur principal (outputTorque1, N·m). |
-| `torqueTransmission` | number | Couple de sortie de la boîte (N·m). |
-| `wheelCount` | integer | Jamais mis à jour. |
+| `avgAV` | number | Never updated. |
+| `brake` | number | Never updated (stays at 0). |
+| `engineAV` | number|nil | Engine angular velocity (rad/s) or nil without a main engine. |
+| `engineDisabled` | boolean | isDisabled of the main engine. |
+| `engineLoad` | number | engineLoad of the main engine. |
+| `esc` | table | Fake compatibility ESC object: update, updateGFX, toggleESCMode, getCarData are nop, escPulse = 0. |
+| `fuel` | number | Default value 100, never updated. |
+| `fuelCapacity` | number | Default value 100, never updated. |
+| `fuelLeakRate` | number | Fuel leak rate (L/s); never updated. |
+| `fuelUsage` | number | Never updated. |
+| `gear` | integer | Gear index of the gearbox ('gearbox'). |
+| `rpm` | number | Engine speed in RPM. |
+| `shifterMode` | integer | Always 2 (arcade) after updateGFX. |
+| `shifterPosition` | number | Never updated. |
+| `throttle` | number | Copy of electrics.values.throttle. |
+| `torque` | number | Main engine output torque (outputTorque1, N·m). |
+| `torqueTransmission` | number | Gearbox output torque (N·m). |
+| `wheelCount` | integer | Never updated. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/drivetrain.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/drivetrain.lua`.*

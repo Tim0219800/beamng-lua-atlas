@@ -1,46 +1,46 @@
 # `scenario_raceMarkers_sideHologramMarker`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua` · VM : Game Engine (GE) · 546 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua` · VM: Game Engine (GE) · 546 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/sideHologramMarker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/sideHologramMarker")` (file under extensions/ but not a regular extension)
 
-Marqueur de checkpoint « portique hologramme » : deux piliers (portail gauche et droit), chacun avec un cône au sol, une colonne haute, un cylindre fin qui relie le sol au cône, plus une flèche flottante au centre qui pointe vers le checkpoint suivant. Les pieds des piliers sont posés sur le sol par lancer de rayon (Engine.castRay, collision des arbres de la forêt temporairement coupée). Le module renvoie un constructeur : require('scenario/raceMarkers/sideHologramMarker')(id) donne un objet de la classe C.
+"Hologram gantry" checkpoint marker: two pillars (left and right portal), each with a cone on the ground, a tall column, a thin cylinder linking the ground to the cone, plus a floating arrow in the center pointing to the next checkpoint. The pillar feet are placed on the ground by raycast (Engine.castRay, forest tree collision temporarily disabled). The module returns a constructor: require('scenario/raceMarkers/sideHologramMarker')(id) gives an object of class C.
 
-## Remarques
+## Notes
 
-- setToCheckpoint(wp) lit wp.pos, wp.radius (demi-écart entre piliers), wp.normal (défaut (1,1,0) normalisé), wp.nextPos (position du checkpoint suivant, oriente la flèche), wp.fadeNear, wp.fadeFar, wp.minAlpha.
-- Couleurs de pilier par mode : default bleu (0, 0.4, 1), next noir (piliers amincis à 0.75), start et lap vert (0.4, 1, 0.2), recovery jaune, final bleu (0.1, 0.3, 1), branch orange, hidden amincit à 0. Fondu de 0.8 s entre deux modes.
-- Le dernier checkpoint n'a pas de flèche orientée tant que wp.nextPos est absent : la flèche garde alors sa dernière orientation.
-- Le lancer de rayon part de 6 m au-dessus et descend de 25 m ; si le sol est plus de 1 m sous la position d'origine, la position d'origine est conservée (cas des ponts).
-- Les 9 objets créés sont des TSStatic nommés cylinder_marker_<rôle><id>, ajoutés à ScenarioObjectsGroup si présent.
-- La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim).
-- update référence self.leftPillarPos : si update est appelé avant setToCheckpoint (position nil), l'appel plante ; scenario_race_marker appelle toujours setToCheckpoint avant render.
+- setToCheckpoint(wp) reads wp.pos, wp.radius (half the gap between pillars), wp.normal (default (1,1,0) normalized), wp.nextPos (position of the next checkpoint, orients the arrow), wp.fadeNear, wp.fadeFar, wp.minAlpha.
+- Pillar colors per mode: default blue (0, 0.4, 1), next black (pillars thinned to 0.75), start and lap green (0.4, 1, 0.2), recovery yellow, final blue (0.1, 0.3, 1), branch orange, hidden thins to 0. 0.8 s fade between two modes.
+- The last checkpoint has no oriented arrow while wp.nextPos is absent: the arrow then keeps its last orientation.
+- The raycast starts 6 m above and goes down 25 m; if the ground is more than 1 m below the original position, the original position is kept (bridge case).
+- The 9 created objects are TSStatic named cylinder_marker_<role><id>, added to ScenarioObjectsGroup if present.
+- The extracted page shows update(dtSim); the actual signature is update(dt, dtSim).
+- update references self.leftPillarPos: if update is called before setToCheckpoint (position nil), the call crashes; scenario_race_marker always calls setToCheckpoint before render.
 
-## Classe `C`
+## Class `C`
 
-Marqueur portique avec piliers, cônes, colonnes et flèche.
+Gantry marker with pillars, cones, columns and arrow.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_sideHologramMarker")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_sideHologramMarker")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarker(id)` | Supprime un objet à partir de son identifiant. | 509 |
-| `C:clearMarkers()` | Supprime tous les objets créés. | 517 |
-| `C:createMarkers()` | Supprime les anciens objets puis crée les 9 objets. | 495 |
-| `C:createObject(shapeName, objectName)` | Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup. | 473 |
-| `C:hide()` | Appelle setVisibility(false). | 469 |
-| `C:init(id)` | Constructeur : initialise l'état et les couleurs. | 105 |
-| `C:setMode(mode)` | Change de mode : affiche (sauf 'hidden') et lance le fondu. | 413 |
-| `C:setToCheckpoint(wp)` | Calcule les positions au sol des deux piliers par lancers de rayon et place tous les objets. | 300 |
-| `C:setVisibility(v)` | Affiche ou cache les 9 objets. | 425 |
-| `C:show()` | Appelle setVisibility(true). | 470 |
-| `C:update(dt, dtSim)` | Appel par image : balancement vertical, fondu de couleur, taille des colonnes selon la distance, orientation de la flèche vers nextPos. | 145 |
+| `C:clearMarker(id)` | Removes an object from its identifier. | 509 |
+| `C:clearMarkers()` | Deletes all created objects. | 517 |
+| `C:createMarkers()` | Removes the old objects then creates the 9 objects. | 495 |
+| `C:createObject(shapeName, objectName)` | Creates a hidden TSStatic registered under objectName and added to ScenarioObjectsGroup. | 473 |
+| `C:hide()` | Calls setVisibility(false). | 469 |
+| `C:init(id)` | Constructor: initializes the state and the colors. | 105 |
+| `C:setMode(mode)` | Changes mode: shows (except 'hidden') and starts the fade. | 413 |
+| `C:setToCheckpoint(wp)` | Computes the ground positions of the two pillars by raycasts and places all the objects. | 300 |
+| `C:setVisibility(v)` | Shows or hides the 9 objects. | 425 |
+| `C:show()` | Calls setVisibility(true). | 470 |
+| `C:update(dt, dtSim)` | Per-frame call: vertical sway, color fade, column size according to distance, arrow orientation toward nextPos. | 145 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 - `obj:` `delete`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/sideHologramMarker.lua`.*

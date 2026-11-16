@@ -1,0 +1,157 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenRallySettings.lua",
+  "module": "Nœud « StartScreen Rally Settings » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage d'une mission de rallye un panneau « coDriverSelector » : choix du copilote (voicepack), case des notes visuelles et réglages booléens (rallyRepairVehicleOnRecovery, rallyEnableFalseStarts, rallyEnableEarlyTimeControlPenalties). Joue un échantillon audio du copilote choisi. Les choix sont mémorisés en attente et appliqués au clic sur Start (hook onUIStartButtonClicked). Gère aussi le mode « rallyLoop ». Entrée flow, sortie flow (chainFlow).",
+  "notes": [
+    "Les fonctions locales du fichier gèrent l'échantillon audio : intercomCheckAudioObjs, composedSampleAudioObjs, recordedSampleAudioObjs (mission de référence automation_test_track/rallyStage/002-mixedstage, pacenote_27.ogg).",
+    "Le fichier dépend de gameplay/rally/voicepack, util, audioManager et compositors/helpers/textCompositor."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Crée le panneau {type='coDriverSelector', ...} et vide les choix en attente.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Vide pendingValue et pendingSettings.",
+          "internal": true
+        },
+        "getMission": {
+          "desc": "Renvoie la mission rallye de la boucle (loopManager:getRallyLoopMission()) ou, sans boucle, l'activité du gestionnaire.",
+          "params": {
+            "loopManager": {
+              "type": "table|nil",
+              "desc": "Gestionnaire de boucle rallye ou nil."
+            }
+          },
+          "internal": false
+        },
+        "buildLoopOptions": {
+          "desc": "Construit la liste des copilotes pour une mission de boucle rallye (label, value, shortLabel, detail) et la valeur sélectionnée ; renvoie nil si rien n'est disponible.",
+          "params": {
+            "loopManager": {
+              "type": "table",
+              "desc": "Gestionnaire de boucle rallye."
+            }
+          },
+          "internal": false
+        },
+        "buildStageOptions": {
+          "desc": "Idem pour une spéciale rallye standard à partir du rally manager.",
+          "params": {
+            "rm": {
+              "type": "table",
+              "desc": "Rally manager (gameplay_rally.getRallyManager())."
+            }
+          },
+          "internal": false
+        },
+        "buildBoolSettings": {
+          "desc": "Renvoie les réglages booléens de la mission retenus dans settingKeys, avec la valeur en attente si elle existe.",
+          "params": {
+            "mission": {
+              "type": "table|nil",
+              "desc": "Mission dont on lit getUserSettingsData()."
+            }
+          },
+          "internal": false
+        },
+        "work": {
+          "desc": "Construit le panneau (options de copilote, sélection, notes visuelles, réglages booléens, note de boucle) et l'ajoute à l'UI, puis joue le test d'interphone du copilote sélectionné. Sans rally manager ou sans option, logue un avertissement et saute le panneau.",
+          "internal": true
+        },
+        "resolveEntry": {
+          "desc": "Retrouve l'entrée de voicepack correspondant à la valeur choisie (mode boucle ou spéciale).",
+          "params": {
+            "value": {
+              "type": "string",
+              "desc": "Valeur de réglage du copilote."
+            }
+          },
+          "internal": false
+        },
+        "playSample": {
+          "desc": "Réinitialise la file audio d'échantillon puis y met les objets audio donnés (timing du voicepack de l'entrée).",
+          "params": {
+            "entry": {
+              "type": "table|nil",
+              "desc": "Entrée de voicepack."
+            },
+            "audioObjs": {
+              "type": "table|nil",
+              "desc": "Objets audio à jouer ; nil pour couper."
+            }
+          },
+          "internal": false
+        },
+        "onUpdate": {
+          "desc": "Appelé chaque frame comme extension ; fait avancer la file audio de l'échantillon.",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "Delta temps réel (s)."
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "Delta temps simulé (s)."
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "Delta temps brut (s)."
+            }
+          },
+          "internal": true
+        },
+        "onCoDriverSelectedByPanel": {
+          "desc": "Appelé par le panneau quand un copilote est choisi : mémorise le choix et joue un échantillon (composé, enregistré ou test d'interphone).",
+          "params": {
+            "value": {
+              "type": "string",
+              "desc": "Valeur choisie."
+            }
+          },
+          "internal": false
+        },
+        "onVisualPacenotesChangedByPanel": {
+          "desc": "Appelé quand la case notes visuelles change ; mémorise rallyVisualPacenotes en attente.",
+          "params": {
+            "value": {
+              "type": "boolean",
+              "desc": "Nouvel état."
+            }
+          },
+          "internal": false
+        },
+        "onRallyStartSettingChanged": {
+          "desc": "Appelé quand un réglage booléen change : met à jour pendingSettings, mission.lastUserSettings et le panneau. Accepte soit (key, value), soit une table {key, value}.",
+          "params": {
+            "key": {
+              "type": "string|table",
+              "desc": "Clé du réglage ou table payload."
+            },
+            "value": {
+              "type": "boolean|nil",
+              "desc": "Nouvelle valeur."
+            }
+          },
+          "internal": false
+        },
+        "onUIStartButtonClicked": {
+          "desc": "Hook appelé au clic sur Start : coupe l'audio, écrit les réglages en attente via settings.setValue et applique le copilote choisi (applyPick).",
+          "internal": false
+        },
+        "applyPick": {
+          "desc": "Applique le choix de copilote : enregistre rallyVoicepackPick (boucle) ou recharge les assets du voicepack via rm:reloadVoicepackAssets ; logue une erreur en cas d'échec.",
+          "params": {
+            "value": {
+              "type": "string",
+              "desc": "Valeur du copilote choisi."
+            }
+          },
+          "internal": false
+        }
+      }
+    }
+  }
+}

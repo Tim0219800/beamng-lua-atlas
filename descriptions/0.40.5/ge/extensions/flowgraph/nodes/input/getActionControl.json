@@ -1,17 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/input/getActionControl.lua",
-  "module": "Nœud flowgraph « Get Action Control » (repeat_instant). Donne le contrôle (touche/bouton) associé à une action d'entrée via core_input_bindings.getControlForAction(actionName). Sortie : controlName.",
+  "module": "Flowgraph node \"Get Action Control\" (repeat_instant). Gives the control (key/button) bound to an input action via core_input_bindings.getControlForAction(actionName). Output: controlName.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "work": {
-          "desc": "Écrit sur controlName le contrôle lié à actionName.",
+          "desc": "Writes the control bound to actionName to controlName.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

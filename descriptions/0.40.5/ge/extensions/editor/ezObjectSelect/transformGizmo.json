@@ -1,41 +1,76 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/transformGizmo.lua",
-  "module": "Guides visuels 3D de l'outil Easy Object Select pendant une translation, une mise à l'échelle ou une rotation. Dessinés avec debugDrawer : flèches (ligne + prisme) pour la translation, lignes + sphères pour l'échelle, anneau de 64 segments et arc d'angle pour la rotation. Les couleurs sont rouge/vert/bleu pour X/Y/Z ; la longueur du guide dépend de la distance à la caméra (0.16 × distance, bornée entre 1.5 et 30 m).",
+  "module": "3D visual guides of the Easy Object Select tool during a translation, scaling or rotation. Drawn with debugDrawer: arrows (line + prism) for translation, lines + spheres for scale, 64-segment ring and angle arc for rotation. Colors are red/green/blue for X/Y/Z; the guide length depends on the distance to the camera (0.16 × distance, clamped between 1.5 and 30 m).",
   "notes": [
-    "Le paramètre constraint est {axis = \"x\"|\"y\"|\"z\", exclude = boolean} : sans exclude seul l'axe est dessiné, avec exclude les deux autres (contrainte de plan). Sans contrainte les trois axes sont dessinés."
+    "The constraint parameter is {axis = \"x\"|\"y\"|\"z\", exclude = boolean}: without exclude only the axis is drawn, with exclude the other two (plane constraint). Without a constraint all three axes are drawn."
   ],
   "functions": {
     "axisColors": {
-      "desc": "Renvoie la table des couleurs d'axes {x, y, z} (ColorF).",
+      "desc": "Returns the axis color table {x, y, z} (ColorF).",
       "params": {},
-      "returns": [{"type": "table<string, ColorF>", "desc": "Couleurs des axes x, y, z."}],
+      "returns": [
+        {
+          "type": "table<string, ColorF>",
+          "desc": "Colors of the x, y, z axes."
+        }
+      ],
       "internal": false
     },
     "drawTranslate": {
-      "desc": "Dessine les flèches de translation depuis le pivot pour les axes concernés par la contrainte.",
+      "desc": "Draws the translation arrows from the pivot for the axes concerned by the constraint.",
       "params": {
-        "pivot": {"type": "vec3", "desc": "Point d'origine des flèches."},
-        "axes": {"type": "table<string, vec3>", "desc": "Directions des axes x, y, z (monde ou locales)."},
-        "constraint": {"type": "table|nil", "desc": "Contrainte d'axe/plan ({axis, exclude}), ou nil pour les trois axes."}
+        "pivot": {
+          "type": "vec3",
+          "desc": "Origin point of the arrows."
+        },
+        "axes": {
+          "type": "table<string, vec3>",
+          "desc": "Directions of the x, y, z axes (world or local)."
+        },
+        "constraint": {
+          "type": "table|nil",
+          "desc": "Axis/plane constraint ({axis, exclude}), or nil for the three axes."
+        }
       },
       "internal": false
     },
     "drawScale": {
-      "desc": "Dessine les guides de mise à l'échelle (ligne terminée par une sphère) pour les axes concernés.",
+      "desc": "Draws the scale guides (line ending in a sphere) for the concerned axes.",
       "params": {
-        "pivot": {"type": "vec3", "desc": "Centre de l'échelle."},
-        "axes": {"type": "table<string, vec3>", "desc": "Directions des axes x, y, z."},
-        "constraint": {"type": "table|nil", "desc": "Contrainte d'axe/plan, ou nil."}
+        "pivot": {
+          "type": "vec3",
+          "desc": "Scale center."
+        },
+        "axes": {
+          "type": "table<string, vec3>",
+          "desc": "Directions of the x, y, z axes."
+        },
+        "constraint": {
+          "type": "table|nil",
+          "desc": "Axis/plane constraint, or nil."
+        }
       },
       "internal": false
     },
     "drawRotation": {
-      "desc": "Dessine l'anneau de rotation autour de l'axe donné et, si l'angle n'est pas nul, un arc épais de l'angle parcouru depuis le vecteur de départ.",
+      "desc": "Draws the rotation ring around the given axis and, if the angle is not zero, a thick arc of the angle traveled from the start vector.",
       "params": {
-        "pivot": {"type": "vec3", "desc": "Centre de la rotation."},
-        "axis": {"type": "vec3", "desc": "Axe de rotation (normalisé en interne, défaut Z)."},
-        "startVector": {"type": "vec3|nil", "desc": "Vecteur de départ projeté sur le plan de l'anneau."},
-        "angle": {"type": "number|nil", "desc": "Angle en radians."}
+        "pivot": {
+          "type": "vec3",
+          "desc": "Rotation center."
+        },
+        "axis": {
+          "type": "vec3",
+          "desc": "Rotation axis (normalized internally, default Z)."
+        },
+        "startVector": {
+          "type": "vec3|nil",
+          "desc": "Start vector projected onto the ring plane."
+        },
+        "angle": {
+          "type": "number|nil",
+          "desc": "Angle in radians."
+        }
       },
       "internal": false
     }

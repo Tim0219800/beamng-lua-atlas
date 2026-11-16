@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/editor/masterSpline/burn.lua",
+  "module": "Verrouillage (« burn » = lock) d'une Master Spline de l'éditeur. Une Master Spline possède une pile de splines enfants liées (mesh, assembly, road, tree, decal) ; la verrouiller verrouille aussi tous ses enfants : ils restent dans leurs outils, non modifiables, et leur contenu généré est sauvegardé avec le niveau. Le déverrouillage rend tout éditable.",
+  "notes": [
+    "Chaque verrouillage/déverrouillage est une action annulable de editor.history (« Lock Master Spline » / « Unlock Master Spline »).",
+    "Au déverrouillage, les modifications manuelles des enfants (outils mesh et assembly seulement, via eachObjectJumpTable) sont enregistrées dans data.records ; un verrouillage ultérieur (ex. annulation) les restaure via splineLock.restore.",
+    "Met spline.isEnabled = not isLocked et appelle editor.setDirty()."
+  ],
+  "functions": {
+    "run": {
+      "desc": "Action du bouton Burn : verrouille la Master Spline d'indice idx (équivaut à setLocked(idx, true)).",
+      "params": {"idx": {"type": "integer", "desc": "Indice de la Master Spline dans la liste (à partir de 1)."}}
+    },
+    "setLocked": {
+      "desc": "Verrouille ou déverrouille la Master Spline d'indice idx, avec tous ses enfants liés, en une seule transaction annulable. Ne fait rien si l'indice est invalide.",
+      "params": {
+        "idx": {"type": "integer", "desc": "Indice de la Master Spline dans la liste (à partir de 1)."},
+        "isLocked": {"type": "boolean", "desc": "true pour verrouiller, false pour déverrouiller."}
+      }
+    }
+  }
+}

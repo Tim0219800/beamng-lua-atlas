@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/manualzoom.lua",
+  "module": "Filtre de zoom manuel : modifie le champ de vision (FOV, en degrés) selon MoveManager.zoomIn / zoomOut, borné entre fovMin et fovMax, et affiche le FOV via ui_message quand il change. Utilisé par d'autres modes (onboard, bigMap...). Ne fait rien en session OpenXR. Renvoie un constructeur.",
+  "notes": ["Vitesse de zoom : 4.5 * dt * (zoomIn - zoomOut) * fov (proportionnelle au FOV courant).", "Valeurs par défaut : fovDefault 80, fovMin 10, fovMax 120, uiTxt « ui.camera.fov ». La page extraite indique init(fovMin, fovMax, uiTxt) mais le code a quatre paramètres, fovDefault en premier."],
+  "classes": {
+    "C": {
+      "desc": "Filtre de zoom. Champs : fov (courant), fovDefault, fovMin, fovMax, uiTxt.",
+      "functions": {
+        "init": {"desc": "Initialise les bornes et remet le FOV à fovDefault.", "params": {"fovDefault": {"type": "number|nil", "desc": "FOV initial en degrés (80)"}, "fovMin": {"type": "number|nil", "desc": "FOV minimal (10)"}, "fovMax": {"type": "number|nil", "desc": "FOV maximal (120)"}, "uiTxt": {"type": "string|nil", "desc": "clé de traduction du message (ui.camera.fov)"}}},
+        "reset": {"desc": "Remet fov à fovDefault."},
+        "update": {"desc": "Applique le zoom des entrées et écrit data.res.fov.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "true si le FOV a changé d'au moins 0.1 degré (message affiché) ; false en OpenXR"}], "internal": true}
+      }
+    }
+  }
+}

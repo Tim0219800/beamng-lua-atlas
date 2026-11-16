@@ -1,13 +1,27 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/fallback.lua",
-  "module": "Caméra-filtre globale (isGlobal, isFilter, hidden, runningOrder 0.6) qui garantit que data.res.pos et data.res.rot sont définis : si aucune caméra n'a donné de position ou de rotation, elle prend la position du véhicule (data.pos) et la direction vers data.pos. Le module renvoie un constructeur : local cam = require('core/cameraModes/fallback')(options).",
-  "notes": ["Tous les modes de caméra suivent ce schéma : constructeur renvoyant un objet de classe C avec C:init() et C:update(data) ; data est la table camData construite par core_cameraUpdate (data.res = résultat pos/rot/fov/targetPos/nearClip, data.dt, data.veh, data.pos...)."],
+  "module": "Global filter camera (isGlobal, isFilter, hidden, runningOrder 0.6) that guarantees data.res.pos and data.res.rot are set: if no camera provided a position or rotation, it takes the vehicle position (data.pos) and the direction toward data.pos. The module returns a constructor: local cam = require('core/cameraModes/fallback')(options).",
+  "notes": [
+    "All camera modes follow this pattern: a constructor returning an object of class C with C:init() and C:update(data); data is the camData table built by core_cameraUpdate (data.res = pos/rot/fov/targetPos/nearClip result, data.dt, data.veh, data.pos...)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du mode de caméra fallback.",
+      "desc": "Class of the fallback camera mode.",
       "functions": {
-        "init": {"desc": "Définit isGlobal=true, runningOrder=0.6, isFilter=true, hidden=true.", "internal": true},
-        "update": {"desc": "Complète data.res.pos et data.res.rot s'ils sont nil.", "params": {"data": {"type": "table", "desc": "camData de l'image"}}, "internal": true}
+        "init": {
+          "desc": "Sets isGlobal=true, runningOrder=0.6, isFilter=true, hidden=true.",
+          "internal": true
+        },
+        "update": {
+          "desc": "Fills data.res.pos and data.res.rot if they are nil.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "camData of the frame"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

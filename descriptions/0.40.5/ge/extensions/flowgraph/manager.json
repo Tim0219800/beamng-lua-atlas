@@ -1,103 +1,866 @@
 {
   "path": "lua/ge/extensions/flowgraph/manager.lua",
-  "module": "Classe 'manager' du flowgraph : un manager représente UN projet flowgraph (graphes, macros, variables, modules, historique, état d'exécution). Il est créé par core_flowgraphManager (self.fgMgr) et exposé à l'éditeur (fgEditor). Il crée les graphes (dont le graphe d'états), gère les macros et leurs instances, la sélection, copier-coller, annuler-refaire, la sérialisation du projet, et pilote l'exécution : setRunning planifie les graphes, démarre les états, diffuse les hooks (broadcastCall) et notifie les 16 modules (missionReplay, drift, vehicle, level, prefab, timer, button, action, camera, file, traffic, mission, foreach, thread, ui, aiRecording) triés par moduleOrder. Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/manager')(parent).",
+  "module": "Flowgraph 'manager' class: a manager represents ONE flowgraph project (graphs, macros, variables, modules, history, execution state). It is created by core_flowgraphManager (self.fgMgr) and exposed to the editor (fgEditor). It creates the graphs (including the state graph), manages macros and their instances, selection, copy-paste, undo-redo, project serialization, and drives execution: setRunning plans the graphs, starts the states, broadcasts the hooks (broadcastCall) and notifies the 16 modules (missionReplay, drift, vehicle, level, prefab, timer, button, action, camera, file, traffic, mission, foreach, thread, ui, aiRecording) sorted by moduleOrder. The module returns a constructor: require('/lua/ge/extensions/flowgraph/manager')(parent).",
   "notes": [
-    "États d'exécution (runningState) : 'stopped', 'running', 'paused'. L'arrêt normal est différé en fin de frame (queueReset traité par resolveHooksAndReset) ; setRunning(false, true) arrête et détruit immédiatement.",
-    "Les ids de graphe et de nœud sont petits (getNextFreeGraphNodeId) ; les ids de pins et de liens descendent depuis 2^29 (getNextFreePinLinkId).",
-    "Les hooks des modules sont enregistrés via extProxy:submitEventSinks(getHooklist(), getDependencies()) ; getHooklist et getDependencies renvoient {} si le projet n'est pas en 'running'.",
-    "getRelativeAbsolutePath cherche d'abord à la racine, puis dans les dossiers layers de l'activité, ou sinon savedDir puis missionFolder.",
-    "Bug : checkDuplicateId utilise les variables non définies 'i', 'occupied' et 'node' (restes de getNextFreeGraphNodeId) : self.graphs[i] vaut toujours nil et la boucle suivante peut échouer ; la vérification est donc inopérante (elle n'est exécutée que si __safeIds, vrai par défaut).",
-    "Bug mineur : setPaused appelle extProxy:submitEventSinks(self:getHooklist()) sans la liste de dépendances.",
-    "Bug probable : findMacrosUsedInChildren lit graph.children, champ commenté dans graph.lua (jamais rempli).",
-    "createStateFromLibrary utilise 'oldIdMap' non défini (nil) lors de l'appel à graph:_onDeserialized."
+    "Execution states (runningState): 'stopped', 'running', 'paused'. A normal stop is deferred to the end of the frame (queueReset handled by resolveHooksAndReset); setRunning(false, true) stops and destroys immediately.",
+    "Graph and node ids are small (getNextFreeGraphNodeId); pin and link ids count down from 2^29 (getNextFreePinLinkId).",
+    "The modules' hooks are registered via extProxy:submitEventSinks(getHooklist(), getDependencies()); getHooklist and getDependencies return {} if the project is not 'running'.",
+    "getRelativeAbsolutePath looks first at the root, then in the activity's layers folders, or otherwise savedDir then missionFolder.",
+    "Bug: checkDuplicateId uses the undefined variables 'i', 'occupied' and 'node' (leftovers from getNextFreeGraphNodeId): self.graphs[i] is always nil and the following loop can fail; the check is therefore ineffective (it only runs if __safeIds, true by default).",
+    "Minor bug: setPaused calls extProxy:submitEventSinks(self:getHooklist()) without the dependency list.",
+    "Probable bug: findMacrosUsedInChildren reads graph.children, a field commented out in graph.lua (never filled).",
+    "createStateFromLibrary uses the undefined 'oldIdMap' (nil) when calling graph:_onDeserialized."
   ],
   "classes": {
     "C": {
-      "desc": "Objet manager (un projet flowgraph).",
+      "desc": "Manager object (a flowgraph project).",
       "functions": {
-        "init": {"desc": "Crée un projet vide : graphe 'New State' avec un nœud events/onUpdate, graphe d'états, variableStorage, instances des 16 modules, historique (99 entrées max), proxy d'extensions (newExtensionProxy) enregistré dans core_flowgraphManager.runningProxies, groupHelper, et un premier instantané d'historique.", "params": {"parent": {"type": "table", "desc": "extension core_flowgraphManager"}}, "internal": true},
-        "attach": {"desc": "Attache l'éditeur (fgEditor) et met à jour la position des nœuds.", "params": {"fgEditor": {"type": "table", "desc": "éditeur flowgraph"}}, "internal": true},
-        "detached": {"desc": "Détache l'éditeur : vide la sélection.", "internal": true},
-        "checkDuplicateId": {"desc": "Devait signaler un id déjà utilisé (voir notes : code défectueux).", "params": {"id": {"type": "integer", "desc": "id à vérifier"}}, "returns": [{"type": "boolean|nil", "desc": "true si doublon"}], "internal": true},
-        "getNextFreeGraphNodeId": {"desc": "Renvoie le prochain id libre pour un graphe ou un nœud (incrémental, vérifie graphes, macros et leurs nœuds).", "returns": [{"type": "integer", "desc": "id"}]},
-        "getGraphNodeOffset": {"desc": "Décalage d'ids utilisé lors de la désérialisation (défaut 0).", "returns": [{"type": "integer", "desc": "offset"}]},
-        "autoGraphNodeOffset": {"desc": "Définit ce décalage au plus grand id de graphe ou de nœud existant (graphes et macros).", "params": {}},
-        "getNextFreePinLinkId": {"desc": "Renvoie le prochain id libre pour pins et liens, en descendant depuis 2^29.", "returns": [{"type": "integer", "desc": "id"}]},
-        "setupStateGraph": {"desc": "Crée le graphe d'états 'States' avec nœuds stateEntry et stateExit, et (sauf si empty) un stateNode vers le graphe principal.", "params": {"empty": {"type": "boolean|nil", "desc": "ne pas créer de stateNode"}}, "returns": [{"type": "table", "desc": "graphe d'états"}, {"type": "table", "desc": "nœud d'entrée"}, {"type": "table", "desc": "nœud de sortie"}]},
-        "createGraphAsState": {"desc": "Crée un graphe et un nœud d'état (states/stateNode) dans le graphe courant qui le cible.", "params": {"name": {"type": "string", "desc": "nom"}, "isStateGraph": {"type": "boolean", "desc": "graphe d'états"}}, "returns": [{"type": "table", "desc": "graphe"}, {"type": "table", "desc": "nœud d'état"}]},
-        "createGroupState": {"desc": "Crée un état de groupe (graphe d'états enfant du graphe courant) avec entrée et sortie 'success'.", "params": {"name": {"type": "string", "desc": "nom"}}, "returns": [{"type": "table", "desc": "graphe"}, {"type": "table", "desc": "nœud d'état"}]},
-        "createStateFromLibrary": {"desc": "Crée un état depuis une donnée de bibliothèque (graph, node, minId, name).", "params": {"data": {"type": "table", "desc": "données d'état"}}, "returns": [{"type": "table", "desc": "graphe"}, {"type": "table", "desc": "nœud"}]},
-        "selectGraph": {"desc": "Rend un graphe courant (affiche son onglet, mémorise l'instance récente, ouvre le macro si arrêté) et vide la sélection.", "params": {"graph": {"type": "table", "desc": "graphe"}}},
-        "createGraph": {"desc": "Crée un graphe lié au manager ; s'il n'est pas hidden, il est ajouté à self.graphs.", "params": {"name": {"type": "string|nil", "desc": "nom"}, "hidden": {"type": "boolean|nil", "desc": "ne pas enregistrer dans graphs"}, "forceId": {"type": "integer|nil", "desc": "id imposé"}}, "returns": [{"type": "table", "desc": "graphe"}]},
-        "copyGraph": {"desc": "Copie un graphe par sérialisation puis désérialisation, en conservant macroID.", "params": {"oldGraph": {"type": "table", "desc": "graphe source"}, "newName": {"type": "string|nil", "desc": "nom"}, "hidden": {"type": "boolean|nil", "desc": "ne pas enregistrer"}}, "returns": [{"type": "table", "desc": "copie"}]},
-        "convertToMacro": {"desc": "Transforme un graphe en macro : sa copie sérialisée devient un macro (self.macros) et le graphe d'origine devient une instance de ce macro.", "params": {"graph": {"type": "table", "desc": "graphe à convertir"}}, "returns": [{"type": "table|nil", "desc": "macro"}]},
-        "refreshIntegratedPins": {"desc": "Reconstruit les pins d'un nœud macro/integrated d'après son graphe cible en conservant liens et valeurs codées en dur.", "params": {"node": {"type": "table", "desc": "nœud integrated"}}},
-        "findIntegratedNode": {"desc": "Trouve le nœud macro/integrated du graphe parent qui représente ce graphe.", "params": {"graph": {"type": "table", "desc": "graphe"}}, "returns": [{"type": "table|nil", "desc": "nœud"}]},
-        "updateSubgraphs": {"desc": "Remplace récursivement les graphes cibles des nœuds integrated par des copies de type 'instance'.", "params": {"graph": {"type": "table", "desc": "graphe"}}},
-        "updateInstances": {"desc": "Met à jour toutes les instances d'un macro modifié à partir de sa version sérialisée.", "params": {"macro": {"type": "table|nil", "desc": "macro modifié"}}},
-        "saveMacro": {"desc": "Écrit un macro (racine) dans un fichier JSON avec ses tags et met à jour macroPath des instances.", "params": {"macro": {"type": "table", "desc": "graphe macro"}, "savedata": {"type": "table", "desc": "champ filepath"}}},
-        "createNewMacroNode": {"desc": "Crée un nœud macro/integrated dans le graphe courant, instancié depuis un fichier macro.", "params": {"path": {"type": "string", "desc": "chemin du fichier macro"}}},
-        "createInstanceFromMacro": {"desc": "Crée un graphe de type 'instance' depuis un macro et le lie éventuellement à un nœud integrated.", "params": {"macro": {"type": "table", "desc": "graphe macro"}, "node": {"type": "table|nil", "desc": "nœud integrated"}, "forceId": {"type": "integer|nil", "desc": "id imposé"}}, "returns": [{"type": "table", "desc": "instance"}]},
-        "createMacroInstanceFromPath": {"desc": "Crée une instance de macro depuis un fichier (réutilise le macro déjà chargé s'il a le même macroPath).", "params": {"path": {"type": "string", "desc": "chemin du macro"}, "node": {"type": "table", "desc": "nœud integrated"}}, "returns": [{"type": "table", "desc": "instance"}]},
-        "setupCreationWorkflow": {"desc": "Prépare la création de nœud ou de lien depuis l'éditeur (ui_flowgraph_editor).", "internal": true},
-        "creationWorkflow": {"desc": "Traite chaque frame la création de liens et de nœuds par glisser dans l'éditeur.", "internal": true},
-        "deleteGraph": {"desc": "Supprime un graphe (graphes ou macros du manager) ; journalise une erreur s'il n'appartient pas au manager.", "params": {"graph": {"type": "table", "desc": "graphe"}}},
-        "deleteGraphs": {"desc": "Supprime tous les graphes puis tous les macros.", "params": {}},
-        "deletionWorkflow": {"desc": "Traite la suppression par l'éditeur (touche Suppr et sélection).", "internal": true},
-        "unselectAll": {"desc": "Vide la sélection de nœuds et de liens.", "params": {}},
-        "updateEditorSelections": {"desc": "Met à jour les tables de nœuds et de liens sélectionnés à partir de la sélection côté C++.", "internal": true},
-        "findLinkIdFromHiddenLinkId": {"desc": "Renvoie l'id du lien dont hiddenId est donné, dans le graphe courant.", "params": {"hiddenId": {"type": "integer", "desc": "hiddenId du lien"}}, "returns": [{"type": "integer|nil", "desc": "id du lien"}]},
-        "onDragStarted": {"desc": "Début d'un glisser-déposer (dragging = true).", "internal": true},
-        "onDrag": {"desc": "Pendant un glisser-déposer.", "internal": true},
-        "onDragEnded": {"desc": "Fin d'un glisser-déposer.", "internal": true},
-        "dragDropTarget": {"desc": "Appelé par l'éditeur quand un objet est déposé : gère la cible du glisser-déposer.", "params": {"payloadType": {"type": "string", "desc": "type de contenu"}}, "internal": true},
-        "dragDropSource": {"desc": "Appelé par l'éditeur pour préparer la source d'un glisser-déposer.", "params": {"payloadType": {"type": "string", "desc": "type de contenu"}, "data": {"type": "any", "desc": "données"}}, "internal": true},
-        "copyNodes": {"desc": "Copie les nœuds sélectionnés dans le presse-papier interne (copiedNodes).", "params": {}},
-        "pasteNodes": {"desc": "Colle les nœuds copiés dans le graphe courant.", "params": {}},
-        "goToHistory": {"desc": "Restaure un état de l'historique par index.", "params": {"index": {"type": "integer", "desc": "index dans history"}}},
-        "undo": {"desc": "Revient à l'entrée précédente de l'historique.", "params": {}},
-        "redo": {"desc": "Passe à l'entrée suivante de l'historique.", "params": {}},
-        "historySnapshot": {"desc": "Enregistre un instantané sérialisé du projet dans l'historique (ignoré si l'édition est interdite, c'est-à-dire pendant l'exécution).", "params": {"title": {"type": "string", "desc": "titre de l'entrée"}}},
-        "deleteSelectionButton": {"desc": "Supprime la sélection puis ajoute une entrée d'historique 'Deleted Selection'.", "params": {}},
-        "deleteSelection": {"desc": "Supprime les nœuds et liens sélectionnés du graphe courant (si l'édition est autorisée).", "params": {}},
-        "draw": {"desc": "Dessine le projet dans l'éditeur à chaque frame (ui).", "params": {"dtReal": {"type": "number", "desc": "dt réel"}, "dtSim": {"type": "number", "desc": "dt simulation"}, "dtRaw": {"type": "number", "desc": "dt brut"}}, "internal": true},
-        "getAvailableMacros": {"desc": "Liste les fichiers macros JSON du dossier /flowgraphEditor/macros/ (par nom, avec le champ path).", "returns": [{"type": "table<string, table>", "desc": "macros par nom"}]},
-        "getAvailableStateTemplates": {"desc": "Renvoie les modèles d'états de core_flowgraphManager.", "returns": [{"type": "table", "desc": "modèles"}]},
-        "getAvailableNodeTemplates": {"desc": "Renvoie les modèles de nœuds (liste et table de recherche par type) du jeu, plus les nœuds personnalisés du dossier customNodes/ du projet s'il est enregistré.", "returns": [{"type": "table", "desc": "liste"}, {"type": "table", "desc": "lookup par nodeType"}]},
-        "getCustomNodeTemplates": {"desc": "Charge les nœuds personnalisés (*Node.lua) depuis savedDir/customNodes/.", "returns": [{"type": "table", "desc": "{lookup, res}"}]},
-        "clearGraph": {"desc": "Vide un graphe (par défaut le courant) : supprime nœuds et liens de l'éditeur puis appelle graph:clear().", "params": {"graph": {"type": "table|nil", "desc": "graphe"}}},
-        "getNextUniqueIdentifier": {"desc": "Renvoie un id unique entre toutes les instances de l'éditeur (délègue à core_flowgraphManager).", "returns": [{"type": "integer", "desc": "id"}]},
-        "_onSerialize": {"desc": "Sérialise tout le projet (graphes, macros, variables, métadonnées).", "returns": [{"type": "table", "desc": "données du projet"}], "internal": true},
-        "_onDeserialized": {"desc": "Reconstruit le projet depuis des données sérialisées.", "params": {"data": {"type": "table", "desc": "données"}}, "internal": true},
-        "updateEditorPosition": {"desc": "Met à jour la position éditeur de tous les nœuds des graphes et macros.", "params": {"force": {"type": "boolean|nil", "desc": "inutilisé"}}},
-        "updateNodePositions": {"desc": "Relit la position éditeur de tous les nœuds des graphes.", "params": {}},
-        "findMacrosUsedInChildren": {"desc": "Liste récursivement les macroID utilisés par les enfants (voir notes).", "params": {"graph": {"type": "table", "desc": "graphe"}, "list": {"type": "string[]", "desc": "liste à remplir"}}},
-        "findDependencyMap": {"desc": "Construit l'ordre de dépendance entre macros sérialisés.", "params": {"serializedMacros": {"type": "table", "desc": "macros sérialisés"}}},
-        "createSubgraphFromMacroInstance": {"desc": "Crée un sous-graphe depuis l'instance de macro sélectionnée (via groupHelper).", "params": {}},
-        "createSubgraphFromSelection": {"desc": "Groupe la sélection en sous-graphe (groupHelper:createGroupingFromSelection).", "params": {}},
-        "resolveHooksAndReset": {"desc": "Appelé en fin de frame par core_flowgraphManager : exécute les arrêts (queueReset) et redémarrages (queueRestart) différés.", "internal": true},
-        "onUpdate": {"desc": "Appelé à chaque frame : compte les frames, mémorise dtReal/dtSim/dtRaw, gère le mode pas-à-pas (steps) puis appelle onUpdate de chaque module.", "params": {"dtReal": {"type": "number", "desc": "dt réel (s)"}, "dtSim": {"type": "number", "desc": "dt simulation (s)"}, "dtRaw": {"type": "number", "desc": "dt brut (s)"}}, "internal": true},
-        "logEvent": {"desc": "Ajoute un évènement au journal du projet (nom, type 'I'/'W'/'E', description, frame, heure) et compte les doublons par nom. Utile aux nœuds et modules pour tracer l'exécution.", "params": {"name": {"type": "string", "desc": "nom de l'évènement"}, "type": {"type": "string|nil", "desc": "'I', 'W' ou 'E'"}, "description": {"type": "string|nil", "desc": "détails"}, "meta": {"type": "table|nil", "desc": "ex. {type = 'node', node = node}"}}},
-        "getHooklist": {"desc": "Renvoie la liste des cibles de hooks (le manager et une table de fonctions regroupant les hooks des modules, exécutés sous xpcall avec log d'erreur). Vide si le projet n'est pas en cours.", "returns": [{"type": "table[]", "desc": "cibles de hooks"}], "internal": true},
-        "getDependencies": {"desc": "Renvoie, triées, les extensions requises par les nœuds (hors macros) et les modules. Vide si le projet n'est pas en cours.", "returns": [{"type": "string[]", "desc": "noms d'extensions"}], "internal": true},
-        "checkCompileWarnings": {"desc": "Journalise une erreur si une section du graphe a plusieurs nœuds racines (couleurs de flux multiples).", "internal": true},
-        "setRunning": {"desc": "Démarre ou arrête le projet. Au démarrage : planifie les graphes racines, construit et démarre les états, notifie nœuds et modules (_executionStarted) et diffuse 'onExecutionStarted'. À l'arrêt : diffuse 'onRemoveNextFrame' et programme l'arrêt en fin de frame, ou l'immédiat si stopInstant.", "params": {"running": {"type": "boolean", "desc": "démarrer (true) ou arrêter (false)"}, "stopInstant": {"type": "boolean|nil", "desc": "arrêter et détruire tout de suite"}}},
-        "setPaused": {"desc": "Met le projet en pause ou le reprend (sans effet si arrêté).", "params": {"paused": {"type": "boolean", "desc": "pause"}}},
-        "queueForRestart": {"desc": "Demande un redémarrage du projet en fin de frame.", "params": {}},
-        "_executionStarted": {"desc": "Notifie graphes et modules du démarrage (ordre des modules par moduleOrder).", "internal": true},
-        "_onClear": {"desc": "Appelé à l'arrêt : notifie graphes, variables, modules (onClear) et états.", "internal": true},
-        "_executionStopped": {"desc": "Appelé à l'arrêt : notifie graphes, variables et modules (executionStopped), retire le proxy d'extensions, décharge les extensions de extToUnload, remet steps et frameCount à 0.", "internal": true},
-        "destroy": {"desc": "Arrête le projet s'il tourne, détruit les états et le proxy d'extensions et marque le manager comme détruit.", "params": {}},
-        "getGraphByName": {"desc": "Renvoie le premier graphe portant ce nom.", "params": {"name": {"type": "string", "desc": "nom"}}, "returns": [{"type": "table|nil", "desc": "graphe"}]},
-        "resolveVariableChanges": {"desc": "Applique les changements de variables en attente du manager et de tous les graphes.", "internal": true},
-        "broadcastCall": {"desc": "Si le projet tourne, appelle la fonction de hook donnée sur le proxy d'extensions puis sur les états (donc sur les nœuds qui l'écoutent).", "params": {"functionName": {"type": "string", "desc": "nom du hook (ex. 'onVehicleResetted')"}, "...": {"type": "any", "desc": "arguments du hook"}}},
-        "broadcastCallReturn": {"desc": "Comme broadcastCall, mais collecte les résultats des nœuds dans une table (passée comme premier argument aux hooks).", "params": {"functionName": {"type": "string", "desc": "nom du hook"}, "...": {"type": "any", "desc": "arguments"}}, "returns": [{"type": "table", "desc": "résultats"}]},
-        "hasNodeForHook": {"desc": "Vrai si le projet tourne et qu'un nœud ou un état écoute ce hook.", "params": {"functionName": {"type": "string", "desc": "nom du hook"}}, "returns": [{"type": "boolean", "desc": "écouté"}]},
-        "blocksOnResetGameplay": {"desc": "Vrai si le projet tourne et qu'un de ses nœuds déclare blocksOnResetGameplay (résultat mis en cache jusqu'au prochain setRunning).", "returns": [{"type": "boolean", "desc": "bloque le reset du gameplay"}]},
-        "allNodes": {"desc": "Itérateur sur tous les nœuds de tous les graphes : for node in mgr:allNodes() do ... end.", "returns": [{"type": "function", "desc": "itérateur"}, {"type": "table", "desc": "contexte"}]},
-        "onClientEndMission": {"desc": "Hook de fin de mission : arrête immédiatement le projet si stopRunningOnClientEndMission est vrai.", "internal": true},
-        "getRelativeAbsolutePath": {"desc": "Résout un ou plusieurs chemins relatifs à la racine, aux dossiers de couches de l'activité, à savedDir ou au dossier de mission et renvoie le premier fichier existant (FS:fileExists). Sinon renvoie le premier chemin candidat et false (avec un avertissement sauf si désactivé).", "params": {"p": {"type": "string|string[]", "desc": "chemin(s) relatif(s)"}, "disableLogEntryOnFail": {"type": "boolean|nil", "desc": "pas d'avertissement si introuvable"}}, "returns": [{"type": "string|nil", "desc": "chemin"}, {"type": "boolean", "desc": "trouvé"}]},
-        "DrawTypeIcon": {"desc": "Dessine l'icône d'un type de donnée (couleur du type, plein si connecté) dans l'éditeur.", "params": {"dataType": {"type": "string|table", "desc": "type de pin"}, "connected": {"type": "boolean", "desc": "pin connectée"}, "alpha": {"type": "number", "desc": "opacité"}, "typeIconSize": {"type": "number|nil", "desc": "taille"}, "innercolor": {"type": "ImVec4|nil", "desc": "couleur intérieure"}}, "internal": true}
+        "init": {
+          "desc": "Creates an empty project: 'New State' graph with an events/onUpdate node, state graph, variableStorage, instances of the 16 modules, history (99 entries max), extension proxy (newExtensionProxy) registered in core_flowgraphManager.runningProxies, groupHelper, and a first history snapshot.",
+          "params": {
+            "parent": {
+              "type": "table",
+              "desc": "core_flowgraphManager extension"
+            }
+          },
+          "internal": true
+        },
+        "attach": {
+          "desc": "Attaches the editor (fgEditor) and updates the node positions.",
+          "params": {
+            "fgEditor": {
+              "type": "table",
+              "desc": "flowgraph editor"
+            }
+          },
+          "internal": true
+        },
+        "detached": {
+          "desc": "Detaches the editor: clears the selection.",
+          "internal": true
+        },
+        "checkDuplicateId": {
+          "desc": "Was meant to report an id already in use (see notes: faulty code).",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "id to check"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "true if duplicate"
+            }
+          ],
+          "internal": true
+        },
+        "getNextFreeGraphNodeId": {
+          "desc": "Returns the next free id for a graph or a node (incremental, checks graphs, macros and their nodes).",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "id"
+            }
+          ]
+        },
+        "getGraphNodeOffset": {
+          "desc": "Id offset used during deserialization (default 0).",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "offset"
+            }
+          ]
+        },
+        "autoGraphNodeOffset": {
+          "desc": "Sets this offset to the largest existing graph or node id (graphs and macros).",
+          "params": {}
+        },
+        "getNextFreePinLinkId": {
+          "desc": "Returns the next free id for pins and links, counting down from 2^29.",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "id"
+            }
+          ]
+        },
+        "setupStateGraph": {
+          "desc": "Creates the 'States' state graph with stateEntry and stateExit nodes, and (unless empty) a stateNode toward the main graph.",
+          "params": {
+            "empty": {
+              "type": "boolean|nil",
+              "desc": "do not create a stateNode"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "state graph"
+            },
+            {
+              "type": "table",
+              "desc": "entry node"
+            },
+            {
+              "type": "table",
+              "desc": "exit node"
+            }
+          ]
+        },
+        "createGraphAsState": {
+          "desc": "Creates a graph and a state node (states/stateNode) in the current graph that targets it.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "name"
+            },
+            "isStateGraph": {
+              "type": "boolean",
+              "desc": "state graph"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "graph"
+            },
+            {
+              "type": "table",
+              "desc": "state node"
+            }
+          ]
+        },
+        "createGroupState": {
+          "desc": "Creates a group state (state graph child of the current graph) with entry and 'success' exit.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "name"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "graph"
+            },
+            {
+              "type": "table",
+              "desc": "state node"
+            }
+          ]
+        },
+        "createStateFromLibrary": {
+          "desc": "Creates a state from library data (graph, node, minId, name).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "state data"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "graph"
+            },
+            {
+              "type": "table",
+              "desc": "node"
+            }
+          ]
+        },
+        "selectGraph": {
+          "desc": "Makes a graph current (shows its tab, remembers the recent instance, opens the macro if stopped) and clears the selection.",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "graph"
+            }
+          }
+        },
+        "createGraph": {
+          "desc": "Creates a graph linked to the manager; if it is not hidden, it is added to self.graphs.",
+          "params": {
+            "name": {
+              "type": "string|nil",
+              "desc": "name"
+            },
+            "hidden": {
+              "type": "boolean|nil",
+              "desc": "do not register in graphs"
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "imposed id"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "graph"
+            }
+          ]
+        },
+        "copyGraph": {
+          "desc": "Copies a graph by serialization then deserialization, keeping macroID.",
+          "params": {
+            "oldGraph": {
+              "type": "table",
+              "desc": "source graph"
+            },
+            "newName": {
+              "type": "string|nil",
+              "desc": "name"
+            },
+            "hidden": {
+              "type": "boolean|nil",
+              "desc": "do not register"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "copy"
+            }
+          ]
+        },
+        "convertToMacro": {
+          "desc": "Turns a graph into a macro: its serialized copy becomes a macro (self.macros) and the original graph becomes an instance of that macro.",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "graph to convert"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "macro"
+            }
+          ]
+        },
+        "refreshIntegratedPins": {
+          "desc": "Rebuilds the pins of a macro/integrated node from its target graph while keeping links and hardcoded values.",
+          "params": {
+            "node": {
+              "type": "table",
+              "desc": "integrated node"
+            }
+          }
+        },
+        "findIntegratedNode": {
+          "desc": "Finds the macro/integrated node of the parent graph that represents this graph.",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "graph"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "node"
+            }
+          ]
+        },
+        "updateSubgraphs": {
+          "desc": "Recursively replaces the target graphs of integrated nodes with copies of type 'instance'.",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "graph"
+            }
+          }
+        },
+        "updateInstances": {
+          "desc": "Updates all instances of a modified macro from its serialized version.",
+          "params": {
+            "macro": {
+              "type": "table|nil",
+              "desc": "modified macro"
+            }
+          }
+        },
+        "saveMacro": {
+          "desc": "Writes a macro (root) to a JSON file with its tags and updates macroPath of the instances.",
+          "params": {
+            "macro": {
+              "type": "table",
+              "desc": "macro graph"
+            },
+            "savedata": {
+              "type": "table",
+              "desc": "filepath field"
+            }
+          }
+        },
+        "createNewMacroNode": {
+          "desc": "Creates a macro/integrated node in the current graph, instantiated from a macro file.",
+          "params": {
+            "path": {
+              "type": "string",
+              "desc": "macro file path"
+            }
+          }
+        },
+        "createInstanceFromMacro": {
+          "desc": "Creates a graph of type 'instance' from a macro and optionally links it to an integrated node.",
+          "params": {
+            "macro": {
+              "type": "table",
+              "desc": "macro graph"
+            },
+            "node": {
+              "type": "table|nil",
+              "desc": "integrated node"
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "imposed id"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "instance"
+            }
+          ]
+        },
+        "createMacroInstanceFromPath": {
+          "desc": "Creates a macro instance from a file (reuses the already loaded macro if it has the same macroPath).",
+          "params": {
+            "path": {
+              "type": "string",
+              "desc": "macro path"
+            },
+            "node": {
+              "type": "table",
+              "desc": "integrated node"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "instance"
+            }
+          ]
+        },
+        "setupCreationWorkflow": {
+          "desc": "Prepares node or link creation from the editor (ui_flowgraph_editor).",
+          "internal": true
+        },
+        "creationWorkflow": {
+          "desc": "Every frame, handles link and node creation by dragging in the editor.",
+          "internal": true
+        },
+        "deleteGraph": {
+          "desc": "Deletes a graph (manager graphs or macros); logs an error if it does not belong to the manager.",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "graph"
+            }
+          }
+        },
+        "deleteGraphs": {
+          "desc": "Deletes all graphs then all macros.",
+          "params": {}
+        },
+        "deletionWorkflow": {
+          "desc": "Handles deletion by the editor (Delete key and selection).",
+          "internal": true
+        },
+        "unselectAll": {
+          "desc": "Clears the node and link selection.",
+          "params": {}
+        },
+        "updateEditorSelections": {
+          "desc": "Updates the selected node and link tables from the C++-side selection.",
+          "internal": true
+        },
+        "findLinkIdFromHiddenLinkId": {
+          "desc": "Returns the id of the link with the given hiddenId, in the current graph.",
+          "params": {
+            "hiddenId": {
+              "type": "integer",
+              "desc": "link hiddenId"
+            }
+          },
+          "returns": [
+            {
+              "type": "integer|nil",
+              "desc": "link id"
+            }
+          ]
+        },
+        "onDragStarted": {
+          "desc": "Start of a drag-and-drop (dragging = true).",
+          "internal": true
+        },
+        "onDrag": {
+          "desc": "During a drag-and-drop.",
+          "internal": true
+        },
+        "onDragEnded": {
+          "desc": "End of a drag-and-drop.",
+          "internal": true
+        },
+        "dragDropTarget": {
+          "desc": "Called by the editor when an object is dropped: handles the drag-and-drop target.",
+          "params": {
+            "payloadType": {
+              "type": "string",
+              "desc": "content type"
+            }
+          },
+          "internal": true
+        },
+        "dragDropSource": {
+          "desc": "Called by the editor to prepare the source of a drag-and-drop.",
+          "params": {
+            "payloadType": {
+              "type": "string",
+              "desc": "content type"
+            },
+            "data": {
+              "type": "any",
+              "desc": "data"
+            }
+          },
+          "internal": true
+        },
+        "copyNodes": {
+          "desc": "Copies the selected nodes to the internal clipboard (copiedNodes).",
+          "params": {}
+        },
+        "pasteNodes": {
+          "desc": "Pastes the copied nodes into the current graph.",
+          "params": {}
+        },
+        "goToHistory": {
+          "desc": "Restores a history state by index.",
+          "params": {
+            "index": {
+              "type": "integer",
+              "desc": "index in history"
+            }
+          }
+        },
+        "undo": {
+          "desc": "Goes back to the previous history entry.",
+          "params": {}
+        },
+        "redo": {
+          "desc": "Moves to the next history entry.",
+          "params": {}
+        },
+        "historySnapshot": {
+          "desc": "Records a serialized snapshot of the project in the history (ignored if editing is forbidden, i.e. during execution).",
+          "params": {
+            "title": {
+              "type": "string",
+              "desc": "entry title"
+            }
+          }
+        },
+        "deleteSelectionButton": {
+          "desc": "Deletes the selection then adds a 'Deleted Selection' history entry.",
+          "params": {}
+        },
+        "deleteSelection": {
+          "desc": "Deletes the selected nodes and links of the current graph (if editing is allowed).",
+          "params": {}
+        },
+        "draw": {
+          "desc": "Draws the project in the editor every frame (ui).",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "real dt"
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "simulation dt"
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "raw dt"
+            }
+          },
+          "internal": true
+        },
+        "getAvailableMacros": {
+          "desc": "Lists the JSON macro files in the /flowgraphEditor/macros/ folder (by name, with the path field).",
+          "returns": [
+            {
+              "type": "table<string, table>",
+              "desc": "macros by name"
+            }
+          ]
+        },
+        "getAvailableStateTemplates": {
+          "desc": "Returns the state templates from core_flowgraphManager.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "templates"
+            }
+          ]
+        },
+        "getAvailableNodeTemplates": {
+          "desc": "Returns the node templates (list and lookup table by type) of the game, plus the custom nodes from the project's customNodes/ folder if it is saved.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "list"
+            },
+            {
+              "type": "table",
+              "desc": "lookup by nodeType"
+            }
+          ]
+        },
+        "getCustomNodeTemplates": {
+          "desc": "Loads the custom nodes (*Node.lua) from savedDir/customNodes/.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "{lookup, res}"
+            }
+          ]
+        },
+        "clearGraph": {
+          "desc": "Clears a graph (the current one by default): removes nodes and links from the editor then calls graph:clear().",
+          "params": {
+            "graph": {
+              "type": "table|nil",
+              "desc": "graph"
+            }
+          }
+        },
+        "getNextUniqueIdentifier": {
+          "desc": "Returns an id that is unique across all editor instances (delegates to core_flowgraphManager).",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "id"
+            }
+          ]
+        },
+        "_onSerialize": {
+          "desc": "Serializes the whole project (graphs, macros, variables, metadata).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "project data"
+            }
+          ],
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Rebuilds the project from serialized data.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "data"
+            }
+          },
+          "internal": true
+        },
+        "updateEditorPosition": {
+          "desc": "Updates the editor position of all nodes in the graphs and macros.",
+          "params": {
+            "force": {
+              "type": "boolean|nil",
+              "desc": "unused"
+            }
+          }
+        },
+        "updateNodePositions": {
+          "desc": "Re-reads the editor position of all nodes in the graphs.",
+          "params": {}
+        },
+        "findMacrosUsedInChildren": {
+          "desc": "Recursively lists the macroIDs used by the children (see notes).",
+          "params": {
+            "graph": {
+              "type": "table",
+              "desc": "graph"
+            },
+            "list": {
+              "type": "string[]",
+              "desc": "list to fill"
+            }
+          }
+        },
+        "findDependencyMap": {
+          "desc": "Builds the dependency order between serialized macros.",
+          "params": {
+            "serializedMacros": {
+              "type": "table",
+              "desc": "serialized macros"
+            }
+          }
+        },
+        "createSubgraphFromMacroInstance": {
+          "desc": "Creates a subgraph from the selected macro instance (via groupHelper).",
+          "params": {}
+        },
+        "createSubgraphFromSelection": {
+          "desc": "Groups the selection into a subgraph (groupHelper:createGroupingFromSelection).",
+          "params": {}
+        },
+        "resolveHooksAndReset": {
+          "desc": "Called at the end of the frame by core_flowgraphManager: executes the deferred stops (queueReset) and restarts (queueRestart).",
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "Called every frame: counts frames, stores dtReal/dtSim/dtRaw, handles step-by-step mode (steps) then calls onUpdate of each module.",
+          "params": {
+            "dtReal": {
+              "type": "number",
+              "desc": "real dt (s)"
+            },
+            "dtSim": {
+              "type": "number",
+              "desc": "simulation dt (s)"
+            },
+            "dtRaw": {
+              "type": "number",
+              "desc": "raw dt (s)"
+            }
+          },
+          "internal": true
+        },
+        "logEvent": {
+          "desc": "Adds an event to the project log (name, type 'I'/'W'/'E', description, frame, time) and counts duplicates by name. Useful for nodes and modules to trace execution.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "event name"
+            },
+            "type": {
+              "type": "string|nil",
+              "desc": "'I', 'W' or 'E'"
+            },
+            "description": {
+              "type": "string|nil",
+              "desc": "details"
+            },
+            "meta": {
+              "type": "table|nil",
+              "desc": "e.g. {type = 'node', node = node}"
+            }
+          }
+        },
+        "getHooklist": {
+          "desc": "Returns the list of hook targets (the manager and a table of functions grouping the modules' hooks, run under xpcall with error logging). Empty if the project is not running.",
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "hook targets"
+            }
+          ],
+          "internal": true
+        },
+        "getDependencies": {
+          "desc": "Returns, sorted, the extensions required by the nodes (excluding macros) and the modules. Empty if the project is not running.",
+          "returns": [
+            {
+              "type": "string[]",
+              "desc": "extension names"
+            }
+          ],
+          "internal": true
+        },
+        "checkCompileWarnings": {
+          "desc": "Logs an error if a section of the graph has several root nodes (multiple flow colors).",
+          "internal": true
+        },
+        "setRunning": {
+          "desc": "Starts or stops the project. On start: plans the root graphs, builds and starts the states, notifies nodes and modules (_executionStarted) and broadcasts 'onExecutionStarted'. On stop: broadcasts 'onRemoveNextFrame' and schedules the stop at the end of the frame, or immediately if stopInstant.",
+          "params": {
+            "running": {
+              "type": "boolean",
+              "desc": "start (true) or stop (false)"
+            },
+            "stopInstant": {
+              "type": "boolean|nil",
+              "desc": "stop and destroy immediately"
+            }
+          }
+        },
+        "setPaused": {
+          "desc": "Pauses or resumes the project (no effect if stopped).",
+          "params": {
+            "paused": {
+              "type": "boolean",
+              "desc": "pause"
+            }
+          }
+        },
+        "queueForRestart": {
+          "desc": "Requests a project restart at the end of the frame.",
+          "params": {}
+        },
+        "_executionStarted": {
+          "desc": "Notifies graphs and modules of the start (module order by moduleOrder).",
+          "internal": true
+        },
+        "_onClear": {
+          "desc": "Called on stop: notifies graphs, variables, modules (onClear) and states.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Called on stop: notifies graphs, variables and modules (executionStopped), removes the extension proxy, unloads the extensions in extToUnload, resets steps and frameCount to 0.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Stops the project if it is running, destroys the states and the extension proxy and marks the manager as destroyed.",
+          "params": {}
+        },
+        "getGraphByName": {
+          "desc": "Returns the first graph with this name.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "name"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "graph"
+            }
+          ]
+        },
+        "resolveVariableChanges": {
+          "desc": "Applies the pending variable changes of the manager and of all graphs.",
+          "internal": true
+        },
+        "broadcastCall": {
+          "desc": "If the project is running, calls the given hook function on the extension proxy then on the states (hence on the nodes that listen to it).",
+          "params": {
+            "functionName": {
+              "type": "string",
+              "desc": "hook name (e.g. 'onVehicleResetted')"
+            },
+            "...": {
+              "type": "any",
+              "desc": "hook arguments"
+            }
+          }
+        },
+        "broadcastCallReturn": {
+          "desc": "Like broadcastCall, but collects the nodes' results in a table (passed as the first argument to the hooks).",
+          "params": {
+            "functionName": {
+              "type": "string",
+              "desc": "hook name"
+            },
+            "...": {
+              "type": "any",
+              "desc": "arguments"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "results"
+            }
+          ]
+        },
+        "hasNodeForHook": {
+          "desc": "True if the project is running and a node or state listens to this hook.",
+          "params": {
+            "functionName": {
+              "type": "string",
+              "desc": "hook name"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "listened to"
+            }
+          ]
+        },
+        "blocksOnResetGameplay": {
+          "desc": "True if the project is running and one of its nodes declares blocksOnResetGameplay (result cached until the next setRunning).",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "blocks the gameplay reset"
+            }
+          ]
+        },
+        "allNodes": {
+          "desc": "Iterator over all nodes of all graphs: for node in mgr:allNodes() do ... end.",
+          "returns": [
+            {
+              "type": "function",
+              "desc": "iterator"
+            },
+            {
+              "type": "table",
+              "desc": "context"
+            }
+          ]
+        },
+        "onClientEndMission": {
+          "desc": "End-of-mission hook: immediately stops the project if stopRunningOnClientEndMission is true.",
+          "internal": true
+        },
+        "getRelativeAbsolutePath": {
+          "desc": "Resolves one or more paths relative to the root, the activity's layer folders, savedDir or the mission folder and returns the first existing file (FS:fileExists). Otherwise returns the first candidate path and false (with a warning unless disabled).",
+          "params": {
+            "p": {
+              "type": "string|string[]",
+              "desc": "relative path(s)"
+            },
+            "disableLogEntryOnFail": {
+              "type": "boolean|nil",
+              "desc": "no warning if not found"
+            }
+          },
+          "returns": [
+            {
+              "type": "string|nil",
+              "desc": "path"
+            },
+            {
+              "type": "boolean",
+              "desc": "found"
+            }
+          ]
+        },
+        "DrawTypeIcon": {
+          "desc": "Draws the icon of a data type (type color, filled if connected) in the editor.",
+          "params": {
+            "dataType": {
+              "type": "string|table",
+              "desc": "pin type"
+            },
+            "connected": {
+              "type": "boolean",
+              "desc": "connected pin"
+            },
+            "alpha": {
+              "type": "number",
+              "desc": "opacity"
+            },
+            "typeIconSize": {
+              "type": "number|nil",
+              "desc": "size"
+            },
+            "innercolor": {
+              "type": "ImVec4|nil",
+              "desc": "inner color"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

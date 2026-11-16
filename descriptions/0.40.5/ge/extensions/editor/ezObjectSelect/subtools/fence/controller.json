@@ -1,33 +1,51 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/subtools/fence/controller.lua",
-  "module": "Panneau ImGui du sous-outil « Fence » d'Easy Object Select. Permet de choisir le mesh de clôture (sélection de l'Asset Browser ou objet sélectionné dans Easy Select), de régler la distance de correspondance des ancres (0.05 à 5 m) et l'option « No overlap », puis de lancer Select Fence, et, une fois le mode actif, de valider (Exit Fence Mode), annuler (Cancel Fence) ou supprimer (Delete Fence) la clôture. Délègue toute la logique à fence/session.",
+  "module": "ImGui panel of the \"Fence\" sub-tool of Easy Object Select. Lets you choose the fence mesh (Asset Browser selection or object selected in Easy Select), set the anchor matching distance (0.05 to 5 m) and the \"No overlap\" option, then start Select Fence, and, once the mode is active, confirm (Exit Fence Mode), cancel (Cancel Fence) or delete (Delete Fence) the fence. Delegates all the logic to fence/session.",
   "notes": [
-    "Exit Fence Mode et Delete Fence sont désactivés quand la session a atteint sa limite de sécurité (isCapped).",
-    "L'état du panneau (asset choisi, distance, noOverlap, message) est local au module."
+    "Exit Fence Mode and Delete Fence are disabled when the session has reached its safety limit (isCapped).",
+    "The panel state (chosen asset, distance, noOverlap, message) is local to the module."
   ],
   "functions": {
     "drawWorkspace": {
-      "desc": "Dessine le panneau du sous-outil et traite les clics sur ses boutons (appelle fenceSession.begin / exitAndCommit / cancel / deleteAndCommit / setNoOverlap).",
+      "desc": "Draws the sub-tool panel and handles clicks on its buttons (calls fenceSession.begin / exitAndCommit / cancel / deleteAndCommit / setNoOverlap).",
       "params": {
-        "options": {"type": "table|nil", "desc": "canEnter (boolean) : si false, Select Fence est désactivé."}
+        "options": {
+          "type": "table|nil",
+          "desc": "canEnter (boolean): if false, Select Fence is disabled."
+        }
       },
       "internal": false
     },
     "update": {
-      "desc": "Passe la frame à fenceSession.update (entrées souris/clavier, aperçu, dessin).",
-      "params": {"canAcceptInput": {"type": "boolean", "desc": "true si la vue peut recevoir les entrées."}},
-      "returns": [{"type": "boolean", "desc": "true si une session est active."}],
+      "desc": "Passes the frame to fenceSession.update (mouse/keyboard input, preview, drawing).",
+      "params": {
+        "canAcceptInput": {
+          "type": "boolean",
+          "desc": "true if the view can receive input."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a session is active."
+        }
+      ],
       "internal": false
     },
     "cancel": {
-      "desc": "Annule la session de clôture en cours (restaure les pièces d'origine).",
+      "desc": "Cancels the current fence session (restores the original pieces).",
       "params": {},
       "internal": false
     },
     "isModeActive": {
-      "desc": "Indique si le mode clôture est actif.",
+      "desc": "Indicates whether fence mode is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si une session est active."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a session is active."
+        }
+      ],
       "internal": false
     }
   }

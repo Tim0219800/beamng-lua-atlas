@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/timetrials/onRaceStart.lua",
+  "module": "Noeud « Race Started » (logic, tag input). Pins de sortie : started (flow quand la course a démarré) et stopped (flow avant le départ). Passe à démarré sur le hook onRaceStart.",
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "started = false.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "started = false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit started et stopped.",
+          "internal": false
+        },
+        "onRaceStart": {
+          "desc": "Hook de départ de course : started = true.",
+          "internal": true
+        },
+        "onScenarioRestarted": {
+          "desc": "Hook de redémarrage : réinitialise.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

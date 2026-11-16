@@ -1,34 +1,34 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/getMapObjectsDynField.lua",
-  "module": "Nœud « Get Map Objects IDs by DynField » (repeat_instant). Renvoie la liste des ids des objets de la carte (map.objects, donc les véhicules suivis) qui possèdent un champ dynamique donné. Entrée : dynamicFieldName. Sortie : objects (table d'ids).",
+  "module": "Node \"Get Map Objects IDs by DynField\" (repeat_instant). Returns the list of ids of the map objects (map.objects, hence the tracked vehicles) that have a given dynamic field. Input: dynamicFieldName. Output: objects (table of ids).",
   "notes": [
-    "Seul le nom du champ est testé, pas sa valeur.",
-    "Recalcule à chaque frame : coût proportionnel au nombre d'objets."
+    "Only the field name is tested, not its value.",
+    "Recomputed every frame: cost proportional to the number of objects."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Ne fait rien.",
+          "desc": "Does nothing.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Met oldPos à nil (champ inutilisé ensuite).",
+          "desc": "Sets oldPos to nil (field unused afterwards).",
           "internal": true
         },
         "findObjectsWithDynField": {
-          "desc": "Parcourt map.objects, lit object:getDynamicFields() et renvoie les ids dont un nom correspond.",
+          "desc": "Iterates over map.objects, reads object:getDynamicFields() and returns the ids for which a name matches.",
           "params": {
             "dynamicFieldName": {
               "type": "string",
-              "desc": "Nom du champ dynamique recherché."
+              "desc": "Name of the dynamic field searched."
             }
           },
           "internal": false
         },
         "work": {
-          "desc": "Si le nom est fourni, recalcule la liste à chaque frame et l'écrit dans objects.",
+          "desc": "If the name is provided, recomputes the list every frame and writes it to objects.",
           "internal": true
         }
       }

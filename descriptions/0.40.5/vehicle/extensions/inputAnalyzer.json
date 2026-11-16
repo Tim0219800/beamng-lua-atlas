@@ -1,21 +1,69 @@
 {
   "path": "lua/vehicle/extensions/inputAnalyzer.lua",
-  "module": "Détecteur de 'codes' à la manette/clavier : à 30 Hz il observe les entrées (accélérateur, frein, direction gauche/droite, embrayage, frein à main), construit une chaîne des 16 dernières pressions et appelle un callback quand la fin de la chaîne correspond à une séquence enregistrée (8 à 16 caractères). Sert à des easter eggs.",
-  "usage": "-- lettres : u accélérateur, d frein, l gauche, r droite, a embrayage, b frein à main\nextensions.inputAnalyzer.registerInputString('uuddlrlrab', function(s) print('code !') end)",
+  "module": "Gamepad/keyboard 'code' detector: at 30 Hz it watches the inputs (throttle, brake, steering left/right, clutch, parking brake), builds a string of the last 16 presses and calls a callback when the end of the string matches a registered sequence (8 to 16 characters). Used for easter eggs.",
+  "usage": "-- letters: u throttle, d brake, l left, r right, a clutch, b parking brake\nextensions.inputAnalyzer.registerInputString('uuddlrlrab', function(s) print('code!') end)",
   "notes": [
-    "Chaque nouvelle pression (passage de faux à vrai au-dessus de 0,01) ajoute sa lettre à la chaîne. La chaîne est tronquée d'un caractère quand elle dépasse 16.",
-    "Les entrées lues sont electrics.values.throttle_input, brake_input, steering_input (l = partie négative, r = partie positive), clutch_input et parkingbrake_input.",
-    "registerInputString ignore les chaînes de moins de 8 ou de plus de 16 caractères.",
-    "Anomalie : le test de doublon dans registerInputString compare `v.string == string` (la bibliothèque string) au lieu de `str` : il n'est jamais vrai, un même code peut donc être enregistré plusieurs fois.",
-    "Anomalie : le paramètre de unregisterInputString s'appelle `string` et masque la bibliothèque string (sans conséquence ici).",
-    "Si une des clés electrics lues est nil, abs(nil) lève une erreur ; elles sont normalement initialisées par les entrées."
+    "Each new press (transition from false to true above 0.01) appends its letter to the string. The string is truncated by one character when it exceeds 16.",
+    "The inputs read are electrics.values.throttle_input, brake_input, steering_input (l = negative part, r = positive part), clutch_input and parkingbrake_input.",
+    "registerInputString ignores strings shorter than 8 or longer than 16 characters.",
+    "Anomaly: the duplicate test in registerInputString compares `v.string == string` (the string library) instead of `str`: it is never true, so the same code can be registered several times.",
+    "Anomaly: the parameter of unregisterInputString is named `string` and shadows the string library (no consequence here).",
+    "If one of the electrics keys read is nil, abs(nil) raises an error; they are normally initialized by the inputs."
   ],
   "fields": {},
   "functions": {
-    "onInit": {"desc": "Hook d'initialisation ; vide.", "params": {}, "returns": [], "internal": true},
-    "onReset": {"desc": "Hook de reset ; vide.", "params": {}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Appelé chaque frame : exécute l'analyse des entrées à 30 Hz (nop quand aucun code n'est enregistré après un (un)register).", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true},
-    "registerInputString": {"desc": "Enregistre une séquence à détecter et le callback appelé avec la chaîne courante quand elle est saisie.", "params": {"str": {"type": "string", "desc": "Séquence de 8 à 16 lettres parmi u, d, l, r, a, b."}, "callback": {"type": "function", "desc": "function(inputString)."}}, "returns": [], "internal": false},
-    "unregisterInputString": {"desc": "Retire une séquence enregistrée (même chaîne et même callback) ; active/désactive updateGFX selon qu'il reste des séquences.", "params": {"string": {"type": "string", "desc": "Séquence enregistrée."}, "callback": {"type": "function", "desc": "Callback enregistré."}}, "returns": [], "internal": false}
+    "onInit": {
+      "desc": "Initialization hook; empty.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onReset": {
+      "desc": "Reset hook; empty.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Called every frame: runs the input analysis at 30 Hz (no-op when no code is registered after a (un)register).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "registerInputString": {
+      "desc": "Registers a sequence to detect and the callback called with the current string when it is entered.",
+      "params": {
+        "str": {
+          "type": "string",
+          "desc": "Sequence of 8 to 16 letters among u, d, l, r, a, b."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "function(inputString)."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "unregisterInputString": {
+      "desc": "Removes a registered sequence (same string and same callback); enables/disables updateGFX depending on whether sequences remain.",
+      "params": {
+        "string": {
+          "type": "string",
+          "desc": "Registered sequence."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Registered callback."
+        }
+      },
+      "returns": [],
+      "internal": false
+    }
   }
 }

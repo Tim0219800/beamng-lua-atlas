@@ -1,35 +1,35 @@
 {
   "path": "lua/ge/extensions/telemetry/performanceSpatialSnapshot.test.lua",
-  "module": "Tests unitaires de telemetry/performanceSpatialSnapshot (runTestFiles(\"performanceSpatialSnapshot\")).",
+  "module": "Unit tests of telemetry/performanceSpatialSnapshot (runTestFiles(\"performanceSpatialSnapshot\")).",
   "functions": {
     "testDetailedMetricsDefaultOff": {
-      "desc": "Vérifie que framePhases et renderStats sont absents par défaut.",
+      "desc": "Checks that framePhases and renderStats are absent by default.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testRenderTimingCanBeEnabledAlone": {
-      "desc": "Vérifie que renderTimingTrackingEnabled ajoute framePhases sans renderStats.",
+      "desc": "Checks that renderTimingTrackingEnabled adds framePhases without renderStats.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],
       "internal": true
     },
     "testSceneComplexityCanBeEnabledAlone": {
-      "desc": "Vérifie que sceneComplexityTrackingEnabled ajoute renderStats (dont visibleObjectCount numérique) sans framePhases.",
+      "desc": "Checks that sceneComplexityTrackingEnabled adds renderStats (including a numeric visibleObjectCount) without framePhases.",
       "params": {
         "ctx": {
           "type": "table",
-          "desc": "Contexte du framework de test."
+          "desc": "Test framework context."
         }
       },
       "returns": [],

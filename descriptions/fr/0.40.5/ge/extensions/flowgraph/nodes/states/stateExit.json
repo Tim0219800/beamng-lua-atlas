@@ -1,0 +1,62 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/states/stateExit.lua",
+  "module": "Noeud d'état « State Exit » (créé par _flowgraph_createStateNode). Point de sortie du graphe d'états : un pin d'entrée 'flow' de type state (pins manuels de type state autorisés), caché dans les menus. Le champ transitionName désigne la transition (pin de sortie du noeud état parent) à emprunter ; choisie dans l'éditeur parmi celles du noeud cible.",
+  "notes": [
+    "Le choix « (None) » met transitionName à nil alors que la valeur initiale est '' ; drawMiddle affiche « No Transition! » pour nil."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "autoStart = false, savePins = true, transitionName = ''.",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Liste déroulante « Transition Name » construite à partir des noms de transition du noeud état parent qui cible ce graphe.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde transitionName.",
+          "params": {
+            "res": {
+              "type": "any",
+              "desc": "table de sauvegarde"
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Restaure transitionName ('' par défaut).",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "données sauvegardées"
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

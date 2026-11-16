@@ -1,75 +1,75 @@
 # `powertrain_genericTorqueProvider`
 
-*Fichier : `lua/vehicle/powertrain/genericTorqueProvider.lua` · VM : Véhicule · 198 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/powertrain/genericTorqueProvider.lua` · VM: Vehicle · 198 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de composant powertrain `genericTorqueProvider` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+**Access:** powertrain device type `genericTorqueProvider` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 
-Composant powertrain `genericTorqueProvider` : source de couple générique, de catégorie `engine`, dont le couple est simplement `desiredOutputTorque` (N·m) fixé de l'extérieur par un contrôleur ou un script (le moteur n'a ni courbe, ni papillon, ni énergie). Il retranche le frottement et expose l'interface minimale d'un moteur (scaleFriction, scaleOutputTorque, disable, enable, lockUp, getTorqueData…) pour que embrayages, boîtes et contrôleurs puissent le traiter comme un moteur. Utile pour un moteur piloté par un contrôleur personnalisé.
+Powertrain component `genericTorqueProvider`: generic torque source, of category `engine`, whose torque is simply `desiredOutputTorque` (N·m) set from outside by a controller or a script (the motor has no curve, throttle or energy). It subtracts the friction and exposes the minimal interface of an engine (scaleFriction, scaleOutputTorque, disable, enable, lockUp, getTorqueData…) so that clutches, gearboxes and controllers can treat it as an engine. Useful for an engine driven by a custom controller.
 
-## Exemple
+## Example
 
 ```lua
 local gen = powertrain.getDevice("torqueSource")
-gen.desiredOutputTorque = 120  -- N·m, à réécrire à chaque pas par votre contrôleur
+gen.desiredOutputTorque = 120  -- N·m, to be rewritten at each step by your controller
 print(gen.outputTorque1, gen.outputAV1)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m par rad/s), inertia (kg·m², défaut 0.1), torqueReactionNodes_nodes (3 nœuds, optionnel, pour la position visuelle), breakTriggerBeam.
-- Champs principaux : desiredOutputTorque (N·m, à écrire de l'extérieur), outputTorque1 (N·m = couple voulu * outputTorqueState - frottement), outputAV1 (rad/s, imposée par l'aval ou le parent), outputRPM (tr/min, mis à jour dans updateGFX), outputTorqueState (0..1 ; 0 après disable/lockUp), isDisabled, friction, dynamicFriction, inertia, torqueReactionNodes.
-- velocityUpdate vaut nop : un fournisseur de couple ne calcule pas de vitesse. Contrairement à electricMotor, aucune intégration de outputAV1 n'a lieu ici : celle-ci doit venir de l'aval.
-- Incohérences : setIgnition, cutIgnition, activateStarter, onBreak et sons valent nop (onBreak = nop : la méthode lockUp n'est jamais appelée à la casse) ; getTorqueData renvoie des courbes vides et des zéros ; calculateInertia ne divise pas par un rapport ; clutchChild vaut {torqueDiff = 0} si aucun enfant mais n'est jamais utilisé dans ce fichier ; validate ajoute {maxRPM = 0} dans powertrain.engineData ; M.requiredExternalInertiaOutputs n'est pas défini dans ce module ; new lit v.data.nodes[...] si torqueReactionNodes_nodes a 3 éléments (erreur si un id est invalide).
+- Jbeam keys read: name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m per rad/s), inertia (kg·m², default 0.1), torqueReactionNodes_nodes (3 nodes, optional, for the visual position), breakTriggerBeam.
+- Main fields: desiredOutputTorque (N·m, to be written from outside), outputTorque1 (N·m = desired torque * outputTorqueState - friction), outputAV1 (rad/s, imposed by downstream or the parent), outputRPM (RPM, updated in updateGFX), outputTorqueState (0..1; 0 after disable/lockUp), isDisabled, friction, dynamicFriction, inertia, torqueReactionNodes.
+- velocityUpdate is nop: a torque provider does not compute a speed. Unlike electricMotor, no integration of outputAV1 takes place here: it must come from downstream.
+- Inconsistencies: setIgnition, cutIgnition, activateStarter, onBreak and sounds are nop (onBreak = nop: the lockUp method is never called on breakage); getTorqueData returns empty curves and zeros; calculateInertia does not divide by a ratio; clutchChild is {torqueDiff = 0} if there is no child but is never used in this file; validate adds {maxRPM = 0} to powertrain.engineData; M.requiredExternalInertiaOutputs is not defined in this module; new reads v.data.nodes[...] if torqueReactionNodes_nodes has 3 elements (error if an id is invalid).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `powertrain_genericTorqueProvider.new(jbeamData)` | Construit le fournisseur de couple avec les stubs d'interface moteur (nop pour son, allumage, démarreur) et la position visuelle déduite des nœuds de réaction de couple. *(interne)* | 124 |
+| `powertrain_genericTorqueProvider.new(jbeamData)` | Builds the torque provider with the engine interface stubs (nop for sound, ignition, starter) and the visual position inferred from the torque reaction nodes. *(internal)* | 124 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `powertrain_genericTorqueProvider.new(jbeamData)`
 
-Construit le fournisseur de couple avec les stubs d'interface moteur (nop pour son, allumage, démarreur) et la position visuelle déduite des nœuds de réaction de couple.
+Builds the torque provider with the engine interface stubs (nop for sound, ignition, starter) and the visual position inferred from the torque reaction nodes.
 
-- `jbeamData` (*table*) : Données jbeam du composant.
-- **renvoie** : table Le device (classe `device`).
+- `jbeamData` (*table*) : jbeam data of the component.
+- **returns**: table The device (class `device`).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `deviceCategories` | table<string, boolean> | {engine=true}. |
 | `outputPorts` | table<integer, boolean> | {[1]=true}. |
 
-## Classe `device`
+## Class `device`
 
-Objet renvoyé par new(jbeamData).
+Object returned by new(jbeamData).
 
-Objet `device` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `device` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `device:calculateInertia()` | Prend l'inertie et le rapport cumulés du premier enfant comme cumulativeInertia et cumulativeGearRatio. | 92 |
-| `device:disable()` | Coupe le couple : outputTorqueState = 0 et isDisabled = true. | 34 |
-| `device:enable()` | Rétablit le couple : outputTorqueState = 1 et isDisabled = false. | 39 |
-| `device:getTorqueData()` | Renvoie une table de courbe de couple vide : {maxRPM=0, curves={}, maxTorque=0, maxPower=0, maxTorqueRPM=0, maxPowerRPM=0, finalCurveName=1, deviceName, vehicleID}. | 15 |
-| `device:lockUp()` | Identique à disable : coupe le couple et marque isDisabled (pas de blocage de vitesse ici). | 44 |
-| `device:reset(jbeamData)` | Remet à zéro vitesse, couple, couple voulu, outputTorqueState et isDisabled ; relit friction, dynamicFriction et inertia du jbeam. | 106 |
-| `device:scaleFriction(friction)` | Multiplie le frottement (friction) par le facteur donné. | 26 |
-| `device:scaleOutputTorque(state)` | Multiplie outputTorqueState par state (cumulatif). | 30 |
-| `device:sendTorqueData(data)` | Envoie l'événement GUI 'TorqueCurveChanged' avec les données de courbe (calculées si non fournies). | 19 |
-| `device:torqueUpdate(dt)` | Appelée à chaque pas physique : outputTorque1 = desiredOutputTorque * outputTorqueState - couple de frottement (limité par la vitesse * inertie * 2000 pour la stabilité). | 55 |
-| `device:updateGFX(dt)` | Mise à jour par image : outputRPM = outputAV1 en tr/min. | 49 |
-| `device:validate()` | Si le device n'a pas d'enfant, pose clutchChild = {torqueDiff = 0} ; enregistre le moteur dans powertrain.engineData ; sélectionne les fonctions de mise à jour. | 77 |
-| `device:velocityUpdate()` | Toujours nop. | dyn |
+| `device:calculateInertia()` | Takes the cumulative inertia and ratio of the first child as cumulativeInertia and cumulativeGearRatio. | 92 |
+| `device:disable()` | Cuts the torque: outputTorqueState = 0 and isDisabled = true. | 34 |
+| `device:enable()` | Restores the torque: outputTorqueState = 1 and isDisabled = false. | 39 |
+| `device:getTorqueData()` | Returns an empty torque curve table: {maxRPM=0, curves={}, maxTorque=0, maxPower=0, maxTorqueRPM=0, maxPowerRPM=0, finalCurveName=1, deviceName, vehicleID}. | 15 |
+| `device:lockUp()` | Same as disable: cuts the torque and sets isDisabled (no speed lock here). | 44 |
+| `device:reset(jbeamData)` | Resets speed, torque, desired torque, outputTorqueState and isDisabled; rereads friction, dynamicFriction and inertia from the jbeam. | 106 |
+| `device:scaleFriction(friction)` | Multiplies the friction (friction) by the given factor. | 26 |
+| `device:scaleOutputTorque(state)` | Multiplies outputTorqueState by state (cumulative). | 30 |
+| `device:sendTorqueData(data)` | Sends the GUI event 'TorqueCurveChanged' with the curve data (computed if not provided). | 19 |
+| `device:torqueUpdate(dt)` | Called at each physics step: outputTorque1 = desiredOutputTorque * outputTorqueState - friction torque (limited by speed * inertia * 2000 for stability). | 55 |
+| `device:updateGFX(dt)` | Per-frame update: outputRPM = outputAV1 in RPM. | 49 |
+| `device:validate()` | If the device has no child, sets clutchChild = {torqueDiff = 0}; registers the engine in powertrain.engineData; selects the update functions. | 77 |
+| `device:velocityUpdate()` | Always nop. | dyn |
 
-**Évènements UI (guihooks.trigger) :** `TorqueCurveChanged`
+**UI events (guihooks.trigger):** `TorqueCurveChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getId`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/powertrain/genericTorqueProvider.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/powertrain/genericTorqueProvider.lua`.*

@@ -1,28 +1,28 @@
 # `flowgraph_nodes_activity_requestAbandon`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/requestAbandon.lua` · VM : Game Engine (GE) · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/requestAbandon.lua` · VM: Game Engine (GE) · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/requestAbandon")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/requestAbandon")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Request Abandon » (catégorie logic, tag input). Laisse passer le flux, une seule fois, quand le joueur demande d'abandonner la mission. Pins : entrée flow ; sorties flow (impulsion) et value (bool caché, vrai tant que l'abandon est demandé). Si ce nœud existe, le graphe doit être arrêté manuellement à la fin. data.blocksOnResetGameplay = true.
+Flowgraph node "Request Abandon" (category logic, tag input). Lets the flow through, only once, when the player requests to abandon the mission. Pins: flow input; outputs flow (impulse) and value (hidden bool, true as long as the abandon is requested). If this node exists, the graph must be stopped manually at the end. data.blocksOnResetGameplay = true.
 
-## Remarques
+## Notes
 
-- L'appui est consommé : le drapeau est remis à faux après le travail et après le déclenchement (_afterTrigger). L'évènement est consigné dans le journal du graphe (logEvent « Player pressed 'Abandon' »).
+- The press is consumed: the flag is set back to false after the work and after the trigger (_afterTrigger). The event is recorded in the graph's log (logEvent "Player pressed 'Abandon'").
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Remet reset à faux après le déclenchement. | 43 |
-| `C:_executionStarted()` | Remet reset à faux au démarrage du graphe. | 34 |
-| `C:_executionStopped()` | Remet reset à faux à l'arrêt du graphe. | 29 |
-| `C:drawMiddle(builder, style)` | Éditeur : dessine la zone centrale du nœud. | 47 |
-| `C:init(mgr, ...)` | Met reset à faux et data.blocksOnResetGameplay à true. | 24 |
-| `C:onRequestAbandon()` | Hook appelé quand le joueur demande l'abandon ; mémorise la demande. | 39 |
-| `C:work(args)` | Si une demande d'abandon est en attente, active flow et value (et journalise), sinon les met à faux. | 51 |
+| `C:_afterTrigger()` | Sets reset back to false after the trigger. | 43 |
+| `C:_executionStarted()` | Sets reset back to false when the graph starts. | 34 |
+| `C:_executionStopped()` | Sets reset back to false when the graph stops. | 29 |
+| `C:drawMiddle(builder, style)` | Editor: draws the central area of the node. | 47 |
+| `C:init(mgr, ...)` | Sets reset to false and data.blocksOnResetGameplay to true. | 24 |
+| `C:onRequestAbandon()` | Hook called when the player requests to abandon; stores the request. | 39 |
+| `C:work(args)` | If an abandon request is pending, enables flow and value (and logs), otherwise sets them to false. | 51 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/requestAbandon.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/requestAbandon.lua`.*

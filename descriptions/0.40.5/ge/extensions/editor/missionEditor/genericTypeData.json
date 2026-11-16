@@ -1,73 +1,114 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/genericTypeData.lua",
-  "module": "Panneau de l'éditeur de missions qui édite le champ missionTypeData d'une mission. Il liste les types de mission (gameplay_missions_missions.getMissionTypes), choisit l'éditeur spécifique au type (gameplay_missions_missions.getMissionEditorForType) et, à défaut ou en mode « Raw », propose un éditeur JSON brut. Il fournit aussi un popup qui compare les variables de mission avec celles du projet Flowgraph ouvert (ajout et correction de type en un clic). Le module renvoie un constructeur (fonction) : require(...)(missionEditor) crée une instance via C:init.",
-  "usage": "local gtd = require('/lua/ge/extensions/editor/missionEditor/genericTypeData')(missionEditor)\ngtd:setMission(mission)\n-- dans la boucle imgui de l'éditeur :\ngtd:draw()",
+  "module": "Mission editor panel that edits a mission's missionTypeData field. It lists the mission types (gameplay_missions_missions.getMissionTypes), picks the type-specific editor (gameplay_missions_missions.getMissionEditorForType) and, failing that or in \"Raw\" mode, offers a raw JSON editor. It also provides a popup that compares the mission variables with those of the open Flowgraph project (adding and fixing the type in one click). The module returns a constructor (function): require(...)(missionEditor) creates an instance via C:init.",
+  "usage": "local gtd = require('/lua/ge/extensions/editor/missionEditor/genericTypeData')(missionEditor)\ngtd:setMission(mission)\n-- in the editor's imgui loop:\ngtd:draw()",
   "notes": [
-    "Le changement de type (changeMissionType) mémorise les anciennes données par mission et par type dans oldMissionTypeData, et les restaure si on revient au type précédent.",
-    "L'éditeur JSON brut plafonne le texte à environ 8*(2+max(128, 4*taille)) / 8 caractères (affiché « char limit »). Un JSON invalide n'est pas sauvegardé et affiche un message en rouge.",
-    "loadEditor n'est pas appelée dans ce fichier ; elle cherche /gameplay/missionTypes/<type>/editor.lua et crée un éditeur par défaut (editorHelper) sinon.",
-    "Le champ mission._dirty est mis à true à chaque modification pour signaler qu'une sauvegarde est nécessaire."
+    "The type change (changeMissionType) remembers the old data per mission and per type in oldMissionTypeData, and restores them if you go back to the previous type.",
+    "The raw JSON editor caps the text at about 8*(2+max(128, 4*size)) / 8 characters (displayed as \"char limit\"). An invalid JSON is not saved and displays a message in red.",
+    "loadEditor is not called in this file; it looks for /gameplay/missionTypes/<type>/editor.lua and creates a default editor (editorHelper) otherwise.",
+    "The mission._dirty field is set to true at each modification to signal that a save is needed."
   ],
   "classes": {
     "C": {
-      "desc": "Instance du panneau « Mission Type Data ». Champs principaux : missionEditor, mission, missionTypes (liste triée), missionTypeEditors (éditeur par type), rawEditPerMission, oldMissionTypeData, mtdIssues.",
+      "desc": "Instance of the \"Mission Type Data\" panel. Main fields: missionEditor, mission, missionTypes (sorted list), missionTypeEditors (editor per type), rawEditPerMission, oldMissionTypeData, mtdIssues.",
       "functions": {
         "init": {
-          "desc": "Constructeur appelé par la fonction renvoyée par le module. Récupère la liste triée des types de mission et l'éditeur de chaque type.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor called by the function returned by the module. Gets the sorted list of mission types and the editor of each type.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "loadEditor": {
-          "desc": "Cherche /gameplay/missionTypes/<missionType>/editor.lua et l'instancie avec missionEditor. Si le fichier n'existe pas ou ne se charge pas, crée un éditeur générique via gameplay_missions_missions.editorHelper.",
-          "params": {"missionType": {"type": "string", "desc": "Nom du type de mission."}}
+          "desc": "Looks for /gameplay/missionTypes/<missionType>/editor.lua and instantiates it with missionEditor. If the file does not exist or does not load, creates a generic editor via gameplay_missions_missions.editorHelper.",
+          "params": {
+            "missionType": {
+              "type": "string",
+              "desc": "Mission type name."
+            }
+          }
         },
         "setMission": {
-          "desc": "Définit la mission courante, transmet le conteneur à l'éditeur de son type (setContainer) et recalcule les problèmes (checkContainer) dans self.mtdIssues.",
-          "params": {"mission": {"type": "table", "desc": "Données de la mission (id, missionType, missionTypeData…)."}},
+          "desc": "Sets the current mission, passes the container to its type's editor (setContainer) and recomputes the issues (checkContainer) into self.mtdIssues.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Mission data (id, missionType, missionTypeData...)."
+            }
+          },
           "internal": true
         },
         "fillGeneric": {
-          "desc": "Remplace mission.missionTypeData par les données neuves fournies par l'éditeur du type de la mission (getNewData), ou {} s'il n'y en a pas.",
-          "params": {"mission": {"type": "table", "desc": "Mission à remplir."}}
+          "desc": "Replaces mission.missionTypeData with the fresh data provided by the mission's type editor (getNewData), or {} if there is none.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Mission to fill."
+            }
+          }
         },
         "changeMissionType": {
-          "desc": "Change le type de la mission : sauvegarde les données du type actuel, crée (ou restaure) celles du nouveau type, puis rappelle setMission.",
+          "desc": "Changes the mission's type: saves the current type's data, creates (or restores) those of the new type, then calls setMission again.",
           "params": {
-            "newType": {"type": "string", "desc": "Nouveau type de mission."},
-            "force": {"type": "boolean|nil", "desc": "Si vrai, efface l'historique des anciennes données de cette mission avant de sauvegarder."}
+            "newType": {
+              "type": "string",
+              "desc": "New mission type."
+            },
+            "force": {
+              "type": "boolean|nil",
+              "desc": "If true, clears the history of the old data of this mission before saving."
+            }
           }
         },
         "openPopup": {
-          "desc": "Ouvre le popup imgui « missionFGVariables » (aide aux variables Flowgraph).",
+          "desc": "Opens the imgui popup \"missionFGVariables\" (Flowgraph variables helper).",
           "internal": false
         },
         "variablesHelperPopup": {
-          "desc": "Dessine le popup qui classe les champs du type de mission en variables manquantes, de type différent, correctes, et variables présentes seulement dans le Flowgraph. Les boutons ajoutent les variables manquantes (valeur par défaut du type) ou corrigent leur type dans le projet Flowgraph courant (editor_flowgraphEditor.getManager()). À appeler à chaque frame."
+          "desc": "Draws the popup that sorts the mission type's fields into missing variables, variables of a different type, correct ones, and variables present only in the Flowgraph. The buttons add the missing variables (default value of the type) or fix their type in the current Flowgraph project (editor_flowgraphEditor.getManager()). Call every frame."
         },
         "draw": {
-          "desc": "Dessine le panneau : combo du type de mission, case « Raw », bouton « Auto fix N issues », puis l'éditeur du type ou l'éditeur JSON brut.",
+          "desc": "Draws the panel: mission type combo, \"Raw\" checkbox, \"Auto fix N issues\" button, then the type's editor or the raw JSON editor.",
           "internal": true
         },
         "drawTools": {
-          "desc": "Pour chaque type dont l'éditeur définit toolsFunctions, crée un sous-menu et appelle cette fonction.",
+          "desc": "For each type whose editor defines toolsFunctions, creates a submenu and calls that function.",
           "internal": true
         },
         "drawViewsMenu": {
-          "desc": "Pour chaque type dont l'éditeur définit viewFunctions, crée un sous-menu et appelle cette fonction.",
+          "desc": "For each type whose editor defines viewFunctions, creates a submenu and calls that function.",
           "internal": true
         },
         "drawViews": {
-          "desc": "Appelle drawViews(liste des missions) sur chaque éditeur de type qui le définit.",
+          "desc": "Calls drawViews(list of missions) on each type editor that defines it.",
           "internal": true
         },
         "getCurrentEditorHelper": {
-          "desc": "Renvoie l'éditeur du type de la mission courante.",
-          "returns": [{"type": "table|nil", "desc": "Éditeur (editorHelper) du type courant."}]
+          "desc": "Returns the editor of the current mission's type.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Editor (editorHelper) of the current type."
+            }
+          ]
         },
         "getMissionIssues": {
-          "desc": "Renvoie la liste des problèmes d'une mission : résultat de checkContainer de l'éditeur de son type, plus ceux de calculateMissionIssues du type s'il existe (appelé en pcall).",
-          "params": {"m": {"type": "table", "desc": "Mission à vérifier."}},
-          "returns": [{"type": "table[]", "desc": "Liste d'éléments {label, severity}."}]
+          "desc": "Returns a mission's list of issues: result of checkContainer of its type's editor, plus those of the type's calculateMissionIssues if it exists (called in pcall).",
+          "params": {
+            "m": {
+              "type": "table",
+              "desc": "Mission to check."
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "List of elements {label, severity}."
+            }
+          ]
         }
       }
     }

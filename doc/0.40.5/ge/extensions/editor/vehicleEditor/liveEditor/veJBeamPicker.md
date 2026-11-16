@@ -1,85 +1,85 @@
 # `editor_vehicleEditor_liveEditor_veJBeamPicker`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veJBeamPicker.lua` · VM : Game Engine (GE) · 805 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veJBeamPicker.lua` · VM: Game Engine (GE) · 805 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_veJBeamPicker` : `extensions.load("editor_vehicleEditor_liveEditor_veJBeamPicker")`, puis la globale `editor_vehicleEditor_liveEditor_veJBeamPicker`
+**Access:** extension `editor_vehicleEditor_liveEditor_veJBeamPicker`: `extensions.load("editor_vehicleEditor_liveEditor_veJBeamPicker")`, then the global `editor_vehicleEditor_liveEditor_veJBeamPicker`
 
-Fenêtre 'JBeam Picker' du Vehicle Editor live : permet de choisir des nœuds et des poutres du véhicule (à la souris, ou par saisie d'ID/nom avec suggestions) et d'en suivre des données en direct. Onglet 'Nodes' / 'Beams' : arbre des éléments choisis, choix des données à afficher (nœud : vitesse, vitesse relative, force ; poutre : longueur, vitesse, force, stress, damping), filtre par type de poutre (NORMALTYPE, BEAM_ANISOTROPIC, BEAM_BOUNDED, BEAM_PRESSURED, BEAM_LBEAM, BEAM_BROKEN, BEAM_HYDRO, BEAM_SUPPORT) et graphes (1000 points). Le picking utilise les modes debug Nœud/Poutre du jeu (Ctrl+M / Ctrl+B).
+'JBeam Picker' window of the live Vehicle Editor: lets you choose nodes and beams of the vehicle (with the mouse, or by typing an ID/name with suggestions) and follow their data live. 'Nodes' / 'Beams' tab: tree of the chosen elements, choice of the data to display (node: velocity, relative velocity, force; beam: length, speed, force, stress, damping), filter by beam type (NORMALTYPE, BEAM_ANISOTROPIC, BEAM_BOUNDED, BEAM_PRESSURED, BEAM_LBEAM, BEAM_BROKEN, BEAM_HYDRO, BEAM_SUPPORT) and graphs (1000 points). Picking uses the game's Node/Beam debug modes (Ctrl+M / Ctrl+B).
 
-## Remarques
+## Notes
 
-- Les valeurs de type de poutre (0 à 7) correspondent aux constantes du moteur C++ et ne doivent pas être changées.
-- Les données dynamiques (force, vitesse, stress…) sont demandées au VM véhicule via be:queueObjectFastLua et renvoyées dans les tables M.nodeDataFromVELua[id][nom] et M.beamDataFromVELua[id][nom] par obj:queueGameEngineLua ; elles arrivent donc avec un frame de retard et valent 0 avant la première réponse.
-- Les graphes avancent d'un échantillon par frame seulement quand la simulation tourne (be:getEnabled()).
-- Unités : m, m/s, N.
+- The beam type values (0 to 7) correspond to the C++ engine constants and must not be changed.
+- The dynamic data (force, velocity, stress...) is requested from the vehicle VM via be:queueObjectFastLua and returned in the tables M.nodeDataFromVELua[id][name] and M.beamDataFromVELua[id][name] by obj:queueGameEngineLua; it therefore arrives one frame late and is 0 before the first reply.
+- The graphs advance by one sample per frame only when the simulation is running (be:getEnabled()).
+- Units: m, m/s, N.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.onDeserialized(data)` | Restaure l'état d'ouverture. *(interne)* *(hook)* | 790 |
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.onEditorInitialized()` | Appelé à l'initialisation de l'éditeur : crée les cases à cocher de types de poutres. *(interne)* *(hook)* | 776 |
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.onSerialize()` | Renvoie {windowOpen}. *(interne)* *(hook)* | 784 |
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.onUpdate(dt)` | Appelé chaque frame : dessine la fenêtre à onglets Nodes/Beams et avance l'offset des graphes. *(interne)* *(hook)* | 733 |
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)` | Hook de rendu émis par editor_veMain : dessine les éléments choisis et exécute le picking de nœuds ou de poutres selon l'état. *(interne)* *(hook)* | 720 |
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.open()` | Ouvre la fenêtre. | 772 |
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.requestDrawnBeamsCallback(beams, scale)` | Callback de la demande de poutres dessinées : mémorise les poutres disponibles et leur échelle (rayon de sélection = 5 x échelle). *(interne)* | 172 |
-| `editor_vehicleEditor_liveEditor_veJBeamPicker.requestDrawnNodesCallback(nodes, scale)` | Callback de la demande de nœuds dessinés : mémorise la liste des nœuds disponibles pour le picking et leur échelle d'affichage (rayon de sélection = 2 x échelle). *(interne)* | 165 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.onDeserialized(data)` | Restores the open state. *(internal)* *(hook)* | 790 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.onEditorInitialized()` | Called at editor initialization: creates the beam type checkboxes. *(internal)* *(hook)* | 776 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.onSerialize()` | Returns {windowOpen}. *(internal)* *(hook)* | 784 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.onUpdate(dt)` | Called every frame: draws the Nodes/Beams tabbed window and advances the graph offset. *(internal)* *(hook)* | 733 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)` | Render hook emitted by editor_veMain: draws the chosen elements and runs the node or beam picking depending on the state. *(internal)* *(hook)* | 720 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.open()` | Opens the window. | 772 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.requestDrawnBeamsCallback(beams, scale)` | Callback of the drawn-beams request: remembers the available beams and their scale (selection radius = 5 x scale). *(internal)* | 172 |
+| `editor_vehicleEditor_liveEditor_veJBeamPicker.requestDrawnNodesCallback(nodes, scale)` | Callback of the drawn-nodes request: remembers the list of nodes available for picking and their display scale (selection radius = 2 x scale). *(internal)* | 165 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_veJBeamPicker.onDeserialized(data)`
 
-Restaure l'état d'ouverture.
+Restores the open state.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_veJBeamPicker.onSerialize()`
 
-Renvoie {windowOpen}.
+Returns {windowOpen}.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
 #### `editor_vehicleEditor_liveEditor_veJBeamPicker.onUpdate(dt)`
 
-Appelé chaque frame : dessine la fenêtre à onglets Nodes/Beams et avance l'offset des graphes.
+Called every frame: draws the Nodes/Beams tabbed window and advances the graph offset.
 
-- `dt` (*number*) : Delta temps.
+- `dt` (*number*) : Time delta.
 
 #### `editor_vehicleEditor_liveEditor_veJBeamPicker.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)`
 
-Hook de rendu émis par editor_veMain : dessine les éléments choisis et exécute le picking de nœuds ou de poutres selon l'état.
+Render hook emitted by editor_veMain: draws the chosen elements and runs the node or beam picking depending on the state.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `editor_vehicleEditor_liveEditor_veJBeamPicker.requestDrawnBeamsCallback(beams, scale)`
 
-Callback de la demande de poutres dessinées : mémorise les poutres disponibles et leur échelle (rayon de sélection = 5 x échelle).
+Callback of the drawn-beams request: remembers the available beams and their scale (selection radius = 5 x scale).
 
-- `beams` (*table*) : Poutres disponibles pour le picking.
-- `scale` (*number*) : Échelle de dessin des poutres.
+- `beams` (*table*) : Beams available for picking.
+- `scale` (*number*) : Drawing scale of the beams.
 
 #### `editor_vehicleEditor_liveEditor_veJBeamPicker.requestDrawnNodesCallback(nodes, scale)`
 
-Callback de la demande de nœuds dessinés : mémorise la liste des nœuds disponibles pour le picking et leur échelle d'affichage (rayon de sélection = 2 x échelle).
+Callback of the drawn-nodes request: remembers the list of nodes available for picking and their display scale (selection radius = 2 x scale).
 
-- `nodes` (*table*) : Nœuds disponibles pour le picking.
-- `scale` (*number*) : Échelle de dessin des nœuds.
+- `nodes` (*table*) : Nodes available for picking.
+- `scale` (*number*) : Drawing scale of the nodes.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `beamDataFromVELua` | table<integer, table<string, any>> | Données de poutres renvoyées par le VM véhicule, indexées par ID de poutre puis nom de donnée (speed, force, stress, damping). |
+| `beamDataFromVELua` | table<integer, table<string, any>> | Beam data returned by the vehicle VM, keyed by beam ID then data name (speed, force, stress, damping). |
 | `menuEntry` | string | 'JBeam Picker'. |
-| `nodeDataFromVELua` | table<integer, table<string, any>> | Données de nœuds renvoyées par le VM véhicule, indexées par ID de nœud puis nom de donnée (ex. force). |
+| `nodeDataFromVELua` | table<integer, table<string, any>> | Node data returned by the vehicle VM, keyed by node ID then data name (e.g. force). |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getEnabled`, `queueObjectFastLua`
 - `debugDrawer:` `drawCylinder`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veJBeamPicker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veJBeamPicker.lua`.*

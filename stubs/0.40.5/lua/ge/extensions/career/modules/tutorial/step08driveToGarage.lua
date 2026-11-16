@@ -2,44 +2,44 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Étape 8 du tutoriel de carrière (« driveToGarage ») : le joueur conduit jusqu'au garage, se gare sur la place garageExteriorPark (immobile 1 s, à moins de 25 m pour déclencher la phase de parking), puis sort du véhicule (mode marche). Phases : driveToGarage, parkAtGarage, hopOut, waitArrivalPopups. Deux popups d'arrivée (v2/garageArrivalIntro1 et 2) concluent l'étape, puis le guidage mène au point garageInteriorWalkStart.
---- Accès : extension `career_modules_tutorial_step08driveToGarage` : `extensions.load("career_modules_tutorial_step08driveToGarage")`, puis la globale `career_modules_tutorial_step08driveToGarage`
+--- Career tutorial step 8 ("driveToGarage"): the player drives to the garage, parks in the garageExteriorPark spot (stationary 1 s, within 25 m to trigger the parking phase), then gets out of the vehicle (walking mode). Phases: driveToGarage, parkAtGarage, hopOut, waitArrivalPopups. Two arrival popups (v2/garageArrivalIntro1 and 2) conclude the step, then the guidance leads to the garageInteriorWalkStart point.
+--- Access: extension `career_modules_tutorial_step08driveToGarage`: `extensions.load("career_modules_tutorial_step08driveToGarage")`, then the global `career_modules_tutorial_step08driveToGarage`
 ---@class career_modules_tutorial_step08driveToGarage
 career_modules_tutorial_step08driveToGarage = {}
 
---- Retire le reset de zone, débloque la marche, vide les tâches et supprime les visuels du parking.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:325
+--- Removes the zone reset, unlocks walking, clears the tasks and deletes the parking visuals.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:325
 function career_modules_tutorial_step08driveToGarage.cleanup() end
 
---- Hook de sortie de zone : lance le reset de sortie de zone de l'étape.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:258
+--- Out-of-bounds hook: starts the step's out-of-bounds reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:258
 function career_modules_tutorial_step08driveToGarage.onCareerTutorialLeftBounds() end
 
---- Affiche la phase et un bouton « Skip Step 8 » (téléporte au garage, passe en mode marche, avance).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:333
----@param im table Table ui_imgui.
+--- Displays the phase and a "Skip Step 8" button (teleports to the garage, switches to walking mode, advances).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:333
+---@param im table ui_imgui table.
 function career_modules_tutorial_step08driveToGarage.onDebugMenu(im) end
 
---- Hook de fermeture de popup : à la fermeture de v2/garageArrivalIntro2 (phase waitArrivalPopups), trace la route vers l'intérieur du garage et programme l'avance d'étape après 1 s.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:262
----@param id string Id de la popup.
+--- Popup close hook: when v2/garageArrivalIntro2 closes (waitArrivalPopups phase), draws the route to the garage interior and schedules the step advance after 1 s.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:262
+---@param id string Popup id.
 function career_modules_tutorial_step08driveToGarage.onIntroPopupCareerClosed(id) end
 
---- Appelé chaque frame : met à jour le checkpoint de reprise, gère les phases conduite / parking / sortie du véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:272
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta simulation (s).
----@param dtRaw number Delta brut (s).
+--- Called every frame: updates the respawn checkpoint, handles the driving / parking / exiting the vehicle phases.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:272
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation delta (s).
+---@param dtRaw number Raw delta (s).
 function career_modules_tutorial_step08driveToGarage.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Appelé à l'activation : arrête le drag, retrouve le véhicule joueur, les places et zones du garage, installe zones et reset, autorise la marche et l'entrée dans le véhicule, crée le marqueur et affiche l'objectif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:181
----@param stepData any Données de l'étape (non utilisées).
+--- Called on activation: stops the drag, finds the player vehicle, the garage spots and zones, installs zones and reset, allows walking and entering the vehicle, creates the marker and displays the objective.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/tutorial/step08driveToGarage.lua:181
+---@param stepData any Step data (unused).
 function career_modules_tutorial_step08driveToGarage.setup(stepData) end
 

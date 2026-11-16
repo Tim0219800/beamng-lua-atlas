@@ -1,67 +1,167 @@
 {
   "path": "lua/ge/extensions/ui/pause/actions.lua",
-  "module": "Registre des actions du menu pause. Il enregistre des boutons (via ui/gridSelectorUtils/buttonModule) exécutables par id, gère l'enchaînement « sauvegarder la carrière puis exécuter un callback », et maintient les onglets et boutons ajoutés par des mods au menu pause. Un mod peut y déclarer un onglet et des boutons ; le module notifie l'UI par le hook GUI PauseModActionsChanged.",
+  "module": "Pause menu action registry. It registers buttons (via ui/gridSelectorUtils/buttonModule) executable by id, handles the \"save the career then run a callback\" chain, and maintains the tabs and buttons added by mods to the pause menu. A mod can declare a tab and buttons there; the module notifies the UI through the GUI hook PauseModActionsChanged.",
   "usage": "ui_pause_actions.registerModButton({id = \"monBouton\", tabId = \"mods\", label = \"Mon outil\", icon = \"wrench\", componentName = \"MonComposant\"})",
   "notes": [
-    "Si tabId vaut \"mods\" et que l'onglet n'existe pas, il est créé automatiquement (label ui.dashboard.mods, icône wrench) puis supprimé quand il n'a plus de bouton. Tout autre tabId inconnu donne reason = \"unknown_tab\".",
-    "getVisibleModTabs ne renvoie que les onglets ayant au moins un bouton ; leur tabId est préfixé par \"mod:\".",
-    "saveCareerThen : le callback expire après 30 s (une sauvegarde échouée ne déclenche jamais onSaveFinished) ; il est alors ignoré.",
-    "L'extension passe en déchargement manuel (setExtensionUnloadMode manual) à son chargement."
+    "If tabId is \"mods\" and the tab does not exist, it is created automatically (label ui.dashboard.mods, icon wrench) then removed when it no longer has any button. Any other unknown tabId gives reason = \"unknown_tab\".",
+    "getVisibleModTabs only returns tabs that have at least one button; their tabId is prefixed with \"mod:\".",
+    "saveCareerThen: the callback expires after 30 s (a failed save never triggers onSaveFinished); it is then ignored.",
+    "The extension switches to manual unloading (setExtensionUnloadMode manual) when it loads."
   ],
   "functions": {
-    "clearActions": {"desc": "Efface tous les boutons enregistrés via registerButton et annule le callback de sauvegarde en attente. Ne touche pas aux onglets/boutons de mods.", "params": {}, "returns": [], "internal": false},
-    "saveCareerThen": {
-      "desc": "Mémorise un callback puis lance career_saveSystem.saveCurrent(). Le callback est appelé dans onSaveFinished s'il n'a pas plus de 30 s.",
-      "params": {"callback": {"type": "function", "desc": "Fonction sans argument appelée après la sauvegarde."}},
+    "clearActions": {
+      "desc": "Clears all buttons registered via registerButton and cancels the pending save callback. Does not touch the mods' tabs/buttons.",
+      "params": {},
       "returns": [],
       "internal": false
     },
-    "onSaveFinished": {"desc": "Hook appelé quand une sauvegarde de carrière se termine ; exécute le callback en attente de saveCareerThen s'il n'a pas expiré.", "params": {}, "returns": [], "internal": true},
+    "saveCareerThen": {
+      "desc": "Stores a callback then launches career_saveSystem.saveCurrent(). The callback is called in onSaveFinished if it is no more than 30 s old.",
+      "params": {
+        "callback": {
+          "type": "function",
+          "desc": "Function with no argument called after the save."
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onSaveFinished": {
+      "desc": "Hook called when a career save finishes; runs the pending saveCareerThen callback if it has not expired.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
     "executeAction": {
-      "desc": "Exécute le bouton enregistré portant cet id.",
-      "params": {"buttonId": {"type": "any", "desc": "Id attribué par registerButton."}, "payload": {"type": "any", "desc": "Données transmises au callback du bouton."}},
-      "returns": [{"type": "any", "desc": "Résultat de buttonInstance.executeButton."}],
+      "desc": "Executes the registered button with this id.",
+      "params": {
+        "buttonId": {
+          "type": "any",
+          "desc": "Id assigned by registerButton."
+        },
+        "payload": {
+          "type": "any",
+          "desc": "Data passed to the button's callback."
+        }
+      },
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Result of buttonInstance.executeButton."
+        }
+      ],
       "internal": false
     },
     "registerButton": {
-      "desc": "Enregistre un bouton d'action et renvoie une copie des métadonnées avec buttonId. Si metadata.visible == false, rien n'est enregistré et les métadonnées sont renvoyées telles quelles.",
+      "desc": "Registers an action button and returns a copy of the metadata with buttonId. If metadata.visible == false, nothing is registered and the metadata is returned as is.",
       "params": {
-        "metadata": {"type": "table|nil", "desc": "Description du bouton (nil devient {})."},
-        "callback": {"type": "function|nil", "desc": "Fonction appelée à l'exécution ; défaut : fonction renvoyant false."}
+        "metadata": {
+          "type": "table|nil",
+          "desc": "Button description (nil becomes {})."
+        },
+        "callback": {
+          "type": "function|nil",
+          "desc": "Function called on execution; default: a function returning false."
+        }
       },
-      "returns": [{"type": "table", "desc": "Copie des métadonnées, avec buttonId si enregistré."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the metadata, with buttonId if registered."
+        }
+      ],
       "internal": false
     },
-    "getAllButtonInfos": {"desc": "Renvoie les infos de tous les boutons enregistrés.", "params": {}, "returns": [{"type": "table", "desc": "Résultat de buttonInstance.getAllButtonInfos."}], "internal": false},
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement ; met le mode de déchargement en manuel.", "params": {}, "returns": [], "internal": true},
+    "getAllButtonInfos": {
+      "desc": "Returns the info of all registered buttons.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Result of buttonInstance.getAllButtonInfos."
+        }
+      ],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook called on load; sets the unload mode to manual.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
     "registerModTab": {
-      "desc": "Crée ou met à jour un onglet de mod (conserve l'ordre des boutons existants) et notifie l'UI.",
-      "params": {"tab": {"type": "table", "desc": "Champs : id (requis), label (défaut id), icon, card2ComponentName, card2Props."}},
-      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"missing_id\"}."}],
+      "desc": "Creates or updates a mod tab (keeps the order of existing buttons) and notifies the UI.",
+      "params": {
+        "tab": {
+          "type": "table",
+          "desc": "Fields: id (required), label (default id), icon, card2ComponentName, card2Props."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success = true} or {success = false, reason = \"missing_id\"}."
+        }
+      ],
       "internal": false
     },
     "unregisterModTab": {
-      "desc": "Supprime un onglet de mod et ses boutons, puis notifie l'UI.",
-      "params": {"id": {"type": "string", "desc": "Id de l'onglet."}},
-      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"not_found\"}."}],
+      "desc": "Removes a mod tab and its buttons, then notifies the UI.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Tab id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success = true} or {success = false, reason = \"not_found\"}."
+        }
+      ],
       "internal": false
     },
     "registerModButton": {
-      "desc": "Ajoute ou met à jour un bouton de mod dans un onglet (déplace le bouton si son tabId change) et notifie l'UI.",
-      "params": {"button": {"type": "table", "desc": "Champs : id et tabId (requis), label, icon, componentName, props, card2ComponentName, card2Props."}},
-      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"missing_id_or_tab\" | \"unknown_tab\"}."}],
+      "desc": "Adds or updates a mod button in a tab (moves the button if its tabId changes) and notifies the UI.",
+      "params": {
+        "button": {
+          "type": "table",
+          "desc": "Fields: id and tabId (required), label, icon, componentName, props, card2ComponentName, card2Props."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success = true} or {success = false, reason = \"missing_id_or_tab\" | \"unknown_tab\"}."
+        }
+      ],
       "internal": false
     },
     "unregisterModButton": {
-      "desc": "Retire un bouton de mod ; supprime l'onglet \"mods\" s'il devient vide ; notifie l'UI.",
-      "params": {"id": {"type": "string", "desc": "Id du bouton."}},
-      "returns": [{"type": "table", "desc": "{success = true} ou {success = false, reason = \"not_found\"}."}],
+      "desc": "Removes a mod button; removes the \"mods\" tab if it becomes empty; notifies the UI.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Button id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{success = true} or {success = false, reason = \"not_found\"}."
+        }
+      ],
       "internal": false
     },
     "getVisibleModTabs": {
-      "desc": "Renvoie les onglets de mods non vides, au format attendu par buildPauseTabs (tabId \"mod:<id>\", isModTab, label, icon, buttons, visible, enabled).",
+      "desc": "Returns the non-empty mod tabs, in the format expected by buildPauseTabs (tabId \"mod:<id>\", isModTab, label, icon, buttons, visible, enabled).",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Liste d'onglets."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of tabs."
+        }
+      ],
       "internal": false
     }
   }

@@ -1,0 +1,179 @@
+{
+  "path": "lua/ge/extensions/ui/router/managers/transitionManager.lua",
+  "module": "Gère le cycle de vie des transitions de route du routeur d'interface : une seule transition à la fois, session de transition (jalons de progression, phase, temps écoulé par phase et total, renvois du changement de route), validation des accusés des frameworks et classification des timeouts. Le module n'a aucun effet de bord sur le routeur : update() renvoie des évènements (resendRouteChange ou timeout) que router.lua traite. Le temps est accumulé à partir de dtReal fourni par onGuiUpdate (pas os.clock).",
+  "notes": [
+    "Deux régimes de timeout. Plat (Angular/legacy, session.phase == nil) : un seul délai Config.Timeout (3 s) sur elapsedTime ; à l'expiration, le hook TRANSITION_TIMEOUT est émis une fois ({type=\"hard\", context}) et update renvoie {type=\"timeout\", reason=\"timeout_reached\"}. Phasé (Vue) : phases startup, routeCommit, mountReady, done.",
+    "Phase startup : renvoie {type=\"resendRouteChange\", entry=pendingEntry} toutes les Config.PhaseTimeouts.startupResendInterval secondes, sans jamais expirer ; la phase se termine quand routeNavigationStarted est reçu (alors totalElapsed est remis à 0). Phases suivantes : budgets routeCommit et mountReady, puis plafond total ; classifications : route_change_not_completed, route_mounted_not_acknowledged, transition_total_timeout.",
+    "Un accusé est valide si une transition est active, si transitionId (quand fourni) correspond, et si routeName (quand fourni) correspond au nom attendu (entrée en attente, sinon nom de la session, sinon route cible). Raisons d'échec : no_active_transition, transition_id_mismatch, route_mismatch (complete renvoie route_name_mismatch).",
+    "L'identifiant de transition est généré sous la forme « transition_<compteur>_<UUID> » (Engine.generateUUID).",
+    "Incohérence mineure : le commentaire de start() annonce « @return transitionId, success » alors que la fonction renvoie (success, transitionId) ; router.lua utilise bien l'ordre (success, id).",
+    "isTimeoutReached ne concerne que le régime plat (elapsedTime >= Config.Timeout) ; en régime phasé elapsedTime n'est pas incrémenté."
+  ],
+  "functions": {
+    "getStatus": {
+      "desc": "Renvoie l'état courant : \"idle\", \"transitioning\" ou \"cancelled\" (transitoire).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "Constants.TransitionStatus."}],
+      "internal": false
+    },
+    "isTransitioning": {
+      "desc": "Indique si une transition est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si status == transitioning."}],
+      "internal": false
+    },
+    "getTransitionId": {
+      "desc": "Renvoie l'identifiant de la transition active.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Identifiant ou nil si aucune transition."}],
+      "internal": false
+    },
+    "getElapsedTime": {
+      "desc": "Temps écoulé (secondes) depuis le début de la transition plate, accumulé depuis dtReal.",
+      "params": {},
+      "returns": [{"type": "number", "desc": "Secondes."}],
+      "internal": false
+    },
+    "isTimeoutReached": {
+      "desc": "Indique si le délai du régime plat (Config.Timeout) est atteint.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si elapsedTime >= Config.Timeout."}],
+      "internal": false
+    },
+    "getKind": {
+      "desc": "Renvoie le type de la transition (context.kind, \"navigate\" par défaut).",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Type ou nil."}],
+      "internal": false
+    },
+    "getToRoute": {
+      "desc": "Renvoie la route de destination de la transition active.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Route résolue."}],
+      "internal": false
+    },
+    "getFromRoute": {
+      "desc": "Renvoie la route d'origine de la transition active.",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Route d'origine (vue compat)."}],
+      "internal": false
+    },
+    "getTransitionContext": {
+      "desc": "Renvoie un instantané du contexte de transition.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{transitionId, kind, toRoute, fromRoute}."}],
+      "internal": false
+    },
+    "validateAcknowledgement": {
+      "desc": "Valide un accusé d'un framework contre la transition active (voir notes).",
+      "params": {
+        "routeName": {"type": "string|nil", "desc": "Route accusée (optionnel)."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition renvoyé par l'UI (optionnel)."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason}."}],
+      "internal": false
+    },
+    "getSession": {
+      "desc": "Renvoie la session de transition active créée par router.lua (routeName, routeData, navigationContext, pendingEntry, skipOnMount, mounted, routeChangeCommitted, expectsMountAck, phase, phaseElapsed, totalElapsed, timeSinceLastEmit, handoffAttempts, progress, milestoneAt, protectionToken…).",
+      "params": {},
+      "returns": [{"type": "table|nil", "desc": "Session ou nil si inactif."}],
+      "internal": false
+    },
+    "markProgress": {
+      "desc": "Enregistre un jalon de progression rapporté par le framework après validation de l'accusé.",
+      "params": {
+        "routeName": {"type": "string", "desc": "Route accusée."},
+        "milestone": {"type": "string", "desc": "routeChangeReceived ou routeNavigationStarted."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason}."}],
+      "internal": false
+    },
+    "markCommitted": {
+      "desc": "Marque la session comme validée (routeChangeComplete a promu l'entrée). La validation et la promotion sont faites par le routeur.",
+      "params": {
+        "routeName": {"type": "string", "desc": "Route validée (non utilisée, pour symétrie)."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason=no_active_transition|transition_id_mismatch}."}],
+      "internal": false
+    },
+    "markMounted": {
+      "desc": "Marque la session comme montée (accusé routeMounted traité).",
+      "params": {
+        "routeName": {"type": "string", "desc": "Route montée (non utilisée)."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition."}
+      },
+      "returns": [{"type": "table", "desc": "{success=true} ou {success=false, reason}."}],
+      "internal": false
+    },
+    "getTimeoutInfo": {
+      "desc": "Instantané de chronométrage pour le gestionnaire de timeout du routeur ; la classification est déduite des jalons de progression si elle n'est pas fournie.",
+      "params": {
+        "classification": {"type": "string|nil", "desc": "Classification déjà calculée (chemin phasé)."}
+      },
+      "returns": [{"type": "table", "desc": "{transitionId, classification, phase, phaseElapsed, totalElapsed, handoffAttempts}."}],
+      "internal": false
+    },
+    "update": {
+      "desc": "Fait avancer le chronométrage de la transition active ; appelée par router.onGuiUpdate. Renvoie nil si rien à signaler.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta de temps réel en secondes."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{type=\"resendRouteChange\", entry} ou {type=\"timeout\", reason, classification?}."}],
+      "internal": true
+    },
+    "canStartTransition": {
+      "desc": "Indique si une nouvelle transition peut démarrer (aucune en cours).",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si status ~= transitioning."}],
+      "internal": false
+    },
+    "start": {
+      "desc": "Démarre une transition : génère l'identifiant, enregistre route cible/origine et session, passe en transitioning. Échoue si une transition est déjà en cours ou sans route cible.",
+      "params": {
+        "context": {"type": "table", "desc": "{toRoute (ou resolved), fromRoute?, kind?, session?}."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si démarrée ; false sinon."},
+        {"type": "string", "desc": "Identifiant de transition, ou raison (transition_already_in_progress, no_target_route) en cas d'échec."}
+      ],
+      "internal": false
+    },
+    "complete": {
+      "desc": "Termine la transition avec succès après validation de l'identifiant et du nom de route, puis remet tout l'état à zéro.",
+      "params": {
+        "routeName": {"type": "string|nil", "desc": "Route terminée (validée contre le nom attendu)."},
+        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition (validé si fourni)."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true si terminée."},
+        {"type": "string", "desc": "\"completed\" ou raison d'échec (no_active_transition, transition_id_mismatch, route_name_mismatch)."}
+      ],
+      "internal": false
+    },
+    "cancel": {
+      "desc": "Annule la transition active, efface l'état et revient à idle.",
+      "params": {
+        "reason": {"type": "string|nil", "desc": "Raison (\"cancelled\" par défaut), journalisée."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "true s'il y avait une transition."},
+        {"type": "string|nil", "desc": "Identifiant de la transition annulée."}
+      ],
+      "internal": false
+    },
+    "reset": {
+      "desc": "Réinitialise l'état (tests ou récupération) : statut idle, identifiant, temps, session. Ne remet pas à nil kind, toRoute ni fromRoute.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getDebugInfo": {
+      "desc": "Renvoie des informations de debug.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{status, transitionId, elapsedTime}."}],
+      "internal": false
+    }
+  }
+}

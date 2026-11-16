@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/getObjectField.lua",
-  "module": "Noeud flowgraph « Get Object Field » (repeat_instant). Lit un champ d'un objet de la scene (scenetree.findObjectById). Entrees : objectId, fieldName, fieldArrayNum (optionnel, 0 par defaut, cache). Sortie : value (any). Utilise getField si le champ est declare, sinon getDynDataFieldbyName (champ dynamique).",
+  "module": "Flowgraph node \"Get Object Field\" (repeat_instant). Reads a field of a scene object (scenetree.findObjectById). Inputs: objectId, fieldName, fieldArrayNum (optional, 0 by default, hidden). Output: value (any). Uses getField if the field is declared, otherwise getDynDataFieldbyName (dynamic field).",
   "notes": [
-    "Rien n'est ecrit si l'objet est introuvable : la sortie garde l'ancienne valeur.",
-    "getField renvoie en general une chaine."
+    "Nothing is written if the object is not found: the output keeps its old value.",
+    "getField generally returns a string."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "work": {
-          "desc": "Trouve l'objet, puis ecrit value avec obj:getField(nom, index) si le nom est dans obj:getFields(), sinon avec obj:getDynDataFieldbyName.",
+          "desc": "Finds the object, then writes value with obj:getField(name, index) if the name is in obj:getFields(), otherwise with obj:getDynDataFieldbyName.",
           "internal": false
         }
       }

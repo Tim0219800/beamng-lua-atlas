@@ -1,56 +1,56 @@
 # `editor_vehicleEditor_staticEditor_vePartTree`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartTree.lua` · VM : Game Engine (GE) · 680 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartTree.lua` · VM: Game Engine (GE) · 680 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_staticEditor_vePartTree` : `extensions.load("editor_vehicleEditor_staticEditor_vePartTree")`, puis la globale `editor_vehicleEditor_staticEditor_vePartTree`
+**Access:** extension `editor_vehicleEditor_staticEditor_vePartTree`: `extensions.load("editor_vehicleEditor_staticEditor_vePartTree")`, then the global `editor_vehicleEditor_staticEditor_vePartTree`
 
-Fenêtre « Part Tree » du Static Editor. Elle lit le fichier JBeam de la partie sélectionnée, le parse en AST (json-ast, avec les données Lua dans ast.transient.luaData / luaDataRaw) et l'affiche en arbre (clé, valeur, éléments). Pour chaque table, on peut la sélectionner (met en surbrillance les nœuds AST correspondants dans Part Text View), la masquer, ou l'envoyer dans Part Properties. Elle dessine aussi les nodes et beams de la partie dans la vue de rendu statique (debugDrawer) et permet de les picker à la souris (Maj pour multi-sélection) ; les nœuds référencés mais définis dans d'autres parties sont retrouvés et dessinés en bleu transparent (« virtuels »). Un bouton « Spawn » ré-instancie le véhicule avec la partie sélectionnée comme partie principale.
+"Part Tree" window of the Static Editor. It reads the JBeam file of the selected part, parses it into an AST (json-ast, with the Lua data in ast.transient.luaData / luaDataRaw) and displays it as a tree (key, value, elements). For each table, you can select it (highlights the matching AST nodes in Part Text View), hide it, or send it to Part Properties. It also draws the part's nodes and beams in the static render view (debugDrawer) and lets you pick them with the mouse (Shift for multi-selection); nodes that are referenced but defined in other parts are looked up and drawn in transparent blue ("virtual"). A "Spawn" button re-instantiates the vehicle with the selected part as the main part.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('editor_vehicleEditor_staticEditor_vePartTree')
 editor_vehicleEditor_staticEditor_vePartTree.open()
 ```
 
-## Remarques
+## Notes
 
-- Écrit dans l'état partagé vEditor : ast, astFilename, selectedASTNodeMap, scrollToNode, selectedBeams, propertyTableEditTarget ; lit vEditor.selectedPart, vehicle, vehData.ioCtx.
-- Les champs internes __astNodeIdx, __selected, __hidden, __schemaProcessed, maxIDs et validTables sont écrits dans les tables de données et masqués dans l'affichage.
-- Rayons de dessin : nodes 0,02 m (survol 0,04, sélection 0,03, collision 0,035) ; beams 0,0025 m (survol 0,01, collision 0,01).
-- getNodefromAllParts parcourt toutes les parties disponibles en les copiant et en appliquant jbeam/tableSchema ; les nodes introuvables sont mémorisés dans brokenNodes pour ne pas répéter l'avertissement.
-- Le bouton « Spawn » modifie playerVehicle.config.mainPartName, sérialise la config dans veh.partConfig et respawn l'objet (spawnObjectWithPosRot) à la position initiale du nœud de référence.
-- Le bouton « Sync with AST » existe mais son corps est vide dans le code.
-- Bug : le menu contextuel 'part_tree_ctx_menu' lit rightClickedPart qui n'est pas défini dans ce fichier (variable globale nil) ; ce menu n'est jamais ouvert dans ce fichier et provoquerait une erreur s'il l'était.
-- Le fichier est relu quand le nom du fichier de la partie change ou que vEditor.ast est nil (par exemple après « Reload » de Part Text View).
+- Writes into the shared vEditor state: ast, astFilename, selectedASTNodeMap, scrollToNode, selectedBeams, propertyTableEditTarget; reads vEditor.selectedPart, vehicle, vehData.ioCtx.
+- The internal fields __astNodeIdx, __selected, __hidden, __schemaProcessed, maxIDs and validTables are written into the data tables and hidden in the display.
+- Drawing radii: nodes 0.02 m (hover 0.04, selection 0.03, collision 0.035); beams 0.0025 m (hover 0.01, collision 0.01).
+- getNodefromAllParts iterates over all available parts, copying them and applying jbeam/tableSchema; nodes that cannot be found are remembered in brokenNodes so the warning is not repeated.
+- The "Spawn" button modifies playerVehicle.config.mainPartName, serializes the config into veh.partConfig and respawns the object (spawnObjectWithPosRot) at the initial position of the reference node.
+- The "Sync with AST" button exists but its body is empty in the code.
+- Bug: the context menu 'part_tree_ctx_menu' reads rightClickedPart, which is not defined in this file (nil global variable); this menu is never opened in this file and would raise an error if it were.
+- The file is re-read when the part's file name changes or when vEditor.ast is nil (for example after "Reload" in Part Text View).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_staticEditor_vePartTree.onEditorGui()` | Hook de l'éditeur appelé à chaque frame : charge l'AST de la partie sélectionnée, dessine l'arbre et appelle le rendu/picking des nodes et beams dans la vue statique. Sans effet sans véhicule, vehData ou partie sélectionnée. *(interne)* *(hook)* | 560 |
-| `editor_vehicleEditor_staticEditor_vePartTree.onEditorInitialized()` | Hook de l'éditeur appelé à l'initialisation : enregistre la fenêtre (500x400, outil vehicleEditor). *(interne)* *(hook)* | 662 |
-| `editor_vehicleEditor_staticEditor_vePartTree.onFileChanged(filename, type)` | Hook d'extension appelé quand un fichier surveillé change sur le disque. Si c'est le fichier JBeam actuellement chargé, invalide l'AST (ast = nil, vEditor.ast = nil) pour le relire au prochain frame. *(interne)* *(hook)* | 666 |
-| `editor_vehicleEditor_staticEditor_vePartTree.open()` | Affiche la fenêtre « Part Tree » (editor.showWindow). | 658 |
+| `editor_vehicleEditor_staticEditor_vePartTree.onEditorGui()` | Editor hook called every frame: loads the AST of the selected part, draws the tree and calls the node and beam rendering/picking in the static view. No effect without a vehicle, vehData or selected part. *(internal)* *(hook)* | 560 |
+| `editor_vehicleEditor_staticEditor_vePartTree.onEditorInitialized()` | Editor hook called at initialization: registers the window (500x400, vehicleEditor tool). *(internal)* *(hook)* | 662 |
+| `editor_vehicleEditor_staticEditor_vePartTree.onFileChanged(filename, type)` | Extension hook called when a watched file changes on disk. If it is the currently loaded JBeam file, invalidates the AST (ast = nil, vEditor.ast = nil) so it is re-read on the next frame. *(internal)* *(hook)* | 666 |
+| `editor_vehicleEditor_staticEditor_vePartTree.open()` | Shows the "Part Tree" window (editor.showWindow). | 658 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_staticEditor_vePartTree.onFileChanged(filename, type)`
 
-Hook d'extension appelé quand un fichier surveillé change sur le disque. Si c'est le fichier JBeam actuellement chargé, invalide l'AST (ast = nil, vEditor.ast = nil) pour le relire au prochain frame.
+Extension hook called when a watched file changes on disk. If it is the currently loaded JBeam file, invalidates the AST (ast = nil, vEditor.ast = nil) so it is re-read on the next frame.
 
-- `filename` (*string*) : chemin du fichier modifié
-- `type` (*string*) : type de changement (non utilisé)
+- `filename` (*string*) : path of the modified file
+- `type` (*string*) : change type (unused)
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `menuEntry` | string | Texte de l'entrée du menu Apps : « Part Tree ». |
+| `menuEntry` | string | Apps menu entry text: "Part Tree". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`, `drawLine`, `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartTree.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/staticEditor/vePartTree.lua`.*

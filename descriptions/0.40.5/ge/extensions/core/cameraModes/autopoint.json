@@ -1,45 +1,70 @@
 {
   "path": "lua/ge/extensions/core/cameraModes/autopoint.lua",
-  "module": "Filtre de caméra (isFilter = true, hidden = true) : fait viser la caméra vers un point décalé du véhicule, exprimé en coordonnées locales du véhicule (localOffset), avec un lissage par ressort. Ce n'est PAS une caméra sélectionnable : camera.lua charge le fichier comme tout mode mais initCam ignore les filtres. Il est instancié par d'autres modes (ex. cameraModes/external.lua : self.autopoint = autopoint(), puis autopoint:update(data) à chaque frame). Le module renvoie un constructeur : require('core/cameraModes/autopoint')(options) qui crée l'objet C avec les options données comme valeurs initiales.",
-  "usage": "local autopoint = require('core/cameraModes/autopoint')\nlocal ap = autopoint()\nap:setRefNodes(ref, left, back)\nap.localOffset = vec3(0, 0, 1)  -- viser 1 m au-dessus du point de référence\nap:setSpring(5, 1)\n-- chaque frame : ap:update(data)",
+  "module": "Camera filter (isFilter = true, hidden = true): makes the camera aim at a point offset from the vehicle, expressed in vehicle-local coordinates (localOffset), with spring smoothing. It is NOT a selectable camera: camera.lua loads the file like any mode but initCam ignores filters. It is instantiated by other modes (e.g. cameraModes/external.lua: self.autopoint = autopoint(), then autopoint:update(data) every frame). The module returns a constructor: require('core/cameraModes/autopoint')(options), which creates the object C with the given options as initial values.",
+  "usage": "local autopoint = require('core/cameraModes/autopoint')\nlocal ap = autopoint()\nap:setRefNodes(ref, left, back)\nap.localOffset = vec3(0, 0, 1)  -- aim 1 m above the reference point\nap:setSpring(5, 1)\n-- every frame: ap:update(data)",
   "notes": [
-    "L'index automatique donne des signatures abrégées (setRefNodes(leftNodeID, backNodeID), setSpring(accel), update()) : les vraies signatures sont setRefNodes(centerNodeID, leftNodeID, backNodeID), setSpring(rate, accel) et update(data).",
-    "update modifie data.res.targetPos (ajoute le décalage lissé converti dans la base du véhicule) puis fixe data.res.rot pour regarder de data.res.pos vers targetPos. Il suppose data.res.pos et data.res.targetPos déjà remplis par la caméra appelante, et utilise data.veh:getNodePosition (positions locales au véhicule).",
-    "La base locale est construite à partir des noeuds de référence : x = (gauche - ref), y = (arrière - ref), z = x cross y (le décalage y est donc positif vers l'arrière du véhicule, selon la convention du code)."
+    "The automatic index gives abbreviated signatures (setRefNodes(leftNodeID, backNodeID), setSpring(accel), update()): the real signatures are setRefNodes(centerNodeID, leftNodeID, backNodeID), setSpring(rate, accel) and update(data).",
+    "update modifies data.res.targetPos (adds the smoothed offset converted to the vehicle basis) then sets data.res.rot to look from data.res.pos toward targetPos. It assumes data.res.pos and data.res.targetPos are already filled by the calling camera, and uses data.veh:getNodePosition (vehicle-local positions).",
+    "The local basis is built from the reference nodes: x = (left - ref), y = (back - ref), z = x cross y (so the y offset is positive toward the rear of the vehicle, per the code's convention)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Objet filtre renvoyé par le constructeur. Champs : isFilter, hidden, localOffset (vec3), refNodes {ref,left,back}, smX/smY/smZ (lisseurs).",
+      "desc": "Filter object returned by the constructor. Fields: isFilter, hidden, localOffset (vec3), refNodes {ref,left,back}, smX/smY/smZ (smoothers).",
       "functions": {
         "init": {
-          "desc": "Initialise le filtre : isFilter et hidden à true, localOffset à (0,0,0) et ressort par défaut (rate 5, accel 1). Appelé par le constructeur.",
+          "desc": "Initializes the filter: isFilter and hidden to true, localOffset to (0,0,0) and default spring (rate 5, accel 1). Called by the constructor.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "setSpring": {
-          "desc": "Crée ou recrée les trois lisseurs temporels sigmoïdes (X, Y, Z) en conservant leur valeur courante.",
+          "desc": "Creates or recreates the three sigmoid temporal smoothers (X, Y, Z), keeping their current value.",
           "params": {
-            "rate": {"type": "number", "desc": "Vitesse maximale de variation (unités par seconde)"},
-            "accel": {"type": "number", "desc": "Accélération du lissage"}
+            "rate": {
+              "type": "number",
+              "desc": "Maximum rate of change (units per second)"
+            },
+            "accel": {
+              "type": "number",
+              "desc": "Smoothing acceleration"
+            }
           },
           "returns": []
         },
         "setRefNodes": {
-          "desc": "Mémorise les noeuds de référence du véhicule utilisés pour construire la base locale.",
+          "desc": "Stores the vehicle reference nodes used to build the local basis.",
           "params": {
-            "centerNodeID": {"type": "integer", "desc": "Noeud central (ref)"},
-            "leftNodeID": {"type": "integer", "desc": "Noeud à gauche (left)"},
-            "backNodeID": {"type": "integer", "desc": "Noeud à l'arrière (back)"}
+            "centerNodeID": {
+              "type": "integer",
+              "desc": "Center node (ref)"
+            },
+            "leftNodeID": {
+              "type": "integer",
+              "desc": "Left node (left)"
+            },
+            "backNodeID": {
+              "type": "integer",
+              "desc": "Rear node (back)"
+            }
           },
           "returns": []
         },
         "update": {
-          "desc": "Applique le décalage lissé à data.res.targetPos et oriente data.res.rot vers lui. Appelé par la caméra qui possède ce filtre.",
-          "params": {"data": {"type": "table", "desc": "Données de frame : veh, dt, res {pos, targetPos, rot, fov}"}},
-          "returns": [{"type": "boolean", "desc": "Toujours true"}]
+          "desc": "Applies the smoothed offset to data.res.targetPos and orients data.res.rot toward it. Called by the camera that owns this filter.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Frame data: veh, dt, res {pos, targetPos, rot, fov}"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Always true"
+            }
+          ]
         }
       }
     }

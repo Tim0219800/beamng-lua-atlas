@@ -1,38 +1,38 @@
 # `editor_roadSpline_import`
 
-*Fichier : `lua/ge/extensions/editor/roadSpline/import.lua` · VM : Game Engine (GE) · 451 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadSpline/import.lua` · VM: Game Engine (GE) · 451 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadSpline_import` : `extensions.load("editor_roadSpline_import")`, puis la globale `editor_roadSpline_import`
+**Access:** extension `editor_roadSpline_import`: `extensions.load("editor_roadSpline_import")`, then the global `editor_roadSpline_import`
 
-Import de DecalRoads existants dans l'outil Road Spline. Estime une ligne centrale de référence (nœuds, largeurs, normales) à partir des routes choisies en cherchant leurs bords (recherche exponentielle puis dichotomie, jusqu'à 50 m latéralement), simplifie par RDP, crée un nouveau groupe Road Spline « Import N » et recrée les routes d'origine sous forme de couches relatives à cette ligne. Les DecalRoads source sont ensuite supprimés (undo possible).
+Import of existing DecalRoads into the Road Spline tool. Estimates a reference centerline (nodes, widths, normals) from the chosen roads by searching for their edges (exponential search then bisection, up to 50 m laterally), simplifies it with RDP, creates a new Road Spline group "Import N" and recreates the original roads as layers relative to that line. The source DecalRoads are then deleted (undo possible).
 
-## Remarques
+## Notes
 
-- BUG : importSelectedIntoNewGroup appelle groupMgr.getSplineMap(), qui n'existe pas dans groupMgr (la fonction s'appelle getIdToIdxMap). L'appel plante donc avec une erreur « attempt to call a nil value » après la création du groupe ; l'import via menu contextuel ou polygone ne peut pas aboutir en l'état (même appel aux lignes 116 et 138 pour les fonctions d'annulation).
-- Toutes les couches importées sont créées avec les couches automatiques désactivées (marques de pneus, lignes, fondus, etc.).
+- BUG: importSelectedIntoNewGroup calls groupMgr.getSplineMap(), which does not exist in groupMgr (the function is called getIdToIdxMap). The call therefore crashes with an "attempt to call a nil value" error after the group is created; the import via context menu or polygon cannot succeed as is (same call at lines 116 and 138 for the undo functions).
+- All imported layers are created with the automatic layers disabled (tire marks, lines, fades, etc.).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadSpline_import.importFromPolygon(polygon)` | Importe tous les DecalRoads dont au moins un nœud se trouve dans le polygone, puis appelle importSelectedIntoNewGroup avec eux. | 425 |
-| `editor_roadSpline_import.importSelectedIntoNewGroup(decalRoads)` | Convertit les DecalRoads donnés en un nouveau groupe Road Spline : calcule la spline de référence, crée le groupe, génère les couches, supprime les DecalRoads (et leurs groupes de scène devenus vides) et enregistre une action d'annulation. Retourne sans rien faire si la liste est vide. | 351 |
+| `editor_roadSpline_import.importFromPolygon(polygon)` | Imports all DecalRoads with at least one node inside the polygon, then calls importSelectedIntoNewGroup with them. | 425 |
+| `editor_roadSpline_import.importSelectedIntoNewGroup(decalRoads)` | Converts the given DecalRoads into a new Road Spline group: computes the reference spline, creates the group, generates the layers, deletes the DecalRoads (and their scene groups that became empty) and records an undo action. Returns without doing anything if the list is empty. | 351 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadSpline_import.importFromPolygon(polygon)`
 
-Importe tous les DecalRoads dont au moins un nœud se trouve dans le polygone, puis appelle importSelectedIntoNewGroup avec eux.
+Imports all DecalRoads with at least one node inside the polygon, then calls importSelectedIntoNewGroup with them.
 
-- `polygon` (*table*) : Polygone de sélection (liste de points) tracé par l'utilisateur.
+- `polygon` (*table*) : Selection polygon (list of points) drawn by the user.
 
 #### `editor_roadSpline_import.importSelectedIntoNewGroup(decalRoads)`
 
-Convertit les DecalRoads donnés en un nouveau groupe Road Spline : calcule la spline de référence, crée le groupe, génère les couches, supprime les DecalRoads (et leurs groupes de scène devenus vides) et enregistre une action d'annulation. Retourne sans rien faire si la liste est vide.
+Converts the given DecalRoads into a new Road Spline group: computes the reference spline, creates the group, generates the layers, deletes the DecalRoads (and their scene groups that became empty) and records an undo action. Returns without doing anything if the list is empty.
 
-- `decalRoads` (*table*) : Liste d'objets DecalRoad (scenetree), par ex. la sélection de l'éditeur.
+- `decalRoads` (*table*) : List of DecalRoad objects (scenetree), e.g. the editor selection.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `Sim.` `getUniqueName`, `upcast`
@@ -40,4 +40,4 @@ Convertit les DecalRoads donnés en un nouveau groupe Road Spline : calcule la s
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadSpline/import.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadSpline/import.lua`.*

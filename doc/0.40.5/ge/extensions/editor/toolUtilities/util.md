@@ -1,12 +1,12 @@
 # `editor_toolUtilities_util`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/util.lua` · VM : Game Engine (GE) · 840 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/util.lua` · VM: Game Engine (GE) · 840 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_util` : `extensions.load("editor_toolUtilities_util")`, puis la globale `editor_toolUtilities_util`
+**Access:** extension `editor_toolUtilities_util`: `extensions.load("editor_toolUtilities_util")`, then the global `editor_toolUtilities_util`
 
-Boîte à outils commune aux outils de splines et de « sites » de l'éditeur : souris et raycasts (position sur la carte, sur le terrain, sur un plan), conversions et couleurs, nettoyage de niveau, noms uniques, annulation (commitStep), noms de matériaux de terrain, calculs sur polylignes et splines (longueur, largeur, espacement, inversion, cadrage caméra), construction de rubans (mesh, GLTF), sources de splines pour le terraformage, bitmaps (retournement, export PNG de debug) et sous-onglets ImGui. Constantes par défaut : largeur min et max 10 m, tolérance de largeur fixe 0.01, distance max du rayon caméra 5000 m.
+Toolbox common to the editor's spline and "site" tools: mouse and raycasts (position on the map, on the terrain, on a plane), conversions and colors, level cleanup, unique names, undo (commitStep), terrain material names, polyline and spline computations (length, width, spacing, reversal, camera framing), ribbon building (mesh, GLTF), spline sources for terraforming, bitmaps (flipping, debug PNG export) and ImGui sub-tabs. Default constants: min and max width 10 m, fixed-width tolerance 0.01, max camera ray distance 5000 m.
 
-## Exemple
+## Example
 
 ```lua
 local util = require('editor/toolUtilities/util')
@@ -14,412 +14,412 @@ local p = util.mouseOnTerrainPos()
 local len = util.getPolyLength(points)
 ```
 
-## Remarques
+## Notes
 
-- Unités : msToKph et msToMph prennent des m/s ; les distances sont en mètres.
-- flipBitmapY est décrit « en place » dans le code mais renvoie un NOUVEAU GBitmap (format GFXFormatR16) sans modifier l'original.
-- generateUniqueName exige prefixIn (il est concaténé sans test) : un appel sans second argument lève une erreur.
-- buildRibbonGLTF convertit les coordonnées BeamNG (x, y, z) en GLTF (x, z, -y) et emballe positions en float et indices en uint16, donc limité à 65536 sommets.
-- Dans les structures de ruban, un 'source' est une liste de { pos, width, binormal } ; width est la largeur totale, la demi-largeur est utilisée de part et d'autre du binormal.
-- La grille d'empreinte des sites (footSnap) a un pas de 1 m, alignée sur le monde.
+- Units: msToKph and msToMph take m/s; distances are in meters.
+- flipBitmapY is described as "in place" in the code but returns a NEW GBitmap (GFXFormatR16 format) without modifying the original.
+- generateUniqueName requires prefixIn (it is concatenated without a check): a call without the second argument raises an error.
+- buildRibbonGLTF converts BeamNG coordinates (x, y, z) to GLTF (x, z, -y) and packs positions as float and indices as uint16, so it is limited to 65536 vertices.
+- In ribbon structures, a 'source' is a list of { pos, width, binormal }; width is the total width, the half-width is used on either side of the binormal.
+- The site footprint grid (footSnap) has a 1 m step, aligned to the world.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_util.beginSubTab(label, flags)` | Ouvre un sous-onglet ImGui (BeginTabItem) dont le corps est un enfant, pour que la rangée d'onglets reste en place. Renvoie false si l'onglet n'est pas ouvert. | 768 |
-| `editor_toolUtilities_util.buildRibbonGLTF(points, widths, binormals)` | Convertit une polyligne de ruban en JSON GLTF avec tampon binaire intégré (positions float, indices uint16), coordonnées converties (x, z, -y). | 493 |
-| `editor_toolUtilities_util.buildRibbonMeshFromPolyline(points, widths, binormals)` | Convertit une polyligne de ruban en maillage de triangles : deux sommets par point (gauche et droite, à demi-largeur le long du binormal), deux triangles par segment. | 451 |
-| `editor_toolUtilities_util.calculateAverageSpacingXY(positions, minSpacing)` | Estime l'espacement moyen en XY entre nœuds en simulant une interpolation Catmull-Rom centripète (10 échantillons par segment), sans compter l'emprise des meshes. | 326 |
-| `editor_toolUtilities_util.clearLevelContent()` | Ramène un niveau au terrain nu pour construire une scène de zéro. Supprime tous les objets des classes DecalRoad, TSStatic, MeshRoad, ProceduralMesh, PointLight et SpotLight, ainsi que toutes les INSTANCES de forêt ; les datablocks ForestItemData restent (la plantation retrouve ses espèces par nom). Marque editor.forestDirty. | 119 |
-| `editor_toolUtilities_util.commitStep(label, data, undoFn, redoFn)` | Enregistre un pas d'annulation comme transaction à part entière. Un commitAction seul copie en profondeur le pas du dessus de la pile et le nouveau pour chercher un doublon, ce qui est prohibitif pour un pas de terraformage de millions de hauteurs ; une transaction est enregistrée sans cette vérification. | 235 |
-| `editor_toolUtilities_util.computeIdToIdxMap(splines, map)` | Remplit `map` (vidée d'abord) avec spline.id -> indice dans la liste. | 205 |
-| `editor_toolUtilities_util.deepEqual(a, b)` | Égalité profonde de deux valeurs. Teste le type avant == car comparer un vec3 à autre chose lève une erreur. | 212 |
-| `editor_toolUtilities_util.doesPathContainNode(path, nodeKey)` | Cherche une clé de nœud dans un chemin. | 358 |
-| `editor_toolUtilities_util.endSubTab()` | Ferme le sous-onglet (EndChild puis EndTabItem). Pas de garde : EndChild doit être appelé même si l'enfant est rogné. | 775 |
-| `editor_toolUtilities_util.fastArrayCopy(arr)` | Copie rapide d'un tableau simple (copie superficielle). | 94 |
-| `editor_toolUtilities_util.filterClosePointsXY(points, minDist)` | Retire les points consécutifs plus proches que minDist dans le plan XY (garde le premier). | 301 |
-| `editor_toolUtilities_util.findMaterialIdx(candidates)` | Indice de la première couche de terrain qui porte l'un des noms candidats, sans tenir compte de la casse. | 253 |
-| `editor_toolUtilities_util.flipBitmapY(bmpIn)` | Retourne verticalement un bitmap : crée un nouveau GBitmap GFXFormatR16 dont chaque texel copie la valeur de la ligne symétrique. | 650 |
-| `editor_toolUtilities_util.flipSplineDirection(spline)` | Inverse le sens d'une spline (nodes, widths, nmls) et la marque isDirty. | 368 |
-| `editor_toolUtilities_util.footSnap()` | Spécification de la grille de calage des empreintes de sites : { ox = 0, oy = 0, step = 1 }, alignée sur le monde et partagée par les trois outils de site. | 431 |
-| `editor_toolUtilities_util.footSnapped(x, y)` | Ramène un x, y monde à cette grille (pas de 1 m). Pour les points qu'un outil pose lui-même : une forme de départ hors grille devient de travers dès qu'un coin est glissé dessus. | 435 |
-| `editor_toolUtilities_util.generateUniqueName(baseName, prefixIn)` | Génère un nom qui n'entre pas en conflit avec l'arbre de scène : teste « prefix - nom », puis « prefix - nom - 1 », « - 2 », etc. Renvoie la partie nom sans préfixe. | 191 |
-| `editor_toolUtilities_util.getAllSources(splines)` | Sources de toutes les splines activées (isEnabled), une liste par spline. | 610 |
-| `editor_toolUtilities_util.getBlueToRedColour(value, minValue, maxValue)` | Couleur interpolée du bleu (minValue) au rouge (maxValue), valeur bornée. | 164 |
-| `editor_toolUtilities_util.getHueBasedColour255(t)` | Couleur de teinte pour t borné entre 0 et 1 : de 240 degrés (bleu) à 0 (rouge), saturation et valeur à 1. | 188 |
-| `editor_toolUtilities_util.getMaterialNames()` | Noms des couches de matériau du terrain (indice à partir de 0 -> nom), même source que roadNetwork. 'Material i' si un nom manque. | 243 |
-| `editor_toolUtilities_util.getMeshBox(meshPath)` | Boîte englobante d'une forme TSStatic : crée un TSStatic temporaire ('temp_getMeshBox'), lit sa boîte d'objet, le supprime. | 145 |
-| `editor_toolUtilities_util.getMinMaxWidth(spline)` | Largeurs minimale et maximale d'une spline (spline.widths) ; 10 et 10 s'il n'y en a pas. | 277 |
-| `editor_toolUtilities_util.getPolyLength(pts)` | Longueur d'une polyligne (somme des distances 3D). | 268 |
-| `editor_toolUtilities_util.getSourcesSingle(spline)` | Sources d'une spline pour le terraformage : une seule liste de { pos, width, binormal } sur divPoints, avec spline.terraWidth si défini à la place de divWidths. | 596 |
-| `editor_toolUtilities_util.goToSpline(points)` | Passe en caméra libre et place la caméra au-dessus de la spline, regard vers le bas, d'après splineFocus. | 408 |
-| `editor_toolUtilities_util.hsvToRgb(h, s, v)` | Convertit HSV en RGB, tout dans [0,1] (h est un tour entier = 1). | 630 |
-| `editor_toolUtilities_util.hsvToRgb255(h, s, v)` | Convertit HSV en RGB sur 0-255 (h en degrés 0-360, s et v en 0-1). | 170 |
-| `editor_toolUtilities_util.isMouseHoveringOverTerrain()` | Vrai si la souris est sur le viewport (ni sur un élément ou une fenêtre ImGui, ni sur le gizmo d'axes). | 41 |
-| `editor_toolUtilities_util.isWidthFixed(nodes)` | Vrai si la largeur des nœuds est fixe (écart inférieur à 0.01). | 291 |
-| `editor_toolUtilities_util.lookAtGround()` | Le sol sous le milieu de l'écran, en x, y (raycast depuis la caméra). Sert à poser un nouvel objet devant l'utilisateur. Renvoie 0, 0 si le regard est dans le ciel ou hors de la carte. | 418 |
-| `editor_toolUtilities_util.mouseOnMapPos()` | Position carte sur laquelle pointe la souris (castRayStatic, portée 5000 m). Sans impact, renvoie la dernière position valide, ou à défaut le point du rayon à la portée maximale. | 46 |
-| `editor_toolUtilities_util.mouseOnPlaneZ(planeZ)` | Point où le rayon de la souris coupe le plan horizontal z = planeZ. | 61 |
-| `editor_toolUtilities_util.mouseOnTerrainPos(seedZ)` | Le SOL sous la souris, posé sur la grille de hauteur du terrain plutôt que sur une géométrie statique qui se trouverait sur le rayon. Itère 4 fois en recoupant avec la hauteur du terrain. | 71 |
-| `editor_toolUtilities_util.msToKph(ms)` | Convertit des m/s en km/h (x 3.6). | 105 |
-| `editor_toolUtilities_util.msToMph(ms)` | Convertit des m/s en mph (x 2.236936). | 103 |
-| `editor_toolUtilities_util.splineFocus(points)` | Calcule un cadrage vu de dessus pour une spline : milieu de la boîte 2D et altitude telle que tout tient dans le champ (distance / tan(fov/2) + zMax + 5). | 381 |
-| `editor_toolUtilities_util.starterRing(w, d, zAt)` | Un rectangle posé sur le sol sous le milieu de l'écran, orienté anti-horaire, coins sur la grille d'empreinte. | 440 |
-| `editor_toolUtilities_util.sumOverNonArrayTable(t)` | Somme de toutes les valeurs d'une table non tableau. | 108 |
-| `editor_toolUtilities_util.unchangedIds(a, b)` | Ids dont les copies dans deux instantanés des mêmes éléments sont identiques : ce qu'un pas d'annulation intermédiaire n'a pas touché. | 222 |
-| `editor_toolUtilities_util.vertRaycast(pos, rayRaise, postFloat)` | Raycast vertical vers le bas qui modifie le Z du point sur place : monte de rayRaise, tire vers le bas, puis redescend sur la surface + postFloat pour ne pas s'enfoncer. | 85 |
-| `editor_toolUtilities_util.writeMaskToPng(mask, path)` | Utilitaire de debug : écrit un masque binaire (lignes de 0 ou 1) en PNG 16 bits (blanc si 1). | 665 |
-| `editor_toolUtilities_util.writePathsToPng(paths, width, height, path)` | Écrit des chemins vectorisés en PNG 16 bits à niveaux de gris, avec une intensité distincte par chemin. | 689 |
-| `editor_toolUtilities_util.writeWidthsToPng(paths, widths, width, height, outPath)` | Écrit les chemins en traits épais continus : un disque plein à chaque point, de rayon max(1, floor(largeur/2)), en blanc sur fond noir. | 724 |
+| `editor_toolUtilities_util.beginSubTab(label, flags)` | Opens an ImGui sub-tab (BeginTabItem) whose body is a child, so the tab row stays in place. Returns false if the tab is not open. | 768 |
+| `editor_toolUtilities_util.buildRibbonGLTF(points, widths, binormals)` | Converts a ribbon polyline into GLTF JSON with an embedded binary buffer (float positions, uint16 indices), coordinates converted (x, z, -y). | 493 |
+| `editor_toolUtilities_util.buildRibbonMeshFromPolyline(points, widths, binormals)` | Converts a ribbon polyline into a triangle mesh: two vertices per point (left and right, at half-width along the binormal), two triangles per segment. | 451 |
+| `editor_toolUtilities_util.calculateAverageSpacingXY(positions, minSpacing)` | Estimates the average XY spacing between nodes by simulating a centripetal Catmull-Rom interpolation (10 samples per segment), without counting the mesh footprint. | 326 |
+| `editor_toolUtilities_util.clearLevelContent()` | Brings a level back to bare terrain to build a scene from scratch. Deletes all objects of the DecalRoad, TSStatic, MeshRoad, ProceduralMesh, PointLight and SpotLight classes, as well as all forest INSTANCES; the ForestItemData datablocks stay (planting finds its species by name). Sets editor.forestDirty. | 119 |
+| `editor_toolUtilities_util.commitStep(label, data, undoFn, redoFn)` | Records an undo step as a full transaction. A plain commitAction deep-copies the top step of the stack and the new one to look for a duplicate, which is prohibitive for a terraforming step of millions of heights; a transaction is recorded without this check. | 235 |
+| `editor_toolUtilities_util.computeIdToIdxMap(splines, map)` | Fills `map` (emptied first) with spline.id -> index in the list. | 205 |
+| `editor_toolUtilities_util.deepEqual(a, b)` | Deep equality of two values. Tests the type before == because comparing a vec3 to something else raises an error. | 212 |
+| `editor_toolUtilities_util.doesPathContainNode(path, nodeKey)` | Looks for a node key in a path. | 358 |
+| `editor_toolUtilities_util.endSubTab()` | Closes the sub-tab (EndChild then EndTabItem). No guard: EndChild must be called even if the child is clipped. | 775 |
+| `editor_toolUtilities_util.fastArrayCopy(arr)` | Fast copy of a simple array (shallow copy). | 94 |
+| `editor_toolUtilities_util.filterClosePointsXY(points, minDist)` | Removes consecutive points closer than minDist in the XY plane (keeps the first). | 301 |
+| `editor_toolUtilities_util.findMaterialIdx(candidates)` | Index of the first terrain layer that carries one of the candidate names, case-insensitive. | 253 |
+| `editor_toolUtilities_util.flipBitmapY(bmpIn)` | Flips a bitmap vertically: creates a new GFXFormatR16 GBitmap where each texel copies the value of the mirrored row. | 650 |
+| `editor_toolUtilities_util.flipSplineDirection(spline)` | Reverses the direction of a spline (nodes, widths, nmls) and marks it isDirty. | 368 |
+| `editor_toolUtilities_util.footSnap()` | Specification of the snapping grid for site footprints: { ox = 0, oy = 0, step = 1 }, aligned to the world and shared by the three site tools. | 431 |
+| `editor_toolUtilities_util.footSnapped(x, y)` | Snaps a world x, y to this grid (1 m step). For points that a tool places itself: an off-grid starting shape becomes crooked as soon as a corner is dragged onto it. | 435 |
+| `editor_toolUtilities_util.generateUniqueName(baseName, prefixIn)` | Generates a name that does not conflict with the scene tree: tests "prefix - name", then "prefix - name - 1", "- 2", etc. Returns the name part without the prefix. | 191 |
+| `editor_toolUtilities_util.getAllSources(splines)` | Sources of all enabled (isEnabled) splines, one list per spline. | 610 |
+| `editor_toolUtilities_util.getBlueToRedColour(value, minValue, maxValue)` | Color interpolated from blue (minValue) to red (maxValue), value clamped. | 164 |
+| `editor_toolUtilities_util.getHueBasedColour255(t)` | Hue color for t clamped between 0 and 1: from 240 degrees (blue) to 0 (red), saturation and value at 1. | 188 |
+| `editor_toolUtilities_util.getMaterialNames()` | Names of the terrain material layers (0-based index -> name), same source as roadNetwork. 'Material i' if a name is missing. | 243 |
+| `editor_toolUtilities_util.getMeshBox(meshPath)` | Bounding box of a TSStatic shape: creates a temporary TSStatic ('temp_getMeshBox'), reads its object box, deletes it. | 145 |
+| `editor_toolUtilities_util.getMinMaxWidth(spline)` | Minimum and maximum widths of a spline (spline.widths); 10 and 10 if there are none. | 277 |
+| `editor_toolUtilities_util.getPolyLength(pts)` | Length of a polyline (sum of 3D distances). | 268 |
+| `editor_toolUtilities_util.getSourcesSingle(spline)` | Sources of a spline for terraforming: a single list of { pos, width, binormal } over divPoints, with spline.terraWidth if defined in place of divWidths. | 596 |
+| `editor_toolUtilities_util.goToSpline(points)` | Switches to the free camera and places the camera above the spline, looking down, according to splineFocus. | 408 |
+| `editor_toolUtilities_util.hsvToRgb(h, s, v)` | Converts HSV to RGB, everything in [0,1] (h is one full turn = 1). | 630 |
+| `editor_toolUtilities_util.hsvToRgb255(h, s, v)` | Converts HSV to RGB on 0-255 (h in degrees 0-360, s and v in 0-1). | 170 |
+| `editor_toolUtilities_util.isMouseHoveringOverTerrain()` | True if the mouse is over the viewport (not over an ImGui element or window, nor the axes gizmo). | 41 |
+| `editor_toolUtilities_util.isWidthFixed(nodes)` | True if the node width is fixed (difference less than 0.01). | 291 |
+| `editor_toolUtilities_util.lookAtGround()` | The ground under the middle of the screen, in x, y (raycast from the camera). Used to place a new object in front of the user. Returns 0, 0 if the view is in the sky or off the map. | 418 |
+| `editor_toolUtilities_util.mouseOnMapPos()` | Map position the mouse points at (castRayStatic, range 5000 m). With no hit, returns the last valid position, or failing that the ray point at maximum range. | 46 |
+| `editor_toolUtilities_util.mouseOnPlaneZ(planeZ)` | Point where the mouse ray intersects the horizontal plane z = planeZ. | 61 |
+| `editor_toolUtilities_util.mouseOnTerrainPos(seedZ)` | The GROUND under the mouse, placed on the terrain height grid rather than on some static geometry lying on the ray. Iterates 4 times, intersecting with the terrain height. | 71 |
+| `editor_toolUtilities_util.msToKph(ms)` | Converts m/s to km/h (x 3.6). | 105 |
+| `editor_toolUtilities_util.msToMph(ms)` | Converts m/s to mph (x 2.236936). | 103 |
+| `editor_toolUtilities_util.splineFocus(points)` | Computes a top-down framing for a spline: middle of the 2D box and altitude such that everything fits in the field of view (distance / tan(fov/2) + zMax + 5). | 381 |
+| `editor_toolUtilities_util.starterRing(w, d, zAt)` | A rectangle placed on the ground under the middle of the screen, oriented counter-clockwise, corners on the footprint grid. | 440 |
+| `editor_toolUtilities_util.sumOverNonArrayTable(t)` | Sum of all the values of a non-array table. | 108 |
+| `editor_toolUtilities_util.unchangedIds(a, b)` | Ids whose copies in two snapshots of the same items are identical: what an intermediate undo step did not touch. | 222 |
+| `editor_toolUtilities_util.vertRaycast(pos, rayRaise, postFloat)` | Vertical downward raycast that modifies the point's Z in place: rises by rayRaise, shoots down, then comes back down onto the surface + postFloat so as not to sink in. | 85 |
+| `editor_toolUtilities_util.writeMaskToPng(mask, path)` | Debug utility: writes a binary mask (rows of 0 or 1) as a 16-bit PNG (white if 1). | 665 |
+| `editor_toolUtilities_util.writePathsToPng(paths, width, height, path)` | Writes vectorized paths as a 16-bit grayscale PNG, with a distinct intensity per path. | 689 |
+| `editor_toolUtilities_util.writeWidthsToPng(paths, widths, width, height, outPath)` | Writes the paths as continuous thick strokes: a filled disc at each point, of radius max(1, floor(width/2)), white on a black background. | 724 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_util.beginSubTab(label, flags)`
 
-Ouvre un sous-onglet ImGui (BeginTabItem) dont le corps est un enfant, pour que la rangée d'onglets reste en place. Renvoie false si l'onglet n'est pas ouvert.
+Opens an ImGui sub-tab (BeginTabItem) whose body is a child, so the tab row stays in place. Returns false if the tab is not open.
 
-- `label` (*string*) : Titre.
-- `flags` (*integer|nil*) : Drapeaux TabItemFlags.
-- **renvoie** : boolean Onglet ouvert.
+- `label` (*string*) : Title.
+- `flags` (*integer|nil*) : TabItemFlags flags.
+- **returns**: boolean Tab open.
 
 #### `editor_toolUtilities_util.buildRibbonGLTF(points, widths, binormals)`
 
-Convertit une polyligne de ruban en JSON GLTF avec tampon binaire intégré (positions float, indices uint16), coordonnées converties (x, z, -y).
+Converts a ribbon polyline into GLTF JSON with an embedded binary buffer (float positions, uint16 indices), coordinates converted (x, z, -y).
 
 - `points` (*vec3[]*) : Points.
-- `widths` (*number[]*) : Largeurs.
-- `binormals` (*vec3[]*) : Binormaux.
-- **renvoie** : table Table GLTF.
+- `widths` (*number[]*) : Widths.
+- `binormals` (*vec3[]*) : Binormals.
+- **returns**: table GLTF table.
 
 #### `editor_toolUtilities_util.buildRibbonMeshFromPolyline(points, widths, binormals)`
 
-Convertit une polyligne de ruban en maillage de triangles : deux sommets par point (gauche et droite, à demi-largeur le long du binormal), deux triangles par segment.
+Converts a ribbon polyline into a triangle mesh: two vertices per point (left and right, at half-width along the binormal), two triangles per segment.
 
-- `points` (*vec3[]*) : Points de la ligne centrale.
-- `widths` (*number[]*) : Largeur totale à chaque point.
-- `binormals` (*vec3[]*) : Binormal à chaque point.
-- **renvoie** : table { vertices = vec3[], indices = integer[] } (indices à partir de 1).
+- `points` (*vec3[]*) : Centerline points.
+- `widths` (*number[]*) : Total width at each point.
+- `binormals` (*vec3[]*) : Binormal at each point.
+- **returns**: table { vertices = vec3[], indices = integer[] } (indices 1-based).
 
 #### `editor_toolUtilities_util.calculateAverageSpacingXY(positions, minSpacing)`
 
-Estime l'espacement moyen en XY entre nœuds en simulant une interpolation Catmull-Rom centripète (10 échantillons par segment), sans compter l'emprise des meshes.
+Estimates the average XY spacing between nodes by simulating a centripetal Catmull-Rom interpolation (10 samples per segment), without counting the mesh footprint.
 
-- `positions` (*vec3[]*) : Positions des nœuds.
-- `minSpacing` (*number|nil*) : Plancher de l'espacement ; sert aussi de valeur de repli (1.0 par défaut) s'il y a moins de 2 nœuds.
-- **renvoie** : number Espacement moyen (m).
+- `positions` (*vec3[]*) : Node positions.
+- `minSpacing` (*number|nil*) : Floor of the spacing; also serves as the fallback value (1.0 by default) if there are fewer than 2 nodes.
+- **returns**: number Average spacing (m).
 
 #### `editor_toolUtilities_util.clearLevelContent()`
 
-Ramène un niveau au terrain nu pour construire une scène de zéro. Supprime tous les objets des classes DecalRoad, TSStatic, MeshRoad, ProceduralMesh, PointLight et SpotLight, ainsi que toutes les INSTANCES de forêt ; les datablocks ForestItemData restent (la plantation retrouve ses espèces par nom). Marque editor.forestDirty.
+Brings a level back to bare terrain to build a scene from scratch. Deletes all objects of the DecalRoad, TSStatic, MeshRoad, ProceduralMesh, PointLight and SpotLight classes, as well as all forest INSTANCES; the ForestItemData datablocks stay (planting finds its species by name). Sets editor.forestDirty.
 
-- **renvoie** : integer Nombre d'objets de scène supprimés (hors éléments de forêt).
+- **returns**: integer Number of scene objects deleted (excluding forest items).
 
 #### `editor_toolUtilities_util.commitStep(label, data, undoFn, redoFn)`
 
-Enregistre un pas d'annulation comme transaction à part entière. Un commitAction seul copie en profondeur le pas du dessus de la pile et le nouveau pour chercher un doublon, ce qui est prohibitif pour un pas de terraformage de millions de hauteurs ; une transaction est enregistrée sans cette vérification.
+Records an undo step as a full transaction. A plain commitAction deep-copies the top step of the stack and the new one to look for a duplicate, which is prohibitive for a terraforming step of millions of heights; a transaction is recorded without this check.
 
-- `label` (*string*) : Libellé.
-- `data` (*any*) : Données du pas.
-- `undoFn` (*function*) : Callback d'annulation.
-- `redoFn` (*function*) : Callback de rétablissement.
+- `label` (*string*) : Label.
+- `data` (*any*) : Step data.
+- `undoFn` (*function*) : Undo callback.
+- `redoFn` (*function*) : Redo callback.
 
 #### `editor_toolUtilities_util.computeIdToIdxMap(splines, map)`
 
-Remplit `map` (vidée d'abord) avec spline.id -> indice dans la liste.
+Fills `map` (emptied first) with spline.id -> index in the list.
 
-- `splines` (*table*) : Liste de splines.
-- `map` (*table*) : Table de sortie.
+- `splines` (*table*) : List of splines.
+- `map` (*table*) : Output table.
 
 #### `editor_toolUtilities_util.deepEqual(a, b)`
 
-Égalité profonde de deux valeurs. Teste le type avant == car comparer un vec3 à autre chose lève une erreur.
+Deep equality of two values. Tests the type before == because comparing a vec3 to something else raises an error.
 
-- `a` (*any*) : Valeur.
-- `b` (*any*) : Valeur.
-- **renvoie** : boolean Égales.
+- `a` (*any*) : Value.
+- `b` (*any*) : Value.
+- **returns**: boolean Equal.
 
 #### `editor_toolUtilities_util.doesPathContainNode(path, nodeKey)`
 
-Cherche une clé de nœud dans un chemin.
+Looks for a node key in a path.
 
-- `path` (*table*) : Liste de clés.
-- `nodeKey` (*any*) : Clé cherchée.
-- **renvoie** : boolean Trouvée.
-- **renvoie** : integer|nil Indice ou nil.
+- `path` (*table*) : List of keys.
+- `nodeKey` (*any*) : Key searched for.
+- **returns**: boolean Found.
+- **returns**: integer|nil Index or nil.
 
 #### `editor_toolUtilities_util.fastArrayCopy(arr)`
 
-Copie rapide d'un tableau simple (copie superficielle).
+Fast copy of a simple array (shallow copy).
 
-- `arr` (*table*) : Tableau source.
-- **renvoie** : table Nouvelle copie.
+- `arr` (*table*) : Source array.
+- **returns**: table New copy.
 
 #### `editor_toolUtilities_util.filterClosePointsXY(points, minDist)`
 
-Retire les points consécutifs plus proches que minDist dans le plan XY (garde le premier).
+Removes consecutive points closer than minDist in the XY plane (keeps the first).
 
 - `points` (*vec3[]*) : Points.
-- `minDist` (*number*) : Distance minimale (m).
-- **renvoie** : table Nouvelle liste (la même table si moins de 2 points).
+- `minDist` (*number*) : Minimum distance (m).
+- **returns**: table New list (the same table if fewer than 2 points).
 
 #### `editor_toolUtilities_util.findMaterialIdx(candidates)`
 
-Indice de la première couche de terrain qui porte l'un des noms candidats, sans tenir compte de la casse.
+Index of the first terrain layer that carries one of the candidate names, case-insensitive.
 
-- `candidates` (*string[]*) : Noms candidats, par ordre de priorité.
-- **renvoie** : integer|nil Indice (à partir de 0) ou nil.
+- `candidates` (*string[]*) : Candidate names, in priority order.
+- **returns**: integer|nil Index (0-based) or nil.
 
 #### `editor_toolUtilities_util.flipBitmapY(bmpIn)`
 
-Retourne verticalement un bitmap : crée un nouveau GBitmap GFXFormatR16 dont chaque texel copie la valeur de la ligne symétrique.
+Flips a bitmap vertically: creates a new GFXFormatR16 GBitmap where each texel copies the value of the mirrored row.
 
-- `bmpIn` (*GBitmap*) : Bitmap source (non modifié).
-- **renvoie** : GBitmap Nouveau bitmap retourné.
+- `bmpIn` (*GBitmap*) : Source bitmap (not modified).
+- **returns**: GBitmap New flipped bitmap.
 
 #### `editor_toolUtilities_util.flipSplineDirection(spline)`
 
-Inverse le sens d'une spline (nodes, widths, nmls) et la marque isDirty.
+Reverses the direction of a spline (nodes, widths, nmls) and marks it isDirty.
 
-- `spline` (*table*) : Spline modifiée en place.
+- `spline` (*table*) : Spline modified in place.
 
 #### `editor_toolUtilities_util.footSnap()`
 
-Spécification de la grille de calage des empreintes de sites : { ox = 0, oy = 0, step = 1 }, alignée sur le monde et partagée par les trois outils de site.
+Specification of the snapping grid for site footprints: { ox = 0, oy = 0, step = 1 }, aligned to the world and shared by the three site tools.
 
-- **renvoie** : table { ox, oy, step }.
+- **returns**: table { ox, oy, step }.
 
 #### `editor_toolUtilities_util.footSnapped(x, y)`
 
-Ramène un x, y monde à cette grille (pas de 1 m). Pour les points qu'un outil pose lui-même : une forme de départ hors grille devient de travers dès qu'un coin est glissé dessus.
+Snaps a world x, y to this grid (1 m step). For points that a tool places itself: an off-grid starting shape becomes crooked as soon as a corner is dragged onto it.
 
-- `x` (*number*) : X monde.
-- `y` (*number*) : Y monde.
-- **renvoie** : number X calé.
-- **renvoie** : number Y calé.
+- `x` (*number*) : World X.
+- `y` (*number*) : World Y.
+- **returns**: number Snapped X.
+- **returns**: number Snapped Y.
 
 #### `editor_toolUtilities_util.generateUniqueName(baseName, prefixIn)`
 
-Génère un nom qui n'entre pas en conflit avec l'arbre de scène : teste « prefix - nom », puis « prefix - nom - 1 », « - 2 », etc. Renvoie la partie nom sans préfixe.
+Generates a name that does not conflict with the scene tree: tests "prefix - name", then "prefix - name - 1", "- 2", etc. Returns the name part without the prefix.
 
-- `baseName` (*string*) : Nom de base.
-- `prefixIn` (*string*) : Préfixe (obligatoire).
-- **renvoie** : string Nom unique, sans le préfixe.
+- `baseName` (*string*) : Base name.
+- `prefixIn` (*string*) : Prefix (required).
+- **returns**: string Unique name, without the prefix.
 
 #### `editor_toolUtilities_util.getAllSources(splines)`
 
-Sources de toutes les splines activées (isEnabled), une liste par spline.
+Sources of all enabled (isEnabled) splines, one list per spline.
 
-- `splines` (*table*) : Liste de splines.
-- **renvoie** : table Liste de listes de { pos, width, binormal }.
+- `splines` (*table*) : List of splines.
+- **returns**: table List of lists of { pos, width, binormal }.
 
 #### `editor_toolUtilities_util.getBlueToRedColour(value, minValue, maxValue)`
 
-Couleur interpolée du bleu (minValue) au rouge (maxValue), valeur bornée.
+Color interpolated from blue (minValue) to red (maxValue), value clamped.
 
-- `value` (*number*) : Valeur.
-- `minValue` (*number*) : Valeur pour le bleu.
-- `maxValue` (*number*) : Valeur pour le rouge.
-- **renvoie** : ColorI color(r, 0, b, 255).
+- `value` (*number*) : Value.
+- `minValue` (*number*) : Value for blue.
+- `maxValue` (*number*) : Value for red.
+- **returns**: ColorI color(r, 0, b, 255).
 
 #### `editor_toolUtilities_util.getHueBasedColour255(t)`
 
-Couleur de teinte pour t borné entre 0 et 1 : de 240 degrés (bleu) à 0 (rouge), saturation et valeur à 1.
+Hue color for t clamped between 0 and 1: from 240 degrees (blue) to 0 (red), saturation and value at 1.
 
-- `t` (*number*) : Valeur 0..1.
-- **renvoie** : integer R (0-255).
-- **renvoie** : integer G (0-255).
-- **renvoie** : integer B (0-255).
+- `t` (*number*) : Value 0..1.
+- **returns**: integer R (0-255).
+- **returns**: integer G (0-255).
+- **returns**: integer B (0-255).
 
 #### `editor_toolUtilities_util.getMaterialNames()`
 
-Noms des couches de matériau du terrain (indice à partir de 0 -> nom), même source que roadNetwork. 'Material i' si un nom manque.
+Names of the terrain material layers (0-based index -> name), same source as roadNetwork. 'Material i' if a name is missing.
 
-- **renvoie** : table<integer, string> Table vide si pas de terrain.
+- **returns**: table<integer, string> Empty table if no terrain.
 
 #### `editor_toolUtilities_util.getMeshBox(meshPath)`
 
-Boîte englobante d'une forme TSStatic : crée un TSStatic temporaire ('temp_getMeshBox'), lit sa boîte d'objet, le supprime.
+Bounding box of a TSStatic shape: creates a temporary TSStatic ('temp_getMeshBox'), reads its object box, deletes it.
 
-- `meshPath` (*string*) : Chemin de la forme (shapeName).
-- **renvoie** : table { minExtents, maxExtents, center, extents } (vec3).
+- `meshPath` (*string*) : Shape path (shapeName).
+- **returns**: table { minExtents, maxExtents, center, extents } (vec3).
 
 #### `editor_toolUtilities_util.getMinMaxWidth(spline)`
 
-Largeurs minimale et maximale d'une spline (spline.widths) ; 10 et 10 s'il n'y en a pas.
+Minimum and maximum widths of a spline (spline.widths); 10 and 10 if there are none.
 
-- `spline` (*table*) : Spline avec widths.
-- **renvoie** : number Minimum.
-- **renvoie** : number Maximum.
+- `spline` (*table*) : Spline with widths.
+- **returns**: number Minimum.
+- **returns**: number Maximum.
 
 #### `editor_toolUtilities_util.getPolyLength(pts)`
 
-Longueur d'une polyligne (somme des distances 3D).
+Length of a polyline (sum of 3D distances).
 
 - `pts` (*vec3[]*) : Points.
-- **renvoie** : number Longueur en mètres.
+- **returns**: number Length in meters.
 
 #### `editor_toolUtilities_util.getSourcesSingle(spline)`
 
-Sources d'une spline pour le terraformage : une seule liste de { pos, width, binormal } sur divPoints, avec spline.terraWidth si défini à la place de divWidths.
+Sources of a spline for terraforming: a single list of { pos, width, binormal } over divPoints, with spline.terraWidth if defined in place of divWidths.
 
 - `spline` (*table*) : Spline (divPoints, divWidths, binormals, terraWidth).
-- **renvoie** : table { sData }.
+- **returns**: table { sData }.
 
 #### `editor_toolUtilities_util.goToSpline(points)`
 
-Passe en caméra libre et place la caméra au-dessus de la spline, regard vers le bas, d'après splineFocus.
+Switches to the free camera and places the camera above the spline, looking down, according to splineFocus.
 
-- `points` (*vec3[]*) : Points de la spline.
+- `points` (*vec3[]*) : Spline points.
 
 #### `editor_toolUtilities_util.hsvToRgb(h, s, v)`
 
-Convertit HSV en RGB, tout dans [0,1] (h est un tour entier = 1).
+Converts HSV to RGB, everything in [0,1] (h is one full turn = 1).
 
-- `h` (*number*) : Teinte 0-1.
+- `h` (*number*) : Hue 0-1.
 - `s` (*number*) : Saturation 0-1.
-- `v` (*number*) : Valeur 0-1.
-- **renvoie** : number R.
-- **renvoie** : number G.
-- **renvoie** : number B.
+- `v` (*number*) : Value 0-1.
+- **returns**: number R.
+- **returns**: number G.
+- **returns**: number B.
 
 #### `editor_toolUtilities_util.hsvToRgb255(h, s, v)`
 
-Convertit HSV en RGB sur 0-255 (h en degrés 0-360, s et v en 0-1).
+Converts HSV to RGB on 0-255 (h in degrees 0-360, s and v in 0-1).
 
-- `h` (*number*) : Teinte en degrés.
+- `h` (*number*) : Hue in degrees.
 - `s` (*number*) : Saturation 0-1.
-- `v` (*number*) : Valeur 0-1.
-- **renvoie** : integer R.
-- **renvoie** : integer G.
-- **renvoie** : integer B.
+- `v` (*number*) : Value 0-1.
+- **returns**: integer R.
+- **returns**: integer G.
+- **returns**: integer B.
 
 #### `editor_toolUtilities_util.isMouseHoveringOverTerrain()`
 
-Vrai si la souris est sur le viewport (ni sur un élément ou une fenêtre ImGui, ni sur le gizmo d'axes).
+True if the mouse is over the viewport (not over an ImGui element or window, nor the axes gizmo).
 
-- **renvoie** : boolean La souris pointe le monde.
+- **returns**: boolean The mouse points at the world.
 
 #### `editor_toolUtilities_util.isWidthFixed(nodes)`
 
-Vrai si la largeur des nœuds est fixe (écart inférieur à 0.01).
+True if the node width is fixed (difference less than 0.01).
 
-- `nodes` (*table*) : Nœuds avec .width.
-- **renvoie** : boolean Largeur fixe.
-- **renvoie** : number Largeur minimale.
+- `nodes` (*table*) : Nodes with .width.
+- **returns**: boolean Fixed width.
+- **returns**: number Minimum width.
 
 #### `editor_toolUtilities_util.lookAtGround()`
 
-Le sol sous le milieu de l'écran, en x, y (raycast depuis la caméra). Sert à poser un nouvel objet devant l'utilisateur. Renvoie 0, 0 si le regard est dans le ciel ou hors de la carte.
+The ground under the middle of the screen, in x, y (raycast from the camera). Used to place a new object in front of the user. Returns 0, 0 if the view is in the sky or off the map.
 
-- **renvoie** : number X.
-- **renvoie** : number Y.
+- **returns**: number X.
+- **returns**: number Y.
 
 #### `editor_toolUtilities_util.mouseOnMapPos()`
 
-Position carte sur laquelle pointe la souris (castRayStatic, portée 5000 m). Sans impact, renvoie la dernière position valide, ou à défaut le point du rayon à la portée maximale.
+Map position the mouse points at (castRayStatic, range 5000 m). With no hit, returns the last valid position, or failing that the ray point at maximum range.
 
-- **renvoie** : vec3 Position monde.
+- **returns**: vec3 World position.
 
 #### `editor_toolUtilities_util.mouseOnPlaneZ(planeZ)`
 
-Point où le rayon de la souris coupe le plan horizontal z = planeZ.
+Point where the mouse ray intersects the horizontal plane z = planeZ.
 
-- `planeZ` (*number*) : Altitude du plan.
-- **renvoie** : vec3|nil Point d'intersection ; nil si le rayon est presque horizontal ou si le plan est derrière la caméra.
+- `planeZ` (*number*) : Altitude of the plane.
+- **returns**: vec3|nil Intersection point; nil if the ray is almost horizontal or the plane is behind the camera.
 
 #### `editor_toolUtilities_util.mouseOnTerrainPos(seedZ)`
 
-Le SOL sous la souris, posé sur la grille de hauteur du terrain plutôt que sur une géométrie statique qui se trouverait sur le rayon. Itère 4 fois en recoupant avec la hauteur du terrain.
+The GROUND under the mouse, placed on the terrain height grid rather than on some static geometry lying on the ray. Iterates 4 times, intersecting with the terrain height.
 
-- `seedZ` (*number|nil*) : Altitude de départ du plan (0 par défaut).
-- **renvoie** : vec3|nil Point sur le terrain.
+- `seedZ` (*number|nil*) : Starting altitude of the plane (0 by default).
+- **returns**: vec3|nil Point on the terrain.
 
 #### `editor_toolUtilities_util.msToKph(ms)`
 
-Convertit des m/s en km/h (x 3.6).
+Converts m/s to km/h (x 3.6).
 
-- `ms` (*number*) : Vitesse en m/s.
-- **renvoie** : number Vitesse en km/h.
+- `ms` (*number*) : Speed in m/s.
+- **returns**: number Speed in km/h.
 
 #### `editor_toolUtilities_util.msToMph(ms)`
 
-Convertit des m/s en mph (x 2.236936).
+Converts m/s to mph (x 2.236936).
 
-- `ms` (*number*) : Vitesse en m/s.
-- **renvoie** : number Vitesse en mph.
+- `ms` (*number*) : Speed in m/s.
+- **returns**: number Speed in mph.
 
 #### `editor_toolUtilities_util.splineFocus(points)`
 
-Calcule un cadrage vu de dessus pour une spline : milieu de la boîte 2D et altitude telle que tout tient dans le champ (distance / tan(fov/2) + zMax + 5).
+Computes a top-down framing for a spline: middle of the 2D box and altitude such that everything fits in the field of view (distance / tan(fov/2) + zMax + 5).
 
-- `points` (*vec3[]*) : Points de la spline.
-- **renvoie** : number|nil X du milieu, nil si la spline est trop petite (moins de 0.1 m).
-- **renvoie** : number Y du milieu.
-- **renvoie** : number Altitude de la caméra.
+- `points` (*vec3[]*) : Spline points.
+- **returns**: number|nil X of the middle, nil if the spline is too small (less than 0.1 m).
+- **returns**: number Y of the middle.
+- **returns**: number Camera altitude.
 
 #### `editor_toolUtilities_util.starterRing(w, d, zAt)`
 
-Un rectangle posé sur le sol sous le milieu de l'écran, orienté anti-horaire, coins sur la grille d'empreinte.
+A rectangle placed on the ground under the middle of the screen, oriented counter-clockwise, corners on the footprint grid.
 
-- `w` (*number*) : Largeur (m).
-- `d` (*number*) : Profondeur (m).
-- `zAt` (*function|nil*) : zAt(x, y) donne l'altitude de chaque coin (0 par défaut).
-- **renvoie** : vec3[] 4 coins.
+- `w` (*number*) : Width (m).
+- `d` (*number*) : Depth (m).
+- `zAt` (*function|nil*) : zAt(x, y) gives the altitude of each corner (0 by default).
+- **returns**: vec3[] 4 corners.
 
 #### `editor_toolUtilities_util.sumOverNonArrayTable(t)`
 
-Somme de toutes les valeurs d'une table non tableau.
+Sum of all the values of a non-array table.
 
-- `t` (*table<any, number>*) : Table clé -> nombre.
-- **renvoie** : number Somme.
+- `t` (*table<any, number>*) : Table key -> number.
+- **returns**: number Sum.
 
 #### `editor_toolUtilities_util.unchangedIds(a, b)`
 
-Ids dont les copies dans deux instantanés des mêmes éléments sont identiques : ce qu'un pas d'annulation intermédiaire n'a pas touché.
+Ids whose copies in two snapshots of the same items are identical: what an intermediate undo step did not touch.
 
-- `a` (*table*) : Instantané A (éléments avec .id).
-- `b` (*table*) : Instantané B.
-- **renvoie** : table<any, boolean> Ensemble id -> true.
+- `a` (*table*) : Snapshot A (items with .id).
+- `b` (*table*) : Snapshot B.
+- **returns**: table<any, boolean> Set id -> true.
 
 #### `editor_toolUtilities_util.vertRaycast(pos, rayRaise, postFloat)`
 
-Raycast vertical vers le bas qui modifie le Z du point sur place : monte de rayRaise, tire vers le bas, puis redescend sur la surface + postFloat pour ne pas s'enfoncer.
+Vertical downward raycast that modifies the point's Z in place: rises by rayRaise, shoots down, then comes back down onto the surface + postFloat so as not to sink in.
 
-- `pos` (*vec3*) : Point modifié en place.
-- `rayRaise` (*number|nil*) : Montée avant le tir (10 par défaut).
-- `postFloat` (*number|nil*) : Petite hauteur ajoutée après (0.05 par défaut).
+- `pos` (*vec3*) : Point modified in place.
+- `rayRaise` (*number|nil*) : Rise before the shot (10 by default).
+- `postFloat` (*number|nil*) : Small height added afterwards (0.05 by default).
 
 #### `editor_toolUtilities_util.writeMaskToPng(mask, path)`
 
-Utilitaire de debug : écrit un masque binaire (lignes de 0 ou 1) en PNG 16 bits (blanc si 1).
+Debug utility: writes a binary mask (rows of 0 or 1) as a 16-bit PNG (white if 1).
 
-- `mask` (*table*) : Masque 2D.
-- `path` (*string*) : Fichier de sortie.
+- `mask` (*table*) : 2D mask.
+- `path` (*string*) : Output file.
 
 #### `editor_toolUtilities_util.writePathsToPng(paths, width, height, path)`
 
-Écrit des chemins vectorisés en PNG 16 bits à niveaux de gris, avec une intensité distincte par chemin.
+Writes vectorized paths as a 16-bit grayscale PNG, with a distinct intensity per path.
 
-- `paths` (*table*) : Chemins.
-- `width` (*integer*) : Largeur de l'image.
-- `height` (*integer*) : Hauteur de l'image.
-- `path` (*string*) : Fichier de sortie.
+- `paths` (*table*) : Paths.
+- `width` (*integer*) : Image width.
+- `height` (*integer*) : Image height.
+- `path` (*string*) : Output file.
 
 #### `editor_toolUtilities_util.writeWidthsToPng(paths, widths, width, height, outPath)`
 
-Écrit les chemins en traits épais continus : un disque plein à chaque point, de rayon max(1, floor(largeur/2)), en blanc sur fond noir.
+Writes the paths as continuous thick strokes: a filled disc at each point, of radius max(1, floor(width/2)), white on a black background.
 
-- `paths` (*table*) : Chemins.
-- `widths` (*table*) : Largeurs par chemin.
-- `width` (*integer*) : Largeur de l'image.
-- `height` (*integer*) : Hauteur de l'image.
-- `outPath` (*string*) : Fichier de sortie.
+- `paths` (*table*) : Paths.
+- `widths` (*table*) : Widths per path.
+- `width` (*integer*) : Image width.
+- `height` (*integer*) : Image height.
+- `outPath` (*string*) : Output file.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`, `getObjBox`, `registerObject`, `setField`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/util.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/util.lua`.*

@@ -1,0 +1,85 @@
+{
+  "path": "lua/ge/extensions/render/openxr.lua",
+  "module": "Interface Lua de la réalité virtuelle OpenXR (casque VR). Pilote le moteur C++ (objet global OpenXR) : activation/désactivation avec une boîte de dialogue de bienvenue, état de session reçu du moteur (stateChanged), recentrage, gestion des erreurs, et une fenêtre ImGui de debug (réglages d'affichage 2D, UI CEF dans le casque, ancrage, mode debug, résolutions, FOV, IPD). L'extension se décharge toute seule à la désactivation. Global : render_openxr.",
+  "usage": "extensions.render_openxr.toggle()   -- disabled -> welcome -> enabled -> disabled\nextensions.render_openxr.center()   -- recentre la vue (ctrl+numpad5)\nif extensions.render_openxr.isSessionRunning() then ... end",
+  "notes": [
+    "stateString : 'disabled', 'welcome' (boîte de dialogue de confirmation affichée) ou 'enabled'. setStateUI('welcome') n'ouvre le dialogue avec le bouton OK que si l'adaptateur est Vulkan ou Direct3D12 ; sinon seul un bouton d'annulation est proposé (texte « no Vulkan »).",
+    "Les callbacks Lua des boutons de la boîte de dialogue sont des chaînes exécutées par l'UI : `extensions.render_openxr.closeWelcome(true|false)`.",
+    "M.state est la table reçue du moteur C++ via stateChanged(state) ; l'UI est notifiée par guihooks 'OpenXRStateChanged' quand l'un des champs suivis change (enabled, sessionRunning, headsetActive, systemName, targetRefreshRate, renderedWidth/Height, recommendedWidth/Height, sourceCount, activeSourceCount, poseValidSourceCount, inputSourcesKey). Les champs sourceCount… et les accesseurs getInputSourceStates/getSourcePoseStates sont commentés (TODO, API non finalisée).",
+    "onPreRender (et non onUpdate) est utilisé volontairement : core_camera s'exécute au preRender, donc OpenXR doit passer après elle pour éviter une frame de retard de pose (d'où la dépendance à core_camera).",
+    "Réglages persistés (via settings) : openXRuiEnabled, openXRuiMode, openXRwindowViewMode, openXRdebugEnabled, openXRquadCompositionEnabled (défaut false), plus openXRimguiEnabled (lu seul) ; changer le mode debug pendant une session redémarre OpenXR.",
+    "La fenêtre ImGui de debug n'est dessinée que si le réglage openXRimguiEnabled est vrai et la session en cours ; fermer la fenêtre désactive OpenXR.",
+    "Raccourcis annoncés dans l'UI de debug : ctrl+numpad0 (activer/désactiver), ctrl+numpad5 (centrer).",
+    "Si enable échoue côté C++, un simple log de debug est émis et l'état repasse à 'disabled'."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{'core_camera'}"},
+    "stateString": {"type": "string", "desc": "'disabled' (défaut), 'welcome' ou 'enabled'."},
+    "cefDialogOpen": {"type": "boolean|nil", "desc": "true tant que la boîte de dialogue de bienvenue est ouverte."},
+    "state": {"type": "table", "desc": "État OpenXR reçu du moteur : systemName ('?' par défaut), enabled, sessionRunning, sessionState, renderedWidth/Height, recommendedWidth/Height, supportedWidth/Height, supportedLayers, fov0hz/fov0vt/fov1hz/fov1vt, ipd (m), currentRefreshRate/targetRefreshRate…"},
+    "openXRuiEnabled": {"type": "userdata", "desc": "BoolPtr ImGui du réglage openXRuiEnabled (créé par loadPointerSettings)."},
+    "openXRuiMode": {"type": "userdata", "desc": "IntPtr du réglage openXRuiMode (ancrage de l'UI : 0 pièce, 1 tête)."},
+    "openXRwindowViewMode": {"type": "userdata", "desc": "IntPtr du mode d'affichage de la fenêtre 2D : 0 vide, 1 entre les yeux, 2 œil gauche, 3 œil droit."},
+    "openXRdebugEnabled": {"type": "userdata", "desc": "BoolPtr du mode debug."},
+    "openXRquadCompositionEnabled": {"type": "userdata", "desc": "BoolPtr de la composition en quad."},
+    "openXRimguiEnabled": {"type": "boolean|nil", "desc": "Réglage openXRimguiEnabled (fenêtre de debug)."}
+  },
+  "functions": {
+    "onPreRender": {
+      "desc": "Hook avant rendu : appelle la fonction de mise à jour courante (onUpdate quand OpenXR est activé, sinon rien).",
+      "params": {"...": {"type": "any", "desc": "dtReal, dtSim, dtRaw (déduit du code)."}},
+      "internal": true
+    },
+    "onInit": {
+      "desc": "Hook d'initialisation : passe l'extension en déchargement manuel et charge les réglages.",
+      "params": {},
+      "internal": true
+    },
+    "onSettingsChanged": {
+      "desc": "Hook de changement de réglages : relit les réglages OpenXR, redémarre OpenXR si le mode debug change pendant une session, et régénère la courbure de l'UI (OpenXR.generateUiCurvature) si OpenXR est actif.",
+      "params": {},
+      "internal": true
+    },
+    "stateChanged": {
+      "desc": "Appelé par le moteur C++ à chaque changement d'état OpenXR : met à jour M.state (le target refresh rate garde le maximum vu ; une fréquence infinie est ramenée à 0), synchronise stateString avec enabled et notifie l'UI.",
+      "params": {"state": {"type": "table", "desc": "Nouvel état OpenXR."}},
+      "internal": true
+    },
+    "setStateUI": {
+      "desc": "Change l'état de l'interface OpenXR : 'welcome' ouvre la boîte de dialogue, 'enabled' active OpenXR.setEnable(true) (retombe sur 'disabled' en cas d'échec), 'disabled' le coupe et décharge l'extension ; toute autre valeur est une erreur (désactive). Enregistre une action joueur « set VR state … ».",
+      "params": {"stateString": {"type": "string", "desc": "'welcome', 'enabled' ou 'disabled'."}},
+      "internal": false
+    },
+    "toggle": {
+      "desc": "Fait avancer l'état : disabled -> welcome ; welcome -> enabled ; enabled -> disabled.",
+      "params": {},
+      "internal": false
+    },
+    "center": {
+      "desc": "Recentre la vue VR. Sans argument, recentre une fois (OpenXR.centerNow) ; avec une valeur, active/désactive le recentrage continu quand value > 0.2 (OpenXR.centerContinuous).",
+      "params": {"value": {"type": "number|nil", "desc": "Valeur analogique d'une action d'entrée (déduit du code)."}},
+      "internal": false
+    },
+    "isSessionRunning": {
+      "desc": "Indique si une session OpenXR est en cours.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "M.state.sessionRunning ou false."}],
+      "internal": false
+    },
+    "updateUI": {
+      "desc": "Envoie 'OpenXRStateChanged' à l'UI si un champ suivi a changé, ou si forced (alors logue aussi l'état).",
+      "params": {"forced": {"type": "boolean|nil", "desc": "Forcer l'envoi."}},
+      "internal": false
+    },
+    "closeWelcome": {
+      "desc": "Fermeture de la boîte de dialogue de bienvenue (appelée par ses boutons) : enable=true active OpenXR, sinon le désactive.",
+      "params": {"enable": {"type": "boolean", "desc": "Choix de l'utilisateur."}},
+      "internal": false
+    },
+    "errorDetected": {
+      "desc": "Appelé par le moteur en cas d'erreur OpenXR : logue l'erreur et affiche un toast d'erreur avec la traduction `ui.openXR.errors.<err>`.",
+      "params": {"err": {"type": "string", "desc": "Identifiant d'erreur (clé de traduction)."}},
+      "internal": true
+    }
+  }
+}

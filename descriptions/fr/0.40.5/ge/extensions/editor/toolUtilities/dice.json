@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/dice.lua",
+  "module": "Tirage pseudo-aléatoire déterministe pour les outils de l'éditeur : à partir d'une graine (seed), d'un sel (salt) qui distingue plusieurs décisions à une même adresse, et de jusqu'à cinq nombres (a à e) qui disent « où » (volume, étage, index de pièce…), renvoie toujours la même valeur. Utile pour des variations reproductibles (jitter) sans état.",
+  "usage": "local r = editor_toolUtilities_dice.roll(seed, 1, floor, bay)\nlocal j = editor_toolUtilities_dice.spread(seed, 2, floor, bay)",
+  "notes": ["Les emplacements a à e absents (nil) comptent pour zéro, de même que seed et salt.", "Le calcul est modulo 2147483647 ; le résultat est dans [0,1)."],
+  "functions": {
+    "roll": {
+      "desc": "Tirage déterministe dans [0,1) pour l'adresse (seed, salt, a..e).",
+      "params": {
+        "seed": {"type": "number|nil", "desc": "Graine"},
+        "salt": {"type": "number|nil", "desc": "Sel distinguant les décisions d'une même adresse"},
+        "a": {"type": "number|nil", "desc": "Composante d'adresse 1"},
+        "b": {"type": "number|nil", "desc": "Composante d'adresse 2"},
+        "c": {"type": "number|nil", "desc": "Composante d'adresse 3"},
+        "d": {"type": "number|nil", "desc": "Composante d'adresse 4"},
+        "e": {"type": "number|nil", "desc": "Composante d'adresse 5"}
+      },
+      "returns": [{"type": "number", "desc": "Valeur dans [0,1)."}]
+    },
+    "spread": {
+      "desc": "Même tirage que roll, ramené à l'intervalle -1..1 (écart dans un sens ou l'autre, pratique pour un jitter).",
+      "params": {
+        "seed": {"type": "number|nil", "desc": "Graine"},
+        "salt": {"type": "number|nil", "desc": "Sel"},
+        "a": {"type": "number|nil", "desc": "Composante d'adresse 1"},
+        "b": {"type": "number|nil", "desc": "Composante d'adresse 2"},
+        "c": {"type": "number|nil", "desc": "Composante d'adresse 3"},
+        "d": {"type": "number|nil", "desc": "Composante d'adresse 4"},
+        "e": {"type": "number|nil", "desc": "Composante d'adresse 5"}
+      },
+      "returns": [{"type": "number", "desc": "Valeur dans [-1,1)."}]
+    }
+  }
+}

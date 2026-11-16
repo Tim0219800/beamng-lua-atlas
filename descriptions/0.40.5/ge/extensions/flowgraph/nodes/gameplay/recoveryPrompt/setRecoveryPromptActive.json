@@ -1,31 +1,31 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.lua",
-  "module": "Nœud flowgraph « Set Recovery Prompt Active » (catégorie once_instant). Active ou désactive le système de récupération des missions (core_recoveryPrompt). À utiliser avec « Set Recovery Prompt Enabled » pour rendre les boutons sélectionnables. Pins d'entrée : active (défaut true), enableAll (obsolète, caché), flipMission, recoverMission (défaut true), submitMission, restartMission (défaut false). Dépend de gameplay_walk et bloque le reset gameplay (blocksOnResetGameplay).",
+  "module": "Flowgraph node \"Set Recovery Prompt Active\" (category once_instant). Enables or disables the mission recovery system (core_recoveryPrompt). To be used with \"Set Recovery Prompt Enabled\" to make the buttons selectable. Input pins: active (default true), enableAll (obsolete, hidden), flipMission, recoverMission (default true), submitMission, restartMission (default false). Depends on gameplay_walk and blocks the gameplay reset (blocksOnResetGameplay).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "drawMiddle": {
-          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "desc": "Draws the central content of the node in the flowgraph editor (ImGui).",
           "internal": true,
           "params": {
             "builder": {
               "type": "table",
-              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+              "desc": "editor node constructor (builder:Middle())"
             },
             "style": {
               "type": "table",
-              "desc": "style de dessin du nœud"
+              "desc": "node drawing style"
             }
           }
         },
         "workOnce": {
-          "desc": "Si active est vrai : appelle core_recoveryPrompt.setActive(true), désactive tous les boutons puis active ceux dont le pin n'est pas nil. Sinon appelle core_recoveryPrompt.setActive(false).",
+          "desc": "If active is true: calls core_recoveryPrompt.setActive(true), disables all buttons then enables those whose pin is not nil. Otherwise calls core_recoveryPrompt.setActive(false).",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

@@ -1,0 +1,28 @@
+{
+  "path": "lua/vehicle/controller/beamNavigator.lua",
+  "module": "Contrôleur auxiliaire qui affiche une carte de navigation en direct sur un écran du véhicule. Il crée une texture HTML (module `htmlTexture`) sur un matériau d'écran, demande au jeu la carte du tableau de bord (`ui_uinavi.requestVehicleDashboardMap`) et lui envoie 15 fois par seconde la position, l'orientation, la vitesse et l'allumage du véhicule, tant qu'un joueur est assis.",
+  "notes": [
+    "Clés jbeam lues par init : `screenMaterialName` (\"@screen_gps\"), `htmlFilePath` (\"local://local/vehicles/common/navi_screen.html\"), `textureWidth` (256), `textureHeight` (128), `textureFPS` (30), `bootscreenImage` (URL facultative de l'écran de démarrage).",
+    "Données envoyées à `map.updateData` : x, y, rotation (degrés = direction + 180), speed (km/h = airspeed × 3.6), zoom (min(150 + vitesse × 1.5, 250), inutilisé sur le tableau de bord), ignitionLevel.",
+    "`M.reset = nop` (fonction vide) : sans cela controller.reset rappellerait init et recréerait la texture. Le champ `reset` n'est donc pas nil.",
+    "L'appel utilise `obj:getID()` pour l'identifiant du véhicule."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "reset": {"type": "function", "desc": "nop : évite de rappeler init au reset du véhicule."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Envoie les données GPS à la texture HTML à 15 Hz quand un joueur est assis.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Crée la texture HTML de l'écran, demande la carte au jeu et affiche l'image de démarrage si `bootscreenImage` est fournie.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

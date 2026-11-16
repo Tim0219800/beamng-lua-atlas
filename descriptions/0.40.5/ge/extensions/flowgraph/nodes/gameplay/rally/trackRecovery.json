@@ -1,12 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackRecovery.lua",
-  "module": "Nœud flowgraph « Rally Mode Track Recovery » (catégorie repeat_instant, tag rally). Suit les retournements et recoveries : à chaque frame, calcule recoveryType parmi 'flip', 'recovery', 'restart' (la dernière pin active l'emporte) et appelle extensions.hook('onRallyVehicleRecovery', recoveryType). Entrées flow : flip, recovery, restart.",
-  "notes": ["Le hook est appelé à chaque frame, y compris avec recoveryType = nil quand aucune pin n'est active.", "La description de la pin restart est « A recovery » (copier-coller)."],
+  "module": "Flowgraph node \"Rally Mode Track Recovery\" (category repeat_instant, tag rally). Tracks flips and recoveries: every frame, computes recoveryType among 'flip', 'recovery', 'restart' (the last active pin wins) and calls extensions.hook('onRallyVehicleRecovery', recoveryType). Flow inputs: flip, recovery, restart.",
+  "notes": [
+    "The hook is called every frame, including with recoveryType = nil when no pin is active.",
+    "The description of the restart pin is \"A recovery\" (copy-paste)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Détermine le type de recovery et émet le hook onRallyVehicleRecovery.", "internal": true}
+        "work": {
+          "desc": "Determines the recovery type and emits the onRallyVehicleRecovery hook.",
+          "internal": true
+        }
       }
     }
   }

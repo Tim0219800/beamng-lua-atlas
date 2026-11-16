@@ -1,170 +1,170 @@
 # `core_levels`
 
-*Fichier : `lua/ge/extensions/core/levels.lua` · VM : Game Engine (GE) · 597 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/levels.lua` · VM: Game Engine (GE) · 597 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_levels` : `extensions.load("core_levels")`, puis la globale `core_levels`
+**Access:** extension `core_levels`: `extensions.load("core_levels")`, then the global `core_levels`
 
-Extension GE `core_levels` : catalogue des niveaux (dossiers de /levels/), lecture de leur info.json, et lancement d'un niveau (startLevel). Un moddeur s'en sert pour lister les cartes disponibles (y compris celles venant de mods), retrouver le titre ou l'aperçu d'une carte, ou charger une carte par script. La liste est calculée une fois (lecture disque lente) puis mise en cache ; le cache est invalidé quand un fichier sous /levels/ change.
+GE extension `core_levels`: catalog of levels (folders in /levels/), reading of their info.json, and launching a level (startLevel). A modder uses it to list the available maps (including those from mods), find a map's title or preview, or load a map by script. The list is computed once (slow disk read) then cached; the cache is invalidated when a file under /levels/ changes.
 
-## Exemple
+## Example
 
 ```lua
 local lvl = core_levels.getLevelByName('west_coast_usa')
 if lvl then log('I','', lvl.title .. ' ' .. tostring(lvl.supportsTraffic)) end
--- charger une carte (le dossier ou le fichier .level.json)
+-- load a map (the folder or the .level.json file)
 core_levels.startLevel('/levels/gridmap_v2/')
 ```
 
-## Remarques
+## Notes
 
-- getList() parcourt /levels/ : les entrées de la liste sont les tables de info.json enrichies (levelName, dir, misFilePath, fullfilename, modID, modName, modTitle, official, previews, spawnPoints, minimap, multiseat.maxPlayers, supportsTraffic, supportsTimeOfDay). Les clés de info.json non listées sont conservées telles quelles.
-- Un niveau sans point d'entrée (dossier main/, ancien fichier principal, ou un .mis) est ignoré avec une erreur dans le log. Si un niveau existe en .level.json et en .mis, seule la version json est gardée.
-- Le dossier /levels/mod_info est ignoré. Le flag obsolète `hidden` de info.json est converti en `isAuxiliary` avec un avertissement.
-- Les chemins d'aperçu (`previews`, `spawnPoints[].previews`, `minimap[].file`) sont préfixés par le dossier du niveau. Les niveaux sans `previews` voient leur `title` écrasé par le nom du dossier (levelName), même si info.json avait un title.
-- Bug probable dans getList : l'appel `imageExistsDefault(l.dirEntry..'.png', imageExistsDefault(l.dirEntry..'_preview.png'))` imbrique le 2e appel comme valeur par défaut du premier au lieu de lui passer deux arguments distincts (déduit du code).
-- getLevelPreview écrit une ligne `print` à chaque appel non mis en cache, ce qui pollue le log.
-- Les caches de titre, d'aperçu et d'options d'heure sont indexés par nom de niveau en minuscules ; la recherche par nom est insensible à la casse.
-- startLevel ne fait rien si un chargement 'levels' est déjà en cours. Si un niveau est déjà chargé (scenetree.MissionCleanup existe), on se déconnecte d'abord, puis on charge. Le paramètre spawnVehicle est mémorisé dans une variable locale et consommé par maybeSpawnDefaultVehicle.
-- onGetRawPoiListForLevel ne vérifie pas que levelInfo soit non nil : un niveau inconnu provoquerait une erreur (levelInfo.spawnPoints).
+- getList() walks /levels/: the list entries are the info.json tables enriched (levelName, dir, misFilePath, fullfilename, modID, modName, modTitle, official, previews, spawnPoints, minimap, multiseat.maxPlayers, supportsTraffic, supportsTimeOfDay). The info.json keys not listed are kept as is.
+- A level without an entry point (main/ folder, old main file, or a .mis) is ignored with an error in the log. If a level exists as .level.json and as .mis, only the json version is kept.
+- The /levels/mod_info folder is ignored. The obsolete `hidden` flag of info.json is converted to `isAuxiliary` with a warning.
+- The preview paths (`previews`, `spawnPoints[].previews`, `minimap[].file`) are prefixed with the level folder. Levels without `previews` have their `title` overwritten by the folder name (levelName), even if info.json had a title.
+- Probable bug in getList: the call `imageExistsDefault(l.dirEntry..'.png', imageExistsDefault(l.dirEntry..'_preview.png'))` nests the 2nd call as the default value of the first instead of passing it two distinct arguments (inferred from code).
+- getLevelPreview writes a `print` line on every uncached call, which pollutes the log.
+- The title, preview and time-of-day options caches are keyed by lowercase level name; the lookup by name is case-insensitive.
+- startLevel does nothing if a 'levels' loading is already in progress. If a level is already loaded (scenetree.MissionCleanup exists), it disconnects first, then loads. The spawnVehicle parameter is stored in a local variable and consumed by maybeSpawnDefaultVehicle.
+- onGetRawPoiListForLevel does not check that levelInfo is non-nil: an unknown level would cause an error (levelInfo.spawnPoints).
 
-**Dépendances (chargées avant) :** `freeroam_levelStats`
+**Dependencies (loaded first):** `freeroam_levelStats`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_levels.expandMissionFileName(missionFileName)` | Résout un nom de fichier de niveau : renvoie tel quel un dossier existant, sinon le fichier développé s'il existe, sinon essaie les variantes .level.json et .mis. | 443 |
-| `core_levels.getLevelByName(levelName)` | Cherche un niveau par son nom de dossier, sans tenir compte de la casse. | 246 |
-| `core_levels.getLevelName(path)` | Extrait le nom du niveau d'un chemin de la forme '/levels/<nom>/...'. | 512 |
-| `core_levels.getLevelNames()` | Renvoie seulement les noms (levelName) des niveaux, dans l'ordre de getList. | 225 |
-| `core_levels.getLevelPaths()` | Renvoie les dossiers des niveaux, chacun terminé par '/'. | 233 |
-| `core_levels.getLevelPreview(levelName)` | Renvoie le premier chemin d'image d'aperçu du niveau. Résultat mis en cache ; écrit une ligne dans le log à chaque calcul. | 281 |
-| `core_levels.getLevelTitle(levelName)` | Renvoie le titre affichable du niveau (champ title, sinon levelName). Résultat mis en cache. | 256 |
-| `core_levels.getList()` | Renvoie le tableau de tous les niveaux valides, triés par nom sans tenir compte de la casse. Construit au premier appel (lent, accès disque) puis mis en cache. Renvoie {} si /levels/ n'existe pas. | 74 |
-| `core_levels.getListWithStats()` | Renvoie la liste des niveaux avec les statistiques d'interface fournies par freeroam_levelStats. | 567 |
-| `core_levels.getSimpleList()` | Alias de getLevelNames, gardé pour compatibilité. | 225 |
-| `core_levels.getTimeOfDayOptions(levelName)` | Renvoie les choix d'heure de la journée proposés pour le niveau (pris dans core_environment.getDefaultTimeOfDayOptions), uniquement si le niveau a supportsTimeOfDay. Triés : valeurs > 0.5 en premier (croissantes), puis valeurs <= 0.5 (croissantes). | 311 |
-| `core_levels.isListLoaded()` | Indique si le cache de la liste des niveaux est déjà construit. | 220 |
-| `core_levels.maybeSpawnDefaultVehicle()` | Fait apparaître le véhicule joueur ('thePlayer') choisi via startLevel (ou le véhicule par défaut) au point d'apparition 'player', l'ajoute à MissionCleanup et MissionGroup et le marque canSave = false. Appelé par le flux de chargement de niveau. *(interne)* | 382 |
-| `core_levels.onClientPostStartMission()` | Hook appelé après le démarrage d'un niveau côté client : régénère tous les DecalRoad de la scène. *(interne)* *(hook)* | 434 |
-| `core_levels.onFilesChanged(files)` | Hook appelé quand des fichiers changent. Si un chemin commence par '/levels/', vide tous les caches et renvoie la liste à l'interface (onLevelsChanged). *(interne)* *(hook)* | 359 |
-| `core_levels.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook de collecte des points d'intérêt d'un niveau : ajoute à `elements` un POI de type spawnPoint (marqueur de grande carte, voyage rapide) pour chaque spawnPoint qui a un objectname trouvé dans la scène. En mode carrière, seuls les points découverts sont ajoutés. *(interne)* *(hook)* | 539 |
-| `core_levels.requestData()` | Alias de notifyUI : envoie à l'interface la liste avec statistiques via guihooks.trigger('onLevelsChanged', levels, uiStats). | 241 |
-| `core_levels.startLevel(levelPath, delayedStart, customLoadingFunction, spawnVehicle)` | Charge un niveau avec écran de chargement 'levels'. Se déconnecte d'abord si un niveau est déjà chargé. Ignoré si un chargement est déjà en cours. | 516 |
+| `core_levels.expandMissionFileName(missionFileName)` | Resolves a level file name: returns as is an existing folder, otherwise the expanded file if it exists, otherwise tries the .level.json and .mis variants. | 443 |
+| `core_levels.getLevelByName(levelName)` | Looks up a level by its folder name, case-insensitively. | 246 |
+| `core_levels.getLevelName(path)` | Extracts the level name from a path of the form '/levels/<name>/...'. | 512 |
+| `core_levels.getLevelNames()` | Returns only the names (levelName) of the levels, in getList order. | 225 |
+| `core_levels.getLevelPaths()` | Returns the level folders, each ending with '/'. | 233 |
+| `core_levels.getLevelPreview(levelName)` | Returns the first preview image path of the level. Result cached; writes a line to the log on every computation. | 281 |
+| `core_levels.getLevelTitle(levelName)` | Returns the level's displayable title (title field, otherwise levelName). Result cached. | 256 |
+| `core_levels.getList()` | Returns the array of all valid levels, sorted by name case-insensitively. Built on the first call (slow, disk access) then cached. Returns {} if /levels/ does not exist. | 74 |
+| `core_levels.getListWithStats()` | Returns the levels list with the UI statistics provided by freeroam_levelStats. | 567 |
+| `core_levels.getSimpleList()` | Alias of getLevelNames, kept for compatibility. | 225 |
+| `core_levels.getTimeOfDayOptions(levelName)` | Returns the time-of-day choices offered for the level (taken from core_environment.getDefaultTimeOfDayOptions), only if the level has supportsTimeOfDay. Sorted: values > 0.5 first (ascending), then values <= 0.5 (ascending). | 311 |
+| `core_levels.isListLoaded()` | Indicates whether the levels list cache is already built. | 220 |
+| `core_levels.maybeSpawnDefaultVehicle()` | Spawns the player vehicle ('thePlayer') chosen via startLevel (or the default vehicle) at the 'player' spawn point, adds it to MissionCleanup and MissionGroup and marks it canSave = false. Called by the level loading flow. *(internal)* | 382 |
+| `core_levels.onClientPostStartMission()` | Hook called after a level starts on the client side: regenerates all DecalRoads in the scene. *(internal)* *(hook)* | 434 |
+| `core_levels.onFilesChanged(files)` | Hook called when files change. If a path starts with '/levels/', clears all caches and sends the list back to the interface (onLevelsChanged). *(internal)* *(hook)* | 359 |
+| `core_levels.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook to collect a level's points of interest: adds to `elements` a POI of type spawnPoint (big map marker, fast travel) for each spawnPoint that has an objectname found in the scene. In career mode, only discovered points are added. *(internal)* *(hook)* | 539 |
+| `core_levels.requestData()` | Alias of notifyUI: sends to the interface the list with statistics via guihooks.trigger('onLevelsChanged', levels, uiStats). | 241 |
+| `core_levels.startLevel(levelPath, delayedStart, customLoadingFunction, spawnVehicle)` | Loads a level with the 'levels' loading screen. Disconnects first if a level is already loaded. Ignored if a loading is already in progress. | 516 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_levels.expandMissionFileName(missionFileName)`
 
-Résout un nom de fichier de niveau : renvoie tel quel un dossier existant, sinon le fichier développé s'il existe, sinon essaie les variantes .level.json et .mis.
+Resolves a level file name: returns as is an existing folder, otherwise the expanded file if it exists, otherwise tries the .level.json and .mis variants.
 
-- `missionFileName` (*string*) : Chemin du niveau (dossier, .mis, .level.json ou sans extension).
-- **renvoie** : string|nil Chemin existant trouvé, ou nil (aucun return explicite).
+- `missionFileName` (*string*) : Level path (folder, .mis, .level.json or without extension).
+- **returns**: string|nil Existing path found, or nil (no explicit return).
 
 #### `core_levels.getLevelByName(levelName)`
 
-Cherche un niveau par son nom de dossier, sans tenir compte de la casse.
+Looks up a level by its folder name, case-insensitively.
 
-- `levelName` (*string*) : Nom du niveau (ex. 'west_coast_usa').
-- **renvoie** : table|nil L'entrée de getList, ou nil si introuvable.
+- `levelName` (*string*) : Level name (e.g. 'west_coast_usa').
+- **returns**: table|nil The getList entry, or nil if not found.
 
 #### `core_levels.getLevelName(path)`
 
-Extrait le nom du niveau d'un chemin de la forme '/levels/<nom>/...'.
+Extracts the level name from a path of the form '/levels/<name>/...'.
 
-- `path` (*string*) : Chemin virtuel contenant levels/<nom>/.
-- **renvoie** : string|nil Nom du niveau, ou nil si le motif ne correspond pas.
+- `path` (*string*) : Virtual path containing levels/<name>/.
+- **returns**: string|nil Level name, or nil if the pattern does not match.
 
 #### `core_levels.getLevelNames()`
 
-Renvoie seulement les noms (levelName) des niveaux, dans l'ordre de getList.
+Returns only the names (levelName) of the levels, in getList order.
 
-- **renvoie** : string[] Noms de dossiers des niveaux.
+- **returns**: string[] Level folder names.
 
 #### `core_levels.getLevelPaths()`
 
-Renvoie les dossiers des niveaux, chacun terminé par '/'.
+Returns the level folders, each ending with '/'.
 
-- **renvoie** : string[] Chemins du type '/levels/gridmap_v2/'.
+- **returns**: string[] Paths like '/levels/gridmap_v2/'.
 
 #### `core_levels.getLevelPreview(levelName)`
 
-Renvoie le premier chemin d'image d'aperçu du niveau. Résultat mis en cache ; écrit une ligne dans le log à chaque calcul.
+Returns the first preview image path of the level. Result cached; writes a line to the log on every computation.
 
-- `levelName` (*string|nil*) : Nom du niveau.
-- **renvoie** : string|nil Chemin de l'image, ou nil.
+- `levelName` (*string|nil*) : Level name.
+- **returns**: string|nil Image path, or nil.
 
 #### `core_levels.getLevelTitle(levelName)`
 
-Renvoie le titre affichable du niveau (champ title, sinon levelName). Résultat mis en cache.
+Returns the level's displayable title (title field, otherwise levelName). Result cached.
 
-- `levelName` (*string|nil*) : Nom du niveau ; nil renvoie nil.
-- **renvoie** : string|nil Titre, ou nil si le niveau est inconnu.
+- `levelName` (*string|nil*) : Level name; nil returns nil.
+- **returns**: string|nil Title, or nil if the level is unknown.
 
 #### `core_levels.getList()`
 
-Renvoie le tableau de tous les niveaux valides, triés par nom sans tenir compte de la casse. Construit au premier appel (lent, accès disque) puis mis en cache. Renvoie {} si /levels/ n'existe pas.
+Returns the array of all valid levels, sorted by name case-insensitively. Built on the first call (slow, disk access) then cached. Returns {} if /levels/ does not exist.
 
-- **renvoie** : table[] Liste des infos de niveau (info.json enrichi, voir notes).
+- **returns**: table[] List of level infos (enriched info.json, see notes).
 
 #### `core_levels.getListWithStats()`
 
-Renvoie la liste des niveaux avec les statistiques d'interface fournies par freeroam_levelStats.
+Returns the levels list with the UI statistics provided by freeroam_levelStats.
 
-- **renvoie** : table { levels = getList(), uiStats = freeroam_levelStats.getUiStats() }
+- **returns**: table { levels = getList(), uiStats = freeroam_levelStats.getUiStats() }
 
 #### `core_levels.getSimpleList()`
 
-Alias de getLevelNames, gardé pour compatibilité.
+Alias of getLevelNames, kept for compatibility.
 
-- **renvoie** : string[] Noms de dossiers des niveaux.
+- **returns**: string[] Level folder names.
 
 #### `core_levels.getTimeOfDayOptions(levelName)`
 
-Renvoie les choix d'heure de la journée proposés pour le niveau (pris dans core_environment.getDefaultTimeOfDayOptions), uniquement si le niveau a supportsTimeOfDay. Triés : valeurs > 0.5 en premier (croissantes), puis valeurs <= 0.5 (croissantes).
+Returns the time-of-day choices offered for the level (taken from core_environment.getDefaultTimeOfDayOptions), only if the level has supportsTimeOfDay. Sorted: values > 0.5 first (ascending), then values <= 0.5 (ascending).
 
-- `levelName` (*string|nil*) : Nom du niveau ; nil renvoie {}.
-- **renvoie** : table[] Éléments { key, value, label }. Vide si non supporté ou niveau inconnu.
+- `levelName` (*string|nil*) : Level name; nil returns {}.
+- **returns**: table[] Elements { key, value, label }. Empty if unsupported or level unknown.
 
 #### `core_levels.isListLoaded()`
 
-Indique si le cache de la liste des niveaux est déjà construit.
+Indicates whether the levels list cache is already built.
 
-- **renvoie** : boolean true si getList a déjà été calculée et pas invalidée depuis.
+- **returns**: boolean true if getList has already been computed and not invalidated since.
 
 #### `core_levels.onFilesChanged(files)`
 
-Hook appelé quand des fichiers changent. Si un chemin commence par '/levels/', vide tous les caches et renvoie la liste à l'interface (onLevelsChanged).
+Hook called when files change. If a path starts with '/levels/', clears all caches and sends the list back to the interface (onLevelsChanged).
 
-- `files` (*table[]*) : Éléments avec un champ filename.
+- `files` (*table[]*) : Elements with a filename field.
 
 #### `core_levels.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook de collecte des points d'intérêt d'un niveau : ajoute à `elements` un POI de type spawnPoint (marqueur de grande carte, voyage rapide) pour chaque spawnPoint qui a un objectname trouvé dans la scène. En mode carrière, seuls les points découverts sont ajoutés.
+Hook to collect a level's points of interest: adds to `elements` a POI of type spawnPoint (big map marker, fast travel) for each spawnPoint that has an objectname found in the scene. In career mode, only discovered points are added.
 
-- `levelIdentifier` (*string*) : Nom du niveau.
-- `elements` (*table[]*) : Liste de POI à compléter (modifiée en place).
+- `levelIdentifier` (*string*) : Level name.
+- `elements` (*table[]*) : POI list to complete (modified in place).
 
 #### `core_levels.startLevel(levelPath, delayedStart, customLoadingFunction, spawnVehicle)`
 
-Charge un niveau avec écran de chargement 'levels'. Se déconnecte d'abord si un niveau est déjà chargé. Ignoré si un chargement est déjà en cours.
+Loads a level with the 'levels' loading screen. Disconnects first if a level is already loaded. Ignored if a loading is already in progress.
 
-- `levelPath` (*string*) : Dossier du niveau ou fichier main.level.json (converti en dossier si le fichier n'existe pas).
-- `delayedStart` (*boolean|nil*) : Si vrai, termine d'abord le mode de jeu actif (endActiveGameMode) puis charge.
-- `customLoadingFunction` (*function|nil*) : Transmise à server.createGame pour remplacer le chargement standard (déduit du code).
-- `spawnVehicle` (*table|false|nil*) : Véhicule à faire apparaître au chargement : { modèle, options } ; false = aucun ; nil = véhicule par défaut.
-- **renvoie** : any Résultat de la déconnexion ou du chargement ; false si le chemin est invalide ; nil sinon.
+- `levelPath` (*string*) : Level folder or main.level.json file (converted to a folder if the file does not exist).
+- `delayedStart` (*boolean|nil*) : If true, first ends the active game mode (endActiveGameMode) then loads.
+- `customLoadingFunction` (*function|nil*) : Passed to server.createGame to replace the standard loading (inferred from code).
+- `spawnVehicle` (*table|false|nil*) : Vehicle to spawn on load: { model, options }; false = none; nil = default vehicle.
+- **returns**: any Result of the disconnection or loading; false if the path is invalid; nil otherwise.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci : { "freeroam_levelStats" }. |
-| `levelsDir` | string | Toujours '/levels/', conservé pour compatibilité avec d'anciens scripts. |
+| `dependencies` | string[] | Extensions loaded before this one: { "freeroam_levelStats" }. |
+| `levelsDir` | string | Always '/levels/', kept for compatibility with old scripts. |
 
-**Évènements UI (guihooks.trigger) :** `onLevelsChanged`
+**UI events (guihooks.trigger):** `onLevelsChanged`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`, `expandFilename`, `fileExists`, `findFiles`
 - `core_environment.` `getDefaultTimeOfDayOptions`
@@ -172,4 +172,4 @@ Charge un niveau avec écran de chargement 'levels'. Se déconnecte d'abord si u
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/levels.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/levels.lua`.*

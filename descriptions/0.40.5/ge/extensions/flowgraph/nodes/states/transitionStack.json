@@ -1,57 +1,57 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/states/transitionStack.lua",
-  "module": "Noeud « Get Transition Variables » du stategraph. Lit les variables passées par le noeud « Transition » de l'état précédent (pile transitionStack de l'état démarré) et les expose sur ses pins de sortie personnalisés ; le flow d'entrée est recopié en sortie.",
+  "module": "Stategraph node \"Get Transition Variables\". Reads the variables passed by the \"Transition\" node of the previous state (transitionStack of the started state) and exposes them on its custom output pins; the input flow is copied to the output.",
   "notes": [
-    "work écrase aussi pinOut.flow avec nil via la boucle (self._stack['flow']) avant de le réécrire à la fin : sans conséquence."
+    "work also overwrites pinOut.flow with nil via the loop (self._stack['flow']) before rewriting it at the end: harmless."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "savePins = true, allowCustomOutPins = true.",
           "internal": true
         },
         "onStateStarted": {
-          "desc": "Hook : à l'entrée dans l'état, mémorise state.transitionStack.",
+          "desc": "Hook: on entering the state, stores state.transitionStack.",
           "params": {
             "state": {
               "type": "any",
-              "desc": "objet état démarré"
+              "desc": "started state object"
             }
           },
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Oublie la pile à l'arrêt.",
+          "desc": "Forgets the stack on stop.",
           "internal": true
         },
         "work": {
-          "desc": "Copie _stack[nom] sur chaque pin de sortie et recopie flow.",
+          "desc": "Copies _stack[name] to each output pin and copies flow.",
           "internal": false
         },
         "makePinTemplates": {
-          "desc": "Construit les modèles de pins comme le noeud transition.",
+          "desc": "Builds the pin templates like the transition node.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Prépare les modèles de pins si besoin.",
+          "desc": "Prepares the pin templates if needed.",
           "internal": true
         },
         "hideProperties": {
-          "desc": "Libère le cache de modèles de pins.",
+          "desc": "Frees the pin template cache.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "desc": "Draws the central content of the node in the editor.",
           "params": {
             "builder": {
               "type": "any",
-              "desc": "constructeur de noeud imgui"
+              "desc": "imgui node builder"
             },
             "style": {
               "type": "any",
-              "desc": "style du noeud"
+              "desc": "node style"
             }
           },
           "internal": true

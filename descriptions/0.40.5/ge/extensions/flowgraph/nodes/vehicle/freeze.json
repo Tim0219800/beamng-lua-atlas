@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/freeze.lua",
-  "module": "Nœud « Freeze Vehicle » (catégorie `repeat_instant`). Gèle ou dégèle un véhicule via `core_vehicleBridge.executeAction(veh,'setFreeze', freeze)`. Pins d'entrée : `vehId`, `freeze` (bool). Si `vehId` est absent, véhicule joueur.",
+  "module": "Node \"Freeze Vehicle\" (category `repeat_instant`). Freezes or unfreezes a vehicle via `core_vehicleBridge.executeAction(veh,'setFreeze', freeze)`. Input pins: `vehId`, `freeze` (bool). If `vehId` is absent, player vehicle.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "work": {
-          "desc": "Envoie l'action `setFreeze` avec la valeur du pin `freeze`.",
+          "desc": "Sends the `setFreeze` action with the value of the `freeze` pin.",
           "internal": true
         }
       }

@@ -1,41 +1,41 @@
 # `editor_toolUtilities_simplex`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/simplex.lua` · VM : Game Engine (GE) · 101 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/simplex.lua` · VM: Game Engine (GE) · 101 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_simplex` : `extensions.load("editor_toolUtilities_simplex")`, puis la globale `editor_toolUtilities_simplex`
+**Access:** extension `editor_toolUtilities_simplex`: `extensions.load("editor_toolUtilities_simplex")`, then the global `editor_toolUtilities_simplex`
 
-Bruit simplex 2D (grille simpliciale de Perlin) avec table de permutation fixe, donc déterministe. Optimisé pour des millions d'échantillons (facteurs de déformation précalculés, gradients dans deux tableaux plats, indices de gradient précalculés). Utilisé par les outils de l'éditeur pour des variations pseudo-aléatoires reproductibles.
+2D simplex noise (Perlin's simplicial grid) with a fixed permutation table, hence deterministic. Optimized for millions of samples (precomputed skew factors, gradients in two flat arrays, precomputed gradient indices). Used by editor tools for reproducible pseudo-random variations.
 
-## Exemple
+## Example
 
 ```lua
 local simplex = extensions.editor_toolUtilities_simplex
 local n = simplex.noise(x * 0.05, y * 0.05)
 ```
 
-## Remarques
+## Notes
 
-- Valeur continue, environ dans [-1, 1] (facteur d'échelle 70).
-- Périodique de 256 cellules en i et j (i % 256, j % 256).
-- La page auto signale une globale affectée « i » : ce sont des variables de boucle `for i = ...`, pas de vraie globale.
+- Continuous value, roughly in [-1, 1] (scale factor 70).
+- Periodic with 256 cells in i and j (i % 256, j % 256).
+- The auto page flags an assigned global "i": these are `for i = ...` loop variables, not a real global.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_simplex.noise(xin, yin)` | Bruit simplex 2D au point (xin, yin). | 54 |
+| `editor_toolUtilities_simplex.noise(xin, yin)` | 2D simplex noise at point (xin, yin). | 54 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_simplex.noise(xin, yin)`
 
-Bruit simplex 2D au point (xin, yin).
+2D simplex noise at point (xin, yin).
 
-- `xin` (*number*) : Coordonnée x.
-- `yin` (*number*) : Coordonnée y.
-- **renvoie** : number Valeur de bruit, environ [-1, 1].
+- `xin` (*number*) : x coordinate.
+- `yin` (*number*) : y coordinate.
+- **returns**: number Noise value, roughly [-1, 1].
 
-**Globales affectées :** `i`
+**Globals assigned:** `i`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/simplex.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/simplex.lua`.*

@@ -1,12 +1,18 @@
 {
   "path": "lua/ge/extensions/editor/roadArchitect/sumoImport.lua",
-  "module": "Petit module d'aiguillage pour l'import SUMO (fichiers .nod.xml / .edg.xml) dans le Road Architect. Il ne contient pas de logique : il réexporte la fonction networkImport.importSumoFromFile sous deux noms. La fenêtre Road Network Import/Exporter l'appelle via require('editor/roadArchitect/sumoImport').importFromFile(filePath, options).",
+  "module": "Small routing module for the SUMO import (.nod.xml / .edg.xml files) into Road Architect. It contains no logic: it re-exports the networkImport.importSumoFromFile function under two names. The Road Network Import/Exporter window calls it via require('editor/roadArchitect/sumoImport').importFromFile(filePath, options).",
   "notes": [
-    "importFromFile et importFromPrefix pointent vers la même fonction (networkImport.importSumoFromFile) ; importFromPrefix n'a donc pas de comportement propre.",
-    "Le module est chargé avec require() par roadNetworkExporter, pas comme extension."
+    "importFromFile and importFromPrefix point to the same function (networkImport.importSumoFromFile); importFromPrefix therefore has no behavior of its own.",
+    "The module is loaded with require() by roadNetworkExporter, not as an extension."
   ],
   "fields": {
-    "importFromFile": {"type": "function", "desc": "Alias de networkImport.importSumoFromFile : importe un réseau SUMO depuis un fichier (signature réelle dans editor/roadArchitect/networkImport ; roadNetworkExporter l'appelle avec (filePath, options))."},
-    "importFromPrefix": {"type": "function", "desc": "Alias identique de importFromFile."}
+    "importFromFile": {
+      "type": "function",
+      "desc": "Alias of networkImport.importSumoFromFile: imports a SUMO network from a file (actual signature in editor/roadArchitect/networkImport; roadNetworkExporter calls it with (filePath, options))."
+    },
+    "importFromPrefix": {
+      "type": "function",
+      "desc": "Identical alias of importFromFile."
+    }
   }
 }

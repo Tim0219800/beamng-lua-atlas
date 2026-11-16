@@ -1,29 +1,29 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/macro/foreach.lua",
-  "module": "Noeud flowgraph 'Foreach' (macro, categorie logic). Pour chaque element de la table d'entree, charge un nouveau flowgraph (fichier .flow.json donne par 'elementFile') avec core_flowgraphManager.loadManager, renseigne mgr.modules.foreach.key/value (lus par le noeud Get Foreach) et lance l'execution. Ne fait cela qu'une fois (flag self.done).",
+  "module": "Flowgraph node 'Foreach' (macro, logic category). For each element of the input table, loads a new flowgraph (.flow.json file given by 'elementFile') with core_flowgraphManager.loadManager, sets mgr.modules.foreach.key/value (read by the Get Foreach node) and starts execution. Does this only once (flag self.done).",
   "notes": [
-    "BUG : work lit self.pinIn.filepath.value alors que le pin s'appelle 'elementFile' (pinIn.filepath est nil, plantage probable).",
-    "BUG : dans _executionStopped, la boucle nomme la variable 'mrg' mais utilise 'mgr:setRunning(false)' (variable globale nil) et removeNextFrame(self.mgr) (le manager parent, pas l'enfant).",
-    "self.done n'est jamais remis a false."
+    "BUG: work reads self.pinIn.filepath.value whereas the pin is named 'elementFile' (pinIn.filepath is nil, likely crash).",
+    "BUG: in _executionStopped, the loop names the variable 'mrg' but uses 'mgr:setRunning(false)' (nil global variable) and removeNextFrame(self.mgr) (the parent manager, not the child).",
+    "self.done is never set back to false."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
           "desc": "data.destroyTargetOnStop=true, targets=nil.",
           "internal": true
         },
         "postInit": {
-          "desc": "Restreint le pin elementFile aux fichiers '.flow.json'.",
+          "desc": "Restricts the elementFile pin to '.flow.json' files.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Si destroyTargetOnStop, arrete et supprime les managers crees ; vide targets.",
+          "desc": "If destroyTargetOnStop, stops and deletes the created managers; clears targets.",
           "internal": true
         },
         "work": {
-          "desc": "Au premier flux, cree et demarre un gestionnaire par element de la table ; self.done evite de recommencer.",
+          "desc": "On the first flow, creates and starts one manager per element of the table; self.done prevents starting again.",
           "internal": true
         }
       }

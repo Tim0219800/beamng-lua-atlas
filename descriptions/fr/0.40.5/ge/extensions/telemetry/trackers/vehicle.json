@@ -1,0 +1,54 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/vehicle.lua",
+  "module": "Traceur de télémétrie des véhicules. Il enregistre quels véhicules sont créés (événement `vehicleSpawned`), conduits et pendant combien de temps (activité `vehicleUsed`), et les réinitialisations (événement `vehicleReset`). Les configurations personnalisées sont rapportées comme \":custom\" au lieu du contenu de la configuration. S'appuie sur `telemetry_core`, `telemetry_vehicleInfo` et `telemetry_configManager`.",
+  "notes": [
+    "Seul le joueur 0 est suivi (`player ~= 0` est ignoré dans onVehicleSwitched). `newId == -1` signifie que le joueur n'est plus dans un véhicule.",
+    "Les réinitialisations sont l'événement le plus bruyant : `trackVehReset` ne fait rien si la configuration du module `vehicle` a `trackResets == false`.",
+    "Après un rechargement Lua, onVehicleSwitched ne se redéclenche pas ; onExtensionLoaded rouvre donc l'activité du véhicule actuellement conduit.",
+    "`trackVehReset` n'est appelé par aucun hook de ce fichier : l'appelant est externe (déduit du code)."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions à charger avant celle-ci : `{'telemetry_core'}`."}
+  },
+  "functions": {
+    "onVehicleSpawned": {
+      "desc": "Hook appelé quand un véhicule est créé. Envoie l'événement `vehicleSpawned` avec le modèle, la configuration et le niveau courant. Ne fait rien si les infos du véhicule sont introuvables.",
+      "params": {"vid": {"type": "integer", "desc": "Id du véhicule créé."}},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé quand le véhicule contrôlé change. Pour le joueur 0, ferme l'activité `vehicleUsed` en cours puis en ouvre une pour le nouveau véhicule (ou seulement la ferme si newId vaut -1).",
+      "params": {
+        "oldId": {"type": "integer", "desc": "Id de l'ancien véhicule."},
+        "newId": {"type": "integer", "desc": "Id du nouveau véhicule, -1 si le joueur n'est plus dans un véhicule."},
+        "player": {"type": "integer", "desc": "Indice du joueur ; seul 0 est traité."}
+      },
+      "internal": true
+    },
+    "trackVehReset": {
+      "desc": "Envoie l'événement `vehicleReset` (modèle et dégâts du véhicule du joueur 0, lus dans `map.objects[vid].damage`). Désactivable via `trackResets = false` dans la configuration du module `vehicle`. Ignoré si le joueur n'a pas de véhicule.",
+      "params": {},
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook appelé à la fin de la mission/du niveau côté client. Ferme l'activité `vehicleUsed`.",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement de l'extension. Passe l'extension en déchargement manuel et, si le joueur 0 conduit déjà un véhicule, ouvre son activité `vehicleUsed`.",
+      "params": {},
+      "internal": true
+    },
+    "onExit": {
+      "desc": "Hook appelé à la fermeture du jeu. Ferme l'activité `vehicleUsed`.",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement de l'extension (un rechargement Lua ne passe pas par onExit). Ferme l'activité `vehicleUsed`.",
+      "params": {},
+      "internal": true
+    }
+  }
+}

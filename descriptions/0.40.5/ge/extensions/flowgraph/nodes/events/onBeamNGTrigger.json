@@ -1,14 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/events/onBeamNGTrigger.lua",
-  "module": "Nœud flowgraph « on BeamNGTrigger » (catégorie repeat_instant, événement). Écoute le hook onBeamNGTrigger et laisse passer le flux selon l'événement (enter ou exit). Peut filtrer par nom de trigger (data.filterName, vide = tous). Sorties : enter, exit (impulsions), vehId, triggerId, vehicleName, triggerName.",
+  "module": "Flowgraph node \"on BeamNGTrigger\" (category repeat_instant, event). Listens to the onBeamNGTrigger hook and lets flow through depending on the event (enter or exit). Can filter by trigger name (data.filterName, empty = all). Outputs: enter, exit (pulses), vehId, triggerId, vehicleName, triggerName.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Initialise data.filterName = \"\" et les drapeaux.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
-        "onBeamNGTrigger": {"desc": "Hook appelé par le moteur à chaque événement de BeamNGTrigger. Ignore l'événement si le nom ne correspond pas au filtre, remplit les pins de sortie, lève enterFlag/exitFlag et déclenche le nœud.", "params": {"data": {"type": "table", "desc": "Champs utilisés : subjectID, subjectName, triggerID, triggerName, event ('enter' ou 'exit')"}}, "internal": true},
-        "work": {"desc": "Copie enterFlag/exitFlag vers les pins enter/exit puis les remet à false.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}},
-        "drawMiddle": {"desc": "Affiche le filtre actif dans le nœud.", "internal": true}
+        "init": {
+          "desc": "Initializes data.filterName = \"\" and the flags.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "onBeamNGTrigger": {
+          "desc": "Hook called by the engine on each BeamNGTrigger event. Ignores the event if the name does not match the filter, fills the output pins, raises enterFlag/exitFlag and triggers the node.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Fields used: subjectID, subjectName, triggerID, triggerName, event ('enter' or 'exit')"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Copies enterFlag/exitFlag to the enter/exit pins then resets them to false.",
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "Flowgraph arguments"
+            }
+          }
+        },
+        "drawMiddle": {
+          "desc": "Displays the active filter in the node.",
+          "internal": true
+        }
       }
     }
   }

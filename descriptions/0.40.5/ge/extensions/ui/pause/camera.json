@@ -1,22 +1,57 @@
 {
   "path": "lua/ge/extensions/ui/pause/camera.lua",
-  "module": "Caméra orbitale automatique du menu pause : prévue pour passer la caméra du joueur en mode orbit et la faire tourner lentement autour du véhicule pendant la pause, puis restaurer la caméra et l'état d'orbite d'origine. Elle s'arrête si le joueur tourne la caméra à la main. Dans 0.40.5, cette fonctionnalité est désactivée dans le code.",
+  "module": "Automatic orbit camera of the pause menu: intended to switch the player's camera to orbit mode and make it rotate slowly around the vehicle during the pause, then restore the original camera and orbit state. It stops if the player rotates the camera by hand. In 0.40.5, this feature is disabled in the code.",
   "notes": [
-    "Désactivée : start, stop, beginPauseSession et endPauseSession commencent par `if true then return end`, donc elles ne font rien et renvoient nil (le code après ce return est mort). La variable locale beginPauseSession n'est jamais exécutée non plus.",
-    "onUpdate ne fait rien tant que state.active est faux, ce qui est toujours le cas ici.",
-    "Si le code était actif : vitesse d'orbite de -5,5 degrés/s sur l'axe x de camRot (lacet, normalisé dans [-180, 180]) ; arrêt si core_camera.timeSinceLastRotation diminue (rotation manuelle) ou si la caméra active n'est plus \"orbit\"."
+    "Disabled: start, stop, beginPauseSession and endPauseSession begin with `if true then return end`, so they do nothing and return nil (the code after this return is dead). The local variable beginPauseSession is never executed either.",
+    "onUpdate does nothing while state.active is false, which is always the case here.",
+    "If the code were active: orbit speed of -5.5 degrees/s on the x axis of camRot (yaw, normalized in [-180, 180]); stops if core_camera.timeSinceLastRotation decreases (manual rotation) or if the active camera is no longer \"orbit\"."
   ],
   "functions": {
-    "beginPauseSession": {"desc": "Prévu pour mémoriser caméra, véhicule et état d'orbite au début de la pause. Sans effet dans 0.40.5 (return immédiat).", "params": {}, "returns": [], "internal": false},
-    "debugState": {"desc": "Renvoie une copie profonde de l'état interne (pauseSessionActive, active, orbiting, stoppedByManualInput, previousCameraName, etc.) pour le débogage.", "params": {}, "returns": [{"type": "table", "desc": "Copie de l'état."}], "internal": false},
-    "endPauseSession": {"desc": "Prévu pour arrêter l'orbite et restaurer la caméra et l'état d'orbite d'avant la pause. Sans effet dans 0.40.5 (return immédiat).", "params": {}, "returns": [], "internal": false},
+    "beginPauseSession": {
+      "desc": "Intended to store the camera, vehicle and orbit state at the start of the pause. No effect in 0.40.5 (immediate return).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "debugState": {
+      "desc": "Returns a deep copy of the internal state (pauseSessionActive, active, orbiting, stoppedByManualInput, previousCameraName, etc.) for debugging.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the state."
+        }
+      ],
+      "internal": false
+    },
+    "endPauseSession": {
+      "desc": "Intended to stop the orbit and restore the camera and orbit state from before the pause. No effect in 0.40.5 (immediate return).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame ; fait tourner la caméra orbit autour du véhicule joueur si la session est active. Sans effet tant que start est désactivée.",
-      "params": {"dtReal": {"type": "number", "desc": "Temps réel écoulé depuis la frame précédente, en secondes."}},
+      "desc": "Hook called every frame; rotates the orbit camera around the player vehicle if the session is active. No effect while start is disabled.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time elapsed since the previous frame, in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
-    "start": {"desc": "Prévu pour passer la caméra du joueur en orbit et lancer la rotation automatique. Sans effet dans 0.40.5 (return immédiat).", "params": {}, "returns": [], "internal": false},
-    "stop": {"desc": "Prévu pour arrêter la rotation automatique et revenir à la caméra précédente. Sans effet dans 0.40.5 (return immédiat).", "params": {}, "returns": [], "internal": false}
+    "start": {
+      "desc": "Intended to switch the player's camera to orbit and start the automatic rotation. No effect in 0.40.5 (immediate return).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "stop": {
+      "desc": "Intended to stop the automatic rotation and return to the previous camera. No effect in 0.40.5 (immediate return).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    }
   }
 }

@@ -1,30 +1,30 @@
 # `flowgraph_nodes_vehicle_special_customVlua_string`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.lua` · VM : Game Engine (GE) · 55 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.lua` · VM: Game Engine (GE) · 55 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/special/customVlua_string")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/special/customVlua_string")` (file under extensions/ but not a regular extension)
 
-Nœud « Custom vlua - deprecated » (catégorie `repeat_p_duration`). Ancienne version de « Custom Vehicle Lua » : envoie la chaîne du pin `customLUA` au véhicule `vehId` avec `queueLuaCommand`. Obsolète : remplacé par « Custom vlua ».
+Node "Custom vlua - deprecated" (category `repeat_p_duration`). Old version of "Custom Vehicle Lua": sends the string of the `customLUA` pin to the vehicle `vehId` with `queueLuaCommand`. Obsolete: replaced by "Custom vlua".
 
-## Remarques
+## Notes
 
-- Le pin `customLUA` est décrit « The message that will be displayed. Bug: can not start directly with a number. »
-- `init` lit `self.pinIn.customLUAString` qui n'existe pas (le pin s'appelle `customLUA`) : erreur potentielle.
-- Pas de repli sur le véhicule joueur.
+- The `customLUA` pin is described as "The message that will be displayed. Bug: can not start directly with a number."
+- `init` reads `self.pinIn.customLUAString` which does not exist (the pin is named `customLUA`): potential error.
+- No fallback to the player vehicle.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Affichage central vide. | 48 |
-| `C:init()` | Constructeur ; tente de copier `pinIn.customLUAString.value` dans `data.func` (pin inexistant). | 27 |
-| `C:work()` | Envoie `customLUA` au véhicule. | 33 |
+| `C:drawMiddle(builder, style)` | Empty central display. | 48 |
+| `C:init()` | Constructor; tries to copy `pinIn.customLUAString.value` into `data.func` (nonexistent pin). | 27 |
+| `C:work()` | Sends `customLUA` to the vehicle. | 33 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/special/customVlua_string.lua`.*

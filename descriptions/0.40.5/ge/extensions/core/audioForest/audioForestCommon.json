@@ -1,54 +1,117 @@
 {
   "path": "lua/ge/extensions/core/audioForest/audioForestCommon.lua",
-  "module": "Code partagé entre l'exécution (audioForest.lua) et l'éditeur : transforme les objets d'une Forest en un nuage de noeuds audio éclaircis. Se charge avec require('core/audioForest/audioForestCommon'). L'algorithme : (1) pré-passe qui lit les items de la forêt (par blocs) et calcule volume et hauteur par modèle (shape) ; (2) classement S/M/L par volume normalisé (percentile 95) avec surcharge possible ; (3) éclaircissement glouton : on garde un item et on absorbe tous ses voisins à moins de minNodeSpacing (20 m) ; (4) construction d'un KD-tree 3D des noeuds.",
+  "module": "Code shared between runtime (audioForest.lua) and the editor: turns the objects of a Forest into a thinned cloud of audio nodes. Loaded with require('core/audioForest/audioForestCommon'). The algorithm: (1) a prepass that reads the forest items (in blocks) and computes volume and height per model (shape); (2) S/M/L classification by normalized volume (95th percentile) with possible override; (3) greedy thinning: keep an item and absorb all its neighbors within minNodeSpacing (20 m); (4) construction of a 3D KD-tree of the nodes.",
   "usage": "local c = require('core/audioForest/audioForestCommon')\nlocal cloud = c.buildNodeCloudFromForest(forestObj, toolState, nil, {})\n-- cloud.nodeCount, cloud.kdNodes ...",
   "notes": [
-    "Config par défaut (defaultCfg) : minNodeSpacing 20 m, thinningOuterRadiusMul 1.5, nodeHeightBlend 0.5, classT0 1/3, classT1 2/3, volumeClassPercentile 0.95, pitchNormPercentile 0.95.",
-    "Classes : 1 = petit (valeur audio 0.0), 2 = moyen (0.5), 3 = grand (1.0).",
-    "Le volume d'un item est le volume de sa boîte englobante multiplié par son échelle.",
-    "Seules ces fonctions sont exportées ; le reste (file de priorité de l'éclaircissement, emptyCloud, etc.) est local."
+    "Default config (defaultCfg): minNodeSpacing 20 m, thinningOuterRadiusMul 1.5, nodeHeightBlend 0.5, classT0 1/3, classT1 2/3, volumeClassPercentile 0.95, pitchNormPercentile 0.95.",
+    "Classes: 1 = small (audio value 0.0), 2 = medium (0.5), 3 = large (1.0).",
+    "An item's volume is the volume of its bounding box multiplied by its scale.",
+    "Only these functions are exported; the rest (thinning priority queue, emptyCloud, etc.) is local."
   ],
   "fields": {},
   "functions": {
     "getItemVolume": {
-      "desc": "Volume (m³) de la boîte englobante d'un item de forêt, multiplié par son échelle. Renvoie 0 sans boîte.",
-      "params": {"item": {"type": "userdata|nil", "desc": "Item de forêt (getObjBox, getScale)"}},
-      "returns": [{"type": "number", "desc": "Volume"}]
+      "desc": "Volume (m³) of a forest item's bounding box, multiplied by its scale. Returns 0 without a box.",
+      "params": {
+        "item": {
+          "type": "userdata|nil",
+          "desc": "Forest item (getObjBox, getScale)"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Volume"
+        }
+      ]
     },
     "computeDefaultClassFromNormVol": {
-      "desc": "Convertit un volume normalisé [0..1] en classe de taille : 1 sous t0, 2 sous t1, sinon 3.",
+      "desc": "Converts a normalized volume [0..1] into a size class: 1 below t0, 2 below t1, otherwise 3.",
       "params": {
-        "normVol": {"type": "number", "desc": "Volume normalisé"},
-        "classT0": {"type": "number|nil", "desc": "Seuil 1/2, 1/3 par défaut"},
-        "classT1": {"type": "number|nil", "desc": "Seuil 2/3, 2/3 par défaut (échangé avec t0 si t0 > t1)"}
+        "normVol": {
+          "type": "number",
+          "desc": "Normalized volume"
+        },
+        "classT0": {
+          "type": "number|nil",
+          "desc": "Threshold 1/2, 1/3 by default"
+        },
+        "classT1": {
+          "type": "number|nil",
+          "desc": "Threshold 2/3, 2/3 by default (swapped with t0 if t0 > t1)"
+        }
       },
-      "returns": [{"type": "integer", "desc": "1, 2 ou 3"}]
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "1, 2 or 3"
+        }
+      ]
     },
     "startRuntimePrepass": {
-      "desc": "Prépare l'état d'une pré-passe incrémentale : récupère tous les items de la forêt (forestObj:getData():getItems()).",
+      "desc": "Prepares the state of an incremental prepass: fetches all forest items (forestObj:getData():getItems()).",
       "params": {
-        "forestObj": {"type": "userdata", "desc": "Objet Forest"},
-        "st": {"type": "table|nil", "desc": "État d'outil ; utilise includeByShape (un modèle absent ou true est inclus, false est exclu)"}
+        "forestObj": {
+          "type": "userdata",
+          "desc": "Forest object"
+        },
+        "st": {
+          "type": "table|nil",
+          "desc": "Tool state; uses includeByShape (an absent model or true is included, false is excluded)"
+        }
       },
-      "returns": [{"type": "table", "desc": "État de pré-passe {all, allCount, i, includeByShape, shapeVol, shapeMaxZ, includedItem, includedShape, volList, volN, itemCount, isReady}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Prepass state {all, allCount, i, includeByShape, shapeVol, shapeMaxZ, includedItem, includedShape, volList, volN, itemCount, isReady}"
+        }
+      ]
     },
     "stepRuntimePrepass": {
-      "desc": "Traite jusqu'à maxSteps items de la pré-passe : retient les items inclus et mesure le volume et la hauteur max une fois par modèle. Passe isReady à true quand tous les items ont été vus.",
+      "desc": "Processes up to maxSteps prepass items: keeps the included items and measures the volume and max height once per model. Sets isReady to true when all items have been seen.",
       "params": {
-        "p": {"type": "table", "desc": "État renvoyé par startRuntimePrepass"},
-        "maxSteps": {"type": "integer|nil", "desc": "Nombre maximal d'items par appel, 10000 par défaut"}
+        "p": {
+          "type": "table",
+          "desc": "State returned by startRuntimePrepass"
+        },
+        "maxSteps": {
+          "type": "integer|nil",
+          "desc": "Maximum number of items per call, 10000 by default"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true quand la pré-passe est terminée"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true when the prepass is finished"
+        }
+      ]
     },
     "buildNodeCloudFromForest": {
-      "desc": "Construit le nuage de noeuds audio. Termine la pré-passe si besoin, classe les modèles, éclaircit les items et construit un KD-tree (kdtreepoint3d). Renvoie un nuage vide (nodeCount 0) s'il n'y a aucun item inclus.",
+      "desc": "Builds the audio node cloud. Finishes the prepass if needed, classifies the models, thins the items and builds a KD-tree (kdtreepoint3d). Returns an empty cloud (nodeCount 0) if there are no included items.",
       "params": {
-        "forestObj": {"type": "userdata", "desc": "Objet Forest"},
-        "st": {"type": "table|nil", "desc": "État d'outil : classSelByShape, classOverrideByShape, includeByShape"},
-        "cfg": {"type": "table|nil", "desc": "Configuration (clés de defaultCfg, ainsi que pitchDensityPercentile)"},
-        "opts": {"type": "table|nil", "desc": "Options : prepass (pré-passe déjà faite), shapeToRow + includeEditorFields (ajoute nodeTypeRow et nodeClassId pour l'éditeur)"}
+        "forestObj": {
+          "type": "userdata",
+          "desc": "Forest object"
+        },
+        "st": {
+          "type": "table|nil",
+          "desc": "Tool state: classSelByShape, classOverrideByShape, includeByShape"
+        },
+        "cfg": {
+          "type": "table|nil",
+          "desc": "Configuration (defaultCfg keys, as well as pitchDensityPercentile)"
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "Options: prepass (prepass already done), shapeToRow + includeEditorFields (adds nodeTypeRow and nodeClassId for the editor)"
+        }
       },
-      "returns": [{"type": "table", "desc": "{minNodeSpacing, nodeCount, nodeX, nodeY, nodeZ, nodeDepth, nodeAvgNormVol, nodeSourceCount, pitchDensityInv, nodeTypeRow, nodeClassId, kdNodes}"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{minNodeSpacing, nodeCount, nodeX, nodeY, nodeZ, nodeDepth, nodeAvgNormVol, nodeSourceCount, pitchDensityInv, nodeTypeRow, nodeClassId, kdNodes}"
+        }
+      ]
     }
   },
   "classes": {}

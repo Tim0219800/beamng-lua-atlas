@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/debug/debugCylinder.lua",
+  "module": "Nœud flowgraph « Debug Cylinder » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un cylindre de débogage (debugDrawer:drawCylinder) entre posA et posB. Entrées : radius (number, 1 par défaut), posA et posB (vec3, requis), color (caché, {r,g,b,a} 0-1, rose {0.91,0.05,0.48,0.5} par défaut).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Vide.", "internal": true},
+        "work": {"desc": "Si posA et posB sont définis, convertit la couleur (alpha 0.5 si absent) et dessine le cylindre."}
+      }
+    }
+  }
+}

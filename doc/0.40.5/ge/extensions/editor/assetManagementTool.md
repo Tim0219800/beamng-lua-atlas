@@ -1,30 +1,30 @@
 # `editor_assetManagementTool`
 
-*Fichier : `lua/ge/extensions/editor/assetManagementTool.lua` · VM : Game Engine (GE) · 2025 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/assetManagementTool.lua` · VM: Game Engine (GE) · 2025 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_assetManagementTool` : `extensions.load("editor_assetManagementTool")`, puis la globale `editor_assetManagementTool`
+**Access:** extension `editor_assetManagementTool`: `extensions.load("editor_assetManagementTool")`, then the global `editor_assetManagementTool`
 
-Outil d'éditeur « Asset Management Tool » (menu Window > Assets, fenêtre 1200x900) destiné à la gestion des fichiers assets et des fichiers lien (link files, pour le dépôt SVN de BeamNG). Onglets : Duplicated Assets (visible seulement en devMode), Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker. Il s'appuie sur FS:hashFile, FS:findLinkFiles, FS:convertLinkFileToTargetCopy, FS:copyFile, etc. Outil interne de développement, peu utile à un mod.
+Editor tool "Asset Management Tool" (Window > Assets menu, 1200x900 window) for managing asset files and link files (for BeamNG's SVN repository). Tabs: Duplicated Assets (only visible in devMode), Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker. It relies on FS:hashFile, FS:findLinkFiles, FS:convertLinkFileToTargetCopy, FS:copyFile, etc. Internal development tool, of little use to a mod.
 
-## Remarques
+## Notes
 
-- L'onglet Duplicated Assets exige devMode et que le userpath soit identique au chemin du jeu (option de ligne de commande -nouserpath), sinon il affiche un avertissement.
-- Seuls onEditorInitialized, onEditorActivated, onEditorGui et onExtensionLoaded sont exportés ; la fonction onWindowMenuItem reste locale (utilisée par le menu).
-- Les dossiers de données de jeu considérés sont /art, /core, /campaigns, /levels, /protected, /vehicles.
+- The Duplicated Assets tab requires devMode and the userpath to be identical to the game path (command line option -nouserpath), otherwise it shows a warning.
+- Only onEditorInitialized, onEditorActivated, onEditorGui and onExtensionLoaded are exported; the onWindowMenuItem function stays local (used by the menu).
+- The game data folders considered are /art, /core, /campaigns, /levels, /protected, /vehicles.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_assetManagementTool.onEditorActivated()` | Hook appelé à l'activation de l'éditeur ; corps vide. *(interne)* *(hook)* | 1989 |
-| `editor_assetManagementTool.onEditorGui()` | Hook appelé à chaque frame de l'éditeur : dessine la fenêtre à onglets (Duplicated Assets si devMode, Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker) et les dialogues modaux associés (ex. confirmation de retrait d'assets de la liste). *(interne)* *(hook)* | 1639 |
-| `editor_assetManagementTool.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : enregistre la fenêtre 'assetManagementTool' et ses ~15 fenêtres modales, ajoute l'entrée de menu « Asset Management Tool » (groupe Assets) et charge la liste de doublons sauvegardée (loadDuplicatesList). *(interne)* *(hook)* | 1996 |
-| `editor_assetManagementTool.onExtensionLoaded()` | Hook appelé au chargement de l'extension ; corps vide. *(interne)* *(hook)* | 2017 |
+| `editor_assetManagementTool.onEditorActivated()` | Hook called when the editor is activated; empty body. *(internal)* *(hook)* | 1989 |
+| `editor_assetManagementTool.onEditorGui()` | Hook called every editor frame: draws the tabbed window (Duplicated Assets if devMode, Link Checker, Delinker, Relinker, Link Files Cleanup, Naming Checker) and the associated modal dialogs (e.g. confirmation to remove assets from the list). *(internal)* *(hook)* | 1639 |
+| `editor_assetManagementTool.onEditorInitialized()` | Hook called at editor initialization: registers the 'assetManagementTool' window and its ~15 modal windows, adds the "Asset Management Tool" menu entry (Assets group) and loads the saved duplicates list (loadDuplicatesList). *(internal)* *(hook)* | 1996 |
+| `editor_assetManagementTool.onExtensionLoaded()` | Hook called when the extension is loaded; empty body. *(internal)* *(hook)* | 2017 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `convertLinkFileToTargetCopy`, `copyFile`, `deleteAssetFileForLinkFile`, `fileExists`, `findFiles`, `findHighestNumberedFolder`, `findLinkFiles`, `getGamePath`, `getHashFileAlgorithmId`, `getUserPath`, `hashFile`, `isLinkFile`, `native2Virtual`, `removeFile`
 - `worldEditorCppApi.` `isSelectMultipleFilesAvailable`, `selectMultipleFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/assetManagementTool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/assetManagementTool.lua`.*

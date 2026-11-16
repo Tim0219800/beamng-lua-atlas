@@ -1,12 +1,12 @@
 # `_`
 
-*Fichier : `lua/common/particles.lua` · VM : Commun (GE + véhicule) · 135 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/particles.lua` · VM: Common (GE + vehicle) · 135 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `_`, `particles`
+**Access:** global `_`, `particles`
 
-Charge au démarrage lua/common/particles.json (matériaux physiques et règles de particules entre deux matériaux) et prépare des tables de recherche : une liste de matériaux et une table indexée par paire de matériaux avec, pour chaque règle, une fonction de comparaison compilée (sur perpendicularVel et slipVel). Sert à choisir les particules d'impact/glissement selon les deux matériaux en contact.
+Loads lua/common/particles.json at startup (physical materials and particle rules between two materials) and prepares lookup tables: a list of materials and a table keyed by material pair with, for each rule, a compiled comparison function (on perpendicularVel and slipVel). Used to choose the impact/slip particles according to the two materials in contact.
 
-## Exemple
+## Example
 
 ```lua
 local particles = require('particles')
@@ -15,54 +15,54 @@ local id1 = particles.getMaterialIDByName(mats, 'ASPHALT')
 local mat = particles.getMaterialByID(mats, id1)
 ```
 
-## Remarques
+## Notes
 
-- Le chargement se fait à l'exécution du module (preloadParticlesTable() est appelé au niveau du fichier) via readDictJSONTable('lua/common/particles.json').
-- Clé de la table de paires : materialID1 * 10000 + materialID2, avec toujours materialID1 >= materialID2 (échangés si besoin). Chaque entrée est une liste de règles ayant compareFunc(arg) où arg = {perpendicularVel=, slipVel=} ; dans les chaînes JSON, la lettre X est remplacée par arg.<champ>.
-- Un matériau inconnu passé à getOrAddMaterialIDByName est ajouté dynamiquement ({colorB/G/R = 255, dynamic = true, name}) ; getMaterialIDByName renvoie à la place min(3, #mats) (valeur de repli, id 3 si assez de matériaux).
-- BUG probable : si perpendicularVel et slipVel sont tous deux vides dans une règle, compareFuncStr vaut '' (table.concat d'une liste vide) et non nil ; la condition 'toujours vraie' ("true") n'est donc jamais appliquée et la fonction compilée ('return ') renvoie nil. De plus, dans le message d'erreur de parsing, `compareFuncStr` est une variable non définie (devrait être v.compareFuncStr).
+- Loading happens when the module runs (preloadParticlesTable() is called at file level) via readDictJSONTable('lua/common/particles.json').
+- Key of the pair table: materialID1 * 10000 + materialID2, always with materialID1 >= materialID2 (swapped if needed). Each entry is a list of rules having compareFunc(arg) where arg = {perpendicularVel=, slipVel=}; in the JSON strings, the letter X is replaced by arg.<field>.
+- An unknown material passed to getOrAddMaterialIDByName is added dynamically ({colorB/G/R = 255, dynamic = true, name}); getMaterialIDByName instead returns min(3, #mats) (fallback value, id 3 if there are enough materials).
+- PROBABLE BUG: if perpendicularVel and slipVel are both empty in a rule, compareFuncStr is '' (table.concat of an empty list) and not nil; the 'always true' condition ("true") is therefore never applied and the compiled function ('return ') returns nil. Also, in the parsing error message, `compareFuncStr` is an undefined variable (should be v.compareFuncStr).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `_.getMaterialByID(mats, i)` | Renvoie le matériau d'indice i dans mats, ou nil si i est nil. | 11 |
-| `_.getMaterialIDByName(mats, s)` | Cherche l'identifiant du matériau nommé s ; renvoie min(3, #mats) s'il est inconnu (pas d'ajout). | 30 |
-| `_.getMaterialsParticlesTable()` | Renvoie la liste des matériaux et la table des règles de particules par paire de matériaux (clé id1*10000+id2). | 122 |
-| `_.getOrAddMaterialIDByName(mats, s)` | Cherche l'identifiant du matériau de nom s ; s'il n'existe pas, crée une définition temporaire (blanche, dynamic = true) ajoutée à mats et renvoie son nouvel identifiant. | 16 |
+| `_.getMaterialByID(mats, i)` | Returns the material at index i in mats, or nil if i is nil. | 11 |
+| `_.getMaterialIDByName(mats, s)` | Looks up the identifier of the material named s; returns min(3, #mats) if it is unknown (no addition). | 30 |
+| `_.getMaterialsParticlesTable()` | Returns the list of materials and the table of particle rules per material pair (key id1*10000+id2). | 122 |
+| `_.getOrAddMaterialIDByName(mats, s)` | Looks up the identifier of the material named s; if it does not exist, creates a temporary definition (white, dynamic = true) added to mats and returns its new identifier. | 16 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `_.getMaterialByID(mats, i)`
 
-Renvoie le matériau d'indice i dans mats, ou nil si i est nil.
+Returns the material at index i in mats, or nil if i is nil.
 
-- `mats` (*table*) : liste de matériaux (premier retour de getMaterialsParticlesTable)
-- `i` (*integer|nil*) : identifiant de matériau
-- **renvoie** : table|nil matériau {name, colorR, colorG, colorB, …}
+- `mats` (*table*) : list of materials (first return value of getMaterialsParticlesTable)
+- `i` (*integer|nil*) : material identifier
+- **returns**: table|nil material {name, colorR, colorG, colorB, ...}
 
 #### `_.getMaterialIDByName(mats, s)`
 
-Cherche l'identifiant du matériau nommé s ; renvoie min(3, #mats) s'il est inconnu (pas d'ajout).
+Looks up the identifier of the material named s; returns min(3, #mats) if it is unknown (no addition).
 
-- `mats` (*table*) : liste de matériaux
-- `s` (*string*) : nom du matériau
-- **renvoie** : integer identifiant de matériau
+- `mats` (*table*) : list of materials
+- `s` (*string*) : material name
+- **returns**: integer material identifier
 
 #### `_.getMaterialsParticlesTable()`
 
-Renvoie la liste des matériaux et la table des règles de particules par paire de matériaux (clé id1*10000+id2).
+Returns the list of materials and the table of particle rules per material pair (key id1*10000+id2).
 
-- **renvoie** : table matériaux
-- **renvoie** : table<integer, table[]> règles par paire de matériaux
+- **returns**: table materials
+- **returns**: table<integer, table[]> rules per material pair
 
 #### `_.getOrAddMaterialIDByName(mats, s)`
 
-Cherche l'identifiant du matériau de nom s ; s'il n'existe pas, crée une définition temporaire (blanche, dynamic = true) ajoutée à mats et renvoie son nouvel identifiant.
+Looks up the identifier of the material named s; if it does not exist, creates a temporary definition (white, dynamic = true) added to mats and returns its new identifier.
 
-- `mats` (*table*) : liste de matériaux (modifiée)
-- `s` (*string*) : nom du matériau
-- **renvoie** : integer identifiant de matériau
+- `mats` (*table*) : list of materials (modified)
+- `s` (*string*) : material name
+- **returns**: integer material identifier
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/particles.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/particles.lua`.*

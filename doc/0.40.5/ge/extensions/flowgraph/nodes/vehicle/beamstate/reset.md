@@ -1,26 +1,26 @@
 # `flowgraph_nodes_vehicle_beamstate_reset`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reset.lua` · VM : Game Engine (GE) · 41 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reset.lua` · VM: Game Engine (GE) · 41 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/beamstate/reset")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/beamstate/reset")` (file under extensions/ but not a regular extension)
 
-Nœud « Reset Vehicle » (catégorie `repeat_p_duration`, tag reset). Remet le véhicule à son état initial : `veh:requestReset(RESET_PHYSICS)` puis `veh:resetBrokenFlexMesh()`. Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).
+Node "Reset Vehicle" (category `repeat_p_duration`, tag reset). Resets the vehicle to its initial state: `veh:requestReset(RESET_PHYSICS)` then `veh:resetBrokenFlexMesh()`. Input pin: `vehId`. If `vehId` is not connected, the node takes the player vehicle (`getPlayerVehicle(0)`).
 
-## Remarques
+## Notes
 
-- Appelé à chaque frame tant que le flux est actif : utiliser une impulsion pour un seul reset.
+- Called every frame while the flow is active: use a pulse for a single reset.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Demande un reset physique du véhicule et remet à zéro ses flexmeshes cassés. | 26 |
+| `C:work()` | Requests a physics reset of the vehicle and resets its broken flexmeshes to zero. | 26 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reset.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reset.lua`.*

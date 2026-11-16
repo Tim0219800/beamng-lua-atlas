@@ -1,153 +1,153 @@
 # `util_asyncBulkLoader`
 
-*Fichier : `lua/ge/extensions/util/asyncBulkLoader.lua` · VM : Game Engine (GE) · 333 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/asyncBulkLoader.lua` · VM: Game Engine (GE) · 333 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_asyncBulkLoader` : `extensions.load("util_asyncBulkLoader")`, puis la globale `util_asyncBulkLoader`
+**Access:** extension `util_asyncBulkLoader`: `extensions.load("util_asyncBulkLoader")`, then the global `util_asyncBulkLoader`
 
-Chargeur asynchrone de gros jeux de données (véhicules, missions, sélecteur de gameplay, niveaux, profils de sauvegarde carrière). Chaque loadXxx lance un job (core_jobsystem, intervalle 1/30 s) qui exécute le chargement lourd en cédant la main au fil des étapes, publie la progression dans le flux 'asyncBulkLoaderProgress' et signale la fin par guihooks et extensions.hook. Les variantes xxxDirect chargent de façon synchrone avec mesure du temps.
+Asynchronous loader for large datasets (vehicles, missions, gameplay selector, levels, career save profiles). Each loadXxx starts a job (core_jobsystem, 1/30 s interval) that runs the heavy loading while yielding between steps, publishes progress in the 'asyncBulkLoaderProgress' stream and signals completion via guihooks and extensions.hook. The xxxDirect variants load synchronously with time measurement.
 
-## Exemple
+## Example
 
 ```lua
 local r = util_asyncBulkLoader.loadVehicles()
--- r vaut 'alreadyLoaded', 'alreadyLoading' ou 'startLoading'
--- la fin est annoncée par le hook asyncVehicleLoadComplete
+-- r is 'alreadyLoaded', 'alreadyLoading' or 'startLoading'
+-- completion is announced by the asyncVehicleLoadComplete hook
 ```
 
-## Remarques
+## Notes
 
-- Valeurs de retour des loadXxx : 'alreadyLoaded' (données déjà chargées), 'alreadyLoading' (un autre chargement est en cours, erreur loggée avec trace) ou 'startLoading'. Un seul chargement à la fois (isLoading).
-- Flux 'asyncBulkLoaderProgress' : {count, total, inProgress, percent}. percent : 0 à 100 = déterminé, -1 = indéterminé. Seul loadVehicles réinitialise percent à -1.
-- Fin de chargement : loadVehicles émet guihooks 'asyncVehicleLoadComplete' et le hook du même nom ; loadMissions émet seulement le guihook 'asyncMissionLoadComplete' (pas de hook extensions) ; loadGameplaySelector émet 'asyncGameplaySelectorLoadComplete' (guihook et hook) ; loadLevels émet 'asyncLevelLoadComplete' (guihook et hook).
-- Le seuil de profilage tooLongLoadingThreshold vaut math.huge : le profilage (startProfiling, profileLow, profileHigh, stopProfiling) est remplacé par nop. En le baissant, un rapport asyncBulkLoader_report.json est écrit pour les chargements trop longs.
-- Bug probable : loadLevels met M.yield à nil à la fin ; tout appel ultérieur à M.yield sans nouveau setupYield provoquerait une erreur (les autres chargements remettent nop ou un nouveau yield).
-- sendAllCareerSaveSlotsDataAsync ne charge rien lui-même (le code de test est commenté) : il lance un job puis appelle career_career.sendAllCareerProfilesData() et ne renvoie que 'startLoading'.
+- Return values of the loadXxx functions: 'alreadyLoaded' (data already loaded), 'alreadyLoading' (another load is in progress, error logged with trace) or 'startLoading'. Only one load at a time (isLoading).
+- 'asyncBulkLoaderProgress' stream: {count, total, inProgress, percent}. percent: 0 to 100 = determinate, -1 = indeterminate. Only loadVehicles resets percent to -1.
+- End of load: loadVehicles emits guihooks 'asyncVehicleLoadComplete' and the hook of the same name; loadMissions emits only the guihook 'asyncMissionLoadComplete' (no extensions hook); loadGameplaySelector emits 'asyncGameplaySelectorLoadComplete' (guihook and hook); loadLevels emits 'asyncLevelLoadComplete' (guihook and hook).
+- The profiling threshold tooLongLoadingThreshold is math.huge: profiling (startProfiling, profileLow, profileHigh, stopProfiling) is replaced by nop. Lowering it writes an asyncBulkLoader_report.json report for loads that take too long.
+- Probable bug: loadLevels sets M.yield to nil at the end; any later call to M.yield without a new setupYield would cause an error (the other loads reset nop or a new yield).
+- sendAllCareerSaveSlotsDataAsync loads nothing itself (the test code is commented out): it starts a job then calls career_career.sendAllCareerProfilesData() and returns only 'startLoading'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_asyncBulkLoader.addCount(count)` | Ajoute au nombre d'éléments déjà traités et publie la progression. | 30 |
-| `util_asyncBulkLoader.addTotal(total)` | Ajoute au total d'éléments à charger et publie la progression. | 23 |
-| `util_asyncBulkLoader.isGameplaySelectorLoaded()` | Indique si les données du sélecteur de gameplay sont chargées. | 102 |
-| `util_asyncBulkLoader.isLevelsLoaded()` | Indique si la liste des niveaux est chargée (core_levels.isListLoaded). | 106 |
-| `util_asyncBulkLoader.isLoading()` | Indique si un chargement asynchrone est en cours. | 135 |
-| `util_asyncBulkLoader.isMissionsLoaded()` | Indique si toutes les missions sont chargées. | 98 |
-| `util_asyncBulkLoader.isVehiclesLoaded()` | Indique si les données des modèles de véhicules sont chargées (core_vehicles.isModelsDataLoaded). | 94 |
-| `util_asyncBulkLoader.loadGameplaySelector()` | Construit en asynchrone les données du sélecteur de gameplay, puis émet 'asyncGameplaySelectorLoadComplete'. | 228 |
-| `util_asyncBulkLoader.loadGameplaySelectorDirect()` | Construit les tuiles du sélecteur de gameplay de façon synchrone et affiche le temps. | 122 |
-| `util_asyncBulkLoader.loadLevels()` | Charge en asynchrone la liste des niveaux, puis émet 'asyncLevelLoadComplete'. | 268 |
-| `util_asyncBulkLoader.loadLevelsDirect()` | Charge la liste des niveaux de façon synchrone et affiche le temps. | 128 |
-| `util_asyncBulkLoader.loadMissions()` | Charge en asynchrone toutes les missions, puis émet le guihook 'asyncMissionLoadComplete'. | 193 |
-| `util_asyncBulkLoader.loadMissionsDirect()` | Charge toutes les missions de façon synchrone et affiche le temps. | 116 |
-| `util_asyncBulkLoader.loadVehicles()` | Charge en asynchrone les données des modèles de véhicules, puis émet 'asyncVehicleLoadComplete' (UI et extensions). Utilisé par le sélecteur de véhicules. | 155 |
-| `util_asyncBulkLoader.loadVehiclesDirect()` | Charge la liste des modèles de véhicules de façon synchrone (core_vehicles.loadModelListNoGarbage) et affiche le temps. | 110 |
-| `util_asyncBulkLoader.reportScanPercent(percent)` | Met à jour le pourcentage de l'analyse de fichiers (décodage des véhicules) et publie la progression. | 18 |
-| `util_asyncBulkLoader.reportStream()` | Envoie l'état de progression courant dans le flux 'asyncBulkLoaderProgress'. | 13 |
-| `util_asyncBulkLoader.sendAllCareerSaveSlotsDataAsync()` | Dans un job, envoie à l'UI les données de tous les emplacements de sauvegarde carrière (career_career.sendAllCareerProfilesData). | 304 |
-| `util_asyncBulkLoader.setupYield(job)` | Prépare M.yield à partir d'un job : job.yield, ou une version avec profilage si le seuil est abaissé. *(interne)* | 139 |
+| `util_asyncBulkLoader.addCount(count)` | Adds to the number of items already processed and publishes the progress. | 30 |
+| `util_asyncBulkLoader.addTotal(total)` | Adds to the total number of items to load and publishes the progress. | 23 |
+| `util_asyncBulkLoader.isGameplaySelectorLoaded()` | Returns whether the gameplay selector data is loaded. | 102 |
+| `util_asyncBulkLoader.isLevelsLoaded()` | Returns whether the level list is loaded (core_levels.isListLoaded). | 106 |
+| `util_asyncBulkLoader.isLoading()` | Returns whether an asynchronous load is in progress. | 135 |
+| `util_asyncBulkLoader.isMissionsLoaded()` | Returns whether all missions are loaded. | 98 |
+| `util_asyncBulkLoader.isVehiclesLoaded()` | Returns whether the vehicle model data is loaded (core_vehicles.isModelsDataLoaded). | 94 |
+| `util_asyncBulkLoader.loadGameplaySelector()` | Builds the gameplay selector data asynchronously, then emits 'asyncGameplaySelectorLoadComplete'. | 228 |
+| `util_asyncBulkLoader.loadGameplaySelectorDirect()` | Builds the gameplay selector tiles synchronously and prints the time. | 122 |
+| `util_asyncBulkLoader.loadLevels()` | Loads the level list asynchronously, then emits 'asyncLevelLoadComplete'. | 268 |
+| `util_asyncBulkLoader.loadLevelsDirect()` | Loads the level list synchronously and prints the time. | 128 |
+| `util_asyncBulkLoader.loadMissions()` | Loads all missions asynchronously, then emits the guihook 'asyncMissionLoadComplete'. | 193 |
+| `util_asyncBulkLoader.loadMissionsDirect()` | Loads all missions synchronously and prints the time. | 116 |
+| `util_asyncBulkLoader.loadVehicles()` | Loads the vehicle model data asynchronously, then emits 'asyncVehicleLoadComplete' (UI and extensions). Used by the vehicle selector. | 155 |
+| `util_asyncBulkLoader.loadVehiclesDirect()` | Loads the vehicle model list synchronously (core_vehicles.loadModelListNoGarbage) and prints the time. | 110 |
+| `util_asyncBulkLoader.reportScanPercent(percent)` | Updates the percentage of file parsing (decoding of vehicles) and publishes the progress. | 18 |
+| `util_asyncBulkLoader.reportStream()` | Sends the current progress state in the 'asyncBulkLoaderProgress' stream. | 13 |
+| `util_asyncBulkLoader.sendAllCareerSaveSlotsDataAsync()` | In a job, sends the UI the data of all career save slots (career_career.sendAllCareerProfilesData). | 304 |
+| `util_asyncBulkLoader.setupYield(job)` | Prepares M.yield from a job: job.yield, or a profiled version if the threshold is lowered. *(internal)* | 139 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_asyncBulkLoader.addCount(count)`
 
-Ajoute au nombre d'éléments déjà traités et publie la progression.
+Adds to the number of items already processed and publishes the progress.
 
-- `count` (*number*) : Éléments traités à ajouter.
+- `count` (*number*) : Processed items to add.
 
 #### `util_asyncBulkLoader.addTotal(total)`
 
-Ajoute au total d'éléments à charger et publie la progression.
+Adds to the total number of items to load and publishes the progress.
 
-- `total` (*number*) : Éléments à ajouter au total.
+- `total` (*number*) : Items to add to the total.
 
 #### `util_asyncBulkLoader.isGameplaySelectorLoaded()`
 
-Indique si les données du sélecteur de gameplay sont chargées.
+Returns whether the gameplay selector data is loaded.
 
-- **renvoie** : boolean true si chargées.
+- **returns**: boolean true if loaded.
 
 #### `util_asyncBulkLoader.isLevelsLoaded()`
 
-Indique si la liste des niveaux est chargée (core_levels.isListLoaded).
+Returns whether the level list is loaded (core_levels.isListLoaded).
 
-- **renvoie** : boolean true si chargée.
+- **returns**: boolean true if loaded.
 
 #### `util_asyncBulkLoader.isLoading()`
 
-Indique si un chargement asynchrone est en cours.
+Returns whether an asynchronous load is in progress.
 
-- **renvoie** : boolean true si en cours.
+- **returns**: boolean true if in progress.
 
 #### `util_asyncBulkLoader.isMissionsLoaded()`
 
-Indique si toutes les missions sont chargées.
+Returns whether all missions are loaded.
 
-- **renvoie** : boolean true si chargées.
+- **returns**: boolean true if loaded.
 
 #### `util_asyncBulkLoader.isVehiclesLoaded()`
 
-Indique si les données des modèles de véhicules sont chargées (core_vehicles.isModelsDataLoaded).
+Returns whether the vehicle model data is loaded (core_vehicles.isModelsDataLoaded).
 
-- **renvoie** : boolean true si chargées.
+- **returns**: boolean true if loaded.
 
 #### `util_asyncBulkLoader.loadGameplaySelector()`
 
-Construit en asynchrone les données du sélecteur de gameplay, puis émet 'asyncGameplaySelectorLoadComplete'.
+Builds the gameplay selector data asynchronously, then emits 'asyncGameplaySelectorLoadComplete'.
 
-- **renvoie** : string 'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+- **returns**: string 'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 
 #### `util_asyncBulkLoader.loadLevels()`
 
-Charge en asynchrone la liste des niveaux, puis émet 'asyncLevelLoadComplete'.
+Loads the level list asynchronously, then emits 'asyncLevelLoadComplete'.
 
-- **renvoie** : string 'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+- **returns**: string 'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 
 #### `util_asyncBulkLoader.loadMissions()`
 
-Charge en asynchrone toutes les missions, puis émet le guihook 'asyncMissionLoadComplete'.
+Loads all missions asynchronously, then emits the guihook 'asyncMissionLoadComplete'.
 
-- **renvoie** : string 'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+- **returns**: string 'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 
 #### `util_asyncBulkLoader.loadVehicles()`
 
-Charge en asynchrone les données des modèles de véhicules, puis émet 'asyncVehicleLoadComplete' (UI et extensions). Utilisé par le sélecteur de véhicules.
+Loads the vehicle model data asynchronously, then emits 'asyncVehicleLoadComplete' (UI and extensions). Used by the vehicle selector.
 
-- **renvoie** : string 'alreadyLoaded', 'alreadyLoading' ou 'startLoading'.
+- **returns**: string 'alreadyLoaded', 'alreadyLoading' or 'startLoading'.
 
 #### `util_asyncBulkLoader.reportScanPercent(percent)`
 
-Met à jour le pourcentage de l'analyse de fichiers (décodage des véhicules) et publie la progression.
+Updates the percentage of file parsing (decoding of vehicles) and publishes the progress.
 
-- `percent` (*number*) : 0 à 100 déterminé, -1 indéterminé.
+- `percent` (*number*) : 0 to 100 determinate, -1 indeterminate.
 
 #### `util_asyncBulkLoader.sendAllCareerSaveSlotsDataAsync()`
 
-Dans un job, envoie à l'UI les données de tous les emplacements de sauvegarde carrière (career_career.sendAllCareerProfilesData).
+In a job, sends the UI the data of all career save slots (career_career.sendAllCareerProfilesData).
 
-- **renvoie** : string 'startLoading'.
+- **returns**: string 'startLoading'.
 
 #### `util_asyncBulkLoader.setupYield(job)`
 
-Prépare M.yield à partir d'un job : job.yield, ou une version avec profilage si le seuil est abaissé.
+Prepares M.yield from a job: job.yield, or a profiled version if the threshold is lowered.
 
-- `job` (*table*) : Job de core_jobsystem.
+- `job` (*table*) : core_jobsystem job.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `yield` | function|nil | Fonction de cession (job.yield) posée par setupYield ; nop au départ. Appelée par le code de chargement pour laisser respirer le jeu. |
+| `yield` | function|nil | Yield function (job.yield) set by setupYield; nop at start. Called by the loading code to let the game breathe. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `asyncGameplaySelectorLoadComplete`
 - `asyncLevelLoadComplete`
 - `asyncVehicleLoadComplete`
 
-**Évènements UI (guihooks.trigger) :** `asyncGameplaySelectorLoadComplete`, `asyncLevelLoadComplete`, `asyncMissionLoadComplete`, `asyncVehicleLoadComplete`
+**UI events (guihooks.trigger):** `asyncGameplaySelectorLoadComplete`, `asyncLevelLoadComplete`, `asyncMissionLoadComplete`, `asyncVehicleLoadComplete`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/asyncBulkLoader.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/asyncBulkLoader.lua`.*

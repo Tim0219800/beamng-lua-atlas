@@ -1,7 +1,9 @@
 {
   "path": "lua/common/cdefImgui.lua",
-  "module": "Déclaration FFI de la fonction de rappel C ImGuiInputTextCallbackLua(const void* data), utilisée côté moteur pour les callbacks de saisie de texte ImGui appelés depuis Lua.",
-  "notes": ["Aucune fonction Lua : un seul ffi.cdef, exécuté si ffi existe."],
+  "module": "FFI declaration of the C callback function ImGuiInputTextCallbackLua(const void* data), used engine-side for ImGui text input callbacks called from Lua.",
+  "notes": [
+    "No Lua function: a single ffi.cdef, executed if ffi exists."
+  ],
   "fields": {},
   "functions": {}
 }

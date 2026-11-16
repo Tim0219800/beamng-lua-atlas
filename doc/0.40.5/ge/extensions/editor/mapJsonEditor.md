@@ -1,83 +1,83 @@
 # `editor_mapJsonEditor`
 
-*Fichier : `lua/ge/extensions/editor/mapJsonEditor.lua` · VM : Game Engine (GE) · 820 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/mapJsonEditor.lua` · VM: Game Engine (GE) · 820 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_mapJsonEditor` : `extensions.load("editor_mapJsonEditor")`, puis la globale `editor_mapJsonEditor`
+**Access:** extension `editor_mapJsonEditor`: `extensions.load("editor_mapJsonEditor")`, then the global `editor_mapJsonEditor`
 
-Éditeur du fichier navgraph levels/<niveau>/map.json (menu Window > Roads > Map Json Editor). Ce fichier contient des segments de route manuels : chaînes ordonnées et nommées de BeamNGWaypoint avec surcharges de drivabilité, sens, voies, vitesse limite, etc. Les waypoints sont des objets de la scène, le fichier ne les référence que par nom. map.lua surveille le fichier et recharge le navgraph quand il est écrit. L'outil dessine les segments et waypoints en 3D (debugDrawer) et ajoute un mode d'édition « Edit Map Json ».
+Editor for the navgraph file levels/<level>/map.json (menu Window > Roads > Map Json Editor). This file contains manual road segments: ordered, named chains of BeamNGWaypoint with overrides for drivability, direction, lanes, speed limit, etc. The waypoints are scene objects, the file only references them by name. map.lua watches the file and reloads the navgraph when it is written. The tool draws the segments and waypoints in 3D (debugDrawer) and adds an "Edit Map Json" edit mode.
 
-## Exemple
+## Example
 
 ```lua
 editor_mapJsonEditor.show()
 editor_mapJsonEditor.saveFile()
 ```
 
-## Remarques
+## Notes
 
-- Clic gauche : sélectionner un segment ; Ctrl + clic gauche : ajouter un waypoint au segment.
-- À la sauvegarde, les clés connues sont écrites dans un ordre fixe (drivability, oneWay, flipDirection, autoLanes, lanesLeft, lanesRight, autoJunction, hiddenInNavi, gatedRoad, type, speedLimit), les autres clés sont ajoutées triées pour ne rien perdre ; le format compact d'origine est conservé.
-- Une liste nodes donnée sous forme de chaîne dans le fichier est développée en tableau au chargement.
-- onSerialize/onDeserialized conservent les données non sauvegardées lors d'un rechargement Lua ; onEditorExitLevel les efface.
+- Left click: select a segment; Ctrl + left click: add a waypoint to the segment.
+- On save, the known keys are written in a fixed order (drivability, oneWay, flipDirection, autoLanes, lanesLeft, lanesRight, autoJunction, hiddenInNavi, gatedRoad, type, speedLimit), the other keys are appended sorted so that nothing is lost; the original compact format is kept.
+- A nodes list given as a string in the file is expanded into an array on load.
+- onSerialize/onDeserialized keep the unsaved data across a Lua reload; onEditorExitLevel clears them.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_mapJsonEditor.loadFile(fp)` | Lit un fichier map.json, remet la sélection à zéro et rescanne les waypoints de la scène. | 133 |
-| `editor_mapJsonEditor.onDeserialized(d)` | Restaure l'état après un rechargement Lua. *(interne)* *(hook)* | 798 |
-| `editor_mapJsonEditor.onEditorExitLevel()` | Appelé à la sortie du niveau : efface données, chemin, sélection et caches. *(interne)* *(hook)* | 784 |
-| `editor_mapJsonEditor.onEditorGui()` | Dessine la fenêtre de l'outil (ouvrir/nouveau, SAVE, liste des segments et nœuds, options d'affichage) et le dessin 3D à chaque frame. *(interne)* *(hook)* | 659 |
-| `editor_mapJsonEditor.onEditorInitialized()` | Définit le mode d'édition mapJsonEditMode, enregistre la fenêtre et l'entrée de menu (groupe Roads). *(interne)* *(hook)* | 758 |
-| `editor_mapJsonEditor.onEditorToolWindowHide(windowName)` | Quand la fenêtre de l'outil est masquée, revient au mode d'édition objectSelect. *(interne)* *(hook)* | 772 |
-| `editor_mapJsonEditor.onSerialize()` | Appelé avant un rechargement Lua. *(interne)* *(hook)* | 794 |
-| `editor_mapJsonEditor.onWindowGotFocus(windowName)` | Quand la fenêtre de l'outil prend le focus, active le mode d'édition mapJsonEditMode. *(interne)* *(hook)* | 778 |
-| `editor_mapJsonEditor.saveFile(fp)` | Écrit les segments dans le fichier (le navgraph se recharge au changement de fichier). Ne fait rien s'il n'y a pas de données ; journalise une erreur si l'écriture échoue. | 200 |
-| `editor_mapJsonEditor.show()` | Affiche la fenêtre, active le mode d'édition mapJsonEditMode, charge map.json du niveau s'il n'est pas déjà ouvert, puis rescanne les waypoints. | 745 |
+| `editor_mapJsonEditor.loadFile(fp)` | Reads a map.json file, resets the selection and rescans the scene's waypoints. | 133 |
+| `editor_mapJsonEditor.onDeserialized(d)` | Restores the state after a Lua reload. *(internal)* *(hook)* | 798 |
+| `editor_mapJsonEditor.onEditorExitLevel()` | Called on level exit: clears data, path, selection and caches. *(internal)* *(hook)* | 784 |
+| `editor_mapJsonEditor.onEditorGui()` | Draws the tool window (open/new, SAVE, list of segments and nodes, display options) and the 3D drawing every frame. *(internal)* *(hook)* | 659 |
+| `editor_mapJsonEditor.onEditorInitialized()` | Defines the mapJsonEditMode edit mode, registers the window and the menu entry (Roads group). *(internal)* *(hook)* | 758 |
+| `editor_mapJsonEditor.onEditorToolWindowHide(windowName)` | When the tool window is hidden, goes back to the objectSelect edit mode. *(internal)* *(hook)* | 772 |
+| `editor_mapJsonEditor.onSerialize()` | Called before a Lua reload. *(internal)* *(hook)* | 794 |
+| `editor_mapJsonEditor.onWindowGotFocus(windowName)` | When the tool window gets focus, activates the mapJsonEditMode edit mode. *(internal)* *(hook)* | 778 |
+| `editor_mapJsonEditor.saveFile(fp)` | Writes the segments to the file (the navgraph reloads when the file changes). Does nothing if there is no data; logs an error if the write fails. | 200 |
+| `editor_mapJsonEditor.show()` | Shows the window, activates the mapJsonEditMode edit mode, loads the level's map.json if not already open, then rescans the waypoints. | 745 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_mapJsonEditor.loadFile(fp)`
 
-Lit un fichier map.json, remet la sélection à zéro et rescanne les waypoints de la scène.
+Reads a map.json file, resets the selection and rescans the scene's waypoints.
 
-- `fp` (*string|nil*) : Chemin du fichier ; map.json du niveau courant si nil.
-- **renvoie** : boolean true si le fichier a été lu, false sinon (pas de niveau ou lecture impossible).
+- `fp` (*string|nil*) : File path; the current level's map.json if nil.
+- **returns**: boolean true if the file was read, false otherwise (no level or file unreadable).
 
 #### `editor_mapJsonEditor.onDeserialized(d)`
 
-Restaure l'état après un rechargement Lua.
+Restores the state after a Lua reload.
 
-- `d` (*table|nil*) : Table renvoyée par onSerialize.
+- `d` (*table|nil*) : Table returned by onSerialize.
 
 #### `editor_mapJsonEditor.onEditorToolWindowHide(windowName)`
 
-Quand la fenêtre de l'outil est masquée, revient au mode d'édition objectSelect.
+When the tool window is hidden, goes back to the objectSelect edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre masquée.
+- `windowName` (*string*) : Name of the hidden window.
 
 #### `editor_mapJsonEditor.onSerialize()`
 
-Appelé avant un rechargement Lua.
+Called before a Lua reload.
 
-- **renvoie** : table {data, filePath, dirty}.
+- **returns**: table {data, filePath, dirty}.
 
 #### `editor_mapJsonEditor.onWindowGotFocus(windowName)`
 
-Quand la fenêtre de l'outil prend le focus, active le mode d'édition mapJsonEditMode.
+When the tool window gets focus, activates the mapJsonEditMode edit mode.
 
-- `windowName` (*string*) : Nom de la fenêtre.
+- `windowName` (*string*) : Window name.
 
 #### `editor_mapJsonEditor.saveFile(fp)`
 
-Écrit les segments dans le fichier (le navgraph se recharge au changement de fichier). Ne fait rien s'il n'y a pas de données ; journalise une erreur si l'écriture échoue.
+Writes the segments to the file (the navgraph reloads when the file changes). Does nothing if there is no data; logs an error if the write fails.
 
-- `fp` (*string|nil*) : Chemin cible ; chemin courant ou map.json du niveau par défaut.
+- `fp` (*string|nil*) : Target path; current path or the level's map.json by default.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLineInstance`, `drawSphere`, `drawTextAdvanced`
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/mapJsonEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/mapJsonEditor.lua`.*

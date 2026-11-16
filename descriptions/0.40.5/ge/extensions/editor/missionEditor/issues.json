@@ -1,42 +1,61 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/issues.lua",
-  "module": "Panneau « Issues » de l'éditeur de missions. Il agrège les problèmes détectés par les autres panneaux (méthode getMissionIssues de chaque fenêtre) pour toutes les missions, les stocke dans mission._issueList et affiche une fenêtre tableau triable « Mission Issues Overview ». Le module renvoie un constructeur : require(...)(missionEditor).",
+  "module": "\"Issues\" panel of the mission editor. It aggregates the issues detected by the other panels (each window's getMissionIssues method) for all the missions, stores them in mission._issueList and displays a sortable table window \"Mission Issues Overview\". The module returns a constructor: require(...)(missionEditor).",
   "notes": [
-    "Sévérités reconnues : unknown (-1), minor (1), warning (10), error (50), critical (100). Seules warning et error comptent dans importantCount.",
-    "calculateMissionIssues ignore les missions devMission quand shipping_build est faux (build de développement).",
-    "Dans drawIssuesWindow, la colonne « Level » est triée par sortByLevel (colonne 4) et la colonne « Availability » par sortByAvailability (colonne 5).",
-    "Les menus de la fenêtre peuvent corriger automatiquement les problèmes de missionTypeData de toutes les missions (checkContainer(mission, true)) ou supprimer les données en trop (checkContainer(mission, true, {})) : action de masse, à utiliser avec prudence."
+    "Recognized severities: unknown (-1), minor (1), warning (10), error (50), critical (100). Only warning and error count in importantCount.",
+    "calculateMissionIssues ignores devMission missions when shipping_build is false (development build).",
+    "In drawIssuesWindow, the \"Level\" column is sorted by sortByLevel (column 4) and the \"Availability\" column by sortByAvailability (column 5).",
+    "The window's menus can automatically fix the missionTypeData issues of all the missions (checkContainer(mission, true)) or remove the excess data (checkContainer(mission, true, {})): bulk action, to be used with caution."
   ],
   "classes": {
     "C": {
-      "desc": "Instance du panneau Issues. Champs : missionEditor, mission, issues = {list = {...}}.",
+      "desc": "Instance of the Issues panel. Fields: missionEditor, mission, issues = {list = {...}}.",
       "functions": {
         "init": {
-          "desc": "Constructeur : mémorise missionEditor et initialise issues.list.",
-          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "desc": "Constructor: remembers missionEditor and initializes issues.list.",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "Main editor_missionEditor module."
+            }
+          },
           "internal": true
         },
         "setMission": {
-          "desc": "Définit la mission courante.",
-          "params": {"mission": {"type": "table", "desc": "Mission affichée."}},
+          "desc": "Sets the current mission.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Displayed mission."
+            }
+          },
           "internal": true
         },
         "draw": {
-          "desc": "Affiche, pour la mission courante, la liste à puces des labels de problèmes (ou « No Issues! »). Ne fait rien si mission._issueList n'existe pas.",
+          "desc": "Displays, for the current mission, the bulleted list of issue labels (or \"No Issues!\"). Does nothing if mission._issueList does not exist.",
           "internal": true
         },
         "drawIssuesWindow": {
-          "desc": "Dessine la fenêtre « mission_issues » : menu d'actions de masse et tableau à 7 colonnes (#, Type, Mission, MissionType, Level, Availability, Label). Cliquer sur une mission l'ouvre dans l'éditeur (setMissionById). Respecte la préférence missionEditor.general.shortIds."
+          "desc": "Draws the \"mission_issues\" window: bulk action menu and 7-column table (#, Type, Mission, MissionType, Level, Availability, Label). Clicking a mission opens it in the editor (setMissionById). Respects the preference missionEditor.general.shortIds."
         },
         "showIssuesWindow": {
-          "desc": "Affiche la fenêtre d'éditeur « mission_issues »."
+          "desc": "Shows the \"mission_issues\" editor window."
         },
         "calculateMissionIssues": {
-          "desc": "Recalcule tous les problèmes : pour chaque mission, appelle setMission sur missionTypeWindow puis getMissionIssues(mission) sur chaque fenêtre qui le définit. Remplit issue.label, severity, idx, missionId, missionType, level, availability, et pour la mission _issueList (importantCount, highestSeverity, icon, color).",
+          "desc": "Recomputes all the issues: for each mission, calls setMission on missionTypeWindow then getMissionIssues(mission) on each window that defines it. Fills issue.label, severity, idx, missionId, missionType, level, availability, and for the mission _issueList (importantCount, highestSeverity, icon, color).",
           "params": {
-            "missionList": {"type": "table[]", "desc": "Liste des missions."},
-            "windows": {"type": "table[]", "desc": "Panneaux de l'éditeur pouvant avoir getMissionIssues."},
-            "missionTypeWindow": {"type": "table", "desc": "Panneau genericTypeData, dont setMission est appelé pour chaque mission."}
+            "missionList": {
+              "type": "table[]",
+              "desc": "List of missions."
+            },
+            "windows": {
+              "type": "table[]",
+              "desc": "Editor panels that may have getMissionIssues."
+            },
+            "missionTypeWindow": {
+              "type": "table",
+              "desc": "genericTypeData panel, whose setMission is called for each mission."
+            }
           }
         }
       }

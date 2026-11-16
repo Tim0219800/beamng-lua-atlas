@@ -1,27 +1,27 @@
 # `flowgraph_nodes_audio_fadeOut`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/audio/fadeOut.lua` · VM : Game Engine (GE) · 54 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/audio/fadeOut.lua` · VM: Game Engine (GE) · 54 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/audio/fadeOut")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/audio/fadeOut")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Audio Fade Out » (catégorie once_f_duration, tags sound/audio/volume). Fait descendre le volume global jusqu'au silence : fixe g_FadeTimeMS (= duration en ms) et g_GameLoading = 1 via SFXSystem.setGlobalParameter, puis attend la durée pour signaler la fin. Entrée : duration (s, défaut 1).
+Flowgraph node "Audio Fade Out" (category once_f_duration, tags sound/audio/volume). Brings the global volume down to silence: sets g_FadeTimeMS (= duration in ms) and g_GameLoading = 1 via SFXSystem.setGlobalParameter, then waits for the duration to signal completion. Input: duration (s, default 1).
 
-## Remarques
+## Notes
 
-- Miroir de Audio Fade In (g_GameLoading = 0 là-bas). À l'arrêt ou au reset du nœud, les deux paramètres sont remis à 0, ce qui annule le fondu.
+- Mirror of Audio Fade In (g_GameLoading = 0 there). When the node stops or resets, both parameters are set back to 0, which cancels the fade.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle reset() à l'arrêt du graphe. | 23 |
-| `C:init()` | Met le minuteur à 0. | 19 |
-| `C:onNodeReset()` | Appelle reset() quand le nœud est réinitialisé. | 27 |
-| `C:reset()` | Remet le minuteur à 0, l'état de durée à 'inactive' et g_FadeTimeMS / g_GameLoading à 0. | 31 |
-| `C:work()` | Chaque frame : fait avancer le minuteur (mgr.dtReal) et passe l'état à 'finished' une fois duration atteinte. | 44 |
-| `C:workOnce()` | Au premier flux : g_FadeTimeMS = duration*1000, g_GameLoading = 1, état 'started'. | 38 |
+| `C:_executionStopped()` | Calls reset() when the graph stops. | 23 |
+| `C:init()` | Sets the timer to 0. | 19 |
+| `C:onNodeReset()` | Calls reset() when the node is reset. | 27 |
+| `C:reset()` | Sets the timer back to 0, the duration state to 'inactive' and g_FadeTimeMS / g_GameLoading to 0. | 31 |
+| `C:work()` | Every frame: advances the timer (mgr.dtReal) and sets the state to 'finished' once duration is reached. | 44 |
+| `C:workOnce()` | On the first flow: g_FadeTimeMS = duration*1000, g_GameLoading = 1, state 'started'. | 38 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/audio/fadeOut.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/audio/fadeOut.lua`.*

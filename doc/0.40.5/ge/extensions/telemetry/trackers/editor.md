@@ -1,43 +1,43 @@
 # `telemetry_trackers_editor`
 
-*Fichier : `lua/ge/extensions/telemetry/trackers/editor.lua` · VM : Game Engine (GE) · 59 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/trackers/editor.lua` · VM: Game Engine (GE) · 59 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_trackers_editor` : `extensions.load("telemetry_trackers_editor")`, puis la globale `telemetry_trackers_editor`
+**Access:** extension `telemetry_trackers_editor`: `extensions.load("telemetry_trackers_editor")`, then the global `telemetry_trackers_editor`
 
-Suiveur de télémétrie de l'éditeur de monde : mesure la durée d'ouverture de l'éditeur (activité « editorActive ») et enregistre les fenêtres d'outils ouvertes (évènement « editorToolWindowOpened » avec nom d'outil et point d'entrée). Seuls les noms d'outils sont rapportés, jamais les chemins de niveaux ou d'assets. Le constructeur de pistes est suivi par un autre suiveur de gameplay.
+World editor telemetry tracker: measures how long the editor is open (activity "editorActive") and records the tool windows opened (event "editorToolWindowOpened" with tool name and entry point). Only tool names are reported, never level or asset paths. The track builder is tracked by another gameplay tracker.
 
-## Remarques
+## Notes
 
-- Si l'éditeur est déjà actif au chargement de l'extension (editor.active), l'activité démarre immédiatement.
-- onExit et onExtensionUnloaded sont la même fonction : elle ferme l'activité ouverte, sinon la dernière n'aurait pas de durée.
+- If the editor is already active when the extension loads (editor.active), the activity starts immediately.
+- onExit and onExtensionUnloaded are the same function: it closes the open activity, otherwise the last one would have no duration.
 
-**Dépendances (chargées avant) :** `telemetry_core`
+**Dependencies (loaded first):** `telemetry_core`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_trackers_editor.onEditorActivated()` | Hook appelé à l'activation de l'éditeur : démarre l'activité editorActive (sans effet si déjà ouverte). *(interne)* *(hook)* | 19 |
-| `telemetry_trackers_editor.onEditorDeactivated()` | Hook appelé à la fermeture de l'éditeur : termine l'activité editorActive. *(interne)* *(hook)* | 25 |
-| `telemetry_trackers_editor.onEditorToolWindowOpened(toolName, entryPoint)` | Hook appelé à l'ouverture d'une fenêtre d'outil : enregistre l'évènement. *(interne)* *(hook)* | 31 |
-| `telemetry_trackers_editor.onExit()` | Hook appelé à la fermeture du jeu : ferme l'activité éditeur ouverte. *(interne)* *(hook)* | 45 |
-| `telemetry_trackers_editor.onExtensionLoaded()` | Hook appelé au chargement : déchargement manuel, et démarre l'activité si l'éditeur est déjà actif. *(interne)* *(hook)* | 39 |
-| `telemetry_trackers_editor.onExtensionUnloaded()` | Hook appelé au déchargement : ferme l'activité éditeur ouverte (même fonction que onExit). *(interne)* *(hook)* | 45 |
+| `telemetry_trackers_editor.onEditorActivated()` | Hook called when the editor is activated: starts the editorActive activity (no effect if already open). *(internal)* *(hook)* | 19 |
+| `telemetry_trackers_editor.onEditorDeactivated()` | Hook called when the editor is closed: ends the editorActive activity. *(internal)* *(hook)* | 25 |
+| `telemetry_trackers_editor.onEditorToolWindowOpened(toolName, entryPoint)` | Hook called when a tool window is opened: records the event. *(internal)* *(hook)* | 31 |
+| `telemetry_trackers_editor.onExit()` | Hook called when the game closes: closes the open editor activity. *(internal)* *(hook)* | 45 |
+| `telemetry_trackers_editor.onExtensionLoaded()` | Hook called on load: manual unload, and starts the activity if the editor is already active. *(internal)* *(hook)* | 39 |
+| `telemetry_trackers_editor.onExtensionUnloaded()` | Hook called on unload: closes the open editor activity (same function as onExit). *(internal)* *(hook)* | 45 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_trackers_editor.onEditorToolWindowOpened(toolName, entryPoint)`
 
-Hook appelé à l'ouverture d'une fenêtre d'outil : enregistre l'évènement.
+Hook called when a tool window is opened: records the event.
 
-- `toolName` (*string*) : Nom de l'outil.
-- `entryPoint` (*string*) : Point d'entrée (menu, raccourci, etc., déduit du code).
+- `toolName` (*string*) : Tool name.
+- `entryPoint` (*string*) : Entry point (menu, shortcut, etc., inferred from code).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | telemetry_core. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/trackers/editor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/trackers/editor.lua`.*

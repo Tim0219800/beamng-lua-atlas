@@ -2,36 +2,36 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/triLive.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Compteur de triangles réellement dessinés par un « kit » (pièces instanciées), vu depuis la caméra : chaque instance est comptée au LOD qu'elle dessine vraiment, moins celles hors écran. Sert au pied de page statsFooter. Garde une seule réponse à la fois (l'éditeur n'a qu'un mode d'édition). Les échelles de LOD mesurées, coûteuses, sont partagées et mises en cache sur disque dans /temp/massingEditor/shapeLods.json (avec la date de modification du fichier de forme).
---- Accès : extension `editor_toolUtilities_triLive` : `extensions.load("editor_toolUtilities_triLive")`, puis la globale `editor_toolUtilities_triLive`
+--- Counter of the triangles actually drawn by a "kit" (instanced pieces), as seen from the camera: each instance is counted at the LOD it really draws, minus those off screen. Used by the statsFooter footer. Keeps a single answer at a time (the editor has only one edit mode). The measured LOD scales, which are costly, are shared and cached on disk in /temp/massingEditor/shapeLods.json (with the shape file's modification date).
+--- Access: extension `editor_toolUtilities_triLive`: `extensions.load("editor_toolUtilities_triLive")`, then the global `editor_toolUtilities_triLive`
 ---@class editor_toolUtilities_triLive
 editor_toolUtilities_triLive = {}
 
---- Dernier résultat : triangles instanciés dessinés, distance au centroïde des instances (m), instances dessinées, instances placées, formes restant à scanner.
----Source : lua/ge/extensions/editor/toolUtilities/triLive.lua:254
----@return number  Triangles dessinés.
----@return number  Distance au centroïde (m).
----@return integer  Instances dessinées.
----@return integer  Instances placées.
----@return integer  Formes encore à scanner.
+--- Last result: instanced triangles drawn, distance to the instances' centroid (m), instances drawn, instances placed, shapes left to scan.
+---Source: lua/ge/extensions/editor/toolUtilities/triLive.lua:254
+---@return number  Triangles drawn.
+---@return number  Distance to the centroid (m).
+---@return integer  Instances drawn.
+---@return integer  Instances placed.
+---@return integer  Shapes still to scan.
 function editor_toolUtilities_triLive.get() end
 
---- Met en file les formes de `instances` jamais mesurées (ou dont le fichier a changé). Assez peu coûteux pour être appelé à chaque reconstruction.
----Source : lua/ge/extensions/editor/toolUtilities/triLive.lua:130
----@param instances table Liste d'entrées avec champ shape.
+--- Queues the shapes of `instances` never measured (or whose file has changed). Cheap enough to be called on every rebuild.
+---Source: lua/ge/extensions/editor/toolUtilities/triLive.lua:130
+---@param instances table List of entries with a shape field.
 function editor_toolUtilities_triLive.note(instances) end
 
---- Vide le cache de mesures, les rayons, la file et les échecs : « tout réessayer ». Le cache sera réécrit.
----Source : lua/ge/extensions/editor/toolUtilities/triLive.lua:258
+--- Clears the measurement cache, the scales, the queue and the failures: "retry everything". The cache will be rewritten.
+---Source: lua/ge/extensions/editor/toolUtilities/triLive.lua:258
 function editor_toolUtilities_triLive.rescan() end
 
---- Mesure UNE forme par appel (échelle de LOD), appelé depuis la frame de l'éditeur pour que le scan à froid apparaisse comme une progression et non comme un gel. Sauvegarde le cache quand la file est vide.
----Source : lua/ge/extensions/editor/toolUtilities/triLive.lua:148
----@return boolean  Vrai si une forme a été traitée.
+--- Measures ONE shape per call (LOD scale), called from the editor frame so that the cold scan shows up as progress rather than a freeze. Saves the cache when the queue is empty.
+---Source: lua/ge/extensions/editor/toolUtilities/triLive.lua:148
+---@return boolean  True if a shape was processed.
 function editor_toolUtilities_triLive.scanStep() end
 
---- Calcule le total de triangles instanciés à l'écran et la distance caméra - centroïde des instances. Limité en fréquence et découpé en tranches de 10000 instances par frame.
----Source : lua/ge/extensions/editor/toolUtilities/triLive.lua:197
----@param instances table Liste d'entrées { shape, px, py, pz }.
+--- Computes the total of instanced triangles on screen and the camera - instance centroid distance. Rate-limited and split into slices of 10000 instances per frame.
+---Source: lua/ge/extensions/editor/toolUtilities/triLive.lua:197
+---@param instances table List of entries { shape, px, py, pz }.
 function editor_toolUtilities_triLive.update(instances) end
 

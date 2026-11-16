@@ -1,52 +1,52 @@
 # `gameplay_rally_tools_rallyToolbox`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/tools/rallyToolbox.lua` · VM : Game Engine (GE) · 1882 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/tools/rallyToolbox.lua` · VM: Game Engine (GE) · 1882 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/tools/rallyToolbox")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/tools/rallyToolbox")` (file under extensions/ but not a regular extension)
 
-Fenêtre imgui de debug du RallyManager (gameplay_rally) : affiche la mission courante et la distance de la driveline, propose Warm Reload (resynchronise l'état d'exécution sans recharger), Cold Reload (vide les caches de voicepacks, recharge route, notebook, driveline et resynchronise le véhicule) et l'ouverture de la fenêtre de reconnaissance (recce). Elle contient des sections repliables : Rally Loop (charger/décharger l'extension, ouvrir la fenêtre Loop Toolbox), Recovery (tester la récupération de route), Vehicle (placer le véhicule d'un clic dans la vue 3D), Prefabs (faire apparaître les prefabs de la mission ou de la boucle), Voicepack (sélecteur et infos de timing), Visual Pacenotes, et de nombreuses cases de visualisation (driveline, course, bas niveau, souris comme véhicule). Le module renvoie un constructeur : `require(...)()` ; le dessin 3D se fait dans drawDebug.
+RallyManager (gameplay_rally) debug imgui window: displays the current mission and the driveline distance, offers Warm Reload (resyncs the runtime state without reloading), Cold Reload (clears the voicepack caches, reloads route, notebook, driveline and resyncs the vehicle) and opening the recce window. It contains collapsible sections: Rally Loop (load/unload the extension, open the Loop Toolbox window), Recovery (test route recovery), Vehicle (place the vehicle with a click in the 3D view), Prefabs (spawn the mission's or loop's prefabs), Voicepack (selector and timing info), Visual Pacenotes, and many visualization checkboxes (driveline, race, low level, mouse as vehicle). The module returns a constructor: `require(...)()`; the 3D drawing is done in drawDebug.
 
-## Remarques
+## Notes
 
-- Les options de dessin sont dans self.debug (drawRacePath, drawRaceSplits, drawRaceAiRoute, drawRaceCurrentSeg, drawStartFinishLines, drawStopZone, drawNotebookPacenotes, drawDrivelineRouteStatic, useMouseRayCast, drawRoutePacenotes, drawRoutePacenoteText, drawRoutePathnodes, drawRoutePointI, drawRoutePointMetadata, drawRouteHiddenPathnodes, drawRouteShort, drawReccePacenotes, drawDynamicTriggerPoint, drawStageNextPathnode, drawRouteCompletion, drawStageTimingFootprints, drawVehicleTracker…).
-- Placement du véhicule : clic gauche = téléporte le véhicule joueur (spawn.safeTeleport) en gardant son orientation ; clic droit = annule. Le RallyManager conserve le suivi de récupération lors de ce reset.
-- Fichiers prefab cherchés dans le dossier de la mission : <nom>.prefab puis <nom>.prefab.json ; les objets créés sont ajoutés à MissionGroup et nommés '<missionId> - <nom>'.
-- Le sélecteur de voicepack met ses entrées en cache par mission (self._vpCache) ; « Refresh » vide les caches de voicepack.lua.
-- getRace colore en alternance orange et jaune les segments du chemin de course pour le debug (champ _rallyDebugColor).
-- Le constructeur init contient deux fois la même affectation de nextPacenoteIdxForAudioTriggerTesting (doublon sans effet).
+- The drawing options are in self.debug (drawRacePath, drawRaceSplits, drawRaceAiRoute, drawRaceCurrentSeg, drawStartFinishLines, drawStopZone, drawNotebookPacenotes, drawDrivelineRouteStatic, useMouseRayCast, drawRoutePacenotes, drawRoutePacenoteText, drawRoutePathnodes, drawRoutePointI, drawRoutePointMetadata, drawRouteHiddenPathnodes, drawRouteShort, drawReccePacenotes, drawDynamicTriggerPoint, drawStageNextPathnode, drawRouteCompletion, drawStageTimingFootprints, drawVehicleTracker…).
+- Vehicle placement: left click = teleports the player vehicle (spawn.safeTeleport) keeping its orientation; right click = cancels. The RallyManager keeps the recovery tracking during this reset.
+- Prefab files searched in the mission folder: <name>.prefab then <name>.prefab.json; the created objects are added to MissionGroup and named '<missionId> - <name>'.
+- The voicepack selector caches its entries per mission (self._vpCache); "Refresh" clears the voicepack.lua caches.
+- getRace colors the race path segments alternately orange and yellow for debug (_rallyDebugColor field).
+- The init constructor contains the same assignment of nextPacenoteIdxForAudioTriggerTesting twice (duplicate with no effect).
 
-## Classe `C`
+## Class `C`
 
-Outils de debug du rallye. Champs : rallyManager, race, recce, debugLogging, debug (options de dessin), vehiclePlacementActive, vehiclePlacementMessage, selectedPrefabId, _vpCache, ainsi que des IntPtr imgui pour les délais audio (cornerGapMsPtr, phraseGapMsPtr, linkWordGapMsPtr, pacenoteGapMsPtr) et la récupération (rallyRecoveryCorridorWidthPtr = 8, rallyRecoveryBackoffDistancePtr = 3).
+Rally debug tools. Fields: rallyManager, race, recce, debugLogging, debug (drawing options), vehiclePlacementActive, vehiclePlacementMessage, selectedPrefabId, _vpCache, as well as imgui IntPtrs for the audio delays (cornerGapMsPtr, phraseGapMsPtr, linkWordGapMsPtr, pacenoteGapMsPtr) and for recovery (rallyRecoveryCorridorWidthPtr = 8, rallyRecoveryBackoffDistancePtr = 3).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_tools_rallyToolbox")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_tools_rallyToolbox")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_cancelVehiclePlacement()` | Annule le placement du véhicule. | 386 |
-| `C:_invalidateVoicepackCache()` | Vide le cache local des entrées du sélecteur de voicepack. | 117 |
-| `C:_placeVehicleAt(pos)` | Téléporte le véhicule joueur 0 à la position donnée en conservant son orientation (spawn.safeTeleport, protégé par pcall). | 391 |
-| `C:_spawnPrefab(filepath, ownerMissionId)` | Fait apparaître un prefab dans MissionGroup (position 0 0 0) et le sélectionne. | 489 |
-| `C:_startVehiclePlacement()` | Active le mode de placement du véhicule. | 381 |
-| `C:_updateVehiclePlacementMode()` | Chaque image en mode placement : trace une sphère au point sous la souris (cameraMouseRayCast) et gère clic gauche (placer) et clic droit (annuler). | 414 |
-| `C:clearReccePoints()` | Oublie les points de reconnaissance affichés (self.recce = nil). | 1076 |
-| `C:draw()` | Dessine toute la fenêtre (à appeler dans un im.Begin/im.End) : en-tête de mission, boutons de rechargement et sections. | 644 |
-| `C:drawDebug()` | Dessin 3D de debug selon self.debug : chemin et segments de la course, splits, lignes départ et arrivée, zone d'arrêt, notes d'allure, route de la driveline, suivi du véhicule, etc. Gère aussi le mode de placement du véhicule. | 1195 |
-| `C:drawLoopTools()` | Section « Rally Loop » : état de l'extension gameplay_rallyLoop, boutons Load, Unload et Toggle Loop Debug Window. | 255 |
-| `C:drawPrefabTools()` | Section « Prefabs » : boutons de spawn des prefabs de la mission et des boucles qui la contiennent, et suppression. | 562 |
-| `C:drawRallyRecoveryTools(rm)` | Section « Recovery » : largeur du couloir et distance de recul, cases (réparer le véhicule, marqueurs du suivi) et bouton « Run Recovery ». | 287 |
-| `C:drawVehicleTools()` | Section « Vehicle » avec bouton Place Vehicle / Cancel. | 444 |
-| `C:drawVoicepackPicker(rm)` | Menu déroulant de voicepack avec cache d'entrées ; changer de voicepack vide les points de reconnaissance et appelle rm:reloadVoicepackAssets(pick, {writeSettings = false}). Bouton Refresh pour invalider les caches. | 150 |
-| `C:getDebugLogging()` | État du log de debug. | 137 |
-| `C:getRace()` | Objet course courant de gameplay_rally (si l'extension est chargée), en colorant les segments du chemin pour le debug. | 216 |
-| `C:getRallyManager()` | Manager lié, sinon celui de gameplay_rally.getRallyManager(). | 129 |
-| `C:init()` | Constructeur : initialise tous les champs d'état et les options de dessin par défaut. | 41 |
-| `C:setDebugLogging(debugLogging)` | Active ou coupe le log de debug. | 125 |
-| `C:setMouseAsVehicleEnabled(enabled)` | Active ou coupe le mode « souris comme véhicule » de la driveline route (la position sous la souris sert de position de véhicule). | 240 |
-| `C:setRallyManager(rallyManager)` | Lie la fenêtre à un RallyManager et invalide le cache du sélecteur de voicepack. | 107 |
-| `C:toggleMouseMovementCheckbox()` | Inverse le mode « souris comme véhicule ». | 251 |
+| `C:_cancelVehiclePlacement()` | Cancels the vehicle placement. | 386 |
+| `C:_invalidateVoicepackCache()` | Clears the local cache of the voicepack selector entries. | 117 |
+| `C:_placeVehicleAt(pos)` | Teleports player vehicle 0 to the given position keeping its orientation (spawn.safeTeleport, protected by pcall). | 391 |
+| `C:_spawnPrefab(filepath, ownerMissionId)` | Spawns a prefab in MissionGroup (position 0 0 0) and selects it. | 489 |
+| `C:_startVehiclePlacement()` | Enables the vehicle placement mode. | 381 |
+| `C:_updateVehiclePlacementMode()` | Each frame in placement mode: draws a sphere at the point under the mouse (cameraMouseRayCast) and handles left click (place) and right click (cancel). | 414 |
+| `C:clearReccePoints()` | Forgets the displayed recce points (self.recce = nil). | 1076 |
+| `C:draw()` | Draws the whole window (to be called inside an im.Begin/im.End): mission header, reload buttons and sections. | 644 |
+| `C:drawDebug()` | 3D debug drawing according to self.debug: race path and segments, splits, start and finish lines, stop zone, pacenotes, driveline route, vehicle tracking, etc. Also handles the vehicle placement mode. | 1195 |
+| `C:drawLoopTools()` | "Rally Loop" section: state of the gameplay_rallyLoop extension, Load, Unload and Toggle Loop Debug Window buttons. | 255 |
+| `C:drawPrefabTools()` | "Prefabs" section: spawn buttons for the mission's prefabs and those of the loops that contain it, and deletion. | 562 |
+| `C:drawRallyRecoveryTools(rm)` | "Recovery" section: corridor width and backoff distance, checkboxes (repair the vehicle, tracking markers) and "Run Recovery" button. | 287 |
+| `C:drawVehicleTools()` | "Vehicle" section with a Place Vehicle / Cancel button. | 444 |
+| `C:drawVoicepackPicker(rm)` | Voicepack dropdown with entry cache; changing the voicepack clears the recce points and calls rm:reloadVoicepackAssets(pick, {writeSettings = false}). Refresh button to invalidate the caches. | 150 |
+| `C:getDebugLogging()` | Debug log state. | 137 |
+| `C:getRace()` | Current race object of gameplay_rally (if the extension is loaded), coloring the path segments for debug. | 216 |
+| `C:getRallyManager()` | Bound manager, otherwise that of gameplay_rally.getRallyManager(). | 129 |
+| `C:init()` | Constructor: initializes all the state fields and the default drawing options. | 41 |
+| `C:setDebugLogging(debugLogging)` | Enables or disables debug logging. | 125 |
+| `C:setMouseAsVehicleEnabled(enabled)` | Enables or disables the driveline route's "mouse as vehicle" mode (the position under the mouse is used as the vehicle position). | 240 |
+| `C:setRallyManager(rallyManager)` | Binds the window to a RallyManager and invalidates the voicepack selector cache. | 107 |
+| `C:toggleMouseMovementCheckbox()` | Toggles the "mouse as vehicle" mode. | 251 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 - `Sim.` `getUniqueName`
@@ -55,4 +55,4 @@ Le module renvoie un constructeur : `local obj = require("gameplay_rally_tools_r
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/tools/rallyToolbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/tools/rallyToolbox.lua`.*

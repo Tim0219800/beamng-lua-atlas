@@ -2,179 +2,179 @@
 -- tim19Atlas stub generated from lua/common/libs/copas/copas.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Copas 2.0.2 : bibliothèque tierce (Kepler Project) — « Coroutine Oriented Portable Asynchronous Services », un répartiteur à base de coroutines pour serveurs et clients TCP/UDP, qui s'appuie sur LuaSocket. Les sockets sont enveloppés (copas.wrap) pour que send/receive/connect cèdent la main au lieu de bloquer ; copas.loop ou copas.step font tourner le tout. Copas sert de base aux sous-modules copas.http, copas.ftp, copas.smtp, copas.timer, copas.lock, copas.semaphore et copas.limit.
---- Accès : `require("libs/copas/copas")`
+--- Copas 2.0.2: third-party library (Kepler Project) — "Coroutine Oriented Portable Asynchronous Services", a coroutine-based dispatcher for TCP/UDP servers and clients, built on LuaSocket. Sockets are wrapped (copas.wrap) so that send/receive/connect yield instead of blocking; copas.loop or copas.step runs it all. Copas is the basis of the submodules copas.http, copas.ftp, copas.smtp, copas.timer, copas.lock, copas.semaphore and copas.limit.
+--- Access: `require("libs/copas/copas")`
 ---@class libs_copas_copas
 ---@field _COPYRIGHT string Copyright Kepler Project 2005-2017.
 ---@field _DESCRIPTION string Coroutine Oriented Portable Asynchronous Services.
 ---@field _VERSION string "Copas 2.0.2".
----@field autoclose boolean Si vrai (défaut), ferme le socket de la connexion une fois le handler terminé.
----@field running boolean Indique que la boucle copas.loop tourne (faux au départ).
+---@field autoclose boolean If true (default), closes the connection's socket once the handler has finished.
+---@field running boolean Indicates that the copas.loop loop is running (false at the start).
 local libs_copas_copas = {}
 
---- Enregistre un socket serveur TCP et un handler appelé dans une nouvelle coroutine pour chaque connexion acceptée (fonction définie dans le code, non listée par l'extracteur automatique). (assignée dynamiquement)
----Source : lua/common/libs/copas/copas.lua:dyn
----@param server table Socket serveur LuaSocket
----@param handler function Fonction handler(skt) (voir copas.handler)
----@param timeout number|nil Timeout des opérations (déduit du code)
+--- Registers a TCP server socket and a handler called in a new coroutine for each accepted connection (function defined in the code, not listed by the automatic extractor). (dynamically assigned)
+---Source: lua/common/libs/copas/copas.lua:dyn
+---@param server table LuaSocket server socket
+---@param handler function Handler function handler(skt) (see copas.handler)
+---@param timeout number|nil Operation timeout (inferred from code)
 function libs_copas_copas.addserver(server, handler, timeout) end
 
---- Ajoute une nouvelle coroutine au répartiteur ; elle démarre au prochain pas de boucle.
----Source : lua/common/libs/copas/copas.lua:903
----@param handler function Fonction exécutée dans la coroutine
----@param ... any Arguments passés au handler
----@return thread  La coroutine créée
+--- Adds a new coroutine to the dispatcher; it starts at the next loop step.
+---Source: lua/common/libs/copas/copas.lua:903
+---@param handler function Function run in the coroutine
+---@param ... any Arguments passed to the handler
+---@return thread  The coroutine created
 function libs_copas_copas.addthread(handler, ...) end
 
---- Connecte le socket et attend (en cédant la main) la fin de la connexion.
----Source : lua/common/libs/copas/copas.lua:565
+--- Connects the socket and waits (yielding) for the connection to finish.
+---Source: lua/common/libs/copas/copas.lua:565
 ---@param skt table Socket
----@param host string Hôte
+---@param host string Host
 ---@param port integer Port
 function libs_copas_copas.connect(skt, host, port) end
 
---- Poignée de main SSL asynchrone sur un socket client connecté. Renvoie un nouveau socket SSL qui remplace l'ancien ; lève une erreur en cas d'échec.
----Source : lua/common/libs/copas/copas.lua:611
----@param skt table Socket client LuaSocket
----@param sslt table Paramètres SSL
----@return table  Socket SSL
+--- Asynchronous SSL handshake on a connected client socket. Returns a new SSL socket that replaces the old one; raises an error on failure.
+---Source: lua/common/libs/copas/copas.lua:611
+---@param skt table LuaSocket client socket
+---@param sslt table SSL parameters
+---@return table  SSL socket
 function libs_copas_copas.dohandshake(skt, sslt) end
 
---- Indique s'il n'y a plus rien à faire (aucun socket en lecture/écriture ni tâche planifiée).
----Source : lua/common/libs/copas/copas.lua:1166
----@return boolean  true s'il n'y a plus rien à traiter
+--- Indicates whether there is nothing left to do (no socket for reading/writing and no scheduled task).
+---Source: lua/common/libs/copas/copas.lua:1166
+---@return boolean  true if there is nothing left to process
 function libs_copas_copas.finished() end
 
---- Vide le tampon d'écriture d'un client (obsolète).
----Source : lua/common/libs/copas/copas.lua:651
+--- Flushes a client's write buffer (obsolete).
+---Source: lua/common/libs/copas/copas.lua:651
 function libs_copas_copas.flush() end
 
---- Enveloppe un handler de façon à envelopper le socket et faire la poignée de main SSL facultative.
----Source : lua/common/libs/copas/copas.lua:769
+--- Wraps a handler so as to wrap the socket and perform the optional SSL handshake.
+---Source: lua/common/libs/copas/copas.lua:769
 ---@param handler function Handler(skt)
----@param sslparams table|nil Paramètres SSL
----@return function  Handler enveloppé
+---@param sslparams table|nil SSL parameters
+---@return function  Wrapped handler
 function libs_copas_copas.handler(handler, sslparams) end
 
---- Boucle sans fin du répartiteur : écoute et traite les requêtes jusqu'à l'arrêt. Met copas.running à true.
----Source : lua/common/libs/copas/copas.lua:1175
----@param initializer function|nil Fonction exécutée dans une coroutine au démarrage
----@param timeout number|nil Timeout de chaque pas
+--- Endless dispatcher loop: listens to and processes requests until stopped. Sets copas.running to true.
+---Source: lua/common/libs/copas/copas.lua:1175
+---@param initializer function|nil Function run in a coroutine at startup
+---@param timeout number|nil Timeout of each step
 function libs_copas_copas.loop(initializer, timeout) end
 
---- Lit selon un motif sur un client et cède la main aux timeouts. Pour UDP, le motif est obligatoire et doit être un nombre.
----Source : lua/common/libs/copas/copas.lua:398
+--- Reads according to a pattern on a client and yields to timeouts. For UDP, the pattern is required and must be a number.
+---Source: lua/common/libs/copas/copas.lua:398
 ---@param client table Socket
----@param pattern string|integer|nil Motif de lecture LuaSocket ("*l", "*a", nombre d'octets)
----@param part string|nil Données déjà reçues (reprise)
+---@param pattern string|integer|nil LuaSocket read pattern ("*l", "*a", number of bytes)
+---@param part string|nil Data already received (resume)
 function libs_copas_copas.receive(client, pattern, part) end
 
---- Comme receive, mais se débloque dès que des données arrivent (lecture par morceaux).
----Source : lua/common/libs/copas/copas.lua:468
+--- Like receive, but unblocks as soon as data arrives (partial reads).
+---Source: lua/common/libs/copas/copas.lua:468
 ---@param client table Socket
----@param pattern string|integer|nil Motif de lecture
----@param part string|nil Données déjà reçues
+---@param pattern string|integer|nil Read pattern
+---@param part string|nil Data already received
 function libs_copas_copas.receivePartial(client, pattern, part) end
 
---- Reçoit des données d'un client UDP (non disponible pour TCP).
----Source : lua/common/libs/copas/copas.lua:438
----@param client table Socket UDP
----@param size integer Taille maximale
+--- Receives data from a UDP client (not available for TCP).
+---Source: lua/common/libs/copas/copas.lua:438
+---@param client table UDP socket
+---@param size integer Maximum size
 function libs_copas_copas.receivefrom(client, size) end
 
---- Retire un serveur du répartiteur ; le ferme sauf si keep_open est vrai.
----Source : lua/common/libs/copas/copas.lua:882
----@param server table Socket serveur
----@param keep_open boolean|nil Ne pas fermer le socket
+--- Removes a server from the dispatcher; closes it unless keep_open is true.
+---Source: lua/common/libs/copas/copas.lua:882
+---@param server table Server socket
+---@param keep_open boolean|nil Do not close the socket
 function libs_copas_copas.removeserver(server, keep_open) end
 
---- Retire une coroutine du répartiteur (elle est supprimée à sa prochaine reprise).
----Source : lua/common/libs/copas/copas.lua:912
----@param thread thread Coroutine à retirer
+--- Removes a coroutine from the dispatcher (it is deleted at its next resume).
+---Source: lua/common/libs/copas/copas.lua:912
+---@param thread thread Coroutine to remove
 function libs_copas_copas.removethread(thread) end
 
---- Envoie des données à un client, avec tampon, en cédant la main sur timeout. from et to sont ignorés pour UDP.
----Source : lua/common/libs/copas/copas.lua:509
+--- Sends data to a client, with buffering, yielding on timeout. from and to are ignored for UDP.
+---Source: lua/common/libs/copas/copas.lua:509
 ---@param client table Socket
----@param data string Données
----@param from integer|nil Premier octet à envoyer
----@param to integer|nil Dernier octet à envoyer
+---@param data string Data
+---@param from integer|nil First byte to send
+---@param to integer|nil Last byte to send
 function libs_copas_copas.send(client, data, from, to) end
 
---- Envoie un datagramme UDP.
----Source : lua/common/libs/copas/copas.lua:559
----@param client table Socket UDP
----@param data string Données
----@param ip string Adresse
+--- Sends a UDP datagram.
+---Source: lua/common/libs/copas/copas.lua:559
+---@param client table UDP socket
+---@param data string Data
+---@param ip string Address
 ---@param port integer Port
 function libs_copas_copas.sendto(client, data, ip, port) end
 
---- Définit la fonction appelée quand un handler lève une erreur ; avec default vrai, remplace aussi le gestionnaire par défaut (déduit du code).
----Source : lua/common/libs/copas/copas.lua:798
----@param err function Gestionnaire d'erreurs
----@param default boolean|nil Changer le gestionnaire par défaut
+--- Sets the function called when a handler raises an error; with default true, also replaces the default handler (inferred from code).
+---Source: lua/common/libs/copas/copas.lua:798
+---@param err function Error handler
+---@param default boolean|nil Change the default handler
 function libs_copas_copas.setErrorHandler(err, default) end
 
---- Définit le timeout d'un socket Copas.
----Source : lua/common/libs/copas/copas.lua:380
+--- Sets the timeout of a Copas socket.
+---Source: lua/common/libs/copas/copas.lua:380
 ---@param skt table Socket
----@param timeout number Timeout en secondes
+---@param timeout number Timeout in seconds
 function libs_copas_copas.settimeout(skt, timeout) end
 
---- Suspend la coroutine courante et la réveille après sleeptime secondes. Une valeur négative la suspend jusqu'à un appel explicite à wakeup.
----Source : lua/common/libs/copas/copas.lua:926
----@param sleeptime number Durée en secondes (négative : jusqu'à wakeup)
+--- Suspends the current coroutine and wakes it after sleeptime seconds. A negative value suspends it until an explicit call to wakeup.
+---Source: lua/common/libs/copas/copas.lua:926
+---@param sleeptime number Duration in seconds (negative: until wakeup)
 function libs_copas_copas.sleep(sleeptime) end
 
---- Un pas de la boucle du répartiteur : traite les sockets prêts et les tâches planifiées.
----Source : lua/common/libs/copas/copas.lua:1136
----@param timeout number|nil Durée max d'attente des sockets, en secondes
----@return boolean|nil  false si aucune donnée traitée, true sinon (ou nil + message d'erreur)
+--- One step of the dispatcher loop: processes the ready sockets and the scheduled tasks.
+---Source: lua/common/libs/copas/copas.lua:1136
+---@param timeout number|nil Maximum socket wait time, in seconds
+---@return boolean|nil  false if no data processed, true otherwise (or nil + error message)
 function libs_copas_copas.step(timeout) end
 
---- Choisit de renvoyer les erreurs de timeout d'origine de LuaSocket (vrai) ou toujours « timeout » (faux).
----Source : lua/common/libs/copas/copas.lua:809
----@param bool boolean Activer les erreurs d'origine
+--- Chooses to return LuaSocket's original timeout errors (true) or always "timeout" (false).
+---Source: lua/common/libs/copas/copas.lua:809
+---@param bool boolean Enable the original errors
 function libs_copas_copas.useSocketTimeoutErrors(bool) end
 
---- Réveille une coroutine endormie par sleep.
----Source : lua/common/libs/copas/copas.lua:931
----@param co thread Coroutine à réveiller
+--- Wakes a coroutine put to sleep by sleep.
+---Source: lua/common/libs/copas/copas.lua:931
+---@param co thread Coroutine to wake
 function libs_copas_copas.wakeup(co) end
 
---- Enveloppe un socket LuaSocket en socket asynchrone Copas ; avec sslt, active SSL.
----Source : lua/common/libs/copas/copas.lua:755
----@param skt table Socket LuaSocket
----@param sslt table|nil Paramètres SSL (table vide pour les valeurs par défaut)
----@return table  Socket enveloppé
+--- Wraps a LuaSocket socket into an asynchronous Copas socket; with sslt, enables SSL.
+---Source: lua/common/libs/copas/copas.lua:755
+---@param skt table LuaSocket socket
+---@param sslt table|nil SSL parameters (empty table for the defaults)
+---@return table  Wrapped socket
 function libs_copas_copas.wrap(skt, sslt) end
 
---- File interne des coroutines endormies (objet interne).
+--- Internal queue of sleeping coroutines (internal object).
 ---@class libs_copas_copas__sleeping
 local libs_copas_copas__sleeping = {}
 
---- Insère une coroutine endormie (interne au répartiteur).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/copas/copas.lua:58
+--- Inserts a sleeping coroutine (internal to the dispatcher).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/copas/copas.lua:58
 function libs_copas_copas__sleeping.insert() end
 
---- Retire une coroutine endormie (interne au répartiteur).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/copas/copas.lua:58
+--- Removes a sleeping coroutine (internal to the dispatcher).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/copas/copas.lua:58
 function libs_copas_copas__sleeping.remove() end
 
---- Fonctions LuaSocket redéfinies par Copas en versions sûres vis-à-vis des coroutines (permet d'utiliser socket.http dans Copas).
+--- LuaSocket functions redefined by Copas as coroutine-safe versions (allows using socket.http in Copas).
 ---@class libs_copas_copas_socket
 local libs_copas_copas_socket = {}
 
---- Version de socket.newtry compatible coroutines.
----Source : lua/common/libs/copas/copas.lua:83
----@param finalizer function Fonction de nettoyage
+--- Coroutine-compatible version of socket.newtry.
+---Source: lua/common/libs/copas/copas.lua:83
+---@param finalizer function Cleanup function
 function libs_copas_copas_socket.newtry(finalizer) end
 
---- Version de socket.protect compatible coroutines.
----Source : lua/common/libs/copas/copas.lua:77
----@param func function Fonction à protéger
+--- Coroutine-compatible version of socket.protect.
+---Source: lua/common/libs/copas/copas.lua:77
+---@param func function Function to protect
 function libs_copas_copas_socket.protect(func) end
 
 return libs_copas_copas

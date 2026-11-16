@@ -1,57 +1,57 @@
 # `editor_ezObjectSelect_transformNumericInput`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/transformNumericInput.lua` · VM : Game Engine (GE) · 85 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/transformNumericInput.lua` · VM: Game Engine (GE) · 85 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_transformNumericInput` : `extensions.load("editor_ezObjectSelect_transformNumericInput")`, puis la globale `editor_ezObjectSelect_transformNumericInput`
+**Access:** extension `editor_ezObjectSelect_transformNumericInput`: `extensions.load("editor_ezObjectSelect_transformNumericInput")`, then the global `editor_ezObjectSelect_transformNumericInput`
 
-Petit tampon de saisie numérique au clavier pour les opérations de transformation d'Easy Object Select (comme dans Blender : taper « 2.5 » pendant un déplacement). Lit les touches chiffres (rangée du haut et pavé numérique), point/virgule décimale, moins (inverse le signe) et retour arrière via ImGui, et maintient une chaîne dans un état {text, active}.
+Small keyboard numeric input buffer for the transform operations of Easy Object Select (as in Blender: typing "2.5" during a move). Reads digit keys (top row and numpad), decimal point/comma, minus (flips the sign) and backspace via ImGui, and maintains a string in a state {text, active}.
 
-## Exemple
+## Example
 
 ```lua
 local ni = require("editor/ezObjectSelect/transformNumericInput")
 local st = ni.newState()
-ni.update(st)          -- chaque frame
-local v = ni.value(st) -- nil tant que rien de valide n'est saisi
+ni.update(st)          -- every frame
+local v = ni.value(st) -- nil as long as nothing valid is entered
 ```
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_transformNumericInput.clear(state)` | Vide le texte et désactive la saisie. | 30 |
-| `editor_ezObjectSelect_transformNumericInput.newState()` | Crée un état de saisie vide. | 26 |
-| `editor_ezObjectSelect_transformNumericInput.update(state, ignoreTopRowFour)` | Traite les touches pressées cette frame : chiffres, un seul point décimal (préfixé d'un 0 si le texte est vide ou « - »), moins qui bascule le signe, retour arrière. | 40 |
-| `editor_ezObjectSelect_transformNumericInput.value(state)` | Convertit le texte saisi en nombre. | 77 |
+| `editor_ezObjectSelect_transformNumericInput.clear(state)` | Clears the text and deactivates the input. | 30 |
+| `editor_ezObjectSelect_transformNumericInput.newState()` | Creates an empty input state. | 26 |
+| `editor_ezObjectSelect_transformNumericInput.update(state, ignoreTopRowFour)` | Processes the keys pressed this frame: digits, a single decimal point (prefixed with a 0 if the text is empty or "-"), minus that toggles the sign, backspace. | 40 |
+| `editor_ezObjectSelect_transformNumericInput.value(state)` | Converts the entered text to a number. | 77 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_transformNumericInput.clear(state)`
 
-Vide le texte et désactive la saisie.
+Clears the text and deactivates the input.
 
-- `state` (*table*) : État créé par newState.
+- `state` (*table*) : State created by newState.
 
 #### `editor_ezObjectSelect_transformNumericInput.newState()`
 
-Crée un état de saisie vide.
+Creates an empty input state.
 
-- **renvoie** : table {text = "", active = false}.
+- **returns**: table {text = "", active = false}.
 
 #### `editor_ezObjectSelect_transformNumericInput.update(state, ignoreTopRowFour)`
 
-Traite les touches pressées cette frame : chiffres, un seul point décimal (préfixé d'un 0 si le texte est vide ou « - »), moins qui bascule le signe, retour arrière.
+Processes the keys pressed this frame: digits, a single decimal point (prefixed with a 0 if the text is empty or "-"), minus that toggles the sign, backspace.
 
-- `state` (*table*) : État de saisie, modifié en place.
-- `ignoreTopRowFour` (*boolean|nil*) : Si true, ignore la touche 4 de la rangée du haut pour cette frame (utile quand elle sert à autre chose).
-- **renvoie** : boolean true si le texte a changé.
+- `state` (*table*) : Input state, modified in place.
+- `ignoreTopRowFour` (*boolean|nil*) : If true, ignores the top row key 4 for this frame (useful when it is used for something else).
+- **returns**: boolean true if the text changed.
 
 #### `editor_ezObjectSelect_transformNumericInput.value(state)`
 
-Convertit le texte saisi en nombre.
+Converts the entered text to a number.
 
-- `state` (*table*) : État de saisie.
-- **renvoie** : number|nil Valeur, ou nil si inactif, vide, « - » ou « . ».
+- `state` (*table*) : Input state.
+- **returns**: number|nil Value, or nil if inactive, empty, "-" or ".".
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/transformNumericInput.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/transformNumericInput.lua`.*

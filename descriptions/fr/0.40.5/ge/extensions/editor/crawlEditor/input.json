@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/editor/crawlEditor/input.lua",
+  "module": "Aide de l'éditeur de crawl pour la souris : à chaque appel de updateMouseInfo, calcule le rayon caméra-souris, le raycast sur la scène (forêt désactivée le temps du tir) et les états clic/maintien/relâché du bouton gauche. Les autres fichiers du crawlEditor lisent le résultat via getMouseInfo().",
+  "notes": [
+    "Champs de la table mouseInfo : camPos, ray, rayDir, rayCast, valid, down, hold, up, closestNodeHovered, et _downPos/_downNormal, _holdPos/_holdNormal, _upPos/_upNormal (vec3 issus de rayCast.pos et rayCast.normal).",
+    "down/hold/up sont forcés à false quand le raycast ne touche rien ; sinon ils sont aussi faux si imgui capte la souris (WantCaptureMouse).",
+    "getMouseInfo() renvoie nil tant que updateMouseInfo n'a jamais été appelé."
+  ],
+  "functions": {
+    "updateMouseInfo": {
+      "desc": "Met à jour la table mouseInfo (position caméra, rayon souris, raycast, états du bouton gauche). Désactive puis réactive la collision de la forêt autour du raycast."
+    },
+    "getMouseInfo": {
+      "desc": "Renvoie la table mouseInfo courante.",
+      "returns": [{"type": "table|nil", "desc": "mouseInfo, ou nil avant le premier updateMouseInfo"}]
+    }
+  }
+}

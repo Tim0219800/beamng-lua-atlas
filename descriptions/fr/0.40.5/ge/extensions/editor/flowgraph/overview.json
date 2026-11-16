@@ -1,0 +1,25 @@
+{
+  "path": "lua/ge/extensions/editor/flowgraph/overview.lua",
+  "module": "Fenêtre « Overview » (fg_treeview) de l'éditeur Flowgraph : arborescence des graphes du projet (et des macros) avec un filtre texte. Le filtre porte sur le nom des graphes, et sur celui des nœuds si la préférence flowgraph.debug.displayNodesInOverview est active. Un menu contextuel sur un nœud permet Focus et Delete.",
+  "notes": [
+    "Seuls les graphes dont le nom (ou un parent) passe le filtre sont dessinés ; sinon seul le graphe courant (mgr.graph) reste affiché (skipDrawing).",
+    "En mode debug (flowgraph.debug.editorDebug), un bouton « Print Graphs » imprime la structure de tous les graphes et macros dans la console.",
+    "Le dessin des macros racine est commenté dans le code : seuls mgr.graphs sont affichés dans l'arbre."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe de la fenêtre (windowName 'fg_treeview', windowDescription 'Overview').",
+      "functions": {
+        "init": {"desc": "Crée le filtre texte et enregistre la fenêtre (150x300, masquée par défaut).", "internal": true},
+        "attach": {"desc": "Mémorise le manager courant.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": true},
+        "drawPopups": {"desc": "Dessine le popup « nodeOverviewPopup » : Focus (sélectionne le nœud et navigue vers lui) et Delete (graph:deleteNode).", "internal": true},
+        "skipDrawing": {"desc": "Indique si un graphe doit être masqué : faux s'il (ou un de ses parents) passe le filtre, sinon vrai sauf pour le graphe courant.", "params": {"graph": {"type": "table", "desc": "Graphe testé."}}, "returns": [{"type": "boolean", "desc": "true si le graphe doit être sauté."}]},
+        "drawGraph": {"desc": "Dessine un graphe de l'arbre (et récursivement ses enfants).", "params": {"graph": {"type": "table", "desc": "Graphe à dessiner."}}},
+        "fillPassedGraphsArray": {"desc": "Remplit self.passedGraphIds avec les ids des graphes et macros dont le nom (ou un nœud, selon la préférence) passe le filtre."},
+        "TreeView": {"desc": "Dessine le contenu de la fenêtre : filtre, bouton debug, liste triée des graphes racines.", "internal": true},
+        "draw": {"desc": "Dessine la fenêtre si elle est visible (appelle TreeView).", "internal": true},
+        "selectNode": {"desc": "Sélectionne un nœud dans l'éditeur (fge.SelectNode).", "params": {"node": {"type": "table", "desc": "Nœud (utilise node.id)."}, "append": {"type": "boolean", "desc": "Ajouter à la sélection."}}}
+      }
+    }
+  }
+}

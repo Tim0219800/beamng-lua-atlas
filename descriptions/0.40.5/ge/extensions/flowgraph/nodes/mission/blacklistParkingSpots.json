@@ -1,62 +1,62 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/blacklistParkingSpots.lua",
-  "module": "Noeud flowgraph 'Blacklist Parking Spots' (categorie once_instant). Marque comme 'banned' les places de parking (gameplay_parking) situees dans un rayon autour de positions donnees, pour que des voitures garees ne les utilisent pas, et teleporte les vehicules deja garees dessus. Positions : liste posList, pins pos_i (nombre reglable) et, si 'auto', les vehicules actifs de la mission (hors trafic/garees). Les marques sont retirees a l'arret ou au reset.",
+  "module": "Flowgraph node 'Blacklist Parking Spots' (once_instant category). Marks as 'banned' the parking spots (gameplay_parking) located within a radius around given positions, so that parked cars do not use them, and teleports the vehicles already parked on them. Positions: posList list, pins pos_i (adjustable count) and, if 'auto', the active mission vehicles (excluding traffic/parked). The marks are removed on stop or reset.",
   "notes": [
-    "workOnce ajoute les positions dans la table posList du pin d'entree (si fournie), donc modifie la table de l'appelant.",
-    "updatePins teste lnk.sourcePin alors que les pins pos_i sont des entrees : les liens ne sont pas supprimes."
+    "workOnce adds the positions to the posList table of the input pin (if provided), so it modifies the caller's table.",
+    "updatePins tests lnk.sourcePin whereas the pos_i pins are inputs: the links are not deleted."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "count=1, bannedSpots vide.",
+          "desc": "count=1, bannedSpots empty.",
           "internal": true
         },
         "postInit": {
-          "desc": "Cree les pins pos_1..pos_count.",
+          "desc": "Creates the pins pos_1..pos_count.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Appelle reset().",
+          "desc": "Calls reset().",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Appelle reset().",
+          "desc": "Calls reset().",
           "internal": true
         },
         "reset": {
-          "desc": "Retire le tag 'banned' des places bannies par ce noeud et vide la liste.",
+          "desc": "Removes the 'banned' tag from the spots banned by this node and clears the list.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Panneau : nombre de pins de position (Count).",
+          "desc": "Panel: number of position pins (Count).",
           "internal": true
         },
         "updatePins": {
-          "desc": "Cree ou supprime les pins pos_i.",
+          "desc": "Creates or deletes the pos_i pins.",
           "internal": true,
           "params": {
             "old": {
               "type": "integer",
-              "desc": "ancien nombre"
+              "desc": "old count"
             },
             "new": {
               "type": "integer",
-              "desc": "nouveau nombre"
+              "desc": "new count"
             }
           }
         },
         "workOnce": {
-          "desc": "Rassemble les positions, cherche les places dans le rayon (defaut 5 m) avec gameplay_parking.findParkingSpots, ajoute le tag 'banned' et force la teleportation des vehicules qui les occupent.",
+          "desc": "Gathers the positions, looks for spots within the radius (default 5 m) with gameplay_parking.findParkingSpots, adds the 'banned' tag and forces the teleportation of the vehicles occupying them.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde count.",
+          "desc": "Saves count.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Relit count et recree les pins.",
+          "desc": "Reads back count and recreates the pins.",
           "internal": true
         }
       }

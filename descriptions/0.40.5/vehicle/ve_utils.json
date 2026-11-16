@@ -1,90 +1,201 @@
 {
   "path": "lua/vehicle/ve_utils.lua",
-  "module": "Utilitaires globaux propres à la VM véhicule, chargés par require(\"ve_utils\") : chronomètre haute précision, conversion de tables jbeam à en-tête en liste de dictionnaires, sauvegarde de jbeam compilé en texte, couleurs de contraste, génération de courbes interpolées (Catmull-Rom) et conversion psi -> Pa. Le module ne retourne pas de table M utile : tout est défini comme fonction globale.",
-  "usage": "local t = HighPerfTimer()\n-- ... travail ...\nlocal ms = t:stop() -- durée en millisecondes\nlocal curve = createCurve({{0,0},{1000,50},{7000,200}})\nlocal torque = curve[floor(rpm)]",
+  "module": "Global utilities specific to the vehicle VM, loaded by require(\"ve_utils\"): high-precision timer, conversion of header-style jbeam tables to a list of dictionaries, saving compiled jbeam as text, contrast colors, generation of interpolated curves (Catmull-Rom) and psi -> Pa conversion. The module does not return a useful table M: everything is defined as a global function.",
+  "usage": "local t = HighPerfTimer()\n-- ... work ...\nlocal ms = t:stop() -- duration in milliseconds\nlocal curve = createCurve({{0,0},{1000,50},{7000,200}})\nlocal torque = curve[floor(rpm)]",
   "notes": [
-    "Les fonctions sont globales (pas de préfixe ve_utils.) ; un `require` suffit pour les définir.",
-    "HighPerfTimer : os.clockhp() est en secondes, getTime/stop/stopAndReset renvoient des millisecondes.",
-    "_HighPerfTimer:getTime() renvoie l'horloge absolue en ms (os.clockhp()*1000), pas le temps écoulé : pour la durée, utiliser stop().",
-    "createCurve : les x des points doivent être des entiers croissants (l'index du tableau résultat est x lui-même, de floor(x1) à floor(xn)). Avec returnArray=true et ffi dispo, renvoie un float[?] C de taille xn+1 indexé à partir de 0.",
-    "createCurve avec 3 points ou plus utilise un spline Catmull-Rom ; avec 2 points une droite ; avec moins de 2 renvoie nil.",
-    "PSItoPascal ajoute 101325 : le résultat est une pression absolue, pas relative.",
-    "getContrastColor/getContrastColorStringRGB cyclent sur 17 couleurs (i % 17) de la palette jetColor.",
-    "saveCompiledJBeamRecursive écrit un pseudo-JSON (ordre des clés non garanti car pairs()) et n'échappe pas les guillemets des chaînes."
+    "The functions are global (no ve_utils. prefix); a `require` is enough to define them.",
+    "HighPerfTimer: os.clockhp() is in seconds, getTime/stop/stopAndReset return milliseconds.",
+    "_HighPerfTimer:getTime() returns the absolute clock in ms (os.clockhp()*1000), not the elapsed time: for the duration, use stop().",
+    "createCurve: the x of the points must be increasing integers (the index of the resulting array is x itself, from floor(x1) to floor(xn)). With returnArray=true and ffi available, returns a C float[?] of size xn+1, 0-based.",
+    "createCurve with 3 or more points uses a Catmull-Rom spline; with 2 points a straight line; with fewer than 2 returns nil.",
+    "PSItoPascal adds 101325: the result is an absolute pressure, not relative.",
+    "getContrastColor/getContrastColorStringRGB cycle over 17 colors (i % 17) of the jetColor palette.",
+    "saveCompiledJBeamRecursive writes a pseudo-JSON (key order not guaranteed because of pairs()) and does not escape the quotes of strings."
   ],
   "fields": {},
   "functions": {
     "HighPerfTimer": {
-      "desc": "Crée un chronomètre haute précision démarré à l'instant de création (basé sur os.clockhp).",
+      "desc": "Creates a high-precision timer started at the moment of creation (based on os.clockhp).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Objet _HighPerfTimer avec les méthodes reset, stop, stopAndReset, getTime."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "_HighPerfTimer object with the methods reset, stop, stopAndReset, getTime."
+        }
+      ],
       "internal": false
     },
     "tableFromHeaderTable": {
-      "desc": "Convertit une table jbeam au format « première ligne = en-tête, lignes suivantes = valeurs » en liste de dictionnaires {colonne=valeur}. Une ligne qui est un dictionnaire seul définit des options communes appliquées aux lignes suivantes ; un dictionnaire placé en dernière colonne fusionne ses options dans la ligne. Si une ligne a un champ id, il est renommé name.",
-      "params": {"entry": {"type": "table", "desc": "Table jbeam brute (entry[1] = en-tête)."}},
-      "returns": [{"type": "table|boolean", "desc": "Liste de lignes (table vide si entry est vide), ou false si l'en-tête/une ligne est invalide (un avertissement est loggé)."}],
+      "desc": "Converts a jbeam table in the \"first row = header, following rows = values\" format into a list of dictionaries {column=value}. A row that is a lone dictionary defines common options applied to the following rows; a dictionary placed in the last column merges its options into the row. If a row has an id field, it is renamed name.",
+      "params": {
+        "entry": {
+          "type": "table",
+          "desc": "Raw jbeam table (entry[1] = header)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|boolean",
+          "desc": "List of rows (empty table if entry is empty), or false if the header/a row is invalid (a warning is logged)."
+        }
+      ],
       "internal": false
     },
     "saveCompiledJBeamRecursive": {
-      "desc": "Écrit récursivement une table de données au format texte type JSON dans un fichier ouvert, avec une indentation dépendant du niveau et un commentaire d'en-tête pour chaque table ayant un partPath.",
+      "desc": "Recursively writes a data table in JSON-like text format to an open file, with indentation depending on the level and a header comment for each table having a partPath.",
       "params": {
-        "f": {"type": "file", "desc": "Fichier ouvert en écriture (io.open)."},
-        "data": {"type": "table", "desc": "Données à écrire."},
-        "level": {"type": "integer", "desc": "Niveau de récursion courant (0 au départ)."}
+        "f": {
+          "type": "file",
+          "desc": "File open for writing (io.open)."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Data to write."
+        },
+        "level": {
+          "type": "integer",
+          "desc": "Current recursion level (0 at the start)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "saveCompiledJBeam": {
-      "desc": "Sauvegarde des données jbeam compilées dans un fichier texte (ouvre, écrit via saveCompiledJBeamRecursive, ferme). Sert au débogage.",
+      "desc": "Saves compiled jbeam data to a text file (opens, writes via saveCompiledJBeamRecursive, closes). Used for debugging.",
       "params": {
-        "data": {"type": "table", "desc": "Données à sauvegarder."},
-        "filename": {"type": "string", "desc": "Chemin du fichier de sortie."},
-        "lvl": {"type": "integer|nil", "desc": "Niveau initial (0 par défaut)."}
+        "data": {
+          "type": "table",
+          "desc": "Data to save."
+        },
+        "filename": {
+          "type": "string",
+          "desc": "Output file path."
+        },
+        "lvl": {
+          "type": "integer|nil",
+          "desc": "Initial level (0 by default)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "false si le fichier n'a pas pu être ouvert (avertissement loggé), sinon true."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the file could not be opened (warning logged), otherwise true."
+        }
+      ],
       "internal": false
     },
     "getContrastColor": {
-      "desc": "Renvoie une couleur du jeu tirée de la palette jet selon l'indice, pour distinguer des courbes ou des éléments de debug.",
+      "desc": "Returns a game color taken from the jet palette according to the index, to distinguish curves or debug elements.",
       "params": {
-        "i": {"type": "integer", "desc": "Indice ; la couleur est jetColor((i % 17) / 16)."},
-        "a": {"type": "number|nil", "desc": "Alpha transmis à jetColor."}
+        "i": {
+          "type": "integer",
+          "desc": "Index; the color is jetColor((i % 17) / 16)."
+        },
+        "a": {
+          "type": "number|nil",
+          "desc": "Alpha passed to jetColor."
+        }
       },
-      "returns": [{"type": "color", "desc": "Couleur du jeu."}],
+      "returns": [
+        {
+          "type": "color",
+          "desc": "Game color."
+        }
+      ],
       "internal": false
     },
     "getContrastColorStringRGB": {
-      "desc": "Même palette que getContrastColor mais renvoie une chaîne hexadécimale CSS.",
-      "params": {"i": {"type": "integer", "desc": "Indice (modulo 17)."}},
-      "returns": [{"type": "string", "desc": "Couleur au format \"#rrggbb\"."}],
+      "desc": "Same palette as getContrastColor but returns a CSS hexadecimal string.",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Index (modulo 17)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Color in \"#rrggbb\" format."
+        }
+      ],
       "internal": false
     },
     "createCurve": {
-      "desc": "Construit une table de recherche dense à partir de points {x, y} : un tableau dont l'index est x (entier) et la valeur y interpolée. Droite pour 2 points, spline Catmull-Rom pour 3 ou plus. Sert par exemple aux courbes de couple moteur.",
+      "desc": "Builds a dense lookup table from points {x, y}: an array whose index is x (integer) and whose value is the interpolated y. Straight line for 2 points, Catmull-Rom spline for 3 or more. Used for example for engine torque curves.",
       "params": {
-        "points": {"type": "table", "desc": "Liste de {x, y} avec x entiers croissants."},
-        "returnArray": {"type": "boolean|nil", "desc": "Si vrai et ffi disponible, renvoie un tableau C float[] (indexé à partir de 0) au lieu d'une table Lua."}
+        "points": {
+          "type": "table",
+          "desc": "List of {x, y} with increasing integer x."
+        },
+        "returnArray": {
+          "type": "boolean|nil",
+          "desc": "If true and ffi is available, returns a C float[] array (0-based) instead of a Lua table."
+        }
       },
-      "returns": [{"type": "table|cdata|nil", "desc": "Table indexée par x, ou nil si moins de 2 points."}],
+      "returns": [
+        {
+          "type": "table|cdata|nil",
+          "desc": "Table keyed by x, or nil if fewer than 2 points."
+        }
+      ],
       "internal": false
     },
     "PSItoPascal": {
-      "desc": "Convertit une pression relative en psi en pression absolue en pascals : psi * 6894.757 + 101325.",
-      "params": {"psi": {"type": "number", "desc": "Pression relative en psi."}},
-      "returns": [{"type": "number", "desc": "Pression absolue en Pa."}],
+      "desc": "Converts a relative pressure in psi to an absolute pressure in pascals: psi * 6894.757 + 101325.",
+      "params": {
+        "psi": {
+          "type": "number",
+          "desc": "Relative pressure in psi."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Absolute pressure in Pa."
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "_HighPerfTimer": {
-      "desc": "Chronomètre renvoyé par HighPerfTimer(). Stocke l'instant de départ en secondes dans self[1].",
+      "desc": "Timer returned by HighPerfTimer(). Stores the start time in seconds in self[1].",
       "functions": {
-        "reset": {"desc": "Redémarre le chronomètre à l'instant présent.", "params": {}, "returns": []},
-        "stop": {"desc": "Renvoie le temps écoulé depuis le départ, en millisecondes, sans redémarrer.", "params": {}, "returns": [{"type": "number", "desc": "Durée en ms."}]},
-        "stopAndReset": {"desc": "Renvoie le temps écoulé en millisecondes et redémarre le chronomètre.", "params": {}, "returns": [{"type": "number", "desc": "Durée en ms."}]},
-        "getTime": {"desc": "Renvoie l'horloge haute précision absolue en millisecondes (pas la durée écoulée).", "params": {}, "returns": [{"type": "number", "desc": "os.clockhp()*1000."}]}
+        "reset": {
+          "desc": "Restarts the timer at the present moment.",
+          "params": {},
+          "returns": []
+        },
+        "stop": {
+          "desc": "Returns the time elapsed since the start, in milliseconds, without restarting.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Duration in ms."
+            }
+          ]
+        },
+        "stopAndReset": {
+          "desc": "Returns the elapsed time in milliseconds and restarts the timer.",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Duration in ms."
+            }
+          ]
+        },
+        "getTime": {
+          "desc": "Returns the absolute high-precision clock in milliseconds (not the elapsed duration).",
+          "params": {},
+          "returns": [
+            {
+              "type": "number",
+              "desc": "os.clockhp()*1000."
+            }
+          ]
+        }
       }
     }
   }

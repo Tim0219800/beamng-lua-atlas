@@ -1,14 +1,14 @@
 # `bananabench_json`
 
-*Fichier : `lua/console/bananabench-json.lua` · VM : Console · 22 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/console/bananabench-json.lua` · VM: Console · 22 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("bananabench-json")`
+**Access:** `require("bananabench-json")`
 
-Script de la VM console : met stdout en mode ligne par ligne (pour que le processus parent lise la progression en direct), exécute bench.physics() de bananabench puis écrit le résultat complet en JSON avec jsonWriteFile (indenté). Nom du fichier : deuxième argument de la ligne de commande (`args[2]`), sinon `bananabench.json`.
+Console VM script: sets stdout to line-buffered mode (so the parent process reads progress live), runs bananabench's bench.physics() then writes the full result as JSON with jsonWriteFile (indented). File name: second command-line argument (`args[2]`), otherwise `bananabench.json`.
 
-## Remarques
+## Notes
 
-- S'exécute au chargement (pas de fonction exportée) ; utilise la globale `args` fournie par la console.
+- Runs on load (no exported function); uses the global `args` provided by the console.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/bananabench-json.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/console/bananabench-json.lua`.*

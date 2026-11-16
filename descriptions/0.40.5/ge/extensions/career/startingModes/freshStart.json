@@ -1,18 +1,38 @@
 {
   "path": "lua/ge/extensions/career/startingModes/freshStart.lua",
-  "module": "Mode de départ de carrière « freshStart » (tier minor, ordre 200, image start_fresh.jpg) : départ sans tutoriel avec 10 000 d'argent. Table de description chargée par career/career.lua, pas une extension. Le joueur (à pied) est téléporté devant le concessionnaire, face à lui.",
+  "module": "Career starting mode \"freshStart\" (tier minor, order 200, image start_fresh.jpg): start without tutorial with 10,000 money. Description table loaded by career/career.lua, not an extension. The player (on foot) is teleported in front of the dealership, facing it.",
   "fields": {
-    "id": {"type": "string", "desc": "\"freshStart\"."},
-    "order": {"type": "number", "desc": "200."},
-    "tier": {"type": "string", "desc": "\"minor\"."},
-    "image": {"type": "string", "desc": "images/career/start_fresh.jpg."}
+    "id": {
+      "type": "string",
+      "desc": "\"freshStart\"."
+    },
+    "order": {
+      "type": "number",
+      "desc": "200."
+    },
+    "tier": {
+      "type": "string",
+      "desc": "\"minor\"."
+    },
+    "image": {
+      "type": "string",
+      "desc": "images/career/start_fresh.jpg."
+    }
   },
   "functions": {
     "initPlayerAttributes": {
-      "desc": "Initialise l'argent à 10 000 (libellé « Starting Capital »).",
-      "params": {"playerAttributes": {"type": "table", "desc": "Module career_modules_playerAttributes."}},
+      "desc": "Initializes money to 10,000 (label \"Starting Capital\").",
+      "params": {
+        "playerAttributes": {
+          "type": "table",
+          "desc": "Module career_modules_playerAttributes."
+        }
+      },
       "internal": true
     },
-    "setupInventory": {"desc": "Téléporte le joueur en (905.54, -542.39, 164.31) et l'oriente vers le concessionnaire (gameplay_walk.setRot).", "internal": true}
+    "setupInventory": {
+      "desc": "Teleports the player to (905.54, -542.39, 164.31) and orients them toward the dealership (gameplay_walk.setRot).",
+      "internal": true
+    }
   }
 }

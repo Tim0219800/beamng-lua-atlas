@@ -1,26 +1,26 @@
 # `devUtils`
 
-*Fichier : `lua/common/devUtils.lua` · VM : Commun (GE + véhicule) · 213 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/devUtils.lua` · VM: Common (GE + vehicle) · 213 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("devUtils")`
+**Access:** `require("devUtils")`
 
-Utilitaires de développement rarement nécessaires, définis comme fonctions globales : exécution de code Lua avec capture du print, analyse des upvalues d'un module, instantané (snapshot) JSON de l'état global Lua pour comparer deux états, et détection de tables partagées à plusieurs endroits d'une arborescence. Surtout utile pour déboguer les fuites ou fusions de tables entre modules.
+Rarely needed development utilities, defined as global functions: running Lua code with print capture, analysis of a module's upvalues, JSON snapshot of the Lua global state to compare two states, and detection of tables shared in several places of a tree. Mostly useful for debugging table leaks or merges between modules.
 
-## Remarques
+## Notes
 
-- Le fichier utilise des helpers globaux d'autres fichiers : tableMerge, tableKeysSorted, tableIsEmpty, deepcopy, flattenTable, jsonWriteFile, writeFile.
-- executeLuaSandboxed n'est pas un vrai bac à sable (le code reste exécuté dans l'environnement du fichier et on peut atteindre des objets cachés) ; seul print est détourné.
-- Bug : _createGraphviz (locale, non utilisée, appel commenté dans createGlobalSnapshot) référence une variable k non définie ; elle ne fonctionnerait pas si activée.
-- createGlobalSnapshot appelle gui.reset() si disponible avant de capturer pour vider les caches temporaires.
+- The file uses global helpers from other files: tableMerge, tableKeysSorted, tableIsEmpty, deepcopy, flattenTable, jsonWriteFile, writeFile.
+- executeLuaSandboxed is not a real sandbox (the code still runs in the file's environment and hidden objects can be reached); only print is redirected.
+- Bug: _createGraphviz (local, unused, call commented out in createGlobalSnapshot) references an undefined variable k; it would not work if enabled.
+- createGlobalSnapshot calls gui.reset() if available before capturing, to clear temporary caches.
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `createGlobalSnapshot(filename)` | Écrit en JSON un instantané des variables globales, des modules (contenu et locales) et des extensions chargées. Les fonctions et userdata sont retirés, les tables aplaties (flattenTable). | 145 |
-| `executeLuaSandboxed(cmd, source)` | Compile puis exécute la chaîne cmd avec xpcall, en remplaçant temporairement print pour capturer les sorties. En cas d'erreur de syntaxe ou d'exécution, renvoie une chaîne commençant par 'Error: '. | 10 |
-| `getModuleLocals(moduleTbl)` | Renvoie les variables locales (upvalues) utilisées par les fonctions d'un module, en parcourant récursivement les fonctions, leurs upvalues et la métatable. Ignore les globales, les champs du module, le module lui-même et ___locals. | 89 |
-| `tableFindRecursion(tbl)` | Parcourt tbl et détecte les sous-tables atteintes par plusieurs chemins (références partagées ou cycles). | 200 |
+| `createGlobalSnapshot(filename)` | Writes as JSON a snapshot of the global variables, the modules (contents and locals) and the loaded extensions. Functions and userdata are removed, tables flattened (flattenTable). | 145 |
+| `executeLuaSandboxed(cmd, source)` | Compiles then runs the string cmd with xpcall, temporarily replacing print to capture output. On a syntax or runtime error, returns a string starting with 'Error: '. | 10 |
+| `getModuleLocals(moduleTbl)` | Returns the local variables (upvalues) used by a module's functions, recursively walking the functions, their upvalues and the metatable. Ignores globals, module fields, the module itself and ___locals. | 89 |
+| `tableFindRecursion(tbl)` | Walks tbl and detects sub-tables reached through several paths (shared references or cycles). | 200 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/devUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/devUtils.lua`.*

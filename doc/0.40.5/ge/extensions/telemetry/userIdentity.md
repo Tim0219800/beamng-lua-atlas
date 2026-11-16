@@ -1,42 +1,42 @@
 # `telemetry_userIdentity`
 
-*Fichier : `lua/ge/extensions/telemetry/userIdentity.lua` · VM : Game Engine (GE) · 108 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/userIdentity.lua` · VM: Game Engine (GE) · 108 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_userIdentity` : `extensions.load("telemetry_userIdentity")`, puis la globale `telemetry_userIdentity`
+**Access:** extension `telemetry_userIdentity`: `extensions.load("telemetry_userIdentity")`, then the global `telemetry_userIdentity`
 
-Gère l'identifiant anonyme de l'utilisateur utilisé par la télémétrie. Un « sel » aléatoire est créé une fois et stocké dans `/telemetry/salt.txt` ; l'identifiant est le hash SHA-256 de ce fichier. Un ancien fichier `/gameTelemetries/.salt` est migré automatiquement pour conserver le même identifiant.
+Manages the user's anonymous ID used by telemetry. A random "salt" is created once and stored in `/telemetry/salt.txt`; the ID is the SHA-256 hash of that file. An old `/gameTelemetries/.salt` file is migrated automatically to keep the same ID.
 
-## Exemple
+## Example
 
 ```lua
 local id = telemetry_userIdentity.getAnonymousUserID()
 ```
 
-## Remarques
+## Notes
 
-- Le fichier de sel contient une bannière explicative (lien vers la politique de confidentialité) suivie de 6 lignes de 80 caractères hexadécimaux aléatoires (`SecureComm.getRandomBytesHexSlow(40)`).
-- Le hash porte sur tout le contenu du fichier lu, bannière comprise ; lors d'une migration, l'ancien contenu est recopié tel quel, sans bannière, pour ne pas changer l'identifiant.
-- Chaque appel de getAnonymousUserID relit le fichier et recalcule le hash (pas de cache).
-- L'extension se met en déchargement manuel au chargement.
+- The salt file contains an explanatory banner (link to the privacy policy) followed by 6 lines of 80 random hexadecimal characters (`SecureComm.getRandomBytesHexSlow(40)`).
+- The hash covers the whole content of the file read, banner included; during a migration, the old content is copied as is, without a banner, so as not to change the ID.
+- Each call of getAnonymousUserID rereads the file and recomputes the hash (no cache).
+- The extension sets itself to manual unload on load.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_userIdentity.getAnonymousUserID()` | Renvoie l'identifiant anonyme : le hash SHA-256 (`hashStringSHA256`) du sel. Crée ou migre le fichier de sel si nécessaire (dossier `telemetry` créé au besoin). | 94 |
-| `telemetry_userIdentity.onExtensionLoaded()` | Hook appelé au chargement de l'extension. Passe l'extension en déchargement manuel pour éviter son déchargement automatique. *(interne)* *(hook)* | 101 |
+| `telemetry_userIdentity.getAnonymousUserID()` | Returns the anonymous ID: the SHA-256 hash (`hashStringSHA256`) of the salt. Creates or migrates the salt file if needed (`telemetry` folder created as needed). | 94 |
+| `telemetry_userIdentity.onExtensionLoaded()` | Hook called when the extension loads. Sets the extension to manual unload to avoid its automatic unload. *(internal)* *(hook)* | 101 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_userIdentity.getAnonymousUserID()`
 
-Renvoie l'identifiant anonyme : le hash SHA-256 (`hashStringSHA256`) du sel. Crée ou migre le fichier de sel si nécessaire (dossier `telemetry` créé au besoin).
+Returns the anonymous ID: the SHA-256 hash (`hashStringSHA256`) of the salt. Creates or migrates the salt file if needed (`telemetry` folder created as needed).
 
-- **renvoie** : string Hash SHA-256 du contenu du fichier de sel.
+- **returns**: string SHA-256 hash of the salt file's contents.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`, `removeFile`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/userIdentity.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/userIdentity.lua`.*

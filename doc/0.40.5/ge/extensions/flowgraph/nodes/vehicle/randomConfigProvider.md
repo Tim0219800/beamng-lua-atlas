@@ -1,29 +1,29 @@
 # `flowgraph_nodes_vehicle_randomConfigProvider`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.lua` · VM : Game Engine (GE) · 97 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.lua` · VM: Game Engine (GE) · 97 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/randomConfigProvider")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/randomConfigProvider")` (file under extensions/ but not a regular extension)
 
-Nœud fournisseur « Random Config Provider » (catégorie `once_instant`). Choisit au hasard un modèle et une configuration parmi les voitures (`Type == 'Car'`) dont une config a `Top Speed > 10`. Sorties : `model`, `config`, `name` (cachée), `color` (cachée, nom de peinture aléatoire du modèle ou nil).
+Provider node "Random Config Provider" (category `once_instant`). Randomly chooses a model and a configuration among the cars (`Type == 'Car'`) with a config having `Top Speed > 10`. Outputs: `model`, `config`, `name` (hidden), `color` (hidden, random paint name of the model or nil).
 
-## Remarques
+## Notes
 
-- Les options sont calculées une fois au premier démarrage (`self.options`) depuis `core_vehicles.getVehicleList()`.
-- La description du pin `color` est copiée de `name` (« model name »).
+- The options are computed once at first start (`self.options`) from `core_vehicles.getVehicleList()`.
+- The description of the `color` pin is copied from `name` ("model name").
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Construit la liste `options` des modèles/configs éligibles si elle n'existe pas. | 46 |
-| `C:_onDeserialized(nodeData)` | Fonction vide. | 92 |
-| `C:_onSerialize(res)` | Fonction vide. | 88 |
-| `C:drawCustomProperties()` | Ne dessine rien ; renvoie nil. | 34 |
-| `C:drawMiddle(builder, style)` | Affichage ImGui au centre du nœud dans l'éditeur de flowgraph ; purement visuel. | 41 |
-| `C:init()` | Constructeur ; initialise les champs modèle/config. | 24 |
-| `C:workOnce()` | Tire un modèle, une config et une peinture au hasard et les écrit sur les sorties. | 74 |
+| `C:_executionStarted()` | Builds the `options` list of eligible models/configs if it does not exist. | 46 |
+| `C:_onDeserialized(nodeData)` | Empty function. | 92 |
+| `C:_onSerialize(res)` | Empty function. | 88 |
+| `C:drawCustomProperties()` | Draws nothing; returns nil. | 34 |
+| `C:drawMiddle(builder, style)` | ImGui display in the center of the node in the flowgraph editor; purely visual. | 41 |
+| `C:init()` | Constructor; initializes the model/config fields. | 24 |
+| `C:workOnce()` | Draws a random model, config and paint and writes them to the outputs. | 74 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/randomConfigProvider.lua`.*

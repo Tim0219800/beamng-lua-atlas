@@ -1,77 +1,139 @@
 {
   "path": "lua/ge/extensions/ui/gameplayScoreboard.lua",
-  "module": "Couche de données de tableau des scores, indépendante de la source (écran partagé local ou réseau multijoueur). Garde l'état des joueurs (nom, couleur, scores, statut, rang) et le pousse à l'UI par le stream « scoreboard » (guihooks.queueStream). Le tri se fait selon le style (orderBy.key, direction asc/desc), les joueurs « disqualified » passant après les autres ; les ex-aequo partagent le rang.",
+  "module": "Scoreboard data layer, independent of the source (local split screen or multiplayer network). Keeps the players' state (name, color, scores, status, rank) and pushes it to the UI through the \"scoreboard\" stream (guihooks.queueStream). Sorting is done according to the style (orderBy.key, asc/desc direction), with \"disqualified\" players placed after the others; ties share the rank.",
   "usage": "ui_gameplayScoreboard.startNewScoreboard({entries={{key='score', name='Score', order=1, type='points'}}, orderBy={key='score', direction='desc'}})\nui_gameplayScoreboard.ensurePlayer('p1', 'Alice', {1,0,0,1}, 1)\nui_gameplayScoreboard.updatePlayerScores('p1', {score = 10})",
   "notes": [
-    "Il faut appeler startNewScoreboard pour activer le tableau : updatePlayerScores, updatePlayerStatus et pulsePlayerColor ne font rien tant que active est faux (et après clear).",
-    "Style par défaut : une colonne « score » (type points), tri décroissant sur score.",
-    "Un score absent vaut 0 ; à égalité, l'ordre suit playerIndex.",
-    "setPlayerName ne pousse pas à l'UI (pas de pushToUI) : le nom n'apparaît qu'au prochain push.",
-    "clear() remet le style par défaut, désactive le tableau et pousse un état vide à l'UI."
+    "startNewScoreboard must be called to activate the scoreboard: updatePlayerScores, updatePlayerStatus and pulsePlayerColor do nothing as long as active is false (and after clear).",
+    "Default style: one \"score\" column (type points), descending sort on score.",
+    "A missing score is 0; on a tie, the order follows playerIndex.",
+    "setPlayerName does not push to the UI (no pushToUI): the name only appears at the next push.",
+    "clear() resets the default style, deactivates the scoreboard and pushes an empty state to the UI."
   ],
   "functions": {
     "startNewScoreboard": {
-      "desc": "Réinitialise (clear), active le tableau avec le style donné et pousse l'état à l'UI.",
-      "params": {"_scoreboardStyle": {"type": "table|nil", "desc": "Définition du style : entries (liste {key, name, order, type}) et orderBy ({key, direction}). Défaut : style à une colonne score."}}
+      "desc": "Resets (clear), activates the scoreboard with the given style and pushes the state to the UI.",
+      "params": {
+        "_scoreboardStyle": {
+          "type": "table|nil",
+          "desc": "Style definition: entries (list of {key, name, order, type}) and orderBy ({key, direction}). Default: one-column score style."
+        }
+      }
     },
     "clear": {
-      "desc": "Vide les joueurs, remet le style par défaut, désactive le tableau et pousse l'état vide à l'UI."
+      "desc": "Empties the players, resets the default style, deactivates the scoreboard and pushes the empty state to the UI."
     },
     "isActive": {
-      "desc": "Indique si un tableau est actif (startNewScoreboard appelé et pas de clear depuis).",
-      "returns": [{"type": "boolean", "desc": "true si actif."}]
+      "desc": "Indicates whether a scoreboard is active (startNewScoreboard called and no clear since).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active."
+        }
+      ]
     },
     "ensurePlayer": {
-      "desc": "Crée le joueur s'il n'existe pas (nom par défaut = playerId, scores vides) ; sinon met à jour couleur, index et nom fournis (non nil). Ne pousse pas à l'UI.",
+      "desc": "Creates the player if it does not exist (default name = playerId, empty scores); otherwise updates the color, index and name provided (non-nil). Does not push to the UI.",
       "params": {
-        "playerId": {"type": "string", "desc": "Identifiant du joueur (stocké aussi dans mpClientId)."},
-        "name": {"type": "string|nil", "desc": "Nom affiché."},
-        "color": {"type": "any", "desc": "Couleur du joueur (format transmis tel quel à l'UI)."},
-        "playerIndex": {"type": "integer|nil", "desc": "Index du joueur, sert de départage au tri."}
+        "playerId": {
+          "type": "string",
+          "desc": "Player identifier (also stored in mpClientId)."
+        },
+        "name": {
+          "type": "string|nil",
+          "desc": "Displayed name."
+        },
+        "color": {
+          "type": "any",
+          "desc": "Player color (format passed as is to the UI)."
+        },
+        "playerIndex": {
+          "type": "integer|nil",
+          "desc": "Player index, used as the sort tiebreaker."
+        }
       }
     },
     "setPlayerName": {
-      "desc": "Change le nom d'un joueur (le crée au besoin). N'envoie pas de mise à jour à l'UI.",
+      "desc": "Changes a player's name (creates it if needed). Does not send an update to the UI.",
       "params": {
-        "playerId": {"type": "string", "desc": "Identifiant du joueur."},
-        "name": {"type": "string", "desc": "Nouveau nom."}
+        "playerId": {
+          "type": "string",
+          "desc": "Player identifier."
+        },
+        "name": {
+          "type": "string",
+          "desc": "New name."
+        }
       }
     },
     "setPlayerColor": {
-      "desc": "Change la couleur d'un joueur (le crée au besoin) et pousse à l'UI.",
+      "desc": "Changes a player's color (creates it if needed) and pushes to the UI.",
       "params": {
-        "playerId": {"type": "string", "desc": "Identifiant du joueur."},
-        "color": {"type": "any", "desc": "Nouvelle couleur."}
+        "playerId": {
+          "type": "string",
+          "desc": "Player identifier."
+        },
+        "color": {
+          "type": "any",
+          "desc": "New color."
+        }
       }
     },
     "updatePlayerScores": {
-      "desc": "Fusionne les valeurs données dans les scores du joueur (clé par clé) et pousse à l'UI. Sans effet si le tableau n'est pas actif.",
+      "desc": "Merges the given values into the player's scores (key by key) and pushes to the UI. No effect if the scoreboard is not active.",
       "params": {
-        "playerId": {"type": "string", "desc": "Identifiant du joueur."},
-        "scores": {"type": "table<string, number>", "desc": "Valeurs par clé de colonne (ex. {score = 10})."}
+        "playerId": {
+          "type": "string",
+          "desc": "Player identifier."
+        },
+        "scores": {
+          "type": "table<string, number>",
+          "desc": "Values by column key (e.g. {score = 10})."
+        }
       }
     },
     "updatePlayerStatus": {
-      "desc": "Définit le statut d'un joueur (ex. \"disqualified\" le classe en dernier) et pousse à l'UI. Sans effet si inactif.",
+      "desc": "Sets a player's status (e.g. \"disqualified\" ranks them last) and pushes to the UI. No effect if inactive.",
       "params": {
-        "playerId": {"type": "string", "desc": "Identifiant du joueur."},
-        "status": {"type": "string|nil", "desc": "Statut ; seule la valeur \"disqualified\" est interprétée par le tri."}
+        "playerId": {
+          "type": "string",
+          "desc": "Player identifier."
+        },
+        "status": {
+          "type": "string|nil",
+          "desc": "Status; only the value \"disqualified\" is interpreted by the sort."
+        }
       }
     },
     "pulsePlayerColor": {
-      "desc": "Déclenche une pulsation de couleur sur la ligne du joueur via guihooks.trigger('scoreboardPlayerPulseColor', {mpClientId, color}). Sans effet si inactif.",
+      "desc": "Triggers a color pulse on the player's row via guihooks.trigger('scoreboardPlayerPulseColor', {mpClientId, color}). No effect if inactive.",
       "params": {
-        "playerId": {"type": "string", "desc": "Identifiant du joueur."},
-        "color": {"type": "any", "desc": "Couleur de la pulsation."}
+        "playerId": {
+          "type": "string",
+          "desc": "Player identifier."
+        },
+        "color": {
+          "type": "any",
+          "desc": "Pulse color."
+        }
       }
     },
     "setLocalMPClientId": {
-      "desc": "Indique à l'UI quel joueur est le client local (mpClientId) et pousse l'état.",
-      "params": {"id": {"type": "string|nil", "desc": "Identifiant du joueur local."}}
+      "desc": "Tells the UI which player is the local client (mpClientId) and pushes the state.",
+      "params": {
+        "id": {
+          "type": "string|nil",
+          "desc": "Local player identifier."
+        }
+      }
     },
     "getPlayers": {
-      "desc": "Renvoie la table des joueurs (playerId -> {mpClientId, name, scores, status, color, playerIndex, rank}).",
-      "returns": [{"type": "table<string, table>", "desc": "Table interne des joueurs (non copiée)."}]
+      "desc": "Returns the players table (playerId -> {mpClientId, name, scores, status, color, playerIndex, rank}).",
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Internal players table (not copied)."
+        }
+      ]
     }
   }
 }

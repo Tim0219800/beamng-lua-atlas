@@ -2,45 +2,45 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/liveries/textures.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fournit à l'interface des livrées le catalogue des textures de décalcomanies dynamiques, classées par tags (digit, gradient, letter, logo, noise, pattern, shape, textureFill, Team Offroad) plus une catégorie « others » pour les textures sans tag. Le scan des textures tourne dans un job (editor_api_dynamicDecals_textures.setupAsync) avec un flux de progression, et les résultats sont envoyés à l'UI par guihooks. Mémorise aussi l'élément choisi dans le sélecteur.
---- Accès : extension `ui_liveries_textures` : `extensions.load("ui_liveries_textures")`, puis la globale `ui_liveries_textures`
+--- Provides the livery UI with the catalog of dynamic decal textures, classified by tags (digit, gradient, letter, logo, noise, pattern, shape, textureFill, Team Offroad) plus an "others" category for untagged textures. The texture scan runs in a job (editor_api_dynamicDecals_textures.setupAsync) with a progress stream, and the results are sent to the UI via guihooks. Also stores the item chosen in the selector.
+--- Access: extension `ui_liveries_textures`: `extensions.load("ui_liveries_textures")`, then the global `ui_liveries_textures`
 ---@class ui_liveries_textures
----@field dependencies table<integer, string> Extensions chargées avant : editor_api_dynamicDecals_textures.
+---@field dependencies table<integer, string> Extensions loaded before: editor_api_dynamicDecals_textures.
 ui_liveries_textures = {}
 
---- Oublie l'élément choisi.
----Source : lua/ge/extensions/ui/liveries/textures.lua:227
+--- Forgets the chosen item.
+---Source: lua/ge/extensions/ui/liveries/textures.lua:227
 function ui_liveries_textures.clearSelectedItem() end
 
---- Renvoie l'élément mémorisé par setSelectorItem.
----Source : lua/ge/extensions/ui/liveries/textures.lua:223
----@return table|nil  Élément choisi ou nil.
+--- Returns the item stored by setSelectorItem.
+---Source: lua/ge/extensions/ui/liveries/textures.lua:223
+---@return table|nil  Chosen item or nil.
 function ui_liveries_textures.getSelectedItem() end
 
---- Construit les métadonnées du sélecteur : catégorie par défaut « all », puis liste triée des catégories (tags connus, « others » s'il existe des textures sans tag), « all » en tête.
----Source : lua/ge/extensions/ui/liveries/textures.lua:165
+--- Builds the selector metadata: default category "all", then sorted list of categories (known tags, "others" if untagged textures exist), "all" first.
+---Source: lua/ge/extensions/ui/liveries/textures.lua:165
 ---@return table  {defaultCategory = "all", categories = {{value, label}, ...}}.
 function ui_liveries_textures.getSelectorMetadata() end
 
---- Renvoie la clé de traduction (ui.liveries.edit.decalCategories.*) associée à un tag de texture.
----Source : lua/ge/extensions/ui/liveries/textures.lua:98
----@param tag string Identifiant de tag, par exemple « logo ».
----@return string|nil  Clé de traduction, nil si le tag est inconnu.
+--- Returns the translation key (ui.liveries.edit.decalCategories.*) associated with a texture tag.
+---Source: lua/ge/extensions/ui/liveries/textures.lua:98
+---@param tag string Tag identifier, for example "logo".
+---@return string|nil  Translation key, nil if the tag is unknown.
 function ui_liveries_textures.getTagLabel(tag) end
 
---- Lance dans un job (cadence 1/30) le scan asynchrone des textures si elles ne sont pas déjà chargées, publie la progression, puis déclenche liveries_textureSelectorDataLoaded avec getSelectorMetadata().
----Source : lua/ge/extensions/ui/liveries/textures.lua:139
----@return string  « startLoading », « alreadyLoading » (job en cours, la progression est renvoyée) ou « unavailable » (API absente).
+--- Launches in a job (rate 1/30) the asynchronous texture scan if they are not already loaded, publishes the progress, then triggers liveries_textureSelectorDataLoaded with getSelectorMetadata().
+---Source: lua/ge/extensions/ui/liveries/textures.lua:139
+---@return string  "startLoading", "alreadyLoading" (job running, progress is returned) or "unavailable" (API missing).
 function ui_liveries_textures.loadTextures() end
 
---- Prépare les groupes de textures d'une catégorie (« all » : tous les tags plus « others » ; « others » : textures sans tag ; ou un tag précis) et les envoie à l'UI par l'événement liveries_textureCategoryData. Chaque élément a name, label, value (nom de fichier) et preview (chemin).
----Source : lua/ge/extensions/ui/liveries/textures.lua:190
----@param category string Catégorie demandée ; une valeur non string est remplacée par « all ».
----@param requestId number Identifiant renvoyé tel quel dans l'événement (0 par défaut).
+--- Prepares the texture groups of a category ("all": all tags plus "others"; "others": untagged textures; or a specific tag) and sends them to the UI via the liveries_textureCategoryData event. Each item has name, label, value (file name) and preview (path).
+---Source: lua/ge/extensions/ui/liveries/textures.lua:190
+---@param category string Requested category; a non-string value is replaced by "all".
+---@param requestId number Identifier returned as is in the event (0 by default).
 function ui_liveries_textures.requestSelectorCategory(category, requestId) end
 
---- Mémorise l'élément de catalogue choisi, conservé pendant la navigation vers l'écran de transformation.
----Source : lua/ge/extensions/ui/liveries/textures.lua:219
----@param item table|nil Élément choisi.
+--- Stores the chosen catalog item, kept while navigating to the transform screen.
+---Source: lua/ge/extensions/ui/liveries/textures.lua:219
+---@param item table|nil Chosen item.
 function ui_liveries_textures.setSelectorItem(item) end
 

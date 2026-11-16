@@ -1,59 +1,59 @@
 # `controller_gauges_customModules_electricMotorData`
 
-*Fichier : `lua/vehicle/controller/gauges/customModules/electricMotorData.lua` · VM : Véhicule · 120 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/gauges/customModules/electricMotorData.lua` · VM: Vehicle · 120 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `gauges/customModules/electricMotorData` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `gauges/customModules/electricMotorData` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Module de données pour genericGauges : calcule la puissance affichée, la puissance et le couple, l'autonomie restante et un graphe de consommation pour les moteurs électriques.
+Data module for genericGauges: computes the displayed power, the power and torque, the remaining range and a consumption graph for electric motors.
 
-## Remarques
+## Notes
 
-- Les moteurs sont les dispositifs de type "electricMotor" ; les batteries sont leurs stockages d'énergie enregistrés. Autonomie = énergie stockée * 0.0278 / consommation moyenne par 100 km.
-- La consommation est lissée et ne change que si le véhicule roule (> 0.5 m/s). updateGaugeData lit electrics.values.wheelspeed sans défaut.
-- setupGaugeData ajoute les batteries sans vider la liste précédente (un second appel les duplique).
+- The motors are the devices of type "electricMotor"; the batteries are their registered energy storages. Range = stored energy * 0.0278 / average consumption per 100 km.
+- The consumption is smoothed and only changes if the vehicle is moving (> 0.5 m/s). updateGaugeData reads electrics.values.wheelspeed without a default.
+- setupGaugeData adds the batteries without clearing the previous list (a second call duplicates them).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_gauges_customModules_electricMotorData.init(jbeamData)` | Ne fait rien. *(interne)* | 109 |
-| `controller_gauges_customModules_electricMotorData.reset()` | Réinitialise l'état interne du module. *(interne)* | 105 |
-| `controller_gauges_customModules_electricMotorData.setupGaugeData(properties)` | Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : powerDisplay (electricPowerDisplay : accélérateur moyen moins régénération), currentPower (currentPower et averagePower en ch, currentTorque en N·m), remainingRange, consumptionGraph (averageConsumption, envoyé toutes les 5 s, sinon nil). *(interne)* | 92 |
-| `controller_gauges_customModules_electricMotorData.updateGFX(dt)` | Ne fait rien (la mise à jour se fait par updateGaugeData). *(interne)* | 33 |
-| `controller_gauges_customModules_electricMotorData.updateGaugeData(moduleData, dt)` | Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées. *(interne)* | 36 |
+| `controller_gauges_customModules_electricMotorData.init(jbeamData)` | Does nothing. *(internal)* | 109 |
+| `controller_gauges_customModules_electricMotorData.reset()` | Resets the module's internal state. *(internal)* | 105 |
+| `controller_gauges_customModules_electricMotorData.setupGaugeData(properties)` | Called by genericGauges with the properties requested in displayData.customModules: powerDisplay (electricPowerDisplay: average throttle minus regeneration), currentPower (currentPower and averagePower in hp, currentTorque in N·m), remainingRange, consumptionGraph (averageConsumption, sent every 5 s, otherwise nil). *(internal)* | 92 |
+| `controller_gauges_customModules_electricMotorData.updateGFX(dt)` | Does nothing (the update is done by updateGaugeData). *(internal)* | 33 |
+| `controller_gauges_customModules_electricMotorData.updateGaugeData(moduleData, dt)` | Called by genericGauges before each send: fills moduleData with the requested values. *(internal)* | 36 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_gauges_customModules_electricMotorData.init(jbeamData)`
 
-Ne fait rien.
+Does nothing.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_gauges_customModules_electricMotorData.setupGaugeData(properties)`
 
-Appelé par genericGauges avec les propriétés demandées dans displayData.customModules : powerDisplay (electricPowerDisplay : accélérateur moyen moins régénération), currentPower (currentPower et averagePower en ch, currentTorque en N·m), remainingRange, consumptionGraph (averageConsumption, envoyé toutes les 5 s, sinon nil).
+Called by genericGauges with the properties requested in displayData.customModules: powerDisplay (electricPowerDisplay: average throttle minus regeneration), currentPower (currentPower and averagePower in hp, currentTorque in N·m), remainingRange, consumptionGraph (averageConsumption, sent every 5 s, otherwise nil).
 
-- `properties` (*table<string, boolean>*) : Ensemble des propriétés demandées (clé = nom, valeur = true).
+- `properties` (*table<string, boolean>*) : Set of requested properties (key = name, value = true).
 
 #### `controller_gauges_customModules_electricMotorData.updateGFX(dt)`
 
-Ne fait rien (la mise à jour se fait par updateGaugeData).
+Does nothing (the update is done by updateGaugeData).
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_gauges_customModules_electricMotorData.updateGaugeData(moduleData, dt)`
 
-Appelé par genericGauges avant chaque envoi : remplit moduleData avec les valeurs demandées.
+Called by genericGauges before each send: fills moduleData with the requested values.
 
-- `moduleData` (*table*) : Table de données du module, envoyée ensuite à la page HTML.
-- `dt` (*number*) : Temps écoulé depuis le dernier envoi (s).
+- `moduleData` (*table*) : Module data table, then sent to the HTML page.
+- `dt` (*number*) : Time elapsed since the last send (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/gauges/customModules/electricMotorData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/gauges/customModules/electricMotorData.lua`.*

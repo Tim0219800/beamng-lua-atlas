@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlResults.lua",
+  "module": "Nœud flowgraph « Get Crawl Results » (catégorie repeat_instant, crawl). Lit les résultats d'un crawl terminé (bridge.getCrawlEndData). Sorties : time, points (pénalités), damage, recoveries, completed, disqualified, pathnodeTimings (table). Si les données manquent : erreur de nœud et valeurs à 0, false ou {}.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Charge le bridge du crawl.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "work": {"desc": "Copie les champs de getCrawlEndData vers les pins de sortie."}
+      }
+    }
+  }
+}

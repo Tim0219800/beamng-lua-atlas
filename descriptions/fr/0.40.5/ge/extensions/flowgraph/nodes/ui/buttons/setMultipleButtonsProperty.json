@@ -1,0 +1,76 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/setMultipleButtonsProperty.lua",
+  "module": "Nœud flowgraph « Set Multiple Buttons Property » (catégorie repeat_instant) : même chose que Set Button Property pour plusieurs boutons. Pour chaque i : entrées « buttonId_i », « label_i », « active_i », « order_i », « style_i ». Seules les propriétés non nil sont appliquées.",
+  "notes": [
+    "La valeur par défaut de label_i est « Button » : le libellé est donc réécrit à chaque frame tant que le pin garde cette valeur."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_onDeserialized": {
+          "desc": "Restaure l'état du nœud depuis les données sauvegardées.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Écrit l'état du nœud dans la table de sauvegarde.",
+          "params": {
+            "res": {
+              "type": "table",
+              "desc": "Table de sauvegarde du nœud à remplir."
+            }
+          },
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Dessine le panneau de propriétés personnalisé de l'éditeur ; renvoie une chaîne décrivant la modification (pour l'historique d'annulation) ou nil.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine la zone centrale du nœud dans l'éditeur flowgraph.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale)."
+            },
+            "style": {
+              "type": "any",
+              "desc": "Style d'affichage du nœud fourni par l'éditeur."
+            }
+          },
+          "internal": true
+        },
+        "init": {
+          "desc": "count = 1.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajuste le nombre de groupes de 5 pins d'entrée (buttonId, label, active, order, style).",
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "Ancien nombre d'éléments."
+            },
+            "new": {
+              "type": "integer",
+              "desc": "Nouveau nombre d'éléments."
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Pour chaque i dont le bouton existe, applique les propriétés non nil.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

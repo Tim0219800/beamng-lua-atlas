@@ -1,42 +1,42 @@
 # `main`
 
-*Fichier : `lua/objectpool/main.lua` · VM : Commun (GE + véhicule) · 108 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/objectpool/main.lua` · VM: Common (GE + vehicle) · 108 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("main")`
+**Access:** `require("main")`
 
-Point d'entrée de la machine virtuelle Lua « objectpool » (vmType = 'objectpool'), qui stocke des objets de véhicule sérialisés (lpack) dans une table `objPool` indexée par identifiant d'objet. Elle sert à déplacer des données de véhicule entre VM : le moteur appelle getObject, setObject, moveObject, deleteObject. Elle charge luaCore, utils, devUtils, ve_utils et mathlib, redéfinit `print` vers le journal et installe des métatables sur _G pour que les variables globales d'un objet soient stockées dans sa fiche (objData).
+Entry point of the Lua virtual machine "objectpool" (vmType = 'objectpool'), which stores serialized vehicle objects (lpack) in an `objPool` table keyed by object id. It is used to move vehicle data between VMs: the engine calls getObject, setObject, moveObject, deleteObject. It loads luaCore, utils, devUtils, ve_utils and mathlib, redefines `print` to the log and installs metatables on _G so that an object's global variables are stored in its record (objData).
 
-## Remarques
+## Notes
 
-- Ce n'est pas une extension : fichier main.lua d'une VM séparée, chargé par le moteur ; package.path est redéfini et package.cpath vidé.
-- Après _setObj(objId, obj), toute lecture ou écriture d'une globale inconnue passe par __indexHandler / __newIndexHandler et va dans objPool[objId] (rawget/rawset sur objData).
-- float3 est un alias de vec3. Les hooks onNodeCollision, onVehicleReset, onBeamBroke et onBeamDeformed sont vides.
-- getObject et moveObject encodent avec lpack.encode ; moveObject retire en plus l'objet du pool. setObject et moveObject journalisent via dump.
+- This is not an extension: it is the main.lua file of a separate VM, loaded by the engine; package.path is redefined and package.cpath is emptied.
+- After _setObj(objId, obj), any read or write of an unknown global goes through __indexHandler / __newIndexHandler and goes into objPool[objId] (rawget/rawset on objData).
+- float3 is an alias of vec3. The hooks onNodeCollision, onVehicleReset, onBeamBroke and onBeamDeformed are empty.
+- getObject and moveObject encode with lpack.encode; moveObject also removes the object from the pool. setObject and moveObject log via dump.
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `__indexHandler(t, key)` | Métatable de _G : la lecture d'une globale absente est cherchée dans objData. | 100 |
-| `__newIndexHandler(t, key, val)` | Métatable de _G : une affectation de globale est stockée dans objData au lieu de _G. | 96 |
-| `_setObj(objId, _obj)` | Sélectionne l'objet courant : pose les globales obj, objectId et objData (= objPool[objId]) avec rawset. | 90 |
-| `deleteObject(objId)` | Supprime l'objet du pool. | 40 |
-| `getObject(objId)` | Retourne l'objet du pool encodé en chaîne lpack, sans le retirer. | 24 |
-| `init(path, initData)` | Appelée dans la VM Lua de l'objet : décode initData (lpack), charge le véhicule avec jbeam/stage2 (loadVehicleStage2) et le range dans objPool[obj:getId()] = {v = objet}. Journalise une erreur et retourne false (décharge la Lua) si les données sont invalides. | 49 |
-| `initPool()` | Initialisation de la VM « thread » du pool ; ne fait rien. | 45 |
-| `moveObject(objId)` | Retourne l'objet encodé et le retire du pool (transfert vers une autre VM). | 28 |
-| `onBeamBroke(id, energy)` | Hook appelé par le moteur quand une poutre casse ; corps vide. | 81 |
-| `onBeamDeformed(id, ratio)` | Hook appelé par le moteur quand une poutre se déforme ; corps vide. | 84 |
-| `onNodeCollision(id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialId1, materialId2)` | Hook de collision de nœud appelé par le moteur ; corps vide dans cette VM. | 74 |
-| `onVehicleReset(retainDebug)` | Hook appelé par le moteur lors d'un reset ; corps vide. | 78 |
-| `print(...)` | Remplace print : écrit dans le journal avec le niveau 'A' et le tag 'print'. Seul le premier argument est converti (tostring(...)). | 18 |
-| `setObject(objId, objDataStr)` | Décode une chaîne lpack et la range dans le pool sous objId. | 35 |
+| `__indexHandler(t, key)` | Metatable of _G: reading a missing global is looked up in objData. | 100 |
+| `__newIndexHandler(t, key, val)` | Metatable of _G: a global assignment is stored in objData instead of _G. | 96 |
+| `_setObj(objId, _obj)` | Selects the current object: sets the globals obj, objectId and objData (= objPool[objId]) with rawset. | 90 |
+| `deleteObject(objId)` | Removes the object from the pool. | 40 |
+| `getObject(objId)` | Returns the pool object encoded as an lpack string, without removing it. | 24 |
+| `init(path, initData)` | Called in the object's Lua VM: decodes initData (lpack), loads the vehicle with jbeam/stage2 (loadVehicleStage2) and stores it in objPool[obj:getId()] = {v = object}. Logs an error and returns false (unloads the Lua) if the data is invalid. | 49 |
+| `initPool()` | Initialization of the pool's "thread" VM; does nothing. | 45 |
+| `moveObject(objId)` | Returns the encoded object and removes it from the pool (transfer to another VM). | 28 |
+| `onBeamBroke(id, energy)` | Hook called by the engine when a beam breaks; empty body. | 81 |
+| `onBeamDeformed(id, ratio)` | Hook called by the engine when a beam deforms; empty body. | 84 |
+| `onNodeCollision(id1, pos, normal, nodeVel, perpendicularVel, slipVec, slipVel, slipForce, normalForce, depth, materialId1, materialId2)` | Node collision hook called by the engine; empty body in this VM. | 74 |
+| `onVehicleReset(retainDebug)` | Hook called by the engine on a reset; empty body. | 78 |
+| `print(...)` | Replaces print: writes to the log with level 'A' and tag 'print'. Only the first argument is converted (tostring(...)). | 18 |
+| `setObject(objId, objDataStr)` | Decodes an lpack string and stores it in the pool under objId. | 35 |
 
-**Globales affectées :** `float3`, `objData`, `vmType`
+**Globals assigned:** `float3`, `objData`, `vmType`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getId`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/objectpool/main.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/objectpool/main.lua`.*

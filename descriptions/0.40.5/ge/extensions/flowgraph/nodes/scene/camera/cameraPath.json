@@ -1,43 +1,43 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/cameraPath.lua",
-  "module": "Noeud flowgraph 'Simple Cam Path' (categorie once_f_duration, fichier cameraPath). Lance une trajectoire de camera (fichier .camPath.json designe par 'pathName') via le module camera du gestionnaire, avec option 'loop'. Sorties : id de la trajectoire, impulsion 'activated' au demarrage, 'inactive' si la trajectoire n'est plus active, 'duration'. L'etat de duree passe a 'finished' quand la trajectoire est complete.",
+  "module": "Flowgraph node 'Simple Cam Path' (once_f_duration category, file cameraPath). Starts a camera path (.camPath.json file designated by 'pathName') via the manager's camera module, with option 'loop'. Outputs: path id, impulse 'activated' on start, 'inactive' if the path is no longer active, 'duration'. The duration state goes to 'finished' when the path is complete.",
   "notes": [
-    "legacyPins renvoie vers 'complete' et 'flow', des pins qui n'existent pas dans le schema actuel."
+    "legacyPins point to 'complete' and 'flow', pins that do not exist in the current schema."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Vide.",
+          "desc": "Empty.",
           "internal": true
         },
         "postInit": {
-          "desc": "Restreint le pin pathName aux fichiers '.camPath.json'.",
+          "desc": "Restricts the pathName pin to '.camPath.json' files.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet activatedFlag et l'etat de duree 'inactive'.",
+          "desc": "Resets activatedFlag and the duration state to 'inactive'.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Meme remise a zero.",
+          "desc": "Same reset.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Trouve la trajectoire (camera:findPath), la demarre (startPath), ecrit id, activated=true et passe a l'etat 'started'.",
+          "desc": "Finds the path (camera:findPath), starts it (startPath), writes id, activated=true and goes to the 'started' state.",
           "internal": true
         },
         "work": {
-          "desc": "Pendant l'etat started : gere l'impulsion activated, met inactive/duration selon que la trajectoire est active, passe a 'finished' quand isPathComplete.",
+          "desc": "During the started state: handles the activated impulse, sets inactive/duration depending on whether the path is active, goes to 'finished' when isPathComplete.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine le milieu du noeud (vide).",
+          "desc": "Draws the middle of the node (empty).",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Migre l'ancien champ data.loop vers le pin code en dur 'loop'.",
+          "desc": "Migrates the old field data.loop to the hard-coded pin 'loop'.",
           "internal": true
         }
       }

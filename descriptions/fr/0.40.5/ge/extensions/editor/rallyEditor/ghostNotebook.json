@@ -1,0 +1,73 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/ghostNotebook.lua",
+  "module": "Gère le « carnet fantôme » de l'éditeur de rallye : un second carnet (ou les métadonnées de calibration du carnet actif) dont les notes sont affichées en texte dans la vue 3D, à titre de comparaison avec le carnet en cours d'édition. Le module renvoie un constructeur (classe C). Il liste les carnets disponibles dans le dossier de la mission, en charge un, et calcule un libellé court par pacenote (texte anglais hérité, sortie du compositeur, éléments structurés, ou nom). Le rendu est fait par ghostRenderer.",
+  "usage": "local ghost = require('/lua/ge/extensions/editor/rallyEditor/ghostNotebook')(rallyEditor)\nfor _, c in ipairs(ghost:listChoices()) do print(c.label) end\nif ghost:select('<metadata>') then print(ghost:getSelectedLabel()) end",
+  "notes": [
+    "Choix spécial '<metadata>' : le fantôme est alors le carnet actif de la fenêtre pacenotes, et le libellé vient de pacenote.metadata.calibration (descripteur/intensité, direction, longueur, forme).",
+    "Ordre de priorité du libellé d'un pacenote : audio personnalisé, texte anglais hérité (notes.english), sortie structurée du compositeur, éléments structurés, puis pacenote.name.",
+    "Les appels au compositeur sont protégés par pcall : une erreur donne simplement un libellé vide ou nil.",
+    "Les libellés sont mis en cache à select() dans self.labels (indexés par pacenote.id) ; en mode '<metadata>' ils sont recalculés à chaque appel."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur du module (new(rallyEditor)). Champs : rallyEditor, selectedFname, path (carnet chargé), labels (table id -> libellé), error (message ou nil).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur interne : mémorise l'éditeur et remet l'état à zéro.",
+          "params": {"rallyEditor": {"type": "table", "desc": "Instance de l'éditeur de rallye (utilise getCurrentMissionDir et getPacenotesWindow)."}},
+          "internal": true
+        },
+        "clear": {
+          "desc": "Oublie le carnet fantôme sélectionné, son chemin, les libellés et l'erreur.",
+          "internal": false
+        },
+        "clearState": {
+          "desc": "Alias de clear(), appelé par l'éditeur lors d'une réinitialisation d'état.",
+          "internal": true
+        },
+        "listChoices": {
+          "desc": "Liste les fantômes sélectionnables : d'abord l'entrée '<metadata>', puis chaque carnet du dossier de la mission. Renvoie une table vide s'il n'y a pas de mission courante.",
+          "returns": [{"type": "table<integer, {fname: string, basename: string, label: string}>", "desc": "Chaque entrée donne le chemin complet, le nom de base et le libellé d'affichage (sans .notebook.json)."}],
+          "internal": false
+        },
+        "activeNotebook": {
+          "desc": "Renvoie le carnet actuellement édité (champ path de la fenêtre pacenotes), ou nil.",
+          "returns": [{"type": "table|nil", "desc": "Carnet actif."}],
+          "internal": false
+        },
+        "select": {
+          "desc": "Charge le carnet fantôme indiqué ('<metadata>' = carnet actif), rafraîchit ses notes structurées et précalcule les libellés. Un nom vide ou nil efface la sélection. En cas d'échec, remplit self.error et journalise une erreur.",
+          "params": {"fname": {"type": "string|nil", "desc": "Chemin complet du carnet, ou '<metadata>'."}},
+          "returns": [{"type": "boolean", "desc": "true si la sélection a réussi (ou a été effacée), false si le carnet n'a pas pu être chargé."}],
+          "internal": false
+        },
+        "getPath": {
+          "desc": "Renvoie le carnet fantôme chargé.",
+          "returns": [{"type": "table|nil", "desc": "Objet carnet, ou nil."}],
+          "internal": false
+        },
+        "getSelectedFname": {
+          "desc": "Renvoie le nom de fichier sélectionné (ou '<metadata>').",
+          "returns": [{"type": "string|nil", "desc": "Chemin sélectionné."}],
+          "internal": false
+        },
+        "getSelectedLabel": {
+          "desc": "Renvoie le libellé d'affichage du fantôme sélectionné, ou '(none)' si rien n'est sélectionné.",
+          "returns": [{"type": "string", "desc": "Libellé."}],
+          "internal": false
+        },
+        "getError": {
+          "desc": "Renvoie le dernier message d'erreur de chargement.",
+          "returns": [{"type": "string|nil", "desc": "Message d'erreur, ou nil."}],
+          "internal": false
+        },
+        "getLabelForPacenote": {
+          "desc": "Renvoie le texte à afficher pour un pacenote du fantôme. En mode '<metadata>', construit le libellé depuis les métadonnées de calibration (chaîne vide si absent) ; sinon utilise le cache puis recalcule.",
+          "params": {"pacenote": {"type": "table|nil", "desc": "Pacenote du carnet fantôme."}},
+          "returns": [{"type": "string|nil", "desc": "Libellé, ou nil si pacenote est nil."}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

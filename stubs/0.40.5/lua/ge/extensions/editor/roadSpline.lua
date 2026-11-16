@@ -2,51 +2,51 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/roadSpline.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil « Road Spline » de l'éditeur de niveaux : on trace une spline (nœuds + largeurs) et l'outil génère automatiquement des DecalRoads empilés en couches (chaussée, lignes centrales/de rive, fondus de bord, marques de pneus, fissures, rustines…), avec peinture optionnelle du terrain. Ce fichier est surtout l'interface ImGui (fenêtre « roadSplineEditor », mode d'édition « Road Spline ») ; la logique de données est dans editor/roadSpline/groupMgr et layerMgr. Il enregistre aussi l'entrée « Convert to Road Spline » dans le menu contextuel de l'arbre de scène pour convertir des DecalRoads existants. Utile à un moddeur surtout pour verrouiller/sélectionner une spline depuis un autre outil (Master Spline).
---- Accès : extension `editor_roadSpline` : `extensions.load("editor_roadSpline")`, puis la globale `editor_roadSpline`
+--- "Road Spline" tool of the level editor: you draw a spline (nodes + widths) and the tool automatically generates DecalRoads stacked in layers (roadway, center/edge lines, edge fades, tire marks, cracks, patches...), with optional terrain painting. This file is mostly the ImGui interface ("roadSplineEditor" window, "Road Spline" edit mode); the data logic is in editor/roadSpline/groupMgr and layerMgr. It also registers the "Convert to Road Spline" entry in the scene tree context menu to convert existing DecalRoads. Useful to a modder mainly to lock/select a spline from another tool (Master Spline).
+--- Access: extension `editor_roadSpline`: `extensions.load("editor_roadSpline")`, then the global `editor_roadSpline`
 ---@class editor_roadSpline
 editor_roadSpline = {}
 
---- Appelé à la sortie du niveau : supprime les groupes actifs non liés (les verrouillés et liés restent dans la liste) et recalcule la table id -> indice.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadSpline.lua:1680
+--- Called when leaving the level: deletes the active unlinked groups (locked and linked ones stay in the list) and recomputes the id -> index table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadSpline.lua:1680
 function editor_roadSpline.onClientEndMission() end
 
---- Hook de désérialisation après rechargement Lua : recrée les groupes, reprend les DecalRoads conservés des routes verrouillées (groupMgr.adopt) et recalcule la table id -> indice.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadSpline.lua:162
----@param data table Valeur renvoyée par onSerialize.
+--- Deserialization hook after Lua reload: recreates the groups, takes back the kept DecalRoads of the locked roads (groupMgr.adopt) and recomputes the id -> index table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadSpline.lua:162
+---@param data table Value returned by onSerialize.
 function editor_roadSpline.onDeserialized(data) end
 
---- Appelé à chaque image par l'éditeur. Met à jour les groupes sales (même si l'outil est inactif), puis, si l'outil est actif, dessine la fenêtre principale, gère le polygone de sélection, la sélection de matériau, le fil de fer, les nœuds/poignées et le gizmo.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadSpline.lua:1504
+--- Called every frame by the editor. Updates the dirty groups (even if the tool is inactive), then, if the tool is active, draws the main window, handles the selection polygon, material selection, wireframe, nodes/handles and the gizmo.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadSpline.lua:1504
 function editor_roadSpline.onEditorGui() end
 
---- Appelé à l'initialisation de l'éditeur : déclare le mode d'édition roadSplineEditor (« Road Spline »), enregistre la fenêtre de l'outil et celle de sélection de matériau, et ajoute « Convert to Road Spline » au menu contextuel de l'arbre de scène.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadSpline.lua:1657
+--- Called when the editor initializes: declares the roadSplineEditor edit mode ("Road Spline"), registers the tool window and the material selection window, and adds "Convert to Road Spline" to the scene tree context menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadSpline.lua:1657
 function editor_roadSpline.onEditorInitialized() end
 
---- Hook de sérialisation avant rechargement Lua. Renvoie la liste des groupes encodés ; pour une route verrouillée, mémorise les ids de ses DecalRoads (keptObjects) et laisse les objets dans la scène. Vide ensuite la liste des groupes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/roadSpline.lua:144
----@return table  Tableau de groupes sérialisés (chaînes encodées par string.buffer).
+--- Serialization hook before Lua reload. Returns the list of encoded groups; for a locked road, stores the ids of its DecalRoads (keptObjects) and leaves the objects in the scene. Then empties the list of groups.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/roadSpline.lua:144
+---@return table  Array of serialized groups (strings encoded by string.buffer).
 function editor_roadSpline.onSerialize() end
 
---- Verrouille ou déverrouille la spline dont l'id est donné et la reconstruit immédiatement. Verrouillée (isEnabled = false), la route n'est plus reconstruite par l'outil et ses DecalRoads sont sauvegardés avec le niveau. Utilisée aussi par la Master Spline pour les splines enfants liées. Ne fait rien si l'id est inconnu.
----Source : lua/ge/extensions/editor/roadSpline.lua:86
----@param id string Identifiant (UUID) du groupe/spline.
----@param isLocked boolean true pour verrouiller (le dernier état affiché est d'abord reconstruit), false pour déverrouiller.
+--- Locks or unlocks the spline whose id is given and rebuilds it immediately. When locked (isEnabled = false), the road is no longer rebuilt by the tool and its DecalRoads are saved with the level. Also used by the Master Spline for linked child splines. Does nothing if the id is unknown.
+---Source: lua/ge/extensions/editor/roadSpline.lua:86
+---@param id string Identifier (UUID) of the group/spline.
+---@param isLocked boolean true to lock (the last displayed state is rebuilt first), false to unlock.
 function editor_roadSpline.setLockedById(id, isLocked) end
 
---- Définit l'indice du nœud sélectionné dans la spline courante (sélection partagée entre outils).
----Source : lua/ge/extensions/editor/roadSpline.lua:119
----@param idx integer Indice (à partir de 1) du nœud.
+--- Sets the index of the selected node in the current spline (selection shared between tools).
+---Source: lua/ge/extensions/editor/roadSpline.lua:119
+---@param idx integer Index (1-based) of the node.
 function editor_roadSpline.setSelectedNodeIdx(idx) end
 
---- Définit l'indice de la spline sélectionnée dans l'outil (sélection partagée entre outils).
----Source : lua/ge/extensions/editor/roadSpline.lua:116
----@param idx integer Indice (à partir de 1) dans la liste des groupes.
+--- Sets the index of the selected spline in the tool (selection shared between tools).
+---Source: lua/ge/extensions/editor/roadSpline.lua:116
+---@param idx integer Index (1-based) in the list of groups.
 function editor_roadSpline.setSelectedSplineIdx(idx) end
 

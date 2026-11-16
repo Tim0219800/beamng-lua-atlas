@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/util/testJSONFilesSyntax.lua",
+  "module": "Outil de diagnostic : au chargement, il parcourt tout le système de fichiers virtuel du jeu (racine '/') à la recherche des fichiers *.jbeam, *.pc et *.json, puis les décode un par un avec la bibliothèque jsonDebug. Les erreurs de syntaxe et les avertissements sont écrits dans le journal. Utile à un moddeur pour trouver un JSON ou un jbeam invalide.",
+  "usage": "extensions.load('util/testJSONFilesSyntax')\n-- puis lire les lignes E/W 'jsonDecode' dans le journal",
+  "notes": [
+    "Tout se fait dans onExtensionLoaded, de façon synchrone : le jeu peut se figer un moment, car tous les fichiers du jeu et des mods sont lus.",
+    "Le résultat du décodage n'est pas conservé ; seuls les logs servent."
+  ],
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension. Liste récursivement les fichiers .jbeam, .pc et .json, les lit avec readFile et les décode avec jsonDebug.decode sous xpcall ; logue les erreurs (E) et avertissements (W) sous le tag 'jsonDecode'.",
+      "params": {},
+      "internal": true
+    }
+  }
+}

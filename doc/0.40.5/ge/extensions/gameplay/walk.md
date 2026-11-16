@@ -1,337 +1,337 @@
 # `gameplay_walk`
 
-*Fichier : `lua/ge/extensions/gameplay/walk.lua` · VM : Game Engine (GE) · 697 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/walk.lua` · VM: Game Engine (GE) · 697 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_walk` : `extensions.load("gameplay_walk")`, puis la globale `gameplay_walk`
+**Access:** extension `gameplay_walk`: `extensions.load("gameplay_walk")`, then the global `gameplay_walk`
 
-Mode « marche » du joueur : sortir du véhicule fait apparaître un véhicule spécial « unicycle » (le personnage) que le joueur contrôle à pied ; remonter dans un véhicule proche le désactive. Gère par joueur (multi-siège/écran partagé compris) l'unicycle, son visage (face part) et sa couleur, détecte le véhicule le plus proche à moins de 2 m (distance aux arêtes de sa boîte orientée), affiche le message « walkingmode » et expose une liste noire de véhicules. Un moddeur s'en sert pour téléporter/placer le joueur, forcer le mode marche ou l'interdire.
+Player "walking" mode: leaving the vehicle spawns a special "unicycle" vehicle (the character) that the player controls on foot; getting back into a nearby vehicle deactivates it. Manages, per player (including multiseat/split screen), the unicycle, its face (face part) and its color, detects the nearest vehicle within 2 m (distance to the edges of its oriented box), shows the "walkingmode" message and exposes a vehicle blacklist. A modder uses it to teleport/place the player, force walking mode or forbid it.
 
-## Exemple
+## Example
 
 ```lua
-gameplay_walk.setWalkingMode(true, vec3(x, y, z), quat(0, 0, 0, 1), true) -- force le mode marche à une position
+gameplay_walk.setWalkingMode(true, vec3(x, y, z), quat(0, 0, 0, 1), true) -- forces walking mode at a position
 if gameplay_walk.isWalking() then gameplay_walk.getInVehicle(veh) end
-gameplay_walk.addVehicleToBlacklist(vehId) -- ce véhicule ne sera pas proposé à l'entrée
+gameplay_walk.addVehicleToBlacklist(vehId) -- this vehicle will not be offered for entry
 ```
 
-## Remarques
+## Notes
 
-- `player` est l'indice de joueur (0 par défaut) ; la plupart des fonctions acceptent nil et prennent 0.
-- Le joueur est « à pied » quand son véhicule courant a le fichier jbeam « unicycle » (getCurrentUnicycle).
-- Basculer : possible seulement si force, ou (vitesse de stationnement atteinte et toggling activé, action toggleWalkingMode non bloquée, replay pas en lecture). Seuils de vitesse : < 5 km/h devient « à l'arrêt », > 6 km/h devient « en mouvement » (hystérésis).
-- Hook émis : onBeforeWalkingModeToggled(enabled, vehId|nil, player) avant le changement ; le message UI « Message » (catégorie cameramode) est vidé à l'entrée en mode marche.
-- En multijoueur, toggleWalkingMode délègue à multiplayer_vehicleSync.requestWalkingMode.
-- Si gameplay_seatOccupants existe, l'entrée dans un véhicule passe par requestEnterBestSeat et la sortie par getSeatExitData.
-- Un dump(config) de débogage reste dans le code : il écrit la config dans les logs à chaque création d'unicycle.
-- L'état interne `active[player]` n'est mis à jour que par onVehicleSwitched et onDeserialize : setRot ne fait rien tant que le joueur n'a pas déclenché un changement de véhicule.
-- Le hook de restauration s'appelle onDeserialize (et non onDeserialized) dans ce fichier, tandis que la sérialisation s'appelle onSerialize : incohérence de nom possible selon ce que le gestionnaire d'extensions appelle (non vérifié ici).
-- onClientEndMission vide les mémoires d'unicycles, de visages et de peintures ; onClientStartMission vide la liste noire et réactive le toggling.
+- `player` is the player index (0 by default); most functions accept nil and use 0.
+- The player is "on foot" when their current vehicle has the "unicycle" jbeam file (getCurrentUnicycle).
+- Toggling: only possible if force, or (parking speed reached and toggling enabled, toggleWalkingMode action not blocked, replay not playing). Speed thresholds: < 5 km/h becomes "stationary", > 6 km/h becomes "moving" (hysteresis).
+- Emitted hook: onBeforeWalkingModeToggled(enabled, vehId|nil, player) before the change; the UI "Message" (cameramode category) is cleared when entering walking mode.
+- In multiplayer, toggleWalkingMode delegates to multiplayer_vehicleSync.requestWalkingMode.
+- If gameplay_seatOccupants exists, entering a vehicle goes through requestEnterBestSeat and exiting through getSeatExitData.
+- A debug dump(config) remains in the code: it writes the config to the logs every time a unicycle is created.
+- The internal state `active[player]` is only updated by onVehicleSwitched and onDeserialize: setRot does nothing until the player has triggered a vehicle change.
+- The restore hook is named onDeserialize (not onDeserialized) in this file, while serialization is named onSerialize: possible naming inconsistency depending on what the extension manager calls (not verified here).
+- onClientEndMission clears the unicycle, face and paint memories; onClientStartMission clears the blacklist and re-enables toggling.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_walk.addVehicleToBlacklist(vehId)` | Exclut un véhicule des candidats à l'entrée en mode marche. | 561 |
-| `gameplay_walk.canSetWalkingMode(enabled, force, player)` | Comme canToggleWalkingMode, mais exige aussi que l'état demandé diffère de l'état actif. | 306 |
-| `gameplay_walk.canToggleWalkingMode(force, player)` | Indique si le joueur peut changer de mode : force, ou vitesse de stationnement + toggling activé + action non bloquée + pas de lecture de replay. | 298 |
-| `gameplay_walk.clearBlacklist()` | Vide la liste noire. | 573 |
-| `gameplay_walk.enableToggling(enabled)` | Autorise ou interdit le basculement manuel entre véhicule et marche. | 553 |
-| `gameplay_walk.getBlacklist()` | Renvoie la table de la liste noire (id -> true), pas une copie. | 577 |
-| `gameplay_walk.getCurrentUnicycle(player)` | Renvoie l'unicycle que le joueur contrôle en ce moment, qu'il soit ou non celui mémorisé dans unicycleIds. | 114 |
-| `gameplay_walk.getDoorsidePosRot(veh)` | Calcule une position près de la portière conducteur d'un véhicule (côté gauche ou droit selon la conduite), orientée vers le centre du véhicule. | 215 |
-| `gameplay_walk.getFacePart(player)` | Visage du personnage. Priorité : pièce de l'unicycle (sélecteur de pièces), réglage playerCharacterFace (par persona en écran partagé), dernier visage connu, visage aléatoire. | 135 |
-| `gameplay_walk.getInVehicle(vehicle, player)` | Fait monter le joueur dans un véhicule (be:enterVehicle) en mémorisant son unicycle actuel. | 252 |
-| `gameplay_walk.getPaint(player)` | Peinture du personnage. Priorité : peinture du persona (multi-siège), peinture de l'unicycle (menu de config), dernière peinture connue, couleur enregistrée playerCharacterColor. | 150 |
-| `gameplay_walk.getPosRot(player)` | Position de l'unicycle et orientation de la caméra du joueur à pied. | 530 |
-| `gameplay_walk.getPosXYZ(player)` | Position de l'unicycle en trois nombres (sans allocation). | 538 |
-| `gameplay_walk.getRotXYZW(player)` | Orientation de la caméra du joueur à pied en quatre nombres. | 546 |
-| `gameplay_walk.getStoredUnicycleId(player)` | Id de l'unicycle mémorisé pour ce joueur (même s'il est inactif, par exemple pendant qu'il conduit). | 357 |
-| `gameplay_walk.getVehicleInFront(player)` | Véhicule le plus proche (moins de 2 m) que le joueur à pied peut rejoindre. | 510 |
-| `gameplay_walk.isAtParkingSpeed(player)` | Indique si le véhicule le plus proche (ou celui du joueur) est assez lent pour permettre de basculer en mode marche. | 181 |
-| `gameplay_walk.isTogglingEnabled()` | Indique si le basculement est autorisé. | 557 |
-| `gameplay_walk.isVehicleBlacklisted(vehId)` | Teste si un véhicule est dans la liste noire. | 569 |
-| `gameplay_walk.isWalking(player)` | Indique si le joueur contrôle actuellement un unicycle. | 177 |
-| `gameplay_walk.onCameraChanged(player, camName, vid)` | Hook appelé au changement de caméra d'un joueur : masque l'unicycle dans la vue du joueur quand il utilise la caméra unicycle, ou quand la transition de la grande carte s'éloigne de lui. *(interne)* *(hook)* | 598 |
-| `gameplay_walk.onClientEndMission(levelPath)` | Hook appelé à la fin d'un niveau : oublie unicycles, visages et peintures. *(interne)* *(hook)* | 586 |
-| `gameplay_walk.onClientStartMission(levelPath)` | Hook appelé au début d'un niveau : vide la liste noire, réactive le toggling. *(interne)* *(hook)* | 581 |
-| `gameplay_walk.onDeserialize(data)` | Restaure l'état sérialisé et recalcule quels joueurs sont à pied. *(interne)* *(hook)* | 518 |
-| `gameplay_walk.onSerialize()` | Hook de sauvegarde avant rechargement des extensions : toggling, liste noire, unicycles, visages, peintures. *(interne)* *(hook)* | 514 |
-| `gameplay_walk.onSplitScreenChanged(enabled, playerCount, layout, mode)` | Hook appelé quand l'écran partagé change : reconfigure les couleurs des unicycles. *(interne)* *(hook)* | 593 |
-| `gameplay_walk.onUpdate(dtReal, dtSim)` | Hook appelé à chaque image : pour chaque joueur, cherche le véhicule proche, met à jour la vitesse de stationnement et affiche/retire le message « walkingmode ». *(interne)* *(hook)* | 502 |
-| `gameplay_walk.onVehicleColorChanged(vehId, index, paint)` | Hook appelé quand la couleur d'un véhicule change : si c'est l'unicycle d'un joueur (hors multi-siège), enregistre la peinture dans le réglage playerCharacterColor. *(interne)* *(hook)* | 628 |
-| `gameplay_walk.onVehicleDestroyed(vehId)` | Hook appelé à la destruction d'un véhicule : oublie l'unicycle correspondant. *(interne)* *(hook)* | 654 |
-| `gameplay_walk.onVehicleReplaced(vehId)` | Hook appelé quand un véhicule est remplacé : oublie l'unicycle correspondant. *(interne)* *(hook)* | 650 |
-| `gameplay_walk.onVehicleSwitched(oldId, newId, player)` | Hook appelé quand un joueur change de véhicule : désactive l'ancien unicycle mémorisé et met à jour l'état actif. *(interne)* *(hook)* | 617 |
-| `gameplay_walk.removeVehicleFromBlacklist(vehId)` | Retire un véhicule de la liste noire. | 565 |
-| `gameplay_walk.setFacePart(player, facePart)` | Change le visage. Si le joueur est à pied, son unicycle est reconfiguré ; sinon l'unicycle mémorisé est supprimé et sera recréé plus tard. | 163 |
-| `gameplay_walk.setRot(front, up, player)` | Oriente la caméra/le personnage à pied via les données de la caméra unicycle. Sans effet si le joueur n'est pas actif en mode marche. | 287 |
-| `gameplay_walk.setWalkingMode(enabled, pos, rot, force, player)` | Active ou désactive le mode marche. À l'activation, fait apparaître ou réactive l'unicycle à pos (sinon près de la portière ou au siège quitté) et y place le joueur. À la désactivation, monte dans le véhicule proche, ou désactive simplement l'unicycle. | 311 |
-| `gameplay_walk.toggleWalkingMode(player)` | Bascule le mode marche (appelé par l'action d'entrée). Ne fait rien si le joueur marche sans véhicule à proximité ; en multijoueur, passe par multiplayer_vehicleSync. | 361 |
+| `gameplay_walk.addVehicleToBlacklist(vehId)` | Excludes a vehicle from the candidates for entry in walking mode. | 561 |
+| `gameplay_walk.canSetWalkingMode(enabled, force, player)` | Like canToggleWalkingMode, but also requires the requested state to differ from the active state. | 306 |
+| `gameplay_walk.canToggleWalkingMode(force, player)` | Returns whether the player can switch modes: force, or parking speed + toggling enabled + action not blocked + no replay playing. | 298 |
+| `gameplay_walk.clearBlacklist()` | Clears the blacklist. | 573 |
+| `gameplay_walk.enableToggling(enabled)` | Allows or forbids manual switching between vehicle and walking. | 553 |
+| `gameplay_walk.getBlacklist()` | Returns the blacklist table (id -> true), not a copy. | 577 |
+| `gameplay_walk.getCurrentUnicycle(player)` | Returns the unicycle the player is controlling right now, whether or not it is the one stored in unicycleIds. | 114 |
+| `gameplay_walk.getDoorsidePosRot(veh)` | Computes a position near a vehicle's driver door (left or right side depending on the driving side), oriented toward the vehicle's center. | 215 |
+| `gameplay_walk.getFacePart(player)` | Character face. Priority: unicycle part (parts selector), playerCharacterFace setting (per persona in split screen), last known face, random face. | 135 |
+| `gameplay_walk.getInVehicle(vehicle, player)` | Makes the player enter a vehicle (be:enterVehicle), storing their current unicycle. | 252 |
+| `gameplay_walk.getPaint(player)` | Character paint. Priority: persona paint (multiseat), unicycle paint (config menu), last known paint, saved playerCharacterColor color. | 150 |
+| `gameplay_walk.getPosRot(player)` | Unicycle position and camera orientation of the on-foot player. | 530 |
+| `gameplay_walk.getPosXYZ(player)` | Unicycle position as three numbers (no allocation). | 538 |
+| `gameplay_walk.getRotXYZW(player)` | On-foot player's camera orientation as four numbers. | 546 |
+| `gameplay_walk.getStoredUnicycleId(player)` | Id of the unicycle stored for this player (even if inactive, e.g. while they are driving). | 357 |
+| `gameplay_walk.getVehicleInFront(player)` | Nearest vehicle (within 2 m) that the on-foot player can enter. | 510 |
+| `gameplay_walk.isAtParkingSpeed(player)` | Returns whether the nearest vehicle (or the player's) is slow enough to allow switching to walking mode. | 181 |
+| `gameplay_walk.isTogglingEnabled()` | Indicates whether switching is allowed. | 557 |
+| `gameplay_walk.isVehicleBlacklisted(vehId)` | Tests whether a vehicle is in the blacklist. | 569 |
+| `gameplay_walk.isWalking(player)` | Returns whether the player is currently controlling a unicycle. | 177 |
+| `gameplay_walk.onCameraChanged(player, camName, vid)` | Hook called when a player's camera changes: hides the unicycle in the player's view when they use the unicycle camera, or when the big map transition moves away from them. *(internal)* *(hook)* | 598 |
+| `gameplay_walk.onClientEndMission(levelPath)` | Hook called at the end of a level: forgets unicycles, faces and paints. *(internal)* *(hook)* | 586 |
+| `gameplay_walk.onClientStartMission(levelPath)` | Hook called at the start of a level: clears the blacklist, re-enables toggling. *(internal)* *(hook)* | 581 |
+| `gameplay_walk.onDeserialize(data)` | Restores the serialized state and recomputes which players are on foot. *(internal)* *(hook)* | 518 |
+| `gameplay_walk.onSerialize()` | Save hook before extensions reload: toggling, blacklist, unicycles, faces, paints. *(internal)* *(hook)* | 514 |
+| `gameplay_walk.onSplitScreenChanged(enabled, playerCount, layout, mode)` | Hook called when split screen changes: reconfigures the unicycle colors. *(internal)* *(hook)* | 593 |
+| `gameplay_walk.onUpdate(dtReal, dtSim)` | Hook called every frame: for each player, looks for the nearby vehicle, updates the parking speed and shows/removes the "walkingmode" message. *(internal)* *(hook)* | 502 |
+| `gameplay_walk.onVehicleColorChanged(vehId, index, paint)` | Hook called when a vehicle's color changes: if it is a player's unicycle (outside multiseat), saves the paint in the playerCharacterColor setting. *(internal)* *(hook)* | 628 |
+| `gameplay_walk.onVehicleDestroyed(vehId)` | Hook called when a vehicle is destroyed: forgets the corresponding unicycle. *(internal)* *(hook)* | 654 |
+| `gameplay_walk.onVehicleReplaced(vehId)` | Hook called when a vehicle is replaced: forgets the corresponding unicycle. *(internal)* *(hook)* | 650 |
+| `gameplay_walk.onVehicleSwitched(oldId, newId, player)` | Hook called when a player switches vehicle: deactivates the previously stored unicycle and updates the active state. *(internal)* *(hook)* | 617 |
+| `gameplay_walk.removeVehicleFromBlacklist(vehId)` | Removes a vehicle from the blacklist. | 565 |
+| `gameplay_walk.setFacePart(player, facePart)` | Changes the face. If the player is on foot, their unicycle is reconfigured; otherwise the stored unicycle is deleted and will be recreated later. | 163 |
+| `gameplay_walk.setRot(front, up, player)` | Orients the camera/on-foot character via the unicycle camera data. Has no effect if the player is not active in walking mode. | 287 |
+| `gameplay_walk.setWalkingMode(enabled, pos, rot, force, player)` | Enables or disables walking mode. On enabling, spawns or reactivates the unicycle at pos (otherwise near the door or at the seat left) and places the player in it. On disabling, enters the nearby vehicle, or simply deactivates the unicycle. | 311 |
+| `gameplay_walk.toggleWalkingMode(player)` | Toggles walking mode (called by the input action). Does nothing if the player is walking with no vehicle nearby; in multiplayer, goes through multiplayer_vehicleSync. | 361 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_walk.addVehicleToBlacklist(vehId)`
 
-Exclut un véhicule des candidats à l'entrée en mode marche.
+Excludes a vehicle from the candidates for entry in walking mode.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_walk.canSetWalkingMode(enabled, force, player)`
 
-Comme canToggleWalkingMode, mais exige aussi que l'état demandé diffère de l'état actif.
+Like canToggleWalkingMode, but also requires the requested state to differ from the active state.
 
-- `enabled` (*boolean*) : État demandé.
-- `force` (*boolean|nil*) : Ignore les restrictions.
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : boolean 
+- `enabled` (*boolean*) : Requested state.
+- `force` (*boolean|nil*) : Ignores restrictions.
+- `player` (*integer|nil*) : Player index.
+- **returns**: boolean 
 
 #### `gameplay_walk.canToggleWalkingMode(force, player)`
 
-Indique si le joueur peut changer de mode : force, ou vitesse de stationnement + toggling activé + action non bloquée + pas de lecture de replay.
+Returns whether the player can switch modes: force, or parking speed + toggling enabled + action not blocked + no replay playing.
 
-- `force` (*boolean|nil*) : Ignore toutes les restrictions.
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : boolean 
+- `force` (*boolean|nil*) : Ignores all restrictions.
+- `player` (*integer|nil*) : Player index.
+- **returns**: boolean 
 
 #### `gameplay_walk.enableToggling(enabled)`
 
-Autorise ou interdit le basculement manuel entre véhicule et marche.
+Allows or forbids manual switching between vehicle and walking.
 
-- `enabled` (*boolean*) : true pour autoriser.
+- `enabled` (*boolean*) : true to allow.
 
 #### `gameplay_walk.getBlacklist()`
 
-Renvoie la table de la liste noire (id -> true), pas une copie.
+Returns the blacklist table (id -> true), not a copy.
 
-- **renvoie** : table<integer, boolean> 
+- **returns**: table<integer, boolean> 
 
 #### `gameplay_walk.getCurrentUnicycle(player)`
 
-Renvoie l'unicycle que le joueur contrôle en ce moment, qu'il soit ou non celui mémorisé dans unicycleIds.
+Returns the unicycle the player is controlling right now, whether or not it is the one stored in unicycleIds.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : userdata|nil Objet véhicule unicycle, nil sinon.
+- `player` (*integer|nil*) : Player index.
+- **returns**: userdata|nil Unicycle vehicle object, nil otherwise.
 
 #### `gameplay_walk.getDoorsidePosRot(veh)`
 
-Calcule une position près de la portière conducteur d'un véhicule (côté gauche ou droit selon la conduite), orientée vers le centre du véhicule.
+Computes a position near a vehicle's driver door (left or right side depending on the driving side), oriented toward the vehicle's center.
 
-- `veh` (*userdata*) : Objet véhicule.
-- **renvoie** : vec3 Position.
-- **renvoie** : vec3 Direction avant (z = 0).
-- **renvoie** : vec3 Vecteur haut (0,0,1).
+- `veh` (*userdata*) : Vehicle object.
+- **returns**: vec3 Position.
+- **returns**: vec3 Forward direction (z = 0).
+- **returns**: vec3 Up vector (0,0,1).
 
 #### `gameplay_walk.getFacePart(player)`
 
-Visage du personnage. Priorité : pièce de l'unicycle (sélecteur de pièces), réglage playerCharacterFace (par persona en écran partagé), dernier visage connu, visage aléatoire.
+Character face. Priority: unicycle part (parts selector), playerCharacterFace setting (per persona in split screen), last known face, random face.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : string Nom de la pièce skin_character_face.
+- `player` (*integer|nil*) : Player index.
+- **returns**: string Name of the skin_character_face part.
 
 #### `gameplay_walk.getInVehicle(vehicle, player)`
 
-Fait monter le joueur dans un véhicule (be:enterVehicle) en mémorisant son unicycle actuel.
+Makes the player enter a vehicle (be:enterVehicle), storing their current unicycle.
 
-- `vehicle` (*userdata*) : Véhicule à rejoindre.
-- `player` (*integer|nil*) : Indice de joueur.
+- `vehicle` (*userdata*) : Vehicle to enter.
+- `player` (*integer|nil*) : Player index.
 
 #### `gameplay_walk.getPaint(player)`
 
-Peinture du personnage. Priorité : peinture du persona (multi-siège), peinture de l'unicycle (menu de config), dernière peinture connue, couleur enregistrée playerCharacterColor.
+Character paint. Priority: persona paint (multiseat), unicycle paint (config menu), last known paint, saved playerCharacterColor color.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : table Peinture de véhicule.
+- `player` (*integer|nil*) : Player index.
+- **returns**: table Vehicle paint.
 
 #### `gameplay_walk.getPosRot(player)`
 
-Position de l'unicycle et orientation de la caméra du joueur à pied.
+Unicycle position and camera orientation of the on-foot player.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : vec3|nil Position.
-- **renvoie** : quat|nil Rotation caméra.
+- `player` (*integer|nil*) : Player index.
+- **returns**: vec3|nil Position.
+- **returns**: quat|nil Camera rotation.
 
 #### `gameplay_walk.getPosXYZ(player)`
 
-Position de l'unicycle en trois nombres (sans allocation).
+Unicycle position as three numbers (no allocation).
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : number|nil x, y, z (nil si le joueur n'est pas à pied).
+- `player` (*integer|nil*) : Player index.
+- **returns**: number|nil x, y, z (nil if the player is not on foot).
 
 #### `gameplay_walk.getRotXYZW(player)`
 
-Orientation de la caméra du joueur à pied en quatre nombres.
+On-foot player's camera orientation as four numbers.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : number|nil x, y, z, w (nil si le joueur n'est pas à pied).
+- `player` (*integer|nil*) : Player index.
+- **returns**: number|nil x, y, z, w (nil if the player is not on foot).
 
 #### `gameplay_walk.getStoredUnicycleId(player)`
 
-Id de l'unicycle mémorisé pour ce joueur (même s'il est inactif, par exemple pendant qu'il conduit).
+Id of the unicycle stored for this player (even if inactive, e.g. while they are driving).
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : integer|nil 
+- `player` (*integer|nil*) : Player index.
+- **returns**: integer|nil 
 
 #### `gameplay_walk.getVehicleInFront(player)`
 
-Véhicule le plus proche (moins de 2 m) que le joueur à pied peut rejoindre.
+Nearest vehicle (within 2 m) that the on-foot player can enter.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : userdata|nil 
+- `player` (*integer|nil*) : Player index.
+- **returns**: userdata|nil 
 
 #### `gameplay_walk.isAtParkingSpeed(player)`
 
-Indique si le véhicule le plus proche (ou celui du joueur) est assez lent pour permettre de basculer en mode marche.
+Returns whether the nearest vehicle (or the player's) is slow enough to allow switching to walking mode.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : boolean false seulement si la vitesse a dépassé 6 km/h sans repasser sous 5 km/h.
+- `player` (*integer|nil*) : Player index.
+- **returns**: boolean false only if the speed exceeded 6 km/h without dropping back below 5 km/h.
 
 #### `gameplay_walk.isTogglingEnabled()`
 
-Indique si le basculement est autorisé.
+Indicates whether switching is allowed.
 
-- **renvoie** : boolean 
+- **returns**: boolean 
 
 #### `gameplay_walk.isVehicleBlacklisted(vehId)`
 
-Teste si un véhicule est dans la liste noire.
+Tests whether a vehicle is in the blacklist.
 
-- `vehId` (*integer*) : Id du véhicule.
-- **renvoie** : boolean|nil true ou nil.
+- `vehId` (*integer*) : Vehicle id.
+- **returns**: boolean|nil true or nil.
 
 #### `gameplay_walk.isWalking(player)`
 
-Indique si le joueur contrôle actuellement un unicycle.
+Returns whether the player is currently controlling a unicycle.
 
-- `player` (*integer|nil*) : Indice de joueur (0 par défaut).
-- **renvoie** : boolean 
+- `player` (*integer|nil*) : Player index (0 by default).
+- **returns**: boolean 
 
 #### `gameplay_walk.onCameraChanged(player, camName, vid)`
 
-Hook appelé au changement de caméra d'un joueur : masque l'unicycle dans la vue du joueur quand il utilise la caméra unicycle, ou quand la transition de la grande carte s'éloigne de lui.
+Hook called when a player's camera changes: hides the unicycle in the player's view when they use the unicycle camera, or when the big map transition moves away from them.
 
-- `player` (*integer*) : Indice de joueur.
-- `camName` (*string*) : Nom du mode de caméra.
-- `vid` (*integer|nil*) : Id du véhicule suivi.
+- `player` (*integer*) : Player index.
+- `camName` (*string*) : Camera mode name.
+- `vid` (*integer|nil*) : Id of the tracked vehicle.
 
 #### `gameplay_walk.onClientEndMission(levelPath)`
 
-Hook appelé à la fin d'un niveau : oublie unicycles, visages et peintures.
+Hook called at the end of a level: forgets unicycles, faces and paints.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `gameplay_walk.onClientStartMission(levelPath)`
 
-Hook appelé au début d'un niveau : vide la liste noire, réactive le toggling.
+Hook called at the start of a level: clears the blacklist, re-enables toggling.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `gameplay_walk.onDeserialize(data)`
 
-Restaure l'état sérialisé et recalcule quels joueurs sont à pied.
+Restores the serialized state and recomputes which players are on foot.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `gameplay_walk.onSerialize()`
 
-Hook de sauvegarde avant rechargement des extensions : toggling, liste noire, unicycles, visages, peintures.
+Save hook before extensions reload: toggling, blacklist, unicycles, faces, paints.
 
-- **renvoie** : table {togglingEnabled, vehicleBlacklist, unicycleIds, faceParts, paints}
+- **returns**: table {togglingEnabled, vehicleBlacklist, unicycleIds, faceParts, paints}
 
 #### `gameplay_walk.onSplitScreenChanged(enabled, playerCount, layout, mode)`
 
-Hook appelé quand l'écran partagé change : reconfigure les couleurs des unicycles.
+Hook called when split screen changes: reconfigures the unicycle colors.
 
-- `enabled` (*boolean*) : Écran partagé actif.
-- `playerCount` (*integer*) : Nombre de joueurs.
-- `layout` (*any*) : Disposition.
+- `enabled` (*boolean*) : Split screen active.
+- `playerCount` (*integer*) : Number of players.
+- `layout` (*any*) : Layout.
 - `mode` (*any*) : Mode.
 
 #### `gameplay_walk.onUpdate(dtReal, dtSim)`
 
-Hook appelé à chaque image : pour chaque joueur, cherche le véhicule proche, met à jour la vitesse de stationnement et affiche/retire le message « walkingmode ».
+Hook called every frame: for each player, looks for the nearby vehicle, updates the parking speed and shows/removes the "walkingmode" message.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulé (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulated time delta (s).
 
 #### `gameplay_walk.onVehicleColorChanged(vehId, index, paint)`
 
-Hook appelé quand la couleur d'un véhicule change : si c'est l'unicycle d'un joueur (hors multi-siège), enregistre la peinture dans le réglage playerCharacterColor.
+Hook called when a vehicle's color changes: if it is a player's unicycle (outside multiseat), saves the paint in the playerCharacterColor setting.
 
-- `vehId` (*integer*) : Id du véhicule.
-- `index` (*integer*) : Indice de peinture (seul 1 est pris en compte).
-- `paint` (*table*) : Peinture.
+- `vehId` (*integer*) : Vehicle id.
+- `index` (*integer*) : Paint index (only 1 is taken into account).
+- `paint` (*table*) : Paint.
 
 #### `gameplay_walk.onVehicleDestroyed(vehId)`
 
-Hook appelé à la destruction d'un véhicule : oublie l'unicycle correspondant.
+Hook called when a vehicle is destroyed: forgets the corresponding unicycle.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_walk.onVehicleReplaced(vehId)`
 
-Hook appelé quand un véhicule est remplacé : oublie l'unicycle correspondant.
+Hook called when a vehicle is replaced: forgets the corresponding unicycle.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_walk.onVehicleSwitched(oldId, newId, player)`
 
-Hook appelé quand un joueur change de véhicule : désactive l'ancien unicycle mémorisé et met à jour l'état actif.
+Hook called when a player switches vehicle: deactivates the previously stored unicycle and updates the active state.
 
-- `oldId` (*integer*) : Ancien véhicule.
-- `newId` (*integer*) : Nouveau véhicule.
-- `player` (*integer|nil*) : Indice de joueur.
+- `oldId` (*integer*) : Old vehicle.
+- `newId` (*integer*) : New vehicle.
+- `player` (*integer|nil*) : Player index.
 
 #### `gameplay_walk.removeVehicleFromBlacklist(vehId)`
 
-Retire un véhicule de la liste noire.
+Removes a vehicle from the blacklist.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_walk.setFacePart(player, facePart)`
 
-Change le visage. Si le joueur est à pied, son unicycle est reconfiguré ; sinon l'unicycle mémorisé est supprimé et sera recréé plus tard.
+Changes the face. If the player is on foot, their unicycle is reconfigured; otherwise the stored unicycle is deleted and will be recreated later.
 
-- `player` (*integer|nil*) : Indice de joueur.
-- `facePart` (*string*) : Nom de la pièce de visage.
+- `player` (*integer|nil*) : Player index.
+- `facePart` (*string*) : Face part name.
 
 #### `gameplay_walk.setRot(front, up, player)`
 
-Oriente la caméra/le personnage à pied via les données de la caméra unicycle. Sans effet si le joueur n'est pas actif en mode marche.
+Orients the camera/on-foot character via the unicycle camera data. Has no effect if the player is not active in walking mode.
 
-- `front` (*vec3*) : Direction avant.
-- `up` (*vec3*) : Direction haut.
-- `player` (*integer|nil*) : Indice de joueur.
+- `front` (*vec3*) : Forward direction.
+- `up` (*vec3*) : Up direction.
+- `player` (*integer|nil*) : Player index.
 
 #### `gameplay_walk.setWalkingMode(enabled, pos, rot, force, player)`
 
-Active ou désactive le mode marche. À l'activation, fait apparaître ou réactive l'unicycle à pos (sinon près de la portière ou au siège quitté) et y place le joueur. À la désactivation, monte dans le véhicule proche, ou désactive simplement l'unicycle.
+Enables or disables walking mode. On enabling, spawns or reactivates the unicycle at pos (otherwise near the door or at the seat left) and places the player in it. On disabling, enters the nearby vehicle, or simply deactivates the unicycle.
 
-- `enabled` (*boolean*) : true pour marcher.
-- `pos` (*vec3|nil*) : Position d'apparition (facultative).
-- `rot` (*quat|nil*) : Orientation de départ (facultative).
-- `force` (*boolean|nil*) : Ignore les restrictions de bascule.
-- `player` (*integer|nil*) : Indice de joueur.
-- **renvoie** : boolean true si l'état demandé est atteint (false si bloqué).
-- **renvoie** : integer|nil Id de l'unicycle courant.
+- `enabled` (*boolean*) : true to walk.
+- `pos` (*vec3|nil*) : Spawn position (optional).
+- `rot` (*quat|nil*) : Starting orientation (optional).
+- `force` (*boolean|nil*) : Ignores toggle restrictions.
+- `player` (*integer|nil*) : Player index.
+- **returns**: boolean true if the requested state is reached (false if blocked).
+- **returns**: integer|nil Current unicycle id.
 
 #### `gameplay_walk.toggleWalkingMode(player)`
 
-Bascule le mode marche (appelé par l'action d'entrée). Ne fait rien si le joueur marche sans véhicule à proximité ; en multijoueur, passe par multiplayer_vehicleSync.
+Toggles walking mode (called by the input action). Does nothing if the player is walking with no vehicle nearby; in multiplayer, goes through multiplayer_vehicleSync.
 
-- `player` (*integer|nil*) : Indice de joueur (ignoré si négatif).
+- `player` (*integer|nil*) : Player index (ignored if negative).
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onBeforeWalkingModeToggled` — écouté par 2 module(s)
+- `onBeforeWalkingModeToggled` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `Message`
+**UI events (guihooks.trigger):** `Message`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `enterVehicle`, `exitVehicle`, `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`, `getObjectOOBBIsInitialized`, `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/walk.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/walk.lua`.*

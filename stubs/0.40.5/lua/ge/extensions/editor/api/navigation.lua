@@ -2,62 +2,62 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/navigation.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module d'API de l'éditeur prévu pour gérer les maillages de navigation (NavMesh), les liens hors-maillage et les couvertures (cover) pour l'IA. Dans 0.40.5 c'est une coquille vide : toutes les fonctions sont des `--TODO` sans corps. `initialize` les attache à l'objet `editor` (editor.createNavMesh, etc.).
---- Accès : extension `editor_api_navigation` : `extensions.load("editor_api_navigation")`, puis la globale `editor_api_navigation`
+--- Editor API module intended to manage navigation meshes (NavMesh), off-mesh links and covers for AI. In 0.40.5 it is an empty shell: all the functions are `--TODO` with no body. `initialize` attaches them to the `editor` object (editor.createNavMesh, etc.).
+--- Access: extension `editor_api_navigation`: `extensions.load("editor_api_navigation")`, then the global `editor_api_navigation`
 ---@class editor_api_navigation
 editor_api_navigation = {}
 
---- Mémorise l'instance de l'éditeur et y installe les neuf fonctions navmesh/cover/offmeshlink (non implémentées).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/navigation.lua:43
----@param editorInstance table objet `editor` sur lequel poser les fonctions
+--- Remembers the editor instance and installs the nine navmesh/cover/offmeshlink functions on it (not implemented).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/navigation.lua:43
+---@param editorInstance table `editor` object on which to place the functions
 function editor_api_navigation.initialize(editorInstance) end
 
---- Fonctions ajoutées à l'objet `editor` par `initialize`. Toutes sont des stubs vides (TODO).
+--- Functions added to the `editor` object by `initialize`. All are empty stubs (TODO).
 ---@class editor_api_navigation_editor
 local editor_api_navigation_editor = {}
 
---- Stub : devrait créer une couverture.
----Source : lua/ge/extensions/editor/api/navigation.lua:23
----@param coverInfo any description de la couverture
+--- Stub: should create a cover.
+---Source: lua/ge/extensions/editor/api/navigation.lua:23
+---@param coverInfo any cover description
 function editor_api_navigation_editor.createCover(coverInfo) end
 
---- Stub : devrait créer un navmesh.
----Source : lua/ge/extensions/editor/api/navigation.lua:7
----@param navMeshInfo any description du navmesh (déduit du nom)
+--- Stub: should create a navmesh.
+---Source: lua/ge/extensions/editor/api/navigation.lua:7
+---@param navMeshInfo any navmesh description (inferred from the name)
 function editor_api_navigation_editor.createNavMesh(navMeshInfo) end
 
---- Stub : devrait créer un lien hors-maillage.
----Source : lua/ge/extensions/editor/api/navigation.lua:15
----@param navMeshObjectId integer id du navmesh (déduit du nom)
----@param linkInfo any description du lien
+--- Stub: should create an off-mesh link.
+---Source: lua/ge/extensions/editor/api/navigation.lua:15
+---@param navMeshObjectId integer navmesh id (inferred from the name)
+---@param linkInfo any link description
 function editor_api_navigation_editor.createOffMeshLink(navMeshObjectId, linkInfo) end
 
---- Stub : devrait supprimer une couverture.
----Source : lua/ge/extensions/editor/api/navigation.lua:27
----@param coverObjectId integer id de l'objet cover (déduit du nom)
+--- Stub: should delete a cover.
+---Source: lua/ge/extensions/editor/api/navigation.lua:27
+---@param coverObjectId integer cover object id (inferred from the name)
 function editor_api_navigation_editor.deleteCover(coverObjectId) end
 
---- Stub : devrait supprimer un navmesh.
----Source : lua/ge/extensions/editor/api/navigation.lua:11
----@param navMeshObjectId integer id de l'objet navmesh (déduit du nom)
+--- Stub: should delete a navmesh.
+---Source: lua/ge/extensions/editor/api/navigation.lua:11
+---@param navMeshObjectId integer navmesh object id (inferred from the name)
 function editor_api_navigation_editor.deleteNavMesh(navMeshObjectId) end
 
---- Stub : devrait supprimer un lien hors-maillage.
----Source : lua/ge/extensions/editor/api/navigation.lua:19
----@param linkId any identifiant du lien
+--- Stub: should delete an off-mesh link.
+---Source: lua/ge/extensions/editor/api/navigation.lua:19
+---@param linkId any link identifier
 function editor_api_navigation_editor.deleteOffMeshLink(linkId) end
 
---- Stub : devrait lister les couvertures d'un navmesh.
----Source : lua/ge/extensions/editor/api/navigation.lua:35
----@param navMeshObjectId integer id du navmesh
+--- Stub: should list the covers of a navmesh.
+---Source: lua/ge/extensions/editor/api/navigation.lua:35
+---@param navMeshObjectId integer navmesh id
 function editor_api_navigation_editor.getCovers(navMeshObjectId) end
 
---- Stub : devrait lister les navmeshes.
----Source : lua/ge/extensions/editor/api/navigation.lua:31
+--- Stub: should list the navmeshes.
+---Source: lua/ge/extensions/editor/api/navigation.lua:31
 function editor_api_navigation_editor.getNavMeshes() end
 
---- Stub : devrait lister les liens hors-maillage.
----Source : lua/ge/extensions/editor/api/navigation.lua:39
+--- Stub: should list the off-mesh links.
+---Source: lua/ge/extensions/editor/api/navigation.lua:39
 function editor_api_navigation_editor.getOffMeshLinks() end
 

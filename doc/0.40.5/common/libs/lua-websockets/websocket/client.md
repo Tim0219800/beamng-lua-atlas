@@ -1,22 +1,22 @@
 # `client`
 
-*Fichier : `lua/common/libs/lua-websockets/websocket/client.lua` · VM : Commun (GE + véhicule) · 9 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-websockets/websocket/client.lua` · VM: Common (GE + vehicle) · 9 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `client`
+**Access:** global `client`
 
-Sélecteur de backend client WebSocket de lua-websockets. Renvoie une table vide dont le __index charge à la demande le module 'websocket/client_<nom>' pour les noms 'sync', 'copas', 'ev' et 'new' (alias de 'sync'). Tout autre nom renvoie nil sans rien charger.
+WebSocket client backend selector of lua-websockets. Returns an empty table whose __index loads the module 'websocket/client_<name>' on demand for the names 'sync', 'copas', 'ev' and 'new' (alias of 'sync'). Any other name returns nil without loading anything.
 
-## Exemple
+## Example
 
 ```lua
 local client = require('libs/lua-websockets/websocket.client')
-local ws = client.new({timeout = 1})   -- backend synchrone
-local wsCopas = client.copas()         -- backend copas
+local ws = client.new({timeout = 1})   -- synchronous backend
+local wsCopas = client.copas()         -- copas backend
 ```
 
-## Remarques
+## Notes
 
-- Le backend chargé est mis en cache dans la table (client.sync, client.copas…) ; client.new est le même objet que client.sync.
+- The loaded backend is cached in the table (client.sync, client.copas...); client.new is the same object as client.sync.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-websockets/websocket/client.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-websockets/websocket/client.lua`.*

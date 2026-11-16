@@ -1,0 +1,119 @@
+{
+  "path": "lua/ge/extensions/editor/raceEditor/pathnodes.lua",
+  "module": "Sous-fenêtre « Pathnodes » de l'éditeur de course (raceEditor) : édite les nœuds de chemin (path.pathnodes) du chemin courant. On peut créer un nœud manuel (Shift + glisser : position, rayon et direction), ajouter un nœud depuis le navgraph (Alt + clic), sélectionner, déplacer (gizmo ou « simple drag » si la préférence raceEditor.general.useSimpleDrag est active), supprimer, réordonner, basculer le mode manuel/navgraph, et régler position, rayon, normale, visibilité du marqueur, « Use as Split », positions de récupération avant/arrière et champs personnalisés. Toutes les modifications passent par editor.history (annuler/rétablir). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/pathnodes')(raceEditor).",
+  "notes": [
+    "Création manuelle : si un nœud précédent existe, un segment est créé automatiquement entre le dernier nœud trié et le nouveau ; la route IA est recalculée (editor_raceEditor.calculateAiRoute).",
+    "La normale n'est créée à la création que si la préférence raceEditor.general.directionalNodes est vraie.",
+    "En mode navgraph, le gizmo ne déplace pas le nœud (message « Set node to manual to move via Gizmo. ») ; l'échelle agit sur navRadiusScale au lieu de radius.",
+    "Dans autoRecoverPos, la fonction « redo » utilise la variable locale node capturée à la création de l'action (pas data) pour le nom de la position.",
+    "C:onEditModeActivate teste self.node, champ jamais défini dans ce fichier : la resélection ne se produit donc jamais.",
+    "Raccourcis : Shift = ajouter un nœud manuel, Alt = ajouter un nœud du navgraph."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Fenêtre Pathnodes (windowDescription = 'Pathnodes'). Instanciée par le constructeur du module avec init(raceEditor). raceEditor.lua appelle setPath, selected, unselect, draw et onEditModeActivate.",
+      "functions": {
+        "init": {
+          "desc": "Mémorise raceEditor, index de sélection nil, mouseInfo vide et crée un utilitaire de champs personnalisés (customFieldsUtil).",
+          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor."}},
+          "internal": true
+        },
+        "setPath": {
+          "desc": "Définit le chemin de course édité.",
+          "params": {"path": {"type": "table", "desc": "Objet gameplay/race/path."}}
+        },
+        "selected": {
+          "desc": "Appelé quand l'onglet devient actif : désélectionne, met tous les nœuds en dessin « normal », ajoute le raccourci Shift « Add New » et récupère la carte (map.getMap()).",
+          "internal": true
+        },
+        "unselect": {
+          "desc": "Appelé quand l'onglet est quitté : les nœuds passent en dessin « faded » et le raccourci Shift est retiré.",
+          "internal": true
+        },
+        "selectPathnode": {
+          "desc": "Sélectionne le nœud d'ID id (nil pour aucun) : met en surbrillance ce nœud, place le gizmo, charge le nom et les champs personnalisés.",
+          "params": {"id": {"type": "integer|nil", "desc": "ID du pathnode."}}
+        },
+        "selectedPathnode": {
+          "desc": "Renvoie le nœud sélectionné s'il existe et n'est pas manquant.",
+          "returns": [{"type": "table|nil", "desc": "Pathnode sélectionné."}]
+        },
+        "updateTransform": {
+          "desc": "Place le gizmo d'axes sur le nœud (orienté selon sa normale en alignement local si le nœud en a une). Sans effet si le gizmo n'est pas autorisé.",
+          "params": {"index": {"type": "integer", "desc": "ID du pathnode."}}
+        },
+        "beginDrag": {
+          "desc": "Début de manipulation au gizmo : mémorise l'état sérialisé, la rotation et le rayon du nœud.",
+          "internal": true
+        },
+        "dragging": {
+          "desc": "Pendant la manipulation : applique translation (mode manuel seulement), rotation de la normale (si le nœud en a une) ou échelle du rayon.",
+          "internal": true
+        },
+        "endDragging": {
+          "desc": "Fin de manipulation : valide l'action d'historique avec l'état avant/après du nœud.",
+          "internal": true
+        },
+        "handleMouseDown": {
+          "desc": "Mode simple drag : au clic, autorise le glissement si on clique le nœud déjà sélectionné, sinon sélectionne le nœud survolé ou désélectionne.",
+          "params": {"hovered": {"type": "table|nil", "desc": "Nœud sous la souris."}},
+          "internal": true
+        },
+        "handleMouseHold": {
+          "desc": "Mode simple drag : pendant le maintien, calcule la position projetée au sol par lancer de rayon statique (forêt désactivée en collision) et dessine une sphère et le nom du nœud.",
+          "internal": true
+        },
+        "handleMouseUp": {
+          "desc": "Mode simple drag : au relâchement, valide l'action « Manipulated Node via Simple Drag » avec la nouvelle position.",
+          "internal": true
+        },
+        "onEditModeActivate": {
+          "desc": "Appelé à l'activation du mode d'édition (voir notes : inopérant).",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau du nœud.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Infos souris (valid, down, hold, up, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos)."}},
+          "internal": true
+        },
+        "createManualPathnode": {
+          "desc": "Affiche l'aide et l'aperçu (sphère, prismes de direction) pendant le glisser, puis au relâchement crée un nœud manuel (et un segment depuis le dernier nœud) via l'historique.",
+          "internal": true
+        },
+        "selectNavgraphNode": {
+          "desc": "Mode Alt : survole les waypoints manuels du navgraph (map.getManualWaypoints) et permet d'en ajouter un comme pathnode.",
+          "internal": true
+        },
+        "mouseOverPathnodes": {
+          "desc": "Renvoie le nœud dont la sphère (rayon radius) est traversée par le rayon souris, le plus proche de la caméra.",
+          "returns": [{"type": "table|nil", "desc": "Pathnode survolé."}]
+        },
+        "input": {
+          "desc": "Gère la souris : Alt = nœud navgraph, Shift = création manuelle, sinon sélection (clic simple, ou simple drag selon la préférence).",
+          "internal": true
+        },
+        "drawPathnodeList": {
+          "desc": "Dessine la liste des nœuds (préfixe « * » si useAsSplit, parenthèses si non visible) et le panneau du nœud courant : suppression, déplacement dans la liste, nom, mode, position/rayon, normale, visibilité, split, positions de récupération.",
+          "internal": true
+        },
+        "drawCustomFields": {
+          "desc": "Dessine l'éditeur de champs personnalisés et les boutons Copy Fields / Paste Fields (copie dans self.cfData).",
+          "params": {"fields": {"type": "table", "desc": "Objet de champs personnalisés (onSerialize/onDeserialized)."}}
+        },
+        "autoRecoverPos": {
+          "desc": "Crée automatiquement une position de départ de groupe « recovery » à l'emplacement du nœud (direction inversée si reverse) et l'affecte au champ recovery ou reverseRecovery du nœud.",
+          "params": {"reverse": {"type": "boolean", "desc": "true pour la récupération arrière (champ reverseRecovery, normale inversée)."}}
+        },
+        "selector": {
+          "desc": "Liste déroulante pour choisir une position de départ (ou « None » = -1) dans un champ du nœud, avec aperçu du nom dans le monde et bouton « Auto-Place » si le champ est vide et le nœud a une normale.",
+          "params": {
+            "name": {"type": "string", "desc": "Libellé."},
+            "fieldName": {"type": "string", "desc": "Champ du nœud (recovery ou reverseRecovery)."},
+            "clrI": {"type": "ColorI|nil", "desc": "Couleur de fond du texte dans le monde."},
+            "tt": {"type": "string|nil", "desc": "Infobulle."}
+          }
+        }
+      }
+    }
+  }
+}

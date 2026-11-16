@@ -1,112 +1,243 @@
 {
   "path": "lua/ge/extensions/freeroam/freeroam.lua",
-  "module": "Mode de jeu « freeroam » (balade libre) : démarre un niveau en freeroam, applique les options de spawn (trafic, véhicules garés, heure du jour, date, écoulement du temps), lance les flowgraphs associés au niveau, gère la remise à zéro du joueur et les messages de radars. Un moddeur l'utilise pour lancer un niveau (startFreeroam / startFreeroamByName) ou pour préconfigurer le trafic et l'heure via spawningOptionsHelper avant le lancement. Global : freeroam_freeroam.",
-  "usage": "freeroam_freeroam.spawningOptionsHelper.trafficMode = 'enabled'\nfreeroam_freeroam.spawningOptionsHelper.trafficAmount = 10\nfreeroam_freeroam.spawningOptionsHelper.timeOfDay = 0.5 -- midi\nfreeroam_freeroam.startFreeroamByName('gridmap_v2')",
+  "module": "\"Freeroam\" game mode (free roam): starts a level in freeroam, applies the spawn options (traffic, parked vehicles, time of day, date, time flow), launches the flowgraphs associated with the level, handles the player's reset and radar messages. A modder uses it to launch a level (startFreeroam / startFreeroamByName) or to preconfigure traffic and time via spawningOptionsHelper before launch. Global: freeroam_freeroam.",
+  "usage": "freeroam_freeroam.spawningOptionsHelper.trafficMode = 'enabled'\nfreeroam_freeroam.spawningOptionsHelper.trafficAmount = 10\nfreeroam_freeroam.spawningOptionsHelper.timeOfDay = 0.5 -- noon\nfreeroam_freeroam.startFreeroamByName('gridmap_v2')",
   "notes": [
-    "M.state.freeroamActive est mis à true au démarrage et remis à false dans onClientEndMission.",
-    "Les options environnement (timeOfDay, date, timePlay) sont remises par défaut après application dans onClientPostStartMission. Le reste n'est remis à zéro que si resetSpawningOptions est appelée (champ resetOptionsAfterStartingFreeroam non lu dans ce fichier).",
-    "Si un niveau est déjà chargé (scenetree.MissionGroup existe), le démarrage est différé : le jeu termine d'abord le mode actif (endActiveGameMode) puis relance startFreeroam.",
-    "Le hook onFreeroamLoaded(levelPath) est émis dans onClientStartMission quand le freeroam est actif.",
-    "Dans onClientPostStartMission, le flowgraph associé n'est lancé que s'il n'y a pas de scénario actif.",
-    "Dans onPlayerCameraReady, trafficMode 'fromSetting' (valeur par défaut) est traité comme « désactivé » (seul 'enabled' charge le trafic), et le champ resetOptionsAfterStartingFreeroam n'est pas utilisé dans ce fichier."
+    "M.state.freeroamActive is set to true on start and set back to false in onClientEndMission.",
+    "The environment options (timeOfDay, date, timePlay) are reset to default after being applied in onClientPostStartMission. The rest is only reset if resetSpawningOptions is called (field resetOptionsAfterStartingFreeroam not read in this file).",
+    "If a level is already loaded (scenetree.MissionGroup exists), the start is deferred: the game first ends the active game mode (endActiveGameMode) then calls startFreeroam again.",
+    "The onFreeroamLoaded(levelPath) hook is emitted in onClientStartMission when freeroam is active.",
+    "In onClientPostStartMission, the associated flowgraph is only launched if there is no active scenario.",
+    "In onPlayerCameraReady, trafficMode 'fromSetting' (default value) is treated as \"disabled\" (only 'enabled' loads traffic), and the resetOptionsAfterStartingFreeroam field is not used in this file."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{'core_environment'}"},
-    "state": {"type": "table", "desc": "État du mode ; contient freeroamActive (boolean) pendant une partie freeroam."},
-    "spawningOptionsHelper": {"type": "table", "desc": "Options de lancement : trafficMode ('fromSetting'|'disabled'|'enabled'), trafficAmount (-1 auto, 0 aucun, N), trafficPolice ('disabled'|'enabled'), trafficParked ('disabled'|'enabled'), trafficParkedAmount (-1 auto), timeOfDay ('default'|'current'|'currentUtc'|clé du niveau|nombre 0..1), date (secondes epoch Unix), timePlay ('disabled'|'level'|'fast'|'normal'|'slow'|'realtime'), resetOptionsAfterStartingFreeroam (boolean)."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{'core_environment'}"
+    },
+    "state": {
+      "type": "table",
+      "desc": "Mode state; contains freeroamActive (boolean) during a freeroam game."
+    },
+    "spawningOptionsHelper": {
+      "type": "table",
+      "desc": "Launch options: trafficMode ('fromSetting'|'disabled'|'enabled'), trafficAmount (-1 auto, 0 none, N), trafficPolice ('disabled'|'enabled'), trafficParked ('disabled'|'enabled'), trafficParkedAmount (-1 auto), timeOfDay ('default'|'current'|'currentUtc'|level key|number 0..1), date (Unix epoch seconds), timePlay ('disabled'|'level'|'fast'|'normal'|'slow'|'realtime'), resetOptionsAfterStartingFreeroam (boolean)."
+    }
   },
   "functions": {
     "resetSpawningOptions": {
-      "desc": "Remet spawningOptionsHelper à ses valeurs par défaut (copie profonde de l'état initial).",
+      "desc": "Resets spawningOptionsHelper to its default values (deep copy of the initial state).",
       "params": {},
       "internal": false
     },
     "startFreeroam": {
-      "desc": "Démarre le freeroam sur un niveau : affiche l'écran de chargement, décharge les extensions automatiques, charge les extensions de preset, vide le filtre d'actions, puis core_levels.startLevel. Si un niveau est déjà chargé, attend sa fin.",
+      "desc": "Starts freeroam on a level: shows the loading screen, unloads the automatic extensions, loads the preset extensions, empties the action filter, then core_levels.startLevel. If a level is already loaded, waits for it to finish.",
       "params": {
-        "level": {"type": "table|string", "desc": "Table niveau (levelName, misFilePath) ou chemin du fichier du niveau."},
-        "startPointName": {"type": "string|nil", "desc": "Nom du point de départ (utilisé seulement si level est une table, via setSpawnpoint.setDefaultSP)."},
-        "wasDelayed": {"type": "boolean|nil", "desc": "Vrai quand l'appel vient d'un démarrage différé (non utilisé dans le corps actif)."},
-        "spawnVehicle": {"type": "boolean|nil", "desc": "false = ne pas faire apparaître de véhicule (efface les variables $beamngVehicle*)."},
-        "customLoadingFunction": {"type": "function|nil", "desc": "Fonction de chargement personnalisée transmise à core_levels.startLevel."}
+        "level": {
+          "type": "table|string",
+          "desc": "Level table (levelName, misFilePath) or level file path."
+        },
+        "startPointName": {
+          "type": "string|nil",
+          "desc": "Spawn point name (only used if level is a table, via setSpawnpoint.setDefaultSP)."
+        },
+        "wasDelayed": {
+          "type": "boolean|nil",
+          "desc": "True when the call comes from a deferred start (not used in the active body)."
+        },
+        "spawnVehicle": {
+          "type": "boolean|nil",
+          "desc": "false = do not spawn a vehicle (clears the $beamngVehicle* variables)."
+        },
+        "customLoadingFunction": {
+          "type": "function|nil",
+          "desc": "Custom loading function passed to core_levels.startLevel."
+        }
       },
       "internal": false
     },
     "startFreeroamByName": {
-      "desc": "Retrouve le niveau par nom (core_levels.getLevelByName) et appelle startFreeroam.",
+      "desc": "Finds the level by name (core_levels.getLevelByName) and calls startFreeroam.",
       "params": {
-        "levelName": {"type": "string", "desc": "Nom du niveau."},
-        "startPointName": {"type": "string|nil", "desc": "Point de départ."},
-        "wasDelayed": {"type": "boolean|nil", "desc": "Voir startFreeroam."},
-        "spawnVehicle": {"type": "boolean|nil", "desc": "Voir startFreeroam."},
-        "customLoadingFunction": {"type": "function|nil", "desc": "Voir startFreeroam."}
+        "levelName": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "startPointName": {
+          "type": "string|nil",
+          "desc": "Start point."
+        },
+        "wasDelayed": {
+          "type": "boolean|nil",
+          "desc": "See startFreeroam."
+        },
+        "spawnVehicle": {
+          "type": "boolean|nil",
+          "desc": "See startFreeroam."
+        },
+        "customLoadingFunction": {
+          "type": "function|nil",
+          "desc": "See startFreeroam."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le niveau existe."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the level exists."
+        }
+      ],
       "internal": false
     },
     "startTrackBuilder": {
-      "desc": "Charge l'extension trackbuilder_trackBuilder et appelle son enter(levelName, forceLoad).",
-      "params": {"levelName": {"type": "string", "desc": "Niveau."}, "forceLoad": {"type": "boolean|nil", "desc": "Forcer le chargement."}},
+      "desc": "Loads the trackbuilder_trackBuilder extension and calls its enter(levelName, forceLoad).",
+      "params": {
+        "levelName": {
+          "type": "string",
+          "desc": "Level."
+        },
+        "forceLoad": {
+          "type": "boolean|nil",
+          "desc": "Force the load."
+        }
+      },
       "internal": false
     },
     "onPlayerCameraReady": {
-      "desc": "Hook appelé quand la caméra joueur est prête : si le freeroam est actif, décide du trafic et des véhicules garés d'après spawningOptionsHelper et du réglage trafficParkedVehicles, puis appelle gameplay_traffic.setupTrafficHelper. Ne fait rien si le niveau ne supporte pas le trafic.",
+      "desc": "Hook called when the player camera is ready: if freeroam is active, decides on traffic and parked vehicles based on spawningOptionsHelper and the trafficParkedVehicles setting, then calls gameplay_traffic.setupTrafficHelper. Does nothing if the level does not support traffic.",
       "params": {},
       "internal": true
     },
     "onTrafficOrParkingReady": {
-      "desc": "Hook appelé quand trafic/véhicules garés sont prêts : retire l'écran de chargement « traffic ».",
+      "desc": "Hook called when traffic/parked vehicles are ready: removes the \"traffic\" loading screen.",
       "params": {},
       "internal": true
     },
     "onClientPreStartMission": {
-      "desc": "Hook avant le démarrage du niveau : charge à la racine le fichier `mainLevel.lua` du dossier du niveau s'il existe et appelle son onClientPreStartMission.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook before the level starts: loads the `mainLevel.lua` file from the level folder at the root if it exists and calls its onClientPreStartMission.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook au démarrage du niveau : si freeroam actif, émet onFreeroamLoaded(levelPath) et pousse l'action map ExplorationCheckpointsActionMap si elle existe.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook when the level starts: if freeroam is active, emits onFreeroamLoaded(levelPath) and pushes the ExplorationCheckpointsActionMap action map if it exists.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onClientPostStartMission": {
-      "desc": "Hook après le démarrage : applique date, heure du jour et écoulement du temps demandés dans spawningOptionsHelper, les remet par défaut, puis lance les flowgraphs associés au niveau (sauf scénario actif).",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook after start: applies the date, time of day and time flow requested in spawningOptionsHelper, resets them to default, then launches the flowgraphs associated with the level (unless a scenario is active).",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook de fin de niveau : désactive freeroamActive, retire l'action map ExplorationCheckpointsActionMap et décharge mainLevel si chargé.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "End-of-level hook: disables freeroamActive, removes the ExplorationCheckpointsActionMap action map and unloads mainLevel if loaded.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook de changement de véhicule : efface les surbrillances de parts de l'ancien véhicule (core_vehicle_partmgmt.clearVehicleHighlights).",
-      "params": {"oldId": {"type": "integer", "desc": "Ancien véhicule."}, "newId": {"type": "integer", "desc": "Nouveau véhicule."}, "player": {"type": "integer", "desc": "Joueur (non utilisé)."}},
+      "desc": "Vehicle change hook: clears the part highlights of the old vehicle (core_vehicle_partmgmt.clearVehicleHighlights).",
+      "params": {
+        "oldId": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newId": {
+          "type": "integer",
+          "desc": "New vehicle."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player (unused)."
+        }
+      },
       "internal": true
     },
     "onVehicleSpawned": {
-      "desc": "Hook d'apparition de véhicule : réinitialise les surbrillances de parts et appelle core_vehicle_partmgmt.setNewParts.",
-      "params": {"vehID": {"type": "integer", "desc": "Id du véhicule."}},
+      "desc": "Vehicle spawn hook: resets the part highlights and calls core_vehicle_partmgmt.setNewParts.",
+      "params": {
+        "vehID": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
       "internal": true
     },
     "onResetGameplay": {
-      "desc": "Hook de remise à zéro du joueur : ignoré en scénario, campagne, invite de récupération, flowgraph bloquant ou session multijoueur ; sinon spawn.safeReset si le réglage enableSmartRecovery est actif, sinon be:resetVehicle.",
-      "params": {"playerID": {"type": "integer", "desc": "Joueur (-1 = aucun véhicule)."}},
+      "desc": "Player reset hook: ignored in scenario, campaign, recovery prompt, blocking flowgraph or multiplayer session; otherwise spawn.safeReset if the enableSmartRecovery setting is active, else be:resetVehicle.",
+      "params": {
+        "playerID": {
+          "type": "integer",
+          "desc": "Player (-1 = no vehicle)."
+        }
+      },
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook par frame : tant que worldReadyState vaut 0, initialise la caméra (commands.initCamera) et passe en caméra libre s'il n'y a pas de véhicule joueur.",
-      "params": {"dtReal": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}, "dtRaw": {"type": "number", "desc": "Durée brute (s)."}},
+      "desc": "Per-frame hook: while worldReadyState is 0, initializes the camera (commands.initCamera) and switches to the free camera if there is no player vehicle.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real duration (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated duration (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw duration (s)."
+        }
+      },
       "internal": true
     },
     "onSpeedTrapTriggered": {
-      "desc": "Hook de radar : en freeroam, si le sujet est le véhicule joueur, enregistre le record dans gameplay_speedTrapLeaderboards et affiche les messages de vitesse et de record (ui_message).",
-      "params": {"speedTrapData": {"type": "table", "desc": "Données du radar (speedLimit, subjectID…)."}, "playerSpeed": {"type": "number", "desc": "Vitesse enregistrée (m/s, déduit du code)."}, "overSpeed": {"type": "number|boolean", "desc": "Dépassement (déduit du code)."}},
+      "desc": "Speed trap hook: in freeroam, if the subject is the player vehicle, records the record in gameplay_speedTrapLeaderboards and displays the speed and record messages (ui_message).",
+      "params": {
+        "speedTrapData": {
+          "type": "table",
+          "desc": "Speed trap data (speedLimit, subjectID...)."
+        },
+        "playerSpeed": {
+          "type": "number",
+          "desc": "Recorded speed (m/s, inferred from code)."
+        },
+        "overSpeed": {
+          "type": "number|boolean",
+          "desc": "Overspeed (inferred from code)."
+        }
+      },
       "internal": true
     },
     "onRedLightCamTriggered": {
-      "desc": "Hook de radar de feu rouge : en freeroam pour le véhicule joueur, affiche un message avec la plaque.",
-      "params": {"speedTrapData": {"type": "table", "desc": "Données du radar."}, "playerSpeed": {"type": "number", "desc": "Vitesse (non utilisée)."}},
+      "desc": "Red light camera hook: in freeroam for the player vehicle, displays a message with the license plate.",
+      "params": {
+        "speedTrapData": {
+          "type": "table",
+          "desc": "Speed trap data."
+        },
+        "playerSpeed": {
+          "type": "number",
+          "desc": "Speed (unused)."
+        }
+      },
       "internal": true
     }
   }

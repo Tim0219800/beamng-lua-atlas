@@ -1,0 +1,17 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactEnergyStorage.lua",
+  "module": "Module de gameplayInterface pour energyStorage : fixer l'énergie stockée d'un réservoir et lister tous les stockages avec leur énergie courante et maximale.",
+  "usage": "gameplayInterface.executeAction(0, 11, 'setEnergyStorageEnergy', 'mainTank', 1.0e8)\ngameplayInterface.getSystemData(0, 12, 'energyStorage')",
+  "notes": [
+    "Action 'setEnergyStorageEnergy'(name:string, energy:number) : écrit directement storage.storedEnergy (en joules) ; {failReason} si le stockage est introuvable. Aucun clamp à energyCapacity.",
+    "Lookup 'energyStorage'() : renvoie une table contenant une liste {name, storageType, energyType, currentEnergy, maxEnergy} (currentEnergy = storedEnergy, maxEnergy = energyCapacity). La liste est englobée dans une table (le résultat est {liste})."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions : setEnergyStorageEnergy."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : energyStorage."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

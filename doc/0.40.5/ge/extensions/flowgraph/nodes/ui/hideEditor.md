@@ -1,23 +1,23 @@
 # `flowgraph_nodes_ui_hideEditor`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/hideEditor.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/hideEditor.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/hideEditor")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/hideEditor")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Show Editor » (catégorie once_instant, auteur BeamNG) : affiche ou masque le World Editor. Entrée « value » (bool, vrai = visible). L'action est appliquée après le déclenchement (_afterTrigger) via editor.setEditorActive si l'état change.
+Flowgraph node "Show Editor" (category once_instant, author BeamNG): shows or hides the World Editor. Input "value" (bool, true = visible). The action is applied after the trigger (_afterTrigger) via editor.setEditorActive if the state changes.
 
-## Remarques
+## Notes
 
-- Le nom du fichier (hideEditor) diffère du nom du nœud (Show Editor).
+- The file name (hideEditor) differs from the node name (Show Editor).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Applique editor.setEditorActive si différent de editor.active. | 27 |
-| `C:workOnce()` | Mémorise la valeur demandée. | 23 |
+| `C:_afterTrigger()` | Applies editor.setEditorActive if different from editor.active. | 27 |
+| `C:workOnce()` | Stores the requested value. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/hideEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/hideEditor.lua`.*

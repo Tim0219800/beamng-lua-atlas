@@ -1,0 +1,78 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.lua",
+  "module": "Noeud flowgraph « Sevensegment Display » (repeat_instant, auteur BeamNG). Crée un afficheur sept segments composé de TSStatic (art/shapes/quarter_mile_display/display_*.dae) à la position/rotation données et y affiche le nombre du pin number. Réglages dans self.data : mode ('number', 'minutes', 'hours'), scaling, count (5 chiffres), decimals (3), decimalOffset, spacing, shapeFolder, showLeadingZeroes. Sortie : number.",
+  "notes": [
+    "Le pin de sortie number n'est jamais écrit.",
+    "Les modes 'hours' et 'number' n'ont pas de logique distincte : seul 'minutes' ajoute les deux points.",
+    "Si le pin number est nil, updateNumbers échoue (division de nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise les réglages par défaut (mode 'minutes', count 5, decimals 3, spacing 5...).",
+          "params": {
+            "mgr": {
+              "type": "any",
+              "desc": "gestionnaire flowgraph"
+            }
+          },
+          "internal": true
+        },
+        "createObjects": {
+          "desc": "Crée les chiffres (shape '8'), le point décimal et, en mode minutes, les deux points.",
+          "params": {
+            "objectName": {
+              "type": "any",
+              "desc": "non utilisé"
+            }
+          },
+          "internal": true
+        },
+        "makeDot": {
+          "desc": "Crée un TSStatic de point (shape 'period') décalé par rapport à la position de base.",
+          "params": {
+            "offset": {
+              "type": "any",
+              "desc": "vec3 de décalage local"
+            },
+            "name": {
+              "type": "any",
+              "desc": "suffixe de nom (decimal, m_1, m_2)"
+            }
+          },
+          "internal": true
+        },
+        "updateNumbers": {
+          "desc": "Change la shape de chaque chiffre selon le nombre courant ; efface les zéros de tête si showLeadingZeroes est faux.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Supprime les objets à l'arrêt.",
+          "internal": true
+        },
+        "_executionStarted": {
+          "desc": "Oublie le dernier nombre affiché.",
+          "internal": true
+        },
+        "clearObjects": {
+          "desc": "Supprime tous les objets créés et remet spawned à false.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Sur clear, supprime l'afficheur ; sinon le crée si besoin et met à jour les chiffres si le nombre a changé.",
+          "internal": false
+        },
+        "onClientEndMission": {
+          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "internal": true
+        },
+        "destroy": {
+          "desc": "Appelé à la destruction du noeud : nettoie les objets créés.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

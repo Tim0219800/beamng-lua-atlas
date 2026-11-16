@@ -1,100 +1,100 @@
 # `controller_braking_hydraulicPumpBrake`
 
-*Fichier : `lua/vehicle/controller/braking/hydraulicPumpBrake.lua` · VM : Véhicule · 197 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/braking/hydraulicPumpBrake.lua` · VM: Vehicle · 197 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `braking/hydraulicPumpBrake` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `braking/hydraulicPumpBrake` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire pour un freinage hydraulique alimenté par la pompe du moteur (véhicules lourds ou anciens). Les freins avant et arrière (`brakeF`, `brakeR`) ne fonctionnent que moteur tournant ; sans pression ou si des poutres de dommage sont cassées, le frein de stationnement est serré automatiquement. Propose une assistance en côte (frein arrière résiduel sans accélérateur) et un blocage des freins avant. Ordre d'appel : `defaultOrder = 50` (tôt).
+Auxiliary controller for hydraulic braking powered by the engine's pump (heavy or old vehicles). The front and rear brakes (`brakeF`, `brakeR`) only work with the engine running; without pressure or if damage beams are broken, the parking brake is applied automatically. Offers a hill assist (residual rear brake without throttle) and a front brake lockout. Call order: `defaultOrder = 50` (early).
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `relevantEngineName` ("mainEngine"), `frontDamageBeamTag`, `rearDamageBeamTag` (tags de poutres de `beamstate.tagBeamMap` ; leur casse coupe le frein avant ou arrière).
-- Le moteur est considéré en marche si `outputAV1` > 10 rad/s ; le coefficient est lissé.
-- Electrics écrits : brakeF, brakeR, frontBrakeLockOut (1/0), hillAssist (0..1). Lit electrics throttle et brake.
-- Assistance en côte : tant que le coefficient est > 0 et que l'accélérateur est <= 0, ajoute jusqu'à 0.8 au frein arrière.
-- Le frein de stationnement est serré via `controller.mainController.smartParkingBrake` s'il existe, sinon via `input.event("parkingbrake", 1, FILTER_KBD)`.
-- Attention : updateGFX suppose que les tags jbeam sont définis ; avec un tag nil, `beamstate.tagBeamMap[nil]` est lu (renvoie nil, donc table vide).
+- Jbeam keys read by init: `relevantEngineName` ("mainEngine"), `frontDamageBeamTag`, `rearDamageBeamTag` (beam tags from `beamstate.tagBeamMap`; breaking one cuts the front or rear brake).
+- The engine is considered running if `outputAV1` > 10 rad/s; the coefficient is smoothed.
+- Electrics written: brakeF, brakeR, frontBrakeLockOut (1/0), hillAssist (0..1). Reads electrics throttle and brake.
+- Hill assist: as long as the coefficient is > 0 and the throttle is <= 0, adds up to 0.8 to the rear brake.
+- The parking brake is applied via `controller.mainController.smartParkingBrake` if it exists, otherwise via `input.event("parkingbrake", 1, FILTER_KBD)`.
+- Warning: updateGFX assumes the jbeam tags are defined; with a nil tag, `beamstate.tagBeamMap[nil]` is read (returns nil, hence an empty table).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_braking_hydraulicPumpBrake.beamBroken(id, energy)` | Hook de rupture de poutre : si la poutre est dans les tags de dommage avant ou arrière, désactive le frein correspondant jusqu'au reset. *(interne)* | 75 |
-| `controller_braking_hydraulicPumpBrake.changeHillAssistCoef(change)` | Ajoute une variation au coefficient d'assistance en côte. | 111 |
-| `controller_braking_hydraulicPumpBrake.getState()` | Renvoie l'assistance en côte et le blocage avant pour la sauvegarde d'état. | 159 |
-| `controller_braking_hydraulicPumpBrake.init(jbeamData)` | Retrouve le moteur et les listes de poutres de dommage (via les tags jbeam). *(interne)* | 140 |
-| `controller_braking_hydraulicPumpBrake.reset(jbeamData)` | Réinitialise le lisseur du moteur, les coefficients de dommage et le frein de stationnement automatique. *(interne)* | 133 |
-| `controller_braking_hydraulicPumpBrake.setFrontLockOutEnabled(enabled, silent)` | Active ou désactive le blocage du frein avant (le frein avant est coupé quand actif). | 115 |
-| `controller_braking_hydraulicPumpBrake.setHillAssistCoef(coef, silent)` | Fixe le coefficient d'assistance en côte (0 à 1, remis à 0 s'il est <= 0.01) et affiche un message UI sauf si silent. | 94 |
-| `controller_braking_hydraulicPumpBrake.setState(data)` | Restaure ces deux valeurs (silencieusement). | 165 |
-| `controller_braking_hydraulicPumpBrake.toggleFrontLockOutEnabled()` | Inverse l'état du blocage du frein avant. | 129 |
-| `controller_braking_hydraulicPumpBrake.updateGFX(dt)` | Chaque frame : calcule brakeF/brakeR en tenant compte du moteur en marche, de l'assistance en côte, du blocage avant et des poutres cassées ; gère le frein de stationnement automatique et publie les electrics. *(interne)* | 31 |
+| `controller_braking_hydraulicPumpBrake.beamBroken(id, energy)` | Beam break hook: if the beam is in the front or rear damage tags, disables the corresponding brake until reset. *(internal)* | 75 |
+| `controller_braking_hydraulicPumpBrake.changeHillAssistCoef(change)` | Adds a change to the hill assist coefficient. | 111 |
+| `controller_braking_hydraulicPumpBrake.getState()` | Returns the hill assist and the front lockout for the state save. | 159 |
+| `controller_braking_hydraulicPumpBrake.init(jbeamData)` | Finds the engine and the damage beam lists (via the jbeam tags). *(internal)* | 140 |
+| `controller_braking_hydraulicPumpBrake.reset(jbeamData)` | Reinitializes the engine smoother, the damage coefficients and the automatic parking brake. *(internal)* | 133 |
+| `controller_braking_hydraulicPumpBrake.setFrontLockOutEnabled(enabled, silent)` | Enables or disables the front brake lockout (the front brake is cut when active). | 115 |
+| `controller_braking_hydraulicPumpBrake.setHillAssistCoef(coef, silent)` | Sets the hill assist coefficient (0 to 1, reset to 0 if <= 0.01) and displays a UI message unless silent. | 94 |
+| `controller_braking_hydraulicPumpBrake.setState(data)` | Restores these two values (silently). | 165 |
+| `controller_braking_hydraulicPumpBrake.toggleFrontLockOutEnabled()` | Toggles the front brake lockout state. | 129 |
+| `controller_braking_hydraulicPumpBrake.updateGFX(dt)` | Every frame: computes brakeF/brakeR taking into account the running engine, hill assist, front lockout and broken beams; handles the automatic parking brake and publishes the electrics. *(internal)* | 31 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_braking_hydraulicPumpBrake.beamBroken(id, energy)`
 
-Hook de rupture de poutre : si la poutre est dans les tags de dommage avant ou arrière, désactive le frein correspondant jusqu'au reset.
+Beam break hook: if the beam is in the front or rear damage tags, disables the corresponding brake until reset.
 
-- `id` (*integer*) : cid de la poutre.
-- `energy` (*number*) : Énergie de rupture (non utilisée).
+- `id` (*integer*) : cid of the beam.
+- `energy` (*number*) : Break energy (unused).
 
 #### `controller_braking_hydraulicPumpBrake.changeHillAssistCoef(change)`
 
-Ajoute une variation au coefficient d'assistance en côte.
+Adds a change to the hill assist coefficient.
 
-- `change` (*number*) : Variation (peut être négative).
+- `change` (*number*) : Change (can be negative).
 
 #### `controller_braking_hydraulicPumpBrake.getState()`
 
-Renvoie l'assistance en côte et le blocage avant pour la sauvegarde d'état.
+Returns the hill assist and the front lockout for the state save.
 
-- **renvoie** : table Clés `<nom>_hillAssistCoef` et `<nom>_frontLockOutEnabled`.
+- **returns**: table Keys `<name>_hillAssistCoef` and `<name>_frontLockOutEnabled`.
 
 #### `controller_braking_hydraulicPumpBrake.init(jbeamData)`
 
-Retrouve le moteur et les listes de poutres de dommage (via les tags jbeam).
+Finds the engine and the damage beam lists (via the jbeam tags).
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_braking_hydraulicPumpBrake.reset(jbeamData)`
 
-Réinitialise le lisseur du moteur, les coefficients de dommage et le frein de stationnement automatique.
+Reinitializes the engine smoother, the damage coefficients and the automatic parking brake.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_braking_hydraulicPumpBrake.setFrontLockOutEnabled(enabled, silent)`
 
-Active ou désactive le blocage du frein avant (le frein avant est coupé quand actif).
+Enables or disables the front brake lockout (the front brake is cut when active).
 
-- `enabled` (*boolean*) : true pour couper le frein avant.
-- `silent` (*boolean|nil*) : true pour ne pas afficher de message.
+- `enabled` (*boolean*) : true to cut the front brake.
+- `silent` (*boolean|nil*) : true to not display a message.
 
 #### `controller_braking_hydraulicPumpBrake.setHillAssistCoef(coef, silent)`
 
-Fixe le coefficient d'assistance en côte (0 à 1, remis à 0 s'il est <= 0.01) et affiche un message UI sauf si silent.
+Sets the hill assist coefficient (0 to 1, reset to 0 if <= 0.01) and displays a UI message unless silent.
 
-- `coef` (*number*) : Coefficient 0 à 1.
-- `silent` (*boolean|nil*) : true pour ne pas afficher de message.
+- `coef` (*number*) : Coefficient 0 to 1.
+- `silent` (*boolean|nil*) : true to not display a message.
 
 #### `controller_braking_hydraulicPumpBrake.setState(data)`
 
-Restaure ces deux valeurs (silencieusement).
+Restores these two values (silently).
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_braking_hydraulicPumpBrake.updateGFX(dt)`
 
-Chaque frame : calcule brakeF/brakeR en tenant compte du moteur en marche, de l'assistance en côte, du blocage avant et des poutres cassées ; gère le frein de stationnement automatique et publie les electrics.
+Every frame: computes brakeF/brakeR taking into account the running engine, hill assist, front lockout and broken beams; handles the automatic parking brake and publishes the electrics.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | 50 : rang d'appel par défaut, tôt dans la liste triée. |
+| `defaultOrder` | number | 50: default call rank, early in the sorted list. |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/braking/hydraulicPumpBrake.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/braking/hydraulicPumpBrake.lua`.*

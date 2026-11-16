@@ -2,381 +2,381 @@
 -- tim19Atlas stub generated from lua/common/graphpath.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Graphe de routes pondéré et algorithmes de recherche de chemin utilisés par l'IA et le navigateur. newGraphpath() crée un graphe (nœuds nommés, arêtes bidirectionnelles avec longueur, drivabilité, voies, sens unique, positions et rayons) ; les méthodes calculent plus court chemin (Dijkstra avec tas minimal), chemins par arêtes avec pénalité de virage, chemin point-à-point, chemins aléatoires/fuite/poursuite, composantes fortement connexes et graphe minorant. Un moddeur l'utilise pour requêter le réseau routier (map.getGraphpath()) ou construire son propre graphe.
---- Accès : `require("graphpath")`
+--- Weighted road graph and pathfinding algorithms used by the AI and the navigator. newGraphpath() creates a graph (named nodes, bidirectional edges with length, drivability, lanes, one-way, positions and radii); the methods compute shortest path (Dijkstra with a min-heap), edge-based paths with turn penalty, point-to-point path, random/flee/chase paths, strongly connected components and minor graph. A modder uses it to query the road network (map.getGraphpath()) or build their own graph.
+--- Access: `require("graphpath")`
 ---@class graphpath
 local graphpath = {}
 
---- Crée un graphe vide. Les paramètres ne servent qu'à pré-allouer les tables.
----Source : lua/common/graphpath.lua:123
----@param nodeCount integer|nil Nombre de nœuds prévu (pré-allocation).
----@param edgeCount integer|nil Ignoré par le code.
----@return table  Objet Graphpath (champs graph, positions, radius, edgeListCount).
+--- Creates an empty graph. The parameters are only used to pre-allocate the tables.
+---Source: lua/common/graphpath.lua:123
+---@param nodeCount integer|nil Expected number of nodes (pre-allocation).
+---@param edgeCount integer|nil Ignored by the code.
+---@return table  Graphpath object (fields graph, positions, radius, edgeListCount).
 function graphpath.newGraphpath(nodeCount, edgeCount) end
 
---- Crée un tas minimal (file de priorité) avec les clés dans la table elle-même et les valeurs dans vals.
----Source : lua/common/graphpath.lua:47
----@return table  Objet minheap.
+--- Creates a min-heap (priority queue) with the keys in the table itself and the values in vals.
+---Source: lua/common/graphpath.lua:47
+---@return table  minheap object.
 function graphpath.newMinheap() end
 
---- Graphe non orienté de nœuds identifiés par des clés (chaînes), avec tables graph[n1][n2] = données d'arête, positions[n] (vec3), radius[n] (largeur/demi-largeur de route).
+--- Undirected graph of nodes identified by keys (strings), with tables graph[n1][n2] = edge data, positions[n] (vec3), radius[n] (road width/half-width).
 ---@class graphpath_Graphpath
 local graphpath_Graphpath = {}
 
---- Implémentation de la recherche point à point : plusieurs nœuds/arêtes d'accès possibles à la source (fournis par l'itérateur iter) et sortie vers targetPos par projection sur les arêtes ; yieldFn optionnel appelé à chaque itération.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/graphpath.lua:704
----@param sourcePos vec3 Position source.
----@param iter function Itérateur renvoyant (nœud ou {n1,n2}, coût, xnorm) du plus proche au plus éloigné.
----@param targetPos vec3 Position cible.
----@param cutOffDrivability number|nil Seuil de drivabilité (défaut 0).
----@param dirMult number|nil Pénalité de contresens.
----@param penaltyAboveCutoff number|nil Défaut 1.
----@param penaltyBelowCutoff number|nil Défaut 10000.
----@param wZ number|nil Poids vertical (défaut 1).
----@param yieldFn function|nil Appelée à chaque itération.
----@return table  Chemin (nœuds) ; {} si impossible ou si le chemin direct est meilleur.
+--- Implementation of the point-to-point search: several possible access nodes/edges at the source (provided by the iterator iter) and exit toward targetPos by projection onto the edges; optional yieldFn called at each iteration.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/graphpath.lua:704
+---@param sourcePos vec3 Source position.
+---@param iter function Iterator returning (node or {n1,n2}, cost, xnorm) from nearest to farthest.
+---@param targetPos vec3 Target position.
+---@param cutOffDrivability number|nil Drivability threshold (default 0).
+---@param dirMult number|nil Wrong-way penalty.
+---@param penaltyAboveCutoff number|nil Default 1.
+---@param penaltyBelowCutoff number|nil Default 10000.
+---@param wZ number|nil Vertical weight (default 1).
+---@param yieldFn function|nil Called at each iteration.
+---@return table  Path (nodes); {} if impossible or if the direct path is better.
 function graphpath_Graphpath:_getPointToPointPathImpl(sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ, yieldFn) end
 
---- Comme uniEdge mais attribue aussi un identifiant d'arête eId (deux identifiants consécutifs par arête, un par sens) ; nécessaire pour getEdgePath et l'index d'arêtes.
----Source : lua/common/graphpath.lua:218
----@param inNode any Nœud d'entrée.
----@param outNode any Nœud de sortie.
----@param dist number|nil Longueur (défaut 1).
----@param drivability number|nil Drivabilité.
----@param speedLimit number|nil Vitesse limite.
----@param lanes string|nil Chaîne des voies.
----@param oneWay boolean|nil Sens unique.
----@param gated number|boolean|nil Barrière.
----@param inPos vec3|nil Position à inNode.
----@param inRad number|nil Rayon à inNode.
----@param outPos vec3|nil Position à outNode.
----@param outRad number|nil Rayon à outNode.
+--- Like uniEdge but also assigns an edge identifier eId (two consecutive identifiers per edge, one per direction); required for getEdgePath and the edge index.
+---Source: lua/common/graphpath.lua:218
+---@param inNode any Entry node.
+---@param outNode any Exit node.
+---@param dist number|nil Length (default 1).
+---@param drivability number|nil Drivability.
+---@param speedLimit number|nil Speed limit.
+---@param lanes string|nil Lanes string.
+---@param oneWay boolean|nil One-way.
+---@param gated number|boolean|nil Gate.
+---@param inPos vec3|nil Position at inNode.
+---@param inRad number|nil Radius at inNode.
+---@param outPos vec3|nil Position at outNode.
+---@param outRad number|nil Radius at outNode.
 function graphpath_Graphpath:bidiEdge(inNode, outNode, dist, drivability, speedLimit, lanes, oneWay, gated, inPos, inRad, outPos, outRad) end
 
---- Remplace la table graph par une table vide (positions et rayons conservés).
----Source : lua/common/graphpath.lua:173
+--- Replaces the graph table with an empty table (positions and radii kept).
+---Source: lua/common/graphpath.lua:173
 function graphpath_Graphpath:clear() end
 
---- Ajoute une arête simple de sp vers ep (len = dist) et crée ep si absent. Une seule direction est stockée (graph[sp][ep]).
----Source : lua/common/graphpath.lua:177
----@param sp any Nœud de départ.
----@param ep any Nœud d'arrivée.
----@param dist number|nil Longueur/coût (défaut 1).
+--- Adds a simple edge from sp to ep (len = dist) and creates ep if absent. Only one direction is stored (graph[sp][ep]).
+---Source: lua/common/graphpath.lua:177
+---@param sp any Start node.
+---@param ep any End node.
+---@param dist number|nil Length/cost (default 1).
 function graphpath_Graphpath:edge(sp, ep, dist) end
 
---- Nombre de voies de l'arête allant de fromNode vers toNode (compte les '+' ou '-' de la chaîne lanes selon le sens).
----Source : lua/common/graphpath.lua:515
----@param fromNode any Nœud de départ.
----@param toNode any Nœud d'arrivée.
----@return integer  Nombre de voies dans ce sens.
+--- Number of lanes of the edge going from fromNode to toNode (counts the '+' or '-' of the lanes string depending on the direction).
+---Source: lua/common/graphpath.lua:515
+---@param fromNode any Start node.
+---@param toNode any End node.
+---@return integer  Number of lanes in this direction.
 function graphpath_Graphpath:edgeLanesInDirection(fromNode, toNode) end
 
---- Exporte le graphe sous forme compacte (une entrée par arête, sans doublon) pour sauvegarde ou envoi à une autre VM.
----Source : lua/common/graphpath.lua:133
----@param edgeCount integer|nil Nombre d'arêtes attendu (pré-allocation).
+--- Exports the graph in compact form (one entry per edge, no duplicates) for saving or sending to another VM.
+---Source: lua/common/graphpath.lua:133
+---@param edgeCount integer|nil Expected number of edges (pre-allocation).
 ---@return table  {edgeData, positions, radius, edgeDataCount, nodeCount}.
 function graphpath_Graphpath:export(edgeCount) end
 
---- Construit la table edgeList (eId vers nœud) à partir des arêtes créées par bidiEdge.
----Source : lua/common/graphpath.lua:250
+--- Builds the edgeList table (eId to node) from the edges created by bidiEdge.
+---Source: lua/common/graphpath.lua:250
 function graphpath_Graphpath:generateEdgeIndex() end
 
---- Parcours en profondeur dans un rayon autour de start ; renvoie les carrefours (nœuds avec au moins 2 nouveaux voisins) et leurs liens.
----Source : lua/common/graphpath.lua:1416
----@param start any Nœud de départ.
----@param maxRadius number|nil Rayon max en m (défaut 1000).
----@return table[]|nil  Liste de {node, links, sqDist} ; nil si start inconnu.
+--- Depth-first traversal within a radius around start; returns the intersections (nodes with at least 2 new neighbors) and their links.
+---Source: lua/common/graphpath.lua:1416
+---@param start any Start node.
+---@param maxRadius number|nil Max radius in m (default 1000).
+---@return table[]|nil  List of {node, links, sqDist}; nil if start is unknown.
 function graphpath_Graphpath:getBranchNodesAround(start, maxRadius) end
 
---- Chemin pour poursuivre une cible : choisit le nœud devant selon la position/vitesse de la cible et calcule un chemin vers le nœud de la cible.
----Source : lua/common/graphpath.lua:1456
----@param nodeBehind any Nœud derrière le poursuivant.
----@param nodeAhead any Nœud devant le poursuivant.
----@param targetNodeBehind any Nœud derrière la cible.
----@param targetNodeAhead any Nœud devant la cible.
----@param mePos vec3 Position du poursuivant.
----@param meVel vec3 Vitesse du poursuivant.
----@param targetPos vec3 Position de la cible.
----@param targetVel vec3 Vitesse de la cible.
----@param dirMult number|nil Pénalité de contresens.
----@return table  Chemin de nœuds.
+--- Path to chase a target: picks the node ahead according to the target's position/velocity and computes a path to the target's node.
+---Source: lua/common/graphpath.lua:1456
+---@param nodeBehind any Node behind the chaser.
+---@param nodeAhead any Node ahead of the chaser.
+---@param targetNodeBehind any Node behind the target.
+---@param targetNodeAhead any Node ahead of the target.
+---@param mePos vec3 Chaser position.
+---@param meVel vec3 Chaser velocity.
+---@param targetPos vec3 Target position.
+---@param targetVel vec3 Target velocity.
+---@param dirMult number|nil Wrong-way penalty.
+---@return table  Node path.
 function graphpath_Graphpath:getChasePath(nodeBehind, nodeAhead, targetNodeBehind, targetNodeAhead, mePos, meVel, targetPos, targetVel, dirMult) end
 
---- Identifiant d'arête orientée de fromNode vers toNode (eId pour le sens inNode->outNode, eId+1 pour l'inverse).
----Source : lua/common/graphpath.lua:263
----@param fromNode any Nœud de départ.
----@param toNode any Nœud d'arrivée.
----@return integer  Identifiant d'arête.
+--- Identifier of the directed edge from fromNode to toNode (eId for the direction inNode->outNode, eId+1 for the reverse).
+---Source: lua/common/graphpath.lua:263
+---@param fromNode any Start node.
+---@param toNode any End node.
+---@return integer  Edge identifier.
 function graphpath_Graphpath:getEdgeIdFromNodes(fromNode, toNode) end
 
---- Plus court chemin sur des arêtes (états = arêtes orientées) avec pénalités de virage (gauche/droite plus forte aux carrefours, demi-tour très pénalisé selon la largeur de route). Part de l'arête bNode vers fNode ; le résultat est une liste de nœuds.
----Source : lua/common/graphpath.lua:523
----@param bNode any Nœud derrière.
----@param fNode any Nœud devant (direction de départ).
----@param goal any Nœud but.
----@param dirMult number|nil Pénalité de contresens (au moins 1).
----@return table|nil  Liste de nœuds ; nil si les nœuds ne forment pas une arête valide ou si le but est inconnu.
+--- Shortest path over edges (states = directed edges) with turn penalties (left/right stronger at intersections, U-turn heavily penalized depending on road width). Starts from the edge bNode to fNode; the result is a list of nodes.
+---Source: lua/common/graphpath.lua:523
+---@param bNode any Node behind.
+---@param fNode any Node ahead (start direction).
+---@param goal any Goal node.
+---@param dirMult number|nil Wrong-way penalty (at least 1).
+---@return table|nil  List of nodes; nil if the nodes do not form a valid edge or if the goal is unknown.
 function graphpath_Graphpath:getEdgePath(bNode, fNode, goal, dirMult) end
 
---- Positions des extrémités d'une arête : position spécifique à l'arête (inPos/outPos) si elle existe, sinon position du nœud.
----Source : lua/common/graphpath.lua:271
----@param n1id any Premier nœud.
----@param n2id any Second nœud.
----@return vec3  Position côté n1id.
----@return vec3  Position côté n2id.
+--- Positions of the ends of an edge: the edge-specific position (inPos/outPos) if it exists, otherwise the node position.
+---Source: lua/common/graphpath.lua:271
+---@param n1id any First node.
+---@param n2id any Second node.
+---@return vec3  Position on the n1id side.
+---@return vec3  Position on the n2id side.
 function graphpath_Graphpath:getEdgePositions(n1id, n2id) end
 
---- Rayons aux extrémités d'une arête (rayon propre à l'arête sinon celui du nœud).
----Source : lua/common/graphpath.lua:277
----@param n1id any Premier nœud.
----@param n2id any Second nœud.
----@return number  Rayon côté n1id.
----@return number  Rayon côté n2id.
+--- Radii at the ends of an edge (the edge's own radius, otherwise the node's).
+---Source: lua/common/graphpath.lua:277
+---@param n1id any First node.
+---@param n2id any Second node.
+---@return number  Radius on the n1id side.
+---@return number  Radius on the n2id side.
 function graphpath_Graphpath:getEdgeRadii(n1id, n2id) end
 
---- Plus court chemin entre deux nœuds avec pénalités de drivabilité (seuil) et de contresens.
----Source : lua/common/graphpath.lua:1266
----@param start any Nœud de départ.
----@param goal any Nœud d'arrivée.
----@param cutOffDrivability number|nil Seuil (défaut 0).
----@param dirMult number|nil Pénalité de contresens.
----@param penaltyAboveCutoff number|nil Défaut 1.
----@param penaltyBelowCutoff number|nil Défaut 10000.
----@return table  Chemin de nœuds.
+--- Shortest path between two nodes with drivability (threshold) and wrong-way penalties.
+---Source: lua/common/graphpath.lua:1266
+---@param start any Start node.
+---@param goal any End node.
+---@param cutOffDrivability number|nil Threshold (default 0).
+---@param dirMult number|nil Wrong-way penalty.
+---@param penaltyAboveCutoff number|nil Default 1.
+---@param penaltyBelowCutoff number|nil Default 10000.
+---@return table  Node path.
 function graphpath_Graphpath:getFilteredPath(start, goal, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff) end
 
---- Construit gloutonnement un chemin de fuite loin de chasePos, avec une randomisation de direction, jusqu'à dépasser pathLenLimit.
----Source : lua/common/graphpath.lua:1480
----@param startNode any Nœud de départ.
----@param initialDir vec3 Direction initiale.
----@param chasePos vec3 Position du poursuivant.
----@param pathLenLimit number|nil Longueur à atteindre en m (défaut 100).
----@param rndDirCoef number|nil Amplitude de la randomisation de direction (défaut 0).
----@param rndDistCoef number|nil Croissance de la randomisation avec la distance (défaut 0.05, max 1).
----@return table|nil  Chemin de nœuds ; nil si startNode inconnu.
+--- Greedily builds a flee path away from chasePos, with direction randomization, until exceeding pathLenLimit.
+---Source: lua/common/graphpath.lua:1480
+---@param startNode any Start node.
+---@param initialDir vec3 Initial direction.
+---@param chasePos vec3 Chaser position.
+---@param pathLenLimit number|nil Length to reach in m (default 100).
+---@param rndDirCoef number|nil Magnitude of the direction randomization (default 0).
+---@param rndDistCoef number|nil Growth of the randomization with distance (default 0.05, max 1).
+---@return table|nil  Node path; nil if startNode is unknown.
 function graphpath_Graphpath:getFleePath(startNode, initialDir, chasePos, pathLenLimit, rndDirCoef, rndDistCoef) end
 
---- Flux (capacité) avant et arrière d'une arête orientée, déduits du rayon du nœud de sortie réparti sur les voies.
----Source : lua/common/graphpath.lua:1035
----@param inNode any Nœud d'entrée.
----@param outNode any Nœud de sortie.
----@return number  Flux dans le sens inNode->outNode.
----@return number  Flux dans le sens inverse.
+--- Forward and backward flow (capacity) of a directed edge, inferred from the exit node's radius distributed over the lanes.
+---Source: lua/common/graphpath.lua:1035
+---@param inNode any Entry node.
+---@param outNode any Exit node.
+---@return number  Flow in the inNode->outNode direction.
+---@return number  Flow in the reverse direction.
 function graphpath_Graphpath:getFlows(inNode, outNode) end
 
---- Parcourt le graphe dans un rayon radius autour de start et renvoie le nœud le plus éloigné, ou le plus avancé selon la direction dir.
----Source : lua/common/graphpath.lua:1375
----@param start any Nœud de départ.
----@param radius number Rayon de recherche (m).
----@param dir vec3|nil Si fourni, score = projection sur dir au lieu de la distance carrée.
----@return any|nil  Nœud trouvé, nil si start inconnu.
+--- Walks the graph within a radius radius around start and returns the farthest node, or the most advanced one according to the direction dir.
+---Source: lua/common/graphpath.lua:1375
+---@param start any Start node.
+---@param radius number Search radius (m).
+---@param dir vec3|nil If provided, score = projection onto dir instead of the squared distance.
+---@return any|nil  Node found, nil if start is unknown.
 function graphpath_Graphpath:getMaxNodeAround(start, radius, dir) end
 
---- Inverse de getEdgeIdFromNodes : renvoie les deux nœuds de l'arête orientée (départ, arrivée).
----Source : lua/common/graphpath.lua:267
----@param eId integer Identifiant d'arête.
----@return any  Nœud de départ.
----@return any  Nœud d'arrivée.
+--- Inverse of getEdgeIdFromNodes: returns the two nodes of the directed edge (start, end).
+---Source: lua/common/graphpath.lua:267
+---@param eId integer Edge identifier.
+---@return any  Start node.
+---@return any  End node.
 function graphpath_Graphpath:getNodesFromEdgeId(eId) end
 
---- Plus court chemin (Dijkstra) entre deux nœuds en minimisant la somme des len ; les arêtes sens unique parcourues à contresens sont multipliées par dirMult.
----Source : lua/common/graphpath.lua:468
----@param start any Nœud de départ.
----@param goal any Nœud d'arrivée.
----@param dirMult number|nil Pénalité de contresens (défaut 1).
----@return table  Liste de nœuds ; {} si départ ou but inconnu.
+--- Shortest path (Dijkstra) between two nodes minimizing the sum of len; one-way edges traversed against their direction are multiplied by dirMult.
+---Source: lua/common/graphpath.lua:468
+---@param start any Start node.
+---@param goal any End node.
+---@param dirMult number|nil Wrong-way penalty (default 1).
+---@return table  List of nodes; {} if start or goal is unknown.
 function graphpath_Graphpath:getPath(start, goal, dirMult) end
 
---- Chemin vers goal qui évite stayAwayPos : le coût des arêtes est pondéré par (distance à mePos / distance à stayAwayPos).
----Source : lua/common/graphpath.lua:1339
----@param start any Nœud de départ.
----@param goal any Nœud but.
----@param mePos vec3 Position de l'agent.
----@param stayAwayPos vec3 Position à éviter.
----@param dirMult number|nil Pénalité de contresens.
----@return table  Chemin de nœuds.
+--- Path to goal that avoids stayAwayPos: the edge cost is weighted by (distance to mePos / distance to stayAwayPos).
+---Source: lua/common/graphpath.lua:1339
+---@param start any Start node.
+---@param goal any Goal node.
+---@param mePos vec3 Agent position.
+---@param stayAwayPos vec3 Position to avoid.
+---@param dirMult number|nil Wrong-way penalty.
+---@return table  Node path.
 function graphpath_Graphpath:getPathAwayFrom(start, goal, mePos, stayAwayPos, dirMult) end
 
---- Choisit un chemin aléatoire pondéré pour un trafic IA à partir de start, en privilégiant routes drivables, continuité de direction et capacité (flux de voies) ; s'arrête à pathLenLim mètres de mePos, jusqu'à 10 candidats tirés au hasard.
----Source : lua/common/graphpath.lua:927
----@param start any Nœud de départ.
----@param mePos vec3 Position de référence pour la distance.
----@param pathLenLim number Distance minimale du chemin (m).
----@param illegalDirPenalty number|nil Non utilisé dans le code.
----@param initDir vec3 Direction initiale (x, y utilisés).
----@return table  Chemin de nœuds ({} si start inconnu).
+--- Picks a weighted random path for AI traffic from start, favoring drivable roads, direction continuity and capacity (lane flow); stops at pathLenLim meters from mePos, up to 10 randomly drawn candidates.
+---Source: lua/common/graphpath.lua:927
+---@param start any Start node.
+---@param mePos vec3 Reference position for the distance.
+---@param pathLenLim number Minimum path distance (m).
+---@param illegalDirPenalty number|nil Not used in the code.
+---@param initDir vec3 Initial direction (x, y used).
+---@return table  Node path ({} if start is unknown).
 function graphpath_Graphpath:getPathT(start, mePos, pathLenLim, illegalDirPenalty, initDir) end
 
---- Variante de getPathT qui réutilise le chemin précédent comme état pour continuer de façon cohérente (le dernier nœud du chemin précédent doit être start).
----Source : lua/common/graphpath.lua:1045
----@param start any Nœud de départ.
----@param mePos vec3|nil Position de référence (défaut position de start).
----@param pathLenLim number|nil Longueur minimale du chemin (défaut 150).
----@param state vec3|table|nil Direction initiale (vec3) ou chemin précédent (liste de nœuds).
----@return table  Chemin de nœuds ({} si impossible).
+--- Variant of getPathT that reuses the previous path as state to continue consistently (the last node of the previous path must be start).
+---Source: lua/common/graphpath.lua:1045
+---@param start any Start node.
+---@param mePos vec3|nil Reference position (default position of start).
+---@param pathLenLim number|nil Minimum path length (default 150).
+---@param state vec3|table|nil Initial direction (vec3) or previous path (list of nodes).
+---@return table  Node path ({} if impossible).
 function graphpath_Graphpath:getPathTWithState(start, mePos, pathLenLim, state) end
 
---- Plus court chemin entre un point (vec3) et un nœud, dans un sens ou l'autre (si start est un cdata/vec3, le chemin est calculé depuis le nœud target et inversé). Pénalise la distance entre le point et la route et peut finir sur le milieu d'une arête (premier élément du tableau = nœud de l'arête qui contient la projection du point).
----Source : lua/common/graphpath.lua:603
----@param start any Nœud ou vec3.
----@param target any Vec3 ou nœud (l'autre côté).
----@param cutOffDrivability number|nil Seuil de drivabilité (défaut 0).
----@param dirMult number|nil Pénalité de contresens.
----@param penaltyAboveCutoff number|nil Multiplicateur au-dessus du seuil (défaut 1).
----@param penaltyBelowCutoff number|nil Multiplicateur sous le seuil (défaut 10000).
----@param wZ number|nil Poids de l'écart vertical dans la distance (défaut 4).
----@return table  Chemin de nœuds ({} si départ inconnu).
+--- Shortest path between a point (vec3) and a node, in either direction (if start is a cdata/vec3, the path is computed from the target node and reversed). Penalizes the distance between the point and the road and can end in the middle of an edge (first element of the array = node of the edge that contains the projection of the point).
+---Source: lua/common/graphpath.lua:603
+---@param start any Node or vec3.
+---@param target any Vec3 or node (the other side).
+---@param cutOffDrivability number|nil Drivability threshold (default 0).
+---@param dirMult number|nil Wrong-way penalty.
+---@param penaltyAboveCutoff number|nil Multiplier above the threshold (default 1).
+---@param penaltyBelowCutoff number|nil Multiplier below the threshold (default 10000).
+---@param wZ number|nil Weight of the vertical offset in the distance (default 4).
+---@return table  Node path ({} if start is unknown).
 function graphpath_Graphpath:getPointNodePath(start, target, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ) end
 
---- Chemin entre deux positions via le réseau routier (version synchrone de _getPointToPointPathImpl).
----Source : lua/common/graphpath.lua:882
----@param sourcePos vec3 Position source.
----@param iter function Itérateur de nœuds/arêtes proches de la source.
----@param targetPos vec3 Position cible.
----@param cutOffDrivability number|nil Seuil de drivabilité.
----@param dirMult number|nil Pénalité de contresens.
----@param penaltyAboveCutoff number|nil Multiplicateur au-dessus du seuil.
----@param penaltyBelowCutoff number|nil Multiplicateur sous le seuil.
----@param wZ number|nil Poids vertical.
----@return table  Chemin de nœuds.
+--- Path between two positions via the road network (synchronous version of _getPointToPointPathImpl).
+---Source: lua/common/graphpath.lua:882
+---@param sourcePos vec3 Source position.
+---@param iter function Iterator of nodes/edges near the source.
+---@param targetPos vec3 Target position.
+---@param cutOffDrivability number|nil Drivability threshold.
+---@param dirMult number|nil Wrong-way penalty.
+---@param penaltyAboveCutoff number|nil Multiplier above the threshold.
+---@param penaltyBelowCutoff number|nil Multiplier below the threshold.
+---@param wZ number|nil Vertical weight.
+---@return table  Node path.
 function graphpath_Graphpath:getPointToPointPath(sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ) end
 
---- Comme getPointToPointPath mais cède la main (job.yield) toutes les 350 itérations (ou global_yieldInterval) pour ne pas bloquer le jeu ; à appeler depuis un job du jobsystem.
----Source : lua/common/graphpath.lua:888
----@param job table|nil Job de core_jobsystem (avec .yield).
----@param sourcePos vec3 Position source.
----@param iter function Itérateur de nœuds/arêtes proches de la source.
----@param targetPos vec3 Position cible.
----@param cutOffDrivability number|nil Seuil de drivabilité.
----@param dirMult number|nil Pénalité de contresens.
----@param penaltyAboveCutoff number|nil Multiplicateur au-dessus du seuil.
----@param penaltyBelowCutoff number|nil Multiplicateur sous le seuil.
----@param wZ number|nil Poids vertical.
----@return table  Chemin de nœuds.
+--- Like getPointToPointPath but yields (job.yield) every 350 iterations (or global_yieldInterval) so as not to block the game; to be called from a jobsystem job.
+---Source: lua/common/graphpath.lua:888
+---@param job table|nil core_jobsystem job (with .yield).
+---@param sourcePos vec3 Source position.
+---@param iter function Iterator of nodes/edges near the source.
+---@param targetPos vec3 Target position.
+---@param cutOffDrivability number|nil Drivability threshold.
+---@param dirMult number|nil Wrong-way penalty.
+---@param penaltyAboveCutoff number|nil Multiplier above the threshold.
+---@param penaltyBelowCutoff number|nil Multiplier below the threshold.
+---@param wZ number|nil Vertical weight.
+---@return table  Node path.
 function graphpath_Graphpath:getPointToPointPathJob(job, sourcePos, iter, targetPos, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wZ) end
 
---- Chemin aléatoire (jusqu'à 5 candidats à plus de 300 m, tirage pondéré) avec un biais vers la colinéarité des arêtes ; empêche de faire demi-tour vers nodeBehind.
----Source : lua/common/graphpath.lua:1616
----@param nodeAhead any Nœud devant.
----@param nodeBehind any Nœud derrière.
----@param dirMult number|nil Pénalité de contresens.
----@return table  Chemin de nœuds ({} si un nœud est inconnu).
+--- Random path (up to 5 candidates over 300 m, weighted draw) with a bias toward edge collinearity; prevents making a U-turn toward nodeBehind.
+---Source: lua/common/graphpath.lua:1616
+---@param nodeAhead any Node ahead.
+---@param nodeBehind any Node behind.
+---@param dirMult number|nil Wrong-way penalty.
+---@return table  Node path ({} if a node is unknown).
 function graphpath_Graphpath:getRandomPath(nodeAhead, nodeBehind, dirMult) end
 
---- Construit gloutonnement un chemin aléatoire qui privilégie la continuité de direction, jusqu'à dépasser pathLenLimit.
----Source : lua/common/graphpath.lua:1545
----@param startNode any Nœud de départ.
----@param initialDir vec3 Direction initiale.
----@param pathLenLimit number|nil Longueur à atteindre en m (défaut 100).
----@param rndDirCoef number|nil Randomisation de direction (défaut 0).
----@param rndDistCoef number|nil Croissance de la randomisation (défaut 0.05).
----@param oneway boolean|nil Si false, ne pénalise pas les sens uniques pris à contresens (défaut true : pénalisés).
----@return table|nil  Chemin de nœuds ; nil si startNode inconnu.
+--- Greedily builds a random path that favors direction continuity, until exceeding pathLenLimit.
+---Source: lua/common/graphpath.lua:1545
+---@param startNode any Start node.
+---@param initialDir vec3 Initial direction.
+---@param pathLenLimit number|nil Length to reach in m (default 100).
+---@param rndDirCoef number|nil Direction randomization (default 0).
+---@param rndDistCoef number|nil Randomization growth (default 0.05).
+---@param oneway boolean|nil If false, does not penalize one-way streets taken the wrong way (default true: penalized).
+---@return table|nil  Node path; nil if startNode is unknown.
 function graphpath_Graphpath:getRandomPathG(startNode, initialDir, pathLenLimit, rndDirCoef, rndDistCoef, oneway) end
 
---- Contracte les nœuds de degré 2 : le résultat ne contient que les impasses et carrefours. minor[a][b] est le tableau ordonné des nœuds d'origine reliant a et b (extrémités incluses), symétrique en minor[b][a].
----Source : lua/common/graphpath.lua:373
----@return table  Graphe minorant.
+--- Contracts degree-2 nodes: the result contains only dead ends and intersections. minor[a][b] is the ordered array of original nodes linking a and b (ends included), symmetric in minor[b][a].
+---Source: lua/common/graphpath.lua:373
+---@return table  Minor graph.
 function graphpath_Graphpath:graphMinor() end
 
---- Reconstruit le graphe depuis le format produit par export (utilise inNode/outNode/eId des arêtes) et l'index des arêtes.
----Source : lua/common/graphpath.lua:147
----@param graphData table Données d'export.
+--- Rebuilds the graph from the format produced by export (uses inNode/outNode/eId of the edges) and the edge index.
+---Source: lua/common/graphpath.lua:147
+---@param graphData table Export data.
 function graphpath_Graphpath:import(graphData) end
 
---- Nombre total de voies d'une arête et nombre de voies dans le sens inNode->outNode donné ; si lanes est absent, les déduit des rayons (3,45 m par voie).
----Source : lua/common/graphpath.lua:904
----@param inNode any Nœud de départ.
----@param outNode any Nœud d'arrivée.
----@return integer  Voies au total.
----@return integer  Voies dans le sens inNode->outNode.
+--- Total number of lanes of an edge and number of lanes in the given inNode->outNode direction; if lanes is absent, infers them from the radii (3.45 m per lane).
+---Source: lua/common/graphpath.lua:904
+---@param inNode any Start node.
+---@param outNode any End node.
+---@return integer  Total lanes.
+---@return integer  Lanes in the inNode->outNode direction.
 function graphpath_Graphpath:numOfEdgeLanes(inNode, outNode) end
 
---- Composantes fortement connexes (Tarjan) en ne suivant que les arêtes de drivabilité exactement 1. Si v est donné, ne calcule que depuis v.
----Source : lua/common/graphpath.lua:dyn
----@param v any|nil Nœud de départ facultatif.
----@return table[]  Liste de composantes ; chaque composante est un dictionnaire nœud=true avec le nombre de nœuds dans la clé [0].
+--- Strongly connected components (Tarjan) following only edges with drivability exactly 1. If v is given, computes only from v.
+---Source: lua/common/graphpath.lua:dyn
+---@param v any|nil Optional start node.
+---@return table[]  List of components; each component is a node=true dictionary with the number of nodes in the key [0].
 function graphpath_Graphpath:scc(v) end
 
---- Définit le rayon d'un nœud.
----Source : lua/common/graphpath.lua:292
----@param node any Nœud.
----@param radius number Rayon.
+--- Sets the radius of a node.
+---Source: lua/common/graphpath.lua:292
+---@param node any Node.
+---@param radius number Radius.
 function graphpath_Graphpath:setNodeRadius(node, radius) end
 
---- Définit la position d'un nœud.
----Source : lua/common/graphpath.lua:283
----@param p any Nœud.
+--- Sets the position of a node.
+---Source: lua/common/graphpath.lua:283
+---@param p any Node.
 ---@param pos vec3 Position.
 function graphpath_Graphpath:setPointPosition(p, pos) end
 
---- Définit position et rayon d'un nœud.
----Source : lua/common/graphpath.lua:287
----@param p any Nœud.
+--- Sets the position and radius of a node.
+---Source: lua/common/graphpath.lua:287
+---@param p any Node.
 ---@param pos vec3 Position.
----@param radius number Rayon.
+---@param radius number Radius.
 function graphpath_Graphpath:setPointPositionRadius(p, pos, radius) end
 
---- Plus court chemin où le coût de chaque arête est multiplié par edgeDict['a\0b'] (défaut 1e20 si absente), avec forte pénalité (x300) pour repartir vers nodeBehind depuis la source ; sert à couvrir un ensemble d'arêtes.
----Source : lua/common/graphpath.lua:1305
----@param source any Nœud de départ.
----@param nodeBehind any Nœud derrière la source.
----@param target any Nœud but.
----@param edgeDict table<string, number> Coefficient par arête, clé node..'\0'..child.
----@param dirMult number|nil Pénalité de contresens.
----@return table  Chemin de nœuds.
+--- Shortest path where the cost of each edge is multiplied by edgeDict['a\0b'] (default 1e20 if absent), with a strong penalty (x300) for heading back to nodeBehind from the source; used to cover a set of edges.
+---Source: lua/common/graphpath.lua:1305
+---@param source any Start node.
+---@param nodeBehind any Node behind the source.
+---@param target any Goal node.
+---@param edgeDict table<string, number> Per-edge coefficient, key node..'\0'..child.
+---@param dirMult number|nil Wrong-way penalty.
+---@return table  Node path.
 function graphpath_Graphpath:spanMap(source, nodeBehind, target, edgeDict, dirMult) end
 
---- Ajoute une arête riche partagée par les deux sens, sans identifiant d'arête (pas de eId).
----Source : lua/common/graphpath.lua:189
----@param inNode any Nœud d'entrée de l'arête.
----@param outNode any Nœud de sortie.
----@param dist number|nil Longueur (défaut 1).
----@param drivability number|nil Drivabilité de la route (1 = idéale).
----@param speedLimit number|nil Vitesse limite.
----@param lanes string|nil Chaîne des voies ('+' sens inNode->outNode, '-' inverse).
----@param oneWay boolean|nil Sens unique (inNode vers outNode).
----@param gated number|boolean|nil Indicateur de barrière (valeur utilisée comme nombre dans les calculs de getPathT).
----@param inPos vec3|nil Position spécifique de l'extrémité inNode.
----@param inRad number|nil Rayon à inNode.
----@param outPos vec3|nil Position spécifique à outNode.
----@param outRad number|nil Rayon à outNode.
+--- Adds a rich edge shared by both directions, without an edge identifier (no eId).
+---Source: lua/common/graphpath.lua:189
+---@param inNode any Entry node of the edge.
+---@param outNode any Exit node.
+---@param dist number|nil Length (default 1).
+---@param drivability number|nil Drivability of the road (1 = ideal).
+---@param speedLimit number|nil Speed limit.
+---@param lanes string|nil Lanes string ('+' direction inNode->outNode, '-' reverse).
+---@param oneWay boolean|nil One-way (inNode to outNode).
+---@param gated number|boolean|nil Gate flag (value used as a number in the getPathT calculations).
+---@param inPos vec3|nil Specific position of the inNode end.
+---@param inRad number|nil Radius at inNode.
+---@param outPos vec3|nil Specific position at outNode.
+---@param outRad number|nil Radius at outNode.
 function graphpath_Graphpath:uniEdge(inNode, outNode, dist, drivability, speedLimit, lanes, oneWay, gated, inPos, inRad, outPos, outRad) end
 
---- File de priorité à clé numérique minimale en tête. Champs : length, vals ; les clés sont stockées aux indices 1..length de la table.
+--- Priority queue with the minimum numeric key at the head. Fields: length, vals; the keys are stored at indices 1..length of the table.
 ---@class graphpath_minheap
 local graphpath_minheap = {}
 
---- Vide le tas (conserve la table).
----Source : lua/common/graphpath.lua:63
+--- Empties the heap (keeps the table).
+---Source: lua/common/graphpath.lua:63
 function graphpath_minheap:clear() end
 
---- Indique si le tas est vide.
----Source : lua/common/graphpath.lua:59
----@return boolean  true si vide.
+--- Tells whether the heap is empty.
+---Source: lua/common/graphpath.lua:59
+---@return boolean  true if empty.
 function graphpath_minheap:empty() end
 
---- Insère la valeur v avec la clé k.
----Source : lua/common/graphpath.lua:68
----@param k number Clé (priorité, plus petit = sort en premier).
----@param v any Valeur associée.
+--- Inserts the value v with the key k.
+---Source: lua/common/graphpath.lua:68
+---@param k number Key (priority, smallest comes out first).
+---@param v any Associated value.
 function graphpath_minheap:insert(k, v) end
 
---- Clé minimale sans retirer (nil si vide).
----Source : lua/common/graphpath.lua:51
----@return number|nil  Clé minimale.
+--- Minimum key without removing (nil if empty).
+---Source: lua/common/graphpath.lua:51
+---@return number|nil  Minimum key.
 function graphpath_minheap:peekKey() end
 
---- Valeur de clé minimale sans retirer.
----Source : lua/common/graphpath.lua:55
----@return any  Valeur.
+--- Value of the minimum key without removing.
+---Source: lua/common/graphpath.lua:55
+---@return any  Value.
 function graphpath_minheap:peekVal() end
 
---- Retire et renvoie l'élément de clé minimale.
----Source : lua/common/graphpath.lua:88
----@return number|nil  Clé (nil si vide).
----@return any  Valeur associée.
+--- Removes and returns the element with the minimum key.
+---Source: lua/common/graphpath.lua:88
+---@return number|nil  Key (nil if empty).
+---@return any  Associated value.
 function graphpath_minheap:pop() end
 
 return graphpath

@@ -1,12 +1,12 @@
 # `core_recoveryCamera`
 
-*Fichier : `lua/ge/extensions/core/recoveryCamera.lua` · VM : Game Engine (GE) · 62 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/recoveryCamera.lua` · VM: Game Engine (GE) · 62 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_recoveryCamera` : `extensions.load("core_recoveryCamera")`, puis la globale `core_recoveryCamera`
+**Access:** extension `core_recoveryCamera`: `extensions.load("core_recoveryCamera")`, then the global `core_recoveryCamera`
 
-Caméra libre temporaire pendant le « recovery » (retour en arrière/réapparition) d'un véhicule. beginRecoveryCamera bascule le joueur assis dans ce véhicule en caméra libre, setRecoveryCameraPosRot la déplace, endRecoveryCamera restaure la caméra de jeu. Si le joueur était déjà en caméra libre, rien n'est modifié. Appelé en pratique depuis le code de recovery du véhicule.
+Temporary free camera during a vehicle's "recovery" (rewind/respawn). beginRecoveryCamera switches the player seated in that vehicle to free camera, setRecoveryCameraPosRot moves it, endRecoveryCamera restores the game camera. If the player was already in free camera, nothing is changed. In practice called from the vehicle's recovery code.
 
-## Exemple
+## Example
 
 ```lua
 core_recoveryCamera.beginRecoveryCamera(vid)
@@ -14,45 +14,45 @@ core_recoveryCamera.setRecoveryCameraPosRot(vid, x, y, z, qx, qy, qz, qw)
 core_recoveryCamera.endRecoveryCamera(vid)
 ```
 
-## Remarques
+## Notes
 
-- Le joueur est retrouvé parmi core_multiseat.getPlayers() (ou {0}) via be:getPlayerVehicleID ; si personne n'est assis dans le véhicule, rien ne se passe.
-- En mode multiseat, la caméra de recovery n'est active que si core_camera.getContextIdForPlayer(player) existe.
+- The player is found among core_multiseat.getPlayers() (or {0}) via be:getPlayerVehicleID; if nobody is seated in the vehicle, nothing happens.
+- In multiseat mode, the recovery camera is only active if core_camera.getContextIdForPlayer(player) exists.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_recoveryCamera.beginRecoveryCamera(vehicleId)` | Démarre la caméra de recovery pour le joueur assis dans le véhicule : mémorise s'il était déjà en caméra libre, sinon appelle commands.setFreeCamera(player). | 27 |
-| `core_recoveryCamera.endRecoveryCamera(vehicleId)` | Termine le recovery : oublie l'état et remet la caméra de jeu (commands.setGameCamera) si la caméra libre avait été activée par beginRecoveryCamera. | 45 |
-| `core_recoveryCamera.onDespawnObject(vehicleId)` | Hook appelé quand un objet est supprimé : oublie un recovery en cours pour ce véhicule. *(interne)* *(hook)* | 52 |
-| `core_recoveryCamera.setRecoveryCameraPosRot(vehicleId, px, py, pz, qx, qy, qz, qw)` | Place la caméra du joueur (core_camera.setPosRot). Sans effet si aucun recovery actif pour ce véhicule ou si le joueur était déjà en caméra libre. | 38 |
+| `core_recoveryCamera.beginRecoveryCamera(vehicleId)` | Starts the recovery camera for the player seated in the vehicle: remembers whether it was already in free camera, otherwise calls commands.setFreeCamera(player). | 27 |
+| `core_recoveryCamera.endRecoveryCamera(vehicleId)` | Ends the recovery: forgets the state and puts the game camera back (commands.setGameCamera) if the free camera had been enabled by beginRecoveryCamera. | 45 |
+| `core_recoveryCamera.onDespawnObject(vehicleId)` | Hook called when an object is deleted: forgets a recovery in progress for this vehicle. *(internal)* *(hook)* | 52 |
+| `core_recoveryCamera.setRecoveryCameraPosRot(vehicleId, px, py, pz, qx, qy, qz, qw)` | Places the player's camera (core_camera.setPosRot). No effect if no recovery is active for this vehicle or if the player was already in free camera. | 38 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_recoveryCamera.beginRecoveryCamera(vehicleId)`
 
-Démarre la caméra de recovery pour le joueur assis dans le véhicule : mémorise s'il était déjà en caméra libre, sinon appelle commands.setFreeCamera(player).
+Starts the recovery camera for the player seated in the vehicle: remembers whether it was already in free camera, otherwise calls commands.setFreeCamera(player).
 
-- `vehicleId` (*integer*) : Id du véhicule en recovery.
+- `vehicleId` (*integer*) : Id of the vehicle in recovery.
 
 #### `core_recoveryCamera.endRecoveryCamera(vehicleId)`
 
-Termine le recovery : oublie l'état et remet la caméra de jeu (commands.setGameCamera) si la caméra libre avait été activée par beginRecoveryCamera.
+Ends the recovery: forgets the state and puts the game camera back (commands.setGameCamera) if the free camera had been enabled by beginRecoveryCamera.
 
-- `vehicleId` (*integer*) : Id du véhicule.
+- `vehicleId` (*integer*) : Vehicle id.
 
 #### `core_recoveryCamera.onDespawnObject(vehicleId)`
 
-Hook appelé quand un objet est supprimé : oublie un recovery en cours pour ce véhicule.
+Hook called when an object is deleted: forgets a recovery in progress for this vehicle.
 
-- `vehicleId` (*integer*) : Id de l'objet supprimé.
+- `vehicleId` (*integer*) : Id of the deleted object.
 
 #### `core_recoveryCamera.setRecoveryCameraPosRot(vehicleId, px, py, pz, qx, qy, qz, qw)`
 
-Place la caméra du joueur (core_camera.setPosRot). Sans effet si aucun recovery actif pour ce véhicule ou si le joueur était déjà en caméra libre.
+Places the player's camera (core_camera.setPosRot). No effect if no recovery is active for this vehicle or if the player was already in free camera.
 
-- `vehicleId` (*integer*) : Id du véhicule.
+- `vehicleId` (*integer*) : Vehicle id.
 - `px` (*number*) : Position x (m).
 - `py` (*number*) : Position y (m).
 - `pz` (*number*) : Position z (m).
@@ -61,9 +61,9 @@ Place la caméra du joueur (core_camera.setPosRot). Sans effet si aucun recovery
 - `qz` (*number*) : Quaternion z.
 - `qw` (*number*) : Quaternion w.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/recoveryCamera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/recoveryCamera.lua`.*

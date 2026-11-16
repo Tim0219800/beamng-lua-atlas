@@ -1,0 +1,88 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/tools/rallyToolbox.lua",
+  "module": "Fenêtre imgui de debug du RallyManager (gameplay_rally) : affiche la mission courante et la distance de la driveline, propose Warm Reload (resynchronise l'état d'exécution sans recharger), Cold Reload (vide les caches de voicepacks, recharge route, notebook, driveline et resynchronise le véhicule) et l'ouverture de la fenêtre de reconnaissance (recce). Elle contient des sections repliables : Rally Loop (charger/décharger l'extension, ouvrir la fenêtre Loop Toolbox), Recovery (tester la récupération de route), Vehicle (placer le véhicule d'un clic dans la vue 3D), Prefabs (faire apparaître les prefabs de la mission ou de la boucle), Voicepack (sélecteur et infos de timing), Visual Pacenotes, et de nombreuses cases de visualisation (driveline, course, bas niveau, souris comme véhicule). Le module renvoie un constructeur : `require(...)()` ; le dessin 3D se fait dans drawDebug.",
+  "notes": [
+    "Les options de dessin sont dans self.debug (drawRacePath, drawRaceSplits, drawRaceAiRoute, drawRaceCurrentSeg, drawStartFinishLines, drawStopZone, drawNotebookPacenotes, drawDrivelineRouteStatic, useMouseRayCast, drawRoutePacenotes, drawRoutePacenoteText, drawRoutePathnodes, drawRoutePointI, drawRoutePointMetadata, drawRouteHiddenPathnodes, drawRouteShort, drawReccePacenotes, drawDynamicTriggerPoint, drawStageNextPathnode, drawRouteCompletion, drawStageTimingFootprints, drawVehicleTracker…).",
+    "Placement du véhicule : clic gauche = téléporte le véhicule joueur (spawn.safeTeleport) en gardant son orientation ; clic droit = annule. Le RallyManager conserve le suivi de récupération lors de ce reset.",
+    "Fichiers prefab cherchés dans le dossier de la mission : <nom>.prefab puis <nom>.prefab.json ; les objets créés sont ajoutés à MissionGroup et nommés '<missionId> - <nom>'.",
+    "Le sélecteur de voicepack met ses entrées en cache par mission (self._vpCache) ; « Refresh » vide les caches de voicepack.lua.",
+    "getRace colore en alternance orange et jaune les segments du chemin de course pour le debug (champ _rallyDebugColor).",
+    "Le constructeur init contient deux fois la même affectation de nextPacenoteIdxForAudioTriggerTesting (doublon sans effet)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Outils de debug du rallye. Champs : rallyManager, race, recce, debugLogging, debug (options de dessin), vehiclePlacementActive, vehiclePlacementMessage, selectedPrefabId, _vpCache, ainsi que des IntPtr imgui pour les délais audio (cornerGapMsPtr, phraseGapMsPtr, linkWordGapMsPtr, pacenoteGapMsPtr) et la récupération (rallyRecoveryCorridorWidthPtr = 8, rallyRecoveryBackoffDistancePtr = 3).",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise tous les champs d'état et les options de dessin par défaut.", "internal": true},
+        "setRallyManager": {
+          "desc": "Lie la fenêtre à un RallyManager et invalide le cache du sélecteur de voicepack.",
+          "params": {"rallyManager": {"type": "table|nil", "desc": "RallyManager."}}
+        },
+        "getRallyManager": {
+          "desc": "Manager lié, sinon celui de gameplay_rally.getRallyManager().",
+          "returns": [{"type": "table|nil", "desc": "RallyManager."}]
+        },
+        "setDebugLogging": {
+          "desc": "Active ou coupe le log de debug.",
+          "params": {"debugLogging": {"type": "boolean", "desc": "Nouvelle valeur."}}
+        },
+        "getDebugLogging": {
+          "desc": "État du log de debug.",
+          "returns": [{"type": "boolean", "desc": "debugLogging."}]
+        },
+        "_invalidateVoicepackCache": {"desc": "Vide le cache local des entrées du sélecteur de voicepack.", "internal": true},
+        "getRace": {
+          "desc": "Objet course courant de gameplay_rally (si l'extension est chargée), en colorant les segments du chemin pour le debug.",
+          "returns": [{"type": "table|nil", "desc": "Course."}]
+        },
+        "setMouseAsVehicleEnabled": {
+          "desc": "Active ou coupe le mode « souris comme véhicule » de la driveline route (la position sous la souris sert de position de véhicule).",
+          "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}}
+        },
+        "toggleMouseMovementCheckbox": {"desc": "Inverse le mode « souris comme véhicule »."},
+        "drawLoopTools": {"desc": "Section « Rally Loop » : état de l'extension gameplay_rallyLoop, boutons Load, Unload et Toggle Loop Debug Window.", "internal": true},
+        "drawRallyRecoveryTools": {
+          "desc": "Section « Recovery » : largeur du couloir et distance de recul, cases (réparer le véhicule, marqueurs du suivi) et bouton « Run Recovery ».",
+          "params": {"rm": {"type": "table", "desc": "RallyManager."}},
+          "internal": true
+        },
+        "_startVehiclePlacement": {"desc": "Active le mode de placement du véhicule.", "internal": true},
+        "_cancelVehiclePlacement": {"desc": "Annule le placement du véhicule.", "internal": true},
+        "_placeVehicleAt": {
+          "desc": "Téléporte le véhicule joueur 0 à la position donnée en conservant son orientation (spawn.safeTeleport, protégé par pcall).",
+          "params": {"pos": {"type": "vec3", "desc": "Position monde."}},
+          "returns": [
+            {"type": "boolean", "desc": "true si réussi."},
+            {"type": "string|nil", "desc": "Cause de l'échec."}
+          ],
+          "internal": true
+        },
+        "_updateVehiclePlacementMode": {
+          "desc": "Chaque image en mode placement : trace une sphère au point sous la souris (cameraMouseRayCast) et gère clic gauche (placer) et clic droit (annuler).",
+          "internal": true
+        },
+        "drawVehicleTools": {"desc": "Section « Vehicle » avec bouton Place Vehicle / Cancel.", "internal": true},
+        "_spawnPrefab": {
+          "desc": "Fait apparaître un prefab dans MissionGroup (position 0 0 0) et le sélectionne.",
+          "params": {
+            "filepath": {"type": "string", "desc": "Chemin du fichier .prefab ou .prefab.json."},
+            "ownerMissionId": {"type": "string|nil", "desc": "Id de mission pour nommer l'objet ; défaut mission du manager."}
+          },
+          "internal": true
+        },
+        "drawPrefabTools": {"desc": "Section « Prefabs » : boutons de spawn des prefabs de la mission et des boucles qui la contiennent, et suppression.", "internal": true},
+        "drawVoicepackPicker": {
+          "desc": "Menu déroulant de voicepack avec cache d'entrées ; changer de voicepack vide les points de reconnaissance et appelle rm:reloadVoicepackAssets(pick, {writeSettings = false}). Bouton Refresh pour invalider les caches.",
+          "params": {"rm": {"type": "table", "desc": "RallyManager."}},
+          "internal": true
+        },
+        "clearReccePoints": {"desc": "Oublie les points de reconnaissance affichés (self.recce = nil)."},
+        "draw": {"desc": "Dessine toute la fenêtre (à appeler dans un im.Begin/im.End) : en-tête de mission, boutons de rechargement et sections."},
+        "drawDebug": {
+          "desc": "Dessin 3D de debug selon self.debug : chemin et segments de la course, splits, lignes départ et arrivée, zone d'arrêt, notes d'allure, route de la driveline, suivi du véhicule, etc. Gère aussi le mode de placement du véhicule.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

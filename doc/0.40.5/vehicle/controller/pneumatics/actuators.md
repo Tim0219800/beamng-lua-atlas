@@ -1,162 +1,162 @@
 # `controller_pneumatics_actuators`
 
-*Fichier : `lua/vehicle/controller/pneumatics/actuators.lua` · VM : Véhicule · 750 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/pneumatics/actuators.lua` · VM: Vehicle · 750 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `pneumatics/actuators` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `pneumatics/actuators` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire (type "auxiliary", defaultOrder 50) de vérins pneumatiques avec physique de gaz simplifiée : un réservoir d'air (energyStorage) alimente, via des vannes, des « tampons virtuels » (cross-flow groups) puis les poutres pressurées d'un groupe. Les débits dépendent des différences de pression et des sections de passage, l'énergie de l'air est conservée (PV = e) et la consommation d'air vide le réservoir. Une vanne par groupe (valveState -1..1) ouvre l'admission (> 0) ou l'échappement ; elle peut être lue depuis une valeur electrics. Il joue aussi des sons selon le débit.
+Auxiliary controller (type "auxiliary", defaultOrder 50) for pneumatic cylinders with simplified gas physics: an air tank (energyStorage) feeds, via valves, "virtual buffers" (cross-flow groups) then the pressurized beams of a group. The flows depend on pressure differences and passage cross-sections, the air's energy is conserved (PV = e) and the air consumption empties the tank. One valve per group (valveState -1..1) opens the intake (> 0) or the exhaust; it can be read from an electrics value. It also plays sounds according to the flow.
 
-## Exemple
+## Example
 
 ```lua
 local a = controller.getControllerSafe('pneumatics/actuators')
-a.setBeamGroupValveState('liftAxle', 1)    -- admission
-local p = a.getAveragePressure('liftAxle') -- en Pa absolus
+a.setBeamGroupValveState('liftAxle', 1)    -- intake
+local p = a.getAveragePressure('liftAxle') -- in absolute Pa
 ```
 
-## Remarques
+## Notes
 
-- Unités : pressions en pascals (absolues), débits en m³/s, rayons en m. Une valeur electrics <nomContrôleur>_<groupe>_pressure_avg reçoit la pression moyenne relative (moyenne - pression ambiante).
-- Clés jbeam du contrôleur (défaut) : airTankName ("mainAirTank"), pressuredBeams (nom de table v.data avec beamName, groupName, crossFlowTag (défaut = groupName), supplyHoseRadius, supplyValveRadius, maxSupplyPressure, maxSupplyPressurePSI, valveStateElectricsName, disableAirConsumption, debug), crossFlowGroups (nom de table avec crossFlowTag, virtualBufferCapacity, debug), supplyHoseRadius (0.0075 m), supplyValveRadius (0.2 * supplyHoseRadius), maxSupplyPressure (infini), maxSupplyPressurePSI (converti en pression absolue + 101325 Pa), virtualBufferCapacity (0.005 m³), pressureDumpFlowRate (0.01 m³/s), crossFlowBetweenBeams (booléen), debug (booléen), groupSounds (nom de table avec groupName, node, volume/volumeIncrease/volumeDecrease, soundIncrease, soundDecrease, startFlowRateThreshold…, stopFlowRateThreshold…, flowRateVolumeFactor…).
-- Champs de poutre lus : name, pressure (pression par défaut), maxPressure, beamSpring, beamDamp, surface (section en m²), lengthOffset.
-- Si le réservoir est introuvable, une erreur est journalisée et updateFixedStep devient nop ; mais updateGFX reste actif et lit des données non initialisées (déduit du code : à éviter).
-- valveState > 0 : le tampon est alimenté par le réservoir (limité par maxSupplyPressure) ; valveState <= 0 : le tampon se vide vers l'atmosphère. Si valveState = 0 (et pas de crossFlowBetweenBeams) aucun échange avec les poutres.
-- Un cross-flow group implicite est créé (avec un avertissement) si un crossFlowTag n'est pas déclaré dans crossFlowGroups.
-- Le calcul est exécuté à chaque pas physique (updateFixedStep) et peut être coûteux.
+- Units: pressures in pascals (absolute), flows in m³/s, radii in m. An electrics value <controllerName>_<group>_pressure_avg receives the average relative pressure (average - ambient pressure).
+- Controller jbeam keys (default): airTankName ("mainAirTank"), pressuredBeams (v.data table name with beamName, groupName, crossFlowTag (default = groupName), supplyHoseRadius, supplyValveRadius, maxSupplyPressure, maxSupplyPressurePSI, valveStateElectricsName, disableAirConsumption, debug), crossFlowGroups (table name with crossFlowTag, virtualBufferCapacity, debug), supplyHoseRadius (0.0075 m), supplyValveRadius (0.2 * supplyHoseRadius), maxSupplyPressure (infinite), maxSupplyPressurePSI (converted to absolute pressure + 101325 Pa), virtualBufferCapacity (0.005 m³), pressureDumpFlowRate (0.01 m³/s), crossFlowBetweenBeams (boolean), debug (boolean), groupSounds (table name with groupName, node, volume/volumeIncrease/volumeDecrease, soundIncrease, soundDecrease, startFlowRateThreshold..., stopFlowRateThreshold..., flowRateVolumeFactor...).
+- Beam fields read: name, pressure (default pressure), maxPressure, beamSpring, beamDamp, surface (cross-section in m²), lengthOffset.
+- If the tank is not found, an error is logged and updateFixedStep becomes nop; but updateGFX stays active and reads uninitialized data (inferred from code: avoid).
+- valveState > 0: the buffer is fed by the tank (limited by maxSupplyPressure); valveState <= 0: the buffer empties to the atmosphere. If valveState = 0 (and no crossFlowBetweenBeams) there is no exchange with the beams.
+- An implicit cross-flow group is created (with a warning) if a crossFlowTag is not declared in crossFlowGroups.
+- The computation is executed at every physics step (updateFixedStep) and can be costly.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_pneumatics_actuators.getAverageFlowRate(groupName)` | Renvoie le débit moyen vers les poutres d'un groupe (m³/s ; 0 si introuvable). | 210 |
-| `controller_pneumatics_actuators.getAveragePressure(groupName)` | Renvoie la pression moyenne des poutres d'un groupe (Pa absolus ; 0 si introuvable). | 219 |
-| `controller_pneumatics_actuators.getBeamGroupsAverageFlowRate(groupNames)` | Renvoie la moyenne des débits moyens de plusieurs groupes. | 228 |
-| `controller_pneumatics_actuators.getValveState(groupName)` | Renvoie l'état de la vanne d'un groupe (0 si introuvable). | 201 |
-| `controller_pneumatics_actuators.init(jbeamData)` | Construit groupes de poutres, tampons virtuels et paramètres de débit à partir du jbeam et retrouve le réservoir d'air. *(interne)* | 528 |
-| `controller_pneumatics_actuators.initSounds(jbeamData)` | Crée les sources sonores d'augmentation/diminution de débit pour chaque groupe. Appelé par le gestionnaire de contrôleurs. *(interne)* | 683 |
-| `controller_pneumatics_actuators.reset()` | Remet pressions, énergies stockées, vannes et tampons virtuels à leur état initial. *(interne)* | 500 |
-| `controller_pneumatics_actuators.resetSounds()` | Coupe le volume des sons et réinitialise leur état. *(interne)* | 717 |
-| `controller_pneumatics_actuators.setBeamGroupCrossFlowTag(groupName, crossFlowTag)` | Change le tampon virtuel (cross-flow group) auquel un groupe est relié ; réinitialise le tampon si le groupe est le premier à l'utiliser. | 169 |
-| `controller_pneumatics_actuators.setBeamGroupMaximumSupplyPressure(groupName, maxSupplyPressure)` | Fixe la pression d'alimentation maximale d'un groupe. | 154 |
-| `controller_pneumatics_actuators.setBeamGroupValveState(groupName, valveState)` | Fixe l'état de la vanne d'un groupe. | 122 |
-| `controller_pneumatics_actuators.setBeamGroupsMaximumSupplyPressure(groupNames, maxSupplyPressure)` | Même chose pour plusieurs groupes. | 163 |
-| `controller_pneumatics_actuators.setBeamGroupsValveState(groupNames, valveState)` | Même chose pour plusieurs groupes. | 131 |
-| `controller_pneumatics_actuators.toggleBeamGroupValveState(groupName)` | Bascule la vanne entre 1 (admission) et -1 (échappement) : si l'état courant est < 0 elle passe à 1, sinon à -1. | 137 |
-| `controller_pneumatics_actuators.toggleBeamGroupsValveState(groupNames)` | Même chose pour plusieurs groupes. | 148 |
-| `controller_pneumatics_actuators.updateFixedStep(dt)` | Chaque pas physique : calcule les débits réservoir -> tampons -> poutres, met à jour pressions et énergie du réservoir, applique les pressions aux poutres. *(interne)* | 243 |
-| `controller_pneumatics_actuators.updateGFX(dt)` | Chaque image : gère les sons selon le débit, remet à zéro les énergies par tick, écrit la pression moyenne relative dans electrics et trace les graphes de debug. *(interne)* | 415 |
+| `controller_pneumatics_actuators.getAverageFlowRate(groupName)` | Returns the average flow to the beams of a group (m³/s; 0 if not found). | 210 |
+| `controller_pneumatics_actuators.getAveragePressure(groupName)` | Returns the average pressure of the beams of a group (absolute Pa; 0 if not found). | 219 |
+| `controller_pneumatics_actuators.getBeamGroupsAverageFlowRate(groupNames)` | Returns the average of the average flows of several groups. | 228 |
+| `controller_pneumatics_actuators.getValveState(groupName)` | Returns the valve state of a group (0 if not found). | 201 |
+| `controller_pneumatics_actuators.init(jbeamData)` | Builds beam groups, virtual buffers and flow parameters from the jbeam and finds the air tank. *(internal)* | 528 |
+| `controller_pneumatics_actuators.initSounds(jbeamData)` | Creates the flow increase/decrease sound sources for each group. Called by the controller manager. *(internal)* | 683 |
+| `controller_pneumatics_actuators.reset()` | Resets pressures, stored energies, valves and virtual buffers to their initial state. *(internal)* | 500 |
+| `controller_pneumatics_actuators.resetSounds()` | Cuts the sound volume and resets their state. *(internal)* | 717 |
+| `controller_pneumatics_actuators.setBeamGroupCrossFlowTag(groupName, crossFlowTag)` | Changes the virtual buffer (cross-flow group) a group is connected to; resets the buffer if the group is the first to use it. | 169 |
+| `controller_pneumatics_actuators.setBeamGroupMaximumSupplyPressure(groupName, maxSupplyPressure)` | Sets the maximum supply pressure of a group. | 154 |
+| `controller_pneumatics_actuators.setBeamGroupValveState(groupName, valveState)` | Sets the valve state of a group. | 122 |
+| `controller_pneumatics_actuators.setBeamGroupsMaximumSupplyPressure(groupNames, maxSupplyPressure)` | Same for several groups. | 163 |
+| `controller_pneumatics_actuators.setBeamGroupsValveState(groupNames, valveState)` | Same for several groups. | 131 |
+| `controller_pneumatics_actuators.toggleBeamGroupValveState(groupName)` | Toggles the valve between 1 (intake) and -1 (exhaust): if the current state is < 0 it goes to 1, otherwise to -1. | 137 |
+| `controller_pneumatics_actuators.toggleBeamGroupsValveState(groupNames)` | Same for several groups. | 148 |
+| `controller_pneumatics_actuators.updateFixedStep(dt)` | Every physics step: computes the tank -> buffers -> beams flows, updates the pressures and the tank's energy, applies the pressures to the beams. *(internal)* | 243 |
+| `controller_pneumatics_actuators.updateGFX(dt)` | Every frame: handles the sounds according to the flow, resets the per-tick energies to zero, writes the average relative pressure into electrics and draws the debug graphs. *(internal)* | 415 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_pneumatics_actuators.getAverageFlowRate(groupName)`
 
-Renvoie le débit moyen vers les poutres d'un groupe (m³/s ; 0 si introuvable).
+Returns the average flow to the beams of a group (m³/s; 0 if not found).
 
-- `groupName` (*string*) : Nom du groupe.
-- **renvoie** : number Débit moyen.
+- `groupName` (*string*) : Group name.
+- **returns**: number Average flow.
 
 #### `controller_pneumatics_actuators.getAveragePressure(groupName)`
 
-Renvoie la pression moyenne des poutres d'un groupe (Pa absolus ; 0 si introuvable).
+Returns the average pressure of the beams of a group (absolute Pa; 0 if not found).
 
-- `groupName` (*string*) : Nom du groupe.
-- **renvoie** : number Pression moyenne.
+- `groupName` (*string*) : Group name.
+- **returns**: number Average pressure.
 
 #### `controller_pneumatics_actuators.getBeamGroupsAverageFlowRate(groupNames)`
 
-Renvoie la moyenne des débits moyens de plusieurs groupes.
+Returns the average of the average flows of several groups.
 
-- `groupNames` (*string[]*) : Noms de groupes.
-- **renvoie** : number Débit moyen (0 si liste vide).
+- `groupNames` (*string[]*) : Group names.
+- **returns**: number Average flow (0 if the list is empty).
 
 #### `controller_pneumatics_actuators.getValveState(groupName)`
 
-Renvoie l'état de la vanne d'un groupe (0 si introuvable).
+Returns the valve state of a group (0 if not found).
 
-- `groupName` (*string*) : Nom du groupe.
-- **renvoie** : number État de vanne -1..1.
+- `groupName` (*string*) : Group name.
+- **returns**: number Valve state -1..1.
 
 #### `controller_pneumatics_actuators.init(jbeamData)`
 
-Construit groupes de poutres, tampons virtuels et paramètres de débit à partir du jbeam et retrouve le réservoir d'air.
+Builds beam groups, virtual buffers and flow parameters from the jbeam and finds the air tank.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_pneumatics_actuators.initSounds(jbeamData)`
 
-Crée les sources sonores d'augmentation/diminution de débit pour chaque groupe. Appelé par le gestionnaire de contrôleurs.
+Creates the flow increase/decrease sound sources for each group. Called by the controller manager.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_pneumatics_actuators.setBeamGroupCrossFlowTag(groupName, crossFlowTag)`
 
-Change le tampon virtuel (cross-flow group) auquel un groupe est relié ; réinitialise le tampon si le groupe est le premier à l'utiliser.
+Changes the virtual buffer (cross-flow group) a group is connected to; resets the buffer if the group is the first to use it.
 
-- `groupName` (*string*) : Nom du groupe.
-- `crossFlowTag` (*string*) : Nom du tampon virtuel.
+- `groupName` (*string*) : Group name.
+- `crossFlowTag` (*string*) : Virtual buffer name.
 
 #### `controller_pneumatics_actuators.setBeamGroupMaximumSupplyPressure(groupName, maxSupplyPressure)`
 
-Fixe la pression d'alimentation maximale d'un groupe.
+Sets the maximum supply pressure of a group.
 
-- `groupName` (*string*) : Nom du groupe.
-- `maxSupplyPressure` (*number*) : Pression absolue maximale (Pa).
+- `groupName` (*string*) : Group name.
+- `maxSupplyPressure` (*number*) : Maximum absolute pressure (Pa).
 
 #### `controller_pneumatics_actuators.setBeamGroupValveState(groupName, valveState)`
 
-Fixe l'état de la vanne d'un groupe.
+Sets the valve state of a group.
 
-- `groupName` (*string*) : Nom du groupe.
-- `valveState` (*number*) : -1..1 ; > 0 admission, <= 0 échappement ; la valeur absolue règle l'ouverture.
+- `groupName` (*string*) : Group name.
+- `valveState` (*number*) : -1..1; > 0 intake, <= 0 exhaust; the absolute value sets the opening.
 
 #### `controller_pneumatics_actuators.setBeamGroupsMaximumSupplyPressure(groupNames, maxSupplyPressure)`
 
-Même chose pour plusieurs groupes.
+Same for several groups.
 
-- `groupNames` (*string[]*) : Noms de groupes.
-- `maxSupplyPressure` (*number*) : Pression absolue maximale (Pa).
+- `groupNames` (*string[]*) : Group names.
+- `maxSupplyPressure` (*number*) : Maximum absolute pressure (Pa).
 
 #### `controller_pneumatics_actuators.setBeamGroupsValveState(groupNames, valveState)`
 
-Même chose pour plusieurs groupes.
+Same for several groups.
 
-- `groupNames` (*string[]*) : Noms de groupes.
+- `groupNames` (*string[]*) : Group names.
 - `valveState` (*number*) : -1..1.
 
 #### `controller_pneumatics_actuators.toggleBeamGroupValveState(groupName)`
 
-Bascule la vanne entre 1 (admission) et -1 (échappement) : si l'état courant est < 0 elle passe à 1, sinon à -1.
+Toggles the valve between 1 (intake) and -1 (exhaust): if the current state is < 0 it goes to 1, otherwise to -1.
 
-- `groupName` (*string*) : Nom du groupe.
+- `groupName` (*string*) : Group name.
 
 #### `controller_pneumatics_actuators.toggleBeamGroupsValveState(groupNames)`
 
-Même chose pour plusieurs groupes.
+Same for several groups.
 
-- `groupNames` (*string[]*) : Noms de groupes.
+- `groupNames` (*string[]*) : Group names.
 
 #### `controller_pneumatics_actuators.updateFixedStep(dt)`
 
-Chaque pas physique : calcule les débits réservoir -> tampons -> poutres, met à jour pressions et énergie du réservoir, applique les pressions aux poutres.
+Every physics step: computes the tank -> buffers -> beams flows, updates the pressures and the tank's energy, applies the pressures to the beams.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_pneumatics_actuators.updateGFX(dt)`
 
-Chaque image : gère les sons selon le débit, remet à zéro les énergies par tick, écrit la pression moyenne relative dans electrics et trace les graphes de debug.
+Every frame: handles the sounds according to the flow, resets the per-tick energies to zero, writes the average relative pressure into electrics and draws the debug graphs.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `defaultOrder` | number | 50. |
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `createSFXSource2`, `cutSFX`, `getBeamLength`, `playSFX`, `setBeamPressureRel`, `setVolume`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/pneumatics/actuators.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/pneumatics/actuators.lua`.*

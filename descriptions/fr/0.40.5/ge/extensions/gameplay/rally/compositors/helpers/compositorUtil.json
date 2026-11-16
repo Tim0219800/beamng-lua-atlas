@@ -1,0 +1,292 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/compositors/helpers/compositorUtil.lua",
+  "module": "Boîte à outils du compositeur de notes de rallye. Parcourt les éléments d'une note structurée dans l'ordre fixe des emplacements, appelle pour chaque type (corner, caution, modificateurs) les règles du registre componentTypes du style actif, et produit les phrases (avec catégorie et variante), en ajoutant les marqueurs de distance avant/après. Contient aussi les recherches dans les plages (intensité par diamètre, longueur par longueur d'arc), le hash de phrase servant de nom de fichier audio et les énumérations de phrases pour la génération audio et le lecteur de script. Les types inconnus ou valeurs non rendables sont ignorés silencieusement.",
+  "notes": [
+    "Une plage est {min, max} avec max facultatif (dernière plage ouverte) ; rangeContains teste min <= v < max.",
+    "Les listes d'intensité vont du risque le plus élevé au plus faible : un riskIntensity positif remonte vers le début de la liste (index - step, borné).",
+    "Le descripteur (descriptor) d'un virage l'emporte sur l'intensité ; dans ce cas la longueur n'est pas énoncée.",
+    "Direction d'un virage : -1 gauche, 1 droite, 0/nil = pas d'appel de virage. lengthMode peut être 'skip', 'shorter' ou 'longer'.",
+    "Catégories de phrases : distance, linkword, corner, caution, modifier, other. Un texte de distance égal à un lien du style est classé 'linkword'.",
+    "pacenoteHash : minuscules, apostrophes supprimées, tout caractère hors a-z0-9 remplacé par '_', '_' répétés fusionnés, '_' de début/fin retirés ; sert à nommer les fichiers audio.",
+    "getRandomWeightedItem utilise math.random : résultat non déterministe ; le poids par défaut est 1.",
+    "enumerateScriptEntries et enumerateConcise reçoivent un paramètre textCompositor qui n'est pas utilisé."
+  ],
+  "functions": {
+    "getNearestValue": {
+      "desc": "Renvoie l'entrée dont la valeur numérique (clé 'value' par défaut) est la plus proche de targetValue.",
+      "params": {
+        "valuesList": {"type": "table[]", "desc": "Liste d'entrées."},
+        "targetValue": {"type": "number", "desc": "Valeur cible."},
+        "key": {"type": "string|nil", "desc": "Clé numérique ('value' par défaut)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée la plus proche."}],
+      "internal": false
+    },
+    "rangeBounds": {
+      "desc": "Lit une plage {min, max} : renvoie min et max numériques (max nil si absent) ; nil, nil si value n'est pas une table.",
+      "params": {"value": {"type": "table|nil", "desc": "Plage."}},
+      "returns": [{"type": "number|nil", "desc": "min."}, {"type": "number|nil", "desc": "max."}],
+      "internal": false
+    },
+    "rangeContains": {
+      "desc": "Vrai si targetValue est dans [min, max[ (ou >= min sans max).",
+      "params": {
+        "value": {"type": "table", "desc": "Plage {min, max}."},
+        "targetValue": {"type": "number", "desc": "Valeur testée."}
+      },
+      "returns": [{"type": "boolean", "desc": "Résultat."}],
+      "internal": false
+    },
+    "getRangeValue": {
+      "desc": "Renvoie la première entrée dont la plage (clé 'value' par défaut) contient targetValue.",
+      "params": {
+        "valuesList": {"type": "table[]|nil", "desc": "Liste d'entrées."},
+        "targetValue": {"type": "number|string", "desc": "Valeur cherchée."},
+        "key": {"type": "string|nil", "desc": "Clé de la plage."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée trouvée."}],
+      "internal": false
+    },
+    "getClosestEntry": {
+      "desc": "Renvoie l'entrée dont la plage est la plus proche de targetValue (distance 0 si contenue), avec filtre facultatif.",
+      "params": {
+        "valuesList": {"type": "table[]|nil", "desc": "Liste d'entrées."},
+        "targetValue": {"type": "number|string", "desc": "Valeur cible."},
+        "key": {"type": "string|nil", "desc": "Clé de la plage."},
+        "filterFn": {"type": "function|nil", "desc": "function(entry) -> boolean pour exclure des entrées."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée la plus proche."}],
+      "internal": false
+    },
+    "cornerNumbering": {
+      "desc": "Renvoie la sous-table de numérotation d'un composant corner (cornerCfg.numbering, ou cornerCfg lui-même s'il n'existe pas, ou {} si nil).",
+      "params": {"cornerCfg": {"type": "table|nil", "desc": "Config du composant corner."}},
+      "returns": [{"type": "table", "desc": "Numérotation."}],
+      "internal": false
+    },
+    "cornerIntensityList": {
+      "desc": "Liste ordonnée des intensités de virage du style.",
+      "params": {"cornerCfg": {"type": "table|nil", "desc": "Config corner."}},
+      "returns": [{"type": "table[]|nil", "desc": "Entrées {id, text, diameter, visual, afterDirection...}."}],
+      "internal": false
+    },
+    "cornerLengthList": {
+      "desc": "Liste des longueurs de virage pour une intensité (lengthsByIntensity[intensityId]).",
+      "params": {
+        "cornerCfg": {"type": "table|nil", "desc": "Config corner."},
+        "intensityId": {"type": "string|nil", "desc": "Identifiant d'intensité."}
+      },
+      "returns": [{"type": "table[]|nil", "desc": "Entrées {id, text, arcMeters...}."}],
+      "internal": false
+    },
+    "cornerLengthEntryById": {
+      "desc": "Cherche une entrée de longueur par son id pour une intensité.",
+      "params": {
+        "cornerCfg": {"type": "table|nil", "desc": "Config corner."},
+        "intensityId": {"type": "string", "desc": "Intensité."},
+        "lengthId": {"type": "string", "desc": "Id de la longueur."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée."}, {"type": "integer|nil", "desc": "Indice dans la liste."}],
+      "internal": false
+    },
+    "modifierComponents": {
+      "desc": "Table des modificateurs atomiques du style (componentTypes.modifiers, ou {}).",
+      "params": {"componentTypes": {"type": "table|nil", "desc": "Registre componentTypes."}},
+      "returns": [{"type": "table", "desc": "Modificateurs par clé."}],
+      "internal": false
+    },
+    "lookupComponentType": {
+      "desc": "Renvoie la config du composant pour un type d'élément : corner et caution directement, sinon un modificateur (en résolvant modifierAliases).",
+      "params": {
+        "componentTypes": {"type": "table|nil", "desc": "Registre componentTypes."},
+        "itemType": {"type": "string", "desc": "Type de l'élément."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Config du composant."}],
+      "internal": false
+    },
+    "cornerLengthEntryText": {
+      "desc": "Texte parlé d'une entrée de longueur.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "string|nil", "desc": "Texte."}],
+      "internal": false
+    },
+    "cornerLengthEntryLabel": {
+      "desc": "Libellé d'une entrée de longueur : label, sinon text, sinon id.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "string|nil", "desc": "Libellé."}],
+      "internal": false
+    },
+    "intensityEntryId": {
+      "desc": "Identifiant d'une entrée d'intensité.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "string|nil", "desc": "Id."}],
+      "internal": false
+    },
+    "intensityEntryText": {
+      "desc": "Texte parlé d'une entrée d'intensité.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "string|nil", "desc": "Texte."}],
+      "internal": false
+    },
+    "intensityEntryLabel": {
+      "desc": "Libellé d'une entrée d'intensité : label, sinon text, sinon id.",
+      "params": {"entry": {"type": "table|nil", "desc": "Entrée."}},
+      "returns": [{"type": "string|nil", "desc": "Libellé."}],
+      "internal": false
+    },
+    "signedStep": {
+      "desc": "Signe d'une valeur : 1, -1 ou 0 (0 si non numérique).",
+      "params": {"value": {"type": "number|nil", "desc": "Valeur."}},
+      "returns": [{"type": "integer", "desc": "-1, 0 ou 1."}],
+      "internal": false
+    },
+    "lookupIntensityEntry": {
+      "desc": "Entrée d'intensité du style correspondant à un diamètre physique mesuré (plage 'diameter').",
+      "params": {
+        "cornerCfg": {"type": "table", "desc": "Config corner."},
+        "intensity": {"type": "number", "desc": "Diamètre mesuré (>= 0)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée d'intensité."}],
+      "internal": false
+    },
+    "lookupRiskAdjustedIntensityEntry": {
+      "desc": "Comme lookupIntensityEntry sur item.intensity, puis décale l'entrée selon le signe de item.riskIntensity (positif = vers le début de la liste, plus risqué), borné aux extrémités.",
+      "params": {
+        "cornerCfg": {"type": "table", "desc": "Config corner."},
+        "item": {"type": "table", "desc": "Élément corner (intensity, riskIntensity)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée d'intensité ajustée."}],
+      "internal": false
+    },
+    "lookupDescriptorEntry": {
+      "desc": "Entrée de descripteur d'un virage (cornerCfg.descriptors, en résolvant descriptorAliases).",
+      "params": {
+        "cornerCfg": {"type": "table", "desc": "Config corner."},
+        "descriptor": {"type": "string|nil", "desc": "Clé du descripteur."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée."}],
+      "internal": false
+    },
+    "lookupShapeEntry": {
+      "desc": "Entrée de forme d'un virage (cornerCfg.shapes[shape]).",
+      "params": {
+        "cornerCfg": {"type": "table", "desc": "Config corner."},
+        "shape": {"type": "string|nil", "desc": "Clé de forme."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Entrée."}],
+      "internal": false
+    },
+    "getCornerCall": {
+      "desc": "Phrase d'appel d'un virage : descripteur + direction, sinon intensité (ajustée au risque) + direction + afterDirection. Renvoie nil si pas de direction, direction non définie dans le style ou intensité introuvable.",
+      "params": {
+        "cornerCfg": {"type": "table|nil", "desc": "Config corner."},
+        "item": {"type": "table", "desc": "Élément corner (direction, descriptor, intensity...)."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Phrase."}],
+      "internal": false
+    },
+    "getCornerLengthForIntensity": {
+      "desc": "Texte de longueur d'un virage pour une intensité donnée d'après item.arcMeters ; lengthMode 'shorter'/'longer' décale d'une entrée, 'skip' supprime.",
+      "params": {
+        "cornerCfg": {"type": "table", "desc": "Config corner."},
+        "item": {"type": "table", "desc": "Élément corner (arcMeters, lengthMode)."},
+        "intensityEntry": {"type": "table|nil", "desc": "Entrée d'intensité."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Texte de longueur."}],
+      "internal": false
+    },
+    "getCornerLengthForItem": {
+      "desc": "Texte de longueur d'un virage en cherchant d'abord l'intensité de l'élément (sans ajustement de risque).",
+      "params": {
+        "cornerCfg": {"type": "table", "desc": "Config corner."},
+        "item": {"type": "table", "desc": "Élément corner."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Texte de longueur."}],
+      "internal": false
+    },
+    "getCornerShape": {
+      "desc": "Texte parlé de la forme d'un virage.",
+      "params": {
+        "cornerCfg": {"type": "table", "desc": "Config corner."},
+        "shape": {"type": "string|nil", "desc": "Clé de forme."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Texte."}],
+      "internal": false
+    },
+    "getCaution": {
+      "desc": "Texte d'un niveau de caution (cautionCfg.levels[item.level]).",
+      "params": {
+        "cautionCfg": {"type": "table|nil", "desc": "Config caution."},
+        "item": {"type": "table|nil", "desc": "Élément caution (level)."}
+      },
+      "returns": [{"type": "string|nil", "desc": "Texte."}],
+      "internal": false
+    },
+    "postProcessPhrase": {
+      "desc": "Nettoie une phrase (suppression des espaces de début et de fin via rallyUtil.trimString).",
+      "params": {"phrase": {"type": "string", "desc": "Phrase brute."}},
+      "returns": [{"type": "string", "desc": "Phrase nettoyée."}],
+      "internal": false
+    },
+    "pacenoteHash": {
+      "desc": "Transforme une phrase en identifiant utilisable comme nom de fichier (voir notes).",
+      "params": {"text": {"type": "string|nil", "desc": "Phrase."}},
+      "returns": [{"type": "string|nil", "desc": "Hash, nil si text est nil."}],
+      "internal": false
+    },
+    "getRandomWeightedItem": {
+      "desc": "Tire un élément au hasard selon son champ 'weight' (1 par défaut).",
+      "params": {"items": {"type": "table[]", "desc": "Éléments avec weight facultatif."}},
+      "returns": [{"type": "table", "desc": "Élément choisi."}],
+      "internal": false
+    },
+    "distanceCallsEnabled": {
+      "desc": "Vrai sauf si config.distance.callsEnabled vaut explicitement false.",
+      "params": {"config": {"type": "table|nil", "desc": "Config du style."}},
+      "returns": [{"type": "boolean", "desc": "État."}],
+      "internal": false
+    },
+    "compositePhraseEntries": {
+      "desc": "Parcourt les éléments structurés dans l'ordre fixe des emplacements, appelle l'émetteur du type et ajoute les marqueurs de distance avant/après. Les éléments sont dits les uns après les autres sans connecteur automatique ; les liens inter-notes ('into', 'and') viennent de la liste de liens de distance si les appels de distance sont activés.",
+      "params": {
+        "config": {"type": "table|nil", "desc": "Config du style."},
+        "structured": {"type": "table", "desc": "Note structurée."},
+        "rawDistanceBefore": {"type": "number|nil", "desc": "Distance avant (m)."},
+        "rawDistanceAfter": {"type": "number|nil", "desc": "Distance après (m)."},
+        "opts": {"type": "table|nil", "desc": "escapeVars (boolean : variables au lieu de valeurs), variantResolver (function(entry) -> entry|nil), distanceAfterBeforePostModifier (boolean : place la distance après avant le premier modificateur postérieur au virage)."}
+      },
+      "returns": [{"type": "table[]", "desc": "Entrées {text, category, variant?, audioFname?}."}],
+      "internal": false
+    },
+    "compositeFromPhrases": {
+      "desc": "Version simplifiée de compositePhraseEntries qui ne renvoie que les textes.",
+      "params": {
+        "config": {"type": "table|nil", "desc": "Config du style."},
+        "structured": {"type": "table", "desc": "Note structurée."},
+        "rawDistanceBefore": {"type": "number|nil", "desc": "Distance avant (m)."},
+        "rawDistanceAfter": {"type": "number|nil", "desc": "Distance après (m)."},
+        "escapeVars": {"type": "boolean|nil", "desc": "true pour des variables de distance."}
+      },
+      "returns": [{"type": "string[]", "desc": "Phrases dans l'ordre."}],
+      "internal": false
+    },
+    "enumerateScriptEntries": {
+      "desc": "Énumère les entrées du lecteur de script avec catégorie, sous-catégorie, variante et clés de tri : liens de distance, appels de virage (par intensité et direction), descripteurs, longueurs, formes, niveaux de caution, modificateurs. Plus riche qu'enumerateConcise.",
+      "params": {
+        "textCompositor": {"type": "table", "desc": "Non utilisé."},
+        "config": {"type": "table", "desc": "Config du style."}
+      },
+      "returns": [{"type": "table[]", "desc": "Entrées {phrase, hash, audioFname, recordingSlug, category, subcategory, sourceContext, variant, sortGroup, sortSubgroup, sortPhrase}."}],
+      "internal": false
+    },
+    "enumerateConcise": {
+      "desc": "Énumère toutes les phrases prononçables du style actif (dédoublonnées) : liens de distance, appels de virage, descripteurs, longueurs, formes, cautions, modificateurs. Sert au pipeline audio et au lecteur de script pour savoir quels fichiers chercher ou générer.",
+      "params": {
+        "textCompositor": {"type": "table", "desc": "Non utilisé."},
+        "config": {"type": "table", "desc": "Config du style."}
+      },
+      "returns": [{"type": "string[]", "desc": "Phrases uniques."}],
+      "internal": false
+    }
+  }
+}

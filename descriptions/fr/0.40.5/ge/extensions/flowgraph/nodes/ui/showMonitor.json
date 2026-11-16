@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/showMonitor.lua",
+  "module": "Nœud flowgraph « Show Monitor » (catégorie once_instant, auteur BeamNG) : active le moniteur flowgraph (petite fenêtre) et cache l'éditeur. Entrées cachées : « showStates » (section États), « showLog » (section Journal).",
+  "notes": [
+    "workOnce appelle dumpz(self.mgr.fgEditor, 1) avant et après (traces de debug)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "workOnce": {
+          "desc": "Passe l'éditeur en petite fenêtre (switchToSmallWindow) et force l'ouverture des sections États/Journal.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

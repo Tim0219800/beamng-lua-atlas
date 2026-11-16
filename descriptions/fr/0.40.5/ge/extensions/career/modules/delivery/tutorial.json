@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/tutorial.lua",
+  "module": "Détermine si les tutoriels de livraison (colis, véhicules, matériaux) sont encore actifs et fournit les listes de tâches du tutoriel pour la page de progression de carrière. Un tutoriel est actif tant que l'XP de la branche correspondante (logistics-delivery, logistics-vehicleDelivery, logistics-materials) vaut 0 ; le résultat est mis en cache et invalidé quand cette XP change, ce qui débloque aussi un succès.",
+  "notes": [
+    "Le cache (tutorialStatusCache) est vidé dans onPlayerAttributesChanged ; les succès DELIVERY_TUTORIAL_COMPLETED, VEHICLE_DELIVERY_COMPLETED et MATERIALS_DELIVERY_COMPLETED sont débloqués à chaque changement de l'attribut correspondant, pas seulement la première fois.",
+    "currentVehicleHasDryBulkContainer et currentVehicleHasTutorialMaterials renvoient toujours false : l'étape « charger des matériaux » du tutoriel matériaux n'est donc jamais cochée avant la fin du tutoriel.",
+    "tutorialVehicleTakenOutOfFacility teste n'importe quelle tâche de véhicule avec isTutorialVehicle, pas seulement celle du véhicule actuel.",
+    "currentOrNearbyVehicleHasContainer considère un conteneur attaché à moins de 20 m du joueur (ou du véhicule actuel).",
+    "getTutorialInfo ne renseigne que 'parcel' et 'vehicle' ; le tutoriel 'materials-introduction' existe dans onCareerProgressPageGetTasklistData mais n'est pas inclus.",
+    "Les titres 'Delivery Introduction', 'Vehicle Delivery Introduction' et 'Materials Introduction' sont en anglais, non traduits."
+  ],
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les extensions de livraison utilisées.",
+      "internal": true
+    },
+    "isCargoDeliveryTutorialActive": {
+      "desc": "Vrai tant que l'XP de logistics-delivery est 0 (résultat mis en cache).",
+      "returns": [{"type": "boolean", "desc": "Tutoriel de colis actif."}]
+    },
+    "isVehicleDeliveryTutorialActive": {
+      "desc": "Vrai tant que l'XP de logistics-vehicleDelivery est 0 (mis en cache).",
+      "returns": [{"type": "boolean", "desc": "Tutoriel de livraison de véhicules actif."}]
+    },
+    "isMaterialsDeliveryTutorialActive": {
+      "desc": "Vrai tant que l'XP de logistics-materials est 0 (mis en cache).",
+      "returns": [{"type": "boolean", "desc": "Tutoriel de matériaux actif."}]
+    },
+    "onPlayerAttributesChanged": {
+      "desc": "Hook appelé quand des attributs du joueur changent : invalide le cache du tutoriel concerné et débloque le succès associé.",
+      "params": {
+        "change": {"type": "table<string, number>", "desc": "Attributs modifiés (clés logistics-delivery, logistics-vehicleDelivery, logistics-materials)."},
+        "reason": {"type": "any", "desc": "Raison du changement (non utilisée)."}
+      },
+      "internal": true
+    },
+    "getTutorialInfo": {
+      "desc": "Renvoie l'état des tutoriels colis et véhicule : unlocked, isActive et la liste de tâches, pour l'UI.",
+      "returns": [{"type": "table", "desc": "{parcel = {unlocked, isActive, tasks, headerLabel}, vehicle = {…}}."}]
+    },
+    "onCareerProgressPageGetTasklistData": {
+      "desc": "Hook de la page de progression : remplit tasklistData.headerLabel et tasklistData.tasks ({label, description, done}) pour 'delivery-introduction' (installer un conteneur, charger un colis du tutoriel, livrer), 'vehicle-delivery-introduction' (récupérer le véhicule, livrer) ou 'materials-introduction'. Si le tutoriel est terminé, une seule tâche « terminé » est renvoyée.",
+      "params": {
+        "tasklistData": {"type": "table", "desc": "Table à remplir."},
+        "tasklistId": {"type": "string", "desc": "'delivery-introduction', 'vehicle-delivery-introduction' ou 'materials-introduction'."}
+      }
+    }
+  }
+}

@@ -1,26 +1,26 @@
 # `flowgraph_nodes_vehicle_beamstate_reload`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reload.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reload.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/beamstate/reload")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/beamstate/reload")` (file under extensions/ but not a regular extension)
 
-Nœud « Reload Vehicle » (catégorie `repeat_p_duration`, tag reset). Recharge le véhicule (`veh:reload()`), c'est-à-dire un rechargement complet de l'objet véhicule. Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).
+Node "Reload Vehicle" (category `repeat_p_duration`, tag reset). Reloads the vehicle (`veh:reload()`), i.e. a full reload of the vehicle object. Input pin: `vehId`. If `vehId` is not connected, the node takes the player vehicle (`getPlayerVehicle(0)`).
 
-## Remarques
+## Notes
 
-- Appelé à chaque frame tant que le flux est actif : relier à une impulsion pour ne recharger qu'une fois.
+- Called every frame while the flow is active: connect it to a pulse to reload only once.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle `veh:reload()` sur le véhicule trouvé. | 25 |
+| `C:work()` | Calls `veh:reload()` on the found vehicle. | 25 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reload.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reload.lua`.*

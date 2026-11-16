@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/touchingProps.lua",
-  "module": "Nœud « Props Touch » (catégorie `repeat_instant`, tags collision/collide/hit). Indique si un véhicule touche un objet (prop) d'une liste d'ids, via `map.objects[vehId].objectCollisions`. Pins d'entrée : `flow`, `vehId`, `propsIds` (table d'ids). Sorties : `flow` (true), `touching` (flux), `isTouching` (bool, caché).",
+  "module": "\"Props Touch\" node (category `repeat_instant`, tags collision/collide/hit). Tells whether a vehicle touches an object (prop) from a list of ids, via `map.objects[vehId].objectCollisions`. Input pins: `flow`, `vehId`, `propsIds` (table of ids). Outputs: `flow` (true), `touching` (flow), `isTouching` (bool, hidden).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "work": {
-          "desc": "Parcourt `propsIds` et active `touching` / `isTouching` au premier objet en collision.",
+          "desc": "Iterates over `propsIds` and sets `touching` / `isTouching` on the first colliding object.",
           "internal": true
         }
       }

@@ -1,114 +1,114 @@
 # `controller_hydraulicSuspension`
 
-*Fichier : `lua/vehicle/controller/hydraulicSuspension.lua` · VM : Véhicule · 328 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/hydraulicSuspension.lua` · VM: Vehicle · 328 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `hydraulicSuspension` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `hydraulicSuspension` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de suspension hydraulique (type "auxiliary") : pilote la longueur de référence de poutres (vérins de suspension) regroupées en groupes nommés. Une pompe virtuelle limite la vitesse d'extension ; la descente se fait à vitesse fixe ; en mode « bleed » la poutre est relâchée (ressort nul, amortissement variable) et suit librement. Il joue aussi les sons de pompe et de décharge. Un moddeur appelle setGroupsPosition / setGroupsBleed / setGroupsMomentaryIncrease depuis des entrées ou d'autres contrôleurs.
+Auxiliary hydraulic suspension controller (type "auxiliary"): drives the reference length of beams (suspension cylinders) grouped into named groups. A virtual pump limits the extension speed; lowering is done at a fixed speed; in "bleed" mode the beam is released (zero spring, variable damping) and follows freely. It also plays the pump and release sounds. A modder calls setGroupsPosition / setGroupsBleed / setGroupsMomentaryIncrease from inputs or other controllers.
 
-## Exemple
+## Example
 
 ```lua
 local hs = controller.getControllerSafe('hydraulicSuspension')
-hs.setGroupsPosition({"front", "rear"}, 1)   -- tout en haut
-hs.setGroupsBleed({"front"}, 1)              -- relâche l'avant
+hs.setGroupsPosition({"front", "rear"}, 1)   -- all the way up
+hs.setGroupsBleed({"front"}, 1)              -- releases the front
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam du contrôleur : hydraulicBeams (nom de la table de v.data qui décrit les poutres, défaut "hydraulicsData" ; chaque entrée contient beamName, groupName, min, max), basePumpSpeed (0.5, variation du ratio de longueur par seconde), maxPumpSpeed (défaut basePumpSpeed*20), pumpSample (événement sonore, défaut "event:>Vehicle>Hydraulics>Pump_01"), releaseSample (défaut "event:>Vehicle>Hydraulics>Release_01"), pumpNode (nœud d'émission du son).
-- Clés jbeam portées par les poutres : name (obligatoire pour être trouvées), hydraulicsMinDamp (0, amortissement minimal en mode bleed), defaultBleedCoef (1, borné 0..1). Les positions sont des ratios de la longueur de référence de la poutre (obj:setBeamLengthRefRatio).
-- Une poutre en mode bleed (bleedCoef > 0) a un ressort de 0 ; à bleedCoef = 0 elle reprend son ressort d'origine et un amortissement d'origine. La montée est limitée par min(basePumpSpeed*speedCoef, maxPumpSpeed) ; la descente se fait à 10 (ratio/s).
-- Au reset toutes les poutres reviennent à leur position d'origine avec bleedCoef = 1 (relâchées).
-- Les noms de groupe inexistants sont ignorés avec un avertissement dans le journal.
-- getState/setState sauvegardent par poutre : currentPosition, targetPosition, bleedCoef, speedCoef.
+- Controller jbeam keys: hydraulicBeams (name of the v.data table describing the beams, default "hydraulicsData"; each entry contains beamName, groupName, min, max), basePumpSpeed (0.5, length ratio change per second), maxPumpSpeed (default basePumpSpeed*20), pumpSample (sound event, default "event:>Vehicle>Hydraulics>Pump_01"), releaseSample (default "event:>Vehicle>Hydraulics>Release_01"), pumpNode (sound emission node).
+- jbeam keys carried by the beams: name (required to be found), hydraulicsMinDamp (0, minimum damping in bleed mode), defaultBleedCoef (1, bounded 0..1). Positions are ratios of the beam's reference length (obj:setBeamLengthRefRatio).
+- A beam in bleed mode (bleedCoef > 0) has a spring of 0; at bleedCoef = 0 it regains its original spring and original damping. Raising is limited by min(basePumpSpeed*speedCoef, maxPumpSpeed); lowering is done at 10 (ratio/s).
+- On reset all beams return to their original position with bleedCoef = 1 (released).
+- Non-existent group names are ignored with a warning in the log.
+- getState/setState save per beam: currentPosition, targetPosition, bleedCoef, speedCoef.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_hydraulicSuspension.getState()` | Renvoie l'état de toutes les poutres pour la sauvegarde/synchronisation. | 238 |
-| `controller_hydraulicSuspension.init(jbeamData)` | Construit les groupes de poutres à partir de la table hydraulique jbeam, mémorise les paramètres de pompe. *(interne)* | 166 |
-| `controller_hydraulicSuspension.initSounds(jbeamData)` | Crée les sources sonores de pompe et de décharge sur pumpNode. Appelé par le gestionnaire de contrôleurs lors de l'initialisation des sons. *(interne)* | 289 |
-| `controller_hydraulicSuspension.reset()` | Remet toutes les poutres à leur position d'origine et en mode relâché. *(interne)* | 153 |
-| `controller_hydraulicSuspension.resetSounds()` | Remet à zéro l'état des sons de pompe et de décharge. *(interne)* | 305 |
-| `controller_hydraulicSuspension.setGroupsBleed(groupNames, bleedCoef)` | Relâche les groupes : bleedCoef > 0 supprime le ressort et laisse la poutre suivre librement ; l'amortissement dépend de 1 - bleedCoef. | 61 |
-| `controller_hydraulicSuspension.setGroupsMomentaryIncrease(groupNames, enabled, speedCoef)` | Active/désactive l'augmentation continue de la cible des groupes (à la vitesse de base de la pompe) tant que enabled est vrai, dans les limites min/max de chaque poutre. | 77 |
-| `controller_hydraulicSuspension.setGroupsPosition(groupNames, position, speedCoef)` | Fixe la position cible de tous les groupes nommés : position 0 = extension min, 1 = extension max de chaque poutre. Désactive le bleed de ces poutres. | 42 |
-| `controller_hydraulicSuspension.setState(data)` | Restaure l'état renvoyé par getState (valeurs numériques valides uniquement). | 248 |
-| `controller_hydraulicSuspension.updateFixedStep(dt)` | Chaque pas physique : fait avancer chaque poutre vers sa position cible à la vitesse de pompe et applique la longueur et le ressort/amortissement. *(interne)* | 132 |
-| `controller_hydraulicSuspension.updateGFX(dt)` | Chaque image : gère le son de pompe (volume 0.5, hauteur selon le débit) et le son de décharge selon les poutres relâchées qui raccourcissent. *(interne)* | 95 |
+| `controller_hydraulicSuspension.getState()` | Returns the state of all beams for saving/synchronization. | 238 |
+| `controller_hydraulicSuspension.init(jbeamData)` | Builds the beam groups from the jbeam hydraulic table, stores the pump parameters. *(internal)* | 166 |
+| `controller_hydraulicSuspension.initSounds(jbeamData)` | Creates the pump and release sound sources on pumpNode. Called by the controller manager during sound initialization. *(internal)* | 289 |
+| `controller_hydraulicSuspension.reset()` | Returns all beams to their original position and to released mode. *(internal)* | 153 |
+| `controller_hydraulicSuspension.resetSounds()` | Resets the state of the pump and release sounds. *(internal)* | 305 |
+| `controller_hydraulicSuspension.setGroupsBleed(groupNames, bleedCoef)` | Releases the groups: bleedCoef > 0 removes the spring and lets the beam follow freely; the damping depends on 1 - bleedCoef. | 61 |
+| `controller_hydraulicSuspension.setGroupsMomentaryIncrease(groupNames, enabled, speedCoef)` | Enables/disables the continuous increase of the groups' target (at the pump's base speed) as long as enabled is true, within the min/max limits of each beam. | 77 |
+| `controller_hydraulicSuspension.setGroupsPosition(groupNames, position, speedCoef)` | Sets the target position of all named groups: position 0 = min extension, 1 = max extension of each beam. Disables the bleed of these beams. | 42 |
+| `controller_hydraulicSuspension.setState(data)` | Restores the state returned by getState (valid numeric values only). | 248 |
+| `controller_hydraulicSuspension.updateFixedStep(dt)` | Every physics step: advances each beam toward its target position at the pump speed and applies the length and the spring/damping. *(internal)* | 132 |
+| `controller_hydraulicSuspension.updateGFX(dt)` | Every frame: handles the pump sound (volume 0.5, pitch depending on the flow) and the release sound according to the released beams that shorten. *(internal)* | 95 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_hydraulicSuspension.getState()`
 
-Renvoie l'état de toutes les poutres pour la sauvegarde/synchronisation.
+Returns the state of all beams for saving/synchronization.
 
-- **renvoie** : table<string, number> Table d'état (réutilisée).
+- **returns**: table<string, number> State table (reused).
 
 #### `controller_hydraulicSuspension.init(jbeamData)`
 
-Construit les groupes de poutres à partir de la table hydraulique jbeam, mémorise les paramètres de pompe.
+Builds the beam groups from the jbeam hydraulic table, stores the pump parameters.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_hydraulicSuspension.initSounds(jbeamData)`
 
-Crée les sources sonores de pompe et de décharge sur pumpNode. Appelé par le gestionnaire de contrôleurs lors de l'initialisation des sons.
+Creates the pump and release sound sources on pumpNode. Called by the controller manager during sound initialization.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_hydraulicSuspension.setGroupsBleed(groupNames, bleedCoef)`
 
-Relâche les groupes : bleedCoef > 0 supprime le ressort et laisse la poutre suivre librement ; l'amortissement dépend de 1 - bleedCoef.
+Releases the groups: bleedCoef > 0 removes the spring and lets the beam follow freely; the damping depends on 1 - bleedCoef.
 
-- `groupNames` (*string[]*) : Noms de groupes.
-- `bleedCoef` (*number*) : 0 (pas de relâchement) à 1 (relâchement complet), borné.
+- `groupNames` (*string[]*) : Group names.
+- `bleedCoef` (*number*) : 0 (no release) to 1 (full release), bounded.
 
 #### `controller_hydraulicSuspension.setGroupsMomentaryIncrease(groupNames, enabled, speedCoef)`
 
-Active/désactive l'augmentation continue de la cible des groupes (à la vitesse de base de la pompe) tant que enabled est vrai, dans les limites min/max de chaque poutre.
+Enables/disables the continuous increase of the groups' target (at the pump's base speed) as long as enabled is true, within the min/max limits of each beam.
 
-- `groupNames` (*string[]*) : Noms de groupes.
-- `enabled` (*boolean*) : Vrai pour monter en continu.
-- `speedCoef` (*number|nil*) : Multiplicateur de vitesse (1 par défaut).
+- `groupNames` (*string[]*) : Group names.
+- `enabled` (*boolean*) : True to raise continuously.
+- `speedCoef` (*number|nil*) : Speed multiplier (1 by default).
 
 #### `controller_hydraulicSuspension.setGroupsPosition(groupNames, position, speedCoef)`
 
-Fixe la position cible de tous les groupes nommés : position 0 = extension min, 1 = extension max de chaque poutre. Désactive le bleed de ces poutres.
+Sets the target position of all named groups: position 0 = min extension, 1 = max extension of each beam. Disables the bleed of these beams.
 
-- `groupNames` (*string[]*) : Noms de groupes (groupName dans la table hydraulique).
-- `position` (*number*) : 0..1, interpolation entre min et max de chaque poutre.
-- `speedCoef` (*number|nil*) : Multiplicateur de la vitesse de pompe (1 par défaut).
+- `groupNames` (*string[]*) : Group names (groupName in the hydraulic table).
+- `position` (*number*) : 0..1, interpolation between min and max of each beam.
+- `speedCoef` (*number|nil*) : Pump speed multiplier (1 by default).
 
 #### `controller_hydraulicSuspension.setState(data)`
 
-Restaure l'état renvoyé par getState (valeurs numériques valides uniquement).
+Restores the state returned by getState (valid numeric values only).
 
-- `data` (*table|nil*) : Table d'état.
+- `data` (*table|nil*) : State table.
 
 #### `controller_hydraulicSuspension.updateFixedStep(dt)`
 
-Chaque pas physique : fait avancer chaque poutre vers sa position cible à la vitesse de pompe et applique la longueur et le ressort/amortissement.
+Every physics step: advances each beam toward its target position at the pump speed and applies the length and the spring/damping.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_hydraulicSuspension.updateGFX(dt)`
 
-Chaque image : gère le son de pompe (volume 0.5, hauteur selon le débit) et le son de décharge selon les poutres relâchées qui raccourcissent.
+Every frame: handles the pump sound (volume 0.5, pitch depending on the flow) and the release sound according to the released beams that shorten.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `createSFXSource`, `createSFXSource2`, `cutSFX`, `getBeamCurLengthRefRatio`, `getBeamLengthRefRatio`, `playSFX`, `setBeamLengthRefRatio`, `setBeamSpringDamp`, `setVolumePitch`, `stopSFX`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/hydraulicSuspension.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/hydraulicSuspension.lua`.*

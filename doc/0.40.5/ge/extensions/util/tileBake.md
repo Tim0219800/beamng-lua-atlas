@@ -1,38 +1,38 @@
 # `util_tileBake`
 
-*Fichier : `lua/ge/extensions/util/tileBake.lua` · VM : Game Engine (GE) · 163 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/tileBake.lua` · VM: Game Engine (GE) · 163 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_tileBake` : `extensions.load("util_tileBake")`, puis la globale `util_tileBake`
+**Access:** extension `util_tileBake`: `extensions.load("util_tileBake")`, then the global `util_tileBake`
 
-Outil réservé au développement : produit des proxys de tuiles pour la ville lointaine. Il répartit chaque mesh statique (TSStatic) et chaque gros objet de forêt du niveau en tuiles de 200 m, fusionne chaque tuile en un mesh, le cuit sur GPU dans un atlas partagé et écrit un glTF par tuile (via la fonction C++ bakeTileToGltf). Les sorties servent ensuite à l'outil DevTools/instalod pour fabriquer des LOD simplifiés. Sortie : /temp/tileBake/<niveau>/tile_<tx>_<ty>/ (PNG d'atlas, tile_<tx>_<ty>.gltf et tile.json).
+Development-only tool: produces tile proxies for the distant city. It distributes each static mesh (TSStatic) and each large forest object of the level into 200 m tiles, merges each tile into a mesh, bakes it on the GPU into a shared atlas and writes one glTF per tile (via the C++ function bakeTileToGltf). The outputs are then used by the DevTools/instalod tool to produce simplified LODs. Output: /temp/tileBake/<level>/tile_<tx>_<ty>/ (atlas PNG, tile_<tx>_<ty>.gltf and tile.json).
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util/tileBake')
--- le baking démarre tout seul quand un niveau est chargé
+-- baking starts by itself when a level is loaded
 ```
 
-## Remarques
+## Notes
 
-- Constantes : tuile 200 m, page d'atlas 4096 px, gouttière de 8 px, rayon minimal 4 m pour les objets de forêt.
-- La végétation (chemins contenant /trees/, /vegetation/, /foliage/, /plants/, bush, shrub, fern, grass, hedge, weed) est ignorée car elle a son propre système de LOD/imposteurs.
-- Séquence : 60 frames d'attente (le temps que le rendu et les shaders se stabilisent), une passe de collecte (gather), puis une tuile cuite par frame pour laisser respirer le jeu.
-- Chaque tuile écrit un tile.json (niveau, tx, ty, tileSize, origine, nombre de statiques/forêt/instances) pour la replacer à son origine monde.
-- Les transformations de la forêt sont constantes ; le code reconstruit une matrice modifiable avant d'appliquer l'échelle (voir scaledTransform).
-- Le nom du niveau est tiré de getMissionFilename() ('level' par défaut).
+- Constants: 200 m tile, 4096 px atlas page, 8 px gutter, minimum radius 4 m for forest objects.
+- Vegetation (paths containing /trees/, /vegetation/, /foliage/, /plants/, bush, shrub, fern, grass, hedge, weed) is ignored because it has its own LOD/impostor system.
+- Sequence: 60 frames of waiting (time for rendering and shaders to settle), one gathering pass (gather), then one tile baked per frame to let the game breathe.
+- Each tile writes a tile.json (level, tx, ty, tileSize, origin, number of statics/forest/instances) to place it back at its world origin.
+- The forest transforms are constant; the code rebuilds a modifiable matrix before applying the scale (see scaledTransform).
+- The level name is taken from getMissionFilename() ('level' by default).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_tileBake.onClientPostStartMission()` | Hook appelé à la fin du chargement d'un niveau ; réarme le baking (même fonction que onExtensionLoaded). *(interne)* *(hook)* | 136 |
-| `util_tileBake.onExtensionLoaded()` | Armement du baking quand l'extension est chargée alors qu'un niveau est déjà en place : active le mode pending, attente de 60 frames, remise à zéro des compteurs. Même fonction que onClientPostStartMission. *(interne)* *(hook)* | 136 |
-| `util_tileBake.onUpdate()` | Hook appelé à chaque frame. Une fois armé : attend la fin du warmup, collecte les instances par tuile, puis cuit une tuile par appel et logue la progression et le bilan final (OK/échecs). *(interne)* *(hook)* | 144 |
+| `util_tileBake.onClientPostStartMission()` | Hook called at the end of level loading; rearms the baking (same function as onExtensionLoaded). *(internal)* *(hook)* | 136 |
+| `util_tileBake.onExtensionLoaded()` | Arms the baking when the extension is loaded while a level is already in place: enables the pending mode, waits 60 frames, resets the counters. Same function as onClientPostStartMission. *(internal)* *(hook)* | 136 |
+| `util_tileBake.onUpdate()` | Hook called every frame. Once armed: waits for the warmup to end, collects the instances per tile, then bakes one tile per call and logs the progress and the final summary (OK/failures). *(internal)* *(hook)* | 144 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getField`, `getScale`, `getTransform`, `getWorldBox`, `isSubClassOf`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/tileBake.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/tileBake.lua`.*

@@ -1,23 +1,32 @@
 {
   "path": "lua/common/jbeam/sections/meshs.lua",
-  "module": "Traite les sections jbeam qui concernent les meshes 3D du véhicule : triangles (triangles de collision physique), props (meshes rigides attachés à trois nœuds de référence, y compris les lumières SPOTLIGHT/POINTLIGHT) et flexbodies (meshes déformables liés à des groupes de nœuds). Applique d'abord les rotations/déplacements du composant aux positions/rotations des flexbodies, demande au moteur le chargement groupé des meshes, crée les triangles physiques, les props et les flexmeshes avec leurs transformations, puis valide (meshCommit).",
+  "module": "Processes the jbeam sections that concern the vehicle's 3D meshes: triangles (physical collision triangles), props (rigid meshes attached to three reference nodes, including SPOTLIGHT/POINTLIGHT lights) and flexbodies (deformable meshes linked to node groups). First applies the component's rotations/translations to the flexbodies' positions/rotations, asks the engine to load the meshes in a group, creates the physical triangles, the props and the flexmeshes with their transformations, then validates (meshCommit).",
   "notes": [
-    "Props : requièrent idRef, idX, idY, translation et rotation (sinon erreur et prop ignoré). Rotation en degrés dans le jbeam, convertie en radians ; baseRotation/baseRotationGlobal aussi. Si le moteur renomme le mesh, le nom d'origine est mémorisé dans originalMesh et mesh est mis à jour. Le paramètre utilisateur « disableSteeringwheel » désactive les props dont func == 'steering'.",
-    "Valeurs par défaut des props : min 0, max 100, offset 0, multiplier 1 ; ils sont créés visibles avec valeur de donnée 0. prop.pid et prop.slotID reçoivent l'identifiant moteur.",
-    "Lumières (mesh SPOTLIGHT ou POINTLIGHT) : lightInnerAngle (40), lightOuterAngle (45), lightBrightness (1) ou lightIntensityCd / lightIntensityLm (convertis en luminosité / 5000), lightRange (10), lightCastShadows (false), flareName ('vehicleDefaultLightflare'), flareScale 1, cookieName, animationType/Period/Phase, texSize 256, shadowSoftness 1, lightColor (table {r,g,b,a} 0-255 ou chaîne '#RRGGBBAA'), lightAttenuation (0,1,1), lightSourceRadius (en mètres, -1 par défaut).",
-    "materialOverride (props et flexbodies) doit être un tableau de paires {ancien, nouveau} ; une paire simple {a, b} provoque une erreur de journal.",
-    "Flexbodies : créés seulement s'ils ont au moins un nœud dans _group_nodes ; pos/rot (degrés)/scale optionnels appliqués via setInitialTransformation (flatMap optionnel). Les meshes renommés sont suivis comme pour les props.",
-    "Les triangles dégénérés (deux indices identiques) sont ignorés.",
-    "Le module ne fait rien côté moteur si vehicleObj est nil (VM véhicule)."
+    "Props: require idRef, idX, idY, translation and rotation (otherwise error and the prop is ignored). Rotation in degrees in the jbeam, converted to radians; baseRotation/baseRotationGlobal too. If the engine renames the mesh, the original name is stored in originalMesh and mesh is updated. The user parameter \"disableSteeringwheel\" disables the props whose func == 'steering'.",
+    "Prop default values: min 0, max 100, offset 0, multiplier 1; they are created visible with data value 0. prop.pid and prop.slotID receive the engine identifier.",
+    "Lights (mesh SPOTLIGHT or POINTLIGHT): lightInnerAngle (40), lightOuterAngle (45), lightBrightness (1) or lightIntensityCd / lightIntensityLm (converted to brightness / 5000), lightRange (10), lightCastShadows (false), flareName ('vehicleDefaultLightflare'), flareScale 1, cookieName, animationType/Period/Phase, texSize 256, shadowSoftness 1, lightColor ({r,g,b,a} table 0-255 or string '#RRGGBBAA'), lightAttenuation (0,1,1), lightSourceRadius (in meters, -1 by default).",
+    "materialOverride (props and flexbodies) must be an array of {old, new} pairs; a single pair {a, b} causes a log error.",
+    "Flexbodies: created only if they have at least one node in _group_nodes; pos/rot (degrees)/scale optional, applied via setInitialTransformation (optional flatMap). Renamed meshes are tracked as for props.",
+    "Degenerate triangles (two identical indices) are ignored.",
+    "The module does nothing engine-side if vehicleObj is nil (vehicle VM)."
   ],
   "fields": {},
   "functions": {
     "process": {
-      "desc": "Charge et configure triangles, props et flexbodies du véhicule dans le moteur.",
+      "desc": "Loads and configures the vehicle's triangles, props and flexbodies in the engine.",
       "params": {
-        "objID": {"type": "integer", "desc": "Identifiant du véhicule (non utilisé)."},
-        "vehicleObj": {"type": "userdata|nil", "desc": "Objet véhicule moteur."},
-        "vehicle": {"type": "table", "desc": "Données jbeam du véhicule (modifiées en place : pid, fid, mesh, rotation...)."}
+        "objID": {
+          "type": "integer",
+          "desc": "Vehicle identifier (unused)."
+        },
+        "vehicleObj": {
+          "type": "userdata|nil",
+          "desc": "Engine vehicle object."
+        },
+        "vehicle": {
+          "type": "table",
+          "desc": "Vehicle jbeam data (modified in place: pid, fid, mesh, rotation...)."
+        }
       },
       "internal": true
     }

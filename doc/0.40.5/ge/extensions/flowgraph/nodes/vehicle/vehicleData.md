@@ -1,28 +1,28 @@
 # `flowgraph_nodes_vehicle_vehicleData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleData.lua` · VM : Game Engine (GE) · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleData.lua` · VM: Game Engine (GE) · 103 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/vehicleData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/vehicleData")` (file under extensions/ but not a regular extension)
 
-Nœud « Get Vehicle Data » (catégorie `repeat_instant`), obsolète : « remplacé par Get Vehicle Data, Vehicle OOBB et Vehicle Wheels ». Lit `map.objects[vehId]` et la géométrie du véhicule. Sorties : `active`, `damage`, `dirVec`, `dirVecUp`, `rotation`, `position` (refnode), `corner_FR/FL/BR/BL`, `wheelCenter`, `velocityVector`, `velocity` (m/s). Pin d'entrée : `vehId` (défaut 0).
+"Get Vehicle Data" node (category `repeat_instant`), obsolete: "replaced by Get Vehicle Data, Vehicle OOBB and Vehicle Wheels". Reads `map.objects[vehId]` and the vehicle geometry. Outputs: `active`, `damage`, `dirVec`, `dirVecUp`, `rotation`, `position` (refnode), `corner_FR/FL/BR/BL`, `wheelCenter`, `velocityVector`, `velocity` (m/s). Input pin: `vehId` (default 0).
 
-## Remarques
+## Notes
 
-- Le code final (`extractVehicleData`, sorties `model`/`config`) est dans un bloc commenté.
-- Plante si le véhicule joueur n'existe pas (`veh:getId()` n'est pas atteint grâce au `return`).
+- The final code (`extractVehicleData`, `model`/`config` outputs) is in a commented-out block.
+- Crashes if the player vehicle does not exist (`veh:getId()` is not reached thanks to the `return`).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Constructeur vide. | 45 |
-| `C:work(args)` | Remplit toutes les sorties depuis `map.objects` et la boîte englobante. | 53 |
+| `C:init(mgr, ...)` | Empty constructor. | 45 |
+| `C:work(args)` | Fills all outputs from `map.objects` and the bounding box. | 53 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/vehicleData.lua`.*

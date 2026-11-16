@@ -1,0 +1,13 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/shake.lua",
+  "module": "Filtre de tremblement lent : ajoute à la position (amplitudes 0.08/0.05/0.03 m) et à la rotation (10 degrés par mètre de décalage) des oscillations sinusoïdales de fréquences 0.05/0.04/0.03 Hz avec décalages de phase aléatoires. Masqué. Renvoie un constructeur.",
+  "classes": {
+    "C": {
+      "desc": "Filtre de tremblement. Champs : amp (vec3), freq (vec3), timeOffset (vec3), time.",
+      "functions": {
+        "init": {"desc": "Initialise amplitudes, fréquences et phases aléatoires."},
+        "update": {"desc": "Applique le décalage de position et la rotation à data.res.", "params": {"data": {"type": "table", "desc": "camData"}}, "internal": true}
+      }
+    }
+  }
+}

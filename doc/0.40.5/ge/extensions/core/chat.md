@@ -1,15 +1,15 @@
 # `core_chat`
 
-*Fichier : `lua/ge/extensions/core/chat.lua` · VM : Game Engine (GE) · 179 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/chat.lua` · VM: Game Engine (GE) · 179 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/chat")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/chat")` (file under extensions/ but not a regular extension)
 
-Ancien client de chat IRC (irc.beamng.com, canal #beamng). Tout le code du fichier est en commentaire (bloc --[[ ... ]], marqué « not working atm ») : le module ne renvoie donc rien d'utilisable et ne définit aucune fonction.
+Old IRC chat client (irc.beamng.com, channel #beamng). All the code in the file is commented out (--[[ ... ]] block, marked "not working atm"): the module therefore returns nothing usable and defines no function.
 
-## Remarques
+## Notes
 
-- Le fichier ne contient aucun code actif ; require renvoie nil. Ne pas s'en servir.
-- Le code commenté prévoyait M.activate, M.deactivate, M.send(target, message), M.requestState, M.onInit, M.onUpdate et émettait le hook onChatMessage et l'évènement UI ChatMessage/ChatState.
+- The file contains no active code; require returns nil. Do not use it.
+- The commented-out code provided for M.activate, M.deactivate, M.send(target, message), M.requestState, M.onInit, M.onUpdate and emitted the onChatMessage hook and the ChatMessage/ChatState UI event.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/chat.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/chat.lua`.*

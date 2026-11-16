@@ -1,31 +1,48 @@
 {
   "path": "lua/ge/extensions/ui/router/managers/frameworkManager.lua",
-  "module": "Pont sortant du routeur Lua vers les frameworks UI (Vue, Angular) par guihooks. Il émet les évènements de changement de route (démarrage, fin, annulation) et ne garde aucun état : l'état de transition, la progression, les timeouts et la validation des accusés sont dans transitionManager.lua et router.lua.",
+  "module": "Outgoing bridge from the Lua router to the UI frameworks (Vue, Angular) via guihooks. It emits the route change events (start, end, cancellation) and keeps no state: transition state, progress, timeouts and acknowledgment validation are in transitionManager.lua and router.lua.",
   "notes": [
-    "Quand un transitionId est fourni, une copie superficielle de la charge utile est émise avec transitionId ajouté : l'entrée de navigation d'origine n'est jamais modifiée. Les champs existants (request, resolved, origin, toRoute, fromRoute, routeNode) sont conservés.",
-    "Évènements GUI émis : ui_router_routeChange, ui_router_afterRouteChange (Constants.RouterHooks.AFTER_ROUTE_CHANGE), ui_router_routeChangeCancelled (ROUTE_CHANGE_CANCELLED)."
+    "When a transitionId is provided, a shallow copy of the payload is emitted with transitionId added: the original navigation entry is never modified. Existing fields (request, resolved, origin, toRoute, fromRoute, routeNode) are kept.",
+    "Emitted GUI events: ui_router_routeChange, ui_router_afterRouteChange (Constants.RouterHooks.AFTER_ROUTE_CHANGE), ui_router_routeChangeCancelled (ROUTE_CHANGE_CANCELLED)."
   ],
   "functions": {
     "sendRouteChange": {
-      "desc": "Émet l'évènement GUI ui_router_routeChange pour demander au framework d'afficher la route.",
+      "desc": "Emits the GUI event ui_router_routeChange to ask the framework to display the route.",
       "params": {
-        "data": {"type": "table", "desc": "Entrée de navigation (traitée comme immuable)."},
-        "transitionId": {"type": "string|nil", "desc": "Identifiant de transition à joindre à la charge utile (copie)."}
+        "data": {
+          "type": "table",
+          "desc": "Navigation entry (treated as immutable)."
+        },
+        "transitionId": {
+          "type": "string|nil",
+          "desc": "Transition identifier to attach to the payload (copy)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "sendRouteChangeComplete": {
-      "desc": "Émet l'évènement GUI ui_router_afterRouteChange avec l'entrée de navigation validée.",
-      "params": {"data": {"type": "table", "desc": "Entrée courante validée."}},
+      "desc": "Emits the GUI event ui_router_afterRouteChange with the committed navigation entry.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Current committed entry."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "sendRouteChangeCancelled": {
-      "desc": "Émet l'évènement GUI ui_router_routeChangeCancelled. Si extras contient transitionId ou reason, une copie de la route est émise avec ces champs pour que l'UI n'efface que le handoff correspondant.",
+      "desc": "Emits the GUI event ui_router_routeChangeCancelled. If extras contains transitionId or reason, a copy of the route is emitted with these fields so that the UI clears only the matching handoff.",
       "params": {
-        "data": {"type": "table|nil", "desc": "Route annulée (toRoute), traitée comme immuable."},
-        "extras": {"type": "table|nil", "desc": "{transitionId?, reason?}."}
+        "data": {
+          "type": "table|nil",
+          "desc": "Cancelled route (toRoute), treated as immutable."
+        },
+        "extras": {
+          "type": "table|nil",
+          "desc": "{transitionId?, reason?}."
+        }
       },
       "returns": [],
       "internal": false

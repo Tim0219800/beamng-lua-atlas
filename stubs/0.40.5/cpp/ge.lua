@@ -2798,9 +2798,9 @@ function worldEditorCppApi.snapPositionToGrid(...) end
 
 ---@class ActionMap : SimObject
 ---@field className any
----@field enabled any modifiable
----@field playerMask any modifiable
----@field trapHandledEvents any modifiable
+---@field enabled any writable
+---@field playerMask any writable
+---@field trapHandledEvents any writable
 local ActionMap = {}
 ---@param ... any
 ---@return any
@@ -3026,7 +3026,7 @@ function ActionMap:setStaticDataFieldbyName(...) end
 function ActionMap:unregisterObject(...) end
 
 ---@class BNGBase_FS_IFileSystem
----@field MAX_LEVELS any modifiable
+---@field MAX_LEVELS any writable
 local BNGBase_FS_IFileSystem = {}
 ---@param ... any
 ---@return any
@@ -3382,8 +3382,8 @@ function BaseMaterial:setStaticDataFieldbyName(...) end
 function BaseMaterial:unregisterObject(...) end
 
 ---@class BeamEngine
----@field nodeGrabber any modifiable
----@field persistenceLuaData any modifiable
+---@field nodeGrabber any writable
+---@field persistenceLuaData any writable
 local BeamEngine = {}
 ---@param ... any
 ---@return any
@@ -4272,8 +4272,8 @@ function BeamNGPointOfInterest:unregisterObject(...) end
 
 ---@class BeamNGTrigger : GameBase
 ---@field className any
----@field color any modifiable
----@field debug any modifiable
+---@field color any writable
+---@field debug any writable
 local BeamNGTrigger = {}
 ---@param ... any
 ---@return any
@@ -4607,13 +4607,13 @@ function BeamNGTrigger:unhideInRenderView(...) end
 function BeamNGTrigger:unregisterObject(...) end
 
 ---@class BeamNGVehicle : ShapeBase
----@field bouncePhase any modifiable
----@field canBeNodeGrabbed any modifiable
+---@field bouncePhase any writable
+---@field canBeNodeGrabbed any writable
 ---@field className any
----@field initialCollidableNodePosBB any modifiable
----@field initialNodePosBB any modifiable
----@field playerUsable any modifiable
----@field ropeIds any modifiable
+---@field initialCollidableNodePosBB any writable
+---@field initialNodePosBB any writable
+---@field playerUsable any writable
+---@field ropeIds any writable
 local BeamNGVehicle = {}
 ---@param ... any
 ---@return any
@@ -5518,7 +5518,7 @@ function BeamNGVehicle:why(...) end
 
 ---@class BeamNGWaypoint : SceneObject
 ---@field className any
----@field excludeFromMap any modifiable
+---@field excludeFromMap any writable
 local BeamNGWaypoint = {}
 ---@param ... any
 ---@return any
@@ -5841,12 +5841,12 @@ function BeamNGWaypoint:unregisterObject(...) end
 
 ---@class BeamNGWorldIconsRenderer : SceneObject
 ---@field className any
----@field mConstantSizeIcons any modifiable
----@field mDrawIconBackground any modifiable
----@field mFadeIcons any modifiable
----@field mFadeIconsDist any modifiable
----@field mUseIconColor any modifiable
----@field maxIconScale any modifiable
+---@field mConstantSizeIcons any writable
+---@field mDrawIconBackground any writable
+---@field mFadeIcons any writable
+---@field mFadeIconsDist any writable
+---@field mUseIconColor any writable
+---@field maxIconScale any writable
 local BeamNGWorldIconsRenderer = {}
 ---@param ... any
 ---@return any
@@ -6584,7 +6584,7 @@ function Camera:unregisterObject(...) end
 
 ---@class CameraBookmark : MissionMarker
 ---@field className any
----@field observer any modifiable
+---@field observer any writable
 local CameraBookmark = {}
 ---@param ... any
 ---@return any
@@ -14267,8 +14267,8 @@ function LoadingManagerClass:setLoadingScreenEnabled(...) end
 function LoadingManagerClass:triggerUpdate(...) end
 
 ---@class Lua
----@field lastDebugFocusPos any modifiable
----@field userLanguage any modifiable
+---@field lastDebugFocusPos any writable
+---@field userLanguage any writable
 local Lua = {}
 ---@param ... any
 ---@return any
@@ -16115,11 +16115,11 @@ function ParticleEmitterNodeData:setStaticDataFieldbyName(...) end
 function ParticleEmitterNodeData:unregisterObject(...) end
 
 ---@class PlatformSwitches
----@field audioFolderName any modifiable
----@field priority any modifiable
----@field settingsJsonPath any modifiable
----@field useEditor any modifiable
----@field useJit any modifiable
+---@field audioFolderName any writable
+---@field priority any writable
+---@field settingsJsonPath any writable
+---@field useEditor any writable
+---@field useJit any writable
 local PlatformSwitches = {}
 
 ---@class PlayerData : ShapeBaseData
@@ -18663,12 +18663,12 @@ function PostEffectDownScale:toggleDebug(...) end
 function PostEffectDownScale:unregisterObject(...) end
 
 ---@class PostEffectLocalExposure : PostEffectBase
----@field autoExposure any modifiable
----@field autoTargetLuminance any modifiable
+---@field autoExposure any writable
+---@field autoTargetLuminance any writable
 ---@field className any
----@field exposureBiasEV any modifiable
----@field manualEV any modifiable
----@field targetLuminance any modifiable
+---@field exposureBiasEV any writable
+---@field manualEV any writable
+---@field targetLuminance any writable
 local PostEffectLocalExposure = {}
 ---@param ... any
 ---@return any
@@ -20010,7 +20010,7 @@ function PostEffectMotionBlur:toggleDebug(...) end
 function PostEffectMotionBlur:unregisterObject(...) end
 
 ---@class PostEffectSSAO : PostEffect
----@field bentNormals any modifiable
+---@field bentNormals any writable
 ---@field className any
 local PostEffectSSAO = {}
 ---@param ... any
@@ -20692,21 +20692,21 @@ function PostFxSMAAT2xResolve:unregisterObject(...) end
 
 ---@class PostFxSSSR : PostEffectBase
 ---@field className any
----@field collectStatistics any modifiable
----@field debugView any modifiable
----@field denoiserEnabled any modifiable
----@field depthThickness any modifiable
----@field halfResolution any modifiable
----@field maxIntersections any modifiable
----@field minOccupancy any modifiable
----@field mostDetailedMip any modifiable
----@field resolutionDivisor any modifiable
----@field roughnessThreshold any modifiable
----@field samplesPerQuad any modifiable
----@field temporalStability any modifiable
----@field transparentReflections any modifiable
----@field varianceGuidedTracing any modifiable
----@field varianceThreshold any modifiable
+---@field collectStatistics any writable
+---@field debugView any writable
+---@field denoiserEnabled any writable
+---@field depthThickness any writable
+---@field halfResolution any writable
+---@field maxIntersections any writable
+---@field minOccupancy any writable
+---@field mostDetailedMip any writable
+---@field resolutionDivisor any writable
+---@field roughnessThreshold any writable
+---@field samplesPerQuad any writable
+---@field temporalStability any writable
+---@field transparentReflections any writable
+---@field varianceGuidedTracing any writable
+---@field varianceThreshold any writable
 local PostFxSSSR = {}
 ---@param ... any
 ---@return any
@@ -26210,58 +26210,58 @@ function SceneObject:unhideInRenderView(...) end
 function SceneObject:unregisterObject(...) end
 
 ---@class Settings
----@field AudioFmodDebugLogs any modifiable
----@field AudioFmodDebugMemory any modifiable
----@field AudioFmodEnableDebugLogging any modifiable
----@field AudioFmodLiveUpdate any modifiable
----@field AudioMaxSoftwareBuffers any modifiable
----@field AudioMuteOnWindowLoseFocus any modifiable
----@field AudioUseHardware any modifiable
----@field BeamNGWaypointDrawDebug any modifiable
----@field DebugDrawDrawAdvancedText any modifiable
----@field FPSLimiterRandomness any modifiable
----@field GraphicGamma any modifiable
----@field GraphicPlatformPreset any modifiable
----@field GraphicPlatformPresetStaticResHeight any modifiable
----@field GraphicPlatformPresetStaticResWidth any modifiable
----@field IngameConsoleLogBlacklist any modifiable
----@field IngameConsoleLogRotationLines any modifiable
----@field IngameConsoleLogWhitelist any modifiable
----@field WinConsoleLogBlacklist any modifiable
----@field WinConsoleLogWhitelist any modifiable
----@field colladaUpdateMaterials any modifiable
----@field fpsLimit any modifiable
----@field fpsLimitBackground any modifiable
----@field fpsLimitBackgroundEnabled any modifiable
----@field fpsLimitEnabled any modifiable
----@field imguiWindowParenting any modifiable
----@field lastError any modifiable
----@field lowFovDetailEnabled any modifiable
----@field multiseat any modifiable
----@field openXRapidumpEnabled any modifiable
----@field openXRdebugEnabled any modifiable
----@field openXRfreeCenter any modifiable
----@field openXRhandPoseDirectionDegrees any modifiable
----@field openXRhandPoseMultiplier any modifiable
----@field openXRquadCompositionEnabled any modifiable
----@field openXRresolutionScale any modifiable
----@field openXRuiCurve any modifiable
----@field openXRuiDepth any modifiable
----@field openXRuiEnabled any modifiable
----@field openXRuiHeight any modifiable
----@field openXRuiMode any modifiable
----@field openXRuiWidth any modifiable
----@field openXRuseControllers any modifiable
----@field openXRwindowViewMode any modifiable
----@field replayClouds any modifiable
----@field replayTod any modifiable
----@field sceneLightingCacheLighting any modifiable
----@field sceneLightingCacheSize any modifiable
----@field sceneLightingPurgeMethod any modifiable
----@field shaderGenCachePath any modifiable
----@field unfocusedInput any modifiable
----@field videoDefaultFenceCount any modifiable
----@field windEffectRadius any modifiable
+---@field AudioFmodDebugLogs any writable
+---@field AudioFmodDebugMemory any writable
+---@field AudioFmodEnableDebugLogging any writable
+---@field AudioFmodLiveUpdate any writable
+---@field AudioMaxSoftwareBuffers any writable
+---@field AudioMuteOnWindowLoseFocus any writable
+---@field AudioUseHardware any writable
+---@field BeamNGWaypointDrawDebug any writable
+---@field DebugDrawDrawAdvancedText any writable
+---@field FPSLimiterRandomness any writable
+---@field GraphicGamma any writable
+---@field GraphicPlatformPreset any writable
+---@field GraphicPlatformPresetStaticResHeight any writable
+---@field GraphicPlatformPresetStaticResWidth any writable
+---@field IngameConsoleLogBlacklist any writable
+---@field IngameConsoleLogRotationLines any writable
+---@field IngameConsoleLogWhitelist any writable
+---@field WinConsoleLogBlacklist any writable
+---@field WinConsoleLogWhitelist any writable
+---@field colladaUpdateMaterials any writable
+---@field fpsLimit any writable
+---@field fpsLimitBackground any writable
+---@field fpsLimitBackgroundEnabled any writable
+---@field fpsLimitEnabled any writable
+---@field imguiWindowParenting any writable
+---@field lastError any writable
+---@field lowFovDetailEnabled any writable
+---@field multiseat any writable
+---@field openXRapidumpEnabled any writable
+---@field openXRdebugEnabled any writable
+---@field openXRfreeCenter any writable
+---@field openXRhandPoseDirectionDegrees any writable
+---@field openXRhandPoseMultiplier any writable
+---@field openXRquadCompositionEnabled any writable
+---@field openXRresolutionScale any writable
+---@field openXRuiCurve any writable
+---@field openXRuiDepth any writable
+---@field openXRuiEnabled any writable
+---@field openXRuiHeight any writable
+---@field openXRuiMode any writable
+---@field openXRuiWidth any writable
+---@field openXRuseControllers any writable
+---@field openXRwindowViewMode any writable
+---@field replayClouds any writable
+---@field replayTod any writable
+---@field sceneLightingCacheLighting any writable
+---@field sceneLightingCacheSize any writable
+---@field sceneLightingPurgeMethod any writable
+---@field shaderGenCachePath any writable
+---@field unfocusedInput any writable
+---@field videoDefaultFenceCount any writable
+---@field windEffectRadius any writable
 local Settings = {}
 
 ---@class ShaderData : SimObject

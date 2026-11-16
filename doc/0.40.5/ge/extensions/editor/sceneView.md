@@ -1,43 +1,43 @@
 # `editor_sceneView`
 
-*Fichier : `lua/ge/extensions/editor/sceneView.lua` · VM : Game Engine (GE) · 448 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/sceneView.lua` · VM: Game Engine (GE) · 448 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_sceneView` : `extensions.load("editor_sceneView")`, puis la globale `editor_sceneView`
+**Access:** extension `editor_sceneView`: `extensions.load("editor_sceneView")`, then the global `editor_sceneView`
 
-Vues de scène supplémentaires de l'éditeur : chaque « Scene view N » est une fenêtre ImGui qui affiche le monde via un ImguiRenderViewControl, avec son propre mode (3D, dernière caméra sélectionnée, orthographique), plans near/far, FOV, position/rotation, visibilité des icônes et du gizmo, et masque de debug draw. Dessine aussi une grille de debug. L'état des vues est sauvegardé avec la disposition de l'éditeur (onSerialize/onDeserialized) et restauré à l'initialisation.
+Additional scene views of the editor: each "Scene view N" is an ImGui window that displays the world via an ImguiRenderViewControl, with its own mode (3D, last selected camera, orthographic), near/far planes, FOV, position/rotation, icon and gizmo visibility, and debug draw mask. Also draws a debug grid. The state of the views is saved with the editor layout (onSerialize/onDeserialized) and restored at initialization.
 
-## Remarques
+## Notes
 
-- Valeurs par défaut d'une vue : nearClip 0.01, farClip 2500, fov 70, renderDebugDrawMask -1 (tout).
-- Piège : `data.attachToObject or true` vaut toujours true, la valeur sauvegardée false est donc perdue au rechargement.
+- Default values of a view: nearClip 0.01, farClip 2500, fov 70, renderDebugDrawMask -1 (everything).
+- Trap: `data.attachToObject or true` is always true, so the saved value false is lost on reload.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_sceneView.onDeserialized(data)` | Mémorise les données sauvegardées jusqu'à ce que l'éditeur soit initialisé (onEditorInitialized les utilise). *(interne)* *(hook)* | 438 |
-| `editor_sceneView.onEditorGui()` | Appelé à chaque image : crée une vue en attente (menu « Add Scene View ») puis dessine chaque fenêtre de vue, ses menus de contrôle (mode, clips, FOV, ortho) et met à jour la caméra de rendu. *(interne)* *(hook)* | 76 |
-| `editor_sceneView.onEditorInitialized()` | Appelé à l'initialisation de l'éditeur : recrée les vues depuis les données désérialisées, puis ajoute le menu « Add Scene View ». *(interne)* *(hook)* | 406 |
-| `editor_sceneView.onSerialize()` | Sérialise l'état de toutes les vues (mode, clips, fov, pos, rot, options d'affichage, masque debug). *(interne)* *(hook)* | 417 |
+| `editor_sceneView.onDeserialized(data)` | Stores the saved data until the editor is initialized (onEditorInitialized uses it). *(internal)* *(hook)* | 438 |
+| `editor_sceneView.onEditorGui()` | Called every frame: creates a pending view ("Add Scene View" menu) then draws each view window, its control menus (mode, clips, FOV, ortho) and updates the render camera. *(internal)* *(hook)* | 76 |
+| `editor_sceneView.onEditorInitialized()` | Called when the editor initializes: recreates the views from the deserialized data, then adds the "Add Scene View" menu. *(internal)* *(hook)* | 406 |
+| `editor_sceneView.onSerialize()` | Serializes the state of all views (mode, clips, fov, pos, rot, display options, debug mask). *(internal)* *(hook)* | 417 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_sceneView.onDeserialized(data)`
 
-Mémorise les données sauvegardées jusqu'à ce que l'éditeur soit initialisé (onEditorInitialized les utilise).
+Stores the saved data until the editor is initialized (onEditorInitialized uses it).
 
-- `data` (*table*) : Valeur renvoyée par onSerialize.
+- `data` (*table*) : Value returned by onSerialize.
 
 #### `editor_sceneView.onSerialize()`
 
-Sérialise l'état de toutes les vues (mode, clips, fov, pos, rot, options d'affichage, masque debug).
+Serializes the state of all views (mode, clips, fov, pos, rot, display options, debug mask).
 
-- **renvoie** : table { sceneViews = { [nom] = état } }
+- **returns**: table { sceneViews = { [name] = state } }
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawTextAdvanced`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/sceneView.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/sceneView.lua`.*

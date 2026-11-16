@@ -1,22 +1,22 @@
 # `flowgraph_nodes_debug_flowButton`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/flowButton.lua` · VM : Game Engine (GE) · 58 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/flowButton.lua` · VM: Game Engine (GE) · 58 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/flowButton")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/flowButton")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Flow Button » (type simple, catégorie logic, tag input). Un bouton dans le nœud : un clic (uniquement quand le graphe tourne) produit une impulsion d'une frame sur la sortie flow. Entrée : flow. Le libellé du bouton (data.btnName, « Push » par défaut) prend le nom du pin lié (ou le nom du nœud cible si le pin s'appelle flow).
+Flowgraph node "Flow Button" (simple type, category logic, tag input). A button in the node: a click (only while the graph is running) produces a one-frame pulse on the flow output. Input: flow. The button label (data.btnName, "Push" by default) takes the name of the linked pin (or the target node name if the pin is named flow).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:drawMiddle(builder, style)` | Éditeur : dessine le bouton ; un clic arme doTrigger si le graphe est en état « running ». | 26 |
-| `C:init(mgr, ...)` | Libellé « Push » et doTrigger à faux. | 21 |
-| `C:onLink(link)` | Hook éditeur : renomme le bouton d'après le pin ou le nœud cible si le nom est encore « Push ». | 44 |
-| `C:onUnlink(link)` | Hook éditeur : remet le libellé « Push ». | 53 |
-| `C:work()` | Met la sortie flow à doTrigger puis le remet à faux. | 39 |
+| `C:drawMiddle(builder, style)` | Editor: draws the button; a click arms doTrigger if the graph is in the "running" state. | 26 |
+| `C:init(mgr, ...)` | Label "Push" and doTrigger false. | 21 |
+| `C:onLink(link)` | Editor hook: renames the button after the pin or target node if the name is still "Push". | 44 |
+| `C:onUnlink(link)` | Editor hook: resets the label to "Push". | 53 |
+| `C:work()` | Sets the flow output to doTrigger then resets it to false. | 39 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/flowButton.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/flowButton.lua`.*

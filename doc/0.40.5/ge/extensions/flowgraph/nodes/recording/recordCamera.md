@@ -1,27 +1,27 @@
 # `flowgraph_nodes_recording_recordCamera`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/recording/recordCamera.lua` · VM : Game Engine (GE) · 97 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/recording/recordCamera.lua` · VM: Game Engine (GE) · 97 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/recording/recordCamera")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/recording/recordCamera")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Record Camera' (categorie repeat_f_duration). Enregistre un trajet de camera par images cles : la premiere impulsion 'snap' demarre l'enregistrement, chaque 'snap' suivant ajoute une cle (pos, rot, temps os.clock). L'impulsion 'stop' termine et cree dans MissionGroup un objet SimPath avec un Marker par cle (position, rotation, timeToNext). Sortie 'filename' : nom genere (prefix + os.time()).
+Flowgraph node 'Record Camera' (repeat_f_duration category). Records a camera path with keyframes: the first 'snap' impulse starts the recording, each following 'snap' adds a key (pos, rot, os.clock time). The 'stop' impulse ends it and creates in MissionGroup a SimPath object with a Marker per key (position, rotation, timeToNext). Output 'filename': generated name (prefix + os.time()).
 
-## Remarques
+## Notes
 
-- Le premier snap demarre l'enregistrement et ajoute aussi la premiere cle (les deux tests sont evalues dans la meme frame).
-- Les noms de marqueurs sont 'maker_N' (faute de frappe pour marker).
+- The first snap starts the recording and also adds the first key (both tests are evaluated in the same frame).
+- The marker names are 'maker_N' (typo for marker).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet l'etat inactif, vide le trajet et memorise l'heure de depart. | 30 |
-| `C:drawMiddle(builder, style)` | Affiche l'etat et le nombre de cles. | 88 |
-| `C:finishUp()` | Cree le SimPath et les Marker (maker_N) depuis le trajet enregistre, renseigne timeToNext et ecrit filename. | 36 |
-| `C:init()` | Etat de duree 'inactive' et trajet vide. | 25 |
-| `C:work()` | Etat inactive : snap demarre l'enregistrement. Etat started : snap ajoute une cle ; stop passe a 'finished' et appelle finishUp. | 69 |
+| `C:_executionStarted()` | Resets to the inactive state, empties the path and stores the start time. | 30 |
+| `C:drawMiddle(builder, style)` | Displays the state and the number of keys. | 88 |
+| `C:finishUp()` | Creates the SimPath and the Markers (maker_N) from the recorded path, sets timeToNext and writes filename. | 36 |
+| `C:init()` | Duration state 'inactive' and empty path. | 25 |
+| `C:work()` | State inactive: snap starts the recording. State started: snap adds a key; stop goes to 'finished' and calls finishUp. | 69 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/recording/recordCamera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/recording/recordCamera.lua`.*

@@ -1,787 +1,787 @@
 # `core_environment`
 
-*Fichier : `lua/ge/extensions/core/environment.lua` · VM : Game Engine (GE) · 2135 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/environment.lua` · VM: Game Engine (GE) · 2135 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_environment` : `extensions.load("core_environment")`, puis la globale `core_environment`
+**Access:** extension `core_environment`: `extensions.load("core_environment")`, then the global `core_environment`
 
-Extension GE `core_environment` : point d'entrée unique pour lire et modifier l'environnement du niveau (heure du jour, nuages, vent, brouillard, précipitations, gravité, température) et pour charger les ground models (art/groundmodels.json + groundModels/*.json du niveau). Il agit sur les objets de la scène (TimeOfDay, CloudLayer, LevelInfo, Precipitation) trouvés par classe, allume/éteint les lumières nocturnes selon l'heure, et envoie l'état à l'UI. Un moddeur l'utilise pour changer l'heure, le vent ou la gravité par script, ou pour réagir à `onEnvironmentChanged`.
+GE extension `core_environment`: single entry point to read and modify the level environment (time of day, clouds, wind, fog, precipitation, gravity, temperature) and to load ground models (art/groundmodels.json + the level's groundModels/*.json). It acts on scene objects (TimeOfDay, CloudLayer, LevelInfo, Precipitation) found by class, turns night lights on/off according to the time, and sends the state to the UI. A modder uses it to change the time, wind or gravity by script, or to react to `onEnvironmentChanged`.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('core_environment')
--- midi (time = 0), jour de 30 min réelles, horloge en marche
+-- noon (time = 0), day lasting 30 real minutes, clock running
 core_environment.setTimeOfDay({time = 0, play = true, dayLength = 1800})
-core_environment.setGravity(-1.62)            -- m/s², négatif = vers le bas
-core_environment.setGroundWind(5, 0, 0)       -- m/s dans le repère monde
-core_environment.setFogDensity(0.002)         -- valeur brute LevelInfo
+core_environment.setGravity(-1.62)            -- m/s², negative = downwards
+core_environment.setGroundWind(5, 0, 0)       -- m/s in world frame
+core_environment.setFogDensity(0.002)         -- raw LevelInfo value
 print(core_environment.getTemperatureK() - 273.15)
 ```
 
-## Remarques
+## Notes
 
-- Heure : `time` est normalisé 0..1 et boucle (modulo 1). 0 = midi (clé `noon`), 0.25 = coucher de soleil environ (`sunset` 0.245), 0.5 = minuit (`night`), 0.775 = lever (`sunrise`). Pour convertir une heure d'horloge : time = (secondes_depuis_minuit / 86400 - 0.5) % 1 (formule utilisée par syncTimeToRealClock).
-- `dayLength` = secondes réelles pour un cycle jour/nuit complet (presets : 900, 1800, 7200, 86400). `play` active l'écoulement du temps (écrit aussi l'ancien champ `animate`).
-- Gravité : m/s², valeur NÉGATIVE pour aller vers le bas (-9.81 par défaut, repli de getGravity). 0 = apesanteur, +9.81 = gravité inversée. setGravity met à jour LevelInfo.gravity ET envoie obj:setGravity à tous les véhicules (queueAllObjectLua).
-- Vent : setGroundWind(x,y,z) est un vec3 monde en m/s (déduit du code : transmis tel quel à be:setGroundWind et obj:setWind). setWindSpeed/getWindSpeed agissent sur CloudLayer.windSpeed (vitesse de déplacement des nuages), pas sur le vent physique des véhicules.
-- Brouillard : LevelInfo.fogDensity est une valeur brute très petite ; l'UI manipule fogDensity*1000 (getState renvoie fogDensity*1000, applyStateNow divise par 1000). Les fonctions setFogDensity/getFogDensity utilisent la valeur brute. fogAtmosphereHeight : hauteur d'atmosphère de brouillard (plage de lerp UI ~0..2000, déduit de lerpRanges).
-- Nuages : altitudes en kilomètres (`...Km`), coverage de CloudLayer (plage de lerp 0..3 dans setState), cirrus coverage/density sont les champs cirrusCoverage/cirrusDensity de CloudLayer. Les variantes `...ByID` visent un CloudLayer précis par id d'objet scène ; elles n'émettent pas onEnvironmentChanged et ignorent enableChanges.
-- Température : getTemperatureK() renvoie des kelvins (température au niveau de la mer envoyée au moteur via be:setSeaLevelTemperatureK). La courbe du niveau (LevelInfo:getTemperatureCurveC, en °C, points {t 0..1, °C}) est évaluée selon l'heure à chaque onUpdate. setTemperatureProfile travaille en °C, borné à -50..60 (UI) ; la courbe d'override est bornée -273.15..200 °C à la normalisation.
-- enableChanges(false) bloque toutes les écritures sur la scène (mais les hooks onEnvironmentChanged sont quand même émis pour la plupart des setters). Utilisé par les scénarios pour figer le ciel.
-- Hook émis : `onEnvironmentChanged(changedTable)` à chaque setter (sauf pendant une mise à jour d'état globale). Évènements UI : `EnvironmentStateUpdate` (état complet) et `EnvironmentCanUpdateChanged` (booléen).
-- Fonctions dépréciées qui ne font que logger un avertissement et renvoient nil : get/setShadowDistance, get/setSkyBrightness, tous les get/set...GradientFile, get/setFogDensityOffset, get/setCloudExposureByID.
-- Incohérences : setFogDensityOffset est exporté (M.setFogDensityOffset) mais absent de la liste automatique ; setFogAtmosphereHeight n'émet pas onEnvironmentChanged contrairement à setFogDensity ; setPrecipitation n'émet pas de hook et ignore enableChanges ; setTemperatureK interne n'est pas exporté (pas de réglage direct de la température, seulement via setTemperatureProfile). onVehicleResetted et onVehicleSpawned sont tous deux liés à applyGroundWind (ré-applique le vent aux véhicules).
+- Time: `time` is normalized 0..1 and wraps (modulo 1). 0 = noon (key `noon`), 0.25 = roughly sunset (`sunset` 0.245), 0.5 = midnight (`night`), 0.775 = sunrise. To convert a clock time: time = (seconds_since_midnight / 86400 - 0.5) % 1 (formula used by syncTimeToRealClock).
+- `dayLength` = real seconds for a full day/night cycle (presets: 900, 1800, 7200, 86400). `play` enables time flow (also writes the legacy `animate` field).
+- Gravity: m/s², NEGATIVE value to go downwards (-9.81 by default, fallback of getGravity). 0 = weightlessness, +9.81 = inverted gravity. setGravity updates LevelInfo.gravity AND sends obj:setGravity to all vehicles (queueAllObjectLua).
+- Wind: setGroundWind(x,y,z) is a world vec3 in m/s (inferred from code: passed as is to be:setGroundWind and obj:setWind). setWindSpeed/getWindSpeed act on CloudLayer.windSpeed (cloud movement speed), not on the physical wind of vehicles.
+- Fog: LevelInfo.fogDensity is a very small raw value; the UI manipulates fogDensity*1000 (getState returns fogDensity*1000, applyStateNow divides by 1000). The setFogDensity/getFogDensity functions use the raw value. fogAtmosphereHeight: fog atmosphere height (UI lerp range ~0..2000, inferred from lerpRanges).
+- Clouds: altitudes in kilometers (`...Km`), coverage of CloudLayer (lerp range 0..3 in setState), cirrus coverage/density are the cirrusCoverage/cirrusDensity fields of CloudLayer. The `...ByID` variants target a specific CloudLayer by scene object id; they do not emit onEnvironmentChanged and ignore enableChanges.
+- Temperature: getTemperatureK() returns kelvins (sea level temperature sent to the engine via be:setSeaLevelTemperatureK). The level curve (LevelInfo:getTemperatureCurveC, in °C, points {t 0..1, °C}) is evaluated according to the time at each onUpdate. setTemperatureProfile works in °C, clamped to -50..60 (UI); the override curve is clamped to -273.15..200 °C at normalization.
+- enableChanges(false) blocks all writes to the scene (but the onEnvironmentChanged hooks are still emitted for most setters). Used by scenarios to freeze the sky.
+- Emitted hook: `onEnvironmentChanged(changedTable)` on each setter (except during a global state update). UI events: `EnvironmentStateUpdate` (full state) and `EnvironmentCanUpdateChanged` (boolean).
+- Deprecated functions that only log a warning and return nil: get/setShadowDistance, get/setSkyBrightness, all get/set...GradientFile, get/setFogDensityOffset, get/setCloudExposureByID.
+- Inconsistencies: setFogDensityOffset is exported (M.setFogDensityOffset) but absent from the automatic list; setFogAtmosphereHeight does not emit onEnvironmentChanged unlike setFogDensity; setPrecipitation emits no hook and ignores enableChanges; the internal setTemperatureK is not exported (no direct temperature setting, only via setTemperatureProfile). onVehicleResetted and onVehicleSpawned are both bound to applyGroundWind (re-applies the wind to vehicles).
 
-**Dépendances (chargées avant) :** `core_solarTimeOfDay`
+**Dependencies (loaded first):** `core_solarTimeOfDay`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_environment.canChange()` | Indique si les modifications d'environnement sont autorisées. | 1769 |
-| `core_environment.cycleTimeOfDay()` | Fait passer l'heure à la valeur suivante parmi trois : si time < 0.2 -> 0.23 (soir), si time >= 0.5 -> 0.05 (jour), sinon -> 0.5 (nuit). | 776 |
-| `core_environment.dumpGroundModels()` | Écrit groundmodels_dump.json avec les propriétés physiques de chaque ground model enregistré (frottements, résistance, densité du fluide…). Outil de debug. | 1579 |
-| `core_environment.enableChanges(enabled)` | Autorise ou interdit les modifications de l'environnement et prévient l'UI. | 1764 |
-| `core_environment.getAmbientScaleGradientFile()` | Déprécié : renvoie nil. | 833 |
-| `core_environment.getAuthoredDayLength(levelDir)` | Cherche dans les *.level.json du dossier du niveau (hors /scenarios/) une valeur dayLength écrite explicitement dans l'objet TimeOfDay (le moteur remplit dayLength même si absent du fichier). | 2005 |
-| `core_environment.getCloudAltitudeKm()` | Altitude des nuages en km. | 947 |
-| `core_environment.getCloudAltitudeKmByID(objectID)` | Altitude (km) d'un CloudLayer précis. | 1107 |
-| `core_environment.getCloudCirrusAltitudeKm()` | Altitude des cirrus. | 1015 |
-| `core_environment.getCloudCirrusAltitudeKmByID(objectID)` | Altitude des cirrus (km) d'un CloudLayer précis. | 1120 |
-| `core_environment.getCloudCirrusCoverage()` | Couverture des cirrus. | 1023 |
-| `core_environment.getCloudCirrusCoverageByID(objectID)` | Couverture des cirrus d'un CloudLayer précis. | 1133 |
-| `core_environment.getCloudCirrusDensity()` | Densité des cirrus. | 1031 |
-| `core_environment.getCloudCirrusDensityByID(objectID)` | Densité des cirrus d'un CloudLayer précis. | 1146 |
-| `core_environment.getCloudCover()` | Lit CloudLayer.coverage du premier CloudLayer. | 912 |
-| `core_environment.getCloudCoverByID(objectID)` | Couverture d'un CloudLayer précis. | 1041 |
-| `core_environment.getCloudExposureByID(objectID)` | Déprécié : log un avertissement. | 1054 |
-| `core_environment.getCloudHeightByID(objectID)` | Champ height d'un CloudLayer précis. | 1076 |
-| `core_environment.getCloudWeatherOffsetKm()` | Décalage de la carte météo des nuages (CloudLayer.getWeatherOffsetKm). | 952 |
-| `core_environment.getCloudWindByID(objectID)` | windSpeed d'un CloudLayer précis. | 1063 |
-| `core_environment.getCloudWindDirection()` | Direction du vent des nuages. | 929 |
-| `core_environment.getCloudWindDirectionByID(objectID)` | Direction du vent d'un CloudLayer précis. | 1089 |
-| `core_environment.getColorizeGradientFile()` | Déprécié : renvoie nil. | 815 |
-| `core_environment.getDayCyclePresets()` | Renvoie M.dayCyclePresets. | 1982 |
-| `core_environment.getDayCycleSeconds(speed)` | Durée en secondes réelles du cycle jour/nuit pour un preset. | 1986 |
-| `core_environment.getDefaultTimeOfDayOptions()` | Renvoie M.defaultTimeOfDayOptions. | 718 |
-| `core_environment.getFogAtmosphereHeight()` | Hauteur d'atmosphère du brouillard. | 1201 |
-| `core_environment.getFogDensity()` | Densité brute du brouillard de LevelInfo. | 1174 |
-| `core_environment.getFogDensityOffset()` | Déprécié : log un avertissement. | 1187 |
-| `core_environment.getFogScaleGradientFile()` | Déprécié : renvoie nil. | 842 |
-| `core_environment.getGravity()` | Gravité du niveau (LevelInfo.gravity). | 1223 |
-| `core_environment.getGravityPresets()` | Renvoie M.gravityPresets. | 1974 |
-| `core_environment.getGroundWind()` | Renvoie le vec3 interne du vent au sol (référence directe, ne pas modifier). | 878 |
-| `core_environment.getInitState()` | Copie de l'état capturé au chargement du niveau (onClientPostStartMission), avec temperatureProfile calculé sur la courbe d'origine du niveau et éventuellement authoredDayLength. | 1757 |
-| `core_environment.getLightState()` | État d'éclairage du monde : jour ou nuit. Retourne {time, phase = 'day'\|'night', isNight, nightLightsActive, nightStart, nightEnd}. nightLightsActive reflète ce que le moteur a réellement appliqué. | 541 |
-| `core_environment.getNightFogGradientFile()` | Déprécié : renvoie nil. | 860 |
-| `core_environment.getNightGradientFile()` | Déprécié : renvoie nil. | 851 |
-| `core_environment.getPrecipitation()` | Nombre de gouttes de l'objet Precipitation. | 1241 |
-| `core_environment.getShadowDistance()` | Déprécié : renvoie nil. | 797 |
-| `core_environment.getSimSpeedPresets()` | Renvoie M.simSpeedPresets. | 1978 |
-| `core_environment.getSkyBrightness()` | Déprécié : renvoie nil. | 806 |
-| `core_environment.getSolarTimeOfDayOptions(state)` | Options de moments calculées pour la position et la date solaires de l'état, à partir des options par défaut. | 722 |
-| `core_environment.getSolarTimeOfDayValue(key, state)` | Valeur de time pour une clé de moment (ex. 'sunrise') avec la date/position de l'état. | 726 |
-| `core_environment.getState()` | Construit l'état complet de l'environnement. Clés : champs TimeOfDay (time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile), windSpeed, groundWind, cloudCover, cloudWindDirection, cloudAltitudeKm, cloudWeatherOffsetKm, cloudCirrus*, fogDensity (x1000), fogAtmosphereHeight, numOfDrops, gravity, temperatureC (°C), temperatureProfile, temperatureCurveOverrideC. | 1364 |
-| `core_environment.getSunScaleGradientFile()` | Déprécié : renvoie nil. | 824 |
-| `core_environment.getTemperatureK()` | Température de l'air au niveau de la mer actuellement envoyée au moteur. | 1250 |
-| `core_environment.getTimeOfDay()` | Lit l'objet scène TimeOfDay et renvoie un état partagé (la même table est réutilisée à chaque appel : copier avant de conserver). | 514 |
-| `core_environment.getTimeOfDayOptions(levelIdentifier)` | Options de moments de la journée adaptées au niveau, calculées astronomiquement (core_solarTimeOfDay) à partir des options du niveau (core_levels). | 713 |
-| `core_environment.getTimeOfDayValueForNormalizedTime(normalizedTime, state)` | Convertit un temps normalisé via core_solarTimeOfDay.timeFromNormalizedTime pour l'état donné (sens exact défini dans core_solarTimeOfDay). | 730 |
-| `core_environment.getWindSpeed()` | Lit CloudLayer.windSpeed du premier CloudLayer. | 896 |
-| `core_environment.loadTireMarks(filename)` | Charge des traces de pneus depuis un fichier. | 1968 |
-| `core_environment.onClientEndMission()` | Hook à la fin du niveau : arrête l'horloge TimeOfDay, remet le vent à 0, vide les lumières nocturnes et appelle reset. *(interne)* *(hook)* | 1870 |
-| `core_environment.onClientPostStartMission(levelPath)` | Hook après démarrage du niveau : mémorise l'état initial (init_env), y ajoute authoredDayLength puis le réapplique. *(interne)* *(hook)* | 1782 |
-| `core_environment.onClientPreStartMission(levelPath)` | Hook avant le démarrage d'un niveau : relit la courbe de température, supprime l'override, recharge les ground models. *(interne)* *(hook)* | 1773 |
-| `core_environment.onClientStartMission(levelPath)` | Hook au démarrage du niveau : vide le cache d'objets, recense les lumières nocturnes, applique le vent et régénère la carte météo avec une graine aléatoire. *(interne)* *(hook)* | 1835 |
-| `core_environment.onDeserialized(data)` | Hook de restauration : réapplique le vent au sol sauvegardé. *(interne)* *(hook)* | 1890 |
-| `core_environment.onEditorAfterSaveLevel()` | Hook après sauvegarde : restaure l'état des lumières nocturnes. *(interne)* *(hook)* | 1863 |
-| `core_environment.onEditorBeforeSaveLevel()` | Hook avant sauvegarde du niveau dans l'éditeur : éteint les lumières nocturnes pour ne pas les sauvegarder allumées. *(interne)* *(hook)* | 1854 |
-| `core_environment.onEditorDeactivated()` | Hook à la sortie de l'éditeur : vide le cache et recense à nouveau les lumières nocturnes. *(interne)* *(hook)* | 1849 |
-| `core_environment.onFilesChanged(files)` | Hook appelé quand des fichiers changent : si un fichier de ground models chargé est modifié, appelle reset() et be:reloadCollision(). *(interne)* *(hook)* | 1793 |
-| `core_environment.onInit()` | Alias de reset : appelé au chargement de l'extension. *(interne)* *(hook)* | 1742 |
-| `core_environment.onSerialize()` | Hook de sauvegarde avant rechargement des extensions : renvoie {groundWind}. *(interne)* *(hook)* | 1887 |
-| `core_environment.onUpdate(dtReal)` | Hook par image : avance la transition d'état, applique les lumières nocturnes et met à jour la température effective selon l'heure. *(interne)* *(hook)* | 1818 |
-| `core_environment.onVehicleResetted()` | Hook : ré-applique le vent au sol (alias de applyGroundWind). *(interne)* *(hook)* | 49 |
-| `core_environment.onVehicleSpawned()` | Hook : ré-applique le vent au sol aux véhicules (alias de applyGroundWind, reçoit l'id du véhicule mais l'ignore). *(interne)* *(hook)* | 49 |
-| `core_environment.refreshnightLightsObjects()` | Recense dans la scène les lumières à allumer la nuit (champ nightLight), les lumières à intensité jour/nuit (dayIntensity/nightIntensity), et les TSStatic émissifs (nightEmissive ou liés par le champ `child` à une lumière), puis applique l'état courant. À appeler après avoir ajouté de tels objets en cours de partie. | 559 |
-| `core_environment.regenerateWeatherMap(seed)` | Régénère la carte météo (forme des nuages) avec une graine. Appelée avec une graine aléatoire à chaque chargement de niveau. | 986 |
-| `core_environment.reloadGroundModels(levelPath)` | Réinitialise puis recharge tous les ground models : art/groundmodels.json, puis les *.json de <niveau>/groundModels/. ASPHALT est soumis en premier (indice 0), puis les autres par ordre alphabétique. Les noms sont mis en majuscules et tronqués à 30 caractères si > 31. | 1712 |
-| `core_environment.requestState()` | Alias de sendState : envoie l'état courant à l'UI (guihooks EnvironmentStateUpdate) et l'état du drapeau canChange. | 1812 |
-| `core_environment.reset()` | Relit la courbe de température du niveau, supprime l'override de température, notifie l'UI et recharge les ground models. Sert aussi de onInit. *(interne)* | 1742 |
-| `core_environment.resetCloudWeatherOffsetKm()` | Remet le décalage météo à (0,0,0). | 977 |
-| `core_environment.resetTemperatureProfile()` | Supprime l'override et revient à la courbe de température du niveau. | 1433 |
-| `core_environment.resetTireMarks()` | Efface toutes les traces de pneus (be:resetTireMarks). | 1956 |
-| `core_environment.reset_init()` | Ré-applique l'état initial du niveau (setState(init_env)). | 1753 |
-| `core_environment.saveTireMarks(filename)` | Sauvegarde les traces de pneus dans un fichier. | 1962 |
-| `core_environment.setAmbientScaleGradientFile(ambientScaleGradientFile)` | Déprécié : avertissement seul. | 838 |
-| `core_environment.setCloudAltitudeKm(altitudeKm)` | Altitude de la couche de nuages. | 937 |
-| `core_environment.setCloudAltitudeKmByID(objectID, altitudeKm)` | Fixe l'altitude (km) d'un CloudLayer précis. | 1112 |
-| `core_environment.setCloudCirrusAltitudeKm(altitudeKm)` | Fixe l'altitude des cirrus. | 1019 |
-| `core_environment.setCloudCirrusAltitudeKmByID(objectID, altitudeKm)` | Fixe l'altitude des cirrus d'un CloudLayer précis. | 1125 |
-| `core_environment.setCloudCirrusCoverage(coverage)` | Fixe la couverture des cirrus. | 1027 |
-| `core_environment.setCloudCirrusCoverageByID(objectID, coverage)` | Fixe la couverture des cirrus d'un CloudLayer précis. | 1138 |
-| `core_environment.setCloudCirrusDensity(density)` | Fixe la densité des cirrus. | 1035 |
-| `core_environment.setCloudCirrusDensityByID(objectID, density)` | Fixe la densité des cirrus d'un CloudLayer précis. | 1151 |
-| `core_environment.setCloudCover(cloud)` | Fixe CloudLayer.coverage du premier CloudLayer et annule une transition d'état en cours. | 901 |
-| `core_environment.setCloudCoverByID(objectID, coverage)` | Fixe la couverture d'un CloudLayer précis (sans hook, sans test enableChanges). | 1046 |
-| `core_environment.setCloudExposureByID(objectID, exposure)` | Déprécié : log un avertissement, ne fait rien. | 1059 |
-| `core_environment.setCloudHeightByID(objectID, height)` | Fixe le champ height d'un CloudLayer précis. | 1081 |
-| `core_environment.setCloudWeatherOffsetKm(...)` | Décale la carte météo des nuages. Émet onEnvironmentChanged. | 962 |
-| `core_environment.setCloudWindByID(objectID, windSpeed)` | Fixe windSpeed d'un CloudLayer précis. | 1068 |
-| `core_environment.setCloudWindDirection(...)` | Fixe CloudLayer.windDirection (Point2F) du premier CloudLayer ; seuls x et y sont utilisés. | 918 |
-| `core_environment.setCloudWindDirectionByID(objectID, ...)` | Fixe la direction du vent d'un CloudLayer précis. | 1098 |
-| `core_environment.setColorizeGradientFile(colorizeGradientFile)` | Déprécié : avertissement seul. | 820 |
-| `core_environment.setFogAtmosphereHeight(fogHeight)` | Fixe LevelInfo.FogAtmosphereHeight. N'émet pas onEnvironmentChanged et ignore enableChanges. | 1192 |
-| `core_environment.setFogDensity(fog)` | Fixe LevelInfo.fogDensity (valeur brute, très petite : l'UI utilise 1000x cette valeur) et annule une transition en cours. Émet onEnvironmentChanged({fogDensity}) avec la valeur brute. | 1163 |
-| `core_environment.setFogDensityOffset(fogOffset)` | Déprécié : log un avertissement, ne fait rien. | 1183 |
-| `core_environment.setFogScaleGradientFile(fogScaleGradientFile)` | Déprécié : avertissement seul. | 847 |
-| `core_environment.setGravity(grav)` | Définit la gravité : écrit LevelInfo.gravity (pour les futurs spawns) et envoie obj:setGravity à tous les véhicules. Émet onEnvironmentChanged({gravity}). | 1210 |
-| `core_environment.setGroundWind(...)` | Définit le vent au sol appliqué au monde et à tous les véhicules (obj:setWind + be:setGroundWind). | 870 |
-| `core_environment.setNightFogGradientFile(nightFogGradientFile)` | Déprécié : avertissement seul. | 865 |
-| `core_environment.setNightGradientFile(nightGradientFile)` | Déprécié : avertissement seul. | 856 |
-| `core_environment.setPrecipitation(rainDrops)` | Fixe Precipitation.numDrops (nombre de gouttes/particules de pluie). Sans hook, sans test enableChanges. | 1234 |
-| `core_environment.setShadowDistance(shadowDistance)` | Déprécié : avertissement seul. | 802 |
-| `core_environment.setSkyBrightness(skyBrightness)` | Déprécié : avertissement seul. | 811 |
-| `core_environment.setState(state, lerpSeconds)` | Applique un état (même format que getState). Émet onEnvironmentChanged. Avec lerpSeconds > 0, cloudCover, fogDensity, fogAtmosphereHeight et time sont interpolés (courbe smootherstep, durée réduite si l'écart est faible, minimum 0.12 s) ; les autres champs sont appliqués tout de suite. | 1511 |
-| `core_environment.setSunScaleGradientFile(sunScaleGradientFile)` | Déprécié : avertissement seul. | 829 |
-| `core_environment.setTemperatureProfile(profile)` | Crée un override de la courbe de température du jour : décale la courbe pour viser la moyenne, puis étire les creux/pics pour viser min et max. Valeurs bornées à -50..60 °C. Ignoré si enableChanges(false) ou table invalide. | 1408 |
-| `core_environment.setTimeOfDay(timeOfDay)` | Applique des champs de l'heure du jour sur l'objet TimeOfDay. Ne fait rien si la table ne contient aucun champ connu. Émet onEnvironmentChanged et met à jour les lumières nocturnes si time est fourni. Changer year/month/day/latitude force le recalcul de la position du soleil. | 734 |
-| `core_environment.setWindSpeed(windSpeed)` | Fixe CloudLayer.windSpeed du premier CloudLayer de la scène. | 886 |
-| `core_environment.syncTimeToRealClock(lerpSeconds)` | Règle l'heure du jeu sur l'heure locale réelle de l'ordinateur (os.date('*t')), en conservant l'état play. | 1913 |
-| `core_environment.syncTimeToRealClockUtc(lerpSeconds)` | Règle heure ET date du jeu sur l'instant UTC réel converti au fuseau (utcOffset/dstRule) du niveau. | 1940 |
+| `core_environment.canChange()` | Indicates whether environment modifications are allowed. | 1769 |
+| `core_environment.cycleTimeOfDay()` | Cycles the time through three values: if time < 0.2 -> 0.23 (evening), if time >= 0.5 -> 0.05 (day), otherwise -> 0.5 (night). | 776 |
+| `core_environment.dumpGroundModels()` | Writes groundmodels_dump.json with the physical properties of each registered ground model (friction, resistance, fluid density…). Debug tool. | 1579 |
+| `core_environment.enableChanges(enabled)` | Allows or forbids environment modifications and notifies the UI. | 1764 |
+| `core_environment.getAmbientScaleGradientFile()` | Deprecated: returns nil. | 833 |
+| `core_environment.getAuthoredDayLength(levelDir)` | Searches the *.level.json files in the level folder (excluding /scenarios/) for a dayLength value explicitly written in the TimeOfDay object (the engine fills in dayLength even if absent from the file). | 2005 |
+| `core_environment.getCloudAltitudeKm()` | Cloud altitude in km. | 947 |
+| `core_environment.getCloudAltitudeKmByID(objectID)` | Altitude (km) of a specific CloudLayer. | 1107 |
+| `core_environment.getCloudCirrusAltitudeKm()` | Cirrus altitude. | 1015 |
+| `core_environment.getCloudCirrusAltitudeKmByID(objectID)` | Cirrus altitude (km) of a specific CloudLayer. | 1120 |
+| `core_environment.getCloudCirrusCoverage()` | Cirrus coverage. | 1023 |
+| `core_environment.getCloudCirrusCoverageByID(objectID)` | Cirrus coverage of a specific CloudLayer. | 1133 |
+| `core_environment.getCloudCirrusDensity()` | Cirrus density. | 1031 |
+| `core_environment.getCloudCirrusDensityByID(objectID)` | Cirrus density of a specific CloudLayer. | 1146 |
+| `core_environment.getCloudCover()` | Reads CloudLayer.coverage of the first CloudLayer. | 912 |
+| `core_environment.getCloudCoverByID(objectID)` | Coverage of a specific CloudLayer. | 1041 |
+| `core_environment.getCloudExposureByID(objectID)` | Deprecated: logs a warning. | 1054 |
+| `core_environment.getCloudHeightByID(objectID)` | height field of a specific CloudLayer. | 1076 |
+| `core_environment.getCloudWeatherOffsetKm()` | Offset of the cloud weather map (CloudLayer.getWeatherOffsetKm). | 952 |
+| `core_environment.getCloudWindByID(objectID)` | windSpeed of a specific CloudLayer. | 1063 |
+| `core_environment.getCloudWindDirection()` | Cloud wind direction. | 929 |
+| `core_environment.getCloudWindDirectionByID(objectID)` | Wind direction of a specific CloudLayer. | 1089 |
+| `core_environment.getColorizeGradientFile()` | Deprecated: returns nil. | 815 |
+| `core_environment.getDayCyclePresets()` | Returns M.dayCyclePresets. | 1982 |
+| `core_environment.getDayCycleSeconds(speed)` | Duration in real seconds of the day/night cycle for a preset. | 1986 |
+| `core_environment.getDefaultTimeOfDayOptions()` | Returns M.defaultTimeOfDayOptions. | 718 |
+| `core_environment.getFogAtmosphereHeight()` | Fog atmosphere height. | 1201 |
+| `core_environment.getFogDensity()` | Raw fog density of LevelInfo. | 1174 |
+| `core_environment.getFogDensityOffset()` | Deprecated: logs a warning. | 1187 |
+| `core_environment.getFogScaleGradientFile()` | Deprecated: returns nil. | 842 |
+| `core_environment.getGravity()` | Level gravity (LevelInfo.gravity). | 1223 |
+| `core_environment.getGravityPresets()` | Returns M.gravityPresets. | 1974 |
+| `core_environment.getGroundWind()` | Returns the internal ground wind vec3 (direct reference, do not modify). | 878 |
+| `core_environment.getInitState()` | Copy of the state captured at level load (onClientPostStartMission), with temperatureProfile computed on the level's original curve and possibly authoredDayLength. | 1757 |
+| `core_environment.getLightState()` | World lighting state: day or night. Returns {time, phase = 'day'\|'night', isNight, nightLightsActive, nightStart, nightEnd}. nightLightsActive reflects what the engine actually applied. | 541 |
+| `core_environment.getNightFogGradientFile()` | Deprecated: returns nil. | 860 |
+| `core_environment.getNightGradientFile()` | Deprecated: returns nil. | 851 |
+| `core_environment.getPrecipitation()` | Number of drops of the Precipitation object. | 1241 |
+| `core_environment.getShadowDistance()` | Deprecated: returns nil. | 797 |
+| `core_environment.getSimSpeedPresets()` | Returns M.simSpeedPresets. | 1978 |
+| `core_environment.getSkyBrightness()` | Deprecated: returns nil. | 806 |
+| `core_environment.getSolarTimeOfDayOptions(state)` | Moment options computed for the state's solar position and date, from the default options. | 722 |
+| `core_environment.getSolarTimeOfDayValue(key, state)` | Time value for a moment key (e.g. 'sunrise') with the state's date/position. | 726 |
+| `core_environment.getState()` | Builds the full environment state. Keys: TimeOfDay fields (time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile), windSpeed, groundWind, cloudCover, cloudWindDirection, cloudAltitudeKm, cloudWeatherOffsetKm, cloudCirrus*, fogDensity (x1000), fogAtmosphereHeight, numOfDrops, gravity, temperatureC (°C), temperatureProfile, temperatureCurveOverrideC. | 1364 |
+| `core_environment.getSunScaleGradientFile()` | Deprecated: returns nil. | 824 |
+| `core_environment.getTemperatureK()` | Sea level air temperature currently sent to the engine. | 1250 |
+| `core_environment.getTimeOfDay()` | Reads the TimeOfDay scene object and returns a shared state (the same table is reused on every call: copy before keeping it). | 514 |
+| `core_environment.getTimeOfDayOptions(levelIdentifier)` | Time-of-day options adapted to the level, computed astronomically (core_solarTimeOfDay) from the level's options (core_levels). | 713 |
+| `core_environment.getTimeOfDayValueForNormalizedTime(normalizedTime, state)` | Converts a normalized time via core_solarTimeOfDay.timeFromNormalizedTime for the given state (exact meaning defined in core_solarTimeOfDay). | 730 |
+| `core_environment.getWindSpeed()` | Reads CloudLayer.windSpeed of the first CloudLayer. | 896 |
+| `core_environment.loadTireMarks(filename)` | Loads tire marks from a file. | 1968 |
+| `core_environment.onClientEndMission()` | Hook at level end: stops the TimeOfDay clock, resets the wind to 0, clears the night lights and calls reset. *(internal)* *(hook)* | 1870 |
+| `core_environment.onClientPostStartMission(levelPath)` | Hook after level start: stores the initial state (init_env), adds authoredDayLength to it then re-applies it. *(internal)* *(hook)* | 1782 |
+| `core_environment.onClientPreStartMission(levelPath)` | Hook before a level starts: re-reads the temperature curve, removes the override, reloads the ground models. *(internal)* *(hook)* | 1773 |
+| `core_environment.onClientStartMission(levelPath)` | Hook at level start: clears the object cache, lists the night lights, applies the wind and regenerates the weather map with a random seed. *(internal)* *(hook)* | 1835 |
+| `core_environment.onDeserialized(data)` | Restore hook: re-applies the saved ground wind. *(internal)* *(hook)* | 1890 |
+| `core_environment.onEditorAfterSaveLevel()` | Hook after saving: restores the state of the night lights. *(internal)* *(hook)* | 1863 |
+| `core_environment.onEditorBeforeSaveLevel()` | Hook before the level is saved in the editor: turns off the night lights so they are not saved turned on. *(internal)* *(hook)* | 1854 |
+| `core_environment.onEditorDeactivated()` | Hook on editor exit: clears the cache and lists the night lights again. *(internal)* *(hook)* | 1849 |
+| `core_environment.onFilesChanged(files)` | Hook called when files change: if a loaded ground model file is modified, calls reset() and be:reloadCollision(). *(internal)* *(hook)* | 1793 |
+| `core_environment.onInit()` | Alias of reset: called when the extension loads. *(internal)* *(hook)* | 1742 |
+| `core_environment.onSerialize()` | Save hook before extensions reload: returns {groundWind}. *(internal)* *(hook)* | 1887 |
+| `core_environment.onUpdate(dtReal)` | Per-frame hook: advances the state transition, applies the night lights and updates the effective temperature according to the time. *(internal)* *(hook)* | 1818 |
+| `core_environment.onVehicleResetted()` | Hook: re-applies the ground wind (alias of applyGroundWind). *(internal)* *(hook)* | 49 |
+| `core_environment.onVehicleSpawned()` | Hook: re-applies the ground wind to vehicles (alias of applyGroundWind, receives the vehicle id but ignores it). *(internal)* *(hook)* | 49 |
+| `core_environment.refreshnightLightsObjects()` | Scans the scene for lights to turn on at night (nightLight field), lights with day/night intensity (dayIntensity/nightIntensity), and emissive TSStatics (nightEmissive or linked to a light by the `child` field), then applies the current state. To be called after adding such objects during gameplay. | 559 |
+| `core_environment.regenerateWeatherMap(seed)` | Regenerates the weather map (cloud shape) with a seed. Called with a random seed on every level load. | 986 |
+| `core_environment.reloadGroundModels(levelPath)` | Resets then reloads all ground models: art/groundmodels.json, then the *.json files of <level>/groundModels/. ASPHALT is submitted first (index 0), then the others in alphabetical order. Names are uppercased and truncated to 30 characters if > 31. | 1712 |
+| `core_environment.requestState()` | Alias of sendState: sends the current state to the UI (guihooks EnvironmentStateUpdate) and the state of the canChange flag. | 1812 |
+| `core_environment.reset()` | Re-reads the level's temperature curve, removes the temperature override, notifies the UI and reloads the ground models. Also serves as onInit. *(internal)* | 1742 |
+| `core_environment.resetCloudWeatherOffsetKm()` | Resets the weather offset to (0,0,0). | 977 |
+| `core_environment.resetTemperatureProfile()` | Removes the override and goes back to the level's temperature curve. | 1433 |
+| `core_environment.resetTireMarks()` | Clears all tire marks (be:resetTireMarks). | 1956 |
+| `core_environment.reset_init()` | Re-applies the level's initial state (setState(init_env)). | 1753 |
+| `core_environment.saveTireMarks(filename)` | Saves the tire marks to a file. | 1962 |
+| `core_environment.setAmbientScaleGradientFile(ambientScaleGradientFile)` | Deprecated: warning only. | 838 |
+| `core_environment.setCloudAltitudeKm(altitudeKm)` | Altitude of the cloud layer. | 937 |
+| `core_environment.setCloudAltitudeKmByID(objectID, altitudeKm)` | Sets the altitude (km) of a specific CloudLayer. | 1112 |
+| `core_environment.setCloudCirrusAltitudeKm(altitudeKm)` | Sets the cirrus altitude. | 1019 |
+| `core_environment.setCloudCirrusAltitudeKmByID(objectID, altitudeKm)` | Sets the cirrus altitude of a specific CloudLayer. | 1125 |
+| `core_environment.setCloudCirrusCoverage(coverage)` | Sets the cirrus coverage. | 1027 |
+| `core_environment.setCloudCirrusCoverageByID(objectID, coverage)` | Sets the cirrus coverage of a specific CloudLayer. | 1138 |
+| `core_environment.setCloudCirrusDensity(density)` | Sets the cirrus density. | 1035 |
+| `core_environment.setCloudCirrusDensityByID(objectID, density)` | Sets the cirrus density of a specific CloudLayer. | 1151 |
+| `core_environment.setCloudCover(cloud)` | Sets CloudLayer.coverage of the first CloudLayer and cancels an ongoing state transition. | 901 |
+| `core_environment.setCloudCoverByID(objectID, coverage)` | Sets the coverage of a specific CloudLayer (no hook, no enableChanges check). | 1046 |
+| `core_environment.setCloudExposureByID(objectID, exposure)` | Deprecated: logs a warning, does nothing. | 1059 |
+| `core_environment.setCloudHeightByID(objectID, height)` | Sets the height field of a specific CloudLayer. | 1081 |
+| `core_environment.setCloudWeatherOffsetKm(...)` | Offsets the cloud weather map. Emits onEnvironmentChanged. | 962 |
+| `core_environment.setCloudWindByID(objectID, windSpeed)` | Sets windSpeed of a specific CloudLayer. | 1068 |
+| `core_environment.setCloudWindDirection(...)` | Sets CloudLayer.windDirection (Point2F) of the first CloudLayer; only x and y are used. | 918 |
+| `core_environment.setCloudWindDirectionByID(objectID, ...)` | Sets the wind direction of a specific CloudLayer. | 1098 |
+| `core_environment.setColorizeGradientFile(colorizeGradientFile)` | Deprecated: warning only. | 820 |
+| `core_environment.setFogAtmosphereHeight(fogHeight)` | Sets LevelInfo.FogAtmosphereHeight. Does not emit onEnvironmentChanged and ignores enableChanges. | 1192 |
+| `core_environment.setFogDensity(fog)` | Sets LevelInfo.fogDensity (raw value, very small: the UI uses 1000x this value) and cancels an ongoing transition. Emits onEnvironmentChanged({fogDensity}) with the raw value. | 1163 |
+| `core_environment.setFogDensityOffset(fogOffset)` | Deprecated: logs a warning, does nothing. | 1183 |
+| `core_environment.setFogScaleGradientFile(fogScaleGradientFile)` | Deprecated: warning only. | 847 |
+| `core_environment.setGravity(grav)` | Sets gravity: writes LevelInfo.gravity (for future spawns) and sends obj:setGravity to all vehicles. Emits onEnvironmentChanged({gravity}). | 1210 |
+| `core_environment.setGroundWind(...)` | Sets the ground wind applied to the world and to all vehicles (obj:setWind + be:setGroundWind). | 870 |
+| `core_environment.setNightFogGradientFile(nightFogGradientFile)` | Deprecated: warning only. | 865 |
+| `core_environment.setNightGradientFile(nightGradientFile)` | Deprecated: warning only. | 856 |
+| `core_environment.setPrecipitation(rainDrops)` | Sets Precipitation.numDrops (number of rain drops/particles). No hook, no enableChanges check. | 1234 |
+| `core_environment.setShadowDistance(shadowDistance)` | Deprecated: warning only. | 802 |
+| `core_environment.setSkyBrightness(skyBrightness)` | Deprecated: warning only. | 811 |
+| `core_environment.setState(state, lerpSeconds)` | Applies a state (same format as getState). Emits onEnvironmentChanged. With lerpSeconds > 0, cloudCover, fogDensity, fogAtmosphereHeight and time are interpolated (smootherstep curve, shorter duration if the gap is small, minimum 0.12 s); the other fields are applied immediately. | 1511 |
+| `core_environment.setSunScaleGradientFile(sunScaleGradientFile)` | Deprecated: warning only. | 829 |
+| `core_environment.setTemperatureProfile(profile)` | Creates an override of the day's temperature curve: shifts the curve to reach the average, then stretches the troughs/peaks to reach min and max. Values clamped to -50..60 °C. Ignored if enableChanges(false) or invalid table. | 1408 |
+| `core_environment.setTimeOfDay(timeOfDay)` | Applies time-of-day fields to the TimeOfDay object. Does nothing if the table contains no known field. Emits onEnvironmentChanged and updates the night lights if time is provided. Changing year/month/day/latitude forces a recomputation of the sun position. | 734 |
+| `core_environment.setWindSpeed(windSpeed)` | Sets CloudLayer.windSpeed of the first CloudLayer in the scene. | 886 |
+| `core_environment.syncTimeToRealClock(lerpSeconds)` | Sets the game time to the computer's real local time (os.date('*t')), keeping the play state. | 1913 |
+| `core_environment.syncTimeToRealClockUtc(lerpSeconds)` | Sets the game time AND date to the real UTC instant converted to the level's time zone (utcOffset/dstRule). | 1940 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_environment.canChange()`
 
-Indique si les modifications d'environnement sont autorisées.
+Indicates whether environment modifications are allowed.
 
-- **renvoie** : boolean État du drapeau défini par enableChanges (true par défaut).
+- **returns**: boolean State of the flag set by enableChanges (true by default).
 
 #### `core_environment.enableChanges(enabled)`
 
-Autorise ou interdit les modifications de l'environnement et prévient l'UI.
+Allows or forbids environment modifications and notifies the UI.
 
-- `enabled` (*boolean*) : false = les setters n'écrivent plus sur la scène.
+- `enabled` (*boolean*) : false = the setters no longer write to the scene.
 
 #### `core_environment.getAmbientScaleGradientFile()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getAuthoredDayLength(levelDir)`
 
-Cherche dans les *.level.json du dossier du niveau (hors /scenarios/) une valeur dayLength écrite explicitement dans l'objet TimeOfDay (le moteur remplit dayLength même si absent du fichier).
+Searches the *.level.json files in the level folder (excluding /scenarios/) for a dayLength value explicitly written in the TimeOfDay object (the engine fills in dayLength even if absent from the file).
 
-- `levelDir` (*string*) : Dossier du niveau.
-- **renvoie** : number|nil Secondes (> 0) ou nil.
+- `levelDir` (*string*) : Level folder.
+- **returns**: number|nil Seconds (> 0) or nil.
 
 #### `core_environment.getCloudAltitudeKm()`
 
-Altitude des nuages en km.
+Cloud altitude in km.
 
-- **renvoie** : number|nil km.
+- **returns**: number|nil km.
 
 #### `core_environment.getCloudAltitudeKmByID(objectID)`
 
-Altitude (km) d'un CloudLayer précis.
+Altitude (km) of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- **renvoie** : number|nil km.
+- `objectID` (*integer*) : Object id.
+- **returns**: number|nil km.
 
 #### `core_environment.getCloudCirrusAltitudeKm()`
 
-Altitude des cirrus.
+Cirrus altitude.
 
-- **renvoie** : number|nil km.
+- **returns**: number|nil km.
 
 #### `core_environment.getCloudCirrusAltitudeKmByID(objectID)`
 
-Altitude des cirrus (km) d'un CloudLayer précis.
+Cirrus altitude (km) of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- **renvoie** : number|nil km.
+- `objectID` (*integer*) : Object id.
+- **returns**: number|nil km.
 
 #### `core_environment.getCloudCirrusCoverage()`
 
-Couverture des cirrus.
+Cirrus coverage.
 
-- **renvoie** : number|nil Valeur du champ cirrusCoverage.
+- **returns**: number|nil Value of the cirrusCoverage field.
 
 #### `core_environment.getCloudCirrusCoverageByID(objectID)`
 
-Couverture des cirrus d'un CloudLayer précis.
+Cirrus coverage of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- **renvoie** : number|nil cirrusCoverage.
+- `objectID` (*integer*) : Object id.
+- **returns**: number|nil cirrusCoverage.
 
 #### `core_environment.getCloudCirrusDensity()`
 
-Densité des cirrus.
+Cirrus density.
 
-- **renvoie** : number|nil Valeur du champ cirrusDensity.
+- **returns**: number|nil Value of the cirrusDensity field.
 
 #### `core_environment.getCloudCirrusDensityByID(objectID)`
 
-Densité des cirrus d'un CloudLayer précis.
+Cirrus density of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- **renvoie** : number|nil cirrusDensity.
+- `objectID` (*integer*) : Object id.
+- **returns**: number|nil cirrusDensity.
 
 #### `core_environment.getCloudCover()`
 
-Lit CloudLayer.coverage du premier CloudLayer.
+Reads CloudLayer.coverage of the first CloudLayer.
 
-- **renvoie** : number|nil Couverture, nil sans CloudLayer.
+- **returns**: number|nil Coverage, nil without a CloudLayer.
 
 #### `core_environment.getCloudCoverByID(objectID)`
 
-Couverture d'un CloudLayer précis.
+Coverage of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet scène.
-- **renvoie** : number|nil coverage.
+- `objectID` (*integer*) : Scene object id.
+- **returns**: number|nil coverage.
 
 #### `core_environment.getCloudExposureByID(objectID)`
 
-Déprécié : log un avertissement.
+Deprecated: logs a warning.
 
-- `objectID` (*integer*) : Ignoré.
-- **renvoie** : nil Toujours nil.
+- `objectID` (*integer*) : Ignored.
+- **returns**: nil Always nil.
 
 #### `core_environment.getCloudHeightByID(objectID)`
 
-Champ height d'un CloudLayer précis.
+height field of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- **renvoie** : number|nil height.
+- `objectID` (*integer*) : Object id.
+- **returns**: number|nil height.
 
 #### `core_environment.getCloudWeatherOffsetKm()`
 
-Décalage de la carte météo des nuages (CloudLayer.getWeatherOffsetKm).
+Offset of the cloud weather map (CloudLayer.getWeatherOffsetKm).
 
-- **renvoie** : vec3|nil Décalage en km ; nil si l'API C++ n'est pas disponible.
+- **returns**: vec3|nil Offset in km; nil if the C++ API is not available.
 
 #### `core_environment.getCloudWindByID(objectID)`
 
-windSpeed d'un CloudLayer précis.
+windSpeed of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- **renvoie** : number|nil windSpeed.
+- `objectID` (*integer*) : Object id.
+- **returns**: number|nil windSpeed.
 
 #### `core_environment.getCloudWindDirection()`
 
-Direction du vent des nuages.
+Cloud wind direction.
 
-- **renvoie** : vec3|nil vec3(x, y, 0) ; nil sans CloudLayer.
+- **returns**: vec3|nil vec3(x, y, 0); nil without a CloudLayer.
 
 #### `core_environment.getCloudWindDirectionByID(objectID)`
 
-Direction du vent d'un CloudLayer précis.
+Wind direction of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- **renvoie** : vec3|nil vec3(x, y, 0).
+- `objectID` (*integer*) : Object id.
+- **returns**: vec3|nil vec3(x, y, 0).
 
 #### `core_environment.getColorizeGradientFile()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getDayCyclePresets()`
 
-Renvoie M.dayCyclePresets.
+Returns M.dayCyclePresets.
 
-- **renvoie** : table[] {speed, seconds}.
+- **returns**: table[] {speed, seconds}.
 
 #### `core_environment.getDayCycleSeconds(speed)`
 
-Durée en secondes réelles du cycle jour/nuit pour un preset.
+Duration in real seconds of the day/night cycle for a preset.
 
-- `speed` (*string*) : 'fast', 'normal', 'slow' ou 'realtime'.
-- **renvoie** : number|nil 900, 1800, 7200 ou 86400 ; nil si inconnu.
+- `speed` (*string*) : 'fast', 'normal', 'slow' or 'realtime'.
+- **returns**: number|nil 900, 1800, 7200 or 86400; nil if unknown.
 
 #### `core_environment.getDefaultTimeOfDayOptions()`
 
-Renvoie M.defaultTimeOfDayOptions.
+Returns M.defaultTimeOfDayOptions.
 
-- **renvoie** : table[] Moments clés par défaut.
+- **returns**: table[] Default key moments.
 
 #### `core_environment.getFogAtmosphereHeight()`
 
-Hauteur d'atmosphère du brouillard.
+Fog atmosphere height.
 
-- **renvoie** : number 0.0 sans LevelInfo.
+- **returns**: number 0.0 without LevelInfo.
 
 #### `core_environment.getFogDensity()`
 
-Densité brute du brouillard de LevelInfo.
+Raw fog density of LevelInfo.
 
-- **renvoie** : number fogDensity, 0.0 sans LevelInfo.
-- **renvoie** : userdata|nil Objet LevelInfo.
+- **returns**: number fogDensity, 0.0 without LevelInfo.
+- **returns**: userdata|nil LevelInfo object.
 
 #### `core_environment.getFogDensityOffset()`
 
-Déprécié : log un avertissement.
+Deprecated: logs a warning.
 
-- **renvoie** : nil Toujours nil.
+- **returns**: nil Always nil.
 
 #### `core_environment.getFogScaleGradientFile()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getGravity()`
 
-Gravité du niveau (LevelInfo.gravity).
+Level gravity (LevelInfo.gravity).
 
-- **renvoie** : number m/s² (négatif vers le bas) ; -9.81 si LevelInfo absent.
+- **returns**: number m/s² (negative downwards); -9.81 if LevelInfo is absent.
 
 #### `core_environment.getGravityPresets()`
 
-Renvoie M.gravityPresets.
+Returns M.gravityPresets.
 
-- **renvoie** : table[] Presets de gravité.
+- **returns**: table[] Gravity presets.
 
 #### `core_environment.getGroundWind()`
 
-Renvoie le vec3 interne du vent au sol (référence directe, ne pas modifier).
+Returns the internal ground wind vec3 (direct reference, do not modify).
 
-- **renvoie** : vec3 Vent en m/s.
+- **returns**: vec3 Wind in m/s.
 
 #### `core_environment.getInitState()`
 
-Copie de l'état capturé au chargement du niveau (onClientPostStartMission), avec temperatureProfile calculé sur la courbe d'origine du niveau et éventuellement authoredDayLength.
+Copy of the state captured at level load (onClientPostStartMission), with temperatureProfile computed on the level's original curve and possibly authoredDayLength.
 
-- **renvoie** : table État initial.
+- **returns**: table Initial state.
 
 #### `core_environment.getLightState()`
 
-État d'éclairage du monde : jour ou nuit. Retourne {time, phase = 'day'|'night', isNight, nightLightsActive, nightStart, nightEnd}. nightLightsActive reflète ce que le moteur a réellement appliqué.
+World lighting state: day or night. Returns {time, phase = 'day'|'night', isNight, nightLightsActive, nightStart, nightEnd}. nightLightsActive reflects what the engine actually applied.
 
-- **renvoie** : table|nil nil s'il n'y a pas de TimeOfDay.
+- **returns**: table|nil nil if there is no TimeOfDay.
 
 #### `core_environment.getNightFogGradientFile()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getNightGradientFile()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getPrecipitation()`
 
-Nombre de gouttes de l'objet Precipitation.
+Number of drops of the Precipitation object.
 
-- **renvoie** : number|nil nil sans objet Precipitation.
+- **returns**: number|nil nil without a Precipitation object.
 
 #### `core_environment.getShadowDistance()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getSimSpeedPresets()`
 
-Renvoie M.simSpeedPresets.
+Returns M.simSpeedPresets.
 
-- **renvoie** : table[] Presets de ralenti.
+- **returns**: table[] Slow-motion presets.
 
 #### `core_environment.getSkyBrightness()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getSolarTimeOfDayOptions(state)`
 
-Options de moments calculées pour la position et la date solaires de l'état, à partir des options par défaut.
+Moment options computed for the state's solar position and date, from the default options.
 
-- `state` (*table|nil*) : État TimeOfDay ; défaut getTimeOfDay().
-- **renvoie** : table Options.
+- `state` (*table|nil*) : TimeOfDay state; default getTimeOfDay().
+- **returns**: table Options.
 
 #### `core_environment.getSolarTimeOfDayValue(key, state)`
 
-Valeur de time pour une clé de moment (ex. 'sunrise') avec la date/position de l'état.
+Time value for a moment key (e.g. 'sunrise') with the state's date/position.
 
-- `key` (*string*) : Clé : sunrise, morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset, night.
-- `state` (*table|nil*) : État TimeOfDay ; défaut getTimeOfDay().
-- **renvoie** : number|nil time normalisé 0..1 (selon core_solarTimeOfDay).
+- `key` (*string*) : Key: sunrise, morning, earlyNoon, noon, lateNoon, afternoon, evening, sunset, night.
+- `state` (*table|nil*) : TimeOfDay state; default getTimeOfDay().
+- **returns**: number|nil normalized time 0..1 (per core_solarTimeOfDay).
 
 #### `core_environment.getState()`
 
-Construit l'état complet de l'environnement. Clés : champs TimeOfDay (time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile), windSpeed, groundWind, cloudCover, cloudWindDirection, cloudAltitudeKm, cloudWeatherOffsetKm, cloudCirrus*, fogDensity (x1000), fogAtmosphereHeight, numOfDrops, gravity, temperatureC (°C), temperatureProfile, temperatureCurveOverrideC.
+Builds the full environment state. Keys: TimeOfDay fields (time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile), windSpeed, groundWind, cloudCover, cloudWindDirection, cloudAltitudeKm, cloudWeatherOffsetKm, cloudCirrus*, fogDensity (x1000), fogAtmosphereHeight, numOfDrops, gravity, temperatureC (°C), temperatureProfile, temperatureCurveOverrideC.
 
-- **renvoie** : table|nil Table d'état (jamais nil en pratique car temperatureCurveOverrideC est toujours présent).
+- **returns**: table|nil State table (never nil in practice because temperatureCurveOverrideC is always present).
 
 #### `core_environment.getSunScaleGradientFile()`
 
-Déprécié : renvoie nil.
+Deprecated: returns nil.
 
-- **renvoie** : nil nil
+- **returns**: nil nil
 
 #### `core_environment.getTemperatureK()`
 
-Température de l'air au niveau de la mer actuellement envoyée au moteur.
+Sea level air temperature currently sent to the engine.
 
-- **renvoie** : number Kelvins (0.0 tant que la courbe n'a pas été évaluée).
+- **returns**: number Kelvins (0.0 until the curve has been evaluated).
 
 #### `core_environment.getTimeOfDay()`
 
-Lit l'objet scène TimeOfDay et renvoie un état partagé (la même table est réutilisée à chaque appel : copier avant de conserver).
+Reads the TimeOfDay scene object and returns a shared state (the same table is reused on every call: copy before keeping it).
 
-- **renvoie** : table|nil {time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile} ; nil s'il n'y a pas d'objet TimeOfDay (menu principal).
+- **returns**: table|nil {time, play, dayLength, startTime, latitude, longitude, year, month, day, utcOffset, dstRule, celestialProfile}; nil if there is no TimeOfDay object (main menu).
 
 #### `core_environment.getTimeOfDayOptions(levelIdentifier)`
 
-Options de moments de la journée adaptées au niveau, calculées astronomiquement (core_solarTimeOfDay) à partir des options du niveau (core_levels).
+Time-of-day options adapted to the level, computed astronomically (core_solarTimeOfDay) from the level's options (core_levels).
 
-- `levelIdentifier` (*string|nil*) : Identifiant du niveau ; défaut getCurrentLevelIdentifier().
-- **renvoie** : table Liste d'options {key, value, label…}.
+- `levelIdentifier` (*string|nil*) : Level identifier; default getCurrentLevelIdentifier().
+- **returns**: table List of options {key, value, label…}.
 
 #### `core_environment.getTimeOfDayValueForNormalizedTime(normalizedTime, state)`
 
-Convertit un temps normalisé via core_solarTimeOfDay.timeFromNormalizedTime pour l'état donné (sens exact défini dans core_solarTimeOfDay).
+Converts a normalized time via core_solarTimeOfDay.timeFromNormalizedTime for the given state (exact meaning defined in core_solarTimeOfDay).
 
-- `normalizedTime` (*number*) : Temps normalisé.
-- `state` (*table|nil*) : État TimeOfDay ; défaut getTimeOfDay().
-- **renvoie** : number|nil Valeur de time.
+- `normalizedTime` (*number*) : Normalized time.
+- `state` (*table|nil*) : TimeOfDay state; default getTimeOfDay().
+- **returns**: number|nil Time value.
 
 #### `core_environment.getWindSpeed()`
 
-Lit CloudLayer.windSpeed du premier CloudLayer.
+Reads CloudLayer.windSpeed of the first CloudLayer.
 
-- **renvoie** : number|nil nil sans CloudLayer.
+- **returns**: number|nil nil without a CloudLayer.
 
 #### `core_environment.loadTireMarks(filename)`
 
-Charge des traces de pneus depuis un fichier.
+Loads tire marks from a file.
 
-- `filename` (*string|nil*) : Défaut 'tiremarks.dat'.
+- `filename` (*string|nil*) : Default 'tiremarks.dat'.
 
 #### `core_environment.onClientPostStartMission(levelPath)`
 
-Hook après démarrage du niveau : mémorise l'état initial (init_env), y ajoute authoredDayLength puis le réapplique.
+Hook after level start: stores the initial state (init_env), adds authoredDayLength to it then re-applies it.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `core_environment.onClientPreStartMission(levelPath)`
 
-Hook avant le démarrage d'un niveau : relit la courbe de température, supprime l'override, recharge les ground models.
+Hook before a level starts: re-reads the temperature curve, removes the override, reloads the ground models.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `core_environment.onClientStartMission(levelPath)`
 
-Hook au démarrage du niveau : vide le cache d'objets, recense les lumières nocturnes, applique le vent et régénère la carte météo avec une graine aléatoire.
+Hook at level start: clears the object cache, lists the night lights, applies the wind and regenerates the weather map with a random seed.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `core_environment.onDeserialized(data)`
 
-Hook de restauration : réapplique le vent au sol sauvegardé.
+Restore hook: re-applies the saved ground wind.
 
-- `data` (*table*) : Table renvoyée par onSerialize.
+- `data` (*table*) : Table returned by onSerialize.
 
 #### `core_environment.onFilesChanged(files)`
 
-Hook appelé quand des fichiers changent : si un fichier de ground models chargé est modifié, appelle reset() et be:reloadCollision().
+Hook called when files change: if a loaded ground model file is modified, calls reset() and be:reloadCollision().
 
-- `files` (*table[]*) : Liste d'entrées avec champ filename.
+- `files` (*table[]*) : List of entries with a filename field.
 
 #### `core_environment.onSerialize()`
 
-Hook de sauvegarde avant rechargement des extensions : renvoie {groundWind}.
+Save hook before extensions reload: returns {groundWind}.
 
-- **renvoie** : table {groundWind = vec3}.
+- **returns**: table {groundWind = vec3}.
 
 #### `core_environment.onUpdate(dtReal)`
 
-Hook par image : avance la transition d'état, applique les lumières nocturnes et met à jour la température effective selon l'heure.
+Per-frame hook: advances the state transition, applies the night lights and updates the effective temperature according to the time.
 
-- `dtReal` (*number*) : Delta temps réel en secondes.
+- `dtReal` (*number*) : Real-time delta in seconds.
 
 #### `core_environment.regenerateWeatherMap(seed)`
 
-Régénère la carte météo (forme des nuages) avec une graine. Appelée avec une graine aléatoire à chaque chargement de niveau.
+Regenerates the weather map (cloud shape) with a seed. Called with a random seed on every level load.
 
-- `seed` (*integer|nil*) : Graine, arrondie et bornée à 0..2147483647 ; aléatoire si nil.
-- **renvoie** : boolean true si exécuté.
-- **renvoie** : integer|nil Graine normalisée utilisée (absente si l'API C++ manque).
+- `seed` (*integer|nil*) : Seed, rounded and clamped to 0..2147483647; random if nil.
+- **returns**: boolean true if executed.
+- **returns**: integer|nil Normalized seed used (absent if the C++ API is missing).
 
 #### `core_environment.reloadGroundModels(levelPath)`
 
-Réinitialise puis recharge tous les ground models : art/groundmodels.json, puis les *.json de <niveau>/groundModels/. ASPHALT est soumis en premier (indice 0), puis les autres par ordre alphabétique. Les noms sont mis en majuscules et tronqués à 30 caractères si > 31.
+Resets then reloads all ground models: art/groundmodels.json, then the *.json files of <level>/groundModels/. ASPHALT is submitted first (index 0), then the others in alphabetical order. Names are uppercased and truncated to 30 characters if > 31.
 
-- `levelPath` (*string|nil*) : Chemin du niveau ; défaut getMissionFilename().
+- `levelPath` (*string|nil*) : Level path; default getMissionFilename().
 
 #### `core_environment.resetCloudWeatherOffsetKm()`
 
-Remet le décalage météo à (0,0,0).
+Resets the weather offset to (0,0,0).
 
-- **renvoie** : boolean Résultat de setCloudWeatherOffsetKm.
+- **returns**: boolean Result of setCloudWeatherOffsetKm.
 
 #### `core_environment.saveTireMarks(filename)`
 
-Sauvegarde les traces de pneus dans un fichier.
+Saves the tire marks to a file.
 
-- `filename` (*string|nil*) : Défaut 'tiremarks.dat'.
+- `filename` (*string|nil*) : Default 'tiremarks.dat'.
 
 #### `core_environment.setAmbientScaleGradientFile(ambientScaleGradientFile)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `ambientScaleGradientFile` (*any*) : Ignoré.
+- `ambientScaleGradientFile` (*any*) : Ignored.
 
 #### `core_environment.setCloudAltitudeKm(altitudeKm)`
 
-Altitude de la couche de nuages.
+Altitude of the cloud layer.
 
-- `altitudeKm` (*number*) : Altitude en kilomètres.
+- `altitudeKm` (*number*) : Altitude in kilometers.
 
 #### `core_environment.setCloudAltitudeKmByID(objectID, altitudeKm)`
 
-Fixe l'altitude (km) d'un CloudLayer précis.
+Sets the altitude (km) of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
+- `objectID` (*integer*) : Object id.
 - `altitudeKm` (*number*) : km.
 
 #### `core_environment.setCloudCirrusAltitudeKm(altitudeKm)`
 
-Fixe l'altitude des cirrus.
+Sets the cirrus altitude.
 
 - `altitudeKm` (*number*) : km.
 
 #### `core_environment.setCloudCirrusAltitudeKmByID(objectID, altitudeKm)`
 
-Fixe l'altitude des cirrus d'un CloudLayer précis.
+Sets the cirrus altitude of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
+- `objectID` (*integer*) : Object id.
 - `altitudeKm` (*number*) : km.
 
 #### `core_environment.setCloudCirrusCoverage(coverage)`
 
-Fixe la couverture des cirrus.
+Sets the cirrus coverage.
 
-- `coverage` (*number*) : Valeur de cirrusCoverage.
+- `coverage` (*number*) : Value of cirrusCoverage.
 
 #### `core_environment.setCloudCirrusCoverageByID(objectID, coverage)`
 
-Fixe la couverture des cirrus d'un CloudLayer précis.
+Sets the cirrus coverage of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- `coverage` (*number*) : Couverture.
+- `objectID` (*integer*) : Object id.
+- `coverage` (*number*) : Coverage.
 
 #### `core_environment.setCloudCirrusDensity(density)`
 
-Fixe la densité des cirrus.
+Sets the cirrus density.
 
-- `density` (*number*) : Valeur de cirrusDensity.
+- `density` (*number*) : Value of cirrusDensity.
 
 #### `core_environment.setCloudCirrusDensityByID(objectID, density)`
 
-Fixe la densité des cirrus d'un CloudLayer précis.
+Sets the cirrus density of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- `density` (*number*) : Densité.
+- `objectID` (*integer*) : Object id.
+- `density` (*number*) : Density.
 
 #### `core_environment.setCloudCover(cloud)`
 
-Fixe CloudLayer.coverage du premier CloudLayer et annule une transition d'état en cours.
+Sets CloudLayer.coverage of the first CloudLayer and cancels an ongoing state transition.
 
-- `cloud` (*number*) : Couverture nuageuse (plage de lerp 0..3 dans setState).
+- `cloud` (*number*) : Cloud coverage (lerp range 0..3 in setState).
 
 #### `core_environment.setCloudCoverByID(objectID, coverage)`
 
-Fixe la couverture d'un CloudLayer précis (sans hook, sans test enableChanges).
+Sets the coverage of a specific CloudLayer (no hook, no enableChanges check).
 
-- `objectID` (*integer*) : Id de l'objet.
-- `coverage` (*number*) : Couverture.
+- `objectID` (*integer*) : Object id.
+- `coverage` (*number*) : Coverage.
 
 #### `core_environment.setCloudExposureByID(objectID, exposure)`
 
-Déprécié : log un avertissement, ne fait rien.
+Deprecated: logs a warning, does nothing.
 
-- `objectID` (*integer*) : Ignoré.
-- `exposure` (*any*) : Ignoré.
+- `objectID` (*integer*) : Ignored.
+- `exposure` (*any*) : Ignored.
 
 #### `core_environment.setCloudHeightByID(objectID, height)`
 
-Fixe le champ height d'un CloudLayer précis.
+Sets the height field of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- `height` (*number*) : Hauteur.
+- `objectID` (*integer*) : Object id.
+- `height` (*number*) : Height.
 
 #### `core_environment.setCloudWeatherOffsetKm(...)`
 
-Décale la carte météo des nuages. Émet onEnvironmentChanged.
+Offsets the cloud weather map. Emits onEnvironmentChanged.
 
-- `...` (*vec3|number*) : Un vec3 ou 3 nombres x, y, z en km.
-- **renvoie** : boolean true si appliqué, false si l'API est absente ou si les changements sont désactivés (nil si l'argument est nil).
+- `...` (*vec3|number*) : A vec3 or 3 numbers x, y, z in km.
+- **returns**: boolean true if applied, false if the API is missing or changes are disabled (nil if the argument is nil).
 
 #### `core_environment.setCloudWindByID(objectID, windSpeed)`
 
-Fixe windSpeed d'un CloudLayer précis.
+Sets windSpeed of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- `windSpeed` (*number*) : Vitesse.
+- `objectID` (*integer*) : Object id.
+- `windSpeed` (*number*) : Speed.
 
 #### `core_environment.setCloudWindDirection(...)`
 
-Fixe CloudLayer.windDirection (Point2F) du premier CloudLayer ; seuls x et y sont utilisés.
+Sets CloudLayer.windDirection (Point2F) of the first CloudLayer; only x and y are used.
 
-- `...` (*vec3|number*) : Un vec3 ou deux nombres x, y.
+- `...` (*vec3|number*) : A vec3 or two numbers x, y.
 
 #### `core_environment.setCloudWindDirectionByID(objectID, ...)`
 
-Fixe la direction du vent d'un CloudLayer précis.
+Sets the wind direction of a specific CloudLayer.
 
-- `objectID` (*integer*) : Id de l'objet.
-- `...` (*vec3|number*) : Un vec3 ou deux nombres x, y.
+- `objectID` (*integer*) : Object id.
+- `...` (*vec3|number*) : A vec3 or two numbers x, y.
 
 #### `core_environment.setColorizeGradientFile(colorizeGradientFile)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `colorizeGradientFile` (*any*) : Ignoré.
+- `colorizeGradientFile` (*any*) : Ignored.
 
 #### `core_environment.setFogAtmosphereHeight(fogHeight)`
 
-Fixe LevelInfo.FogAtmosphereHeight. N'émet pas onEnvironmentChanged et ignore enableChanges.
+Sets LevelInfo.FogAtmosphereHeight. Does not emit onEnvironmentChanged and ignores enableChanges.
 
-- `fogHeight` (*number*) : Hauteur d'atmosphère du brouillard (plage UI jusqu'à ~2000, déduit de lerpRanges).
+- `fogHeight` (*number*) : Fog atmosphere height (UI range up to ~2000, inferred from lerpRanges).
 
 #### `core_environment.setFogDensity(fog)`
 
-Fixe LevelInfo.fogDensity (valeur brute, très petite : l'UI utilise 1000x cette valeur) et annule une transition en cours. Émet onEnvironmentChanged({fogDensity}) avec la valeur brute.
+Sets LevelInfo.fogDensity (raw value, very small: the UI uses 1000x this value) and cancels an ongoing transition. Emits onEnvironmentChanged({fogDensity}) with the raw value.
 
-- `fog` (*number*) : Densité brute du brouillard (ex. 0.002).
+- `fog` (*number*) : Raw fog density (e.g. 0.002).
 
 #### `core_environment.setFogDensityOffset(fogOffset)`
 
-Déprécié : log un avertissement, ne fait rien.
+Deprecated: logs a warning, does nothing.
 
-- `fogOffset` (*any*) : Ignoré.
+- `fogOffset` (*any*) : Ignored.
 
 #### `core_environment.setFogScaleGradientFile(fogScaleGradientFile)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `fogScaleGradientFile` (*any*) : Ignoré.
+- `fogScaleGradientFile` (*any*) : Ignored.
 
 #### `core_environment.setGravity(grav)`
 
-Définit la gravité : écrit LevelInfo.gravity (pour les futurs spawns) et envoie obj:setGravity à tous les véhicules. Émet onEnvironmentChanged({gravity}).
+Sets gravity: writes LevelInfo.gravity (for future spawns) and sends obj:setGravity to all vehicles. Emits onEnvironmentChanged({gravity}).
 
-- `grav` (*number*) : Accélération en m/s², négative vers le bas (-9.81 = Terre). nil/false : ignoré ; 0 est accepté.
+- `grav` (*number*) : Acceleration in m/s², negative downwards (-9.81 = Earth). nil/false: ignored; 0 is accepted.
 
 #### `core_environment.setGroundWind(...)`
 
-Définit le vent au sol appliqué au monde et à tous les véhicules (obj:setWind + be:setGroundWind).
+Sets the ground wind applied to the world and to all vehicles (obj:setWind + be:setGroundWind).
 
-- `...` (*vec3|number*) : Un vec3, ou 3 nombres x, y, z (m/s, repère monde, déduit du code).
+- `...` (*vec3|number*) : A vec3, or 3 numbers x, y, z (m/s, world frame, inferred from code).
 
 #### `core_environment.setNightFogGradientFile(nightFogGradientFile)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `nightFogGradientFile` (*any*) : Ignoré.
+- `nightFogGradientFile` (*any*) : Ignored.
 
 #### `core_environment.setNightGradientFile(nightGradientFile)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `nightGradientFile` (*any*) : Ignoré.
+- `nightGradientFile` (*any*) : Ignored.
 
 #### `core_environment.setPrecipitation(rainDrops)`
 
-Fixe Precipitation.numDrops (nombre de gouttes/particules de pluie). Sans hook, sans test enableChanges.
+Sets Precipitation.numDrops (number of rain drops/particles). No hook, no enableChanges check.
 
-- `rainDrops` (*number*) : Nombre de gouttes.
+- `rainDrops` (*number*) : Number of drops.
 
 #### `core_environment.setShadowDistance(shadowDistance)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `shadowDistance` (*any*) : Ignoré.
+- `shadowDistance` (*any*) : Ignored.
 
 #### `core_environment.setSkyBrightness(skyBrightness)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `skyBrightness` (*any*) : Ignoré.
+- `skyBrightness` (*any*) : Ignored.
 
 #### `core_environment.setState(state, lerpSeconds)`
 
-Applique un état (même format que getState). Émet onEnvironmentChanged. Avec lerpSeconds > 0, cloudCover, fogDensity, fogAtmosphereHeight et time sont interpolés (courbe smootherstep, durée réduite si l'écart est faible, minimum 0.12 s) ; les autres champs sont appliqués tout de suite.
+Applies a state (same format as getState). Emits onEnvironmentChanged. With lerpSeconds > 0, cloudCover, fogDensity, fogAtmosphereHeight and time are interpolated (smootherstep curve, shorter duration if the gap is small, minimum 0.12 s); the other fields are applied immediately.
 
-- `state` (*table*) : État partiel ou complet ; fogDensity attendu x1000 ; time optionnel (sans time l'horloge n'est pas déplacée).
-- `lerpSeconds` (*number|nil*) : Durée maximale de transition en secondes réelles ; nil ou <= 0 = immédiat.
+- `state` (*table*) : Partial or full state; fogDensity expected x1000; time optional (without time the clock is not moved).
+- `lerpSeconds` (*number|nil*) : Maximum transition duration in real seconds; nil or <= 0 = immediate.
 
 #### `core_environment.setSunScaleGradientFile(sunScaleGradientFile)`
 
-Déprécié : avertissement seul.
+Deprecated: warning only.
 
-- `sunScaleGradientFile` (*any*) : Ignoré.
+- `sunScaleGradientFile` (*any*) : Ignored.
 
 #### `core_environment.setTemperatureProfile(profile)`
 
-Crée un override de la courbe de température du jour : décale la courbe pour viser la moyenne, puis étire les creux/pics pour viser min et max. Valeurs bornées à -50..60 °C. Ignoré si enableChanges(false) ou table invalide.
+Creates an override of the day's temperature curve: shifts the curve to reach the average, then stretches the troughs/peaks to reach min and max. Values clamped to -50..60 °C. Ignored if enableChanges(false) or invalid table.
 
-- `profile` (*table*) : {averageC?, minC?, maxC?} en °C ; au moins un champ numérique fini requis.
+- `profile` (*table*) : {averageC?, minC?, maxC?} in °C; at least one finite numeric field required.
 
 #### `core_environment.setTimeOfDay(timeOfDay)`
 
-Applique des champs de l'heure du jour sur l'objet TimeOfDay. Ne fait rien si la table ne contient aucun champ connu. Émet onEnvironmentChanged et met à jour les lumières nocturnes si time est fourni. Changer year/month/day/latitude force le recalcul de la position du soleil.
+Applies time-of-day fields to the TimeOfDay object. Does nothing if the table contains no known field. Emits onEnvironmentChanged and updates the night lights if time is provided. Changing year/month/day/latitude forces a recomputation of the sun position.
 
-- `timeOfDay` (*table*) : Champs facultatifs : time (0..1, 0 = midi, 0.5 = minuit), play (boolean), dayLength (s réelles), startTime, latitude, longitude (degrés, déduit du code), year, month, day, utcOffset (heures), dstRule, celestialProfile (nom, recharge core_celestial).
+- `timeOfDay` (*table*) : Optional fields: time (0..1, 0 = noon, 0.5 = midnight), play (boolean), dayLength (real s), startTime, latitude, longitude (degrees, inferred from code), year, month, day, utcOffset (hours), dstRule, celestialProfile (name, reloads core_celestial).
 
 #### `core_environment.setWindSpeed(windSpeed)`
 
-Fixe CloudLayer.windSpeed du premier CloudLayer de la scène.
+Sets CloudLayer.windSpeed of the first CloudLayer in the scene.
 
-- `windSpeed` (*number*) : Vitesse du vent des nuages (unité du champ moteur, non précisée dans le code).
+- `windSpeed` (*number*) : Cloud wind speed (unit of the engine field, not specified in the code).
 
 #### `core_environment.syncTimeToRealClock(lerpSeconds)`
 
-Règle l'heure du jeu sur l'heure locale réelle de l'ordinateur (os.date('*t')), en conservant l'état play.
+Sets the game time to the computer's real local time (os.date('*t')), keeping the play state.
 
-- `lerpSeconds` (*number|nil*) : Durée de transition en secondes.
+- `lerpSeconds` (*number|nil*) : Transition duration in seconds.
 
 #### `core_environment.syncTimeToRealClockUtc(lerpSeconds)`
 
-Règle heure ET date du jeu sur l'instant UTC réel converti au fuseau (utcOffset/dstRule) du niveau.
+Sets the game time AND date to the real UTC instant converted to the level's time zone (utcOffset/dstRule).
 
-- `lerpSeconds` (*number|nil*) : Durée de transition en secondes.
+- `lerpSeconds` (*number|nil*) : Transition duration in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dayCyclePresets` | table[] | {speed, seconds} : secondes réelles par cycle jour/nuit : fast 900, normal 1800, slow 7200, realtime 86400. |
-| `defaultSolarTimeOfDayOptions` | table[] | Copie profonde de defaultTimeOfDayOptions, base pour les options calculées astronomiquement. |
-| `defaultTimeOfDayOptions` | table[] | Liste {key, value, label} des moments clés : sunrise 0.775, morning 0.825, earlyNoon 0.9, noon 0, lateNoon 0.1, afternoon 0.175, evening 0.23, sunset 0.245, night 0.5. label = clé de traduction. |
-| `dependencies` | string[] | {'core_solarTimeOfDay'} : extension chargée avant celle-ci (calcul solaire : fenêtre de nuit, événements lever/coucher). |
-| `gravityPresets` | table[] | Presets {key, title, value} en m/s² (terre -9.81, lune -1.62, mars -3.71, soleil -274, jupiter -24.92, neptune -11.15, saturne -10.44, uranus -8.87, vénus -8.87, mercure -3.7, pluton -0.58, zéro 0, terre inversée 9.81). |
-| `groundModels` | table<string, {cdata: any, isAlias: boolean, parent: string}> | Ground models connus, clés en MAJUSCULES. cdata = structure C++ ground_model ; isAlias/parent indiquent si l'entrée est un alias d'un autre modèle. Reconstruit par reloadGroundModels. |
-| `loadedGroundModelFiles` | string[] | Chemins des fichiers JSON de ground models chargés (commun + niveau). Sert à onFilesChanged pour détecter une modification à chaud. |
-| `simSpeedPresets` | table[] | {key, label, value} : facteurs de ralenti de la simulation (value = diviseur : 1 temps réel, 2 = 1/2x, 4, 10, 25, 50, 100, 1000). |
-| `timeOfDayKeyToTime` | table<string, number> | Table clé -> valeur de time pour les moments clés par défaut (noon -> 0, night -> 0.5, …). |
+| `dayCyclePresets` | table[] | {speed, seconds}: real seconds per day/night cycle: fast 900, normal 1800, slow 7200, realtime 86400. |
+| `defaultSolarTimeOfDayOptions` | table[] | Deep copy of defaultTimeOfDayOptions, base for the astronomically computed options. |
+| `defaultTimeOfDayOptions` | table[] | List {key, value, label} of key moments: sunrise 0.775, morning 0.825, earlyNoon 0.9, noon 0, lateNoon 0.1, afternoon 0.175, evening 0.23, sunset 0.245, night 0.5. label = translation key. |
+| `dependencies` | string[] | {'core_solarTimeOfDay'}: extension loaded before this one (solar computation: night window, sunrise/sunset events). |
+| `gravityPresets` | table[] | Presets {key, title, value} in m/s² (earth -9.81, moon -1.62, mars -3.71, sun -274, jupiter -24.92, neptune -11.15, saturn -10.44, uranus -8.87, venus -8.87, mercury -3.7, pluto -0.58, zero 0, inverted earth 9.81). |
+| `groundModels` | table<string, {cdata: any, isAlias: boolean, parent: string}> | Known ground models, keys in UPPERCASE. cdata = C++ ground_model structure; isAlias/parent indicate whether the entry is an alias of another model. Rebuilt by reloadGroundModels. |
+| `loadedGroundModelFiles` | string[] | Paths of the loaded ground model JSON files (common + level). Used by onFilesChanged to detect a hot modification. |
+| `simSpeedPresets` | table[] | {key, label, value}: simulation slow-motion factors (value = divisor: 1 real time, 2 = 1/2x, 4, 10, 25, 50, 100, 1000). |
+| `timeOfDayKeyToTime` | table<string, number> | Table key -> time value for the default key moments (noon -> 0, night -> 0.5, …). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEnvironmentChanged`
 
-**Évènements UI (guihooks.trigger) :** `EnvironmentCanUpdateChanged`, `EnvironmentStateUpdate`
+**UI events (guihooks.trigger):** `EnvironmentCanUpdateChanged`, `EnvironmentStateUpdate`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `getGroundModelByID`, `getGroundModelCount`, `loadTireMarks`, `queueAllObjectLua`, `reloadCollision`, `resetGroundModels`, `resetTireMarks`, `saveTireMarks`, `setGroundModel`, `setGroundWind`, `setSeaLevelTemperatureK`
@@ -789,4 +789,4 @@ Règle heure ET date du jeu sur l'instant UTC réel converti au fuseau (utcOffse
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`, `findSubClassObjects`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/environment.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/environment.lua`.*

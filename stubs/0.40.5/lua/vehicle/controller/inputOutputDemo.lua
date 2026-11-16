@@ -2,43 +2,43 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/inputOutputDemo.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur de démonstration (type "auxiliary", defaultOrder 100000) montrant comment lire des données du véhicule, générer des entrées et communiquer par UDP. À chaque image il enregistre temps, accélérateur, frein, énergie de batterie et puissance moteur dans un tableau CSV en mémoire, envoie des entrées aléatoires (throttle, brake, steering en FILTER_DIRECT) et échange un message JSON avec 127.0.0.1:54812. N'est pas destiné à un véhicule jouable.
---- Accès : contrôleur `inputOutputDemo` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Demo controller (type "auxiliary", defaultOrder 100000) showing how to read vehicle data, generate inputs and communicate over UDP. Every frame it records time, throttle, brake, battery energy and motor power in an in-memory CSV table, sends random inputs (throttle, brake, steering in FILTER_DIRECT) and exchanges a JSON message with 127.0.0.1:54812. Not intended for a playable vehicle.
+--- Access: controller `inputOutputDemo` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_inputOutputDemo
----@field defaultOrder number 100000 (exécuté en dernier).
+---@field defaultOrder number 100000 (executed last).
 ---@field type string "auxiliary".
 local controller_inputOutputDemo = {}
 
---- Prépare l'en-tête CSV, remet le chrono à 0 et configure le socket UDP vers 127.0.0.1:54812.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/inputOutputDemo.lua:125
+--- Prepares the CSV header, resets the timer to 0 and configures the UDP socket toward 127.0.0.1:54812.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/inputOutputDemo.lua:125
 function controller_inputOutputDemo.init() end
 
---- Vide le journal CSV (en-tête seul) et remet le chrono à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/inputOutputDemo.lua:119
+--- Clears the CSV log (header only) and resets the timer to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/inputOutputDemo.lua:119
 function controller_inputOutputDemo.reset() end
 
---- Écrit le journal accumulé dans testLog.csv.
----Source : lua/vehicle/controller/inputOutputDemo.lua:37
+--- Writes the accumulated log to testLog.csv.
+---Source: lua/vehicle/controller/inputOutputDemo.lua:37
 function controller_inputOutputDemo.saveLogToCSV() end
 
---- Incrémente le chrono interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/inputOutputDemo.lua:112
----@param dt number Pas de temps (s).
+--- Increments the internal timer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/inputOutputDemo.lua:112
+---@param dt number Time step (s).
 function controller_inputOutputDemo.update(dt) end
 
---- Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/inputOutputDemo.lua:102
----@param dt number Pas de temps (s).
+--- Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/inputOutputDemo.lua:102
+---@param dt number Time step (s).
 function controller_inputOutputDemo.updateFixedStep(dt) end
 
---- Journalise les données, génère des entrées aléatoires et communique par UDP.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/inputOutputDemo.lua:95
----@param dt number Pas de temps (s).
+--- Logs the data, generates random inputs and communicates over UDP.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/inputOutputDemo.lua:95
+---@param dt number Time step (s).
 function controller_inputOutputDemo.updateGFX(dt) end
 
 return controller_inputOutputDemo

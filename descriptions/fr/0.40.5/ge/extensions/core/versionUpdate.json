@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/core/versionUpdate.lua",
+  "module": "Détecte au démarrage si le jeu vient d'être mis à jour vers une nouvelle version majeure (comparaison des deux premiers nombres de beamng_version avec le réglage lastVersion). Dans ce cas il lance FS:folderCleanup pour sauvegarder les dossiers utilisateur de l'ancienne version, puis enregistre la version courante dans les réglages. Un moddeur s'en sert rarement ; updatedFromVersion() indique de quelle version on vient.",
+  "usage": "local ancienne = core_versionUpdate.updatedFromVersion()\nif ancienne then log('I', 'mod', 'mise à jour depuis ' .. ancienne) end",
+  "notes": [
+    "Nouvelle installation (pas de lastVersion et onlineFeatures == 'ask') ou même version majeure : pas de sauvegarde, sauf si le réglage folderCleanupRequested est vrai, auquel cas FS:folderCleanup(\"\") est exécuté.",
+    "Si lastVersion est absent mais que ce n'est pas une nouvelle installation, la valeur « 0.0.0.0.unknown_before_0.38 » est utilisée.",
+    "M.updateBackupPath (chemin renvoyé par FS:folderCleanup) est défini mais absent de la liste des champs exportés ; il n'existe que lors d'une mise à jour majeure.",
+    "onUpdate attend 2 appels (contournement d'un bug du système de réglages), puis se retire (M.onUpdate = nil), relance extensions.hookUpdate('onUpdate') pour reconstruire la liste des hooks, écrit lastVersion et efface folderCleanupRequested."
+  ],
+  "fields": {
+    "lastVersion": {"type": "string|nil", "desc": "Version précédente du jeu si une mise à jour majeure a été détectée à ce lancement, sinon nil."}
+  },
+  "functions": {
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : compare version courante et dernière version enregistrée, lance éventuellement la sauvegarde/nettoyage des dossiers et mémorise lastVersion.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image, mais seulement jusqu'à la 2e fois : enregistre la version courante dans les réglages puis se supprime lui-même.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "updatedFromVersion": {
+      "desc": "Renvoie la version dont on vient de migrer.",
+      "params": {},
+      "returns": [{"type": "string|nil", "desc": "Ancienne version, nil s'il n'y a pas eu de mise à jour majeure à ce lancement."}],
+      "internal": false
+    }
+  },
+  "classes": {}
+}

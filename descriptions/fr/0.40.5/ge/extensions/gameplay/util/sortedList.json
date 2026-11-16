@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/gameplay/util/sortedList.lua",
+  "module": "Liste d'objets ordonnée par `sortOrder`, avec index par id (objects) et par nom (byName). Elle fabrique les objets via un constructeur fourni, gère le tri, le déplacement, la sérialisation et le dessin de debug. Le module renvoie un constructeur de liste ; il sert aux collections de l'éditeur de gameplay (sites, zones, etc.).",
+  "usage": "local liste = require(\"gameplay/util/sortedList\")(\"zones\", parent, function(parent, name, forceId) return maClasse(parent, name, forceId) end)\nlocal obj = liste:create(\"zone1\")\nliste:buildNamesDir()",
+  "notes": [
+    "Les objets créés doivent avoir id, name, sortOrder, drawDebug(), onSerialize() et onDeserialized().",
+    "objects a une métatable : lire un id inexistant renvoie {name = \"Missing!\", missing = true, id = -1} au lieu de nil.",
+    "byName n'est mis à jour que par buildNamesDir() ; en cas de doublon de nom, le premier objet trié gagne.",
+    "create() force obj.isProcedural = false ; seuls les objets non procéduraux sont sérialisés.",
+    "Dans onDeserialized, les anciens ids sont enregistrés dans oldIdMap[oldId] = nouvel id.",
+    "Les hooks postClear, postRemove et postCreate valent nop par défaut et peuvent être remplacés sur l'instance."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Liste ordonnée. Champs : name, parent, objectConstructor, objects (id -> objet), sorted (tableau trié), byName.",
+      "functions": {
+        "init": {"desc": "Crée la liste (vide).", "params": {"name": {"type": "string", "desc": "Nom de la liste."}, "parent": {"type": "table", "desc": "Objet parent passé au constructeur des éléments."}, "objectConstructor": {"type": "function", "desc": "function(parent, name, forceId) renvoyant un nouvel élément."}}, "internal": true},
+        "clear": {"desc": "Vide la liste (objects, sorted, byName) puis appelle postClear.", "params": {}},
+        "create": {"desc": "Crée un élément via objectConstructor, l'enregistre et retrie (sauf skipSort), puis appelle postCreate.", "params": {"name": {"type": "string", "desc": "Nom de l'élément."}, "forceId": {"type": "integer|nil", "desc": "Id imposé."}, "skipSort": {"type": "boolean|nil", "desc": "Ne pas retrier (utile pour les créations en série)."}}, "returns": [{"type": "table", "desc": "Nouvel élément."}]},
+        "remove": {"desc": "Retire un élément (objet ou id), retrie puis appelle postRemove.", "params": {"obj": {"type": "table|integer", "desc": "Élément ou son id."}}},
+        "sort": {"desc": "Reconstruit sorted selon sortOrder et renumérote sortOrder de 1 à N.", "params": {}},
+        "move": {"desc": "Échange la position d'un élément avec son voisin dans la direction donnée.", "params": {"id": {"type": "integer", "desc": "Id de l'élément."}, "dir": {"type": "integer", "desc": "-1 vers le début, +1 vers la fin."}}},
+        "buildNamesDir": {"desc": "Reconstruit l'index byName.", "params": {}},
+        "drawDebug": {"desc": "Appelle drawDebug(drawMode) sur chaque élément.", "params": {"drawMode": {"type": "any", "desc": "Mode de dessin transmis tel quel."}}},
+        "onSerialize": {"desc": "Renvoie la liste des éléments non procéduraux sérialisés, dans l'ordre.", "params": {"parent": {"type": "any", "desc": "Inutilisé."}}, "returns": [{"type": "table[]", "desc": "Données des éléments."}]},
+        "onDeserialized": {"desc": "Vide la liste et recrée les éléments depuis les données.", "params": {"data": {"type": "table[]|nil", "desc": "Données sérialisées."}, "oldIdMap": {"type": "table<integer, integer>", "desc": "Table remplie avec ancien id -> nouvel id."}}}
+      }
+    }
+  }
+}

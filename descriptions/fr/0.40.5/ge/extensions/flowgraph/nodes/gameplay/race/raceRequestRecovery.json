@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/race/raceRequestRecovery.lua",
+  "module": "Nœud flowgraph « Race Request Recovery » (catégorie repeat_instant, tag scenario). Tente de replacer le véhicule sur le dernier point de recovery via race:requestRecover(vehId). Sorties (cachées) : success si la récupération a été possible, fail sinon.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "work": {"desc": "Chaque frame : appelle requestRecover et renseigne success/fail.", "params": {"args": {"type": "table", "desc": "Arguments du moteur flowgraph (non utilisés)."}}, "internal": true}
+      }
+    }
+  }
+}

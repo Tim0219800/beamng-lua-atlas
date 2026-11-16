@@ -1,36 +1,36 @@
 # `core_cameraModes_unicycle`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/unicycle.lua` · VM : Game Engine (GE) · 263 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/unicycle.lua` · VM: Game Engine (GE) · 263 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/unicycle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/unicycle")` (file under extensions/ but not a regular extension)
 
-Caméra à la première personne du personnage à pied (« unicycle » : le véhicule joueur à pied). Masquée. La rotation de la tête vient des entrées de lacet/tangage (tangage limité à ±89.9 degrés), le zoom de data.unicycleZoom (FOV de 55 à 27). La position suit le nœud de tête du véhicule (core_camera.getDriverData). Envoie la rotation de caméra au contrôleur du véhicule (playerController.setCameraControlData). Supporte le snap turn OpenXR. setCustomData fixe la position (posée au sol à 1.6 m des yeux) et la direction de départ. Renvoie un constructeur.
+First-person camera of the on-foot character ("unicycle": the player vehicle on foot). Hidden. Head rotation comes from the yaw/pitch inputs (pitch limited to ±89.9 degrees), zoom from data.unicycleZoom (FOV from 55 to 27). The position follows the vehicle's head node (core_camera.getDriverData). Sends the camera rotation to the vehicle controller (playerController.setCameraControlData). Supports OpenXR snap turn. setCustomData sets the position (placed on the ground at 1.6 m from the eyes) and the starting direction. Returns a constructor.
 
-## Remarques
+## Notes
 
-- Constantes : hauteur humaine 1.6 m, hanche 0.45 * hauteur, accroupi 0.7 ; chute max 10 m, gravité -2 m/s2 dans attemptToWalk, qui est local au fichier et jamais appelée dans ce fichier (code inutilisé).
-- getEyePosition utilise la variable `crouching` qui n'existe pas dans la portée (nil) : l'accroupissement n'est donc jamais pris en compte.
-- onCameraChanged ne fait rien si le véhicule joueur est lui-même un unicycle ; sinon charge la disposition d'apps « unicycle » au gain de focus et redemande l'état de jeu à la perte.
-- getRotVecFromFrontUp force un tangage horizontal (rotVec.y = 180) : le commentaire du code dit « the math below is broken ».
-- Réglages : openXRsnapTurnUnicycle, openXRsnapTurnUnicycleDegrees.
+- Constants: human height 1.6 m, hip 0.45 * height, crouching 0.7; max fall 10 m, gravity -2 m/s2 in attemptToWalk, which is local to the file and never called in this file (unused code).
+- getEyePosition uses the variable `crouching` which does not exist in scope (nil): crouching is therefore never taken into account.
+- onCameraChanged does nothing if the player vehicle is itself a unicycle; otherwise loads the "unicycle" apps layout on focus gain and asks again for the game state on loss.
+- getRotVecFromFrontUp forces a horizontal pitch (rotVec.y = 180): the code comment says "the math below is broken".
+- Settings: openXRsnapTurnUnicycle, openXRsnapTurnUnicycleDegrees.
 
-## Classe `C`
+## Class `C`
 
-Mode caméra piéton. Champs : pos (vec3), rotVec (vec3 degrés, y = 180 pour regarder à l'horizontale).
+Pedestrian camera mode. Fields: pos (vec3), rotVec (vec3 degrees, y = 180 to look horizontally).
 
-Le module renvoie un constructeur : `local obj = require("core_cameraModes_unicycle")(options)`.
+The module returns a constructor: `local obj = require("core_cameraModes_unicycle")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:getPosRot()` | Position et rotation courantes de la caméra. | 164 |
-| `C:init()` | Prépare le lissage du zoom et lit les réglages. | 20 |
-| `C:onCameraChanged(focused)` | Hook : charge ou quitte la disposition d'interface « unicycle » (voir notes). | 33 |
-| `C:onSettingsChanged()` | Hook : relit les réglages snap turn OpenXR. | 28 |
-| `C:reset()` | Remet le lissage du zoom à zéro. | 47 |
-| `C:setCustomData(customData)` | Fixe la position et/ou l'orientation initiales ; appelé par setGlobalCameraByName. | 153 |
-| `C:update(data)` | Applique rotation, zoom et position, et envoie la rotation au contrôleur du joueur. | 173 |
+| `C:getPosRot()` | Current position and rotation of the camera. | 164 |
+| `C:init()` | Prepares the zoom smoothing and reads the settings. | 20 |
+| `C:onCameraChanged(focused)` | Hook: loads or leaves the "unicycle" interface layout (see notes). | 33 |
+| `C:onSettingsChanged()` | Hook: re-reads the OpenXR snap turn settings. | 28 |
+| `C:reset()` | Resets the zoom smoothing to zero. | 47 |
+| `C:setCustomData(customData)` | Sets the initial position and/or orientation; called by setGlobalCameraByName. | 153 |
+| `C:update(data)` | Applies rotation, zoom and position, and sends the rotation to the player's controller. | 173 |
 
-**Évènements UI (guihooks.trigger) :** `appContainer:loadLayoutByType`
+**UI events (guihooks.trigger):** `appContainer:loadLayoutByType`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/unicycle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/unicycle.lua`.*

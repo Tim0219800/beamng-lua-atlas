@@ -1,71 +1,71 @@
 # `core_multiseatPlayerLimits`
 
-*Fichier : `lua/ge/extensions/core/multiseatPlayerLimits.lua` · VM : Game Engine (GE) · 56 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/multiseatPlayerLimits.lua` · VM: Game Engine (GE) · 56 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_multiseatPlayerLimits` : `extensions.load("core_multiseatPlayerLimits")`, puis la globale `core_multiseatPlayerLimits`
+**Access:** extension `core_multiseatPlayerLimits`: `extensions.load("core_multiseatPlayerLimits")`, then the global `core_multiseatPlayerLimits`
 
-Extension GE `core_multiseatPlayerLimits` : calcule les limites du nombre de joueurs en multi-joueur local (multiseat). Deux sources : la limite 'douce' (recommandation matériel ou niveau, champ multiseat.maxPlayers du info.json du niveau, 4 par défaut via core_levels) et la limite 'dure' du mode de jeu multiseat en cours (gameplay_multiseat_gamemodeManager). Elle renvoie un état prêt pour l'interface : limite, atteinte, dépassée, avertissement.
+GE extension `core_multiseatPlayerLimits`: computes the player count limits in local multiplayer (multiseat). Two sources: the 'soft' limit (hardware or level recommendation, multiseat.maxPlayers field of the level's info.json, 4 by default via core_levels) and the 'hard' limit of the current multiseat game mode (gameplay_multiseat_gamemodeManager). It returns a UI-ready state: limit, reached, exceeded, warning.
 
-## Exemple
+## Example
 
 ```lua
 local s = core_multiseatPlayerLimits.getCurrentLevelState(3)
-if s.atLimit then log('I','','plus de place : limite ' .. tostring(s.limit)) end
+if s.atLimit then log('I','','no room left: limit ' .. tostring(s.limit)) end
 ```
 
-## Remarques
+## Notes
 
-- normalizeLimit : une limite doit être un nombre >= 1, arrondi à l'entier inférieur ; sinon elle est ignorée (nil).
-- La limite du mode (modeLimit) est toujours appliquée. La limite douce ne l'est que dans le menu simple (Engine.UI.isSimpleMenu()) ou si softIsHard est vrai ; sinon, dépasser la limite douce produit seulement un avertissement { txt = 'ui.multiseat.playerLimitWarning', context = { count = softLimit } }.
-- Le module est un simple module de fonctions (pas de hooks) ; il est défini avec des `function M.xxx`.
+- normalizeLimit: a limit must be a number >= 1, rounded down to the integer; otherwise it is ignored (nil).
+- The mode limit (modeLimit) is always applied. The soft limit is only applied in the simple menu (Engine.UI.isSimpleMenu()) or if softIsHard is true; otherwise, exceeding the soft limit only produces a warning { txt = 'ui.multiseat.playerLimitWarning', context = { count = softLimit } }.
+- The module is a simple module of functions (no hooks); it is defined with `function M.xxx`.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_multiseatPlayerLimits.getCurrentLevelLimit()` | Renvoie le nombre maximal de joueurs recommandé par le niveau courant (level.multiseat.maxPlayers). | 17 |
-| `core_multiseatPlayerLimits.getCurrentLevelState(playerCount, softIsHard)` | Raccourci : getState avec la limite du niveau courant et la limite du mode courant. | 51 |
-| `core_multiseatPlayerLimits.getCurrentModeLimit()` | Renvoie le nombre maximal de joueurs du mode de jeu multiseat actif (gameplay_multiseat_gamemodeManager.getMaxPlayers) : limite dure sur toutes les plateformes. | 24 |
-| `core_multiseatPlayerLimits.getState(softLimit, playerCount, modeLimit, softIsHard)` | Calcule l'état des limites de joueurs. La limite effective est celle du mode, abaissée par la limite douce si softIsHard (ou menu simple), sinon la limite douce seule si aucune limite de mode. | 31 |
-| `core_multiseatPlayerLimits.isSimpleMenu()` | Indique si l'interface est en mode de menu simplifié (plateformes console/Steam Deck, selon Engine.UI.isSimpleMenu). | 13 |
+| `core_multiseatPlayerLimits.getCurrentLevelLimit()` | Returns the maximum number of players recommended by the current level (level.multiseat.maxPlayers). | 17 |
+| `core_multiseatPlayerLimits.getCurrentLevelState(playerCount, softIsHard)` | Shortcut: getState with the current level's limit and the current mode's limit. | 51 |
+| `core_multiseatPlayerLimits.getCurrentModeLimit()` | Returns the maximum number of players of the active multiseat game mode (gameplay_multiseat_gamemodeManager.getMaxPlayers): hard limit on all platforms. | 24 |
+| `core_multiseatPlayerLimits.getState(softLimit, playerCount, modeLimit, softIsHard)` | Computes the player limits state. The effective limit is the mode's, lowered by the soft limit if softIsHard (or simple menu), otherwise the soft limit alone if there is no mode limit. | 31 |
+| `core_multiseatPlayerLimits.isSimpleMenu()` | Indicates whether the UI is in simplified menu mode (console/Steam Deck platforms, according to Engine.UI.isSimpleMenu). | 13 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_multiseatPlayerLimits.getCurrentLevelLimit()`
 
-Renvoie le nombre maximal de joueurs recommandé par le niveau courant (level.multiseat.maxPlayers).
+Returns the maximum number of players recommended by the current level (level.multiseat.maxPlayers).
 
-- **renvoie** : integer|nil Limite, ou nil si aucun niveau ou valeur invalide.
+- **returns**: integer|nil Limit, or nil if no level or invalid value.
 
 #### `core_multiseatPlayerLimits.getCurrentLevelState(playerCount, softIsHard)`
 
-Raccourci : getState avec la limite du niveau courant et la limite du mode courant.
+Shortcut: getState with the current level's limit and the current mode's limit.
 
-- `playerCount` (*number*) : Nombre de joueurs actuel.
-- `softIsHard` (*boolean|nil*) : Voir getState.
-- **renvoie** : table Même structure que getState.
+- `playerCount` (*number*) : Current number of players.
+- `softIsHard` (*boolean|nil*) : See getState.
+- **returns**: table Same structure as getState.
 
 #### `core_multiseatPlayerLimits.getCurrentModeLimit()`
 
-Renvoie le nombre maximal de joueurs du mode de jeu multiseat actif (gameplay_multiseat_gamemodeManager.getMaxPlayers) : limite dure sur toutes les plateformes.
+Returns the maximum number of players of the active multiseat game mode (gameplay_multiseat_gamemodeManager.getMaxPlayers): hard limit on all platforms.
 
-- **renvoie** : integer|nil Limite, ou nil.
+- **returns**: integer|nil Limit, or nil.
 
 #### `core_multiseatPlayerLimits.getState(softLimit, playerCount, modeLimit, softIsHard)`
 
-Calcule l'état des limites de joueurs. La limite effective est celle du mode, abaissée par la limite douce si softIsHard (ou menu simple), sinon la limite douce seule si aucune limite de mode.
+Computes the player limits state. The effective limit is the mode's, lowered by the soft limit if softIsHard (or simple menu), otherwise the soft limit alone if there is no mode limit.
 
-- `softLimit` (*number|nil*) : Limite recommandée (matériel ou niveau).
-- `playerCount` (*number*) : Nombre de joueurs actuel (négatif ou invalide devient 0).
-- `modeLimit` (*number|nil*) : Limite du mode de jeu.
-- `softIsHard` (*boolean|nil*) : Si vrai, la limite douce est aussi imposée.
-- **renvoie** : table { limit = integer|nil, hard = boolean, atLimit = boolean, exceeded = boolean, warning = table|nil }
+- `softLimit` (*number|nil*) : Recommended limit (hardware or level).
+- `playerCount` (*number*) : Current number of players (negative or invalid becomes 0).
+- `modeLimit` (*number|nil*) : Game mode limit.
+- `softIsHard` (*boolean|nil*) : If true, the soft limit is also enforced.
+- **returns**: table { limit = integer|nil, hard = boolean, atLimit = boolean, exceeded = boolean, warning = table|nil }
 
 #### `core_multiseatPlayerLimits.isSimpleMenu()`
 
-Indique si l'interface est en mode de menu simplifié (plateformes console/Steam Deck, selon Engine.UI.isSimpleMenu).
+Indicates whether the UI is in simplified menu mode (console/Steam Deck platforms, according to Engine.UI.isSimpleMenu).
 
-- **renvoie** : boolean true si menu simple.
+- **returns**: boolean true if simple menu.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/multiseatPlayerLimits.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/multiseatPlayerLimits.lua`.*

@@ -1,45 +1,45 @@
 # `gameplay_freeformDelivery_vehicleSleep`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/vehicleSleep.lua` · VM : Game Engine (GE) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/vehicleSleep.lua` · VM: Game Engine (GE) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_vehicleSleep` : `extensions.load("gameplay_freeformDelivery_vehicleSleep")`, puis la globale `gameplay_freeformDelivery_vehicleSleep`
+**Access:** extension `gameplay_freeformDelivery_vehicleSleep`: `extensions.load("gameplay_freeformDelivery_vehicleSleep")`, then the global `gameplay_freeformDelivery_vehicleSleep`
 
-Sous-module de la livraison libre qui endort (setActive(0)) les véhicules de livraison éloignés de la caméra et du véhicule du joueur, et les réveille à l'approche, pour économiser du temps de simulation. Seuls les véhicules ayant un sleepDistance valide dans leur définition sont gérés.
+Freeform delivery submodule that puts to sleep (setActive(0)) the delivery vehicles far from the camera and the player's vehicle, and wakes them when approached, to save simulation time. Only vehicles with a valid sleepDistance in their definition are managed.
 
-## Remarques
+## Notes
 
-- sleepDistance doit être un nombre > 0, sinon il est ignoré avec une erreur de log.
-- wakeDistance par défaut = max(sleepDistance - 50, sleepDistance * 0.8) ; s'il est absent, invalide ou supérieur à sleepDistance, la valeur par défaut est utilisée (hystérésis).
-- Un véhicule s'endort quand caméra ET véhicule joueur sont plus loin que sleepDistance ; il se réveille dès que l'un des deux est plus proche que wakeDistance.
-- cleanup réveille tous les véhicules suivis.
+- sleepDistance must be a number > 0, otherwise it is ignored with a log error.
+- Default wakeDistance = max(sleepDistance - 50, sleepDistance * 0.8); if it is absent, invalid or greater than sleepDistance, the default value is used (hysteresis).
+- A vehicle falls asleep when the camera AND the player's vehicle are farther than sleepDistance; it wakes as soon as one of the two is closer than wakeDistance.
+- cleanup wakes all tracked vehicles.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_vehicleSleep.cleanup()` | Réactive tous les véhicules suivis et vide le suivi. *(interne)* | 128 |
-| `gameplay_freeformDelivery_vehicleSleep.getDebugData()` | Renvoie un tableau trié par id avec, pour chaque véhicule suivi, l'état de sommeil et les distances (utile pour l'affichage de debug). | 112 |
-| `gameplay_freeformDelivery_vehicleSleep.setup(delivery)` | Normalise sleepDistance/wakeDistance dans delivery.vehicles et enregistre les véhicules concernés (actifs au départ, setActive(1)). *(interne)* | 47 |
-| `gameplay_freeformDelivery_vehicleSleep.update()` | Appelée chaque frame : mesure les distances caméra/joueur de chaque véhicule suivi et bascule son état actif/endormi. *(interne)* | 74 |
+| `gameplay_freeformDelivery_vehicleSleep.cleanup()` | Reactivates all tracked vehicles and clears the tracking. *(internal)* | 128 |
+| `gameplay_freeformDelivery_vehicleSleep.getDebugData()` | Returns an array sorted by id with, for each tracked vehicle, the sleep state and the distances (useful for debug display). | 112 |
+| `gameplay_freeformDelivery_vehicleSleep.setup(delivery)` | Normalizes sleepDistance/wakeDistance in delivery.vehicles and registers the relevant vehicles (active at the start, setActive(1)). *(internal)* | 47 |
+| `gameplay_freeformDelivery_vehicleSleep.update()` | Called every frame: measures the camera/player distances of each tracked vehicle and toggles its active/asleep state. *(internal)* | 74 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_vehicleSleep.getDebugData()`
 
-Renvoie un tableau trié par id avec, pour chaque véhicule suivi, l'état de sommeil et les distances (utile pour l'affichage de debug).
+Returns an array sorted by id with, for each tracked vehicle, the sleep state and the distances (useful for debug display).
 
-- **renvoie** : table[] Entrées {id, sleeping, sleepDistance, wakeDistance, cameraDistance, playerVehicleDistance}.
+- **returns**: table[] Entries {id, sleeping, sleepDistance, wakeDistance, cameraDistance, playerVehicleDistance}.
 
 #### `gameplay_freeformDelivery_vehicleSleep.setup(delivery)`
 
-Normalise sleepDistance/wakeDistance dans delivery.vehicles et enregistre les véhicules concernés (actifs au départ, setActive(1)).
+Normalizes sleepDistance/wakeDistance in delivery.vehicles and registers the relevant vehicles (active at the start, setActive(1)).
 
-- `delivery` (*table*) : Données de livraison avec le tableau vehicles.
+- `delivery` (*table*) : Delivery data with the vehicles array.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `be:` `getPlayerVehicle`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/vehicleSleep.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/vehicleSleep.lua`.*

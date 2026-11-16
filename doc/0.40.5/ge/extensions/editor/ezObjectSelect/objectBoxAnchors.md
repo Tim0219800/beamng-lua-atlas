@@ -1,47 +1,47 @@
 # `editor_ezObjectSelect_objectBoxAnchors`
 
-*Fichier : `lua/ge/extensions/editor/ezObjectSelect/objectBoxAnchors.lua` · VM : Game Engine (GE) · 149 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/ezObjectSelect/objectBoxAnchors.lua` · VM: Game Engine (GE) · 149 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_ezObjectSelect_objectBoxAnchors` : `extensions.load("editor_ezObjectSelect_objectBoxAnchors")`, puis la globale `editor_ezObjectSelect_objectBoxAnchors`
+**Access:** extension `editor_ezObjectSelect_objectBoxAnchors`: `extensions.load("editor_ezObjectSelect_objectBoxAnchors")`, then the global `editor_ezObjectSelect_objectBoxAnchors`
 
-Calcule des points d'ancrage sur le bas de la boîte englobante d'un objet pour l'outil Easy Select. Trois motifs sont produits : shortEdge (milieu du petit côté, à z min), longEdge (milieu du grand côté) et shortEdgeOrigin (comme shortEdge mais à z = 0 local, au niveau de l'origine). Le « long » axe est X si l'étendue mise à l'échelle en X >= celle en Y. Sert à décrire des arêtes de référence pour le déplacement/aimantation.
+Computes anchor points on the bottom of an object's bounding box for the Easy Select tool. Three patterns are produced: shortEdge (middle of the short side, at z min), longEdge (middle of the long side) and shortEdgeOrigin (like shortEdge but at local z = 0, at the origin level). The "long" axis is X if the scaled extent in X >= that in Y. Used to describe reference edges for moving/snapping.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_ezObjectSelect_objectBoxAnchors.describeBox(box, scale)` | Décrit une boîte locale (méthodes getCenter/getExtents et minExtents/maxExtents). Renvoie nil si la boîte n'est pas valide. | 54 |
-| `editor_ezObjectSelect_objectBoxAnchors.describeMeshBox(meshBox, scale)` | Idem describeBox pour une boîte de mesh simple {minExtents, maxExtents, center, extents}. nil si un champ manque. | 59 |
-| `editor_ezObjectSelect_objectBoxAnchors.describeObject(obj)` | Décrit un objet de la scène en coordonnées monde. Utilise getObjBox + getTransform + getScale si possible ; sinon retombe sur la boîte monde getWorldBox. Chaque motif contient first, second, firstOffset, secondOffset, centerOffset (offsets relatifs à la position de l'objet). | 88 |
+| `editor_ezObjectSelect_objectBoxAnchors.describeBox(box, scale)` | Describes a local box (methods getCenter/getExtents and minExtents/maxExtents). Returns nil if the box is not valid. | 54 |
+| `editor_ezObjectSelect_objectBoxAnchors.describeMeshBox(meshBox, scale)` | Same as describeBox for a simple mesh box {minExtents, maxExtents, center, extents}. nil if a field is missing. | 59 |
+| `editor_ezObjectSelect_objectBoxAnchors.describeObject(obj)` | Describes a scene object in world coordinates. Uses getObjBox + getTransform + getScale if possible; otherwise falls back to the world box getWorldBox. Each pattern contains first, second, firstOffset, secondOffset, centerOffset (offsets relative to the object's position). | 88 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_ezObjectSelect_objectBoxAnchors.describeBox(box, scale)`
 
-Décrit une boîte locale (méthodes getCenter/getExtents et minExtents/maxExtents). Renvoie nil si la boîte n'est pas valide.
+Describes a local box (methods getCenter/getExtents and minExtents/maxExtents). Returns nil if the box is not valid.
 
-- `box` (*table*) : Boîte englobante locale
-- `scale` (*vec3|nil*) : Échelle de l'objet (défaut 1,1,1)
-- **renvoie** : table|nil {isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin}, chaque arête ayant firstLocal/secondLocal
+- `box` (*table*) : Local bounding box
+- `scale` (*vec3|nil*) : Object scale (default 1,1,1)
+- **returns**: table|nil {isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin}, each edge having firstLocal/secondLocal
 
 #### `editor_ezObjectSelect_objectBoxAnchors.describeMeshBox(meshBox, scale)`
 
-Idem describeBox pour une boîte de mesh simple {minExtents, maxExtents, center, extents}. nil si un champ manque.
+Same as describeBox for a simple mesh box {minExtents, maxExtents, center, extents}. nil if a field is missing.
 
-- `meshBox` (*table*) : Boîte de mesh
-- `scale` (*vec3|nil*) : Échelle (défaut 1,1,1)
-- **renvoie** : table|nil Même structure que describeBox
+- `meshBox` (*table*) : Mesh box
+- `scale` (*vec3|nil*) : Scale (default 1,1,1)
+- **returns**: table|nil Same structure as describeBox
 
 #### `editor_ezObjectSelect_objectBoxAnchors.describeObject(obj)`
 
-Décrit un objet de la scène en coordonnées monde. Utilise getObjBox + getTransform + getScale si possible ; sinon retombe sur la boîte monde getWorldBox. Chaque motif contient first, second, firstOffset, secondOffset, centerOffset (offsets relatifs à la position de l'objet).
+Describes a scene object in world coordinates. Uses getObjBox + getTransform + getScale if possible; otherwise falls back to the world box getWorldBox. Each pattern contains first, second, firstOffset, secondOffset, centerOffset (offsets relative to the object's position).
 
-- `obj` (*userdata*) : Objet de la scène (doit avoir getPosition)
-- **renvoie** : table|nil {isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin} ou nil si aucune boîte valide
+- `obj` (*userdata*) : Scene object (must have getPosition)
+- **returns**: table|nil {isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin} or nil if no valid box
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getObjBox`, `getPosition`, `getScale`, `getTransform`, `getWorldBox`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/ezObjectSelect/objectBoxAnchors.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/ezObjectSelect/objectBoxAnchors.lua`.*

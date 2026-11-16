@@ -1,0 +1,85 @@
+{
+  "path": "lua/ge/extensions/scenario/race_marker.lua",
+  "module": "Gestionnaire des marqueurs 3D de checkpoints d'une course de scénario. Il crée un marqueur par waypoint avec le type choisi (module scenario/raceMarkers/<type>, par défaut sideColumnMarker), les masque ou affiche, règle leur mode (courant, suivant, caché...) et les met à jour à chaque image. Les marqueurs sont masqués en mode photo.",
+  "notes": [
+    "M.idToMarker est copié à l'export : clearMarkerList réassigne la variable locale idToMarker, donc M.idToMarker ne suit plus la table réellement utilisée après un premier nettoyage.",
+    "Dans setupMarkers, marker:createMarkers() est appelé deux fois par marqueur (une fois dans createRaceMarker, une fois ensuite).",
+    "Les modes passés à setModes sont des noms de mode propres à chaque type de marqueur (voir scenario/raceMarkers/*) ; un waypoint absent de la table reçoit 'hidden'.",
+    "La variable globale photoModeOpen est lue pour masquer les marqueurs."
+  ],
+  "fields": {
+    "idToMarker": {"type": "table", "desc": "Table id -> marqueur, copie initiale de la table interne (voir notes)."}
+  },
+  "functions": {
+    "createRaceMarker": {
+      "desc": "Crée un marqueur du type donné (ou du type courant par défaut), appelle createMarkers() et, sauf si detached, l'enregistre pour les mises à jour et le masquage.",
+      "params": {
+        "detached": {"type": "boolean|nil", "desc": "Si true, le marqueur n'est pas géré par ce module (pas de mise à jour automatique)."},
+        "type": {"type": "string|nil", "desc": "Nom du module dans scenario/raceMarkers/, par exemple 'ringMarker'."}
+      },
+      "returns": [{"type": "table", "desc": "Le marqueur créé."}],
+      "internal": false
+    },
+    "init": {
+      "desc": "Efface les marqueurs précédents et masque ceux qui restent.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "setupMarkers": {
+      "desc": "Choisit le type de marqueur puis crée un marqueur par waypoint et le place sur son checkpoint (setToCheckpoint). Les anciens marqueurs sont d'abord supprimés. Les marqueurs sont indexés par wp.name.",
+      "params": {
+        "wps": {"type": "table[]", "desc": "Liste de waypoints, chacun avec un champ name."},
+        "marker": {"type": "string|nil", "desc": "Nom du module dans scenario/raceMarkers/ ; nil pour le type par défaut sideColumnMarker."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "render": {
+      "desc": "À appeler chaque image : masque les marqueurs en mode photo (et les restaure à la sortie), sinon appelle marker:update(dt, dtSim) sur chacun.",
+      "params": {
+        "dt": {"type": "number", "desc": "Durée de l'image réelle (s)."},
+        "dtSim": {"type": "number", "desc": "Durée de simulation (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "hide": {
+      "desc": "Masque tous les marqueurs gérés.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "show": {
+      "desc": "Affiche tous les marqueurs gérés.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "setModes": {
+      "desc": "Règle le mode de chaque marqueur d'après une table nom de waypoint -> mode ; les noms absents passent en 'hidden'.",
+      "params": {"wpModes": {"type": "table<string, string>", "desc": "Mode par nom de waypoint."}},
+      "returns": [],
+      "internal": false
+    },
+    "setToCheckpoints": {
+      "desc": "Replace chaque marqueur sur les données de checkpoint correspondant à son nom.",
+      "params": {"data": {"type": "table<string, table>", "desc": "Données de checkpoint par nom de waypoint."}},
+      "returns": [],
+      "internal": false
+    },
+    "drawOnMinimap": {
+      "desc": "Demande à chaque marqueur qui en est capable (drawOnMinimap) de se dessiner sur la minicarte.",
+      "params": {"td": {"type": "any", "desc": "Contexte de dessin transmis tel quel aux marqueurs (déduit du code)."}},
+      "returns": [],
+      "internal": false
+    },
+    "onClientEndMission": {
+      "desc": "Hook de fin de mission : supprime les marqueurs et remet le type de marqueur par défaut.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {}
+}

@@ -1,30 +1,30 @@
 # `flowgraph_nodes_gameplay_sites_location`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/location.lua` · VM : Game Engine (GE) · 164 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/location.lua` · VM: Game Engine (GE) · 164 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/sites/location")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/sites/location")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Location » (catégorie repeat_instant, tags scenario/sites). Décompose une donnée location (table locationData) : sorties name, pos, hasNavPos, navPos (projection sur la route la plus proche), roadSide (2 m du bord), roadDir (quat) et navRadius (5 si aucune route). Des pins de sortie supplémentaires (options, par défaut « key ») exposent les champs personnalisés (customFields.values) de la location.
+Flowgraph node "Location" (category repeat_instant, tags scenario/sites). Decomposes a location data (locationData table): outputs name, pos, hasNavPos, navPos (projection on the nearest road), roadSide (2 m from the edge), roadDir (quat) and navRadius (5 if no road). Additional output pins (options, "key" by default) expose the custom fields (customFields.values) of the location.
 
-## Remarques
+## Notes
 
-- Sans route proche : hasNavPos=false, navPos=roadSide=pos, navRadius=5, roadDir={0,0,0,0}.
-- Le bouton « Copy over Fields » de l'éditeur ne fait rien (bloc vide).
+- Without a nearby road: hasNavPos=false, navPos=roadSide=pos, navRadius=5, roadDir={0,0,0,0}.
+- The editor's "Copy over Fields" button does nothing (empty block).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Appelé au démarrage de l'exécution du projet flowgraph ; réinitialise l'état interne du nœud. | 118 |
-| `C:_onDeserialized(nodeData)` | Restaure les réglages propres au nœud à partir des données sauvegardées. | 156 |
-| `C:_onSerialize(res)` | Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe. | 152 |
-| `C:drawCustomProperties()` | Dessine les propriétés personnalisées du nœud dans le panneau de l'éditeur flowgraph (ImGui). | 69 |
-| `C:init(mgr, ...)` | Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph). | 30 |
-| `C:postInit()` | Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques). | 34 |
-| `C:updateKeys()` | Reconstruit les pins de sortie dynamiques à partir de la liste d'options du nœud. | 38 |
-| `C:work(args)` | Quand la location d'entrée change, remplit les sorties (nom, position, infos de route via findClosestRoadInfo, champs personnalisés). | 122 |
+| `C:_executionStarted()` | Called when the flowgraph project execution starts; resets the node's internal state. | 118 |
+| `C:_onDeserialized(nodeData)` | Restores the node's own settings from the saved data. | 156 |
+| `C:_onSerialize(res)` | Adds the node's own settings to the `res` table when saving the graph. | 152 |
+| `C:drawCustomProperties()` | Draws the node's custom properties in the flowgraph editor panel (ImGui). | 69 |
+| `C:init(mgr, ...)` | Initializes the node's internal state at creation (called by the flowgraph engine). | 30 |
+| `C:postInit()` | Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys). | 34 |
+| `C:updateKeys()` | Rebuilds the dynamic output pins from the node's options list. | 38 |
+| `C:work(args)` | When the input location changes, fills the outputs (name, position, road info via findClosestRoadInfo, custom fields). | 122 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/sites/location.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/sites/location.lua`.*

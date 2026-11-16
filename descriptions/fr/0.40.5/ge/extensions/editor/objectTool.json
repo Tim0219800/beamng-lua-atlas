@@ -1,0 +1,89 @@
+{
+  "path": "lua/ge/extensions/editor/objectTool.lua",
+  "module": "Mode d'édition principal du World Editor, « Manipulate Object(s) » (editor.editModes.objectSelect, icône crayon). Il gère la sélection d'objets (clic, rectangle, survol), le gizmo d'axes (déplacement, rotation, échelle, alignement local/monde, snapping, glisser-dupliquer avec Shift, alignement sur surface avec Ctrl+Alt), les boîtes englobantes dessinées (orange, rouge si verrouillé ; pour un véhicule, la sphère et les axes du nœud de référence), copier/coller/dupliquer/supprimer avec annulation (editor.history), ainsi que l'enregistrement des préférences « gizmos » (général, pinceau, icônes d'objets) et « snapping » (général, terrain, grille). Il ajoute aussi au menu de l'arbre de scène « Move Selection At Camera » et « Align Objects Individually To The Grid ». À l'initialisation il enregistre des fonctions sur la table globale editor (voir classe « editor »).",
+  "usage": "-- fonctions ajoutées à `editor` par ce module\neditor.selectObjectById(id)\neditor.duplicateSelectionAtCamera() -- copie la sélection à 10 m devant la caméra\neditor.moveSelectionAtCamera()      -- déplace la sélection à 10 m devant la caméra",
+  "notes": [
+    "onCut est un stub : il vérifie la sélection puis ne fait rien (TODO dans le code) ; couper n'est donc pas implémenté.",
+    "Le presse-papiers interne (copyObjectsArray) est propre au module et non le presse-papiers système (TODO dans le code).",
+    "Les raccourcis copier/coller/dupliquer/supprimer ne fonctionnent que si la vue 3D a le focus (editor.isViewportFocused()). Les objets verrouillés ne sont pas supprimés (notification « Some locked objects were not deleted! »).",
+    "Les fonctions drawSelectionBBox, drawSelectedObjectBBox, updateObjectSelectionAxisGizmo, duplicateSelectionAtCamera, duplicateSceneObjects et moveSelectionAtCamera sont exposées via la table editor (registerApi), pas via le module M.",
+    "onEditorInspectorFieldChanged : quand le champ startTime d'un objet TimeOfDay change, l'heure courante (core_environment) est réglée sur startTime.",
+    "Chaque mode d'édition mémorise l'état du gizmo (plan, grille, profils de flags, alignement, mode) à sa désactivation et le restaure à son activation."
+  ],
+  "functions": {
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : crée editor.editModes.objectSelect (action map ObjectTool, raccourcis de copie, collage, duplication, suppression), enregistre l'API sur editor, applique l'alignement local par défaut si la préférence est active et ajoute deux entrées au menu contextuel de l'arbre de scène.",
+      "internal": true
+    },
+    "onEditorRegisterPreferences": {
+      "desc": "Hook d'enregistrement des préférences : crée les catégories gizmos et snapping et leurs préférences (surbrillance de la sélection, icônes d'objets, couleurs, tailles de gizmo, grille, etc.).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "internal": true
+    },
+    "onEditorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change : répercute les réglages gizmos.* (icônes d'objets, couleurs, échelles, snapping fin, etc.) vers worldEditorCppApi.",
+      "params": {
+        "path": {"type": "string", "desc": "Chemin de la préférence, par ex. « gizmos.general.drawObjectIcons »."},
+        "value": {"type": "any", "desc": "Nouvelle valeur."}
+      },
+      "internal": true
+    },
+    "onEditorAxisGizmoAligmentChanged": {
+      "desc": "Hook appelé quand l'alignement du gizmo change (nom avec faute dans le jeu : « Aligment »). Si le mode d'édition courant est « Manipulate Object(s) », replace le gizmo sur la sélection.",
+      "internal": true
+    },
+    "onEditorInspectorFieldChanged": {
+      "desc": "Hook appelé quand un champ de l'inspecteur est modifié. Ne traite que le champ startTime d'un TimeOfDay.",
+      "params": {
+        "selectedIds": {"type": "integer[]", "desc": "Identifiants des objets sélectionnés ; seul le premier est examiné."},
+        "fieldName": {"type": "string", "desc": "Nom du champ modifié."},
+        "fieldValue": {"type": "any", "desc": "Nouvelle valeur (non utilisée)."},
+        "arrayIndex": {"type": "integer|nil", "desc": "Indice dans un champ tableau (non utilisé)."}
+      },
+      "internal": true
+    },
+    "onEditorEditModeActivated": {
+      "desc": "Hook appelé quand un mode d'édition est activé : restaure l'état de gizmo (editMode.axisGizmoRestoreState) mémorisé à sa dernière désactivation.",
+      "params": {"editMode": {"type": "table", "desc": "Mode d'édition activé."}},
+      "internal": true
+    },
+    "onEditorEditModeDeactivated": {
+      "desc": "Hook appelé quand un mode d'édition est désactivé : mémorise l'état du gizmo dans editMode.axisGizmoRestoreState.",
+      "params": {"editMode": {"type": "table", "desc": "Mode d'édition désactivé."}},
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Pas une classe : fonctions que ce module ajoute à la table globale editor lors de onEditorInitialized (registerApi).",
+      "functions": {
+        "drawSelectionBBox": {
+          "desc": "Dessine avec debugDrawer:drawLineInstance les 12 arêtes d'une boîte unité transformée par la matrice donnée.",
+          "params": {
+            "objMat": {"type": "MatrixF", "desc": "Matrice de transformation (position, rotation, échelle de la boîte)."},
+            "color": {"type": "ColorF", "desc": "Couleur des lignes."}
+          }
+        },
+        "drawSelectedObjectBBox": {
+          "desc": "Dessine la boîte englobante d'un objet de scène (ignore les objets sans getTransform). Pour un BeamNGVehicle, dessine à la place une sphère magenta et trois cylindres (axes rouge, bleu, vert) au nœud de référence, dont la taille suit la distance caméra sauf si gizmos.general.fixedRefnodeVisualization est actif.",
+          "params": {
+            "obj": {"type": "userdata", "desc": "Objet de scène (SimObject)."},
+            "color": {"type": "ColorF", "desc": "Couleur de la boîte (non utilisée pour un véhicule)."}
+          }
+        },
+        "updateObjectSelectionAxisGizmo": {
+          "desc": "Place le gizmo d'axes sur la sélection d'objets : orientation du dernier objet en mode local, position du dernier objet, du centre de la boîte de sélection ou du centroïde selon les préférences (snapping et gizmos.general.useObjectBoxCenter)."
+        },
+        "duplicateSelectionAtCamera": {
+          "desc": "Crée, avec annulation possible (action « DuplicateObjectsAtCamera »), une copie de la sélection déplacée pour que le gizmo se retrouve à 10 m devant la caméra."
+        },
+        "moveSelectionAtCamera": {
+          "desc": "Déplace la sélection (hors SimGroup) à 10 m devant la caméra, avec annulation possible (action « MoveSelectionAtCamera »)."
+        },
+        "duplicateSceneObjects": {
+          "desc": "Duplique la sélection : si le bouton gauche de la souris est enfoncé, colle immédiatement une copie des objets manipulables et passe en glisser-dupliquer ; sinon enregistre une action annulable « DuplicateObjects »."
+        }
+      }
+    }
+  }
+}

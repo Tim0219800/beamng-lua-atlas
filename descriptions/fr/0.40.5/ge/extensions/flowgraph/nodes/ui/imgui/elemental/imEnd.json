@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imEnd.lua",
+  "module": "Nœud flowgraph « im End » (catégorie repeat_instant, tag imgui) : termine la fenêtre imgui ouverte par « im Begin » (im.End). Aucun pin.",
+  "notes": [
+    "Un im End sans im Begin correspondant provoque une erreur imgui."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "work": {
+          "desc": "Appelle im.End().",
+          "internal": true
+        }
+      }
+    }
+  }
+}

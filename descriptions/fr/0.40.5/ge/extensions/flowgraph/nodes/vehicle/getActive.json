@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/getActive.lua",
+  "module": "Nœud « Get Vehicle Active » (catégorie `repeat_instant`). Lit l'état actif (visible) d'un véhicule avec `obj:getActive()`. Pin d'entrée : `vehId` (défaut : joueur). Sorties : flux `true` (actif), flux `false` (inactif), bool `isActive`.",
+  "notes": [
+    "La description du pin dit « set visibility » (copier-coller depuis Set Vehicle Active) ; ce nœud ne fait que lire."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "work": {
+          "desc": "Met à jour les sorties `true`, `false` et `isActive` selon `getActive()`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

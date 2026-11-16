@@ -1,18 +1,59 @@
 {
   "path": "lua/console/bananabench-xml.lua",
-  "module": "Script de la VM console : lance bananabench sur une liste fixe de 9 véhicules (barstow, burnside, etki, fullsize, moonhawk, pessima, pickup, pigeon, pressure_ball) et écrit un rapport XML « performance » (report > test > result avec success, performance, executiontime, compiletime et métriques realtime/maxmbeams) dans bananabench.xml. Il définit aussi une petite classe globale `XML` (create, addChild, encode, toString) pour générer du XML.",
+  "module": "Console VM script: runs bananabench on a fixed list of 9 vehicles (barstow, burnside, etki, fullsize, moonhawk, pessima, pickup, pigeon, pressure_ball) and writes an XML \"performance\" report (report > test > result with success, performance, executiontime, compiletime and realtime/maxmbeams metrics) to bananabench.xml. It also defines a small global `XML` class (create, addChild, encode, toString) to generate XML.",
   "notes": [
-    "Probablement cassé avec la version actuelle de bananabench : `writeXML` lit `v.tests[1].res[dynamicCol]` et les champs `beamspersec`, alors que bananabench.lua renvoie des `res` plats {Mbeamspersec, percentRealtime, time, spawntime} (sans indice 1/2 ni champ beamspersec) ; l'accès à res[dynamicCol] vaut nil et provoque une erreur.",
-    "Le script s'exécute au chargement ; la classe `XML` est une globale. Les variables `str` de XML:encode et XML:toString sont aussi globales (pas de `local`).",
-    "Les attributs `mesure` et `unit` du rapport reprennent le format d'un outil de reporting de performance externe ; le champ executed vaut toujours 'yes' et passed 'yes' (l'analyse des logs est commentée)."  ],
+    "Probably broken with the current version of bananabench: `writeXML` reads `v.tests[1].res[dynamicCol]` and the `beamspersec` fields, whereas bananabench.lua returns flat `res` {Mbeamspersec, percentRealtime, time, spawntime} (without index 1/2 or a beamspersec field); accessing res[dynamicCol] gives nil and causes an error.",
+    "The script runs on load; the `XML` class is a global. The `str` variables of XML:encode and XML:toString are also global (no `local`).",
+    "The report's `measure` and `unit` attributes follow the format of an external performance reporting tool; the executed field is always 'yes' and passed 'yes' (log analysis is commented out)."
+  ],
   "classes": {
     "XML": {
-      "desc": "Petit constructeur de document XML (classe globale).",
+      "desc": "Small XML document builder (global class).",
       "functions": {
-        "create": {"desc": "Crée un nœud XML vide (name, attribs, children).", "params": {}, "returns": [{"type": "table", "desc": "Nœud XML."}]},
-        "addChild": {"desc": "Ajoute un nœud enfant.", "params": {"xml": {"type": "table", "desc": "Nœud enfant."}}},
-        "encode": {"desc": "Renvoie le document complet avec l'en-tête `<?xml version=\"1.0\" encoding=\"UTF-8\"?>`.", "params": {}, "returns": [{"type": "string", "desc": "Texte XML."}]},
-        "toString": {"desc": "Sérialise le nœud et ses enfants avec indentation de 2 espaces.", "params": {"indent": {"type": "integer|nil", "desc": "Niveau d'indentation (défaut 0)."}}, "returns": [{"type": "string", "desc": "Texte XML."}]}
+        "create": {
+          "desc": "Creates an empty XML node (name, attribs, children).",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "XML node."
+            }
+          ]
+        },
+        "addChild": {
+          "desc": "Adds a child node.",
+          "params": {
+            "xml": {
+              "type": "table",
+              "desc": "Child node."
+            }
+          }
+        },
+        "encode": {
+          "desc": "Returns the complete document with the header `<?xml version=\"1.0\" encoding=\"UTF-8\"?>`.",
+          "params": {},
+          "returns": [
+            {
+              "type": "string",
+              "desc": "XML text."
+            }
+          ]
+        },
+        "toString": {
+          "desc": "Serializes the node and its children with 2-space indentation.",
+          "params": {
+            "indent": {
+              "type": "integer|nil",
+              "desc": "Indentation level (default 0)."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "XML text."
+            }
+          ]
+        }
       }
     }
   }

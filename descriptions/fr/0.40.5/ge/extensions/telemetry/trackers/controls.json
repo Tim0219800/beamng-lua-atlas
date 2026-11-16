@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/telemetry/trackers/controls.lua",
+  "module": "Suiveur de télémétrie des commandes : signale la méthode de direction utilisée (évènement ponctuel « controlsUsed ») et, à la fermeture du jeu, le nombre d'utilisations de chaque action liée (« inputActionUse », via ActionMap.getActionUseCounts). Les périphériques connectés relèvent du relevé matériel (tracker hardware), pas de celui-ci.",
+  "notes": [
+    "controlsUsed est un évènement ponctuel, pas une durée : la méthode ne change presque jamais dans une session. Elle est signalée par véhicule, donc un changement de véhicule la signale de nouveau.",
+    "L'extension se décharge avant que telemetry_core ne vide son tampon, donc l'évènement inputActionUse arrive encore dans le fichier.",
+    "Lors d'un rechargement Lua (onSerialize avec reason == « reload »), le rapport d'actions est sauté pour éviter les doublons ; il n'est rapporté qu'une fois par vie de l'extension."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+  },
+  "functions": {
+    "onSteeringFilterChanged": {
+      "desc": "Hook appelé quand le filtre de direction du véhicule change : enregistre l'évènement controlsUsed avec la méthode.",
+      "params": {"method": {"type": "string", "desc": "Méthode de direction (déduit du code : nom du filtre/mode de direction)."}},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : déchargement manuel.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook appelé au déchargement : envoie le décompte d'utilisation des actions (sauf rechargement Lua ou si déjà fait).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant déchargement/rechargement : retient si la raison est un rechargement Lua.",
+      "params": {"reason": {"type": "string", "desc": "Raison de la sérialisation (« reload » en cas de rechargement)."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

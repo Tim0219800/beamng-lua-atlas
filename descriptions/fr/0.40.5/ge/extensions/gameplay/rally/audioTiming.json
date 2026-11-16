@@ -1,0 +1,41 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/audioTiming.lua",
+  "module": "Bornes et fonctions de limitation (clamp) des réglages d'espacement audio du copilote de rallye, en millisecondes : écart entre virages, entre phrases, entre mots de liaison et entre notes. Chaque fonction arrondit la valeur à l'entier et la ramène dans la plage autorisée. Utilisé par l'éditeur/les réglages et par gameplay_rally_audioManager.",
+  "notes": [
+    "cornerGapMs, phraseGapMs et linkWordGapMs sont la MÊME table (min -200, max 200) : modifier l'une modifie les deux autres.",
+    "pacenoteGapMs : min -100, max 400.",
+    "Une valeur négative signifie un chevauchement des clips audio (déduit du nom du champ et de l'usage dans audioManager)."
+  ],
+  "fields": {
+    "cornerGapMs": {"type": "table", "desc": "Bornes {min=-200, max=200} de l'écart entre virages (ms). Table partagée avec phraseGapMs et linkWordGapMs."},
+    "phraseGapMs": {"type": "table", "desc": "Bornes {min=-200, max=200} de l'écart entre phrases (ms)."},
+    "linkWordGapMs": {"type": "table", "desc": "Bornes {min=-200, max=200} de l'écart avec les mots de liaison (ms)."},
+    "pacenoteGapMs": {"type": "table", "desc": "Bornes {min=-100, max=400} de l'écart entre deux notes (ms)."}
+  },
+  "functions": {
+    "clampCornerGapMs": {
+      "desc": "Arrondit et limite un écart entre virages à cornerGapMs.",
+      "params": {"value": {"type": "number|string", "desc": "Valeur en ms ; convertie par tonumber, 0 si invalide."}},
+      "returns": [{"type": "integer", "desc": "Valeur bornée en ms."}],
+      "internal": false
+    },
+    "clampPhraseGapMs": {
+      "desc": "Arrondit et limite un écart entre phrases à phraseGapMs.",
+      "params": {"value": {"type": "number|string", "desc": "Valeur en ms."}},
+      "returns": [{"type": "integer", "desc": "Valeur bornée en ms."}],
+      "internal": false
+    },
+    "clampLinkWordGapMs": {
+      "desc": "Arrondit et limite un écart de mot de liaison à linkWordGapMs.",
+      "params": {"value": {"type": "number|string", "desc": "Valeur en ms."}},
+      "returns": [{"type": "integer", "desc": "Valeur bornée en ms."}],
+      "internal": false
+    },
+    "clampPacenoteGapMs": {
+      "desc": "Arrondit et limite un écart entre notes à pacenoteGapMs.",
+      "params": {"value": {"type": "number|string", "desc": "Valeur en ms."}},
+      "returns": [{"type": "integer", "desc": "Valeur bornée en ms."}],
+      "internal": false
+    }
+  }
+}

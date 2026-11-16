@@ -2,37 +2,37 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/navMeshEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Éditeur du navmesh Recast (maillage de navigation de l'IA) dans le World Editor, modelé sur l'éditeur de rivières : un mode d'édition « Navigation Mesh », une barre d'outils, une interaction dans la vue 3D et deux fenêtres (« NavMesh Overview » : grille 2D des tuiles et formes de la tuile courante ; « navMeshTileView »). Six outils : tiles (sélection et verrouillage des tuiles pour qu'une reconstruction ne les change pas), outline (polygone de couverture), areas (volumes convexes typés Exclude/Ground/Road/Sidewalk/Water), links (liaisons hors maillage jump/drop/climb/teleport), test (recherche de chemin A vers B) et crowd (agents IA vivants). Tout est annulable. Il pilote les fonctions C++ navmeshEditor* (navmeshEditorBuild, navmeshEditorSave/Load, navmeshEditorFindPath, navmeshEditorCrowd*, etc.). Le navmesh est enregistré avec le niveau (onEditorAfterSaveLevel) et rechargé à l'ouverture.
---- Accès : extension `editor_navMeshEditor` : `extensions.load("editor_navMeshEditor")`, puis la globale `editor_navMeshEditor`
+--- Editor of the Recast navmesh (AI navigation mesh) in the World Editor, modeled on the river editor: a "Navigation Mesh" edit mode, a toolbar, an interaction in the 3D view and two windows ("NavMesh Overview": 2D grid of the tiles and shapes of the current tile; "navMeshTileView"). Six tools: tiles (selection and locking of tiles so a rebuild does not change them), outline (coverage polygon), areas (typed convex volumes Exclude/Ground/Road/Sidewalk/Water), links (off-mesh jump/drop/climb/teleport links), test (A to B pathfinding) and crowd (live AI agents). Everything is undoable. It drives the C++ functions navmeshEditor* (navmeshEditorBuild, navmeshEditorSave/Load, navmeshEditorFindPath, navmeshEditorCrowd*, etc.). The navmesh is saved with the level (onEditorAfterSaveLevel) and reloaded on opening.
+--- Access: extension `editor_navMeshEditor`: `extensions.load("editor_navMeshEditor")`, then the global `editor_navMeshEditor`
 ---@class editor_navMeshEditor
 editor_navMeshEditor = {}
 
---- Indique si le gizmo de transformation est autorisé : vrai uniquement quand le mode d'édition courant est « Navigation Mesh ».
----Source : lua/ge/extensions/editor/navMeshEditor.lua:971
----@return boolean  Vrai si le mode d'édition courant est celui du navmesh.
+--- Indicates whether the transform gizmo is allowed: true only when the current edit mode is "Navigation Mesh".
+---Source: lua/ge/extensions/editor/navMeshEditor.lua:971
+---@return boolean  True if the current edit mode is the navmesh one.
 function editor_navMeshEditor.allowGizmo() end
 
---- Hook appelé après l'ouverture d'un niveau dans l'éditeur : réinitialise polygones, aires, sélection, tuiles et liaisons ; le navmesh sera rechargé à la prochaine activation du mode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/navMeshEditor.lua:964
+--- Hook called after a level is opened in the editor: resets polygons, areas, selection, tiles and links; the navmesh will be reloaded at the next activation of the mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/navMeshEditor.lua:964
 function editor_navMeshEditor.onEditorAfterOpenLevel() end
 
---- Hook appelé après la sauvegarde d'un niveau dans l'éditeur : enregistre le navmesh avec le niveau.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/navMeshEditor.lua:963
+--- Hook called after a level is saved in the editor: saves the navmesh with the level.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/navMeshEditor.lua:963
 function editor_navMeshEditor.onEditorAfterSaveLevel() end
 
---- Hook d'éditeur appelé à chaque frame : dessine les fenêtres Overview et vue de tuile quand le mode navmesh est actif (ou le message d'API manquante).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/navMeshEditor.lua:900
+--- Editor hook called every frame: draws the Overview and tile view windows when the navmesh mode is active (or the missing API message).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/navMeshEditor.lua:900
 function editor_navMeshEditor.onEditorGui() end
 
---- Hook appelé à l'initialisation de l'éditeur : enregistre les deux fenêtres, le gestionnaire d'inspecteur « navMesh », le mode d'édition navMeshEditMode et l'entrée de menu « Navigation Mesh » (groupe Gameplay).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/navMeshEditor.lua:942
+--- Hook called at editor initialization: registers the two windows, the "navMesh" inspector handler, the navMeshEditMode edit mode and the "Navigation Mesh" menu entry (Gameplay group).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/navMeshEditor.lua:942
 function editor_navMeshEditor.onEditorInitialized() end
 
---- Sélectionne le mode d'édition « Navigation Mesh ».
----Source : lua/ge/extensions/editor/navMeshEditor.lua:920
+--- Selects the "Navigation Mesh" edit mode.
+---Source: lua/ge/extensions/editor/navMeshEditor.lua:920
 function editor_navMeshEditor.show() end
 

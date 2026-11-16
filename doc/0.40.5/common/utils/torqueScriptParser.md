@@ -1,39 +1,39 @@
 # `utils_torqueScriptParser`
 
-*Fichier : `lua/common/utils/torqueScriptParser.lua` · VM : Commun (GE + véhicule) · 108 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils/torqueScriptParser.lua` · VM: Common (GE + vehicle) · 108 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils/torqueScriptParser")`
+**Access:** `require("utils/torqueScriptParser")`
 
-Preuve de concept d'analyseur (parser PEG, via libs/lua-luaepnf/epnf) de fichiers TorqueScript : déclarations 'new/singleton/datablock', propriétés, fonctions (corps ignoré). Le fichier lui-même annonce 'pas complètement fonctionnel, loin d'être prêt'. Se charge avec require('utils/torqueScriptParser').
+Proof of concept of a parser (PEG parser, via libs/lua-luaepnf/epnf) for TorqueScript files: 'new/singleton/datablock' declarations, properties, functions (body ignored). The file itself states 'not completely functional, far from ready'. Loaded with require('utils/torqueScriptParser').
 
-## Exemple
+## Example
 
 ```lua
 local ts = require('utils/torqueScriptParser')
 local ok, ast = ts.parse(readFile('/levels/xxx/main.cs'))
 ```
 
-## Remarques
+## Notes
 
-- Le JIT est coupé (jit.off) pendant le chargement d'epnf car lulpeg tenterait d'utiliser l'indexation VLA non supportée.
-- parse renvoie directement le résultat de pcall : (true, ast) ou (false, message d'erreur).
-- Le corps des fonctions TorqueScript n'est pas analysé (accolades équilibrées uniquement).
+- The JIT is turned off (jit.off) while loading epnf because lulpeg would try to use VLA indexing, which is not supported.
+- parse directly returns the result of pcall: (true, ast) or (false, error message).
+- The body of TorqueScript functions is not parsed (balanced braces only).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_torqueScriptParser.parse(s)` | Analyse un texte TorqueScript avec la grammaire interne (epnf.parsestring) dans un pcall. | 95 |
+| `utils_torqueScriptParser.parse(s)` | Parses TorqueScript text with the internal grammar (epnf.parsestring) in a pcall. | 95 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_torqueScriptParser.parse(s)`
 
-Analyse un texte TorqueScript avec la grammaire interne (epnf.parsestring) dans un pcall.
+Parses TorqueScript text with the internal grammar (epnf.parsestring) in a pcall.
 
-- `s` (*string*) : Texte TorqueScript
-- **renvoie** : boolean true si l'analyse a réussi
-- **renvoie** : table|string Arbre syntaxique si succès, message d'erreur sinon
+- `s` (*string*) : TorqueScript text
+- **returns**: boolean true if parsing succeeded
+- **returns**: table|string Syntax tree on success, error message otherwise
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils/torqueScriptParser.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils/torqueScriptParser.lua`.*

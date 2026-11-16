@@ -1,13 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/environment/getScatterySky.lua",
-  "module": "Nœud flowgraph « Get ScatterSky » (catégorie provider, tags environment/tod). Lit les paramètres actuels du ciel ScatterSky via core_environment. Sorties : skyBrightness (luminosité globale) et, cachées, les fichiers de gradient (string) : colorizeGradientFile (couleur du ciel), sunScaleGradientFile (soleil), ambientScaleGradientFile (ambiance), fogScaleGradientFile (brouillard), nightGradientFile (ambiance de nuit), nightFogGradientFile (brouillard de nuit).",
+  "module": "Flowgraph node \"Get ScatterSky\" (category provider, tags environment/tod). Reads the current parameters of the ScatterSky sky via core_environment. Outputs: skyBrightness (global brightness) and, hidden, the gradient files (string): colorizeGradientFile (sky color), sunScaleGradientFile (sun), ambientScaleGradientFile (ambient), fogScaleGradientFile (fog), nightGradientFile (night ambient), nightFogGradientFile (night fog).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Chaque frame, lit les sept valeurs depuis core_environment et les écrit sur les sorties."}
+        "work": {
+          "desc": "Every frame, reads the seven values from core_environment and writes them to the outputs."
+        }
       }
     }
   }

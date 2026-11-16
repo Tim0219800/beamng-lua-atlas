@@ -2,54 +2,54 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre 'Flexbody Debug' du Vehicle Editor live, pour diagnostiquer les flexbodies (meshes déformables) du véhicule. Onglet 'Single Flexmesh' : choisir un flexbody (combo trié, favoris), régler la visibilité du mesh, afficher le flexbody choisi, picker un nœud ou un sommet (vertex) à la souris dans un rayon 'Max Dist from Cursor' (0 à 10 m) et visualiser leurs relations. Onglet 'All Flexmeshes' : trouver les sommets sans nœud proche et (mode expert) les sommets aux coordonnées hors limites. Dépend de editor_veMain.
---- Accès : extension `editor_vehicleEditor_liveEditor_veFlexbodyDebug` : `extensions.load("editor_vehicleEditor_liveEditor_veFlexbodyDebug")`, puis la globale `editor_vehicleEditor_liveEditor_veFlexbodyDebug`
+--- 'Flexbody Debug' window of the live Vehicle Editor, to diagnose the vehicle's flexbodies (deformable meshes). 'Single Flexmesh' tab: choose a flexbody (sorted combo, favorites), set the mesh visibility, display the chosen flexbody, pick a node or a vertex with the mouse within a 'Max Dist from Cursor' radius (0 to 10 m) and visualize their relationships. 'All Flexmeshes' tab: find vertices without a nearby node and (expert mode) vertices with out-of-range coordinates. Depends on editor_veMain.
+--- Access: extension `editor_vehicleEditor_liveEditor_veFlexbodyDebug`: `extensions.load("editor_vehicleEditor_liveEditor_veFlexbodyDebug")`, then the global `editor_vehicleEditor_liveEditor_veFlexbodyDebug`
 ---@class editor_vehicleEditor_liveEditor_veFlexbodyDebug
 ---@field dependencies table<integer, string> {'editor_veMain'}.
 ---@field menuEntry string 'Flexbody Debug'.
 editor_vehicleEditor_liveEditor_veFlexbodyDebug = {}
 
---- Restaure l'état d'ouverture.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1157
----@param data table Table de onSerialize.
+--- Restores the open state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1157
+---@param data table onSerialize table.
 function editor_vehicleEditor_liveEditor_veFlexbodyDebug.onDeserialized(data) end
 
---- Renvoie {windowOpen}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1151
+--- Returns {windowOpen}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1151
 ---@return table  {windowOpen = boolean}
 function editor_vehicleEditor_liveEditor_veFlexbodyDebug.onSerialize() end
 
---- Appelé chaque frame : initialise l'état du véhicule, dessine la fenêtre à onglets et les fenêtres annexes (sommets hors limites, sommets sans nœuds).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1108
----@param dt number Delta temps.
+--- Called every frame: initializes the vehicle state, draws the tabbed window and the side windows (out-of-range vertices, vertices without nodes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1108
+---@param dt number Time delta.
 function editor_vehicleEditor_liveEditor_veFlexbodyDebug.onUpdate(dt) end
 
---- Hook de rendu émis par editor_veMain : dessine le flexbody sélectionné et exécute le picking de nœud/sommet selon le mode courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:622
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulation (s).
----@param dtRaw number Delta temps brut (s).
+--- Render hook emitted by editor_veMain: draws the selected flexbody and runs the node/vertex picking according to the current mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:622
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation time delta (s).
+---@param dtRaw number Raw time delta (s).
 function editor_vehicleEditor_liveEditor_veFlexbodyDebug.onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw) end
 
---- Quand un véhicule apparaît, oublie ses données mémorisées.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1143
----@param id integer ID du véhicule.
+--- When a vehicle spawns, forgets its remembered data.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1143
+---@param id integer Vehicle ID.
 function editor_vehicleEditor_liveEditor_veFlexbodyDebug.onVehicleSpawned(id) end
 
---- Au changement de véhicule, bascule vers l'état (ou crée l'état) du nouveau véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1139
----@param oldVehicle integer ID de l'ancien véhicule.
----@param newVehicle integer ID du nouveau véhicule.
----@param player integer Index du joueur.
+--- On vehicle change, switches to the state of the new vehicle (or creates it).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1139
+---@param oldVehicle integer ID of the old vehicle.
+---@param newVehicle integer ID of the new vehicle.
+---@param player integer Player index.
 function editor_vehicleEditor_liveEditor_veFlexbodyDebug.onVehicleSwitched(oldVehicle, newVehicle, player) end
 
---- Ouvre la fenêtre.
----Source : lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1147
+--- Opens the window.
+---Source: lua/ge/extensions/editor/vehicleEditor/liveEditor/veFlexbodyDebug.lua:1147
 function editor_vehicleEditor_liveEditor_veFlexbodyDebug.open() end
 

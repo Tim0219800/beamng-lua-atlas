@@ -1,54 +1,108 @@
 {
   "path": "lua/ge/extensions/ui/policeInfo.lua",
-  "module": "Extension GE qui alimente l'interface des poursuites de police : elle lit gameplay_police.getPursuitData à chaque frame GUI et publie le flux 'policePursuit' (niveau, visibilité, jauges d'arrestation et de fuite, durée, drapeaux). Elle pousse aussi des alertes (PoliceAlertPush / PoliceAlertClear) pour les infractions et pour la fin de poursuite. Par défaut elle suit le véhicule du joueur, sauf si M.targetId est défini.",
-  "usage": "ui_policeInfo.targetId = vehId   -- suivre un autre véhicule\nui_policeInfo.showFinalStats = false\nlocal actif = ui_policeInfo.isPursuit()",
+  "module": "GE extension that feeds the police pursuit UI: it reads gameplay_police.getPursuitData every GUI frame and publishes the 'policePursuit' stream (level, visibility, arrest and evade gauges, duration, flags). It also pushes alerts (PoliceAlertPush / PoliceAlertClear) for offenses and for the end of a pursuit. By default it follows the player's vehicle, unless M.targetId is set.",
+  "usage": "ui_policeInfo.targetId = vehId   -- follow another vehicle\nui_policeInfo.showFinalStats = false\nlocal active = ui_policeInfo.isPursuit()",
   "notes": [
-    "Champs réglables : targetId (nil = joueur), showFinalStats (true : affiche score/infractions/unités à la fin ; false : affiche seulement succès/échec) et enabled (false coupe les mises à jour automatiques). L'extraction automatique a décalé leurs commentaires ; les définitions réelles sont dans le code.",
-    "liveData.state : 0 inactif, 1 poursuite, 2 fin (arrestation ou fuite terminée). En état 2 les données sont figées jusqu'à onPursuitStatsEnded ou la reprise d'une poursuite.",
-    "Dans onPursuitAction, les données de poursuite sont lues avec M.targetId (nil = joueur) et non avec vehId.",
-    "Les jauges arrest/evade sont lissées par lerp(…, 0.5) lorsqu'elles retombent à zéro, pour une barre de progression fluide."
+    "Adjustable fields: targetId (nil = player), showFinalStats (true: shows score/offenses/units at the end; false: shows only success/failure) and enabled (false stops the automatic updates). The automatic extraction shifted their comments; the actual definitions are in the code.",
+    "liveData.state: 0 inactive, 1 pursuit, 2 end (arrest or evade finished). In state 2 the data is frozen until onPursuitStatsEnded or the resumption of a pursuit.",
+    "In onPursuitAction, the pursuit data is read with M.targetId (nil = player) and not with vehId.",
+    "The arrest/evade gauges are smoothed by lerp(…, 0.5) when they drop to zero, for a smooth progress bar."
   ],
   "fields": {
-    "enabled": {"type": "boolean", "desc": "Défaut true. Mettre à false pour désactiver les mises à jour et alertes automatiques."},
-    "showFinalStats": {"type": "boolean", "desc": "Défaut true. Mettre à false pour ne pas afficher le récapitulatif (score, infractions, unités) en fin de poursuite."},
-    "targetId": {"type": "integer|nil", "desc": "Si défini, utilise les données de poursuite de ce véhicule au lieu de celles du joueur."}
+    "enabled": {
+      "type": "boolean",
+      "desc": "Default true. Set to false to disable the automatic updates and alerts."
+    },
+    "showFinalStats": {
+      "type": "boolean",
+      "desc": "Default true. Set to false to not show the summary (score, offenses, units) at the end of a pursuit."
+    },
+    "targetId": {
+      "type": "integer|nil",
+      "desc": "If set, uses the pursuit data of this vehicle instead of the player's."
+    }
   },
   "functions": {
     "isPursuit": {
-      "desc": "Indique si une poursuite est ou a été active (état de liveData > 0, y compris l'écran de fin).",
-      "returns": [{"type": "boolean", "desc": "true si state > 0."}],
+      "desc": "Indicates whether a pursuit is or has been active (liveData state > 0, including the end screen).",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if state > 0."
+        }
+      ],
       "internal": false
     },
     "resetPursuitTable": {
-      "desc": "Remet à zéro tous les nombres et drapeaux de liveData, efface les alertes (PoliceAlertClear) et republie le flux 'policePursuit'.",
+      "desc": "Resets all numbers and flags of liveData to zero, clears the alerts (PoliceAlertClear) and republishes the 'policePursuit' stream.",
       "internal": false
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé au changement de véhicule contrôlé ; remet la table à zéro si l'extension est activée et sans targetId.",
-      "params": {"_": {"type": "any", "desc": "Ignoré (déduit du code)."}, "id": {"type": "integer", "desc": "Id du nouveau véhicule (non utilisé)."}},
+      "desc": "Hook called when the controlled vehicle changes; resets the table if the extension is enabled and without targetId.",
+      "params": {
+        "_": {
+          "type": "any",
+          "desc": "Ignored (inferred from code)."
+        },
+        "id": {
+          "type": "integer",
+          "desc": "Id of the new vehicle (unused)."
+        }
+      },
       "internal": true
     },
     "onPursuitOffense": {
-      "desc": "Hook appelé quand une infraction est commise pendant une poursuite ; pousse une alerte de 3 s (texte ui.apps.police.offenseAlert avec le nom traduit ui.traffic.infractions.<name>) si le véhicule est la cible ou le joueur.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule en infraction."}, "name": {"type": "string", "desc": "Nom de l'infraction."}, "data": {"type": "table", "desc": "Données supplémentaires (non utilisées)."}},
+      "desc": "Hook called when an offense is committed during a pursuit; pushes a 3 s alert (text ui.apps.police.offenseAlert with the translated name ui.traffic.infractions.<name>) if the vehicle is the target or the player.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Offending vehicle."
+        },
+        "name": {
+          "type": "string",
+          "desc": "Offense name."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Additional data (unused)."
+        }
+      },
       "internal": true
     },
     "onPursuitAction": {
-      "desc": "Hook appelé pour une action de poursuite. Sur 'arrest' ou 'evade' : passe en état 2, met la jauge correspondante à 1, efface les alertes et affiche soit le récapitulatif (score, nombre d'infractions, barrages ou unités de police), soit un simple échec/succès selon showFinalStats.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule concerné."}, "action": {"type": "string", "desc": "'arrest' ou 'evade' (les autres actions sont ignorées)."}, "data": {"type": "table", "desc": "Non utilisé."}},
+      "desc": "Hook called for a pursuit action. On 'arrest' or 'evade': switches to state 2, sets the corresponding gauge to 1, clears the alerts and shows either the summary (score, number of offenses, roadblocks or police units), or a simple failure/success depending on showFinalStats.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle concerned."
+        },
+        "action": {
+          "type": "string",
+          "desc": "'arrest' or 'evade' (other actions are ignored)."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Not used."
+        }
+      },
       "internal": true
     },
     "onPursuitStatsEnded": {
-      "desc": "Hook appelé quand les statistiques de fin de poursuite sont terminées ; remet la table à zéro si on est en état 2.",
+      "desc": "Hook called when the pursuit end statistics are finished; resets the table if in state 2.",
       "internal": true
     },
     "onUiChangedState": {
-      "desc": "Hook appelé quand l'interface change d'état ; remet la table à zéro.",
+      "desc": "Hook called when the UI changes state; resets the table.",
       "internal": true
     },
     "onGuiUpdate": {
-      "desc": "Hook appelé à chaque frame GUI : lit les données de poursuite, met à jour niveau, visibilité, jauges, durée (format m:ss ou h:mm:ss) et drapeaux, puis publie 'policePursuit'. Ne fait rien si be:getEnabled() est faux ou si l'extension est désactivée.",
-      "params": {"dt": {"type": "number", "desc": "Delta de temps en secondes (non utilisé)."}},
+      "desc": "Hook called every GUI frame: reads the pursuit data, updates level, visibility, gauges, duration (format m:ss or h:mm:ss) and flags, then publishes 'policePursuit'. Does nothing if be:getEnabled() is false or if the extension is disabled.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time delta in seconds (unused)."
+        }
+      },
       "internal": true
     }
   }

@@ -1,44 +1,44 @@
 # `gameplay_freeformDelivery_hints`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/hints.lua` · VM : Game Engine (GE) · 191 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/hints.lua` · VM: Game Engine (GE) · 191 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_hints` : `extensions.load("gameplay_freeformDelivery_hints")`, puis la globale `gameplay_freeformDelivery_hints`
+**Access:** extension `gameplay_freeformDelivery_hints`: `extensions.load("gameplay_freeformDelivery_hints")`, then the global `gameplay_freeformDelivery_hints`
 
-Gère les indices (hints) du mode de livraison libre : chaque hint de la livraison (id, targetAreaIds, message, subtext) s'affiche comme message dans la liste de tâches (SetTasklistTask) tant que le joueur se trouve dans l'une de ses zones cibles (zone, location ou parkingSpot), puis disparaît (DiscardTasklistItem) quand il en sort. Appelé par gameplay_freeformDelivery_freeformDelivery, pas par le moteur.
+Manages the hints of the freeform delivery mode: each delivery hint (id, targetAreaIds, message, subtext) is displayed as a message in the task list (SetTasklistTask) as long as the player is inside one of its target areas (zone, location or parkingSpot), then disappears (DiscardTasklistItem) when they leave. Called by gameplay_freeformDelivery_freeformDelivery, not by the engine.
 
-## Remarques
+## Notes
 
-- Un hint sans id ou sans targetAreaIds est ignoré (avertissement loggué). Le message par défaut est la clé missions.freeformDelivery.common.hint.fallback.
-- Détection : joueur en véhicule = gameplay_freeformDelivery_utils.checkVehicleInArea ; joueur à pied = test manuel (containsPoint2D pour zone, distance <= rayon pour location, boîte orientée pour parkingSpot).
-- Les tâches de la tasklist ont l'id « hint_<id> » et le type message.
-- Le paramètre profiler de update est facultatif : il sert à y ajouter des sections de mesure (p:add).
+- A hint without id or without targetAreaIds is ignored (logged warning). The default message is the key missions.freeformDelivery.common.hint.fallback.
+- Detection: player in vehicle = gameplay_freeformDelivery_utils.checkVehicleInArea; player on foot = manual test (containsPoint2D for zone, distance <= radius for location, oriented box for parkingSpot).
+- Tasklist tasks have the id "hint_<id>" and the type message.
+- The profiler parameter of update is optional: it is used to add measurement sections (p:add).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_hints.cleanup()` | Retire tous les hints affichés de la tasklist et oublie la livraison active. | 179 |
-| `gameplay_freeformDelivery_hints.setup(delivery)` | Initialise les hints à partir de delivery.hints et mémorise la livraison active. Logge le nombre de hints chargés. | 92 |
-| `gameplay_freeformDelivery_hints.update(dtReal, dtSim, dtRaw, profiler)` | À appeler à chaque frame : affiche les hints dont une zone cible contient le joueur et masque les autres. Sans effet si aucune livraison n'est active ou si la position du joueur est inconnue. | 128 |
+| `gameplay_freeformDelivery_hints.cleanup()` | Removes all displayed hints from the tasklist and forgets the active delivery. | 179 |
+| `gameplay_freeformDelivery_hints.setup(delivery)` | Initializes the hints from delivery.hints and stores the active delivery. Logs the number of hints loaded. | 92 |
+| `gameplay_freeformDelivery_hints.update(dtReal, dtSim, dtRaw, profiler)` | To be called every frame: displays the hints whose target area contains the player and hides the others. No effect if no delivery is active or if the player's position is unknown. | 128 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_hints.setup(delivery)`
 
-Initialise les hints à partir de delivery.hints et mémorise la livraison active. Logge le nombre de hints chargés.
+Initializes the hints from delivery.hints and stores the active delivery. Logs the number of hints loaded.
 
-- `delivery` (*table*) : Livraison chargée (hints, targetAreas, sites).
+- `delivery` (*table*) : Loaded delivery (hints, targetAreas, sites).
 
 #### `gameplay_freeformDelivery_hints.update(dtReal, dtSim, dtRaw, profiler)`
 
-À appeler à chaque frame : affiche les hints dont une zone cible contient le joueur et masque les autres. Sans effet si aucune livraison n'est active ou si la position du joueur est inconnue.
+To be called every frame: displays the hints whose target area contains the player and hides the others. No effect if no delivery is active or if the player's position is unknown.
 
-- `dtReal` (*number*) : Delta temps réel (inutilisé).
-- `dtSim` (*number*) : Delta temps simulé (inutilisé).
-- `dtRaw` (*number*) : Delta temps brut (inutilisé).
-- `profiler` (*table|nil*) : LuaProfiler facultatif pour mesurer les sections.
+- `dtReal` (*number*) : Real time delta (unused).
+- `dtSim` (*number*) : Simulated time delta (unused).
+- `dtRaw` (*number*) : Raw time delta (unused).
+- `profiler` (*table|nil*) : Optional LuaProfiler for measuring sections.
 
-**Évènements UI (guihooks.trigger) :** `DiscardTasklistItem`, `SetTasklistTask`
+**UI events (guihooks.trigger):** `DiscardTasklistItem`, `SetTasklistTask`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/hints.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/hints.lua`.*

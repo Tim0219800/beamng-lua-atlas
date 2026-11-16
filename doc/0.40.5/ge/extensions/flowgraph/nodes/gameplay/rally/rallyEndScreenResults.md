@@ -1,22 +1,22 @@
 # `flowgraph_nodes_gameplay_rally_rallyEndScreenResults`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults.lua` · VM : Game Engine (GE) · 89 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults.lua` · VM: Game Engine (GE) · 89 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally End Screen Results » (catégorie repeat_instant, couleur rally, icône ui). Ajoute à l'écran de fin de mission des panneaux de texte : la tentative formatée (change.formattedAttempt), le texte de fin de la mission (missionTypeData.endScreenText) et un texte supplémentaire (pin text, ex. résultat avec médaille), plus optionnellement les objectifs et les notes (includeObjectives, includeRatings via mgr.modules.ui). Titre : missionTypeData.outroTitleText, sinon 'ui.missions.results.title' ; il n'est affiché que sur le premier panneau. Entrées : flow, text (string ou table), change, includeObjectives, includeRatings. Sortie : flow.
+Flowgraph node "Rally End Screen Results" (category repeat_instant, rally color, ui icon). Adds text panels to the mission end screen: the formatted attempt (change.formattedAttempt), the mission end text (missionTypeData.endScreenText) and an additional text (text pin, e.g. result with medal), plus optionally the objectives and the ratings (includeObjectives, includeRatings via mgr.modules.ui). Title: missionTypeData.outroTitleText, otherwise 'ui.missions.results.title'; it is only shown on the first panel. Inputs: flow, text (string or table), change, includeObjectives, includeRatings. Output: flow.
 
-## Remarques
+## Notes
 
-- Le texte supplémentaire est ignoré s'il a la même clé de traduction que le texte de la mission.
+- The additional text is ignored if it has the same translation key as the mission text.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame : recopie flow et ajoute les éléments UI (textPanel, objectifs, notes) au module ui du flowgraph. | 36 |
+| `C:work()` | Every frame: copies flow and adds the UI elements (textPanel, objectives, ratings) to the flowgraph ui module. | 36 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/rallyEndScreenResults.lua`.*

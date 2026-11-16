@@ -1,0 +1,116 @@
+{
+  "path": "lua/ge/extensions/telemetry/performanceSpatialDetector.test.lua",
+  "module": "Tests unitaires de telemetry/performanceSpatialDetector (runTestFiles(\"performanceSpatialDetector\")).",
+  "functions": {
+    "testAbsoluteDip": {
+      "desc": "Vérifie qu'une chute sous le seuil de FPS absolu produit un événement au retour à la normale.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testRelativeDip": {
+      "desc": "Vérifie qu'un temps de frame supérieur à baseline * ratio produit un événement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testDipMustBeSustained": {
+      "desc": "Vérifie qu'une chute plus courte que dipMinDurationMs ne produit rien.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testRecoveryWithoutObservedDurationDoesNotEmit": {
+      "desc": "Vérifie qu'un épisode sans durée observée (un seul échantillon) n'émet pas d'événement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testRecoveryEmitsWorstFrameOnce": {
+      "desc": "Vérifie que la pire frame est capturée une fois puis que l'événement est émis à la reprise.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testIntentionalCapDisablesAbsoluteTrigger": {
+      "desc": "Vérifie qu'avec absoluteAllowed = false, un FPS plafonné ne déclenche pas de chute absolue.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testOpenSustainedDipCanBeFinished": {
+      "desc": "Vérifie que finish() clôt un épisode ouvert et soutenu.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testLongDipIsSegmented": {
+      "desc": "Vérifie qu'un épisode dépassant maxEpisodeMs est découpé.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testCooldownSuppressesDip": {
+      "desc": "Vérifie que le délai de repos supprime un nouvel épisode.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testSessionCapSuppressesDip": {
+      "desc": "Vérifie que maxDipEventsPerSession plafonne le nombre d'événements.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

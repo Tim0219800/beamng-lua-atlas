@@ -2,246 +2,246 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/quickAccess.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE `core_quickAccess` : le menu radial (menu rapide) du jeu. Elle garde un arbre de menus (chemins du type '/root/sandbox/other/'), l'assemble à l'ouverture (entrées statiques, générateurs, entrées demandées au véhicule joueur), le positionne sur les 8 emplacements du cercle puis l'envoie à l'interface (guihooks 'radialMenuUpdated', route UI 'radial'). Elle ralentit le temps pendant que le menu est ouvert, mémorise les actions récentes et la configuration des emplacements dynamiques (settings/radialRecentActions.json et settings/radialDynamicSlotSettings.json). Un mod ajoute ses propres boutons avec core_quickAccess.addEntry, de préférence dans le hook onRegisterQuickAccessMenus.
---- Accès : extension `core_quickAccess` : `extensions.load("core_quickAccess")`, puis la globale `core_quickAccess`
+--- GE extension `core_quickAccess`: the game's radial menu (quick menu). It keeps a menu tree (paths like '/root/sandbox/other/'), assembles it on opening (static entries, generators, entries requested from the player vehicle), positions it on the 8 slots of the circle then sends it to the UI (guihooks 'radialMenuUpdated', UI route 'radial'). It slows down time while the menu is open, remembers recent actions and the dynamic slot configuration (settings/radialRecentActions.json and settings/radialDynamicSlotSettings.json). A mod adds its own buttons with core_quickAccess.addEntry, preferably in the onRegisterQuickAccessMenus hook.
+--- Access: extension `core_quickAccess`: `extensions.load("core_quickAccess")`, then the global `core_quickAccess`
 ---@class core_quickAccess
----@field dependencies string[] { 'core_vehicleTriggers', 'core_funstuff' }, chargées avant cette extension.
+---@field dependencies string[] { 'core_vehicleTriggers', 'core_funstuff' }, loaded before this extension.
 core_quickAccess = {}
 
---- Ajoute (ou remplace, si uniqueID identique au même level) une entrée dans l'arbre du menu radial. Voir notes pour tous les champs. Renvoie false seulement si `level` n'est pas une chaîne ; un avertissement est loggé si l'entrée n'a ni générateur, ni title avec onSelect/goto, mais l'entrée est quand même ajoutée.
----Source : lua/ge/extensions/core/quickAccess.lua:619
+--- Adds (or replaces, if same uniqueID at the same level) an entry in the radial menu tree. See notes for all fields. Returns false only if `level` is not a string; a warning is logged if the entry has neither generator, nor title with onSelect/goto, but the entry is still added.
+---Source: lua/ge/extensions/core/quickAccess.lua:619
 ---@param _args table { level, generator | (title, onSelect|goto, icon, desc, uniqueID, priority, startSlot, endSlot, ... ) }
----@return boolean  true si ajoutée, false si level invalide.
+---@return boolean  true if added, false if level is invalid.
 function core_quickAccess.addEntry(_args) end
 
---- Callback de l'interface : demande au véhicule joueur d'ajuster la vitesse du régulateur (extension côté véhicule).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2480
----@param direction number Positif = augmenter, négatif = diminuer ; 0 ou non-nombre ignoré.
+--- UI callback: asks the player vehicle to adjust the cruise control speed (vehicle-side extension).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2480
+---@param direction number Positive = increase, negative = decrease; 0 or non-number ignored.
 function core_quickAccess.adjustCruiseSpeed(direction) end
 
---- Revient au niveau précédent (historique), ou au niveau parent selon le chemin si l'historique est vide.
----Source : lua/ge/extensions/core/quickAccess.lua:2182
----@return boolean  true si on a changé de niveau, false sinon (menu fermé ou déjà en haut).
+--- Goes back to the previous level (history), or to the parent level according to the path if the history is empty.
+---Source: lua/ge/extensions/core/quickAccess.lua:2182
+---@return boolean  true if the level changed, false otherwise (menu closed or already at the top).
 function core_quickAccess.back() end
 
---- Marque le passage du menu radial vers un écran enfant (ex. radial.mirrors) sans vraie fermeture, et masque temporairement l'interface.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2219
+--- Marks the transition from the radial menu to a child screen (e.g. radial.mirrors) without a real close, and temporarily hides the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2219
 function core_quickAccess.beginRouteHandoff() end
 
---- Efface l'historique des actions récentes et émet onQuickAccessClearRecentActions.
----Source : lua/ge/extensions/core/quickAccess.lua:2279
+--- Clears the recent actions history and emits onQuickAccessClearRecentActions.
+---Source: lua/ge/extensions/core/quickAccess.lua:2279
 function core_quickAccess.clearRecentActions() end
 
---- Appelée par l'interface pour l'action contextuelle d'un bouton (ex. ouvrir la configuration d'un emplacement dynamique).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2499
----@param id integer Indice de l'item.
----@param buttonDown boolean Non utilisé (déduit du code).
----@param actionIndex integer|nil Non utilisé (déduit du code).
+--- Called by the UI for a button's context action (e.g. opening the configuration of a dynamic slot).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2499
+---@param id integer Item index.
+---@param buttonDown boolean Unused (inferred from code).
+---@param actionIndex integer|nil Unused (inferred from code).
 function core_quickAccess.contextAction(id, buttonDown, actionIndex) end
 
---- Termine le handoff et réaffiche le menu (temps ralenti de nouveau).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2224
+--- Ends the handoff and shows the menu again (time slowed down again).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2224
 function core_quickAccess.endRouteHandoff() end
 
---- Nettoie l'état radial quand un écran enfant retourne directement au jeu, sans renaviguer vers 'play'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2237
+--- Cleans up the radial state when a child screen returns directly to the game, without navigating back to 'play'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2237
 function core_quickAccess.finishRouteHandoffExit() end
 
---- Prépare pour l'interface les données de configuration de l'emplacement ouvert par openDynamicSlotConfigurator (arbre de menus et réglage courant). Plante si aucun emplacement n'a été ouvert.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:467
----@return table  Données pour l'interface.
+--- Prepares for the UI the configuration data of the slot opened by openDynamicSlotConfigurator (menu tree and current setting). Crashes if no slot has been opened.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:467
+---@return table  Data for the UI.
 function core_quickAccess.getDynamicSlotConfigurationData() end
 
---- Renvoie les actions récentes (de la catégorie donnée) encore disponibles dans le menu, hors celles déjà affectées à un emplacement 'uniqueAction', limitées à `limit`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:1897
----@param category string Catégorie (ex. 'all').
----@param limit integer|nil Nombre max ; nil ou 0 renvoie {}.
----@param dynamicItems table[]|nil Items de type dynamicSlot du niveau courant.
----@return table[]  Enregistrements { uniqueID, level, title, timestamp, icon }.
+--- Returns the recent actions (of the given category) still available in the menu, excluding those already assigned to a 'uniqueAction' slot, limited to `limit`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:1897
+---@param category string Category (e.g. 'all').
+---@param limit integer|nil Max number; nil or 0 returns {}.
+---@param dynamicItems table[]|nil dynamicSlot-type items of the current level.
+---@return table[]  Records { uniqueID, level, title, timestamp, icon }.
 function core_quickAccess.getMostRecentAvailableActions(category, limit, dynamicItems) end
 
---- Renvoie l'instant (ms système) du dernier appel de moved().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2537
----@return number  Millisecondes (0 si jamais).
+--- Returns the time (system ms) of the last call to moved().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2537
+---@return number  Milliseconds (0 if never).
 function core_quickAccess.getMovedRadialLastTimeMs() end
 
---- Renvoie les données envoyées à l'interface du menu : canGoBack, items, categories, pathBeforeCategory, selectedCategory, backButtonIndex, currentLevel, breadcrumbs, menuIcon, hasLRShoulderButtons, tutorialHighlightTargets.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:1765
----@return table|nil  uiData, nil avant la première ouverture.
+--- Returns the data sent to the menu UI: canGoBack, items, categories, pathBeforeCategory, selectedCategory, backButtonIndex, currentLevel, breadcrumbs, menuIcon, hasLRShoulderButtons, tutorialHighlightTargets.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:1765
+---@return table|nil  uiData, nil before the first opening.
 function core_quickAccess.getUiData() end
 
---- Construit un nom lisible du véhicule : marque, nom et configuration d'après core_vehicles.getModel ; sinon le nom JBeam.
----Source : lua/ge/extensions/core/quickAccess.lua:2660
----@param veh userdata|nil Objet véhicule ; nil renvoie la clé de traduction 'ui.radialmenu2.noVehicle'.
----@return string  Nom du véhicule.
+--- Builds a readable vehicle name: brand, name and configuration from core_vehicles.getModel; otherwise the JBeam name.
+---Source: lua/ge/extensions/core/quickAccess.lua:2660
+---@param veh userdata|nil Vehicle object; nil returns the translation key 'ui.radialmenu2.noVehicle'.
+---@return string  Vehicle name.
 function core_quickAccess.getVehicleName(veh) end
 
---- Va vers un autre niveau de menu en empilant le niveau actuel dans l'historique (pour back).
----Source : lua/ge/extensions/core/quickAccess.lua:2138
----@param level string Chemin du niveau cible.
+--- Goes to another menu level, pushing the current level onto the history (for back).
+---Source: lua/ge/extensions/core/quickAccess.lua:2138
+---@param level string Path of the target level.
 function core_quickAccess.gotoLevel(level) end
 
---- Indique si le menu radial est actuellement affiché.
----Source : lua/ge/extensions/core/quickAccess.lua:275
----@return boolean  true si l'interface radiale est visible.
+--- Indicates whether the radial menu is currently displayed.
+---Source: lua/ge/extensions/core/quickAccess.lua:275
+---@return boolean  true if the radial UI is visible.
 function core_quickAccess.isEnabled() end
 
---- Indique si un handoff vers un écran enfant est en cours.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2230
----@return boolean  true si actif.
+--- Indicates whether a handoff to a child screen is in progress.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2230
+---@return boolean  true if active.
 function core_quickAccess.isRouteHandoffActive() end
 
---- Enregistre l'instant actuel comme dernier mouvement du curseur radial (appelé par l'interface).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2541
+--- Records the current time as the last movement of the radial cursor (called by the UI).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2541
 function core_quickAccess.moved() end
 
---- Avant l'ouverture de la grande carte : ferme le menu radial.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2656
+--- Before the big map opens: closes the radial menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2656
 function core_quickAccess.onBeforeBigMapActivated() end
 
---- À la fin d'un niveau : sauvegarde les actions récentes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2632
+--- At the end of a level: saves the recent actions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2632
 function core_quickAccess.onClientEndMission() end
 
---- À la fermeture du jeu : sauvegarde les actions récentes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2628
+--- When the game closes: saves the recent actions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2628
 function core_quickAccess.onExit() end
 
---- Au chargement : émet onQuickAccessLoaded, lit les actions récentes et les réglages d'emplacements dynamiques.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2618
+--- On load: emits onQuickAccessLoaded, reads the recent actions and the dynamic slot settings.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2618
 function core_quickAccess.onExtensionLoaded() end
 
---- Au déchargement : sauvegarde les actions récentes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2624
+--- On unload: saves the recent actions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2624
 function core_quickAccess.onExtensionUnloaded() end
 
---- Hook d'initialisation de l'extension : au premier appel enregistre les menus par défaut (puis émet onRegisterQuickAccessMenus), puis ferme le menu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2471
+--- Extension initialization hook: on the first call registers the default menus (then emits onRegisterQuickAccessMenus), then closes the menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2471
 function core_quickAccess.onInit() end
 
---- Avant un rechargement Lua : ferme le menu et sauvegarde actions récentes et emplacements dynamiques.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2650
+--- Before a Lua reload: closes the menu and saves recent actions and dynamic slots.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2650
 function core_quickAccess.onSerialize() end
 
---- Quand la route UI change : si une autre route prend le dessus pendant que le menu est visible, le ferme sans naviguer ; termine aussi un handoff quand l'état devient 'play'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2640
----@param toState string Nouvel état/route UI.
+--- When the UI route changes: if another route takes over while the menu is visible, closes it without navigating; also ends a handoff when the state becomes 'play'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2640
+---@param toState string New UI state/route.
 function core_quickAccess.onUiChangedState(toState) end
 
---- Appelé à chaque frame GFX : gère le délai d'attente des entrées du véhicule (4 frames) et force l'assemblage si le véhicule ne répond pas.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2590
+--- Called every GFX frame: handles the wait delay for the vehicle's entries (4 frames) and forces assembly if the vehicle does not respond.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2590
 function core_quickAccess.onUpdate() end
 
---- Quand un véhicule apparaît : sauvegarde les actions récentes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2636
+--- When a vehicle spawns: saves the recent actions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2636
 function core_quickAccess.onVehicleSpawned() end
 
---- Au changement de véhicule joueur : recharge le menu s'il est ouvert.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2611
+--- When the player vehicle changes: reloads the menu if it is open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2611
 function core_quickAccess.onVehicleSwitched() end
 
---- Ouvre l'écran de configuration d'un emplacement dynamique (guihooks 'OpenDynamicSlotConfigurator', hook onOpenDynamicSlotConfigurator).
----Source : lua/ge/extensions/core/quickAccess.lua:460
----@param dynamicSlotKey string Id de l'emplacement (ex. 'root_up').
+--- Opens the configuration screen of a dynamic slot (guihooks 'OpenDynamicSlotConfigurator', hook onOpenDynamicSlotConfigurator).
+---Source: lua/ge/extensions/core/quickAccess.lua:460
+---@param dynamicSlotKey string Slot id (e.g. 'root_up').
 function core_quickAccess.openDynamicSlotConfigurator(dynamicSlotKey) end
 
---- Obsolète : logge une erreur demandant d'utiliser addEntry, ne fait rien d'autre.
----Source : lua/ge/extensions/core/quickAccess.lua:2754
+--- Deprecated: logs an error asking to use addEntry, does nothing else.
+---Source: lua/ge/extensions/core/quickAccess.lua:2754
 function core_quickAccess.registerMenu() end
 
---- Reconstruit et réaffiche le niveau courant (si le menu est ouvert).
----Source : lua/ge/extensions/core/quickAccess.lua:2178
+--- Rebuilds and redisplays the current level (if the menu is open).
+---Source: lua/ge/extensions/core/quickAccess.lua:2178
 function core_quickAccess.reload() end
 
---- Restaure la configuration par défaut des emplacements dynamiques, la sauvegarde et émet onQuickAccessResetDynamicSlotSettings.
----Source : lua/ge/extensions/core/quickAccess.lua:347
+--- Restores the default configuration of the dynamic slots, saves it and emits onQuickAccessResetDynamicSlotSettings.
+---Source: lua/ge/extensions/core/quickAccess.lua:347
 function core_quickAccess.resetDynamicSlotSettings() end
 
---- Remet le facteur de ralenti à sa valeur d'origine (0.01).
----Source : lua/ge/extensions/core/quickAccess.lua:26
+--- Resets the slow-motion factor to its original value (0.01).
+---Source: lua/ge/extensions/core/quickAccess.lua:26
 function core_quickAccess.resetSlowMoFactor() end
 
---- Appelée par l'interface quand le joueur appuie/relâche un bouton : exécute l'action de l'item d'index id dans le menu courant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2488
----@param id integer Indice (base 1) de l'item dans currentMenuItems.
----@param buttonDown boolean true à l'appui, false au relâchement.
----@param actionIndex integer|nil 1 = principale, 2 = secondaire, 3 = tertiaire (défaut 1).
+--- Called by the UI when the player presses/releases a button: runs the action of the item with index id in the current menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2488
+---@param id integer Index (1-based) of the item in currentMenuItems.
+---@param buttonDown boolean true on press, false on release.
+---@param actionIndex integer|nil 1 = primary, 2 = secondary, 3 = tertiary (default 1).
 function core_quickAccess.selectItem(id, buttonDown, actionIndex) end
 
---- Enregistre le choix du joueur pour un emplacement dynamique (modes uniqueAction, recentActions ou empty), émet les hooks onQuickAccessSetUniqueAction / SetRecentActions / SetEmpty puis onQuickAccessSetDynamicSlotConfiguration, sauvegarde et recharge le menu.
----Source : lua/ge/extensions/core/quickAccess.lua:534
----@param dynamicSlotKey string Id de l'emplacement.
----@param data table { mode, uniqueID, level } ou { mode, category }.
+--- Saves the player's choice for a dynamic slot (modes uniqueAction, recentActions or empty), emits the hooks onQuickAccessSetUniqueAction / SetRecentActions / SetEmpty then onQuickAccessSetDynamicSlotConfiguration, saves and reloads the menu.
+---Source: lua/ge/extensions/core/quickAccess.lua:534
+---@param dynamicSlotKey string Slot id.
+---@param data table { mode, uniqueID, level } or { mode, category }.
 function core_quickAccess.setDynamicSlotConfiguration(dynamicSlotKey, data) end
 
---- Ouvre ou ferme le menu. L'ouverture n'a lieu que si l'état UI est 'play' ou inconnu, ou si le menu est déjà visible, ou si force. Émet le hook onQuickAccessOpened(level). La fermeture est ignorée pendant un route handoff.
----Source : lua/ge/extensions/core/quickAccess.lua:2511
----@param enabled boolean true pour ouvrir, false pour fermer.
----@param level string|nil Niveau à ouvrir (ex. '/root/sandbox/other/') ; nil = '/root/'.
----@param force boolean|nil Ouvre même si un autre écran est actif.
+--- Opens or closes the menu. Opening only happens if the UI state is 'play' or unknown, or if the menu is already visible, or if force. Emits the onQuickAccessOpened(level) hook. Closing is ignored during a route handoff.
+---Source: lua/ge/extensions/core/quickAccess.lua:2511
+---@param enabled boolean true to open, false to close.
+---@param level string|nil Level to open (e.g. '/root/sandbox/other/'); nil = '/root/'.
+---@param force boolean|nil Opens even if another screen is active.
 function core_quickAccess.setEnabled(enabled, level, force) end
 
---- Définit le facteur de temps (simTimeAuthority) appliqué pendant que le menu radial est ouvert. 0.01 par défaut.
----Source : lua/ge/extensions/core/quickAccess.lua:25
----@param factor number Facteur de vitesse de simulation (1 = temps réel).
+--- Sets the time factor (simTimeAuthority) applied while the radial menu is open. 0.01 by default.
+---Source: lua/ge/extensions/core/quickAccess.lua:25
+---@param factor number Simulation speed factor (1 = real time).
 function core_quickAccess.setSlowMoFactor(factor) end
 
---- Définit la liste d'identifiants à mettre en évidence dans le menu (tutoriel). Les valeurs non chaînes, vides ou en double sont filtrées. Rafraîchit l'interface si visible.
----Source : lua/ge/extensions/core/quickAccess.lua:1769
----@param targets string[] Identifiants de cibles.
+--- Sets the list of identifiers to highlight in the menu (tutorial). Non-string, empty or duplicate values are filtered out. Refreshes the UI if visible.
+---Source: lua/ge/extensions/core/quickAccess.lua:1769
+---@param targets string[] Target identifiers.
 function core_quickAccess.setTutorialHighlightTargets(targets) end
 
---- Transforme un identifiant en nom lisible : '_' devient espace, espace avant chaque majuscule collée à une minuscule, première lettre de chaque mot en majuscule, reste en minuscules.
----Source : lua/ge/extensions/core/quickAccess.lua:562
----@param str string Identifiant, ex. 'funStuff'.
----@return string  Ex. 'Fun Stuff'.
+--- Turns an identifier into a readable name: '_' becomes a space, a space before each capital stuck to a lowercase letter, first letter of each word capitalized, the rest lowercase.
+---Source: lua/ge/extensions/core/quickAccess.lua:562
+---@param str string Identifier, e.g. 'funStuff'.
+---@return string  E.g. 'Fun Stuff'.
 function core_quickAccess.toNiceName(str) end
 
---- Ouvre le menu s'il est fermé, le ferme sinon. Utilisée par l'action 'toggleRadialMenuMulti'.
----Source : lua/ge/extensions/core/quickAccess.lua:2528
----@param level string|nil Niveau à ouvrir.
+--- Opens the menu if it is closed, closes it otherwise. Used by the 'toggleRadialMenuMulti' action.
+---Source: lua/ge/extensions/core/quickAccess.lua:2528
+---@param level string|nil Level to open.
 function core_quickAccess.toggle(level) end
 
---- Exécute une action liée aux touches du menu parmi : toggleBigMap, toggleRadialMenuMulti, recoverVehicle, resetVehicle, activateStarterMotor. Ignorée si core_input_actionFilter la bloque ; une action inconnue est loggée en erreur.
----Source : lua/ge/extensions/core/quickAccess.lua:2719
----@param action string Nom de l'action.
+--- Runs an action tied to the menu keys among: toggleBigMap, toggleRadialMenuMulti, recoverVehicle, resetVehicle, activateStarterMotor. Ignored if core_input_actionFilter blocks it; an unknown action is logged as an error.
+---Source: lua/ge/extensions/core/quickAccess.lua:2719
+---@param action string Name of the action.
 function core_quickAccess.tryAction(action) end
 
---- Rappel du véhicule après exécution d'une action d'item : traite l'ordre renvoyé ({'hide'}, {'goto', ...}, etc.).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2605
----@param objID integer Id du véhicule (inutilisé).
----@param args table Ordre à exécuter, même format que le retour de onSelect.
+--- Callback from the vehicle after an item action has run: processes the returned command ({'hide'}, {'goto', ...}, etc.).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2605
+---@param objID integer Vehicle id (unused).
+---@param args table Command to run, same format as the return of onSelect.
 function core_quickAccess.vehicleItemSelectCallback(objID, args) end
 
---- Rappel du véhicule joueur avec ses entrées de menu pour un niveau : les mémorise et affiche le menu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/quickAccess.lua:2125
----@param objID integer Id du véhicule.
----@param level string Niveau demandé.
----@param vehicleMenuTree table Table niveau -> liste d'entrées.
+--- Callback from the player vehicle with its menu entries for a level: stores them and displays the menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/quickAccess.lua:2125
+---@param objID integer Vehicle id.
+---@param level string Requested level.
+---@param vehicleMenuTree table Table level -> list of entries.
 function core_quickAccess.vehicleItemsCallback(objID, level, vehicleMenuTree) end
 

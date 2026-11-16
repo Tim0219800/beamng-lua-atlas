@@ -1,60 +1,60 @@
 # `core_windowsConsole`
 
-*Fichier : `lua/ge/extensions/core/windowsConsole.lua` · VM : Game Engine (GE) · 96 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/windowsConsole.lua` · VM: Game Engine (GE) · 96 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_windowsConsole` : `extensions.load("core_windowsConsole")`, puis la globale `core_windowsConsole`
+**Access:** extension `core_windowsConsole`: `extensions.load("core_windowsConsole")`, then the global `core_windowsConsole`
 
-Pont entre la fenêtre console native de Windows (C++) et Lua. Il remplit la liste déroulante des contextes d'exécution (GE-Lua, véhicule courant, chaque véhicule actif, GE-TorqueScript, CEF/UI - JS) et exécute la commande saisie dans le contexte choisi. Tout est appelé par le moteur ; un moddeur peut seulement écouter le hook onConsoleExecuteCommand.
+Bridge between the native Windows console window (C++) and Lua. It fills the dropdown list of execution contexts (GE-Lua, current vehicle, each active vehicle, GE-TorqueScript, CEF/UI - JS) and executes the typed command in the chosen context. Everything is called by the engine; a modder can only listen to the onConsoleExecuteCommand hook.
 
-## Remarques
+## Notes
 
-- Si les fonctions C++ consoleClearAvailableContexts etc. n'existent pas (autre plateforme), onExtensionLoaded renvoie false et l'extension reste inactive (refreshCombo ne fait rien).
-- Le contexte 'GE-Lua' n'est pas géré dans executeCommand : il est exécuté côté C++ (tryRunCommand est le rappel utilisé).
-- Les contextes véhicule sont nommés d'après mainPartName ; deux véhicules du même modèle partagent le même nom, donc nameVidMap n'en conserve qu'un.
+- If the C++ functions consoleClearAvailableContexts etc. do not exist (other platform), onExtensionLoaded returns false and the extension stays inactive (refreshCombo does nothing).
+- The 'GE-Lua' context is not handled in executeCommand: it is executed on the C++ side (tryRunCommand is the callback used).
+- Vehicle contexts are named after mainPartName; two vehicles of the same model share the same name, so nameVidMap only keeps one.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_windowsConsole.configure()` | Reconstruit la liste des contextes disponibles dans la console (alias de refreshCombo). Appelé par le C++ quand la fenêtre console est activée. *(interne)* | 47 |
-| `core_windowsConsole.executeCommand(context, cmd)` | Exécute une commande dans un contexte et émet le hook onConsoleExecuteCommand(context, cmd). 'GE-TorqueScript' passe par TorqueScript.eval, 'CEF/UI - JS' par be:queueJS, un nom de véhicule par queueLuaCommand sur ce véhicule. *(interne)* | 10 |
-| `core_windowsConsole.onExtensionLoaded()` | Hook appelé au chargement : active l'extension si les fonctions console du C++ existent. *(interne)* *(hook)* | 77 |
-| `core_windowsConsole.onVehicleActiveChanged()` | Hook appelé quand un véhicule devient actif ou inactif : rafraîchit la liste des contextes (même fonction que configure). *(interne)* *(hook)* | 47 |
-| `core_windowsConsole.onVehicleDestroyed()` | Hook appelé à la destruction d'un véhicule : rafraîchit la liste des contextes. *(interne)* *(hook)* | 47 |
-| `core_windowsConsole.onVehicleSpawned()` | Hook appelé à l'apparition d'un véhicule : rafraîchit la liste des contextes. *(interne)* *(hook)* | 47 |
-| `core_windowsConsole.onVehicleSwitched()` | Hook appelé au changement de véhicule joueur : rafraîchit la liste des contextes. *(interne)* *(hook)* | 47 |
-| `core_windowsConsole.tryRunCommand(cmd)` | Exécute du texte Lua dans la VM GE : essaie loadstring(cmd), sinon loadstring('return ' .. cmd) pour afficher la valeur d'une expression, puis dump le résultat s'il n'est pas nil. Journalise « syntax error » si rien ne compile. *(interne)* | 28 |
+| `core_windowsConsole.configure()` | Rebuilds the list of contexts available in the console (alias of refreshCombo). Called by C++ when the console window is activated. *(internal)* | 47 |
+| `core_windowsConsole.executeCommand(context, cmd)` | Executes a command in a context and emits the onConsoleExecuteCommand(context, cmd) hook. 'GE-TorqueScript' goes through TorqueScript.eval, 'CEF/UI - JS' through be:queueJS, a vehicle name through queueLuaCommand on that vehicle. *(internal)* | 10 |
+| `core_windowsConsole.onExtensionLoaded()` | Hook called on load: enables the extension if the C++ console functions exist. *(internal)* *(hook)* | 77 |
+| `core_windowsConsole.onVehicleActiveChanged()` | Hook called when a vehicle becomes active or inactive: refreshes the context list (same function as configure). *(internal)* *(hook)* | 47 |
+| `core_windowsConsole.onVehicleDestroyed()` | Hook called when a vehicle is destroyed: refreshes the context list. *(internal)* *(hook)* | 47 |
+| `core_windowsConsole.onVehicleSpawned()` | Hook called when a vehicle spawns: refreshes the context list. *(internal)* *(hook)* | 47 |
+| `core_windowsConsole.onVehicleSwitched()` | Hook called when the player vehicle changes: refreshes the context list. *(internal)* *(hook)* | 47 |
+| `core_windowsConsole.tryRunCommand(cmd)` | Executes Lua text in the GE VM: tries loadstring(cmd), otherwise loadstring('return ' .. cmd) to display the value of an expression, then dumps the result if it is not nil. Logs "syntax error" if nothing compiles. *(internal)* | 28 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_windowsConsole.executeCommand(context, cmd)`
 
-Exécute une commande dans un contexte et émet le hook onConsoleExecuteCommand(context, cmd). 'GE-TorqueScript' passe par TorqueScript.eval, 'CEF/UI - JS' par be:queueJS, un nom de véhicule par queueLuaCommand sur ce véhicule.
+Executes a command in a context and emits the onConsoleExecuteCommand(context, cmd) hook. 'GE-TorqueScript' goes through TorqueScript.eval, 'CEF/UI - JS' through be:queueJS, a vehicle name through queueLuaCommand on that vehicle.
 
-- `context` (*string*) : Nom du contexte choisi dans la console.
-- `cmd` (*string*) : Texte de la commande.
+- `context` (*string*) : Name of the context chosen in the console.
+- `cmd` (*string*) : Command text.
 
 #### `core_windowsConsole.onExtensionLoaded()`
 
-Hook appelé au chargement : active l'extension si les fonctions console du C++ existent.
+Hook called on load: enables the extension if the C++ console functions exist.
 
-- **renvoie** : boolean|nil false si la console n'est pas disponible sur la plateforme.
+- **returns**: boolean|nil false if the console is not available on the platform.
 
 #### `core_windowsConsole.tryRunCommand(cmd)`
 
-Exécute du texte Lua dans la VM GE : essaie loadstring(cmd), sinon loadstring('return ' .. cmd) pour afficher la valeur d'une expression, puis dump le résultat s'il n'est pas nil. Journalise « syntax error » si rien ne compile.
+Executes Lua text in the GE VM: tries loadstring(cmd), otherwise loadstring('return ' .. cmd) to display the value of an expression, then dumps the result if it is not nil. Logs "syntax error" if nothing compiles.
 
-- `cmd` (*string*) : Code ou expression Lua.
+- `cmd` (*string*) : Lua code or expression.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onConsoleExecuteCommand` — écouté par 1 module(s)
+- `onConsoleExecuteCommand` — listened to by 1 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObject`, `getObjectCount`, `queueJS`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/windowsConsole.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/windowsConsole.lua`.*

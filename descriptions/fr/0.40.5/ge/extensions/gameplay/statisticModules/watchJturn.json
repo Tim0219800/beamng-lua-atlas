@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/gameplay/statisticModules/watchJturn.lua",
+  "module": "Module de statistiques qui détecte les « J-turns » (demi-tour en marche arrière puis marche avant) du véhicule joueur et incrémente la métrique « vehicle/jturn » via gameplay_statistic.metricAdd. Il est appelé par gameplay_statistic avec la fonction workload à chaque tour de surveillance.",
+  "notes": [
+    "Condition : vitesse > 8 m/s ; direction du véhicule opposée à la vitesse (produit scalaire < -0,96) = marche arrière ; puis retour à l'avant (> 0,96) avec direction initiale de recul opposée à la vitesse actuelle (< -0,90) pendant plus d'1 s. Délai max de 4 s après le dernier recul, sinon annulé.",
+    "Le commentaire du code indique que simTime « is probably broken » : il est cumulé à partir de dtSim.",
+    "La fonction onPreRender (debug) est commentée à l'export et référence une variable vpos non définie : ne pas l'activer."
+  ],
+  "functions": {
+    "workload": {
+      "desc": "Analyse un véhicule à chaque appel (vitesse, direction) et compte un J-turn quand la séquence recul puis marche avant est détectée.",
+      "params": {
+        "v": {"type": "userdata", "desc": "Objet véhicule."},
+        "vid": {"type": "integer", "desc": "Identifiant du véhicule ; un changement de véhicule annule la détection."},
+        "dtSim": {"type": "number", "desc": "Temps simulé écoulé en secondes."}
+      },
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook appelé quand un véhicule est réinitialisé : annule la détection s'il s'agit du véhicule suivi.",
+      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onExtensionLoaded": {"desc": "Hook appelé au chargement de l'extension ; ne fait rien.", "internal": true},
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule contrôlé : annule la détection.",
+      "params": {
+        "oldid": {"type": "integer", "desc": "Ancien véhicule."},
+        "newid": {"type": "integer", "desc": "Nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Indice du joueur."}
+      },
+      "internal": true
+    }
+  }
+}

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_recordTimeCardEntry`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Loop Record Time Card Entry » (catégorie once_instant, tag rally). Enregistre une entrée de carte de pointage (time card) dans la boucle rally : rm:recordTimeCardEntry(name, time). Entrées : name (string) et time (number).
+Flowgraph node "Rally Loop Record Time Card Entry" (category once_instant, tag rally). Records a time card entry in the rally loop: rm:recordTimeCardEntry(name, time). Inputs: name (string) and time (number).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle rm:recordTimeCardEntry avec les pins name et time. | 29 |
+| `C:workOnce()` | Calls rm:recordTimeCardEntry with the name and time pins. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry.lua`.*

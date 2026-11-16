@@ -1,23 +1,23 @@
 # `flowgraph_nodes_scene_getPlayerVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/getPlayerVehicle.lua` · VM : Game Engine (GE) · 38 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/getPlayerVehicle.lua` · VM: Game Engine (GE) · 38 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/getPlayerVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/getPlayerVehicle")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Get Player Vehicle ID » (categorie provider). Sorties : vehId (number) id du vehicule controle par le joueur (be:getPlayerVehicleID(0), -1 si aucun) et exist (bool, cache). Ancien nom de pin : objID -> vehId (legacyPins).
+Flowgraph node "Get Player Vehicle ID" (provider category). Outputs: vehId (number) id of the vehicle controlled by the player (be:getPlayerVehicleID(0), -1 if none) and exist (bool, hidden). Old pin name: objID -> vehId (legacyPins).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Rien a initialiser. | 28 |
-| `C:work()` | Ecrit vehId = be:getPlayerVehicleID(0) or -1 et exist = (vehId ~= -1). | 31 |
+| `C:init()` | Nothing to initialize. | 28 |
+| `C:work()` | Writes vehId = be:getPlayerVehicleID(0) or -1 and exist = (vehId ~= -1). | 31 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/getPlayerVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/getPlayerVehicle.lua`.*

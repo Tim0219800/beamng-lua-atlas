@@ -2,265 +2,265 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/crawlEditor/presets.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet presets de l'éditeur Crawl. Champs principaux : presets (categories + metadata), PRESETS_FILE, PRESET_CATEGORIES, showSave*Dialog, showPresetManager(Ptr), *PresetName (buffers ImGui de 256 caractères).
+--- Presets object of the Crawl editor. Main fields: presets (categories + metadata), PRESETS_FILE, PRESET_CATEGORIES, showSave*Dialog, showPresetManager(Ptr), *PresetName (256-character ImGui buffers).
 ---@class editor_crawlEditor_presets
 local editor_crawlEditor_presets = {}
 
---- Supprime un composant de frontière via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:632
----@param id any identifiant du composant
+--- Deletes a boundary component via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:632
+---@param id any component identifier
 function editor_crawlEditor_presets:deleteBoundaryComponent(id) end
 
---- Supprime le preset de frontière et sauvegarde le fichier. Renvoie false, nil si le preset n'existe pas.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:469
----@param name string nom du preset
----@return boolean  succès
----@return string|nil  chemin du fichier
+--- Deletes the boundary preset and saves the file. Returns false, nil if the preset does not exist.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:469
+---@param name string preset name
+---@return boolean  success
+---@return string|nil  file path
 function editor_crawlEditor_presets:deleteBoundaryPreset(name) end
 
---- Supprime un composant de chemin via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:636
----@param id any identifiant du composant
+--- Deletes a path component via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:636
+---@param id any component identifier
 function editor_crawlEditor_presets:deletePathnodeComponent(id) end
 
---- Supprime le preset de chemin et sauvegarde le fichier.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:484
----@param name string nom du preset
----@return boolean  succès
----@return string|nil  chemin du fichier
+--- Deletes the path preset and saves the file.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:484
+---@param name string preset name
+---@return boolean  success
+---@return string|nil  file path
 function editor_crawlEditor_presets:deletePathnodePreset(name) end
 
---- Supprime un composant de trail via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:628
----@param id any identifiant du composant
+--- Deletes a trail component via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:628
+---@param id any component identifier
 function editor_crawlEditor_presets:deleteTrailComponent(id) end
 
---- Supprime le preset de trail et sauvegarde le fichier.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:499
----@param name string nom du preset
----@return boolean  succès
----@return string|nil  chemin du fichier
+--- Deletes the trail preset and saves the file.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:499
+---@param name string preset name
+---@return boolean  success
+---@return string|nil  file path
 function editor_crawlEditor_presets:deleteTrailPreset(name) end
 
---- Dessine les fenêtres ImGui de sauvegarde (frontière, chemin, trail) et le gestionnaire de composants ; appelé à chaque frame par l'éditeur Crawl.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:791
+--- Draws the ImGui save windows (boundary, path, trail) and the component manager; called every frame by the Crawl editor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:791
 function editor_crawlEditor_presets:drawDialogs() end
 
---- Dessine les sous-menus ImGui listant les composants de trail, frontière et chemin (clic = chargement dans crawlData) et l'entrée « Manage Components... ». Mémorise crawlData, trails et waypoints pour les dialogues.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:697
----@param crawlData table données crawl courantes (champ trails)
----@param trails table module trails de l'éditeur
----@param waypoints table module waypoints de l'éditeur
+--- Draws the ImGui submenus listing the trail, boundary and path components (click = load into crawlData) and the "Manage Components..." entry. Stores crawlData, trails and waypoints for the dialogs.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:697
+---@param crawlData table current crawl data (trails field)
+---@param trails table editor trails module
+---@param waypoints table editor waypoints module
 function editor_crawlEditor_presets:drawMenu(crawlData, trails, waypoints) end
 
---- Écrit un preset (table complète) dans un fichier JSON indépendant.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:640
----@param category string trails, boundaries ou pathnodes
----@param name string nom du preset
----@param filepath string fichier de destination
----@return boolean  succès
+--- Writes a preset (complete table) to an independent JSON file.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:640
+---@param category string trails, boundaries or pathnodes
+---@param name string preset name
+---@param filepath string destination file
+---@return boolean  success
 ---@return string|nil  filepath
 function editor_crawlEditor_presets:exportPreset(category, name, filepath) end
 
---- Liste les composants de frontière du niveau courant via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:543
----@return table  liste de composants
+--- Lists the boundary components of the current level via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:543
+---@return table  list of components
 function editor_crawlEditor_presets:getAllBoundaryComponents() end
 
---- Liste les composants de chemin du niveau courant via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:548
----@return table  liste de composants
+--- Lists the path components of the current level via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:548
+---@return table  list of components
 function editor_crawlEditor_presets:getAllPathnodeComponents() end
 
---- Liste les composants de trail du niveau courant via saveSystem (dossier /levels/<niveau>/crawls/).
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:538
----@return table  liste de composants (avec id et name)
+--- Lists the trail components of the current level via saveSystem (folder /levels/<level>/crawls/).
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:538
+---@return table  list of components (with id and name)
 function editor_crawlEditor_presets:getAllTrailComponents() end
 
---- Renvoie le buffer ImGui (256 caractères) du nom saisi pour une frontière.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:693
+--- Returns the ImGui buffer (256 characters) of the name entered for a boundary.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:693
 ---@return userdata  im.ArrayChar
 function editor_crawlEditor_presets:getBoundaryPresetName() end
 
---- Liste les presets de frontières sous forme de tableau {name, preset} (ordre non garanti, issu de pairs).
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:514
----@return table[]  liste de {name, preset}
+--- Lists the boundary presets as an array {name, preset} (order not guaranteed, from pairs).
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:514
+---@return table[]  list of {name, preset}
 function editor_crawlEditor_presets:getBoundaryPresets() end
 
---- Renvoie le buffer ImGui du nom saisi pour un chemin.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:694
+--- Returns the ImGui buffer of the name entered for a path.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:694
 ---@return userdata  im.ArrayChar
 function editor_crawlEditor_presets:getPathnodePresetName() end
 
---- Liste les presets de chemins sous forme de {name, preset}.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:522
----@return table[]  liste de {name, preset}
+--- Lists the path presets as {name, preset}.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:522
+---@return table[]  list of {name, preset}
 function editor_crawlEditor_presets:getPathnodePresets() end
 
---- Indique si la fenêtre de gestion des composants est affichée.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:687
----@return boolean  état
+--- Indicates whether the component management window is displayed.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:687
+---@return boolean  state
 function editor_crawlEditor_presets:getShowPresetManager() end
 
---- Renvoie le BoolPtr ImGui lié à la fenêtre de gestion.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:692
+--- Returns the ImGui BoolPtr linked to the management window.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:692
 ---@return userdata  im.BoolPtr
 function editor_crawlEditor_presets:getShowPresetManagerPtr() end
 
---- Indique si le dialogue de sauvegarde de frontière est affiché.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:681
----@return boolean  état
+--- Indicates whether the boundary save dialog is displayed.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:681
+---@return boolean  state
 function editor_crawlEditor_presets:getShowSaveBoundaryDialog() end
 
---- Indique si le dialogue de sauvegarde de chemin est affiché.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:683
----@return boolean  état
+--- Indicates whether the path save dialog is displayed.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:683
+---@return boolean  state
 function editor_crawlEditor_presets:getShowSavePathnodeDialog() end
 
---- Indique si le dialogue de sauvegarde de trail est affiché.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:685
----@return boolean  état
+--- Indicates whether the trail save dialog is displayed.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:685
+---@return boolean  state
 function editor_crawlEditor_presets:getShowSaveTrailDialog() end
 
---- Renvoie le buffer ImGui du nom saisi pour un trail.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:695
+--- Returns the ImGui buffer of the name entered for a trail.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:695
 ---@return userdata  im.ArrayChar
 function editor_crawlEditor_presets:getTrailPresetName() end
 
---- Liste les presets de trails sous forme de {name, preset}.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:530
----@return table[]  liste de {name, preset}
+--- Lists the trail presets as {name, preset}.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:530
+---@return table[]  list of {name, preset}
 function editor_crawlEditor_presets:getTrailPresets() end
 
---- Lit un fichier de preset, vérifie nom, catégorie et données, l'ajoute à la catégorie (écrase un preset de même nom) et sauvegarde.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:657
----@param filepath string fichier à lire
----@param category string catégorie attendue
----@return boolean  succès
----@return string|nil  fichier de presets
+--- Reads a preset file, checks name, category and data, adds it to the category (overwrites a preset of the same name) and saves.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:657
+---@param filepath string file to read
+---@param category string expected category
+---@return boolean  success
+---@return string|nil  presets file
 function editor_crawlEditor_presets:importPreset(filepath, category) end
 
---- Initialise la table de presets vide, les états des dialogues et les buffers ImGui, calcule le chemin du fichier de presets pour le niveau courant puis appelle loadPresets().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:36
+--- Initializes the empty presets table, the dialog states and the ImGui buffers, computes the presets file path for the current level then calls loadPresets().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:36
 function editor_crawlEditor_presets:init() end
 
---- Charge un composant de frontière par id via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:558
----@param id any identifiant du composant
----@return table|nil  frontière chargée
+--- Loads a boundary component by id via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:558
+---@param id any component identifier
+---@return table|nil  loaded boundary
 function editor_crawlEditor_presets:loadBoundaryComponent(id) end
 
---- Valide puis désérialise le preset de frontière nommé.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:400
----@param name string nom du preset
----@return table|nil  frontière reconstruite
----@return string|nil  fichier de presets
+--- Validates then deserializes the named boundary preset.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:400
+---@param name string preset name
+---@return table|nil  rebuilt boundary
+---@return string|nil  presets file
 function editor_crawlEditor_presets:loadBoundaryPreset(name) end
 
---- Charge un composant de chemin par id via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:563
----@param id any identifiant du composant
----@return table|nil  chemin chargé
+--- Loads a path component by id via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:563
+---@param id any component identifier
+---@return table|nil  loaded path
 function editor_crawlEditor_presets:loadPathnodeComponent(id) end
 
---- Valide puis désérialise le preset de chemin nommé.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:423
----@param name string nom du preset
----@return table|nil  chemin reconstruit
----@return string|nil  fichier de presets
+--- Validates then deserializes the named path preset.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:423
+---@param name string preset name
+---@return table|nil  rebuilt path
+---@return string|nil  presets file
 function editor_crawlEditor_presets:loadPathnodePreset(name) end
 
---- Lit le fichier JSON de presets ; s'il n'existe pas, écrit immédiatement un fichier vide via savePresets().
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:280
+--- Reads the presets JSON file; if it does not exist, immediately writes an empty file via savePresets().
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:280
 function editor_crawlEditor_presets:loadPresets() end
 
---- Charge un composant de trail par id via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:553
----@param id any identifiant du composant
----@return table|nil  trail chargé
+--- Loads a trail component by id via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:553
+---@param id any component identifier
+---@return table|nil  loaded trail
 function editor_crawlEditor_presets:loadTrailComponent(id) end
 
---- Valide puis désérialise le preset de trail nommé.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:446
----@param name string nom du preset
----@return table|nil  trail reconstruit
----@return string|nil  fichier de presets
+--- Validates then deserializes the named trail preset.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:446
+---@param name string preset name
+---@return table|nil  rebuilt trail
+---@return string|nil  presets file
 function editor_crawlEditor_presets:loadTrailPreset(name) end
 
---- Renomme la frontière puis l'enregistre comme composant via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:588
----@param name string nom, non vide
----@param boundary table frontière
----@return boolean  succès
----@return any  résultat de saveSystem
+--- Renames the boundary then records it as a component via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:588
+---@param name string name, non-empty
+---@param boundary table boundary
+---@return boolean  success
+---@return any  saveSystem result
 function editor_crawlEditor_presets:saveBoundaryComponent(name, boundary) end
 
---- Sérialise une frontière (boundary:onSerialize) et l'enregistre comme preset de catégorie boundaries, puis sauvegarde le fichier. Échoue si le nom est vide ou si la frontière n'a aucun sommet.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:307
----@param name string nom du preset
----@param boundary table objet frontière avec méthode onSerialize
----@return boolean  succès
----@return string|nil  chemin du fichier
+--- Serializes a boundary (boundary:onSerialize) and records it as a preset of category boundaries, then saves the file. Fails if the name is empty or the boundary has no vertex.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:307
+---@param name string preset name
+---@param boundary table boundary object with onSerialize method
+---@return boolean  success
+---@return string|nil  file path
 function editor_crawlEditor_presets:saveBoundaryPreset(name, boundary) end
 
---- Renomme le chemin puis l'enregistre comme composant via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:608
----@param name string nom, non vide
----@param path table chemin
----@return boolean  succès
----@return any  résultat de saveSystem
+--- Renames the path then records it as a component via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:608
+---@param name string name, non-empty
+---@param path table path
+---@return boolean  success
+---@return any  saveSystem result
 function editor_crawlEditor_presets:savePathnodeComponent(name, path) end
 
---- Enregistre un chemin (nom, description, nœuds avec position, rotation, rayon par défaut 6.0, flags) comme preset pathnodes.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:338
----@param name string nom du preset
----@param path table chemin avec liste nodes
----@return boolean  succès
----@return string|nil  chemin du fichier
+--- Records a path (name, description, nodes with position, rotation, default radius 6.0, flags) as a pathnodes preset.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:338
+---@param name string preset name
+---@param path table path with nodes list
+---@return boolean  success
+---@return string|nil  file path
 function editor_crawlEditor_presets:savePathnodePreset(name, path) end
 
---- Met à jour la date de modification, crée le dossier si besoin (FS:directoryCreate) et écrit tout le fichier de presets.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:289
----@return boolean  succès
----@return string|nil  chemin écrit
+--- Updates the modification date, creates the folder if needed (FS:directoryCreate) and writes the whole presets file.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:289
+---@return boolean  success
+---@return string|nil  path written
 function editor_crawlEditor_presets:savePresets() end
 
---- Renomme le trail (trail.name = name) puis l'enregistre comme composant via saveSystem.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:568
----@param name string nom, non vide
----@param trail table trail à sauvegarder
----@return boolean  succès
----@return any  résultat de saveSystem
+--- Renames the trail (trail.name = name) then records it as a component via saveSystem.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:568
+---@param name string name, non-empty
+---@param trail table trail to save
+---@return boolean  success
+---@return any  saveSystem result
 function editor_crawlEditor_presets:saveTrailComponent(name, trail) end
 
---- Sérialise un trail complet (chemin + frontière) et l'enregistre comme preset trails.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:369
----@param name string nom du preset
----@param trail table trail à sauvegarder
----@return boolean  succès
----@return string|nil  chemin du fichier
+--- Serializes a complete trail (path + boundary) and records it as a trails preset.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:369
+---@param name string preset name
+---@param trail table trail to save
+---@return boolean  success
+---@return string|nil  file path
 function editor_crawlEditor_presets:saveTrailPreset(name, trail) end
 
---- Affiche/masque la fenêtre de gestion et synchronise le pointeur ImGui.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:688
----@param show boolean afficher
+--- Shows/hides the management window and synchronizes the ImGui pointer.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:688
+---@param show boolean show
 function editor_crawlEditor_presets:setShowPresetManager(show) end
 
---- Affiche/masque le dialogue de sauvegarde de frontière.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:682
----@param show boolean afficher
+--- Shows/hides the boundary save dialog.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:682
+---@param show boolean show
 function editor_crawlEditor_presets:setShowSaveBoundaryDialog(show) end
 
---- Affiche/masque le dialogue de sauvegarde de chemin.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:684
----@param show boolean afficher
+--- Shows/hides the path save dialog.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:684
+---@param show boolean show
 function editor_crawlEditor_presets:setShowSavePathnodeDialog(show) end
 
---- Affiche/masque le dialogue de sauvegarde de trail.
----Source : lua/ge/extensions/editor/crawlEditor/presets.lua:686
----@param show boolean afficher
+--- Shows/hides the trail save dialog.
+---Source: lua/ge/extensions/editor/crawlEditor/presets.lua:686
+---@param show boolean show
 function editor_crawlEditor_presets:setShowSaveTrailDialog(show) end
 

@@ -1,0 +1,17 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/career/onMissionPromptShown.lua",
+  "module": "Nœud flowgraph « On Poi Prompt Shown » (catégorie repeat_instant, couleur/icône ui). Détecte que le joueur s'est arrêté sur un point d'intérêt et que l'invite (missions, concessionnaire, garage, ravitaillement) s'affiche. Sorties en impulsion d'une frame : shownPrompt (invite affichée, y compris garage et carburant) et openedMenu (liste de missions envoyée à l'UI).",
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
+        "work": {"desc": "Chaque frame : remet les deux sorties à faux, applique et efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
+        "onActivityAcceptUpdate": {"desc": "Hook : lève shownPrompt.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
+        "onAvailableMissionsSentToUi": {"desc": "Hook : lève openedMenu.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "path": "lua/vehicle/extensions/profiling/zone.lua",
+  "module": "Bibliothèque tierce : jit.zone de LuaJIT (Mike Pall), copyright 2005-2016, licence MIT. Implémente un modèle simple de zones hiérarchiques (une pile de noms) utilisé par le profileur LuaJIT (mode z de profiling_p) pour regrouper les échantillons par zone nommée. Le module retourne une table appelable : zone('nom') empile une zone, zone() la dépile.",
+  "usage": "local zone = require('extensions/profiling/zone')\nzone('AI')\n  zone('A*')\n  print(zone:get()) --> 'A*'\n  zone()\nprint(zone:get()) --> 'AI'\nzone()",
+  "notes": [
+    "Dépiler une pile vide déclenche l'erreur « empty zone stack » (assert).",
+    "Le module n'est pas une extension du jeu : il se charge par require sur ce chemin (l'exemple d'origine citait require('jit.zone')).",
+    "Aucune fonction M : l'API est la table retournée (méthodes flush et get, plus le métamethode __call)."
+  ],
+  "fields": {
+    "flush": {"type": "function", "desc": "zone:flush() vide entièrement la pile de zones."},
+    "get": {"type": "function", "desc": "zone:get() retourne la zone courante (sommet de pile), ou nil si la pile est vide."}
+  }
+}

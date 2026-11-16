@@ -2,103 +2,103 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/uiNavi.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Back-end Lua de la carte de navigation de l'interface (minimap, GPS). Il envoie à l'UI les positions des véhicules suivis, les points d'intérêt, les missions et les nœuds routiers de la carte, et gère un itinéraire simple (marqueurs au sol via core_groundMarkers). Il sert aussi à alimenter la texture JS d'un tableau de bord de véhicule avec la carte.
---- Accès : extension `ui_uiNavi` : `extensions.load("ui_uiNavi")`, puis la globale `ui_uiNavi`
+--- Lua back-end of the interface navigation map (minimap, GPS). It sends the UI the positions of tracked vehicles, points of interest, missions and road nodes of the map, and handles a simple route (ground markers via core_groundMarkers). It also feeds the JS texture of a vehicle dashboard with the map.
+--- Access: extension `ui_uiNavi`: `extensions.load("ui_uiNavi")`, then the global `ui_uiNavi`
 ---@class ui_uiNavi
 ui_uiNavi = {}
 
---- Renvoie le résultat de map.findClosestRoad pour le point (x, y, z) : les informations sur le segment de route le plus proche.
----Source : lua/ge/extensions/ui/uiNavi.lua:9
----@param x number Coordonnée X monde.
----@param y number Coordonnée Y monde.
----@param z number Coordonnée Z monde.
----@return any  Résultat de map.findClosestRoad (déduit du code).
+--- Returns the result of map.findClosestRoad for the point (x, y, z): information about the closest road segment.
+---Source: lua/ge/extensions/ui/uiNavi.lua:9
+---@param x number World X coordinate.
+---@param y number World Y coordinate.
+---@param z number World Z coordinate.
+---@return any  Result of map.findClosestRoad (inferred from code).
 function ui_uiNavi.findClosestRoad(x, y, z) end
 
---- Liste les arrêts de bus (BeamNGTrigger de type 'busstop'). Les arrêts distants de moins de 70 m (de part et d'autre de la route) sont fusionnés en un point au milieu.
----Source : lua/ge/extensions/ui/uiNavi.lua:183
----@return table[]  Liste de {pos = {x,y,z}}.
+--- Lists the bus stops (BeamNGTrigger of type 'busstop'). Stops less than 70 m apart (on either side of the road) are merged into one point in the middle.
+---Source: lua/ge/extensions/ui/uiNavi.lua:183
+---@return table[]  List of {pos = {x,y,z}}.
 function ui_uiNavi.getBusStops() end
 
---- Renvoie la table des missions actuellement stockée (vide au départ ; les exemples sont commentés dans le code).
----Source : lua/ge/extensions/ui/uiNavi.lua:119
----@return table  Liste de missions (pos, desc, title, state, new, objectives, type).
+--- Returns the currently stored missions table (empty at start; the examples are commented out in the code).
+---Source: lua/ge/extensions/ui/uiNavi.lua:119
+---@return table  List of missions (pos, desc, title, state, new, objectives, type).
 function ui_uiNavi.getMissions() end
 
---- Renvoie les objets du PointOfInterestSet de la scène sous forme de liste {name, pos, desc, title, type}.
----Source : lua/ge/extensions/ui/uiNavi.lua:44
----@return table[]|nil  nil si l'ensemble PointOfInterestSet n'existe pas.
+--- Returns the objects of the scene's PointOfInterestSet as a list of {name, pos, desc, title, type}.
+---Source: lua/ge/extensions/ui/uiNavi.lua:44
+---@return table[]|nil  nil if the PointOfInterestSet set does not exist.
 function ui_uiNavi.getPointsOfInterest() end
 
---- Liste les objets SpawnSphere de la scène avec leur position ({x,y,z} en table). Si le fichier de mission du niveau existe et contient `spawnPoints`, les informations additionnelles (indexées par objectname) sont fusionnées dans chaque entrée.
----Source : lua/ge/extensions/ui/uiNavi.lua:13
----@return table[]  Liste d'entrées contenant au moins `pos`.
+--- Lists the SpawnSphere objects of the scene with their position ({x,y,z} as a table). If the level's mission file exists and contains `spawnPoints`, the additional information (keyed by objectname) is merged into each entry.
+---Source: lua/ge/extensions/ui/uiNavi.lua:13
+---@return table[]  List of entries containing at least `pos`.
 function ui_uiNavi.getSpawnpoints() end
 
---- Hook appelé au chargement de l'extension : envoie un 'RouteUpdate' vide à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/uiNavi.lua:453
+--- Hook called when the extension loads: sends an empty 'RouteUpdate' to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/uiNavi.lua:453
 function ui_uiNavi.onExtensionLoaded() end
 
---- Hook appelé à chaque frame GUI. Rassemble les objets suivis par la carte (uiState ~= 0) avec position, cap en degrés, vitesse et état, puis envoie 'NavigationMapUpdate' ({controlID, objects}) à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/uiNavi.lua:228
----@param dtReal number Durée réelle de la frame (s).
----@param dtSim number Durée simulée de la frame (s).
----@param dtRaw number Durée brute de la frame (s).
+--- Hook called every GUI frame. Gathers the objects tracked by the map (uiState ~= 0) with position, heading in degrees, speed and state, then sends 'NavigationMapUpdate' ({controlID, objects}) to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/uiNavi.lua:228
+---@param dtReal number Real frame time (s).
+---@param dtSim number Simulated frame time (s).
+---@param dtRaw number Raw frame time (s).
 function ui_uiNavi.onGuiUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook appelé au changement de véhicule contrôlé. Le corps est entièrement commenté : ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/uiNavi.lua:437
----@param oid integer Ancien id de véhicule.
----@param nid integer Nouvel id de véhicule.
+--- Hook called when the controlled vehicle changes. The body is entirely commented out: does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/uiNavi.lua:437
+---@param oid integer Old vehicle id.
+---@param nid integer New vehicle id.
 function ui_uiNavi.onVehicleSwitched(oid, nid) end
 
---- Outil de développement : calcule le chemin entre deux positions via map.getPath et l'envoie à l'UI par 'RoutePlanned'.
----Source : lua/ge/extensions/ui/uiNavi.lua:172
----@param posX number[] Point de départ {x, y, z}.
----@param posY number[] Point d'arrivée {x, y, z}.
+--- Development tool: computes the path between two positions via map.getPath and sends it to the UI via 'RoutePlanned'.
+---Source: lua/ge/extensions/ui/uiNavi.lua:172
+---@param posX number[] Start point {x, y, z}.
+---@param posY number[] End point {x, y, z}.
 function ui_uiNavi.planRoute(posX, posY) end
 
---- Envoie la liste des missions courante à l'UI par l'évènement 'MapMissions'.
----Source : lua/ge/extensions/ui/uiNavi.lua:123
+--- Sends the current mission list to the UI via the 'MapMissions' event.
+---Source: lua/ge/extensions/ui/uiNavi.lua:123
 function ui_uiNavi.requestMissions() end
 
---- Envoie les points d'intérêt à l'UI par l'évènement 'MapPointsOfInterest'.
----Source : lua/ge/extensions/ui/uiNavi.lua:60
+--- Sends the points of interest to the UI via the 'MapPointsOfInterest' event.
+---Source: lua/ge/extensions/ui/uiNavi.lua:60
 function ui_uiNavi.requestPoi() end
 
---- Construit les données de la carte (tuiles de terrain du niveau courant, points d'intérêt, nœuds routiers) et les envoie à l'UI par 'NavigationMap'. Si le niveau n'a pas de minimap, elle est générée depuis le TerrainBlock. Remplit aussi les anciens champs (terrainSize, minimapImage, squareSize, terrainOffset) pour les mods d'ancien format.
----Source : lua/ge/extensions/ui/uiNavi.lua:386
----@return table  Les données envoyées (terrainTiles, poi, nodes, ...).
+--- Builds the map data (terrain tiles of the current level, points of interest, road nodes) and sends it to the UI via 'NavigationMap'. If the level has no minimap, it is generated from the TerrainBlock. Also fills the legacy fields (terrainSize, minimapImage, squareSize, terrainOffset) for old-format mods.
+---Source: lua/ge/extensions/ui/uiNavi.lua:386
+---@return table  The data sent (terrainTiles, poi, nodes, ...).
 function ui_uiNavi.requestUIDashboardMap() end
 
---- Envoie la carte à la texture JS d'un tableau de bord de véhicule (queueJSUITexture) en appelant la fonction JS `initmap` avec les données en JSON (nœuds, heure HH:MM, tuiles de terrain). Ne fait rien en mode headless, sans niveau chargé ou sans `dashboard`.
----Source : lua/ge/extensions/ui/uiNavi.lua:411
----@param dashboard string Nom de la texture JS cible.
----@param initmap string|nil Fonction JS à appeler, par défaut 'map.setData'.
----@param vehId integer|nil Id du véhicule cible, sinon le véhicule du joueur 0.
+--- Sends the map to the JS texture of a vehicle dashboard (queueJSUITexture) by calling the JS function `initmap` with the data as JSON (nodes, time HH:MM, terrain tiles). Does nothing in headless mode, with no level loaded or without `dashboard`.
+---Source: lua/ge/extensions/ui/uiNavi.lua:411
+---@param dashboard string Name of the target JS texture.
+---@param initmap string|nil JS function to call, default 'map.setData'.
+---@param vehId integer|nil Target vehicle id, otherwise the player 0 vehicle.
 function ui_uiNavi.requestVehicleDashboardMap(dashboard, initmap, vehId) end
 
---- Termine l'itinéraire : efface la destination, supprime le chemin au sol et envoie 'RouteUpdate' (table vide) puis 'RouteEnded' à l'UI.
----Source : lua/ge/extensions/ui/uiNavi.lua:145
+--- Ends the route: clears the destination, removes the ground path and sends 'RouteUpdate' (empty table) then 'RouteEnded' to the UI.
+---Source: lua/ge/extensions/ui/uiNavi.lua:145
 function ui_uiNavi.route_end() end
 
---- Met à jour l'itinéraire en cours (fonction locale route_update). Sans itinéraire, ne fait rien. Si la position a bougé de plus de 0,1 m, recalcule le chemin, envoie 'RouteUpdate' ; à moins de 50 m de la destination, envoie 'RouteReachedDestination' et termine l'itinéraire.
----Source : lua/ge/extensions/ui/uiNavi.lua:158
----@param oldPos vec3 Position précédente du joueur.
----@param newPos vec3 Position actuelle du joueur.
+--- Updates the current route (local function route_update). With no route, does nothing. If the position moved by more than 0.1 m, recomputes the path, sends 'RouteUpdate'; within 50 m of the destination, sends 'RouteReachedDestination' and ends the route.
+---Source: lua/ge/extensions/ui/uiNavi.lua:158
+---@param oldPos vec3 Previous player position.
+---@param newPos vec3 Current player position.
 function ui_uiNavi.route_requestStatus(oldPos, newPos) end
 
---- Démarre un itinéraire : appelle core_groundMarkers.setPath(wp) et mémorise la destination et sa position. Le code note que le multi-sièges ne rend le chemin que pour le dernier joueur.
----Source : lua/ge/extensions/ui/uiNavi.lua:139
----@param wp any Destination (nom de waypoint de la carte), transmise à core_groundMarkers.setPath et à map.getPath.
----@param pos number[] Position {x, y, z} de la destination.
+--- Starts a route: calls core_groundMarkers.setPath(wp) and stores the destination and its position. The code notes that multiseat renders the path only for the last player.
+---Source: lua/ge/extensions/ui/uiNavi.lua:139
+---@param wp any Destination (map waypoint name), passed to core_groundMarkers.setPath and map.getPath.
+---@param pos number[] {x, y, z} position of the destination.
 function ui_uiNavi.route_start(wp, pos) end
 
---- Remplace la liste des missions et l'envoie aussitôt à l'UI via 'MapMissions'.
----Source : lua/ge/extensions/ui/uiNavi.lua:127
----@param m table Nouvelle liste de missions.
+--- Replaces the mission list and immediately sends it to the UI via 'MapMissions'.
+---Source: lua/ge/extensions/ui/uiNavi.lua:127
+---@param m table New mission list.
 function ui_uiNavi.setMissions(m) end
 

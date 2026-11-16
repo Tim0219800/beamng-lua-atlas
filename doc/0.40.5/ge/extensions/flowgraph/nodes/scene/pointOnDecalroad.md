@@ -1,24 +1,24 @@
 # `flowgraph_nodes_scene_pointOnDecalroad`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/pointOnDecalroad.lua` · VM : Game Engine (GE) · 68 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/pointOnDecalroad.lua` · VM: Game Engine (GE) · 68 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/pointOnDecalroad")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/pointOnDecalroad")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Point on Decalroad » (repeat_instant). Teste si un point (vec3) est sur une DecalRoad (roadId) via roadObj:containsPoint, en forcant z a l'altitude du premier noeud de la route. Sorties : inside / outside (flow), onRoad (bool), closestIdx (index du point de controle le plus proche, -1 si hors route), maxIdx (nombre de points - 1).
+Flowgraph node "Point on Decalroad" (repeat_instant). Tests whether a point (vec3) is on a DecalRoad (roadId) via roadObj:containsPoint, forcing z to the altitude of the road's first node. Outputs: inside / outside (flow), onRoad (bool), closestIdx (index of the closest control point, -1 if off the road), maxIdx (number of points - 1).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Reinitialise le cache de la route et vide les sorties. | 33 |
-| `C:init()` | Initialise point a (0,0,0) et pz a 0. | 28 |
-| `C:work()` | Recharge la route si roadId change, puis calcule closestIdx, onRoad, inside et outside. | 41 |
+| `C:_executionStarted()` | Resets the road cache and empties the outputs. | 33 |
+| `C:init()` | Initializes point to (0,0,0) and pz to 0. | 28 |
+| `C:work()` | Reloads the road if roadId changes, then computes closestIdx, onRoad, inside and outside. | 41 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/pointOnDecalroad.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/pointOnDecalroad.lua`.*

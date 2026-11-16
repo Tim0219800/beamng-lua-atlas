@@ -1,39 +1,61 @@
 {
   "path": "lua/ge/extensions/core/devices.lua",
-  "module": "Pilote l'éclairage RGB des périphériques de jeu (volants, manettes) via l'objet C++ Device. Chaque périphérique assigné à un joueur prend la couleur de ce joueur (orange BeamNG 255,102,0 par défaut), sauf si le retour de force du volant demande le mode d'éclairage « default » et que les LED de changement de rapport du véhicule sont en service : dans ce cas la couleur est réinitialisée (Device.resetRGB).",
+  "module": "Drives the RGB lighting of gaming peripherals (wheels, gamepads) via the C++ Device object. Each device assigned to a player takes that player's color (BeamNG orange 255,102,0 by default), unless the wheel's force feedback requests the \"default\" lighting mode and the vehicle's shift LEDs are in use: in that case the color is reset (Device.resetRGB).",
   "notes": [
-    "Utilise core_input_bindings.assignedPlayers pour savoir quel périphérique appartient à quel joueur, sauf si setPlayerColors a reçu une table d'assignations.",
-    "Les périphériques qui perdent leur joueur repassent à l'orange.",
-    "Ne fait rien si l'objet global Device n'existe pas."
+    "Uses core_input_bindings.assignedPlayers to determine which device belongs to which player, unless setPlayerColors received an assignment table.",
+    "Devices that lose their player go back to orange.",
+    "Does nothing if the global Device object does not exist."
   ],
   "functions": {
     "setPlayerColors": {
-      "desc": "Définit la couleur par numéro de joueur et rafraîchit immédiatement l'éclairage de tous les périphériques.",
+      "desc": "Sets the color per player number and immediately refreshes the lighting of all devices.",
       "params": {
-        "colors": {"type": "table<integer, vec3>|nil", "desc": "Couleur RGB (composantes 0-255 dans x,y,z) indexée par numéro de joueur ; nil vide la table."},
-        "assignments": {"type": "table<string, integer>|nil", "desc": "Remplace temporairement l'assignation nom de périphérique -> numéro de joueur (par exemple pour montrer des assignations pas encore appliquées) ; nil utilise core_input_bindings.assignedPlayers."}
+        "colors": {
+          "type": "table<integer, vec3>|nil",
+          "desc": "RGB color (components 0-255 in x,y,z) keyed by player number; nil clears the table."
+        },
+        "assignments": {
+          "type": "table<string, integer>|nil",
+          "desc": "Temporarily overrides the device name -> player number assignment (for example to show assignments not yet applied); nil uses core_input_bindings.assignedPlayers."
+        }
       }
     },
     "onFFBConfigChanged": {
-      "desc": "Hook : la configuration du retour de force a changé, recalcule l'éclairage des périphériques.",
+      "desc": "Hook: the force feedback configuration changed, recomputes the devices' lighting.",
       "internal": true
     },
     "onVehicleRPMledStateChanged": {
-      "desc": "Hook : un véhicule active ou désactive ses LED de changement de rapport ; si c'est un véhicule de joueur, l'éclairage est recalculé.",
+      "desc": "Hook: a vehicle enables or disables its shift LEDs; if it is a player vehicle, the lighting is recomputed.",
       "params": {
-        "vehicleId": {"type": "integer", "desc": "id du véhicule"},
-        "shiftLEDsInUse": {"type": "boolean", "desc": "vrai si les LED de rapport sont utilisées"}
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        },
+        "shiftLEDsInUse": {
+          "type": "boolean",
+          "desc": "true if the shift LEDs are used"
+        }
       },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : oublie l'état des LED du véhicule détruit.",
-      "params": {"vehicleId": {"type": "integer", "desc": "id du véhicule"}},
+      "desc": "Hook: forgets the LED state of the destroyed vehicle.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
       "internal": true
     },
     "onBeforeVehicleReplaced": {
-      "desc": "Hook : oublie l'état des LED du véhicule sur le point d'être remplacé.",
-      "params": {"vehicleId": {"type": "integer", "desc": "id du véhicule"}},
+      "desc": "Hook: forgets the LED state of the vehicle about to be replaced.",
+      "params": {
+        "vehicleId": {
+          "type": "integer",
+          "desc": "vehicle id"
+        }
+      },
       "internal": true
     }
   }

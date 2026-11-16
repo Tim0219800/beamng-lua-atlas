@@ -8,17 +8,18 @@ Tout est généré à partir du code Lua fourni avec le jeu (lecture seule) et d
 **Version couverte : 0.40.5.0 (build 302427).**
 
 > Projet non officiel, sans lien avec BeamNG GmbH.
+> Les descriptions existent en **anglais** (langue principale) et en **français** (`descriptions/fr/`, `doc/fr/`, `stubs-<version>-fr.zip`).
 
 ## Contenu
 
 | Dossier | Contenu |
 |---|---|
-| [`doc/0.40.5/index.md`](doc/0.40.5/index.md) | Point d'entrée : tous les modules par VM (véhicule, GE, commun), avec liens |
-| [`doc/0.40.5/hooks.md`](doc/0.40.5/hooks.md) | Les 838 hooks : qui les émet, qui les écoute |
-| [`doc/0.40.5/cpp.md`](doc/0.40.5/cpp.md) | Classes et modules C++ exposés au Lua (`obj`, `be`, `Engine.*`, objets de scène…) |
-| `stubs/0.40.5/lua/...` | Stubs `---@meta` pour LuaLS, même arborescence que le dossier `lua/` du jeu |
+| [`doc/fr/0.40.5/index.md`](doc/fr/0.40.5/index.md) | Point d'entrée en français : tous les modules par VM (véhicule, GE, commun), avec liens (version anglaise : [`doc/0.40.5/index.md`](doc/0.40.5/index.md)) |
+| [`doc/fr/0.40.5/hooks.md`](doc/fr/0.40.5/hooks.md) | Les 838 hooks : qui les émet, qui les écoute |
+| [`doc/fr/0.40.5/cpp.md`](doc/fr/0.40.5/cpp.md) | Classes et modules C++ exposés au Lua (`obj`, `be`, `Engine.*`, objets de scène…) |
+| `stubs/0.40.5/lua/...` | Stubs `---@meta` pour LuaLS (commentaires en anglais ; en français : `stubs-0.40.5-fr.zip`), même arborescence que le dossier `lua/` du jeu |
 | `stubs/0.40.5/cpp/ge.lua`, `cpp/vehicle.lua` | Stubs des objets C++ |
-| `descriptions/0.40.5/` | Descriptions rédigées (JSON), fusionnées par le générateur |
+| `descriptions/fr/0.40.5/`, `descriptions/0.40.5/` | Descriptions rédigées (JSON, français / anglais), fusionnées par le générateur |
 | `donnees-0.40.5.zip` (fichier de la release) | Données brutes : extraction statique et relevés en jeu, nécessaires pour régénérer |
 | `outils/` | Les outils : `extraire.py`, `generer.py`, `importer_releve.py`, `mod_releve/`, `comparer.py`, `reporter_descriptions.py`, `verifier_mod.py`, `bissecter.py` (voir plus bas) |
 | [`NOUVELLE_VERSION.md`](NOUVELLE_VERSION.md) | Procédure pas à pas pour passer l'atlas à une nouvelle version du jeu (prévue : 0.41) |
@@ -42,7 +43,7 @@ Côté C++ (relevé en jeu) : 103 classes d'instance en GE (dont 76 types d'obje
 ## Utiliser les stubs dans VS Code
 
 1. Installer l'extension **Lua** (sumneko / LuaLS).
-2. Télécharger `stubs-0.40.5.zip` dans la [dernière release](https://github.com/Tim0219800/beamng-lua-atlas/releases/latest) et le décompresser, ou cloner ce dépôt, par exemple dans `C:/dev/tim19Atlas`.
+2. Télécharger `stubs-0.40.5-fr.zip` (commentaires en français ; `stubs-0.40.5.zip` pour l'anglais) dans la [dernière release](https://github.com/Tim0219800/beamng-lua-atlas/releases/latest) et le décompresser, ou cloner ce dépôt, par exemple dans `C:/dev/tim19Atlas`.
 3. À la racine du mod, créer `.luarc.json`. Pour du Lua **véhicule** :
 
 ```json
@@ -58,6 +59,8 @@ Côté C++ (relevé en jeu) : 103 classes d'instance en GE (dont 76 types d'obje
 }
 ```
 
+Avec `stubs-0.40.5-fr.zip`, les chemins commencent par `stubs/fr/0.40.5/` au lieu de `stubs/0.40.5/`.
+
 Pour du Lua **GE** : remplacer `lua/vehicle` par `lua/ge` et `cpp/vehicle.lua` par `cpp/ge.lua`.
 Ne pas mélanger `ge` et `vehicle` : les deux VM sont séparées dans le jeu (une extension véhicule ne voit pas `core_vehicles`, par exemple).
 
@@ -68,7 +71,8 @@ Décompresser d'abord `donnees-<version>.zip` de la release dans `donnees/` (le 
 ```
 python -I outils/extraire.py "<dossier d'installation de BeamNG.drive>" donnees/<version>/statique.json
 python -I outils/importer_releve.py <version>     # après une partie avec le mod tim19_atlas
-python -I outils/generer.py <version>
+python -I outils/generer.py <version>              # doc et stubs en anglais
+python -I outils/generer.py <version> --lang fr    # doc et stubs en français (doc/fr/, stubs/fr/)
 ```
 
 Relevé en jeu : copier `outils/mod_releve/` dans `mods/unpacked/tim19_atlas/` du dossier utilisateur de BeamNG, lancer le jeu et charger une carte avec une voiture.
@@ -96,7 +100,7 @@ python -I outils/reporter_descriptions.py <ancienne> <nouvelle>          # repor
 
 - **`verifier_mod.py`** : conflits de fichiers entre mods, fichiers du jeu remplacés, appels à des fonctions inconnues ou retirées, extensions introuvables, hooks jamais émis. Ne modifie rien.
 - **`bissecter.py`** : désactive la moitié des mods actifs à chaque étape pour trouver celui qui pose problème ; garde une copie de `db.json` (`db.json.bak_bissection`).
-- **`comparer.py`** : produit `doc/<version>/changements.md` (ruptures, nouveautés, C++) et un JSON utilisé par le vérificateur.
+- **`comparer.py`** : produit `doc/<version>/changements.md` et `doc/fr/<version>/changements.md` (ruptures, nouveautés, C++) et un JSON utilisé par le vérificateur.
 
 ## Suite prévue
 

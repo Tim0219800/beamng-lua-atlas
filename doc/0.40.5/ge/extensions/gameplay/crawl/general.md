@@ -1,170 +1,170 @@
 # `gameplay_crawl_general`
 
-*Fichier : `lua/ge/extensions/gameplay/crawl/general.lua` · VM : Game Engine (GE) · 519 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/crawl/general.lua` · VM: Game Engine (GE) · 519 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_crawl_general` : `extensions.load("gameplay_crawl_general")`, puis la globale `gameplay_crawl_general`
+**Access:** extension `gameplay_crawl_general`: `extensions.load("gameplay_crawl_general")`, then the global `gameplay_crawl_general`
 
-Cœur du mode crawl (franchissement lent de parcours) côté freeroam/carrière : garde le parcours actif (activeTrail : trail, zone, chemin copié, départ, prefabs) et la liste des données de crawlers, prépare un parcours (setupCrawl, avec inversion éventuelle du chemin), démarre le crawl en freeroam ou depuis un flowgraph, et appelle gameplay_crawl_utils.updateCrawl à chaque image. Il fournit aussi les points d'intérêt (marqueurs de départ, carte), les fenêtres d'activité, le dessin de la zone sur la minimap et enregistre les scores à la fin. Il gère le cas multi-joueur local (multiseat).
+Core of the crawl mode (slow trail traversal) on the freeroam/career side: keeps the active trail (activeTrail: trail, zone, copied path, start, prefabs) and the list of crawler data, prepares a trail (setupCrawl, with optional path reversal), starts the crawl in freeroam or from a flowgraph, and calls gameplay_crawl_utils.updateCrawl every frame. It also provides the points of interest (start markers, map), the activity windows, the drawing of the zone on the minimap, and records the scores at the end. It handles the local multiplayer case (multiseat).
 
-## Exemple
+## Example
 
 ```lua
 gameplay_crawl_general.startCrawlFreeroam(trail, be:getPlayerVehicle(0))
 ```
 
-## Remarques
+## Notes
 
-- Un seul parcours actif à la fois (M.activeTrail). Si trail.pathReversed est vrai, le chemin est copié, inversé et chaque rotation est tournée de 180 degrés autour de Z ; la position de départ devient trail.startingPositionIdReversed, ou le premier noeud inversé (rayon 10 m).
-- Les parcours apparaissent dans le jeu seulement si la carrière est active ou si le réglage enableCrawlInFreeroam est vrai (onGetRawPoiListForLevel).
-- En multiseat, entrer dans la zone de départ lance automatiquement le crawl, sauf si un mode de jeu multiseat est actif ou si les parcours diffèrent.
-- M.crawlersData et sa copie locale pointent vers la même table ; clear la vide avec table.clear, il faut donc ne pas réassigner la variable.
-- Quand un véhicule est changé ou détruit en freeroam (parcours non issu d'une mission), son crawler est nettoyé ; le parcours est vidé quand plus aucun crawler n'existe.
-- onCrawlResultsShown enregistre le score (temps, points) via saveSystem.addNewPlayerScore.
-- Hooks émis : onCrawlStarted({trail = trail}).
+- Only one active trail at a time (M.activeTrail). If trail.pathReversed is true, the path is copied, reversed and each rotation is turned by 180 degrees around Z; the starting position becomes trail.startingPositionIdReversed, or the first reversed node (radius 10 m).
+- Trails appear in the game only if career is active or if the enableCrawlInFreeroam setting is true (onGetRawPoiListForLevel).
+- In multiseat, entering the start zone automatically starts the crawl, unless a multiseat game mode is active or the trails differ.
+- M.crawlersData and its local copy point to the same table; clear empties it with table.clear, so the variable must not be reassigned.
+- When a vehicle is changed or destroyed in freeroam (trail not from a mission), its crawler is cleaned up; the trail is cleared when no crawler exists anymore.
+- onCrawlResultsShown records the score (time, points) via saveSystem.addNewPlayerScore.
+- Emitted hooks: onCrawlStarted({trail = trail}).
 
-**Dépendances (chargées avant) :** `gameplay_crawl_saveSystem`, `gameplay_crawl_utils`, `gameplay_crawl_boundary`, `gameplay_crawl_display`
+**Dependencies (loaded first):** `gameplay_crawl_saveSystem`, `gameplay_crawl_utils`, `gameplay_crawl_boundary`, `gameplay_crawl_display`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_crawl_general.clear(force)` | Décharge les prefabs du parcours actif, oublie le parcours, nettoie gameplay_crawl_utils et vide crawlersData. | 38 |
-| `gameplay_crawl_general.onActivityAcceptGatherData(elemData, activityData)` | Hook de la fenêtre d'activité : pour un POI 'crawl', ajoute une fiche (distance, dénivelé positif/négatif, meilleurs points, meilleur temps, tentatives) et un bouton « Jouer » qui lance startCrawlFreeroam sur le véhicule du joueur. *(interne)* *(hook)* | 302 |
-| `gameplay_crawl_general.onActivityIndexVisible(data)` | Hook appelé quand une activité est visible/masquée dans l'index : prépare le parcours et ses marqueurs de chemin pour un POI crawl, ou nettoie si data est nil. *(interne)* *(hook)* | 385 |
-| `gameplay_crawl_general.onAnyMissionChanged(status, id)` | Hook appelé au changement d'état d'une mission : nettoie tout si elle passe à 'stopped'. *(interne)* *(hook)* | 464 |
-| `gameplay_crawl_general.onCrawlCleared()` | Hook émis par utils.clear() à chaque fin de crawl : vide crawlersData et efface les POI bruts pour réafficher le marqueur de départ. *(interne)* *(hook)* | 470 |
-| `gameplay_crawl_general.onCrawlResultsShown(eventData)` | Hook appelé à l'affichage des résultats : enregistre le temps et les points du joueur pour le parcours actif. *(interne)* *(hook)* | 480 |
-| `gameplay_crawl_general.onDrawOnMinimap(td)` | Hook appelé pour dessiner sur la minimap : dessine la zone du parcours actif. *(interne)* *(hook)* | 424 |
-| `gameplay_crawl_general.onExtensionLoaded()` | Hook appelé au chargement : nettoie l'état et crée les dossiers de sauvegarde du joueur. *(interne)* *(hook)* | 433 |
-| `gameplay_crawl_general.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook de collecte des points d'intérêt d'un niveau : ajoute pour chaque parcours (dossier /levels/<niveau>/crawls/) un POI de type 'crawl' avec déclencheur invisible, marqueur de départ et marqueur de carte (nom, miniature, meilleurs points) tant qu'aucun parcours n'est actif. *(interne)* *(hook)* | 229 |
-| `gameplay_crawl_general.onMPSessionChanged(old, new)` | Hook appelé au changement de session multijoueur : charge gameplay_crawl_freeroamMultiplayer au début de session et le décharge à la fin. *(interne)* *(hook)* | 492 |
-| `gameplay_crawl_general.onSerialize()` | Hook appelé avant rechargement des extensions : nettoie l'état. *(interne)* *(hook)* | 438 |
-| `gameplay_crawl_general.onUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque image : fait avancer le crawl actif (gameplay_crawl_utils.updateCrawl). *(interne)* *(hook)* | 209 |
-| `gameplay_crawl_general.onVehicleDestroyed(vehId)` | Hook appelé quand un véhicule est détruit : retire son crawler (parcours hors mission). *(interne)* *(hook)* | 453 |
-| `gameplay_crawl_general.onVehicleSwitched(oldId, newId, player)` | Hook appelé au changement de véhicule contrôlé : retire le crawler de l'ancien véhicule (parcours hors mission) et nettoie s'il n'en reste aucun. *(interne)* *(hook)* | 442 |
-| `gameplay_crawl_general.setupCrawl(trail, veh, isFromMission)` | Prépare un parcours : arrête le crawl précédent, résout zone, chemin et départ depuis saveSystem, gère l'inversion, crée les données du crawler, charge les prefabs et, si isFromMission, téléporte le véhicule à la position de départ. | 49 |
-| `gameplay_crawl_general.startCrawlFlowgraph(trail, veh)` | Démarre un crawl depuis un flowgraph. Si le même parcours (même nom) est déjà préparé, le réutilise ; sinon appelle setupCrawl(trail, veh, true). Émet onCrawlStarted. | 169 |
-| `gameplay_crawl_general.startCrawlFreeroam(trail, veh)` | Démarre un crawl en freeroam. En multiseat avec le même parcours déjà actif, ajoute simplement le véhicule au crawl ; sinon prépare le parcours puis lance gameplay_crawl_utils.startCrawl, émet onCrawlStarted et efface les POI bruts. | 131 |
+| `gameplay_crawl_general.clear(force)` | Unloads the prefabs of the active trail, forgets the trail, cleans up gameplay_crawl_utils and empties crawlersData. | 38 |
+| `gameplay_crawl_general.onActivityAcceptGatherData(elemData, activityData)` | Activity window hook: for a 'crawl' POI, adds a card (distance, positive/negative elevation change, best points, best time, attempts) and a "Play" button that runs startCrawlFreeroam on the player's vehicle. *(internal)* *(hook)* | 302 |
+| `gameplay_crawl_general.onActivityIndexVisible(data)` | Hook called when an activity is shown/hidden in the index: prepares the trail and its path markers for a crawl POI, or cleans up if data is nil. *(internal)* *(hook)* | 385 |
+| `gameplay_crawl_general.onAnyMissionChanged(status, id)` | Hook called when a mission's state changes: cleans everything up if it goes to 'stopped'. *(internal)* *(hook)* | 464 |
+| `gameplay_crawl_general.onCrawlCleared()` | Hook emitted by utils.clear() at the end of each crawl: empties crawlersData and clears the raw POIs to show the start marker again. *(internal)* *(hook)* | 470 |
+| `gameplay_crawl_general.onCrawlResultsShown(eventData)` | Hook called when the results are shown: records the player's time and points for the active trail. *(internal)* *(hook)* | 480 |
+| `gameplay_crawl_general.onDrawOnMinimap(td)` | Hook called to draw on the minimap: draws the zone of the active trail. *(internal)* *(hook)* | 424 |
+| `gameplay_crawl_general.onExtensionLoaded()` | Hook called on load: cleans up the state and creates the player's save folders. *(internal)* *(hook)* | 433 |
+| `gameplay_crawl_general.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook collecting the points of interest of a level: for each trail (folder /levels/<level>/crawls/) adds a 'crawl' type POI with an invisible trigger, a start marker and a map marker (name, thumbnail, best points) as long as no trail is active. *(internal)* *(hook)* | 229 |
+| `gameplay_crawl_general.onMPSessionChanged(old, new)` | Hook called on multiplayer session change: loads gameplay_crawl_freeroamMultiplayer at session start and unloads it at the end. *(internal)* *(hook)* | 492 |
+| `gameplay_crawl_general.onSerialize()` | Hook called before extensions reload: cleans up the state. *(internal)* *(hook)* | 438 |
+| `gameplay_crawl_general.onUpdate(dtReal, dtSim, dtRaw)` | Hook called every frame: advances the active crawl (gameplay_crawl_utils.updateCrawl). *(internal)* *(hook)* | 209 |
+| `gameplay_crawl_general.onVehicleDestroyed(vehId)` | Hook called when a vehicle is destroyed: removes its crawler (non-mission trail). *(internal)* *(hook)* | 453 |
+| `gameplay_crawl_general.onVehicleSwitched(oldId, newId, player)` | Hook called when the controlled vehicle changes: removes the crawler from the old vehicle (non-mission trail) and cleans up if none remain. *(internal)* *(hook)* | 442 |
+| `gameplay_crawl_general.setupCrawl(trail, veh, isFromMission)` | Prepares a trail: stops the previous crawl, resolves zone, path and start from saveSystem, handles reversal, creates the crawler data, loads the prefabs and, if isFromMission, teleports the vehicle to the starting position. | 49 |
+| `gameplay_crawl_general.startCrawlFlowgraph(trail, veh)` | Starts a crawl from a flowgraph. If the same trail (same name) is already prepared, reuses it; otherwise calls setupCrawl(trail, veh, true). Emits onCrawlStarted. | 169 |
+| `gameplay_crawl_general.startCrawlFreeroam(trail, veh)` | Starts a crawl in freeroam. In multiseat with the same trail already active, simply adds the vehicle to the crawl; otherwise prepares the trail then calls gameplay_crawl_utils.startCrawl, emits onCrawlStarted and clears the raw POIs. | 131 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_crawl_general.clear(force)`
 
-Décharge les prefabs du parcours actif, oublie le parcours, nettoie gameplay_crawl_utils et vide crawlersData.
+Unloads the prefabs of the active trail, forgets the trail, cleans up gameplay_crawl_utils and empties crawlersData.
 
-- `force` (*boolean|nil*) : Transmis à gameplay_crawl_utils.clear.
+- `force` (*boolean|nil*) : Passed to gameplay_crawl_utils.clear.
 
 #### `gameplay_crawl_general.onActivityAcceptGatherData(elemData, activityData)`
 
-Hook de la fenêtre d'activité : pour un POI 'crawl', ajoute une fiche (distance, dénivelé positif/négatif, meilleurs points, meilleur temps, tentatives) et un bouton « Jouer » qui lance startCrawlFreeroam sur le véhicule du joueur.
+Activity window hook: for a 'crawl' POI, adds a card (distance, positive/negative elevation change, best points, best time, attempts) and a "Play" button that runs startCrawlFreeroam on the player's vehicle.
 
-- `elemData` (*table*) : Données des éléments sélectionnés.
-- `activityData` (*table*) : Liste de fiches à compléter.
+- `elemData` (*table*) : Data of the selected items.
+- `activityData` (*table*) : List of cards to complete.
 
 #### `gameplay_crawl_general.onActivityIndexVisible(data)`
 
-Hook appelé quand une activité est visible/masquée dans l'index : prépare le parcours et ses marqueurs de chemin pour un POI crawl, ou nettoie si data est nil.
+Hook called when an activity is shown/hidden in the index: prepares the trail and its path markers for a crawl POI, or cleans up if data is nil.
 
-- `data` (*table|nil*) : Données du POI (type, trailId) ; nil quand l'index se ferme.
+- `data` (*table|nil*) : POI data (type, trailId); nil when the index closes.
 
 #### `gameplay_crawl_general.onAnyMissionChanged(status, id)`
 
-Hook appelé au changement d'état d'une mission : nettoie tout si elle passe à 'stopped'.
+Hook called when a mission's state changes: cleans everything up if it goes to 'stopped'.
 
-- `status` (*string*) : État de la mission.
-- `id` (*any*) : Mission concernée.
+- `status` (*string*) : Mission state.
+- `id` (*any*) : Mission concerned.
 
 #### `gameplay_crawl_general.onCrawlResultsShown(eventData)`
 
-Hook appelé à l'affichage des résultats : enregistre le temps et les points du joueur pour le parcours actif.
+Hook called when the results are shown: records the player's time and points for the active trail.
 
 - `eventData` (*table*) : {time, points}.
 
 #### `gameplay_crawl_general.onDrawOnMinimap(td)`
 
-Hook appelé pour dessiner sur la minimap : dessine la zone du parcours actif.
+Hook called to draw on the minimap: draws the zone of the active trail.
 
-- `td` (*table*) : Objet de dessin de la minimap.
+- `td` (*table*) : Minimap drawing object.
 
 #### `gameplay_crawl_general.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook de collecte des points d'intérêt d'un niveau : ajoute pour chaque parcours (dossier /levels/<niveau>/crawls/) un POI de type 'crawl' avec déclencheur invisible, marqueur de départ et marqueur de carte (nom, miniature, meilleurs points) tant qu'aucun parcours n'est actif.
+Hook collecting the points of interest of a level: for each trail (folder /levels/<level>/crawls/) adds a 'crawl' type POI with an invisible trigger, a start marker and a map marker (name, thumbnail, best points) as long as no trail is active.
 
-- `levelIdentifier` (*string*) : Nom du niveau.
-- `elements` (*table*) : Liste de POI à compléter.
+- `levelIdentifier` (*string*) : Level name.
+- `elements` (*table*) : POI list to complete.
 
 #### `gameplay_crawl_general.onMPSessionChanged(old, new)`
 
-Hook appelé au changement de session multijoueur : charge gameplay_crawl_freeroamMultiplayer au début de session et le décharge à la fin.
+Hook called on multiplayer session change: loads gameplay_crawl_freeroamMultiplayer at session start and unloads it at the end.
 
-- `old` (*any*) : Ancienne session (nil/false si aucune).
-- `new` (*any*) : Nouvelle session.
+- `old` (*any*) : Old session (nil/false if none).
+- `new` (*any*) : New session.
 
 #### `gameplay_crawl_general.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque image : fait avancer le crawl actif (gameplay_crawl_utils.updateCrawl).
+Hook called every frame: advances the active crawl (gameplay_crawl_utils.updateCrawl).
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `gameplay_crawl_general.onVehicleDestroyed(vehId)`
 
-Hook appelé quand un véhicule est détruit : retire son crawler (parcours hors mission).
+Hook called when a vehicle is destroyed: removes its crawler (non-mission trail).
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `gameplay_crawl_general.onVehicleSwitched(oldId, newId, player)`
 
-Hook appelé au changement de véhicule contrôlé : retire le crawler de l'ancien véhicule (parcours hors mission) et nettoie s'il n'en reste aucun.
+Hook called when the controlled vehicle changes: removes the crawler from the old vehicle (non-mission trail) and cleans up if none remain.
 
-- `oldId` (*integer*) : Id de l'ancien véhicule.
-- `newId` (*integer*) : Id du nouveau véhicule.
-- `player` (*integer*) : Index du joueur.
+- `oldId` (*integer*) : Id of the old vehicle.
+- `newId` (*integer*) : Id of the new vehicle.
+- `player` (*integer*) : Player index.
 
 #### `gameplay_crawl_general.setupCrawl(trail, veh, isFromMission)`
 
-Prépare un parcours : arrête le crawl précédent, résout zone, chemin et départ depuis saveSystem, gère l'inversion, crée les données du crawler, charge les prefabs et, si isFromMission, téléporte le véhicule à la position de départ.
+Prepares a trail: stops the previous crawl, resolves zone, path and start from saveSystem, handles reversal, creates the crawler data, loads the prefabs and, if isFromMission, teleports the vehicle to the starting position.
 
-- `trail` (*table*) : Parcours (boundaryId, pathId, startingPositionId, pathReversed, prefabs, name).
-- `veh` (*userdata*) : Objet véhicule.
-- `isFromMission` (*boolean|nil*) : Vrai si lancé par une mission/flowgraph.
-- **renvoie** : boolean false si zone ou chemin manquent ou si trail/veh est nil.
+- `trail` (*table*) : Trail (boundaryId, pathId, startingPositionId, pathReversed, prefabs, name).
+- `veh` (*userdata*) : Vehicle object.
+- `isFromMission` (*boolean|nil*) : True if started by a mission/flowgraph.
+- **returns**: boolean false if zone or path are missing or if trail/veh is nil.
 
 #### `gameplay_crawl_general.startCrawlFlowgraph(trail, veh)`
 
-Démarre un crawl depuis un flowgraph. Si le même parcours (même nom) est déjà préparé, le réutilise ; sinon appelle setupCrawl(trail, veh, true). Émet onCrawlStarted.
+Starts a crawl from a flowgraph. If the same trail (same name) is already prepared, reuses it; otherwise calls setupCrawl(trail, veh, true). Emits onCrawlStarted.
 
-- `trail` (*table*) : Parcours à lancer.
-- `veh` (*userdata*) : Objet véhicule.
-- **renvoie** : boolean true si le crawl a démarré.
+- `trail` (*table*) : Trail to start.
+- `veh` (*userdata*) : Vehicle object.
+- **returns**: boolean true if the crawl started.
 
 #### `gameplay_crawl_general.startCrawlFreeroam(trail, veh)`
 
-Démarre un crawl en freeroam. En multiseat avec le même parcours déjà actif, ajoute simplement le véhicule au crawl ; sinon prépare le parcours puis lance gameplay_crawl_utils.startCrawl, émet onCrawlStarted et efface les POI bruts.
+Starts a crawl in freeroam. In multiseat with the same trail already active, simply adds the vehicle to the crawl; otherwise prepares the trail then calls gameplay_crawl_utils.startCrawl, emits onCrawlStarted and clears the raw POIs.
 
-- `trail` (*table*) : Parcours à lancer.
-- `veh` (*userdata*) : Objet véhicule.
+- `trail` (*table*) : Trail to start.
+- `veh` (*userdata*) : Vehicle object.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `activeTrail` | table|nil | Parcours actif : {trail, boundary, path, startingPosition, prefabs, isFromMission} ; nil si aucun. |
-| `crawlersData` | table<integer, table> | Liste des données de crawler (créées par gameplay_crawl_utils.setupCrawlerData) du parcours actif. |
-| `dependencies` | table<integer, string> | Extensions chargées avant : gameplay_crawl_saveSystem, utils, boundary, display. |
+| `activeTrail` | table|nil | Active trail: {trail, boundary, path, startingPosition, prefabs, isFromMission}; nil if none. |
+| `crawlersData` | table<integer, table> | List of crawler data (created by gameplay_crawl_utils.setupCrawlerData) of the active trail. |
+| `dependencies` | table<integer, string> | Extensions loaded beforehand: gameplay_crawl_saveSystem, utils, boundary, display. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCrawlStarted` — écouté par 6 module(s)
+- `onCrawlStarted` — listened to by 6 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`
 
-**Charge les extensions :** `gameplay_crawl_freeroamMultiplayer`
+**Loads extensions:** `gameplay_crawl_freeroamMultiplayer`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/crawl/general.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/crawl/general.lua`.*

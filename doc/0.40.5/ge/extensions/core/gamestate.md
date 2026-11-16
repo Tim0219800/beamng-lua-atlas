@@ -1,151 +1,151 @@
 # `core_gamestate`
 
-*Fichier : `lua/ge/extensions/core/gamestate.lua` · VM : Game Engine (GE) · 258 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/gamestate.lua` · VM: Game Engine (GE) · 258 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_gamestate` : `extensions.load("core_gamestate")`, puis la globale `core_gamestate`
+**Access:** extension `core_gamestate`: `extensions.load("core_gamestate")`, then the global `core_gamestate`
 
-Extension GE `core_gamestate` : deux rôles. (1) Stocker l'état de JEU (freeroam, campagne… avec disposition d'applis et éléments de menu) et le diffuser aux extensions et à l'UI. (2) Piloter l'écran de chargement : les modules demandent à l'afficher (requestEnterLoadingScreen) et à le fermer (requestExitLoadingScreen) ; l'écran ne se ferme que quand TOUS les demandeurs ont terminé. Un moddeur l'utilise pour afficher l'écran de chargement pendant un travail long.
+GE extension `core_gamestate`: two roles. (1) Store the GAME state (freeroam, campaign… with app layout and menu items) and broadcast it to the extensions and the UI. (2) Drive the loading screen: modules request to show it (requestEnterLoadingScreen) and to close it (requestExitLoadingScreen); the screen only closes when ALL requesters have finished. A modder uses it to show the loading screen during a long task.
 
-## Exemple
+## Example
 
 ```lua
 core_gamestate.requestEnterLoadingScreen('monMod', function()
-  -- appelé quand l'écran de chargement est réellement affiché
-  -- ... charger des choses ...
+  -- called when the loading screen is actually displayed
+  -- ... load things ...
   core_gamestate.requestExitLoadingScreen('monMod')
 end)
 ```
 
-## Remarques
+## Notes
 
-- L'état est une table {state, appLayout, menuItems, options}. setGameState ne remplace que les champs fournis (non nil) ; M.state est reconstruit à chaque appel.
-- Écran de chargement : loadingScreenRequests[tag] = true/false ; l'écran se ferme quand toutes les entrées sont false. Le callback de requestEnterLoadingScreen est exécuté tout de suite si l'écran est déjà actif (loadingActive), sinon mis en file jusqu'à loadingScreenActive() (appelée par l'UI). Filet de sécurité : si l'UI ne répond pas, onUpdate force la suite après 1 s cumulée.
-- En mode sans UI (argument de ligne de commande -noui) ou headless_mode, requestEnterLoadingScreen exécute le callback immédiatement sans afficher d'écran, et ne l'enregistre pas.
-- À la fermeture, si getMissionFilename() == '' (aucun niveau), l'UI est envoyée au menu principal et l'état de jeu est remis à zéro.
-- Évènements : hook extensions onGameStateUpdate(state) ; onLoadingScreenInactive(state) ; UI : GameStateUpdate, LoadingScreen {active, gotoMainMenu, gameState}, ShowEntertainingBackground, requestUIInitialised.
-- Incohérences : le paramètre ignoreMenuswitch de requestExitLoadingScreen n'est pas utilisé ; gameStateDecorator fait un dump() de debug à chaque appel ; onDeserialized est vide.
+- The state is a table {state, appLayout, menuItems, options}. setGameState only replaces the provided (non-nil) fields; M.state is rebuilt on every call.
+- Loading screen: loadingScreenRequests[tag] = true/false; the screen closes when all entries are false. The requestEnterLoadingScreen callback is executed immediately if the screen is already active (loadingActive), otherwise queued until loadingScreenActive() (called by the UI). Safety net: if the UI does not respond, onUpdate forces the continuation after 1 s accumulated.
+- In no-UI mode (command line argument -noui) or headless_mode, requestEnterLoadingScreen executes the callback immediately without showing a screen, and does not register it.
+- On closing, if getMissionFilename() == '' (no level), the UI is sent to the main menu and the game state is reset.
+- Events: extension hook onGameStateUpdate(state); onLoadingScreenInactive(state); UI: GameStateUpdate, LoadingScreen {active, gotoMainMenu, gameState}, ShowEntertainingBackground, requestUIInitialised.
+- Inconsistencies: the ignoreMenuswitch parameter of requestExitLoadingScreen is unused; gameStateDecorator does a debug dump() on every call; onDeserialized is empty.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_gamestate.gameStateDecorator()` | Renvoie le nom de l'état de jeu s'il est non vide (affiche aussi l'état par dump(), debug). | 43 |
-| `core_gamestate.getGameState()` | Copie profonde de l'état de jeu. | 39 |
-| `core_gamestate.getLoadingStatus(tagName)` | État de la demande d'un module. | 97 |
-| `core_gamestate.loading()` | Indique si au moins un module demande l'écran de chargement. À ne pas utiliser pendant le processus de chargement lui-même (le code le déconseille) ; préférer getLoadingStatus. | 93 |
-| `core_gamestate.loadingScreenActive()` | Appelé par l'UI quand l'écran de chargement est réellement affiché : marque loadingActive et exécute les callbacks en attente. *(interne)* | 169 |
-| `core_gamestate.loadingScreenInactive(state)` | Appelé par l'UI quand l'écran de chargement est fermé : remet les paramètres audio à 0, signale LoadingManager et émet le hook onLoadingScreenInactive. *(interne)* | 175 |
-| `core_gamestate.onAfterRouteChange(context)` | Hook de changement de route UI : met à jour la musique du menu principal si les fonctions globales existent. *(interne)* *(hook)* | 224 |
-| `core_gamestate.onDeserialized(data)` | Hook de restauration : ne fait rien. *(interne)* *(hook)* | 184 |
-| `core_gamestate.onExtensionLoaded()` | Appelé au chargement de l'extension : demande à l'UI de signaler son initialisation (guihooks requestUIInitialised). *(interne)* *(hook)* | 202 |
-| `core_gamestate.onUIInitialised()` | Hook (alias de uiReady) appelé quand l'UI est prête : si un chargement attendait l'UI, ré-émet LoadingScreen {active = true}. *(interne)* *(hook)* | 187 |
-| `core_gamestate.onUpdate(dtReal, dtSim, dtRaw)` | Hook par image : si des callbacks attendent l'écran de chargement depuis plus d'1 s (temps cumulé borné à 1/30 s par image), force loadingScreenActive. *(interne)* *(hook)* | 210 |
-| `core_gamestate.requestEnterLoadingScreen(tagName, func)` | Demande l'affichage de l'écran de chargement au nom d'un module. À la première demande, envoie LoadingScreen {active = true} et règle les paramètres audio g_GameLoading=1 et g_FadeTimeMS=1000. func est appelé quand l'écran est prêt. | 101 |
-| `core_gamestate.requestExitLoadingScreen(tagName, ignoreMenuswitch)` | Indique que le demandeur a fini. Quand tous ont fini, l'écran de chargement est masqué (LoadingScreen {active = false, gotoMainMenu, gameState}) et la file de callbacks est vidée. | 141 |
-| `core_gamestate.requestGameState()` | Diffuse l'état de jeu courant : hook onGameStateUpdate et évènement UI GameStateUpdate (alias de sendGameState). | 23 |
-| `core_gamestate.requestMainMenuState()` | Indique à l'UI s'il faut afficher le fond du menu principal (guihooks ShowEntertainingBackground) : vrai quand getMissionFilename() est vide. Ne change pas la route de l'UI. | 59 |
-| `core_gamestate.setGameState(state, appLayout, menuItems, options)` | Met à jour l'état de jeu (freeroam, campagne…) puis le diffuse. Les paramètres nil gardent l'ancienne valeur. | 29 |
+| `core_gamestate.gameStateDecorator()` | Returns the game state name if it is non-empty (also displays the state via dump(), debug). | 43 |
+| `core_gamestate.getGameState()` | Deep copy of the game state. | 39 |
+| `core_gamestate.getLoadingStatus(tagName)` | State of a module's request. | 97 |
+| `core_gamestate.loading()` | Indicates whether at least one module requests the loading screen. Not to be used during the loading process itself (the code advises against it); prefer getLoadingStatus. | 93 |
+| `core_gamestate.loadingScreenActive()` | Called by the UI when the loading screen is actually displayed: sets loadingActive and executes the pending callbacks. *(internal)* | 169 |
+| `core_gamestate.loadingScreenInactive(state)` | Called by the UI when the loading screen is closed: resets the audio parameters to 0, signals LoadingManager and emits the onLoadingScreenInactive hook. *(internal)* | 175 |
+| `core_gamestate.onAfterRouteChange(context)` | UI route change hook: updates the main menu music if the global functions exist. *(internal)* *(hook)* | 224 |
+| `core_gamestate.onDeserialized(data)` | Restore hook: does nothing. *(internal)* *(hook)* | 184 |
+| `core_gamestate.onExtensionLoaded()` | Called when the extension loads: asks the UI to report its initialization (guihooks requestUIInitialised). *(internal)* *(hook)* | 202 |
+| `core_gamestate.onUIInitialised()` | Hook (alias of uiReady) called when the UI is ready: if a loading was waiting for the UI, re-emits LoadingScreen {active = true}. *(internal)* *(hook)* | 187 |
+| `core_gamestate.onUpdate(dtReal, dtSim, dtRaw)` | Per-frame hook: if callbacks have been waiting for the loading screen for more than 1 s (accumulated time capped at 1/30 s per frame), forces loadingScreenActive. *(internal)* *(hook)* | 210 |
+| `core_gamestate.requestEnterLoadingScreen(tagName, func)` | Requests the display of the loading screen on behalf of a module. On the first request, sends LoadingScreen {active = true} and sets the audio parameters g_GameLoading=1 and g_FadeTimeMS=1000. func is called when the screen is ready. | 101 |
+| `core_gamestate.requestExitLoadingScreen(tagName, ignoreMenuswitch)` | Indicates that the requester has finished. When all have finished, the loading screen is hidden (LoadingScreen {active = false, gotoMainMenu, gameState}) and the callback queue is cleared. | 141 |
+| `core_gamestate.requestGameState()` | Broadcasts the current game state: onGameStateUpdate hook and UI event GameStateUpdate (alias of sendGameState). | 23 |
+| `core_gamestate.requestMainMenuState()` | Tells the UI whether to show the main menu background (guihooks ShowEntertainingBackground): true when getMissionFilename() is empty. Does not change the UI route. | 59 |
+| `core_gamestate.setGameState(state, appLayout, menuItems, options)` | Updates the game state (freeroam, campaign…) then broadcasts it. nil parameters keep the old value. | 29 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_gamestate.gameStateDecorator()`
 
-Renvoie le nom de l'état de jeu s'il est non vide (affiche aussi l'état par dump(), debug).
+Returns the game state name if it is non-empty (also displays the state via dump(), debug).
 
-- **renvoie** : string|nil Nom de l'état ou nil.
+- **returns**: string|nil State name or nil.
 
 #### `core_gamestate.getGameState()`
 
-Copie profonde de l'état de jeu.
+Deep copy of the game state.
 
-- **renvoie** : table Copie de M.state.
+- **returns**: table Copy of M.state.
 
 #### `core_gamestate.getLoadingStatus(tagName)`
 
-État de la demande d'un module.
+State of a module's request.
 
-- `tagName` (*string*) : Identifiant du demandeur.
-- **renvoie** : boolean|nil true = demandé, false = terminé, nil = jamais demandé.
+- `tagName` (*string*) : Requester identifier.
+- **returns**: boolean|nil true = requested, false = finished, nil = never requested.
 
 #### `core_gamestate.loading()`
 
-Indique si au moins un module demande l'écran de chargement. À ne pas utiliser pendant le processus de chargement lui-même (le code le déconseille) ; préférer getLoadingStatus.
+Indicates whether at least one module requests the loading screen. Not to be used during the loading process itself (the code advises against it); prefer getLoadingStatus.
 
-- **renvoie** : boolean true si un chargement est demandé.
+- **returns**: boolean true if a loading is requested.
 
 #### `core_gamestate.loadingScreenInactive(state)`
 
-Appelé par l'UI quand l'écran de chargement est fermé : remet les paramètres audio à 0, signale LoadingManager et émet le hook onLoadingScreenInactive.
+Called by the UI when the loading screen is closed: resets the audio parameters to 0, signals LoadingManager and emits the onLoadingScreenInactive hook.
 
-- `state` (*number|string*) : État envoyé par l'UI (converti en nombre si possible).
+- `state` (*number|string*) : State sent by the UI (converted to a number if possible).
 
 #### `core_gamestate.onAfterRouteChange(context)`
 
-Hook de changement de route UI : met à jour la musique du menu principal si les fonctions globales existent.
+UI route change hook: updates the main menu music if the global functions exist.
 
-- `context` (*table*) : Contexte avec toRoute.name.
+- `context` (*table*) : Context with toRoute.name.
 
 #### `core_gamestate.onDeserialized(data)`
 
-Hook de restauration : ne fait rien.
+Restore hook: does nothing.
 
-- `data` (*any*) : Non utilisé.
+- `data` (*any*) : Not used.
 
 #### `core_gamestate.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook par image : si des callbacks attendent l'écran de chargement depuis plus d'1 s (temps cumulé borné à 1/30 s par image), force loadingScreenActive.
+Per-frame hook: if callbacks have been waiting for the loading screen for more than 1 s (accumulated time capped at 1/30 s per frame), forces loadingScreenActive.
 
-- `dtReal` (*number*) : Delta temps réel en secondes.
-- `dtSim` (*number*) : Delta simulation.
-- `dtRaw` (*number*) : Delta brut.
+- `dtReal` (*number*) : Real-time delta in seconds.
+- `dtSim` (*number*) : Simulation delta.
+- `dtRaw` (*number*) : Raw delta.
 
 #### `core_gamestate.requestEnterLoadingScreen(tagName, func)`
 
-Demande l'affichage de l'écran de chargement au nom d'un module. À la première demande, envoie LoadingScreen {active = true} et règle les paramètres audio g_GameLoading=1 et g_FadeTimeMS=1000. func est appelé quand l'écran est prêt.
+Requests the display of the loading screen on behalf of a module. On the first request, sends LoadingScreen {active = true} and sets the audio parameters g_GameLoading=1 and g_FadeTimeMS=1000. func is called when the screen is ready.
 
-- `tagName` (*string*) : Identifiant du demandeur (même nom à réutiliser pour la sortie). nil : ignoré.
-- `func` (*function|nil*) : Callback à exécuter quand l'écran est affiché.
+- `tagName` (*string*) : Requester identifier (same name to reuse for the exit). nil: ignored.
+- `func` (*function|nil*) : Callback to execute when the screen is displayed.
 
 #### `core_gamestate.requestExitLoadingScreen(tagName, ignoreMenuswitch)`
 
-Indique que le demandeur a fini. Quand tous ont fini, l'écran de chargement est masqué (LoadingScreen {active = false, gotoMainMenu, gameState}) et la file de callbacks est vidée.
+Indicates that the requester has finished. When all have finished, the loading screen is hidden (LoadingScreen {active = false, gotoMainMenu, gameState}) and the callback queue is cleared.
 
-- `tagName` (*string*) : Même identifiant que pour l'entrée. Un tag inconnu produit un avertissement.
-- `ignoreMenuswitch` (*boolean|nil*) : Non utilisé dans le code.
+- `tagName` (*string*) : Same identifier as for the entry. An unknown tag produces a warning.
+- `ignoreMenuswitch` (*boolean|nil*) : Not used in the code.
 
 #### `core_gamestate.requestMainMenuState()`
 
-Indique à l'UI s'il faut afficher le fond du menu principal (guihooks ShowEntertainingBackground) : vrai quand getMissionFilename() est vide. Ne change pas la route de l'UI.
+Tells the UI whether to show the main menu background (guihooks ShowEntertainingBackground): true when getMissionFilename() is empty. Does not change the UI route.
 
-- **renvoie** : boolean true si aucun niveau n'est chargé.
+- **returns**: boolean true if no level is loaded.
 
 #### `core_gamestate.setGameState(state, appLayout, menuItems, options)`
 
-Met à jour l'état de jeu (freeroam, campagne…) puis le diffuse. Les paramètres nil gardent l'ancienne valeur.
+Updates the game state (freeroam, campaign…) then broadcasts it. nil parameters keep the old value.
 
-- `state` (*string|nil*) : Nom de l'état de jeu.
-- `appLayout` (*any*) : Disposition des applis UI (déduit du code).
-- `menuItems` (*any*) : Éléments de menu (déduit du code).
-- `options` (*any*) : Options supplémentaires.
+- `state` (*string|nil*) : Name of the game state.
+- `appLayout` (*any*) : UI apps layout (inferred from code).
+- `menuItems` (*any*) : Menu items (inferred from code).
+- `options` (*any*) : Additional options.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `state` | table | État de jeu courant {state, appLayout, menuItems, options} ; {} au départ et après un retour au menu principal. |
+| `state` | table | Current game state {state, appLayout, menuItems, options}; {} at start and after a return to the main menu. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onGameStateUpdate` — écouté par 3 module(s)
-- `onLoadingScreenInactive` — écouté par 1 module(s)
+- `onGameStateUpdate` — listened to by 3 module(s)
+- `onLoadingScreenInactive` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `GameStateUpdate`, `LoadingScreen`, `ShowEntertainingBackground`, `requestUIInitialised`
+**UI events (guihooks.trigger):** `GameStateUpdate`, `LoadingScreen`, `ShowEntertainingBackground`, `requestUIInitialised`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getStartingArgs`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/gamestate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/gamestate.lua`.*

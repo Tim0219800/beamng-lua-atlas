@@ -2,46 +2,46 @@
 -- tim19Atlas stub generated from lua/ge/extensions/mcp/server.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Serveur MCP (Model Context Protocol) intégré au jeu. Il ouvre un petit serveur HTTP local (via le serveur C++ BNGWebWSServer) sur http://127.0.0.1:29292/mcp et y parle JSON-RPC 2.0 en transport « Streamable HTTP » (uniquement POST). Un client MCP (Cursor, Claude, etc.) peut ainsi lister et appeler les outils exposés par l'extension mcp_tools (exécuter du Lua dans le jeu, lire les logs, capturer l'écran, piloter véhicules, caméra, éditeur, UI…). Ce module ne contient que la plomberie du protocole ; les outils eux-mêmes sont dans mcp_tools et mcp/tools/*.lua.
---- Accès : extension `mcp_server` : `extensions.load("mcp_server")`, puis la globale `mcp_server`
+--- MCP (Model Context Protocol) server built into the game. It opens a small local HTTP server (via the C++ server BNGWebWSServer) at http://127.0.0.1:29292/mcp and speaks JSON-RPC 2.0 there over the "Streamable HTTP" transport (POST only). An MCP client (Cursor, Claude, etc.) can thus list and call the tools exposed by the mcp_tools extension (run Lua in the game, read logs, capture the screen, drive vehicles, camera, editor, UI...). This module only contains the protocol plumbing; the tools themselves are in mcp_tools and mcp/tools/*.lua.
+--- Access: extension `mcp_server`: `extensions.load("mcp_server")`, then the global `mcp_server`
 ---@class mcp_server
 mcp_server = {}
 
---- Indique si le serveur écoute vraiment : le port publié correspond au port courant, le serveur existe et `server:isListening()` est vrai. Utilisé par ge/main.lua (tryCompleteLuaReload) pour attendre que le serveur soit relancé avant de terminer un rechargement Lua.
----Source : lua/ge/extensions/mcp/server.lua:171
----@return boolean  true si l'écouteur HTTP est prêt.
+--- Returns whether the server is really listening: the published port matches the current port, the server exists and `server:isListening()` is true. Used by ge/main.lua (tryCompleteLuaReload) to wait for the server to restart before finishing a Lua reload.
+---Source: lua/ge/extensions/mcp/server.lua:171
+---@return boolean  true if the HTTP listener is ready.
 function mcp_server.isReady() end
 
---- Appelé après un rechargement du VM Lua : relance le serveur si `data.active` était vrai.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/mcp/server.lua:169
----@param data table|nil Table renvoyée par onSerialize.
+--- Called after a Lua VM reload: restarts the server if `data.active` was true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/mcp/server.lua:169
+---@param data table|nil Table returned by onSerialize.
 function mcp_server.onDeserialize(data) end
 
---- Hook appelé quand l'extension est chargée : démarre le serveur HTTP (BNGWebWSServer.getOrCreate sur l'hôte/port courant, route /mcp).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/mcp/server.lua:161
+--- Hook called when the extension is loaded: starts the HTTP server (BNGWebWSServer.getOrCreate on the current host/port, route /mcp).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/mcp/server.lua:161
 function mcp_server.onExtensionLoaded() end
 
---- Hook appelé au déchargement : détruit le serveur HTTP s'il existe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/mcp/server.lua:163
+--- Hook called on unload: destroys the HTTP server if it exists.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/mcp/server.lua:163
 function mcp_server.onExtensionUnloaded() end
 
---- Hook d'extension appelé au chargement : passe l'extension en mode de déchargement manuel pour qu'elle ne soit pas déchargée lors des changements de niveau ou de mode de jeu.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/mcp/server.lua:159
+--- Extension hook called on load: sets the extension to manual unload mode so that it is not unloaded on level or game mode changes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/mcp/server.lua:159
 function mcp_server.onInit() end
 
---- Appelé avant un rechargement du VM Lua (Ctrl+L) : mémorise si le serveur était actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/mcp/server.lua:168
+--- Called before a Lua VM reload (Ctrl+L): remembers whether the server was active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/mcp/server.lua:168
 ---@return table  {active = boolean}
 function mcp_server.onSerialize() end
 
---- Hook appelé à chaque frame : publie le port une fois la liaison réussie, exécute le chien de garde (toutes les 2 s, change de port si l'écouteur est tombé), puis lit les requêtes HTTP en attente (getHttpRequests) : POST -> handleRpc et réponse JSON, autre méthode -> 405.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/mcp/server.lua:121
----@param dtReal number Durée réelle de la frame en secondes.
+--- Hook called every frame: publishes the port once binding succeeds, runs the watchdog (every 2 s, changes port if the listener went down), then reads pending HTTP requests (getHttpRequests): POST -> handleRpc and JSON response, other method -> 405.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/mcp/server.lua:121
+---@param dtReal number Actual frame duration in seconds.
 function mcp_server.onUpdate(dtReal) end
 

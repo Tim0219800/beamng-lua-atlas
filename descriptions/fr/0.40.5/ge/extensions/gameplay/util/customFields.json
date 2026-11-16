@@ -1,0 +1,32 @@
+{
+  "path": "lua/ge/extensions/gameplay/util/customFields.lua",
+  "module": "Petit conteneur de « champs personnalisés » typés (string, number, boolean, vec3, quat) et d'étiquettes (tags) triées, avec sérialisation. Le module renvoie un constructeur : chaque appel crée un objet indépendant. Utile pour attacher des données libres à un objet de gameplay tout en les sauvegardant en JSON.",
+  "usage": "local cf = require(\"gameplay/util/customFields\")()\ncf:add(\"difficulte\", \"number\", 3)\ncf:addTag(\"ville\")\nlocal valeur, type, existe = cf:get(\"difficulte\")",
+  "notes": [
+    "Types gérés à la désérialisation : string, number, boolean, vec3, quat ; un champ d'un autre type est ignoré.",
+    "validate() convertit les chaînes : '', '0', 0 et 'false' donnent false pour un booléen ; vec3 et quat acceptent 'x,y,z' / 'x,y,z,w' (séparés par des virgules), sinon une valeur nulle.",
+    "add(), set(), remove() et has() testent `self.values[name]` : un champ booléen valant false est donc considéré comme inexistant (set() refuse de le modifier, add() accepte de le ré-ajouter et duplique alors son nom dans names).",
+    "Un champ spécial nommé « tags » déclenche updateTags() à l'ajout ou à la modification.",
+    "get() renvoie (valeur, type, true) ou (nil, nil, false).",
+    "addTag() renvoie false si le tag existe déjà mais ne renvoie rien (nil) en cas de succès."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Objet renvoyé par le constructeur du module. Champs : names (ordre des champs), types, values, tags (ensemble) et sortedTags (liste triée).",
+      "functions": {
+        "init": {"desc": "Initialise les tables names, types, values, tags et sortedTags.", "params": {}, "internal": true},
+        "onSerialize": {"desc": "Renvoie {names, types, values, tags} ; vec3 et quat sont convertis en tables.", "params": {}, "returns": [{"type": "table", "desc": "Données sérialisables."}]},
+        "onDeserialized": {"desc": "Recrée tous les champs et tags depuis les données sérialisées (efface l'état existant).", "params": {"data": {"type": "table", "desc": "Table produite par onSerialize."}}},
+        "validate": {"desc": "Convertit une valeur vers le type demandé (string, number, boolean, vec3, quat).", "params": {"value": {"type": "any", "desc": "Valeur à convertir."}, "datatype": {"type": "string", "desc": "Type cible."}}, "returns": [{"type": "any", "desc": "Valeur convertie ; nil si le type est inconnu."}]},
+        "set": {"desc": "Change la valeur d'un champ existant (sans validation de type).", "params": {"name": {"type": "string", "desc": "Nom du champ."}, "value": {"type": "any", "desc": "Nouvelle valeur."}}, "returns": [{"type": "boolean", "desc": "false si le champ n'existe pas."}]},
+        "addTag": {"desc": "Ajoute un tag et retrie la liste.", "params": {"tag": {"type": "string", "desc": "Tag à ajouter."}}, "returns": [{"type": "boolean|nil", "desc": "false si absent ou déjà présent, nil sinon."}]},
+        "removeTag": {"desc": "Retire un tag, désigné par son nom ou son indice dans sortedTags.", "params": {"tag": {"type": "string|integer", "desc": "Nom ou indice."}}, "returns": [{"type": "boolean", "desc": "false si le tag n'existe pas."}]},
+        "remove": {"desc": "Supprime un champ.", "params": {"name": {"type": "string", "desc": "Nom du champ."}}, "returns": [{"type": "boolean", "desc": "false si le champ n'existe pas."}]},
+        "add": {"desc": "Ajoute un champ typé ; la valeur est validée selon le type.", "params": {"name": {"type": "string", "desc": "Nom du champ."}, "datatype": {"type": "string", "desc": "string, number, boolean, vec3 ou quat."}, "value": {"type": "any", "desc": "Valeur initiale."}}, "returns": [{"type": "boolean", "desc": "false si le nom existe déjà."}]},
+        "has": {"desc": "Teste l'existence d'un champ.", "params": {"name": {"type": "string", "desc": "Nom du champ."}}, "returns": [{"type": "boolean", "desc": ""}]},
+        "get": {"desc": "Lit un champ.", "params": {"name": {"type": "string", "desc": "Nom du champ."}}, "returns": [{"type": "any", "desc": "Valeur."}, {"type": "string|nil", "desc": "Type."}, {"type": "boolean", "desc": "true si trouvé."}]},
+        "updateTags": {"desc": "Reconstruit sortedTags (tags triés alphabétiquement) à partir de tags.", "params": {}, "internal": true}
+      }
+    }
+  }
+}

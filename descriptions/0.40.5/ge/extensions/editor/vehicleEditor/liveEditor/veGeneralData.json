@@ -1,18 +1,45 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.lua",
-  "module": "Fenêtre 'General Data' du Vehicle Editor live. Chaque frame, elle envoie au VM du véhicule une commande qui renvoie (via obj:queueGameEngineLua) une table dans vEditor.generalData : position, rotation, direction, roll/pitch/yaw, vitesse, accélérations (sensors.gx2/gy2/gz2), vitesse air/sol, température, pression, densité de l'air et dégâts. Elle les affiche avec des unités lisibles.",
+  "module": "'General Data' window of the live Vehicle Editor. Every frame, it sends the vehicle VM a command that returns (via obj:queueGameEngineLua) a table in vEditor.generalData: position, rotation, direction, roll/pitch/yaw, speed, accelerations (sensors.gx2/gy2/gz2), air/ground speed, temperature, pressure, air density and damage. It displays them with readable units.",
   "notes": [
-    "Unités affichées : position m, vitesse m/s, accélération m/s², température convertie de K en °C (-273.15), pression convertie de Pa en kPa (*0.001), densité kg/m³, dégâts en $.",
-    "Les données arrivent avec un frame de retard (commande asynchrone queueLuaCommand).",
-    "La commande est envoyée à chaque frame où la fenêtre est ouverte (im.Begin vrai)."
+    "Displayed units: position m, speed m/s, acceleration m/s², temperature converted from K to °C (-273.15), pressure converted from Pa to kPa (*0.001), density kg/m³, damage in $.",
+    "The data arrives one frame late (asynchronous queueLuaCommand command).",
+    "The command is sent every frame the window is open (im.Begin true)."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "'General Data'."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "'General Data'."
+    }
   },
   "functions": {
-    "onUpdate": {"desc": "Appelé chaque frame : demande les données au véhicule et dessine le tableau à deux colonnes.", "internal": true},
-    "open": {"desc": "Ouvre la fenêtre.", "internal": false},
-    "onSerialize": {"desc": "Renvoie {windowOpen}.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
-    "onDeserialized": {"desc": "Restaure l'état d'ouverture.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+    "onUpdate": {
+      "desc": "Called every frame: requests the data from the vehicle and draws the two-column table.",
+      "internal": true
+    },
+    "open": {
+      "desc": "Opens the window.",
+      "internal": false
+    },
+    "onSerialize": {
+      "desc": "Returns {windowOpen}.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restores the open state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
+      "internal": true
+    }
   }
 }

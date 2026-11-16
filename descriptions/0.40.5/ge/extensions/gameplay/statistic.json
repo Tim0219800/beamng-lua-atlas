@@ -1,201 +1,436 @@
 {
   "path": "lua/ge/extensions/gameplay/statistic.lua",
-  "module": "Extension de statistiques de jeu. Elle tient des métriques nommées (compteurs, valeurs, minuteurs) enregistrées dans settings/cloud/gameplay_stat.json, et une copie séparée par profil de carrière (career/gameplay_stat.json dans le slot de sauvegarde). Elle mesure le temps passé par mode, niveau et activité, compte des événements (véhicules apparus, resets, changements de véhicule, scénarios finis) et charge les modules de gameplay/statisticModules (watchJturn, watchRollover…) dont la fonction workload est appelée tour à tour sur le véhicule du joueur. Les moddeurs s'en servent pour lire, incrémenter ou observer des métriques.",
-  "usage": "gameplay_statistic.metricAdd('mymod/jumps', 1)\nlocal e = gameplay_statistic.metricGet('mymod/jumps')\nprint(e and e.value)\ngameplay_statistic.callbackRegister('mymod/jumps', 10, function(name, old, new) print('10 sauts !') end)",
+  "module": "Game statistics extension. It keeps named metrics (counters, values, timers) recorded in settings/cloud/gameplay_stat.json, and a separate copy per career profile (career/gameplay_stat.json in the save slot). It measures time spent per mode, level and activity, counts events (spawned vehicles, resets, vehicle switches, finished scenarios) and loads the gameplay/statisticModules modules (watchJturn, watchRollover...) whose workload function is called in turn on the player's vehicle. Modders use it to read, increment or observe metrics.",
+  "usage": "gameplay_statistic.metricAdd('mymod/jumps', 1)\nlocal e = gameplay_statistic.metricGet('mymod/jumps')\nprint(e and e.value)\ngameplay_statistic.callbackRegister('mymod/jumps', 10, function(name, old, new) print('10 jumps!') end)",
   "notes": [
-    "Une entrée de métrique est {value=…} ; avec aggregate = true elle contient aussi last (pour metricAdd), count, min, max.",
-    "Noms de métriques : chemins avec « / » (ex. vehicle/jturn, vehicle/rollover, general/mode/<mode>.time, general/map/<niveau>.time, scenario/finished). Les minuteurs enregistrent des secondes (temps réel, ou temps simulé avec useSimTime).",
-    "Un callback avec trigger ne s'exécute qu'une fois (supprimé après appel) quand newentry.value >= trigger. Un nom contenant « * » est traité comme motif Lua (string.match) dans une table de callbacks génériques.",
-    "Une fonction workload d'un module n'est appelée que si le véhicule joueur est jouable, contrôlé par le joueur et si dtSim ~= 0 ; une seule fonction par frame (tourniquet).",
-    "Sauvegarde : au plus tard à la fin de la mission, à la sérialisation, à l'arrêt du jeu ou quand sendGUIState constate des entrées modifiées ou plus de 60 s sans sauvegarde ; l'écriture passe par un fichier .tmp renommé.",
-    "Bug mineur : dans startActivity, le test d'arrêt du minuteur de niveau lit la clé « general/mapmap/<niveau>.time » (faute de frappe) au lieu de « general/map/… ».",
-    "checkSaveDecay (non appelée) affecte une globale saveNextFrame jamais déclarée."
+    "A metric entry is {value=...}; with aggregate = true it also contains last (for metricAdd), count, min, max.",
+    "Metric names: paths with \"/\" (e.g. vehicle/jturn, vehicle/rollover, general/mode/<mode>.time, general/map/<level>.time, scenario/finished). Timers record seconds (real time, or simulated time with useSimTime).",
+    "A callback with trigger runs only once (removed after the call) when newentry.value >= trigger. A name containing \"*\" is treated as a Lua pattern (string.match) in a table of generic callbacks.",
+    "A module's workload function is only called if the player vehicle is playable, player-controlled and dtSim ~= 0; one function per frame (round-robin).",
+    "Saving: at the latest at the end of the mission, on serialization, on game shutdown or when sendGUIState finds modified entries or more than 60 s without saving; writing goes through a renamed .tmp file.",
+    "Minor bug: in startActivity, the level timer stop test reads the key \"general/mapmap/<level>.time\" (typo) instead of \"general/map/...\".",
+    "checkSaveDecay (not called) assigns a never-declared global saveNextFrame."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant : ui_imgui et core_gamestate."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "Extensions loaded beforehand: ui_imgui and core_gamestate."
+    }
   },
   "functions": {
     "metricAdd": {
-      "desc": "Ajoute value à la métrique name (la crée si absente), pour les statistiques générales et, si la carrière est active, pour celles de la carrière. Déclenche les callbacks associés.",
+      "desc": "Adds value to the metric name (creates it if absent), for general statistics and, if career is active, for career statistics. Triggers the associated callbacks.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de la métrique."},
-        "value": {"type": "number", "desc": "Valeur à ajouter."},
-        "aggregate": {"type": "boolean|nil", "desc": "Suivre aussi last, count, min, max."}
+        "name": {
+          "type": "string",
+          "desc": "Metric name."
+        },
+        "value": {
+          "type": "number",
+          "desc": "Value to add."
+        },
+        "aggregate": {
+          "type": "boolean|nil",
+          "desc": "Also track last, count, min, max."
+        }
       }
     },
     "metricSet": {
-      "desc": "Fixe la valeur de la métrique (général et carrière). Déclenche les callbacks.",
+      "desc": "Sets the metric value (general and career). Triggers the callbacks.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de la métrique."},
-        "value": {"type": "number", "desc": "Nouvelle valeur."},
-        "aggregate": {"type": "boolean|nil", "desc": "Suivre aussi count, min, max."}
+        "name": {
+          "type": "string",
+          "desc": "Metric name."
+        },
+        "value": {
+          "type": "number",
+          "desc": "New value."
+        },
+        "aggregate": {
+          "type": "boolean|nil",
+          "desc": "Also track count, min, max."
+        }
       }
     },
     "metricGet": {
-      "desc": "Renvoie une copie de l'entrée d'une métrique.",
+      "desc": "Returns a copy of a metric's entry.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de la métrique."},
-        "carreer": {"type": "boolean|nil", "desc": "true pour lire les données de la carrière (si active)."}
+        "name": {
+          "type": "string",
+          "desc": "Metric name."
+        },
+        "carreer": {
+          "type": "boolean|nil",
+          "desc": "true to read career data (if active)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "{value, …} ou nil si inconnue."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{value, ...} or nil if unknown."
+        }
+      ]
     },
     "metricGetMatchPattern": {
-      "desc": "Renvoie les copies de toutes les métriques dont le nom correspond à un motif Lua (string.match).",
+      "desc": "Returns copies of all metrics whose name matches a Lua pattern (string.match).",
       "params": {
-        "namePattern": {"type": "string", "desc": "Motif Lua."},
-        "carreer": {"type": "boolean|nil", "desc": "true pour la carrière (si active)."}
+        "namePattern": {
+          "type": "string",
+          "desc": "Lua pattern."
+        },
+        "carreer": {
+          "type": "boolean|nil",
+          "desc": "true for career (if active)."
+        }
       },
-      "returns": [{"type": "table<string, table>", "desc": "nom -> entrée."}]
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "name -> entry."
+        }
+      ]
     },
     "timerStart": {
-      "desc": "Démarre un minuteur nommé. Si un minuteur de ce nom tourne déjà, l'appel est ignoré avec un avertissement.",
+      "desc": "Starts a named timer. If a timer with this name is already running, the call is ignored with a warning.",
       "params": {
-        "name": {"type": "string", "desc": "Nom (aussi nom de la métrique alimentée)."},
-        "increment": {"type": "boolean|nil", "desc": "true (défaut) : ajoute le temps avec metricAdd ; false : metricSet."},
-        "aggregate": {"type": "boolean|nil", "desc": "Mode agrégat (défaut false)."},
-        "useSimTime": {"type": "boolean|nil", "desc": "Utiliser le temps simulé plutôt que le temps réel (défaut false)."}
+        "name": {
+          "type": "string",
+          "desc": "Name (also the name of the metric fed)."
+        },
+        "increment": {
+          "type": "boolean|nil",
+          "desc": "true (default): adds the time with metricAdd; false: metricSet."
+        },
+        "aggregate": {
+          "type": "boolean|nil",
+          "desc": "Aggregate mode (default false)."
+        },
+        "useSimTime": {
+          "type": "boolean|nil",
+          "desc": "Use simulated time rather than real time (default false)."
+        }
       }
     },
     "timerStop": {
-      "desc": "Arrête le minuteur et enregistre le temps écoulé dans la métrique.",
-      "params": {"name": {"type": "string", "desc": "Nom du minuteur."}},
-      "returns": [{"type": "number", "desc": "Secondes écoulées depuis le dernier enregistrement (0 si le minuteur n'existe pas)."}]
-    },
-    "forceTimerUpdate": {"desc": "Enregistre le temps écoulé de tous les minuteurs en cours (sans les arrêter)."},
-    "callbackRegister": {
-      "desc": "Enregistre une fonction appelée quand une métrique change. Signature du callback : fn(name, oldEntry, newEntry) ; newEntry.career indique le contexte carrière. Avec trigger, appelée une seule fois quand la valeur atteint le seuil.",
+      "desc": "Stops the timer and records the elapsed time in the metric.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de métrique, ou motif contenant « * »."},
-        "trigger": {"type": "number|nil", "desc": "Seuil de valeur ; nil = à chaque changement."},
-        "callbackFunction": {"type": "function", "desc": "Callback."},
-        "career": {"type": "boolean|nil", "desc": "Écouter les métriques de carrière."}
+        "name": {
+          "type": "string",
+          "desc": "Timer name."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Seconds elapsed since the last recording (0 if the timer does not exist)."
+        }
+      ]
+    },
+    "forceTimerUpdate": {
+      "desc": "Records the elapsed time of all running timers (without stopping them)."
+    },
+    "callbackRegister": {
+      "desc": "Registers a function called when a metric changes. Callback signature: fn(name, oldEntry, newEntry); newEntry.career indicates the career context. With trigger, called only once when the value reaches the threshold.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Metric name, or pattern containing \"*\"."
+        },
+        "trigger": {
+          "type": "number|nil",
+          "desc": "Value threshold; nil = on every change."
+        },
+        "callbackFunction": {
+          "type": "function",
+          "desc": "Callback."
+        },
+        "career": {
+          "type": "boolean|nil",
+          "desc": "Listen to career metrics."
+        }
       }
     },
     "callbackRemove": {
-      "desc": "Retire un callback enregistré (mêmes name, trigger, fonction et career).",
+      "desc": "Removes a registered callback (same name, trigger, function and career).",
       "params": {
-        "name": {"type": "string", "desc": "Nom ou motif."},
-        "trigger": {"type": "number|nil", "desc": "Seuil utilisé à l'enregistrement."},
-        "callbackFunction": {"type": "function", "desc": "Callback."},
-        "career": {"type": "boolean|nil", "desc": "Contexte carrière."}
+        "name": {
+          "type": "string",
+          "desc": "Name or pattern."
+        },
+        "trigger": {
+          "type": "number|nil",
+          "desc": "Threshold used at registration."
+        },
+        "callbackFunction": {
+          "type": "function",
+          "desc": "Callback."
+        },
+        "career": {
+          "type": "boolean|nil",
+          "desc": "Career context."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si retiré."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if removed."
+        }
+      ]
     },
     "addSchedule": {
-      "desc": "Ajoute une fonction à la file des surveillances par véhicule. Appelée fn(vehicleObj, vehicleId, dtSim), une fonction par frame en tourniquet.",
-      "params": {"fn": {"type": "function", "desc": "Fonction de surveillance."}}
+      "desc": "Adds a function to the per-vehicle watch queue. Called fn(vehicleObj, vehicleId, dtSim), one function per frame in round-robin.",
+      "params": {
+        "fn": {
+          "type": "function",
+          "desc": "Watch function."
+        }
+      }
     },
     "removeSchedule": {
-      "desc": "Retire une fonction de la file des surveillances.",
-      "params": {"fn": {"type": "function", "desc": "Fonction ajoutée avec addSchedule."}},
-      "returns": [{"type": "boolean", "desc": "true si retirée."}]
+      "desc": "Removes a function from the watch queue.",
+      "params": {
+        "fn": {
+          "type": "function",
+          "desc": "Function added with addSchedule."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if removed."
+        }
+      ]
     },
     "setDebug": {
-      "desc": "Ouvre ou ferme la fenêtre imgui de debug « gameplay_statistic Debugger » (modules, entrées, callbacks).",
-      "params": {"newValue": {"type": "boolean", "desc": "true pour afficher."}}
+      "desc": "Opens or closes the imgui debug window \"gameplay_statistic Debugger\" (modules, entries, callbacks).",
+      "params": {
+        "newValue": {
+          "type": "boolean",
+          "desc": "true to show."
+        }
+      }
     },
     "sendGUIState": {
-      "desc": "Sauvegarde si nécessaire puis envoie à l'interface l'évènement StatisticData avec {general = entrées, career = entrées si active}."
+      "desc": "Saves if needed then sends the StatisticData event to the UI with {general = entries, career = entries if active}."
     },
-    "onExtensionLoaded": {"desc": "Hook : charge le fichier de statistiques et les sous-modules statisticModules.", "internal": true},
-    "onExtensionUnloaded": {"desc": "Hook : sauvegarde.", "internal": true},
-    "onExit": {"desc": "Hook appelé à la fermeture du jeu : termine l'activité et sauvegarde.", "internal": true},
-    "onSerialize": {"desc": "Hook : sauvegarde puis renvoie l'état (activité, niveau, mode, minuteurs) avant rechargement Lua.", "internal": true},
+    "onExtensionLoaded": {
+      "desc": "Hook: loads the statistics file and the statisticModules submodules.",
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook: saves.",
+      "internal": true
+    },
+    "onExit": {
+      "desc": "Hook called when the game closes: ends the activity and saves.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook: saves then returns the state (activity, level, mode, timers) before a Lua reload.",
+      "internal": true
+    },
     "onDeserialized": {
-      "desc": "Hook : recharge le fichier et restaure l'état après rechargement Lua.",
-      "params": {"data": {"type": "table", "desc": "Données de onSerialize."}},
+      "desc": "Hook: reloads the file and restores the state after a Lua reload.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data from onSerialize."
+        }
+      },
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook appelé au début d'un niveau : redémarre le suivi d'activité.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook called at the start of a level: restarts activity tracking.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onClientPostStartMission": {
-      "desc": "Hook appelé après le chargement du niveau : démarre l'activité et recharge les sous-modules.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook called after the level loads: starts the activity and reloads the submodules.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook appelé à la fin d'un niveau : termine l'activité et sauvegarde.",
-      "params": {"levelPath": {"type": "string", "desc": "Chemin du niveau."}},
+      "desc": "Hook called at the end of a level: ends the activity and saves.",
+      "params": {
+        "levelPath": {
+          "type": "string",
+          "desc": "Level path."
+        }
+      },
       "internal": true
     },
     "onWorldReadyState": {
-      "desc": "Hook appelé au changement d'état du monde ; ne fait rien.",
-      "params": {"worldReadyState": {"type": "integer", "desc": "État."}},
+      "desc": "Hook called on world state change; does nothing.",
+      "params": {
+        "worldReadyState": {
+          "type": "integer",
+          "desc": "State."
+        }
+      },
       "internal": true
     },
-    "onEditorActivated": {"desc": "Hook : démarre le minuteur general/editor.time.", "internal": true},
-    "onEditorDeactivated": {"desc": "Hook : arrête le minuteur general/editor.time.", "internal": true},
+    "onEditorActivated": {
+      "desc": "Hook: starts the general/editor.time timer.",
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook: stops the general/editor.time timer.",
+      "internal": true
+    },
     "onScenarioLoaded": {
-      "desc": "Hook appelé au chargement d'un scénario : redémarre le suivi d'activité.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario."}},
+      "desc": "Hook called when a scenario loads: restarts activity tracking.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario."
+        }
+      },
       "internal": true
     },
     "onScenarioFinished": {
-      "desc": "Hook appelé à la fin d'un scénario : incrémente scenario/finished.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario."}},
+      "desc": "Hook called at the end of a scenario: increments scenario/finished.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario."
+        }
+      },
       "internal": true
     },
     "onScenarioRestarted": {
-      "desc": "Hook appelé au redémarrage d'un scénario : incrémente scenario/restarted.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario."}},
+      "desc": "Hook called when a scenario restarts: increments scenario/restarted.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Scenario."
+        }
+      },
       "internal": true
     },
     "onGameStateUpdate": {
-      "desc": "Hook appelé au changement d'état de jeu : redémarre le suivi d'activité (ignoré en carrière tant que le temps réel est à 0).",
-      "params": {"newState": {"type": "table|nil", "desc": "Nouvel état."}},
+      "desc": "Hook called on game state change: restarts activity tracking (ignored in career while real time is 0).",
+      "params": {
+        "newState": {
+          "type": "table|nil",
+          "desc": "New state."
+        }
+      },
       "internal": true
     },
-    "onVehicleSelectorSpawnNew": {"desc": "Hook : incrémente vehicle/spawned.", "internal": true},
-    "onVehicleSelectorReplaceCurrent": {"desc": "Hook : incrémente vehicle/spawned.", "internal": true},
-    "onPlayerVehicleCloned": {"desc": "Hook : incrémente vehicle/spawned.", "internal": true},
-    "onSpawnDefaultVehicle": {"desc": "Hook : incrémente vehicle/spawned.", "internal": true},
+    "onVehicleSelectorSpawnNew": {
+      "desc": "Hook: increments vehicle/spawned.",
+      "internal": true
+    },
+    "onVehicleSelectorReplaceCurrent": {
+      "desc": "Hook: increments vehicle/spawned.",
+      "internal": true
+    },
+    "onPlayerVehicleCloned": {
+      "desc": "Hook: increments vehicle/spawned.",
+      "internal": true
+    },
+    "onSpawnDefaultVehicle": {
+      "desc": "Hook: increments vehicle/spawned.",
+      "internal": true
+    },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : cumule les temps réel et simulé, exécute une fonction de surveillance du véhicule joueur, dessine la fenêtre de debug si ouverte.",
+      "desc": "Hook called every frame: accumulates real and simulated times, runs a watch function on the player vehicle, draws the debug window if open.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s)."},
-        "dtSim": {"type": "number", "desc": "Temps simulé écoulé (s)."},
-        "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Elapsed real time (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time elapsed (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw elapsed time (s)."
+        }
       },
       "internal": true
     },
     "onVehicleSpawned": {
-      "desc": "Hook appelé à l'apparition d'un véhicule ; ne fait rien.",
+      "desc": "Hook called when a vehicle spawns; does nothing.",
       "params": {
-        "vid": {"type": "integer", "desc": "Identifiant du véhicule."},
-        "v": {"type": "userdata", "desc": "Objet véhicule."}
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        },
+        "v": {
+          "type": "userdata",
+          "desc": "Vehicle object."
+        }
       },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé au changement de véhicule : pour le joueur 0, mémorise le véhicule et incrémente vehicle/switch.",
+      "desc": "Hook called on vehicle switch: for player 0, stores the vehicle and increments vehicle/switch.",
       "params": {
-        "oldid": {"type": "integer", "desc": "Ancien véhicule."},
-        "newid": {"type": "integer", "desc": "Nouveau véhicule (-1 si aucun)."},
-        "player": {"type": "integer", "desc": "Indice du joueur."}
+        "oldid": {
+          "type": "integer",
+          "desc": "Old vehicle."
+        },
+        "newid": {
+          "type": "integer",
+          "desc": "New vehicle (-1 if none)."
+        },
+        "player": {
+          "type": "integer",
+          "desc": "Player index."
+        }
       },
       "internal": true
     },
     "onVehicleResetted": {
-      "desc": "Hook : incrémente vehicle/reset si c'est le véhicule du joueur.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook: increments vehicle/reset if it is the player's vehicle.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : oublie le véhicule du joueur s'il est détruit.",
-      "params": {"vid": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "desc": "Hook: forgets the player's vehicle if it is destroyed.",
+      "params": {
+        "vid": {
+          "type": "integer",
+          "desc": "Vehicle identifier."
+        }
+      },
       "internal": true
     },
     "onSaveCurrentProfile": {
-      "desc": "Hook appelé à la sauvegarde du profil de carrière : écrit career/gameplay_stat.json dans le slot.",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier du slot de sauvegarde."}},
+      "desc": "Hook called when the career profile is saved: writes career/gameplay_stat.json in the slot.",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Save slot folder."
+        }
+      },
       "internal": true
     },
     "onCareerActive": {
-      "desc": "Hook appelé à l'activation ou désactivation de la carrière : charge ou libère les statistiques du profil.",
-      "params": {"active": {"type": "boolean", "desc": "true si la carrière devient active."}},
+      "desc": "Hook called when career is activated or deactivated: loads or frees the profile statistics.",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "true if career becomes active."
+        }
+      },
       "internal": true
     }
   }

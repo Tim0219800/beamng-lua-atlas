@@ -1,192 +1,192 @@
 # `gameplay_freeformDelivery_routes`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/routes.lua` · VM : Game Engine (GE) · 1189 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/routes.lua` · VM: Game Engine (GE) · 1189 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_routes` : `extensions.load("gameplay_freeformDelivery_routes")`, puis la globale `gameplay_freeformDelivery_routes`
+**Access:** extension `gameplay_freeformDelivery_routes`: `extensions.load("gameplay_freeformDelivery_routes")`, then the global `gameplay_freeformDelivery_routes`
 
-Gestion des itinéraires de la livraison libre. Construit des routes de guidage (core_groundMarkers.setPath) vers une zone cible ou vers un véhicule, avec waypoints issus d'un fichier race ou de noms de nœuds de la carte, détecte l'arrivée du joueur, choisit automatiquement la route quand il ne reste qu'un objectif visible, réagit aux attelages (couplerAttachedRoute) et alimente la grande carte (bigmap) en points d'intérêt et en groupes.
+Management of freeform delivery routes. Builds guidance routes (core_groundMarkers.setPath) to a target area or to a vehicle, with waypoints from a race file or map node names, detects the player's arrival, automatically chooses the route when only one visible goal remains, reacts to couplings (couplerAttachedRoute) and feeds the big map (bigmap) with points of interest and groups.
 
-## Remarques
+## Notes
 
-- Une route (entrée de delivery.routes) contient targetAreaId ou vehicleId, des bigmapGroups, une icône et un tableau params ; params peut contenir raceFile, waypointNames, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wD, wZ, penalty (alias de penaltyAboveCutoff). Une entrée params avec targetAreaId n'est utilisée que si le joueur est dans cette zone cible ; sinon l'entrée sans targetAreaId sert de défaut.
-- Le chemin est envoyé avec step = 3 et clearPathOnReachingTarget = false.
-- Arrivée : pour une route vers une zone cible, le véhicule du joueur doit être dans la zone ; pour une route vers un véhicule, à moins de 10 m. Le guidage est alors effacé.
-- Guidage automatique : s'il reste exactement un objectif visible non terminé (showInTasklist ~= false), la route est choisie selon son type (placement -> targetAreaId, playerInVehicle -> vehicleId, coupled -> trailerId), en suivant au besoin l'unique objectif qui en dépend (requires).
-- Bug probable : setup() ajoute à chaque appel les groupes otherLocations et otherVehicles dans delivery.bigmapGroups (table de la livraison, modifiée en place) sans jamais les retirer ; une seconde initialisation sur la même table crée des doublons.
-- Bug probable : formatDeliveryToRawPoi lit targetArea.relevantGoals et vehicleData.relevantGoals sans tester nil alors que findTargetArea/findVehicle peuvent renvoyer nil (route vers un id inconnu).
-- Dépend des globales gameplay_freeformDelivery_tasklist, _setup et _freeformDelivery, non déclarées dans dependencies.
+- A route (entry of delivery.routes) contains targetAreaId or vehicleId, bigmapGroups, an icon and a params array; params can contain raceFile, waypointNames, cutOffDrivability, dirMult, penaltyAboveCutoff, penaltyBelowCutoff, wD, wZ, penalty (alias of penaltyAboveCutoff). A params entry with targetAreaId is only used if the player is in that target area; otherwise the entry without targetAreaId serves as the default.
+- The path is sent with step = 3 and clearPathOnReachingTarget = false.
+- Arrival: for a route to a target area, the player's vehicle must be in the area; for a route to a vehicle, within 10 m. The guidance is then cleared.
+- Automatic guidance: if exactly one visible unfinished goal remains (showInTasklist ~= false), the route is chosen according to its type (placement -> targetAreaId, playerInVehicle -> vehicleId, coupled -> trailerId), following if needed the single goal that depends on it (requires).
+- Probable bug: setup() adds the otherLocations and otherVehicles groups to delivery.bigmapGroups (the delivery's table, modified in place) on every call without ever removing them; a second initialization on the same table creates duplicates.
+- Probable bug: formatDeliveryToRawPoi reads targetArea.relevantGoals and vehicleData.relevantGoals without testing nil although findTargetArea/findVehicle can return nil (route to an unknown id).
+- Depends on the globals gameplay_freeformDelivery_tasklist, _setup and _freeformDelivery, not declared in dependencies.
 
-**Dépendances (chargées avant) :** `gameplay_freeformDelivery_utils`, `gameplay_freeformDelivery_goals`, `gameplay_freeformDelivery_markers`
+**Dependencies (loaded first):** `gameplay_freeformDelivery_utils`, `gameplay_freeformDelivery_goals`, `gameplay_freeformDelivery_markers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_routes.cleanup()` | Efface le guidage et oublie la livraison, les routes et la route courante. *(interne)* | 587 |
-| `gameplay_freeformDelivery_routes.clearRoute()` | Cache le marqueur de route, efface le guidage (core_groundMarkers.resetAll) et met à jour la liste de tâches. | 487 |
-| `gameplay_freeformDelivery_routes.getCurrentRoute()` | Route active. | 453 |
-| `gameplay_freeformDelivery_routes.getRoute(index)` | Renvoie la route d'indice donné (à partir de 1). | 440 |
-| `gameplay_freeformDelivery_routes.getRouteCount()` | Nombre de routes disponibles. | 458 |
-| `gameplay_freeformDelivery_routes.getRouteName(route)` | Nom affichable d'une route : nom traduit de la zone cible ou du véhicule, à défaut l'id, ou le texte « route inconnue ». | 422 |
-| `gameplay_freeformDelivery_routes.getRoutes()` | Renvoie la liste des routes de la livraison. | 448 |
-| `gameplay_freeformDelivery_routes.getTargetAreaPosition(targetAreaId)` | Position d'une zone cible : pos pour un lieu ou une place, centre (ou moyenne des sommets recalée sur le relief) pour une zone. | 475 |
-| `gameplay_freeformDelivery_routes.getTargetAreas()` | Renvoie les zones cibles de la livraison active (utile pour générer les POI). | 463 |
-| `gameplay_freeformDelivery_routes.getVehiclePosition(vehicleId)` | Position en cache d'un véhicule de la livraison active. | 481 |
-| `gameplay_freeformDelivery_routes.getVehicles()` | Renvoie les véhicules de la livraison active (utile pour générer les POI). | 469 |
-| `gameplay_freeformDelivery_routes.onBigmapBuildCustomGroupStructures(customGroupStructures)` | Hook de la grande carte : ajoute la structure de groupes « delivery » (delivery_relevant et groupes de la livraison). *(interne)* *(hook)* | 1134 |
-| `gameplay_freeformDelivery_routes.onBigmapBuildGroupData(groupData)` | Hook de la grande carte : crée les groupes delivery_relevant et ceux de bigmapGroups dans groupData. *(interne)* *(hook)* | 1116 |
-| `gameplay_freeformDelivery_routes.onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | Hook appelé à l'attelage de deux véhicules ; si l'un est le véhicule du joueur et que l'autre a une couplerAttachedRoute, active cette route. *(interne)* *(hook)* | 1151 |
-| `gameplay_freeformDelivery_routes.onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)` | Hook appelé au dételage ; efface la route courante si elle correspond à la couplerAttachedRoute du véhicule dételé. *(interne)* *(hook)* | 1165 |
-| `gameplay_freeformDelivery_routes.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook du système de POI : ajoute les POI de la livraison (zones cibles et véhicules, avec description des objectifs liés) quand une livraison est active. *(interne)* *(hook)* | 1147 |
-| `gameplay_freeformDelivery_routes.setRouteToTargetArea(targetAreaId, route)` | Construit et active un itinéraire de guidage vers une zone cible de la livraison (position du lieu, centre de la zone ou position de la place). Pose le marqueur de route, avec le contour de zone ou de place le cas échéant, et met à jour le message de la liste de tâches. | 366 |
-| `gameplay_freeformDelivery_routes.setRouteToVehicle(vehicleId, route)` | Construit et active un itinéraire de guidage vers la position en cache d'un véhicule de livraison. | 404 |
-| `gameplay_freeformDelivery_routes.setup(delivery)` | Initialise le module avec la livraison : routes, groupes de grande carte, groupes de repli otherLocations et otherVehicles pour les routes et véhicules sans groupe. *(interne)* | 505 |
-| `gameplay_freeformDelivery_routes.update(dtReal, dtSim, dtRaw, profiler)` | Appelée chaque frame : vérifie l'arrivée à la route courante puis met à jour la route automatique. *(interne)* | 582 |
+| `gameplay_freeformDelivery_routes.cleanup()` | Clears the guidance and forgets the delivery, the routes and the current route. *(internal)* | 587 |
+| `gameplay_freeformDelivery_routes.clearRoute()` | Hides the route marker, clears the guidance (core_groundMarkers.resetAll) and updates the task list. | 487 |
+| `gameplay_freeformDelivery_routes.getCurrentRoute()` | Active route. | 453 |
+| `gameplay_freeformDelivery_routes.getRoute(index)` | Returns the route at the given index (starting at 1). | 440 |
+| `gameplay_freeformDelivery_routes.getRouteCount()` | Number of available routes. | 458 |
+| `gameplay_freeformDelivery_routes.getRouteName(route)` | Displayable name of a route: translated name of the target area or vehicle, otherwise the id, or the text "unknown route". | 422 |
+| `gameplay_freeformDelivery_routes.getRoutes()` | Returns the list of the delivery's routes. | 448 |
+| `gameplay_freeformDelivery_routes.getTargetAreaPosition(targetAreaId)` | Position of a target area: pos for a location or a spot, center (or average of the vertices snapped to the terrain) for a zone. | 475 |
+| `gameplay_freeformDelivery_routes.getTargetAreas()` | Returns the target areas of the active delivery (useful for generating POIs). | 463 |
+| `gameplay_freeformDelivery_routes.getVehiclePosition(vehicleId)` | Cached position of a vehicle of the active delivery. | 481 |
+| `gameplay_freeformDelivery_routes.getVehicles()` | Returns the vehicles of the active delivery (useful for generating POIs). | 469 |
+| `gameplay_freeformDelivery_routes.onBigmapBuildCustomGroupStructures(customGroupStructures)` | Big map hook: adds the "delivery" group structure (delivery_relevant and the delivery's groups). *(internal)* *(hook)* | 1134 |
+| `gameplay_freeformDelivery_routes.onBigmapBuildGroupData(groupData)` | Big map hook: creates the delivery_relevant groups and those of bigmapGroups in groupData. *(internal)* *(hook)* | 1116 |
+| `gameplay_freeformDelivery_routes.onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | Hook called when two vehicles couple; if one is the player's vehicle and the other has a couplerAttachedRoute, activates that route. *(internal)* *(hook)* | 1151 |
+| `gameplay_freeformDelivery_routes.onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)` | Hook called on uncoupling; clears the current route if it matches the couplerAttachedRoute of the uncoupled vehicle. *(internal)* *(hook)* | 1165 |
+| `gameplay_freeformDelivery_routes.onGetRawPoiListForLevel(levelIdentifier, elements)` | POI system hook: adds the delivery's POIs (target areas and vehicles, with description of the linked goals) when a delivery is active. *(internal)* *(hook)* | 1147 |
+| `gameplay_freeformDelivery_routes.setRouteToTargetArea(targetAreaId, route)` | Builds and activates a guidance route to a target area of the delivery (location position, zone center or spot position). Places the route marker, with the zone or spot outline if applicable, and updates the task list message. | 366 |
+| `gameplay_freeformDelivery_routes.setRouteToVehicle(vehicleId, route)` | Builds and activates a guidance route to the cached position of a delivery vehicle. | 404 |
+| `gameplay_freeformDelivery_routes.setup(delivery)` | Initializes the module with the delivery: routes, big map groups, fallback groups otherLocations and otherVehicles for routes and vehicles without a group. *(internal)* | 505 |
+| `gameplay_freeformDelivery_routes.update(dtReal, dtSim, dtRaw, profiler)` | Called every frame: checks arrival at the current route then updates the automatic route. *(internal)* | 582 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_routes.clearRoute()`
 
-Cache le marqueur de route, efface le guidage (core_groundMarkers.resetAll) et met à jour la liste de tâches.
+Hides the route marker, clears the guidance (core_groundMarkers.resetAll) and updates the task list.
 
-- **renvoie** : boolean false si core_groundMarkers n'est pas disponible, sinon true.
+- **returns**: boolean false if core_groundMarkers is not available, otherwise true.
 
 #### `gameplay_freeformDelivery_routes.getCurrentRoute()`
 
-Route active.
+Active route.
 
-- **renvoie** : table|nil {type = 'targetArea'|'vehicle', id, automaticGoalId?} ou nil.
+- **returns**: table|nil {type = 'targetArea'|'vehicle', id, automaticGoalId?} or nil.
 
 #### `gameplay_freeformDelivery_routes.getRoute(index)`
 
-Renvoie la route d'indice donné (à partir de 1).
+Returns the route at the given index (starting at 1).
 
-- `index` (*integer*) : Indice 1-based.
-- **renvoie** : table|nil Route ou nil si hors limites.
+- `index` (*integer*) : 1-based index.
+- **returns**: table|nil Route or nil if out of bounds.
 
 #### `gameplay_freeformDelivery_routes.getRouteCount()`
 
-Nombre de routes disponibles.
+Number of available routes.
 
-- **renvoie** : integer Nombre de routes.
+- **returns**: integer Number of routes.
 
 #### `gameplay_freeformDelivery_routes.getRouteName(route)`
 
-Nom affichable d'une route : nom traduit de la zone cible ou du véhicule, à défaut l'id, ou le texte « route inconnue ».
+Displayable name of a route: translated name of the target area or vehicle, otherwise the id, or the text "unknown route".
 
-- `route` (*table*) : Entrée de route.
-- **renvoie** : string Nom à afficher.
+- `route` (*table*) : Route entry.
+- **returns**: string Name to display.
 
 #### `gameplay_freeformDelivery_routes.getRoutes()`
 
-Renvoie la liste des routes de la livraison.
+Returns the list of the delivery's routes.
 
-- **renvoie** : table[] Routes (delivery.routes).
+- **returns**: table[] Routes (delivery.routes).
 
 #### `gameplay_freeformDelivery_routes.getTargetAreaPosition(targetAreaId)`
 
-Position d'une zone cible : pos pour un lieu ou une place, centre (ou moyenne des sommets recalée sur le relief) pour une zone.
+Position of a target area: pos for a location or a spot, center (or average of the vertices snapped to the terrain) for a zone.
 
-- `targetAreaId` (*string*) : ID de la zone cible.
-- **renvoie** : vec3|nil Position ou nil.
+- `targetAreaId` (*string*) : ID of the target area.
+- **returns**: vec3|nil Position or nil.
 
 #### `gameplay_freeformDelivery_routes.getTargetAreas()`
 
-Renvoie les zones cibles de la livraison active (utile pour générer les POI).
+Returns the target areas of the active delivery (useful for generating POIs).
 
-- **renvoie** : table[] targetAreas, ou tableau vide sans livraison.
+- **returns**: table[] targetAreas, or empty array without a delivery.
 
 #### `gameplay_freeformDelivery_routes.getVehiclePosition(vehicleId)`
 
-Position en cache d'un véhicule de la livraison active.
+Cached position of a vehicle of the active delivery.
 
-- `vehicleId` (*string*) : ID du véhicule de livraison.
-- **renvoie** : vec3|nil Position ou nil.
+- `vehicleId` (*string*) : ID of the delivery vehicle.
+- **returns**: vec3|nil Position or nil.
 
 #### `gameplay_freeformDelivery_routes.getVehicles()`
 
-Renvoie les véhicules de la livraison active (utile pour générer les POI).
+Returns the vehicles of the active delivery (useful for generating POIs).
 
-- **renvoie** : table[] vehicles, ou tableau vide sans livraison.
+- **returns**: table[] vehicles, or empty array without a delivery.
 
 #### `gameplay_freeformDelivery_routes.onBigmapBuildCustomGroupStructures(customGroupStructures)`
 
-Hook de la grande carte : ajoute la structure de groupes « delivery » (delivery_relevant et groupes de la livraison).
+Big map hook: adds the "delivery" group structure (delivery_relevant and the delivery's groups).
 
-- `customGroupStructures` (*table[]*) : Liste de structures, modifiée en place.
+- `customGroupStructures` (*table[]*) : List of structures, modified in place.
 
 #### `gameplay_freeformDelivery_routes.onBigmapBuildGroupData(groupData)`
 
-Hook de la grande carte : crée les groupes delivery_relevant et ceux de bigmapGroups dans groupData.
+Big map hook: creates the delivery_relevant groups and those of bigmapGroups in groupData.
 
-- `groupData` (*table*) : Table des groupes, indexée par id, modifiée en place.
+- `groupData` (*table*) : Table of groups, keyed by id, modified in place.
 
 #### `gameplay_freeformDelivery_routes.onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)`
 
-Hook appelé à l'attelage de deux véhicules ; si l'un est le véhicule du joueur et que l'autre a une couplerAttachedRoute, active cette route.
+Hook called when two vehicles couple; if one is the player's vehicle and the other has a couplerAttachedRoute, activates that route.
 
-- `objId1` (*integer*) : ID du premier véhicule.
-- `objId2` (*integer*) : ID du second véhicule.
-- `nodeId` (*integer*) : Nœud d'attelage du premier véhicule (déduit du code).
-- `obj2nodeId` (*integer*) : Nœud d'attelage du second véhicule (déduit du code).
+- `objId1` (*integer*) : ID of the first vehicle.
+- `objId2` (*integer*) : ID of the second vehicle.
+- `nodeId` (*integer*) : Coupling node of the first vehicle (inferred from code).
+- `obj2nodeId` (*integer*) : Coupling node of the second vehicle (inferred from code).
 
 #### `gameplay_freeformDelivery_routes.onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)`
 
-Hook appelé au dételage ; efface la route courante si elle correspond à la couplerAttachedRoute du véhicule dételé.
+Hook called on uncoupling; clears the current route if it matches the couplerAttachedRoute of the uncoupled vehicle.
 
-- `objId1` (*integer*) : ID du premier véhicule.
-- `objId2` (*integer*) : ID du second véhicule.
-- `nodeId` (*integer*) : Nœud d'attelage du premier véhicule (déduit du code).
-- `obj2nodeId` (*integer*) : Nœud d'attelage du second véhicule (déduit du code).
-- `breakForce` (*number*) : Force de rupture (non utilisée).
+- `objId1` (*integer*) : ID of the first vehicle.
+- `objId2` (*integer*) : ID of the second vehicle.
+- `nodeId` (*integer*) : Coupling node of the first vehicle (inferred from code).
+- `obj2nodeId` (*integer*) : Coupling node of the second vehicle (inferred from code).
+- `breakForce` (*number*) : Breaking force (unused).
 
 #### `gameplay_freeformDelivery_routes.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook du système de POI : ajoute les POI de la livraison (zones cibles et véhicules, avec description des objectifs liés) quand une livraison est active.
+POI system hook: adds the delivery's POIs (target areas and vehicles, with description of the linked goals) when a delivery is active.
 
-- `levelIdentifier` (*string*) : Identifiant du niveau (non utilisé).
-- `elements` (*table[]*) : Liste de POI complétée en place.
+- `levelIdentifier` (*string*) : Level identifier (unused).
+- `elements` (*table[]*) : POI list completed in place.
 
 #### `gameplay_freeformDelivery_routes.setRouteToTargetArea(targetAreaId, route)`
 
-Construit et active un itinéraire de guidage vers une zone cible de la livraison (position du lieu, centre de la zone ou position de la place). Pose le marqueur de route, avec le contour de zone ou de place le cas échéant, et met à jour le message de la liste de tâches.
+Builds and activates a guidance route to a target area of the delivery (location position, zone center or spot position). Places the route marker, with the zone or spot outline if applicable, and updates the task list message.
 
-- `targetAreaId` (*string*) : ID de la zone cible dans delivery.targetAreas.
-- `route` (*table|nil*) : Entrée de route dont params fournit waypoints et options de calcul.
-- **renvoie** : boolean true si la route est posée ; false si core_groundMarkers manque ou si la zone, le site ou la position est introuvable.
+- `targetAreaId` (*string*) : ID of the target area in delivery.targetAreas.
+- `route` (*table|nil*) : Route entry whose params provides waypoints and computation options.
+- **returns**: boolean true if the route is placed; false if core_groundMarkers is missing or if the area, site or position cannot be found.
 
 #### `gameplay_freeformDelivery_routes.setRouteToVehicle(vehicleId, route)`
 
-Construit et active un itinéraire de guidage vers la position en cache d'un véhicule de livraison.
+Builds and activates a guidance route to the cached position of a delivery vehicle.
 
-- `vehicleId` (*string*) : ID du véhicule dans delivery.vehicles.
-- `route` (*table|nil*) : Entrée de route (params).
-- **renvoie** : boolean true si la route est posée.
+- `vehicleId` (*string*) : Vehicle ID in delivery.vehicles.
+- `route` (*table|nil*) : Route entry (params).
+- **returns**: boolean true if the route is placed.
 
 #### `gameplay_freeformDelivery_routes.setup(delivery)`
 
-Initialise le module avec la livraison : routes, groupes de grande carte, groupes de repli otherLocations et otherVehicles pour les routes et véhicules sans groupe.
+Initializes the module with the delivery: routes, big map groups, fallback groups otherLocations and otherVehicles for routes and vehicles without a group.
 
-- `delivery` (*table*) : Données de livraison.
+- `delivery` (*table*) : Delivery data.
 
 #### `gameplay_freeformDelivery_routes.update(dtReal, dtSim, dtRaw, profiler)`
 
-Appelée chaque frame : vérifie l'arrivée à la route courante puis met à jour la route automatique.
+Called every frame: checks arrival at the current route then updates the automatic route.
 
-- `dtReal` (*number*) : Non utilisé.
-- `dtSim` (*number*) : Non utilisé.
-- `dtRaw` (*number*) : Non utilisé.
-- `profiler` (*table|nil*) : Non utilisé.
+- `dtReal` (*number*) : Not used.
+- `dtSim` (*number*) : Not used.
+- `dtRaw` (*number*) : Not used.
+- `profiler` (*table|nil*) : Not used.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | gameplay_freeformDelivery_utils, _goals et _markers. |
+| `dependencies` | string[] | gameplay_freeformDelivery_utils, _goals and _markers. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/routes.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/routes.lua`.*

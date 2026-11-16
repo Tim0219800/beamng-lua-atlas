@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/telemetry/performanceSpatialSnapshot.test.lua",
+  "module": "Tests unitaires de telemetry/performanceSpatialSnapshot (runTestFiles(\"performanceSpatialSnapshot\")).",
+  "functions": {
+    "testDetailedMetricsDefaultOff": {
+      "desc": "Vérifie que framePhases et renderStats sont absents par défaut.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testRenderTimingCanBeEnabledAlone": {
+      "desc": "Vérifie que renderTimingTrackingEnabled ajoute framePhases sans renderStats.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "testSceneComplexityCanBeEnabledAlone": {
+      "desc": "Vérifie que sceneComplexityTrackingEnabled ajoute renderStats (dont visibleObjectCount numérique) sans framePhases.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte du framework de test."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

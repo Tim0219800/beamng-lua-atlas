@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/editor/driftDataEditor.lua",
+  "module": "Drift Data Editor (menu Gameplay > Drift Data Editor) : fenêtre à deux onglets pour les données du mode drift. « Drift stunt zones editor » crée, déplace et réordonne des zones de figures (donut, driftThrough, hitPole, nearPole) avec leur score, et les enregistre en JSON (par défaut dans /gameplay/temp/). « Drift spots editor » édite les spots de drift du niveau courant (lignes avec position, rotation, échelle, direction d'entrée, point de téléportation de la grande carte, infos d'objectifs) chargés via gameplay_drift_saveLoad. Exige un niveau chargé.",
+  "notes": ["Types de zones et paliers de score proposés : driftThrough 1000/1500/2000 (points max), donut 250/500/750 (points fixes), hitPole et nearPole 500/1000/1500 (points max). Le score par défaut vient de gameplay_drift_scoring.getScoreOptions().defaultPoints.", "Les positions, rotations et échelles lues dans un JSON sont converties en vec3/quat au chargement.", "Seuls donut, driftThrough et hitPole ont un gizmo de transformation dans selectStuntZone ; nearPole n'en a pas.", "Bug probable : la variable logTag utilisée dans loadDriftData n'est pas déclarée dans ce fichier (nil) : le message d'erreur de fichier introuvable est journalisé sans tag.", "onSerialize/onDeserialized conservent le fichier courant, les zones et l'index sélectionné lors d'un rechargement ; la sélection est restaurée plus tard via autoSelectElement.", "M.drawAxisBox est un doublon des utilitaires de dessin de boîte des autres éditeurs."],
+  "functions": {
+    "clearStuntZonesEditor": {"desc": "Réinitialise l'onglet des zones de figures : fichier courant remis à /gameplay/temp/ sans nom, données vides ({stuntZones = {}}). Appelée aussi quand l'onglet Drift spots est affiché.", "params": {}, "internal": true},
+    "drawAxisBox": {
+      "desc": "Dessine en debug une boîte pleine (triangles recto/verso et arêtes noires) à partir d'un coin et de trois vecteurs d'arête.",
+      "params": {"corner": {"type": "vec3", "desc": "coin"}, "x": {"type": "vec3", "desc": "arête X"}, "y": {"type": "vec3", "desc": "arête Y"}, "z": {"type": "vec3", "desc": "arête Z"}, "clr": {"type": "ColorF", "desc": "couleur"}}
+    },
+    "drawElementDetail": {
+      "desc": "Dessine l'édition de la zone sélectionnée : met à jour pos/rot/scl depuis le gizmo (transformUtil), le délai cooldown si présent, et le score par une liste de paliers selon le type.",
+      "params": {"elem": {"type": "table|nil", "desc": "zone de figure (type, pos, rot, scl, score, cooldown)"}}
+    },
+    "selectStuntZone": {
+      "desc": "Sélectionne une zone de figure et crée le gizmo adapté à son type (donut : position et échelle uniforme ; driftThrough : position, rotation, échelle ; hitPole : position).",
+      "params": {"index": {"type": "integer", "desc": "index (base 1) dans driftData.stuntZones"}},
+      "internal": true
+    },
+    "show": {"desc": "Vide la sélection d'objets et affiche la fenêtre driftDataEditor.", "params": {}},
+    "onEditorInitialized": {"desc": "Hook : enregistre la fenêtre (1500x700), l'entrée de menu Gameplay et crée des données vides si besoin.", "params": {}, "internal": true},
+    "onEditorGui": {"desc": "Hook chaque frame : dessine les onglets si un niveau est chargé, sinon un message demandant de charger un niveau.", "params": {}, "internal": true},
+    "onSerialize": {"desc": "Hook avant rechargement : renvoie selectedStuntZoneIndex, currentFileDir, currentFileName et driftData.", "params": {}, "returns": [{"type": "table", "desc": "état à conserver"}], "internal": true},
+    "onDeserialized": {"desc": "Hook après rechargement : restaure le fichier, les données et l'index à resélectionner.", "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}}, "internal": true},
+    "updateMouseInfo": {"desc": "Met à jour la table souris locale (rayon caméra, raycast, clic/maintien/relâchement et positions associées) utilisée par les gizmos.", "params": {}}
+  }
+}

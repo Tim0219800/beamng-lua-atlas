@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/recce/cutsRecording.lua",
+  "module": "Chargeur des « cuts » de reconnaissance (recce) d'un rallye. Un cut est un marqueur de position où le copilote a fait un enregistrement vocal pendant la reconnaissance. Le module lit le fichier des cuts de la mission et y rattache, si elles existent, les transcriptions du fichier de transcripts. C'est une extension (gameplay_rally_recce_cutsRecording), utilisée par la classe recce.",
+  "notes": [
+    "Les chemins des fichiers viennent de rallyUtil.cutsFile(missionDir) et rallyUtil.transcriptsFile(missionDir) ; les deux fichiers sont au format JSONL (une ligne = un objet).",
+    "Une transcription n'est retenue que si son cutId est un nombre > 0 ; elle est rattachée au cut dont l'id est égal.",
+    "Le word_map de normalisation est actuellement un tableau vide (TODO dans le code : à rebrancher quand le travail sur le texte libre reprendra), donc le texte n'est pas modifié en pratique."
+  ],
+  "functions": {
+    "load": {
+      "desc": "Charge les cuts de la mission avec leurs transcriptions. Chaque ligne du fichier de cuts devient un objet dont pos est converti en vec3 et quat en quat, avec un champ transcript ajouté ({error, text} si une transcription existe, sinon table vide).",
+      "params": {
+        "missionDir": {"type": "string", "desc": "Dossier de la mission contenant les fichiers de recce"}
+      },
+      "returns": [{"type": "table[]", "desc": "Tableau d'objets cut ; tableau vide (et non nil) si le fichier de cuts n'existe pas"}],
+      "internal": false
+    }
+  }
+}

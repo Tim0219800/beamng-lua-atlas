@@ -1,0 +1,70 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/helper.lua",
+  "module": "Petites fonctions utilitaires ImGui et de chaînes partagées par les sections de l'outil Dynamic Decals : texte centré, aperçu d'image avec sa taille, info-bulle d'image ou d'icône, mise en forme de noms camelCase. Utile à un moddeur qui écrit une section ou un widget pour cet outil.",
+  "notes": [
+    "splitAndCapitalizeCamelCase et capitalizeWords renvoient deux valeurs (gsub renvoie la chaîne et le nombre de remplacements) ; encadrer l'appel de parenthèses pour ne garder que la chaîne.",
+    "imageWidget et imageTooltip passent par editor.getTempTextureObj(path) ; un chemin « / » (texture absente) est affiché en carré."
+  ],
+  "functions": {
+    "textUnformattedCentered": {
+      "desc": "Affiche un texte brut centré horizontalement dans la zone disponible. Ne fait rien si le texte est nil.",
+      "params": {"string_label": {"type": "string|nil", "desc": "Texte à afficher."}},
+      "returns": [],
+      "internal": false
+    },
+    "textColoredCentered": {
+      "desc": "Comme textUnformattedCentered mais avec une couleur ImGui.",
+      "params": {"color": {"type": "ImVec4", "desc": "Couleur du texte."}, "string_label": {"type": "string|nil", "desc": "Texte à afficher."}},
+      "returns": [],
+      "internal": false
+    },
+    "imageWidget": {
+      "desc": "Affiche une image (teintée avec la couleur BeamNG de l'éditeur) à la largeur donnée en respectant le ratio, suivie de sa taille « L x H ».",
+      "params": {"path": {"type": "string", "desc": "Chemin de la texture."}, "overrideWidth": {"type": "number|nil", "desc": "Largeur en pixels ; par défaut toute la largeur disponible."}},
+      "returns": [],
+      "internal": false
+    },
+    "imageTooltip": {
+      "desc": "Si l'élément ImGui précédent est survolé, affiche une info-bulle avec l'image et sa taille. Largeur par défaut : préférence `dynamicDecalsTool.imageTooltip.texturePreviewSize`.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la texture."}, "overrideTooltipWidth": {"type": "number|nil", "desc": "Largeur de l'aperçu en pixels."}},
+      "returns": [],
+      "internal": false
+    },
+    "iconTooltip": {
+      "desc": "Dessine une icône « info » avec une info-bulle contenant le message.",
+      "params": {"msg": {"type": "string", "desc": "Texte de l'info-bulle."}, "inline": {"type": "boolean|nil", "desc": "Si vrai, place l'icône sur la même ligne que l'élément précédent."}},
+      "returns": [],
+      "internal": false
+    },
+    "splitAndCapitalizeCamelCase": {
+      "desc": "Transforme une chaîne camelCase en mots séparés par des espaces avec majuscule initiale (ex. « brushStroke » donne « Brush Stroke »).",
+      "params": {"str": {"type": "string", "desc": "Chaîne camelCase."}},
+      "returns": [{"type": "string", "desc": "Chaîne formatée (suivie du nombre de substitutions du dernier gsub)."}],
+      "internal": false
+    },
+    "capitalizeWords": {
+      "desc": "Met la première lettre de chaque mot en majuscule et le reste en minuscules.",
+      "params": {"str": {"type": "string", "desc": "Chaîne source."}},
+      "returns": [{"type": "string", "desc": "Chaîne formatée (suivie du nombre de substitutions)."}],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre la préférence float `dynamicDecalsTool.imageTooltip.texturePreviewSize` (défaut 128, de 32 à 512).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : mémorise la référence à l'outil (nécessaire pour iconTooltip, qui utilise tool.getIconSize()).",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

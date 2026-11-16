@@ -2,18 +2,18 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Formulaire d'édition « structuré » d'un pacenote dans l'éditeur de rallye. Il affiche un aperçu du texte et des fichiers audio, puis les sections Caution, Modifiers Before (preMod1/preMod2), Corner (descripteur d'intensité, direction, forme, pas signés, mode de longueur, type de relâchement des virages lents), Modifiers After (postMod1/postMod2) et Distance. Les modifieurs se choisissent par menu ou par recherche textuelle, avec liste des derniers utilisés (10 max). Les options viennent de la configuration du compositeur de texte du notebook. Utilisé par pacenoteForm.
---- Accès : extension `editor_rallyEditor_pacenotes_structuredForm` : `extensions.load("editor_rallyEditor_pacenotes_structuredForm")`, puis la globale `editor_rallyEditor_pacenotes_structuredForm`
+--- "Structured" editing form of a pacenote in the rally editor. It displays a preview of the text and audio files, then the sections Caution, Modifiers Before (preMod1/preMod2), Corner (intensity descriptor, direction, shape, signed steps, length mode, slow corner release type), Modifiers After (postMod1/postMod2) and Distance. Modifiers are chosen by menu or by text search, with a list of the most recently used (10 max). The options come from the notebook's text composer configuration. Used by pacenoteForm.
+--- Access: extension `editor_rallyEditor_pacenotes_structuredForm`: `extensions.load("editor_rallyEditor_pacenotes_structuredForm")`, then the global `editor_rallyEditor_pacenotes_structuredForm`
 ---@class editor_rallyEditor_pacenotes_structuredForm
 editor_rallyEditor_pacenotes_structuredForm = {}
 
---- Réinitialise l'état interne du formulaire (configuration, options, états de recherche, fenêtre active).
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua:1022
+--- Resets the form's internal state (configuration, options, search states, active window).
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua:1022
 function editor_rallyEditor_pacenotes_structuredForm.clear() end
 
---- Dessine tout le formulaire structuré pour le pacenote donné (charge la configuration si besoin).
----Source : lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua:989
----@param pacenote table Pacenote en cours d'édition.
----@param pacenoteToolsWindow table Fenêtre d'outils des pacenotes, mémorisée pour les rafraîchissements.
+--- Draws the whole structured form for the given pacenote (loads the configuration if needed).
+---Source: lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua:989
+---@param pacenote table Pacenote being edited.
+---@param pacenoteToolsWindow table Pacenote tools window, stored for refreshes.
 function editor_rallyEditor_pacenotes_structuredForm.draw(pacenote, pacenoteToolsWindow) end
 

@@ -1,45 +1,45 @@
 # `util_screenshotCreator_currentConfigThumbnail`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/currentConfigThumbnail.lua` · VM : Game Engine (GE) · 75 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/currentConfigThumbnail.lua` · VM: Game Engine (GE) · 75 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_currentConfigThumbnail` : `extensions.load("util_screenshotCreator_currentConfigThumbnail")`, puis la globale `util_screenshotCreator_currentConfigThumbnail`
+**Access:** extension `util_screenshotCreator_currentConfigThumbnail`: `extensions.load("util_screenshotCreator_currentConfigThumbnail")`, then the global `util_screenshotCreator_currentConfigThumbnail`
 
-Sous-module de screenshotCreator qui génère la vignette de la configuration courante d'un véhicule. start() prépare une capture asynchrone : à chaque frame (onPreRender), une coroutine résout le cadrage selon le mode sélectionné (framingManager), capture la vignette hors écran (délai de 5 s maximum) puis appelle le callback avec le résultat. Une seule capture peut être active à la fois.
+Submodule of screenshotCreator that generates the thumbnail of a vehicle's current configuration. start() prepares an asynchronous capture: every frame (onPreRender), a coroutine resolves the framing according to the selected mode (framingManager), captures the thumbnail off-screen (5 s maximum delay) then calls the callback with the result. Only one capture can be active at a time.
 
-## Remarques
+## Notes
 
-- Si le cadrage ne peut pas être résolu, le callback est appelé avec success = false et le message d'erreur en quatrième argument.
-- Le nom du modèle est lu dans vehicle.jbeam ou vehicle.JBeam.
+- If the framing cannot be resolved, the callback is called with success = false and the error message as the fourth argument.
+- The model name is read from vehicle.jbeam or vehicle.JBeam.
 
-**Dépendances (chargées avant) :** `util_screenshotCreator_settings`, `util_screenshotCreator_capture`, `util_screenshotCreator_framing_legacy`, `util_screenshotCreator_framing_isometric`, `util_screenshotCreator_framing_procedural`, `util_screenshotCreator_framing_configured`, `util_screenshotCreator_framingManager`
+**Dependencies (loaded first):** `util_screenshotCreator_settings`, `util_screenshotCreator_capture`, `util_screenshotCreator_framing_legacy`, `util_screenshotCreator_framing_isometric`, `util_screenshotCreator_framing_procedural`, `util_screenshotCreator_framing_configured`, `util_screenshotCreator_framingManager`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_currentConfigThumbnail.onExtensionUnloaded()` | Hook appelé au déchargement : abandonne la capture en cours sans appeler son callback. *(interne)* *(hook)* | 70 |
-| `util_screenshotCreator_currentConfigThumbnail.onPreRender()` | Hook appelé chaque frame avant le rendu : fait avancer la coroutine de capture. En cas d'erreur Lua, logue l'erreur, libère la capture et appelle le callback avec success = false. *(interne)* *(hook)* | 57 |
-| `util_screenshotCreator_currentConfigThumbnail.start(vehicle, configName, outputPath, callback, token)` | Démarre la capture de la vignette d'un véhicule. Refuse (false, "busy") si une capture est déjà en cours. | 43 |
+| `util_screenshotCreator_currentConfigThumbnail.onExtensionUnloaded()` | Hook called on unload: abandons the capture in progress without calling its callback. *(internal)* *(hook)* | 70 |
+| `util_screenshotCreator_currentConfigThumbnail.onPreRender()` | Hook called every frame before rendering: advances the capture coroutine. On a Lua error, logs the error, releases the capture and calls the callback with success = false. *(internal)* *(hook)* | 57 |
+| `util_screenshotCreator_currentConfigThumbnail.start(vehicle, configName, outputPath, callback, token)` | Starts the thumbnail capture of a vehicle. Refuses (false, "busy") if a capture is already in progress. | 43 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_currentConfigThumbnail.start(vehicle, configName, outputPath, callback, token)`
 
-Démarre la capture de la vignette d'un véhicule. Refuse (false, "busy") si une capture est déjà en cours.
+Starts the thumbnail capture of a vehicle. Refuses (false, "busy") if a capture is already in progress.
 
-- `vehicle` (*userdata*) : Véhicule à photographier
-- `configName` (*string*) : Nom de la configuration
-- `outputPath` (*string*) : Chemin du fichier image à produire
-- `callback` (*function*) : callback(success, outputPath, token, errorMessage?) appelé à la fin
-- `token` (*any*) : Valeur renvoyée telle quelle au callback
-- **renvoie** : boolean true si la capture est lancée, false si occupé
-- **renvoie** : string|nil "busy" en cas de refus
+- `vehicle` (*userdata*) : Vehicle to photograph
+- `configName` (*string*) : Configuration name
+- `outputPath` (*string*) : Path of the image file to produce
+- `callback` (*function*) : callback(success, outputPath, token, errorMessage?) called at the end
+- `token` (*any*) : Value returned as is to the callback
+- **returns**: boolean true if the capture is started, false if busy
+- **returns**: string|nil "busy" on refusal
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | table |  |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/currentConfigThumbnail.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/currentConfigThumbnail.lua`.*

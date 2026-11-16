@@ -1,158 +1,158 @@
 # `controller_playerController`
 
-*Fichier : `lua/vehicle/controller/playerController.lua` · VM : Véhicule · 599 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/playerController.lua` · VM: Vehicle · 599 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `playerController` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `playerController` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur principal (type "main", defaultOrder 500) du véhicule « unicycle » utilisé pour le joueur à pied (mode marche). Le personnage est une boule physique (nœuds tag "ball") sur laquelle un torque propulse le joueur, avec des forces de stabilisation par PID qui gardent le corps vertical et le tournent vers la direction de la caméra. Il gère marche, sprint, saut, accroupissement (pression de la boule), blocage de la boule à l'arrêt et gel. Il implémente aussi, en nop, l'API obligatoire des contrôleurs principaux (boîte de vitesses, démarreur...) pour être interchangeable avec un contrôleur de véhicule.
+Main controller (type "main", defaultOrder 500) of the "unicycle" vehicle used for the on-foot player (walking mode). The character is a physical ball (nodes with tag "ball") on which a torque propels the player, with PID stabilization forces that keep the body upright and turn it toward the camera direction. It handles walking, sprinting, jumping, crouching (ball pressure), locking the ball when stopped and freezing. It also implements, as nop, the mandatory main controller API (gearbox, starter...) to be interchangeable with a vehicle controller.
 
-## Exemple
+## Example
 
 ```lua
 local pc = controller.mainController
 pc.setCameraControlData({cameraRotation = quat(0, 0, 0, 1)})
-pc.walkUpDownRaw(1)   -- avancer
+pc.walkUpDownRaw(1)   -- move forward
 pc.setSpeedCoef(1)    -- sprint
 pc.jump(1)
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans init (défaut) : movementSpeedNormal (5, m/s), movementSpeedSprint (11, m/s), maxBallTorque (700, N·m), stabilizationMaxForce (8000, N), yawMaxForce (200, N), ballPressureNormal (1.0), ballPressureCrouch (0.5), jumpForce (50000, N), jumpForceTime (0.01, s), slipUsageCoef (1). Nœuds (noms/cid de nœuds) : stabilizationTopCenter/TopFront/TopRear/TopLeft/TopRight, stabilizationBottomCenter/BottomFront/BottomRear/BottomLeft/BottomRight, ballCenter. Tags de poutres : stabilizationBeamFront/Rear/Left/Right/FrontLeft/FrontRight/RearLeft/RearRight/BottomTop (valeurs de tags à retrouver sur les poutres) ; les poutres de tag "lockBeam" servent au blocage de la boule.
-- Le code suppose des noms de nœuds fixes : ib7, ib2, ib8 (définissent le plan d'application du torque de propulsion) et un groupe de pression "ball" (v.data.pressureGroups.ball) ; les nœuds de tag "ball" définissent la boule.
-- walkLeftRight/walkUpDown ajoutent à la valeur courante, les versions *Raw la remplacent ; walkVector n'est remis à zéro qu'au reset. Le vecteur est exprimé relativement à l'orientation (en lacet seul) de la caméra fournie par setCameraControlData.
-- setSpeedCoef : 0 = marche (movementSpeedNormal), 1 = sprint (movementSpeedSprint), interpolé linéairement entre les deux.
-- Sans marche (walkVector nul) la boule se verrouille (poutres lockBeam raides) ; pendant la marche elle est déverrouillée. La montée du verrou prend 0.4 s + 0.3 s * speedCoef.
-- electrics.values : head_rotation (erreur de lacet corps/caméra, rad), head_tilt, gearboxMode="none", freezeState (booléen). M.engineInfo est un tableau de 21 éléments fixe (valeurs par défaut) pour compatibilité avec les contrôleurs de moteur.
-- Champs throttle, brake, clutchRatio, fireEngineTemperature : valeurs constantes à 0 fournies pour l'interface de contrôleur principal. Les fonctions shiftUp, shiftDown, shiftToGearIndex, cycleGearboxModes, setGearboxMode, smartParkingBrake, setStarter, setEngineIgnition, sendTorqueData, vehicleActivated, setAggressionOverride, setDefaultForwardMode sont toutes nop (nop = fonction globale du moteur qui ne fait rien).
-- Les tableaux lockBeams, ballNodes et ballTorqueNodes ne sont pas vidés dans init : ils s'accumulent si init est rappelé sur le même état Lua (déduit du code).
-- update(dt) applique chaque pas physique les forces préparées par updateFixedStep ; nodeCollision(p) est appelé par le moteur à chaque collision de particules de nœud et accumule le taux de particules pour estimer la vitesse de la boule.
+- jbeam keys read in init (default): movementSpeedNormal (5, m/s), movementSpeedSprint (11, m/s), maxBallTorque (700, N·m), stabilizationMaxForce (8000, N), yawMaxForce (200, N), ballPressureNormal (1.0), ballPressureCrouch (0.5), jumpForce (50000, N), jumpForceTime (0.01, s), slipUsageCoef (1). Nodes (node names/cid): stabilizationTopCenter/TopFront/TopRear/TopLeft/TopRight, stabilizationBottomCenter/BottomFront/BottomRear/BottomLeft/BottomRight, ballCenter. Beam tags: stabilizationBeamFront/Rear/Left/Right/FrontLeft/FrontRight/RearLeft/RearRight/BottomTop (tag values to find on the beams); the beams with tag "lockBeam" are used to lock the ball.
+- The code assumes fixed node names: ib7, ib2, ib8 (define the plane where the propulsion torque is applied) and a "ball" pressure group (v.data.pressureGroups.ball); the nodes with tag "ball" define the ball.
+- walkLeftRight/walkUpDown add to the current value, the *Raw versions replace it; walkVector is only reset to zero on reset. The vector is expressed relative to the camera's orientation (yaw only) provided by setCameraControlData.
+- setSpeedCoef: 0 = walk (movementSpeedNormal), 1 = sprint (movementSpeedSprint), linearly interpolated between the two.
+- Without walking (walkVector zero) the ball locks (lockBeam beams stiff); while walking it is unlocked. The lock ramp-up takes 0.4 s + 0.3 s * speedCoef.
+- electrics.values: head_rotation (body/camera yaw error, rad), head_tilt, gearboxMode="none", freezeState (boolean). M.engineInfo is a fixed array of 21 elements (default values) for compatibility with engine controllers.
+- Fields throttle, brake, clutchRatio, fireEngineTemperature: constant values at 0 provided for the main controller interface. The functions shiftUp, shiftDown, shiftToGearIndex, cycleGearboxModes, setGearboxMode, smartParkingBrake, setStarter, setEngineIgnition, sendTorqueData, vehicleActivated, setAggressionOverride, setDefaultForwardMode are all nop (nop = global engine function that does nothing).
+- The lockBeams, ballNodes and ballTorqueNodes arrays are not cleared in init: they accumulate if init is called again on the same Lua state (inferred from code).
+- update(dt) applies every physics step the forces prepared by updateFixedStep; nodeCollision(p) is called by the engine at each node particle collision and accumulates the particle rate to estimate the ball's speed.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_playerController.crouch(value)` | Value < 0 : s'accroupit (réduit la pression de la boule à ballPressureCrouch) ; value > 0 : relève progressivement. | 428 |
-| `controller_playerController.debugDraw(focusPos)` | Dessine les vecteurs de debug stockés dans debugVectors (vide en pratique). *(interne)* | 143 |
-| `controller_playerController.init(jbeamData)` | Lit les paramètres jbeam, repère nœuds et poutres de stabilisation, de boule et de verrouillage, active le suivi mapmgr et désactive la mise en veille physique du véhicule. *(interne)* | 480 |
-| `controller_playerController.jump(value)` | Déclenche un saut si le personnage touche le sol, hors délai de 0.5 s et hors gel. | 417 |
-| `controller_playerController.nodeCollision(p)` | Appelé par le moteur à chaque particule de collision d'un nœud ; estime la vitesse du joueur à partir de la vitesse de la boule et du glissement. *(interne)* | 149 |
-| `controller_playerController.reset()` | Remet à zéro gel, verrouillage, accroupissement, vecteur de marche, forces et PID. *(interne)* | 455 |
-| `controller_playerController.setCameraControlData(controlData)` | Fournit l'orientation de la caméra qui détermine direction de marche et direction de regard. | 556 |
-| `controller_playerController.setFreeze(mode)` | Gèle ou dégèle le personnage (plus de déplacement, saut ni accroupissement). | 451 |
-| `controller_playerController.setSpeedCoef(value)` | Fixe le coefficient de vitesse (0 marche, 1 sprint). | 409 |
-| `controller_playerController.toggleCrouch()` | Alterne accroupi/debout. | 442 |
-| `controller_playerController.toggleSpeedCoef()` | Inverse le coefficient de vitesse (1 - valeur). | 413 |
-| `controller_playerController.update(dt)` | Chaque pas physique : applique forces de stabilisation, forces de lacet, torque de propulsion de la boule et force de saut. *(interne)* | 170 |
-| `controller_playerController.updateFixedStep(dt)` | Pas fixe : calcule inclinaison, PID de stabilisation et de lacet, torque de propulsion selon la vitesse désirée et gère le verrouillage de la boule. *(interne)* | 249 |
-| `controller_playerController.updateGFX(dt)` | Chaque image : détecte contact sol/eau, gère la remontée de pression après accroupissement, décrémente le délai de saut et écrit electrics.values.gearboxMode et freezeState. *(interne)* | 360 |
-| `controller_playerController.walkLeftRight(value)` | Ajoute à la composante gauche/droite (pour combiner plusieurs touches). | 397 |
-| `controller_playerController.walkLeftRightRaw(value)` | Fixe la composante gauche/droite de la marche (+1 = droite). | 393 |
-| `controller_playerController.walkUpDown(value)` | Ajoute à la composante avant/arrière. | 405 |
-| `controller_playerController.walkUpDownRaw(value)` | Fixe la composante avant/arrière de la marche (+1 = avant). | 401 |
+| `controller_playerController.crouch(value)` | Value < 0: crouches (reduces the ball pressure to ballPressureCrouch); value > 0: gradually stands back up. | 428 |
+| `controller_playerController.debugDraw(focusPos)` | Draws the debug vectors stored in debugVectors (empty in practice). *(internal)* | 143 |
+| `controller_playerController.init(jbeamData)` | Reads the jbeam parameters, locates the stabilization, ball and locking nodes and beams, enables mapmgr tracking and disables the vehicle's physics sleep. *(internal)* | 480 |
+| `controller_playerController.jump(value)` | Triggers a jump if the character touches the ground, outside the 0.5 s delay and outside freeze. | 417 |
+| `controller_playerController.nodeCollision(p)` | Called by the engine at each collision particle of a node; estimates the player's speed from the ball's speed and the slip. *(internal)* | 149 |
+| `controller_playerController.reset()` | Resets freeze, locking, crouching, walk vector, forces and PIDs to zero. *(internal)* | 455 |
+| `controller_playerController.setCameraControlData(controlData)` | Provides the camera orientation that determines the walking direction and the look direction. | 556 |
+| `controller_playerController.setFreeze(mode)` | Freezes or unfreezes the character (no more movement, jumping or crouching). | 451 |
+| `controller_playerController.setSpeedCoef(value)` | Sets the speed coefficient (0 walk, 1 sprint). | 409 |
+| `controller_playerController.toggleCrouch()` | Toggles crouched/standing. | 442 |
+| `controller_playerController.toggleSpeedCoef()` | Inverts the speed coefficient (1 - value). | 413 |
+| `controller_playerController.update(dt)` | Every physics step: applies stabilization forces, yaw forces, the ball's propulsion torque and the jump force. *(internal)* | 170 |
+| `controller_playerController.updateFixedStep(dt)` | Fixed step: computes tilt, stabilization and yaw PIDs, the propulsion torque according to the desired speed and handles the ball locking. *(internal)* | 249 |
+| `controller_playerController.updateGFX(dt)` | Every frame: detects ground/water contact, handles the pressure recovery after crouching, decrements the jump delay and writes electrics.values.gearboxMode and freezeState. *(internal)* | 360 |
+| `controller_playerController.walkLeftRight(value)` | Adds to the left/right component (to combine several keys). | 397 |
+| `controller_playerController.walkLeftRightRaw(value)` | Sets the left/right component of the walk (+1 = right). | 393 |
+| `controller_playerController.walkUpDown(value)` | Adds to the forward/backward component. | 405 |
+| `controller_playerController.walkUpDownRaw(value)` | Sets the forward/backward component of the walk (+1 = forward). | 401 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_playerController.crouch(value)`
 
-Value < 0 : s'accroupit (réduit la pression de la boule à ballPressureCrouch) ; value > 0 : relève progressivement.
+Value < 0: crouches (reduces the ball pressure to ballPressureCrouch); value > 0: gradually stands back up.
 
-- `value` (*number*) : Valeur d'entrée ; seul le signe compte.
+- `value` (*number*) : Input value; only the sign matters.
 
 #### `controller_playerController.debugDraw(focusPos)`
 
-Dessine les vecteurs de debug stockés dans debugVectors (vide en pratique).
+Draws the debug vectors stored in debugVectors (empty in practice).
 
-- `focusPos` (*vec3*) : Position de focus (non utilisée).
+- `focusPos` (*vec3*) : Focus position (unused).
 
 #### `controller_playerController.init(jbeamData)`
 
-Lit les paramètres jbeam, repère nœuds et poutres de stabilisation, de boule et de verrouillage, active le suivi mapmgr et désactive la mise en veille physique du véhicule.
+Reads the jbeam parameters, locates the stabilization, ball and locking nodes and beams, enables mapmgr tracking and disables the vehicle's physics sleep.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur (voir notes).
+- `jbeamData` (*table*) : Controller jbeam data (see notes).
 
 #### `controller_playerController.jump(value)`
 
-Déclenche un saut si le personnage touche le sol, hors délai de 0.5 s et hors gel.
+Triggers a jump if the character touches the ground, outside the 0.5 s delay and outside freeze.
 
-- `value` (*number*) : Valeur d'entrée (non utilisée).
+- `value` (*number*) : Input value (unused).
 
 #### `controller_playerController.nodeCollision(p)`
 
-Appelé par le moteur à chaque particule de collision d'un nœud ; estime la vitesse du joueur à partir de la vitesse de la boule et du glissement.
+Called by the engine at each collision particle of a node; estimates the player's speed from the ball's speed and the slip.
 
-- `p` (*table*) : Particule physique (champs slipVec, nodeVel, id1).
+- `p` (*table*) : Physics particle (fields slipVec, nodeVel, id1).
 
 #### `controller_playerController.setCameraControlData(controlData)`
 
-Fournit l'orientation de la caméra qui détermine direction de marche et direction de regard.
+Provides the camera orientation that determines the walking direction and the look direction.
 
-- `controlData` (*table*) : Table avec cameraRotation (quat).
+- `controlData` (*table*) : Table with cameraRotation (quat).
 
 #### `controller_playerController.setFreeze(mode)`
 
-Gèle ou dégèle le personnage (plus de déplacement, saut ni accroupissement).
+Freezes or unfreezes the character (no more movement, jumping or crouching).
 
-- `mode` (*integer*) : 1 = gelé, toute autre valeur = libre.
+- `mode` (*integer*) : 1 = frozen, any other value = free.
 
 #### `controller_playerController.setSpeedCoef(value)`
 
-Fixe le coefficient de vitesse (0 marche, 1 sprint).
+Sets the speed coefficient (0 walk, 1 sprint).
 
-- `value` (*number*) : 0 à 1.
+- `value` (*number*) : 0 to 1.
 
 #### `controller_playerController.update(dt)`
 
-Chaque pas physique : applique forces de stabilisation, forces de lacet, torque de propulsion de la boule et force de saut.
+Every physics step: applies stabilization forces, yaw forces, the ball's propulsion torque and the jump force.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_playerController.updateFixedStep(dt)`
 
-Pas fixe : calcule inclinaison, PID de stabilisation et de lacet, torque de propulsion selon la vitesse désirée et gère le verrouillage de la boule.
+Fixed step: computes tilt, stabilization and yaw PIDs, the propulsion torque according to the desired speed and handles the ball locking.
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_playerController.updateGFX(dt)`
 
-Chaque image : détecte contact sol/eau, gère la remontée de pression après accroupissement, décrémente le délai de saut et écrit electrics.values.gearboxMode et freezeState.
+Every frame: detects ground/water contact, handles the pressure recovery after crouching, decrements the jump delay and writes electrics.values.gearboxMode and freezeState.
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
 #### `controller_playerController.walkLeftRight(value)`
 
-Ajoute à la composante gauche/droite (pour combiner plusieurs touches).
+Adds to the left/right component (to combine several keys).
 
-- `value` (*number*) : Incrément.
+- `value` (*number*) : Increment.
 
 #### `controller_playerController.walkLeftRightRaw(value)`
 
-Fixe la composante gauche/droite de la marche (+1 = droite).
+Sets the left/right component of the walk (+1 = right).
 
-- `value` (*number*) : -1 à 1.
+- `value` (*number*) : -1 to 1.
 
 #### `controller_playerController.walkUpDown(value)`
 
-Ajoute à la composante avant/arrière.
+Adds to the forward/backward component.
 
-- `value` (*number*) : Incrément.
+- `value` (*number*) : Increment.
 
 #### `controller_playerController.walkUpDownRaw(value)`
 
-Fixe la composante avant/arrière de la marche (+1 = avant).
+Sets the forward/backward component of the walk (+1 = forward).
 
-- `value` (*number*) : -1 à 1.
+- `value` (*number*) : -1 to 1.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `brake` | number | Toujours 0. |
-| `clutchRatio` | number | Toujours 0. |
+| `brake` | number | Always 0. |
+| `clutchRatio` | number | Always 0. |
 | `cycleGearboxModes` | function | nop. |
-| `defaultOrder` | number | Ordre par défaut (500). |
-| `engineInfo` | table | Tableau de 21 valeurs statiques (index 14 = "manual", index 15 = id de l'objet véhicule, index 18 = 1) compatible avec le format d'info moteur des autres contrôleurs principaux. |
-| `fireEngineTemperature` | number | Toujours 0 (API de contrôleur principal). |
+| `defaultOrder` | number | Default order (500). |
+| `engineInfo` | table | Array of 21 static values (index 14 = "manual", index 15 = vehicle object id, index 18 = 1) compatible with the engine info format of the other main controllers. |
+| `fireEngineTemperature` | number | Always 0 (main controller API). |
 | `sendTorqueData` | function | nop. |
 | `setAggressionOverride` | function | nop. |
 | `setDefaultForwardMode` | function | nop. |
@@ -161,15 +161,15 @@ Fixe la composante avant/arrière de la marche (+1 = avant).
 | `setStarter` | function | nop. |
 | `shiftDown` | function | nop. |
 | `shiftToGearIndex` | function | nop. |
-| `shiftUp` | function | nop (API principale obligatoire). |
+| `shiftUp` | function | nop (mandatory main API). |
 | `smartParkingBrake` | function | nop. |
-| `throttle` | number | Toujours 0. |
-| `type` | string | "main" (contrôleur principal obligatoire pour ce véhicule). |
+| `throttle` | number | Always 0. |
+| `type` | string | "main" (mandatory main controller for this vehicle). |
 | `vehicleActivated` | function | nop. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `apply3nodeTorque`, `applyForce`, `applyForceVector`, `get3nodeAngularVelocity`, `getBeamLength`, `getBeamVectorFromNode`, `getId`, `getNodeVelocityVector`, `getNodesVector`, `inWater`, `isNodeColliding`, `setBeamLength`, `setBeamSpringDamp`, `setGroupPressureRel`, `setSleepingEnabled`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/playerController.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/playerController.lua`.*

@@ -1,35 +1,63 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/fuelUtils.lua",
-  "module": "Outils pour sauvegarder et restaurer le carburant d'un véhicule de rallye (par exemple après un reset ou une réparation). createFuelSnapshot analyse les données energyStorage : avec un seul réservoir essence/diesel valide, il mémorise le niveau courant (mode 'remembered') ; sinon il prévoit un plein (mode 'full') avec la raison du repli. applyFuelSnapshot réapplique l'instantané via core_vehicleBridge.",
-  "usage": "gameplay_rally_fuelUtils.requestFuelSnapshot(veh, function(snap)\n  -- plus tard :\n  gameplay_rally_fuelUtils.applyFuelSnapshot(veh, snap, 'MonTag', 'reset')\nend)",
+  "module": "Tools to save and restore a rally vehicle's fuel (for example after a reset or a repair). createFuelSnapshot analyzes the energyStorage data: with a single valid gasoline/diesel tank, it stores the current level ('remembered' mode); otherwise it plans a full tank ('full' mode) with the reason for the fallback. applyFuelSnapshot reapplies the snapshot via core_vehicleBridge.",
+  "usage": "gameplay_rally_fuelUtils.requestFuelSnapshot(veh, function(snap)\n  -- later:\n  gameplay_rally_fuelUtils.applyFuelSnapshot(veh, snap, 'MyTag', 'reset')\nend)",
   "notes": [
-    "Seuls les carburants 'gasoline' et 'diesel' sont mémorisés ; batterie électrique, réservoir multiple, autre type de stockage (hors n2oTank) forcent le mode 'full'.",
-    "Les énergies sont celles d'energyStorage (unité du jeu, déduit du code).",
-    "Snapshot : {mode='full'|'remembered', tanks={...}, reason=string|nil}. En mode 'full', tanks contient {name, maxEnergy} ; en 'remembered', {name, currentEnergy}."
+    "Only 'gasoline' and 'diesel' fuels are remembered; an electric battery, multiple tanks, or another storage type (other than n2oTank) force the 'full' mode.",
+    "The energies are those of energyStorage (game unit, inferred from code).",
+    "Snapshot: {mode='full'|'remembered', tanks={...}, reason=string|nil}. In 'full' mode, tanks contains {name, maxEnergy}; in 'remembered', {name, currentEnergy}."
   ],
   "functions": {
     "createFuelSnapshot": {
-      "desc": "Construit un instantané de carburant à partir des données energyStorage d'un véhicule.",
-      "params": {"energyStorageData": {"type": "table|nil", "desc": "Liste des stockages d'énergie (storageType, energyType, name, currentEnergy, maxEnergy)."}},
-      "returns": [{"type": "table", "desc": "{mode, tanks, reason} ; reason explique pourquoi on retombe sur un plein."}],
+      "desc": "Builds a fuel snapshot from a vehicle's energyStorage data.",
+      "params": {
+        "energyStorageData": {
+          "type": "table|nil",
+          "desc": "List of energy storages (storageType, energyType, name, currentEnergy, maxEnergy)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{mode, tanks, reason}; reason explains why it falls back to a full tank."
+        }
+      ],
       "internal": false
     },
     "requestFuelSnapshot": {
-      "desc": "Demande asynchrone la valeur 'energyStorage' au véhicule (core_vehicleBridge.requestValue) puis appelle callback avec l'instantané. Sans véhicule, appelle callback immédiatement avec un instantané 'full' vide.",
+      "desc": "Asynchronously requests the 'energyStorage' value from the vehicle (core_vehicleBridge.requestValue) then calls callback with the snapshot. Without a vehicle, calls callback immediately with an empty 'full' snapshot.",
       "params": {
-        "veh": {"type": "table|nil", "desc": "Objet véhicule."},
-        "callback": {"type": "function", "desc": "function(snapshot)."}
+        "veh": {
+          "type": "table|nil",
+          "desc": "Vehicle object."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "function(snapshot)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "applyFuelSnapshot": {
-      "desc": "Applique l'instantané : en mode 'remembered' remet currentEnergy dans chaque réservoir ; sinon remplit chaque réservoir à maxEnergy (avec un avertissement dans le log si une raison est fournie). Utilise l'action véhicule setEnergyStorageEnergy. Ne fait rien sans véhicule, sans instantané ou sans réservoir.",
+      "desc": "Applies the snapshot: in 'remembered' mode puts currentEnergy back in each tank; otherwise fills each tank to maxEnergy (with a warning in the log if a reason is provided). Uses the vehicle action setEnergyStorageEnergy. Does nothing without a vehicle, without a snapshot or without a tank.",
       "params": {
-        "veh": {"type": "table", "desc": "Objet véhicule."},
-        "snapshot": {"type": "table", "desc": "Instantané issu de createFuelSnapshot."},
-        "logTag": {"type": "string|nil", "desc": "Tag de log."},
-        "reason": {"type": "string|nil", "desc": "Contexte pour le message de log ('recovery' par défaut)."}
+        "veh": {
+          "type": "table",
+          "desc": "Vehicle object."
+        },
+        "snapshot": {
+          "type": "table",
+          "desc": "Snapshot from createFuelSnapshot."
+        },
+        "logTag": {
+          "type": "string|nil",
+          "desc": "Log tag."
+        },
+        "reason": {
+          "type": "string|nil",
+          "desc": "Context for the log message ('recovery' by default)."
+        }
       },
       "returns": [],
       "internal": false

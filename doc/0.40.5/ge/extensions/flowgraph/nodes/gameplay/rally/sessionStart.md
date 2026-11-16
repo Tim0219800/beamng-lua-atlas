@@ -1,37 +1,37 @@
 # `flowgraph_nodes_gameplay_rally_sessionStart`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.lua` · VM : Game Engine (GE) · 129 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.lua` · VM: Game Engine (GE) · 129 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/sessionStart")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/sessionStart")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Mode Session Start » (catégorie once_instant, tag rally). Charge ce qu'il faut pour le mode rally : extensions gameplay_rally, pont de boucle rally (extRallyLoop) et gameplay_rallyStartClock ; détermine la mission (via le gestionnaire de boucle rally si chargé, sinon RallyUtil.detectMissionIdHelper) ; appelle gameplay_rally.loadMission(missionId, missionDir, nil, voicepackPick, {owner = 'mission'}) ; si disableOnStart, désactive le traitement des pacenotes ; en mode boucle, appelle gameplay_rallyLoop.setupForNewMission() et sort le chemin du préfab de boucle (loopPrefab, rm:getLoopPrefabPath()). Si fireEvents, déclenche le hook onRallySessionStart. Entrées : fireEvents (défaut true), disableOnStart (défaut false). Sortie : loopPrefab (string).
+Flowgraph node "Rally Mode Session Start" (category once_instant, tag rally). Loads what rally mode needs: extensions gameplay_rally, rally loop bridge (extRallyLoop) and gameplay_rallyStartClock; determines the mission (via the rally loop manager if loaded, otherwise RallyUtil.detectMissionIdHelper); calls gameplay_rally.loadMission(missionId, missionDir, nil, voicepackPick, {owner = 'mission'}); if disableOnStart, disables pacenote processing; in loop mode, calls gameplay_rallyLoop.setupForNewMission() and outputs the loop prefab path (loopPrefab, rm:getLoopPrefabPath()). If fireEvents, triggers the onRallySessionStart hook. Inputs: fireEvents (default true), disableOnStart (default false). Output: loopPrefab (string).
 
-## Remarques
+## Notes
 
-- À l'arrêt du graphe, décharge gameplay_rallyStartClock et gameplay_rally (et le pont de boucle s'il a été chargé par ce nœud et qu'aucun gestionnaire de boucle n'existe) puis déclenche onRallySessionEnd si fireEvents.
-- Si la mission n'est pas détectée, un encadré d'erreur est loggé et rien n'est chargé.
-- La pin loopPrefab est déclarée type string avec default = false (incohérent).
+- When the graph stops, unloads gameplay_rallyStartClock and gameplay_rally (and the loop bridge if it was loaded by this node and no loop manager exists) then triggers onRallySessionEnd if fireEvents.
+- If the mission is not detected, an error box is logged and nothing is loaded.
+- The loopPrefab pin is declared with type string and default = false (inconsistent).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Décharge les extensions rally et émet onRallySessionEnd si fireEvents. | 25 |
-| `C:loadExt()` | Charge l'extension gameplay_rally si besoin. | 47 |
-| `C:loadRallyLoopBridge()` | Charge le pont de boucle rally s'il n'est pas chargé et mémorise si c'est ce nœud qui l'a chargé. | 54 |
-| `C:unloadExt()` | Décharge gameplay_rallyStartClock, gameplay_rally et, sous conditions, le pont de boucle rally. | 33 |
-| `C:workOnce()` | Exécute la séquence de démarrage de session décrite dans la description du module. | 63 |
+| `C:_executionStopped()` | Unloads the rally extensions and emits onRallySessionEnd if fireEvents. | 25 |
+| `C:loadExt()` | Loads the gameplay_rally extension if needed. | 47 |
+| `C:loadRallyLoopBridge()` | Loads the rally loop bridge if it is not loaded and remembers whether this node loaded it. | 54 |
+| `C:unloadExt()` | Unloads gameplay_rallyStartClock, gameplay_rally and, under conditions, the rally loop bridge. | 33 |
+| `C:workOnce()` | Executes the session start sequence described in the module description. | 63 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRallySessionEnd` — écouté par 1 module(s)
+- `onRallySessionEnd` — listened to by 1 module(s)
 - `onRallySessionStart`
 
-**Charge les extensions :** `gameplay_rally`, `gameplay_rallyStartClock`
+**Loads extensions:** `gameplay_rally`, `gameplay_rallyStartClock`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/sessionStart.lua`.*

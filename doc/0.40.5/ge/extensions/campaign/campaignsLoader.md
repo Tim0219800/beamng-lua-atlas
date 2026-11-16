@@ -1,123 +1,123 @@
 # `campaign_campaignsLoader`
 
-*Fichier : `lua/ge/extensions/campaign/campaignsLoader.lua` · VM : Game Engine (GE) · 393 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/campaign/campaignsLoader.lua` · VM: Game Engine (GE) · 393 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `campaign_campaignsLoader` : `extensions.load("campaign_campaignsLoader")`, puis la globale `campaign_campaignsLoader`
+**Access:** extension `campaign_campaignsLoader`: `extensions.load("campaign_campaignsLoader")`, then the global `campaign_campaignsLoader`
 
-Chargeur de campagnes : trouve les fichiers /campaigns/*.json dont header.type vaut « campaign », les charge (avec infos de mod et image d'aperçu), valide et prépare une campagne, la démarre (ou reprend une sauvegarde) et gère les sauvegardes dans /saves/campaigns/ (fichiers slotN.json de header.type « campaignSave »). Les modules de la campagne sont campaign_campaigns, campaign_comics, campaign_rewards, campaign_dealer et campaign_photoSafari (M.campaignModules).
+Campaign loader: finds the /campaigns/*.json files whose header.type is "campaign", loads them (with mod info and preview image), validates and prepares a campaign, starts it (or resumes a save) and manages saves in /saves/campaigns/ (slotN.json files with header.type "campaignSave"). The campaign modules are campaign_campaigns, campaign_comics, campaign_rewards, campaign_dealer and campaign_photoSafari (M.campaignModules).
 
-## Remarques
+## Notes
 
-- Sauvegarde : saveCampaign lance le hook onSaveCampaign(callback) ; chaque module appelle le callback avec (alias global, données) ; le résultat est écrit en JSON avec un header {version = 1, type = 'campaignSave', title}. Rien n'est sauvegardé si meta.enableSaves est faux.
-- La sauvegarde correspond à une campagne par son titre (meta.title).
-- resumeSavedCampaign appelle onResumeCampaign sur chaque module sauvegardé via _G (sauf campaign_campaigns, repris en dernier avec campaign_campaigns.resumeCampaign).
-- Bug : M.onInit = onInit exporte une variable non définie dans ce fichier (nil).
-- Bug : startByFolder appelle campaign_campaigns.start, qui n'est pas exportée par campaigns.lua (celui-ci exporte startCampaign) ; l'appel échoue. Utiliser plutôt campaign_campaignsLoader.start.
-- Bug : processCampaignStartInternal teste « if campaign then stop() » avec des globales non définies dans ce fichier ; seul un échec de validation (inatteignable car validate retourne toujours true) ferait retourner nil.
-- splitFieldByToken construit le motif "([^"..token..".]+)" : le point est toujours exclu en plus du jeton donné.
-- start attend la fin du niveau courant (scenetree.MissionGroup) avant de lancer la campagne, via endActiveGameMode et triggerDelayedStartGenerator.
+- Saving: saveCampaign launches the hook onSaveCampaign(callback); each module calls the callback with (global alias, data); the result is written as JSON with a header {version = 1, type = 'campaignSave', title}. Nothing is saved if meta.enableSaves is false.
+- A save matches a campaign by its title (meta.title).
+- resumeSavedCampaign calls onResumeCampaign on each saved module via _G (except campaign_campaigns, resumed last with campaign_campaigns.resumeCampaign).
+- Bug: M.onInit = onInit exports a variable not defined in this file (nil).
+- Bug: startByFolder calls campaign_campaigns.start, which is not exported by campaigns.lua (it exports startCampaign); the call fails. Use campaign_campaignsLoader.start instead.
+- Bug: processCampaignStartInternal tests "if campaign then stop() " with globals not defined in this file; only a validation failure (unreachable since validate always returns true) would make it return nil.
+- splitFieldByToken builds the pattern "([^"..token..".]+)": the dot is always excluded in addition to the given token.
+- start waits for the current level to end (scenetree.MissionGroup) before launching the campaign, via endActiveGameMode and triggerDelayedStartGenerator.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `campaign_campaignsLoader.checkSaveExists(title, savesEnabled)` | Retourne le nom du fichier de sauvegarde correspondant à un titre de campagne, ou nil. | 308 |
-| `campaign_campaignsLoader.getCampaignFilenames()` | Liste les fichiers JSON de /campaigns/ (1 niveau) dont header.type == 'campaign'. Retourne {} si le dossier n'existe pas. | 45 |
-| `campaign_campaignsLoader.getCampaignScenarios()` | Retourne la liste mise en cache scenariosInAllCampaigns (vide dans ce fichier : jamais remplie ici ; generateCampaignScenariosList existe mais n'est pas appelée). | 85 |
-| `campaign_campaignsLoader.getList()` | Charge toutes les campagnes trouvées avec loadCampaign et les retourne ; coopère avec util_asyncBulkLoader si un chargement groupé est en cours. | 61 |
-| `campaign_campaignsLoader.loadCampaign(campaignfile)` | Lit le JSON d'une campagne et ajoute sourceFile, sourcePath, official, modID/modName/modTitle (valeurs « BeamNG » / « BeamNG.drive » si ce n'est pas un mod) et previews (image .jpg du dossier de la campagne). | 12 |
-| `campaign_campaignsLoader.resumeSavedCampaign(campaign, saveFilename)` | Relit un fichier de sauvegarde, rappelle onResumeCampaign de chaque module concerné, puis campaign_campaigns.resumeCampaign. | 364 |
-| `campaign_campaignsLoader.saveCampaign(campaign)` | Sauvegarde l'état de la campagne (voir notes) dans /saves/campaigns/ ; réutilise le fichier existant du même titre, sinon prend le prochain « slotN.json ». | 346 |
-| `campaign_campaignsLoader.splitFieldByToken(field, token)` | Découpe une chaîne par un caractère jeton (en excluant aussi le point) et retourne les morceaux. | 134 |
-| `campaign_campaignsLoader.start(newCampaign, endCallback)` | Démarre une campagne choisie dans l'interface. Si un niveau est chargé, attend sa fermeture ; sinon décharge les extensions automatiques, charge celles du scénario, du quick race et de la campagne, prépare la campagne, puis reprend une sauvegarde existante ou appelle campaign_campaigns.startCampaign. | 249 |
-| `campaign_campaignsLoader.startByFolder(path, endCallback)` | Cherche la campagne dont sourcePath est path et la démarre. | 279 |
+| `campaign_campaignsLoader.checkSaveExists(title, savesEnabled)` | Returns the save file name matching a campaign title, or nil. | 308 |
+| `campaign_campaignsLoader.getCampaignFilenames()` | Lists the JSON files in /campaigns/ (1 level) whose header.type == 'campaign'. Returns {} if the folder does not exist. | 45 |
+| `campaign_campaignsLoader.getCampaignScenarios()` | Returns the cached list scenariosInAllCampaigns (empty in this file: never filled here; generateCampaignScenariosList exists but is not called). | 85 |
+| `campaign_campaignsLoader.getList()` | Loads all the campaigns found with loadCampaign and returns them; cooperates with util_asyncBulkLoader if a bulk load is in progress. | 61 |
+| `campaign_campaignsLoader.loadCampaign(campaignfile)` | Reads a campaign's JSON and adds sourceFile, sourcePath, official, modID/modName/modTitle ("BeamNG" / "BeamNG.drive" values if it is not a mod) and previews (.jpg image from the campaign folder). | 12 |
+| `campaign_campaignsLoader.resumeSavedCampaign(campaign, saveFilename)` | Rereads a save file, calls onResumeCampaign of each module concerned again, then campaign_campaigns.resumeCampaign. | 364 |
+| `campaign_campaignsLoader.saveCampaign(campaign)` | Saves the campaign state (see notes) in /saves/campaigns/; reuses the existing file with the same title, otherwise takes the next "slotN.json". | 346 |
+| `campaign_campaignsLoader.splitFieldByToken(field, token)` | Splits a string by a token character (also excluding the dot) and returns the pieces. | 134 |
+| `campaign_campaignsLoader.start(newCampaign, endCallback)` | Starts a campaign chosen in the interface. If a level is loaded, waits for it to close; otherwise unloads the automatic extensions, loads those of the scenario, the quick race and the campaign, prepares the campaign, then resumes an existing save or calls campaign_campaigns.startCampaign. | 249 |
+| `campaign_campaignsLoader.startByFolder(path, endCallback)` | Finds the campaign whose sourcePath is path and starts it. | 279 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `campaign_campaignsLoader.checkSaveExists(title, savesEnabled)`
 
-Retourne le nom du fichier de sauvegarde correspondant à un titre de campagne, ou nil.
+Returns the save file name matching a campaign title, or nil.
 
-- `title` (*string*) : Titre de la campagne.
-- `savesEnabled` (*boolean*) : Si faux, retourne nil sans rien chercher.
-- **renvoie** : string|nil Chemin de la sauvegarde.
+- `title` (*string*) : Campaign title.
+- `savesEnabled` (*boolean*) : If false, returns nil without searching anything.
+- **returns**: string|nil Path of the save.
 
 #### `campaign_campaignsLoader.getCampaignFilenames()`
 
-Liste les fichiers JSON de /campaigns/ (1 niveau) dont header.type == 'campaign'. Retourne {} si le dossier n'existe pas.
+Lists the JSON files in /campaigns/ (1 level) whose header.type == 'campaign'. Returns {} if the folder does not exist.
 
-- **renvoie** : string[] Chemins des fichiers de campagne.
+- **returns**: string[] Paths of the campaign files.
 
 #### `campaign_campaignsLoader.getCampaignScenarios()`
 
-Retourne la liste mise en cache scenariosInAllCampaigns (vide dans ce fichier : jamais remplie ici ; generateCampaignScenariosList existe mais n'est pas appelée).
+Returns the cached list scenariosInAllCampaigns (empty in this file: never filled here; generateCampaignScenariosList exists but is not called).
 
-- **renvoie** : string[] Chemins de scénarios.
+- **returns**: string[] Scenario paths.
 
 #### `campaign_campaignsLoader.getList()`
 
-Charge toutes les campagnes trouvées avec loadCampaign et les retourne ; coopère avec util_asyncBulkLoader si un chargement groupé est en cours.
+Loads all the campaigns found with loadCampaign and returns them; cooperates with util_asyncBulkLoader if a bulk load is in progress.
 
-- **renvoie** : table[] Liste des campagnes.
+- **returns**: table[] List of campaigns.
 
 #### `campaign_campaignsLoader.loadCampaign(campaignfile)`
 
-Lit le JSON d'une campagne et ajoute sourceFile, sourcePath, official, modID/modName/modTitle (valeurs « BeamNG » / « BeamNG.drive » si ce n'est pas un mod) et previews (image .jpg du dossier de la campagne).
+Reads a campaign's JSON and adds sourceFile, sourcePath, official, modID/modName/modTitle ("BeamNG" / "BeamNG.drive" values if it is not a mod) and previews (.jpg image from the campaign folder).
 
-- `campaignfile` (*string*) : Chemin du fichier JSON de la campagne.
-- **renvoie** : table Données de la campagne enrichies.
+- `campaignfile` (*string*) : Path of the campaign's JSON file.
+- **returns**: table Enriched campaign data.
 
 #### `campaign_campaignsLoader.resumeSavedCampaign(campaign, saveFilename)`
 
-Relit un fichier de sauvegarde, rappelle onResumeCampaign de chaque module concerné, puis campaign_campaigns.resumeCampaign.
+Rereads a save file, calls onResumeCampaign of each module concerned again, then campaign_campaigns.resumeCampaign.
 
-- `campaign` (*table*) : Campagne traitée à reprendre.
-- `saveFilename` (*string*) : Chemin du fichier de sauvegarde.
+- `campaign` (*table*) : Processed campaign to resume.
+- `saveFilename` (*string*) : Path of the save file.
 
 #### `campaign_campaignsLoader.saveCampaign(campaign)`
 
-Sauvegarde l'état de la campagne (voir notes) dans /saves/campaigns/ ; réutilise le fichier existant du même titre, sinon prend le prochain « slotN.json ».
+Saves the campaign state (see notes) in /saves/campaigns/; reuses the existing file with the same title, otherwise takes the next "slotN.json".
 
-- `campaign` (*table*) : Campagne traitée ({meta, state}) ; meta.enableSaves et meta.title sont lus.
+- `campaign` (*table*) : Processed campaign ({meta, state}); meta.enableSaves and meta.title are read.
 
 #### `campaign_campaignsLoader.splitFieldByToken(field, token)`
 
-Découpe une chaîne par un caractère jeton (en excluant aussi le point) et retourne les morceaux.
+Splits a string by a token character (also excluding the dot) and returns the pieces.
 
-- `field` (*string*) : Chaîne à découper.
-- `token` (*string*) : Jeton de séparation.
-- **renvoie** : string[] Morceaux.
+- `field` (*string*) : String to split.
+- `token` (*string*) : Separator token.
+- **returns**: string[] Pieces.
 
 #### `campaign_campaignsLoader.start(newCampaign, endCallback)`
 
-Démarre une campagne choisie dans l'interface. Si un niveau est chargé, attend sa fermeture ; sinon décharge les extensions automatiques, charge celles du scénario, du quick race et de la campagne, prépare la campagne, puis reprend une sauvegarde existante ou appelle campaign_campaigns.startCampaign.
+Starts a campaign chosen in the interface. If a level is loaded, waits for it to close; otherwise unloads the automatic extensions, loads those of the scenario, the quick race and the campaign, prepares the campaign, then resumes an existing save or calls campaign_campaigns.startCampaign.
 
-- `newCampaign` (*table*) : Campagne (issue de loadCampaign).
-- `endCallback` (*function|nil*) : Mémorisée comme endCampaignCallback.
+- `newCampaign` (*table*) : Campaign (from loadCampaign).
+- `endCallback` (*function|nil*) : Stored as endCampaignCallback.
 
 #### `campaign_campaignsLoader.startByFolder(path, endCallback)`
 
-Cherche la campagne dont sourcePath est path et la démarre.
+Finds the campaign whose sourcePath is path and starts it.
 
-- `path` (*string*) : Dossier source de la campagne.
-- `endCallback` (*function|nil*) : Callback de fin.
+- `path` (*string*) : Source folder of the campaign.
+- `endCallback` (*function|nil*) : End callback.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `campaignModules` | string[] | Modules d'extension chargés pour une campagne. |
-| `onInit` | nil | Toujours nil : référence à une variable non définie dans le fichier. ⚠ référence `onInit` non définie dans le fichier (vaut probablement nil) |
+| `campaignModules` | string[] | Extension modules loaded for a campaign. |
+| `onInit` | nil | Always nil: reference to a variable not defined in the file. ⚠ reference `onInit` not defined in the file (probably nil) |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onSaveCampaign` — écouté par 5 module(s)
+- `onSaveCampaign` — listened to by 5 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/campaign/campaignsLoader.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/campaign/campaignsLoader.lua`.*

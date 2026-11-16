@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenFinish.lua",
-  "module": "Nœud « Screen Finish » (repeat_instant, couleur ui). Termine la construction d'un écran (début ou fin) et l'envoie à l'UI. Entrée flow (chainFlow), sortie flow. À placer en bout de chaîne après StartScreen Begin / EndScreen Begin et les nœuds de panneaux.",
+  "module": "Node \"Screen Finish\" (repeat_instant, color ui). Ends the building of a screen (start or end) and sends it to the UI. Input flow (chainFlow), output flow. To be placed at the end of the chain after StartScreen Begin / EndScreen Begin and the panel nodes.",
   "notes": [
-    "Le pin de sortie flow n'est jamais écrit par work."
+    "The output flow pin is never written by work."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "work": {
-          "desc": "Émet le hook onStartScreenFinishedBuilding puis appelle modules.ui:finishUIBuilding().",
+          "desc": "Emits the onStartScreenFinishedBuilding hook then calls modules.ui:finishUIBuilding().",
           "internal": true
         }
       }

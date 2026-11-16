@@ -1,50 +1,93 @@
 {
   "path": "lua/ge/extensions/core/multiseatPlayerLimits.lua",
-  "module": "Extension GE `core_multiseatPlayerLimits` : calcule les limites du nombre de joueurs en multi-joueur local (multiseat). Deux sources : la limite 'douce' (recommandation matériel ou niveau, champ multiseat.maxPlayers du info.json du niveau, 4 par défaut via core_levels) et la limite 'dure' du mode de jeu multiseat en cours (gameplay_multiseat_gamemodeManager). Elle renvoie un état prêt pour l'interface : limite, atteinte, dépassée, avertissement.",
-  "usage": "local s = core_multiseatPlayerLimits.getCurrentLevelState(3)\nif s.atLimit then log('I','','plus de place : limite ' .. tostring(s.limit)) end",
+  "module": "GE extension `core_multiseatPlayerLimits`: computes the player count limits in local multiplayer (multiseat). Two sources: the 'soft' limit (hardware or level recommendation, multiseat.maxPlayers field of the level's info.json, 4 by default via core_levels) and the 'hard' limit of the current multiseat game mode (gameplay_multiseat_gamemodeManager). It returns a UI-ready state: limit, reached, exceeded, warning.",
+  "usage": "local s = core_multiseatPlayerLimits.getCurrentLevelState(3)\nif s.atLimit then log('I','','no room left: limit ' .. tostring(s.limit)) end",
   "notes": [
-    "normalizeLimit : une limite doit être un nombre >= 1, arrondi à l'entier inférieur ; sinon elle est ignorée (nil).",
-    "La limite du mode (modeLimit) est toujours appliquée. La limite douce ne l'est que dans le menu simple (Engine.UI.isSimpleMenu()) ou si softIsHard est vrai ; sinon, dépasser la limite douce produit seulement un avertissement { txt = 'ui.multiseat.playerLimitWarning', context = { count = softLimit } }.",
-    "Le module est un simple module de fonctions (pas de hooks) ; il est défini avec des `function M.xxx`."
+    "normalizeLimit: a limit must be a number >= 1, rounded down to the integer; otherwise it is ignored (nil).",
+    "The mode limit (modeLimit) is always applied. The soft limit is only applied in the simple menu (Engine.UI.isSimpleMenu()) or if softIsHard is true; otherwise, exceeding the soft limit only produces a warning { txt = 'ui.multiseat.playerLimitWarning', context = { count = softLimit } }.",
+    "The module is a simple module of functions (no hooks); it is defined with `function M.xxx`."
   ],
   "fields": {},
   "functions": {
     "isSimpleMenu": {
-      "desc": "Indique si l'interface est en mode de menu simplifié (plateformes console/Steam Deck, selon Engine.UI.isSimpleMenu).",
+      "desc": "Indicates whether the UI is in simplified menu mode (console/Steam Deck platforms, according to Engine.UI.isSimpleMenu).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si menu simple."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if simple menu."
+        }
+      ],
       "internal": false
     },
     "getCurrentLevelLimit": {
-      "desc": "Renvoie le nombre maximal de joueurs recommandé par le niveau courant (level.multiseat.maxPlayers).",
+      "desc": "Returns the maximum number of players recommended by the current level (level.multiseat.maxPlayers).",
       "params": {},
-      "returns": [{"type": "integer|nil", "desc": "Limite, ou nil si aucun niveau ou valeur invalide."}],
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Limit, or nil if no level or invalid value."
+        }
+      ],
       "internal": false
     },
     "getCurrentModeLimit": {
-      "desc": "Renvoie le nombre maximal de joueurs du mode de jeu multiseat actif (gameplay_multiseat_gamemodeManager.getMaxPlayers) : limite dure sur toutes les plateformes.",
+      "desc": "Returns the maximum number of players of the active multiseat game mode (gameplay_multiseat_gamemodeManager.getMaxPlayers): hard limit on all platforms.",
       "params": {},
-      "returns": [{"type": "integer|nil", "desc": "Limite, ou nil."}],
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "Limit, or nil."
+        }
+      ],
       "internal": false
     },
     "getState": {
-      "desc": "Calcule l'état des limites de joueurs. La limite effective est celle du mode, abaissée par la limite douce si softIsHard (ou menu simple), sinon la limite douce seule si aucune limite de mode.",
+      "desc": "Computes the player limits state. The effective limit is the mode's, lowered by the soft limit if softIsHard (or simple menu), otherwise the soft limit alone if there is no mode limit.",
       "params": {
-        "softLimit": {"type": "number|nil", "desc": "Limite recommandée (matériel ou niveau)."},
-        "playerCount": {"type": "number", "desc": "Nombre de joueurs actuel (négatif ou invalide devient 0)."},
-        "modeLimit": {"type": "number|nil", "desc": "Limite du mode de jeu."},
-        "softIsHard": {"type": "boolean|nil", "desc": "Si vrai, la limite douce est aussi imposée."}
+        "softLimit": {
+          "type": "number|nil",
+          "desc": "Recommended limit (hardware or level)."
+        },
+        "playerCount": {
+          "type": "number",
+          "desc": "Current number of players (negative or invalid becomes 0)."
+        },
+        "modeLimit": {
+          "type": "number|nil",
+          "desc": "Game mode limit."
+        },
+        "softIsHard": {
+          "type": "boolean|nil",
+          "desc": "If true, the soft limit is also enforced."
+        }
       },
-      "returns": [{"type": "table", "desc": "{ limit = integer|nil, hard = boolean, atLimit = boolean, exceeded = boolean, warning = table|nil }"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ limit = integer|nil, hard = boolean, atLimit = boolean, exceeded = boolean, warning = table|nil }"
+        }
+      ],
       "internal": false
     },
     "getCurrentLevelState": {
-      "desc": "Raccourci : getState avec la limite du niveau courant et la limite du mode courant.",
+      "desc": "Shortcut: getState with the current level's limit and the current mode's limit.",
       "params": {
-        "playerCount": {"type": "number", "desc": "Nombre de joueurs actuel."},
-        "softIsHard": {"type": "boolean|nil", "desc": "Voir getState."}
+        "playerCount": {
+          "type": "number",
+          "desc": "Current number of players."
+        },
+        "softIsHard": {
+          "type": "boolean|nil",
+          "desc": "See getState."
+        }
       },
-      "returns": [{"type": "table", "desc": "Même structure que getState."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Same structure as getState."
+        }
+      ],
       "internal": false
     }
   }

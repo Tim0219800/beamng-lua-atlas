@@ -1,32 +1,47 @@
 {
   "path": "lua/ge/extensions/editor/vehicleEditor/staticEditor/veJBeamBeautifier.lua",
-  "module": "Application « JBeam Beautifier » du Static Editor. Elle reformate des fichiers .jbeam (un fichier ou un dossier entier) en alignant en colonnes les tableaux des sections choisies (beams, nodes, quads, slots, slots2, triangles), avec option d'alignement de la ligne d'en-tête et d'arrondi des nombres (0 à 5 décimales). Elle travaille sur l'AST du fichier (json-ast) et ne modifie que les espaces et, si demandé, l'arrondi.",
+  "module": "\"JBeam Beautifier\" app of the Static Editor. It reformats .jbeam files (one file or a whole folder) by aligning in columns the arrays of the chosen sections (beams, nodes, quads, slots, slots2, triangles), with an option to align the header line and round numbers (0 to 5 decimals). It works on the file's AST (json-ast) and only changes whitespace and, if requested, the rounding.",
   "usage": "extensions.load('editor_vehicleEditor_staticEditor_veJBeamBeautifier')\neditor_vehicleEditor_staticEditor_veJBeamBeautifier.open()",
   "notes": [
-    "ATTENTION : le fichier .jbeam est réécrit sur place (writeFile(filePath, ...)) sans sauvegarde. Le test de comparaison entre données avant/après (fonction test) est commenté dans beautifyJBeamFile : aucune vérification d'équivalence n'est faite.",
-    "Un fichier est refusé (log E) s'il n'est pas lisible, s'il ne se décode pas avec jsonDebug.decode, s'il produit des avertissements de décodage, ou si son AST ne se parse pas.",
-    "Seules les lignes de tableau tenant sur une seule ligne sont alignées ; les tableaux répartis sur plusieurs lignes sont laissés tels quels.",
-    "Réglages par défaut : nodes et triangles cochés, les autres sections décochées ; alignement de l'en-tête activé ; arrondi désactivé ; 3 décimales.",
-    "Le bouton « Beautify JBeam Files » est désactivé tant que le chemin est vide. Le champ chemin est rempli par les boutons « Select Folder to Beautify » (dossier) et « Select File to Beautify » (fichier) qui ouvrent editor_fileDialog sur /vehicles/. Si le chemin est un fichier, seul ce fichier est traité ; sinon tous les *.jbeam du dossier, récursivement (FS:findFiles).",
-    "Le résultat de l'opération est écrit dans la console (« Done! »)."
+    "WARNING: the .jbeam file is rewritten in place (writeFile(filePath, ...)) without a backup. The comparison test between data before/after (function test) is commented out in beautifyJBeamFile: no equivalence check is done.",
+    "A file is rejected (log E) if it is not readable, if it does not decode with jsonDebug.decode, if it produces decoding warnings, or if its AST does not parse.",
+    "Only array lines that fit on a single line are aligned; arrays spread over several lines are left as is.",
+    "Default settings: nodes and triangles checked, the other sections unchecked; header alignment enabled; rounding disabled; 3 decimals.",
+    "The \"Beautify JBeam Files\" button is disabled as long as the path is empty. The path field is filled by the \"Select Folder to Beautify\" (folder) and \"Select File to Beautify\" (file) buttons which open editor_fileDialog on /vehicles/. If the path is a file, only that file is processed; otherwise all *.jbeam in the folder, recursively (FS:findFiles).",
+    "The result of the operation is written to the console (\"Done!\")."
   ],
   "fields": {
-    "menuEntry": {"type": "string", "desc": "Texte de l'entrée du menu Apps : « JBeam Beautifier »."}
+    "menuEntry": {
+      "type": "string",
+      "desc": "Text of the Apps menu entry: \"JBeam Beautifier\"."
+    }
   },
   "functions": {
-    "open": {"desc": "Ouvre la fenêtre de l'application (windowOpen[0] = true)."},
+    "open": {
+      "desc": "Opens the app window (windowOpen[0] = true)."
+    },
     "onUpdate": {
-      "desc": "Hook d'extension appelé à chaque frame : dessine la fenêtre (sections à traiter, réglages, sélection de dossier/fichier, bouton de lancement) quand elle est ouverte.",
+      "desc": "Extension hook called every frame: draws the window (sections to process, settings, folder/file selection, launch button) when it is open.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook appelé avant un rechargement Lua : sauvegarde l'état de la fenêtre.",
-      "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}],
+      "desc": "Hook called before a Lua reload: saves the window state.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{windowOpen = boolean}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après un rechargement Lua : restaure l'état de la fenêtre.",
-      "params": {"data": {"type": "table", "desc": "table produite par onSerialize"}},
+      "desc": "Hook called after a Lua reload: restores the window state.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "table produced by onSerialize"
+        }
+      },
       "internal": true
     }
   }

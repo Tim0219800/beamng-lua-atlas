@@ -1,34 +1,191 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/examples.lua",
-  "module": "Fenêtre « Examples » (fg_examples) de l'éditeur Flowgraph. Elle charge (une fois, mise en cache) tous les fichiers *flow.json du dossier /lua/ge/extensions/flowgraph/examples/, les range en arborescence par sous-dossier (beginner, intermediate, expert, nodes en premier), propose une recherche et, au clic sur un exemple, ouvre un nouveau projet flowgraph créé à partir de ses données (sans nom de fichier sauvegardé). Navigation possible aux flèches via l'action map « NodeLibrary ».",
+  "module": "\"Examples\" window (fg_examples) of the Flowgraph editor. It loads (once, cached) all *flow.json files from the /lua/ge/extensions/flowgraph/examples/ folder, arranges them in a tree by subfolder (beginner, intermediate, expert, nodes first), offers a search and, on clicking an example, opens a new flowgraph project created from its data (without a saved file name). Arrow-key navigation is possible via the \"NodeLibrary\" action map.",
   "notes": [
-    "Les exemples sont triés par exampleOrder (10^10 par défaut) ; la description vient du champ description du .flow.json.",
-    "Le cache examplesLookup est partagé au niveau du module : il n'est pas rechargé tant que le jeu tourne.",
-    "findExamples référence examplesLookup, qui doit déjà avoir été chargé par loadExamples."
+    "Examples are sorted by exampleOrder (10^10 by default); the description comes from the description field of the .flow.json.",
+    "The examplesLookup cache is shared at module level: it is not reloaded while the game is running.",
+    "findExamples references examplesLookup, which must already have been loaded by loadExamples."
   ],
   "classes": {
     "C": {
-      "desc": "Classe de la fenêtre Examples (windowName = 'fg_examples', arrowControllable = true).",
+      "desc": "Examples window class (windowName = 'fg_examples', arrowControllable = true).",
       "functions": {
-        "attach": {"desc": "Associe le manager et réinitialise la recherche.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": false},
-        "init": {"desc": "Enregistre la fenêtre, crée l'utilitaire de recherche et charge les exemples.", "params": {}, "internal": true},
-        "loadExamples": {"desc": "Parcourt FS:findFiles sur les .flow.json d'exemples, construit l'arbre (res) et la table plate (lookup) avec leur contenu JSON, puis les met en cache.", "params": {}, "returns": [{"type": "table", "desc": "Arbre des exemples."}, {"type": "table", "desc": "Table plate chemin -> données."}], "internal": false},
-        "getExamplesLookup": {"desc": "Renvoie l'arbre et la table plate (via loadExamples).", "params": {}, "returns": [{"type": "table", "desc": "Arbre."}, {"type": "table", "desc": "Lookup."}], "internal": false},
-        "createNode": {"desc": "Demande de valider l'élément sélectionné au prochain affichage (doClick).", "params": {}, "internal": false},
-        "navigateList": {"desc": "Déplace la sélection clavier dans la liste.", "params": {"up": {"type": "boolean", "desc": "true pour monter."}}, "internal": false},
-        "drawSearchInput": {"desc": "Dessine le champ « Find », le bouton d'effacement et l'aide.", "params": {}, "internal": false},
-        "findExamples": {"desc": "Soumet chaque exemple à l'utilitaire de recherche.", "params": {"match": {"type": "string", "desc": "Chaîne recherchée (non utilisée directement dans le corps, déduit du code)."}}, "internal": false},
-        "findStuff": {"desc": "Relance la recherche si le texte a changé et remplit self.results.", "params": {}, "internal": false},
-        "highlightText": {"desc": "Affiche un libellé en surlignant en orange les occurrences du texte cherché.", "params": {"label": {"type": "string", "desc": "Libellé."}, "highlightText": {"type": "string", "desc": "Texte à surligner."}}, "internal": false},
-        "displayResults": {"desc": "Affiche les résultats de recherche (ou « No Results! »).", "params": {}, "internal": false},
-        "displayTreeView": {"desc": "Affiche l'arborescence complète des exemples.", "params": {}, "internal": false},
-        "recursiveTreeView": {"desc": "Affiche récursivement un nœud de l'arbre : exemples triés puis sous-dossiers.", "params": {"element": {"type": "table", "desc": "Nœud de l'arbre."}, "depth": {"type": "integer", "desc": "Profondeur (sert aux identifiants ImGui)."}}, "internal": false},
-        "manageClick": {"desc": "Si l'élément est cliqué (ou validé au clavier), crée un manager via core_flowgraphManager.addManager et le rend actif dans l'éditeur.", "params": {"result": {"type": "table", "desc": "Résultat contenant info.data (données du projet)."}}, "internal": false},
-        "arrowHelper": {"desc": "Compte l'élément dans la liste navigable et dessine le cadre de sélection clavier.", "params": {"cursor": {"type": "ImVec2", "desc": "Position du curseur avant l'élément."}, "itemSize": {"type": "ImVec2", "desc": "Taille de l'élément."}, "doHover": {"type": "boolean|nil", "desc": "(déduit du code)"}}, "internal": false},
-        "handleActionMap": {"desc": "Quand la fenêtre a le focus, empile l'action map « NodeLibrary » pour la navigation aux flèches.", "params": {}, "internal": false},
-        "draw": {"desc": "Dessine la fenêtre Examples (recherche ou arborescence).", "params": {}, "internal": false},
-        "_onSerialize": {"desc": "Sérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true},
-        "_onDeserialized": {"desc": "Désérialisation (vide).", "params": {"data": {"type": "table", "desc": "Données."}}, "internal": true}
+        "attach": {
+          "desc": "Associates the manager and resets the search.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "Registers the window, creates the search utility and loads the examples.",
+          "params": {},
+          "internal": true
+        },
+        "loadExamples": {
+          "desc": "Walks FS:findFiles over the example .flow.json files, builds the tree (res) and the flat table (lookup) with their JSON content, then caches them.",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Tree of examples."
+            },
+            {
+              "type": "table",
+              "desc": "Flat table path -> data."
+            }
+          ],
+          "internal": false
+        },
+        "getExamplesLookup": {
+          "desc": "Returns the tree and the flat table (via loadExamples).",
+          "params": {},
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Tree."
+            },
+            {
+              "type": "table",
+              "desc": "Lookup."
+            }
+          ],
+          "internal": false
+        },
+        "createNode": {
+          "desc": "Requests validation of the selected item at the next display (doClick).",
+          "params": {},
+          "internal": false
+        },
+        "navigateList": {
+          "desc": "Moves the keyboard selection in the list.",
+          "params": {
+            "up": {
+              "type": "boolean",
+              "desc": "true to move up."
+            }
+          },
+          "internal": false
+        },
+        "drawSearchInput": {
+          "desc": "Draws the \"Find\" field, the clear button and the help.",
+          "params": {},
+          "internal": false
+        },
+        "findExamples": {
+          "desc": "Submits each example to the search utility.",
+          "params": {
+            "match": {
+              "type": "string",
+              "desc": "Searched string (not used directly in the body, inferred from code)."
+            }
+          },
+          "internal": false
+        },
+        "findStuff": {
+          "desc": "Re-runs the search if the text has changed and fills self.results.",
+          "params": {},
+          "internal": false
+        },
+        "highlightText": {
+          "desc": "Displays a label, highlighting in orange the occurrences of the searched text.",
+          "params": {
+            "label": {
+              "type": "string",
+              "desc": "Label."
+            },
+            "highlightText": {
+              "type": "string",
+              "desc": "Text to highlight."
+            }
+          },
+          "internal": false
+        },
+        "displayResults": {
+          "desc": "Displays the search results (or \"No Results!\").",
+          "params": {},
+          "internal": false
+        },
+        "displayTreeView": {
+          "desc": "Displays the full tree of examples.",
+          "params": {},
+          "internal": false
+        },
+        "recursiveTreeView": {
+          "desc": "Recursively displays a tree node: sorted examples then subfolders.",
+          "params": {
+            "element": {
+              "type": "table",
+              "desc": "Tree node."
+            },
+            "depth": {
+              "type": "integer",
+              "desc": "Depth (used for ImGui identifiers)."
+            }
+          },
+          "internal": false
+        },
+        "manageClick": {
+          "desc": "If the item is clicked (or validated by keyboard), creates a manager via core_flowgraphManager.addManager and makes it active in the editor.",
+          "params": {
+            "result": {
+              "type": "table",
+              "desc": "Result containing info.data (project data)."
+            }
+          },
+          "internal": false
+        },
+        "arrowHelper": {
+          "desc": "Counts the item in the navigable list and draws the keyboard selection frame.",
+          "params": {
+            "cursor": {
+              "type": "ImVec2",
+              "desc": "Cursor position before the item."
+            },
+            "itemSize": {
+              "type": "ImVec2",
+              "desc": "Size of the item."
+            },
+            "doHover": {
+              "type": "boolean|nil",
+              "desc": "(inferred from code)"
+            }
+          },
+          "internal": false
+        },
+        "handleActionMap": {
+          "desc": "When the window has focus, pushes the \"NodeLibrary\" action map for arrow-key navigation.",
+          "params": {},
+          "internal": false
+        },
+        "draw": {
+          "desc": "Draws the Examples window (search or tree).",
+          "params": {},
+          "internal": false
+        },
+        "_onSerialize": {
+          "desc": "Serialization (empty).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data."
+            }
+          },
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Deserialization (empty).",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

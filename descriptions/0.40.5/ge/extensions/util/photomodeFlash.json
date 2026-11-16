@@ -1,73 +1,138 @@
 {
   "path": "lua/ge/extensions/util/photomodeFlash.lua",
-  "module": "Flash de mode photo : crée un projecteur (SpotLight, avec ombres, non sauvegardé dans le niveau) collé à la caméra pendant le mode photo, orienté vers le point visé (raycast depuis la caméra, sinon distance de mise au point DOF). Deux modes : « always » (allumé en continu) et « pulse » (allumé uniquement pendant la prise de capture). En mode pulse, runCapture attend 2 frames de préchauffage, déclenche la capture via le module screenshot, puis éteint le flash à la réception de onScreenshotAllDone (ou après 60 frames de secours). L'interface du mode photo appelle applyFromUi.",
+  "module": "Photo mode flash: creates a spotlight (SpotLight, with shadows, not saved in the level) attached to the camera during photo mode, aimed at the target point (raycast from the camera, otherwise the DOF focus distance). Two modes: \"always\" (continuously on) and \"pulse\" (on only during the capture). In pulse mode, runCapture waits 2 warm-up frames, triggers the capture via the screenshot module, then turns the flash off on receiving onScreenshotAllDone (or after 60 fallback frames). The photo mode UI calls applyFromUi.",
   "usage": "extensions.util_photomodeFlash.applyFromUi(true, true, 25000, 55, 0, 0)\nextensions.util_photomodeFlash.runCapture('takeScreenShot')",
   "fields": {
-    "enabled": {"type": "boolean", "desc": "true si le flash est actif (le projecteur existe)"},
-    "mode": {"type": "string", "desc": "\"always\" (continu) ou \"pulse\" (seulement pendant une capture)"},
-    "intensity": {"type": "number", "desc": "Intensité du projecteur (défaut 25000, de 0 à 1 000 000)"},
-    "outerAngle": {"type": "integer", "desc": "Angle extérieur du cône en degrés (défaut 55, de 1 à 179)"},
-    "hue": {"type": "integer", "desc": "Teinte de la couleur en degrés, 0 à 360 (défaut 0)"},
-    "saturation": {"type": "integer", "desc": "Saturation en pourcentage, 0 à 100 (défaut 0 : lumière blanche)"},
-    "capturePulseActive": {"type": "boolean", "desc": "true pendant une impulsion de flash liée à une capture"}
+    "enabled": {
+      "type": "boolean",
+      "desc": "true if the flash is active (the spotlight exists)"
+    },
+    "mode": {
+      "type": "string",
+      "desc": "\"always\" (continuous) or \"pulse\" (only during a capture)"
+    },
+    "intensity": {
+      "type": "number",
+      "desc": "Spotlight intensity (default 25000, from 0 to 1,000,000)"
+    },
+    "outerAngle": {
+      "type": "integer",
+      "desc": "Outer cone angle in degrees (default 55, from 1 to 179)"
+    },
+    "hue": {
+      "type": "integer",
+      "desc": "Color hue in degrees, 0 to 360 (default 0)"
+    },
+    "saturation": {
+      "type": "integer",
+      "desc": "Saturation in percent, 0 to 100 (default 0: white light)"
+    },
+    "capturePulseActive": {
+      "type": "boolean",
+      "desc": "true during a flash pulse tied to a capture"
+    }
   },
   "notes": [
-    "Le projecteur est décalé de la caméra : 0,12 m à droite, 0,06 m vers le haut et 0,05 m vers l'avant ; portée 40 m ; carte d'ombre 1024.",
-    "Le flash ne s'applique que si le mode photo est ouvert (variable globale photoModeOpen ou ui_photomode_shared.S.photoModeOpen) et si la caméra active n'est pas « path ».",
-    "Types de capture acceptés par runCapture (kind) : takeScreenShot, takeBigScreenShot, takeHugeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, steam. Ils délèguent au module screenshot ; « steam » ne passe pas par le hook de fin de capture.",
-    "runCapture sans flash actif lance simplement la capture. En mode pulse, une deuxième demande pendant une impulsion est refusée (false, \"capture_busy\").",
-    "Les valeurs hue, saturation et outerAngle sont arrondies à l'entier ; l'intensité n'est que bornée."
+    "The spotlight is offset from the camera: 0.12 m to the right, 0.06 m up and 0.05 m forward; range 40 m; shadow map 1024.",
+    "The flash only applies if photo mode is open (global variable photoModeOpen or ui_photomode_shared.S.photoModeOpen) and if the active camera is not \"path\".",
+    "Capture types accepted by runCapture (kind): takeScreenShot, takeBigScreenShot, takeHugeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, steam. They delegate to the screenshot module; \"steam\" does not go through the capture-end hook.",
+    "runCapture without an active flash simply starts the capture. In pulse mode, a second request during a pulse is refused (false, \"capture_busy\").",
+    "The hue, saturation and outerAngle values are rounded to integers; the intensity is only clamped."
   ],
   "functions": {
     "enable": {
-      "desc": "Active ou désactive le flash : à l'activation crée le SpotLight dans MissionGroup et l'oriente ; à la désactivation le supprime. Annule toute impulsion en attente.",
-      "params": {"en": {"type": "boolean", "desc": "true pour activer (toute autre valeur désactive)"}},
+      "desc": "Enables or disables the flash: on activation creates the SpotLight in MissionGroup and aims it; on deactivation removes it. Cancels any pending pulse.",
+      "params": {
+        "en": {
+          "type": "boolean",
+          "desc": "true to enable (any other value disables)"
+        }
+      },
       "returns": [],
       "internal": false
     },
     "runCapture": {
-      "desc": "Déclenche une capture d'écran en tenant compte du flash : direct si le flash est inactif ou en mode always, avec impulsion de lumière en mode pulse.",
+      "desc": "Triggers a screenshot taking the flash into account: direct if the flash is inactive or in always mode, with a light pulse in pulse mode.",
       "params": {
-        "kind": {"type": "string", "desc": "Type de capture (voir notes)"},
-        "...": {"type": "any", "desc": "Arguments transmis à la fonction du module screenshot correspondante (jusqu'à 6 selon le type)"}
+        "kind": {
+          "type": "string",
+          "desc": "Capture type (see notes)"
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments passed to the corresponding screenshot module function (up to 6 depending on the type)"
+        }
       },
       "returns": [
-        {"type": "boolean", "desc": "true si la capture est lancée ou planifiée"},
-        {"type": "string|nil", "desc": "Code d'erreur : \"capture_busy\" ou \"screenshot_request_failed\""}
+        {
+          "type": "boolean",
+          "desc": "true if the capture is started or scheduled"
+        },
+        {
+          "type": "string|nil",
+          "desc": "Error code: \"capture_busy\" or \"screenshot_request_failed\""
+        }
       ],
       "internal": false
     },
     "applyFromUi": {
-      "desc": "Applique les réglages issus de l'interface du mode photo : bornage des valeurs puis activation du flash (ou désactivation si enabled n'est pas true).",
+      "desc": "Applies the settings coming from the photo mode UI: clamps the values then enables the flash (or disables it if enabled is not true).",
       "params": {
-        "enabled": {"type": "boolean", "desc": "Active le flash (désactive sinon)"},
-        "fireOnCapture": {"type": "boolean", "desc": "true pour le mode pulse, sinon always"},
-        "intensity": {"type": "number", "desc": "Intensité (0 à 1 000 000)"},
-        "outerAngle": {"type": "number", "desc": "Angle extérieur en degrés (1 à 179)"},
-        "hue": {"type": "number", "desc": "Teinte en degrés (0 à 360)"},
-        "saturation": {"type": "number", "desc": "Saturation en pourcentage (0 à 100)"}
+        "enabled": {
+          "type": "boolean",
+          "desc": "Enables the flash (disables otherwise)"
+        },
+        "fireOnCapture": {
+          "type": "boolean",
+          "desc": "true for pulse mode, otherwise always"
+        },
+        "intensity": {
+          "type": "number",
+          "desc": "Intensity (0 to 1,000,000)"
+        },
+        "outerAngle": {
+          "type": "number",
+          "desc": "Outer angle in degrees (1 to 179)"
+        },
+        "hue": {
+          "type": "number",
+          "desc": "Hue in degrees (0 to 360)"
+        },
+        "saturation": {
+          "type": "number",
+          "desc": "Saturation in percent (0 to 100)"
+        }
       },
       "returns": [],
       "internal": false
     },
     "onPreRender": {
-      "desc": "Hook appelé chaque frame avant le rendu : replace le projecteur sur la caméra et fait avancer la machine à états de l'impulsion (préchauffage, capture, nettoyage, délai de secours).",
+      "desc": "Hook called every frame before rendering: repositions the spotlight on the camera and advances the pulse state machine (warm-up, capture, cleanup, fallback delay).",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta de temps réel (non utilisé)"},
-        "dtSim": {"type": "number", "desc": "Delta de temps de simulation (non utilisé)"},
-        "dtRaw": {"type": "number", "desc": "Delta de temps brut (non utilisé)"}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real-time delta (unused)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (unused)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)"
+        }
       },
       "returns": [],
       "internal": true
     },
     "onScreenshotAllDone": {
-      "desc": "Hook appelé quand toutes les captures d'écran en cours sont terminées : démarre le nettoyage (extinction du flash) d'une impulsion en attente. Ignoré si le mode photo n'est pas ouvert.",
+      "desc": "Hook called when all in-progress screenshots are done: starts the cleanup (turning the flash off) of a pending pulse. Ignored if photo mode is not open.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement : désactive le flash et supprime le projecteur.",
+      "desc": "Hook called on unload: disables the flash and removes the spotlight.",
       "params": {},
       "returns": [],
       "internal": true

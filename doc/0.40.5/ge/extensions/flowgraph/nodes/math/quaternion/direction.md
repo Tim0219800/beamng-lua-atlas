@@ -1,24 +1,24 @@
 # `flowgraph_nodes_math_quaternion_direction`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/math/quaternion/direction.lua` · VM : Game Engine (GE) · 36 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/math/quaternion/direction.lua` · VM: Game Engine (GE) · 36 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/math/quaternion/direction")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/math/quaternion/direction")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Direction' (categorie simple). Convertit un angle 'deg' en degres en quaternion de rotation autour de l'axe Z (setFromEuler(0,0,angle)). Le resultat est recalcule seulement quand l'angle change.
+Flowgraph node 'Direction' (simple category). Converts an angle 'deg' in degrees into a rotation quaternion around the Z axis (setFromEuler(0,0,angle)). The result is recomputed only when the angle changes.
 
-## Remarques
+## Notes
 
-- Le quaternion 'rot' est une variable locale au module, partagee par toutes les instances du noeud, alors que le cache oldIn est par instance : deux noeuds avec des angles differents peuvent s'ecraser.
-- Si l'angle d'entree est nil, work provoque une erreur d'arithmetique sur nil.
+- The quaternion 'rot' is a module-local variable shared by all instances of the node, whereas the oldIn cache is per instance: two nodes with different angles may overwrite each other.
+- If the input angle is nil, work raises an arithmetic error on nil.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:init()` | oldIn = nil. | 23 |
-| `C:work()` | Recalcule le quaternion (variable locale du module) si l'angle a change, ecrit la table du quaternion sur 'value'. | 27 |
+| `C:work()` | Recomputes the quaternion (module-local variable) if the angle changed, writes the quaternion table to 'value'. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/math/quaternion/direction.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/math/quaternion/direction.lua`.*

@@ -1,34 +1,54 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/transcripts/vehicleSnapshot.lua",
-  "module": "Classe squelette représentant un instantané de véhicule (position, orientation, braquage, horodatage) rattaché à un chemin de transcriptions du rallye. Elle se comporte comme un élément de `sortedList` (champs id, name, sortOrder). Le module renvoie un constructeur : `require(...)(path, name, forceId)`. Dans cette version, la plupart des champs restent à nil et la désérialisation est vide.",
+  "module": "Skeleton class representing a vehicle snapshot (position, orientation, steering, timestamp) attached to a rally transcriptions path. It behaves like an element of `sortedList` (fields id, name, sortOrder). The module returns a constructor: `require(...)(path, name, forceId)`. In this version, most fields stay nil and deserialization is empty.",
   "notes": [
-    "onSerialize lit self.text, qui n'est jamais initialisé dans init : le champ sérialisé `text` vaudra toujours nil.",
-    "onDeserialized ne fait rien (tout le corps est commenté) : le code semble être une copie inachevée de transcripts/entry.lua.",
-    "sortOrder est fixé à 999999."
+    "onSerialize reads self.text, which is never initialized in init: the serialized `text` field will always be nil.",
+    "onDeserialized does nothing (the whole body is commented out): the code appears to be an unfinished copy of transcripts/entry.lua.",
+    "sortOrder is set to 999999."
   ],
   "classes": {
     "C": {
-      "desc": "Instantané de véhicule. Champs initialisés : path, id, name, sortOrder, pos, quat, steering, timestamp, cornerCall (les cinq derniers à nil).",
+      "desc": "Vehicle snapshot. Initialized fields: path, id, name, sortOrder, pos, quat, steering, timestamp, cornerCall (the last five nil).",
       "functions": {
         "init": {
-          "desc": "Constructeur appelé par la fonction retournée par le module. Mémorise le chemin parent, prend l'id fourni ou un nouvel id via path:getNextUniqueIdentifier(), et nomme l'objet `t_<id>` par défaut.",
+          "desc": "Constructor called by the function returned by the module. Stores the parent path, takes the provided id or a new id via path:getNextUniqueIdentifier(), and names the object `t_<id>` by default.",
           "params": {
-            "path": {"type": "table", "desc": "Objet chemin de transcriptions (doit fournir getNextUniqueIdentifier)."},
-            "name": {"type": "string|nil", "desc": "Nom ; défaut `t_<id>`."},
-            "forceId": {"type": "integer|nil", "desc": "Id imposé (par exemple lors d'un chargement)."}
+            "path": {
+              "type": "table",
+              "desc": "Transcriptions path object (must provide getNextUniqueIdentifier)."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Name; default `t_<id>`."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Forced id (for example during a load)."
+            }
           },
           "internal": true
         },
         "onSerialize": {
-          "desc": "Renvoie une table {oldId, name, text} pour la sauvegarde.",
-          "returns": [{"type": "table", "desc": "Données sérialisables (text vaut nil, voir notes)."}],
+          "desc": "Returns a table {oldId, name, text} for saving.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Serializable data (text is nil, see notes)."
+            }
+          ],
           "internal": true
         },
         "onDeserialized": {
-          "desc": "Restauration depuis les données sauvegardées. Ne fait rien dans cette version.",
+          "desc": "Restoration from the saved data. Does nothing in this version.",
           "params": {
-            "data": {"type": "table", "desc": "Données sauvegardées."},
-            "oldIdMap": {"type": "table", "desc": "Table de correspondance des anciens ids."}
+            "data": {
+              "type": "table",
+              "desc": "Saved data."
+            },
+            "oldIdMap": {
+              "type": "table",
+              "desc": "Mapping table of the old ids."
+            }
           },
           "internal": true
         }

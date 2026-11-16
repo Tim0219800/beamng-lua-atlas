@@ -1,50 +1,50 @@
 # `controller_propAnimation_dualAxisLever`
 
-*Fichier : `lua/vehicle/controller/propAnimation/dualAxisLever.lua` · VM : Véhicule · 378 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/propAnimation/dualAxisLever.lua` · VM: Vehicle · 378 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `propAnimation/dualAxisLever` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `propAnimation/dualAxisLever` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire d'animation d'un levier à deux axes (levier de boîte automatique type P R N D S M avec grille). Lit le nom du mode courant (electrics.values.gear par défaut), le met en file puis déplace le levier virtuel mode par mode (en passant par les modes intermédiaires), éventuellement via des coordonnées intermédiaires (modeChanges), et publie la position dans electrics dualAxisX / dualAxisY. Gère les modes S et M (avec modes impulsionnels M+ et M-).
+Auxiliary two-axis lever animation controller (automatic gearbox lever of the P R N D S M type with a gate). Reads the current mode name (electrics.values.gear by default), queues it then moves the virtual lever mode by mode (passing through the intermediate modes), optionally via intermediate coordinates (modeChanges), and publishes the position in electrics dualAxisX / dualAxisY. Handles the S and M modes (with impulse modes M+ and M-).
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : orderedModeCoordinates (table d'en-tête modeName, x, y ; l'ordre définit la position des modes), impulseModeCoordinates (modes impulsionnels dont le nom est le mode de base suivi d'un caractère, typiquement + ou -), modeChanges (mode1, mode2, intermediateCoordinates : chemin de la grille entre deux modes), electricsNameXAxis ("dualAxisX"), electricsNameYAxis ("dualAxisY"), electricsNameMode ("gear"), moveSoundNode_nodes (premier élément = nœud du son, sinon 0 + log W), moveSoundEventDualAxisDirectionChange ("event:>Vehicle>Interior>Gearshift>manual_modern_01_in"), moveSoundVolumeDualAxisDirectionChange (0.5), smootherRateX et smootherRateY (4), demoModes (table de noms pour animation de démonstration).
-- Le nom de mode lu est ramené à « S » pour tout mode commençant par S, et à « M » (ou M+ / M-) pour M<n> selon que le numéro augmente ou diminue.
-- Un nom d'impulsion de moins de 2 caractères ou sans mode de base fait un log E et arrête init (return) : les structures suivantes ne sont alors pas initialisées.
-- Dans handleMSModes, les index de rapport M<n> sont comparés en tant que chaînes extraites du nom (la comparaison gearIndex > lastMModeGearIndex porte sur des chaînes), ce qui peut mal ordonner 9 et 10 (déduit du code).
-- M.updateGFX est nop à la déclaration et n'est affecté à updateGFX qu'en fin d'init (dualAxisLever.init).
+- jbeam keys read: orderedModeCoordinates (header table modeName, x, y; the order defines the position of the modes), impulseModeCoordinates (impulse modes whose name is the base mode followed by a character, typically + or -), modeChanges (mode1, mode2, intermediateCoordinates: gate path between two modes), electricsNameXAxis ("dualAxisX"), electricsNameYAxis ("dualAxisY"), electricsNameMode ("gear"), moveSoundNode_nodes (first element = sound node, otherwise 0 + log W), moveSoundEventDualAxisDirectionChange ("event:>Vehicle>Interior>Gearshift>manual_modern_01_in"), moveSoundVolumeDualAxisDirectionChange (0.5), smootherRateX and smootherRateY (4), demoModes (table of names for demonstration animation).
+- The mode name read is reduced to "S" for any mode starting with S, and to "M" (or M+ / M-) for M<n> depending on whether the number increases or decreases.
+- An impulse name of fewer than 2 characters or without a base mode logs an E and stops init (return): the following structures are then not initialized.
+- In handleMSModes, the M<n> gear indices are compared as strings extracted from the name (the gearIndex > lastMModeGearIndex comparison operates on strings), which may misorder 9 and 10 (inferred from code).
+- M.updateGFX is nop at declaration and is only assigned to updateGFX at the end of init (dualAxisLever.init).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_propAnimation_dualAxisLever.init(jbeamData)` | Lit coordonnées des modes, modes impulsionnels, changements de mode, sons et lisseurs ; démarre sur le premier mode de la liste. *(interne)* | 271 |
-| `controller_propAnimation_dualAxisLever.reset(jbeamData)` | Remet position, file de modes, états de mouvement et lisseurs à zéro. *(interne)* | 249 |
+| `controller_propAnimation_dualAxisLever.init(jbeamData)` | Reads mode coordinates, impulse modes, mode changes, sounds and smoothers; starts on the first mode of the list. *(internal)* | 271 |
+| `controller_propAnimation_dualAxisLever.reset(jbeamData)` | Resets position, mode queue, movement states and smoothers to zero. *(internal)* | 249 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_propAnimation_dualAxisLever.init(jbeamData)`
 
-Lit coordonnées des modes, modes impulsionnels, changements de mode, sons et lisseurs ; démarre sur le premier mode de la liste.
+Reads mode coordinates, impulse modes, mode changes, sounds and smoothers; starts on the first mode of the list.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_propAnimation_dualAxisLever.reset(jbeamData)`
 
-Remet position, file de modes, états de mouvement et lisseurs à zéro.
+Resets position, mode queue, movement states and smoothers to zero.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
-| `updateGFX` | function | nop au chargement, puis updateGFX interne après init. |
+| `updateGFX` | function | nop at load, then internal updateGFX after init. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `playSFXOnceCT`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/propAnimation/dualAxisLever.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/propAnimation/dualAxisLever.lua`.*

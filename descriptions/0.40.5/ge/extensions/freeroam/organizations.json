@@ -1,41 +1,85 @@
 {
   "path": "lua/ge/extensions/freeroam/organizations.lua",
-  "module": "Registre des organisations (factions du mode carrière avec réputation), chargé depuis les fichiers `gameplay/organizations/*.organizations.json` et enrichi avec les données de réputation du carrière. Fournit aussi les données prêtes pour l'UI. Global : freeroam_organizations.",
+  "module": "Registry of organizations (career mode factions with reputation), loaded from the `gameplay/organizations/*.organizations.json` files and enriched with the career's reputation data. Also provides UI-ready data. Global: freeroam_organizations.",
   "notes": [
-    "Dépend des modules carrière (career_modules_reputation, career_career, career_modules_delivery_generator) : getOrganizations appelle addAdditionalInfoToOrg qui utilise career_modules_reputation sans test de nil, donc hors carrière ces globales doivent exister.",
-    "Chaque organisation reçoit : id (clé du fichier), visible, attributeKey (= id .. 'Reputation') et les champs de réputation.",
-    "getOrganizationIdOrderAndIcon renvoie toujours 7000 et 'peopleOutline' (ordre réservé 7000-8000).",
-    "getUIDataForOrg: deepcopy puis max/min/label de réputation, offersDeliveries, hasUnlocks, associatedFacilities, et pour chaque niveau de réputation label et level (= indice - 2). Il déréférence organization.reputation sans test : une org inconnue renvoie nil (log d'erreur dans getOrganization)."
+    "Depends on the career modules (career_modules_reputation, career_career, career_modules_delivery_generator): getOrganizations calls addAdditionalInfoToOrg which uses career_modules_reputation without a nil test, so outside career these globals must exist.",
+    "Each organization receives: id (file key), visible, attributeKey (= id .. 'Reputation') and the reputation fields.",
+    "getOrganizationIdOrderAndIcon always returns 7000 and 'peopleOutline' (reserved order 7000-8000).",
+    "getUIDataForOrg: deepcopy then reputation max/min/label, offersDeliveries, hasUnlocks, associatedFacilities, and for each reputation level label and level (= index - 2). It dereferences organization.reputation without a test: an unknown org returns nil (error log in getOrganization)."
   ],
   "functions": {
     "getOrganizations": {
-      "desc": "Charge (une fois, mise en cache) toutes les organisations.",
+      "desc": "Loads (once, cached) all the organizations.",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "Organisations indexées par id."}],
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Organizations keyed by id."
+        }
+      ],
       "internal": false
     },
     "getOrganization": {
-      "desc": "Renvoie une organisation par id (en rafraîchissant sa réputation) ou nil avec un log d'erreur.",
-      "params": {"id": {"type": "string", "desc": "Id de l'organisation."}},
-      "returns": [{"type": "table|nil", "desc": "Organisation."}],
+      "desc": "Returns an organization by id (refreshing its reputation) or nil with an error log.",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Organization id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Organization."
+        }
+      ],
       "internal": false
     },
     "getOrganizationIdOrderAndIcon": {
-      "desc": "Ordre d'affichage et icône : constants (7000, 'peopleOutline').",
-      "params": {"id": {"type": "string", "desc": "Non utilisé."}},
-      "returns": [{"type": "integer", "desc": "7000"}, {"type": "string", "desc": "'peopleOutline'"}],
+      "desc": "Display order and icon: constants (7000, 'peopleOutline').",
+      "params": {
+        "id": {
+          "type": "string",
+          "desc": "Not used."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "7000"
+        },
+        {
+          "type": "string",
+          "desc": "'peopleOutline'"
+        }
+      ],
       "internal": false
     },
     "getUIData": {
-      "desc": "Liste des organisations au format UI (getUIDataForOrg), triées par nom traduit.",
+      "desc": "List of the organizations in UI format (getUIDataForOrg), sorted by translated name.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Données UI."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "UI data."
+        }
+      ],
       "internal": false
     },
     "getUIDataForOrg": {
-      "desc": "Copie enrichie d'une organisation pour l'UI.",
-      "params": {"orgId": {"type": "string", "desc": "Id de l'organisation."}},
-      "returns": [{"type": "table|nil", "desc": "Données UI."}],
+      "desc": "Enriched copy of an organization for the UI.",
+      "params": {
+        "orgId": {
+          "type": "string",
+          "desc": "Organization id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "UI data."
+        }
+      ],
       "internal": false
     }
   }

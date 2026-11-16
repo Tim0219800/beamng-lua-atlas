@@ -1,0 +1,81 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/threeElementSelect.lua",
+  "module": "Nœud flowgraph « Three Element Select » (catégorie par défaut, once + singleActive) : laisse le joueur choisir entre trois éléments (navigation UI 'menu.threeElementSelect'). Entrées : flow, « reset », « description », puis pour i = 1..3 : « veh<i>image », « veh<i>name », « veh<i>desc ». Sorties : « pick1 », « pick2 », « pick3 ».",
+  "notes": [
+    "Showing two of these at the same time will break everything (todo du code).",
+    "started() met self.pinOut.flow à true, mais ce nœud n'a pas de pin de sortie « flow » (erreur si appelée)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Sorties à false, _active = false.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Ferme et réinitialise.",
+          "internal": true
+        },
+        "buttonPushed": {
+          "desc": "Met à true la sortie pick choisie, les autres à false.",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "closeDialogue": {
+          "desc": "Marque l'écran comme fermé.",
+          "internal": false
+        },
+        "closed": {
+          "desc": "done = true.",
+          "internal": false
+        },
+        "getCmd": {
+          "desc": "Renvoie la commande Lua qui rappelle buttonPushed(action).",
+          "params": {
+            "action": {
+              "type": "string",
+              "desc": "Nom du bouton ou du pin de sortie activé."
+            }
+          },
+          "internal": false
+        },
+        "init": {
+          "desc": "open = false, done = false.",
+          "internal": true
+        },
+        "onClientEndMission": {
+          "desc": "Hook : réinitialise open et _active.",
+          "internal": true
+        },
+        "openDialogue": {
+          "desc": "Construit les trois éléments (image, nom, description, code du bouton) et navigue vers 'menu.threeElementSelect'.",
+          "internal": false
+        },
+        "postInit": {
+          "desc": "Vide.",
+          "internal": true
+        },
+        "reset": {
+          "desc": "Remet done, open et _active à false.",
+          "internal": false
+        },
+        "started": {
+          "desc": "Ferme l'écran puis écrit pinOut.flow (voir notes).",
+          "internal": false
+        },
+        "work": {
+          "desc": "Gère reset ; ouvre l'écran quand le flux d'entrée est actif.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

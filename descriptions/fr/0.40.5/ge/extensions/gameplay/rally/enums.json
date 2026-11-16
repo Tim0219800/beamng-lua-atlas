@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/enums.lua",
+  "module": "Énumérations partagées du système de rallye (notes de copilote) : mode audio des pacenotes, type de déclenchement (trigger), type de relâchement pour les virages lents, avec leurs noms lisibles. Ce sont des tables de constantes consultées par l'éditeur de notes et par le moteur de rallye ; le fichier ne contient aucune fonction.",
+  "notes": [
+    "Les valeurs numériques sont persistées dans les carnets de notes : ne pas les renuméroter.",
+    "Plusieurs valeurs de triggerType et de slowCornerReleaseType sont commentées dans le code (csStatic, csHalf, ceMinus5, ceStatic pour triggerType) et donc indisponibles.",
+    "slowCornerReleaseType : écarts de 10 en 10 (10 à 50) ; csHalf (30) est la valeur par défaut d'après son libellé."
+  ],
+  "fields": {
+    "pacenoteAudioMode": {"type": "table<string, integer>", "desc": "Modes audio : auto=1, freeform=2, structuredOnline=3, structuredOffline=4, custom=5."},
+    "pacenoteAudioModeNames": {"type": "table<integer, string>", "desc": "Nom technique de chaque mode audio, indexé par valeur."},
+    "pacenoteAudioModeDisplayNames": {"type": "table<integer, string>", "desc": "Noms affichés à l'utilisateur (éditeur, debug) ; structuredOffline s'affiche 'structured'."},
+    "pacenoteAudioModeHidden": {"type": "table<string, boolean>", "desc": "Modes masqués dans les listes de choix (freeform, structuredOnline) mais toujours fonctionnels pour les carnets existants."},
+    "triggerType": {"type": "table<string, integer>", "desc": "Types de déclenchement d'une note : dynamic=1, csImmediate=15."},
+    "triggerTypeName": {"type": "table<integer, string>", "desc": "Libellés des types de déclenchement ('dynamic (default)', 'immediate (only use for first pacenote)')."},
+    "slowCornerReleaseType": {"type": "table<string, integer>", "desc": "Moment de relâche d'une note de virage lent : csStaticMinus40=10, csStatic=20, csHalf=30, ceMinus5=40, ceStatic=50."},
+    "slowCornerReleaseTypeName": {"type": "table<integer, string>", "desc": "Libellés correspondants (ex. '40m before corner start', 'at corner end')."}
+  }
+}

@@ -1,75 +1,75 @@
 # `gameplay_missions_startTrigger`
 
-*Fichier : `lua/ge/extensions/gameplay/missions/startTrigger.lua` · VM : Game Engine (GE) · 192 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/missions/startTrigger.lua` · VM: Game Engine (GE) · 192 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_missions_startTrigger` : `extensions.load("gameplay_missions_startTrigger")`, puis la globale `gameplay_missions_startTrigger`
+**Access:** extension `gameplay_missions_startTrigger`: `extensions.load("gameplay_missions_startTrigger")`, then the global `gameplay_missions_startTrigger`
 
-Transforme le champ `startTrigger` d'une mission en liste de « locations » (zones de démarrage) et regroupe les zones proches en clusters pour la carte. Seul le type « coordinates » (niveau + position + rayon) produit réellement une location ; « league » et « none » n'en produisent aucune (nop). Utilisé par gameplay_missions_missions (getLocations) et par les marqueurs de missions.
+Transforms a mission's `startTrigger` field into a list of "locations" (start zones) and groups nearby zones into clusters for the map. Only the "coordinates" type (level + position + radius) actually produces a location; "league" and "none" produce none (nop). Used by gameplay_missions_missions (getLocations) and by the mission markers.
 
-## Exemple
+## Example
 
 ```lua
 local clusters = gameplay_missions_startTrigger.getMissionClusters(30)
 for _, c in ipairs(clusters) do print(c.clusterId, c.level, c.pos, c.radius, dumps(c.missionIds)) end
 ```
 
-## Remarques
+## Notes
 
-- Champs obligatoires par type : level -> {level} ; coordinates -> {level,pos,radius} ; league -> {level} ; none -> {}.
-- Une location est une table {type='coordinates', level, pos=vec3, rot=quat, radius, check=defaultLocationCheck, displayMarker=defaultLocationDisplayMarker}. rot vaut quat(0,0,0,1) par défaut.
-- getMissionClusters met le résultat en cache par rayon de fusion (clé -1 si mergeRadius vaut nil) ; le cache est vidé par onAnyMissionChanged.
-- Pour un cluster d'une seule mission, clusterId = id de la mission et missionIds est une liste {id}. Pour un cluster de plusieurs missions, clusterId est la concaténation des ids et missionIds = tableKeys(...) (ordre non garanti).
-- Le rayon d'un cluster fusionné est max(rayon + distance au centre) - 1.
-- Dans defaultLocationDisplayMarker, `canBeStarted` est fixé à true en dur (l'appel à gameplay_missions_missionManager.canBeStarted est commenté) : le marqueur est donc vert dès que le joueur est dans la zone.
-- getMissionClusters modifie les tables de locations renvoyées par gameplay_missions_missions.getLocations en y ajoutant id, missionId et _qtId (déduit du code).
+- Required fields per type: level -> {level}; coordinates -> {level,pos,radius}; league -> {level}; none -> {}.
+- A location is a table {type='coordinates', level, pos=vec3, rot=quat, radius, check=defaultLocationCheck, displayMarker=defaultLocationDisplayMarker}. rot defaults to quat(0,0,0,1).
+- getMissionClusters caches the result per merge radius (key -1 if mergeRadius is nil); the cache is cleared by onAnyMissionChanged.
+- For a single-mission cluster, clusterId = the mission id and missionIds is a list {id}. For a multi-mission cluster, clusterId is the concatenation of the ids and missionIds = tableKeys(...) (order not guaranteed).
+- The radius of a merged cluster is max(radius + distance to center) - 1.
+- In defaultLocationDisplayMarker, `canBeStarted` is hardcoded to true (the call to gameplay_missions_missionManager.canBeStarted is commented out): the marker is therefore green as soon as the player is in the zone.
+- getMissionClusters modifies the location tables returned by gameplay_missions_missions.getLocations by adding id, missionId and _qtId (inferred from code).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_missions_startTrigger.defaultLocationCheck(location, level, playerPosition, mission)` | Teste si le joueur est dans la zone de démarrage : même niveau, position et rayon définis, et distance au centre <= rayon. | 16 |
-| `gameplay_missions_startTrigger.defaultLocationDisplayMarker(location, playerPosition)` | Dessine avec debugDrawer le marqueur d'une zone de démarrage : cylindre au sol de rayon `radius` et mât de 5 m. Rouge hors zone, vert à l'intérieur. | 21 |
-| `gameplay_missions_startTrigger.getMissionClusters(mergeRadius)` | Regroupe en clusters toutes les locations « coordinates » de toutes les missions, niveau par niveau, grâce à un quadtree. Deux zones se regroupent si leurs disques se chevauchent (rayon de fusion fixe si mergeRadius est donné). | 127 |
-| `gameplay_missions_startTrigger.onAnyMissionChanged()` | Hook émis par missionManager quand une mission change d'état : vide le cache des clusters. *(interne)* *(hook)* | 187 |
-| `gameplay_missions_startTrigger.parseMission(mission)` | Crée la liste des locations d'une mission à partir de mission.startTrigger. Vérifie le type et les champs obligatoires. | 62 |
+| `gameplay_missions_startTrigger.defaultLocationCheck(location, level, playerPosition, mission)` | Tests whether the player is in the start zone: same level, position and radius defined, and distance to the center <= radius. | 16 |
+| `gameplay_missions_startTrigger.defaultLocationDisplayMarker(location, playerPosition)` | Draws a start zone marker with debugDrawer: a ground cylinder of radius `radius` and a 5 m pole. Red outside the zone, green inside. | 21 |
+| `gameplay_missions_startTrigger.getMissionClusters(mergeRadius)` | Groups all "coordinates" locations of all missions into clusters, level by level, using a quadtree. Two zones are grouped if their disks overlap (fixed merge radius if mergeRadius is given). | 127 |
+| `gameplay_missions_startTrigger.onAnyMissionChanged()` | Hook emitted by missionManager when a mission changes state: clears the clusters cache. *(internal)* *(hook)* | 187 |
+| `gameplay_missions_startTrigger.parseMission(mission)` | Creates a mission's list of locations from mission.startTrigger. Checks the type and the required fields. | 62 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_missions_startTrigger.defaultLocationCheck(location, level, playerPosition, mission)`
 
-Teste si le joueur est dans la zone de démarrage : même niveau, position et rayon définis, et distance au centre <= rayon.
+Tests whether the player is in the start zone: same level, position and radius defined, and distance to the center <= radius.
 
 - `location` (*table*) : Location {level, pos, radius}.
-- `level` (*string*) : Identifiant du niveau courant (minuscules).
-- `playerPosition` (*vec3*) : Position du joueur.
-- `mission` (*table*) : Mission concernée (non utilisée).
-- **renvoie** : boolean true si le joueur est dans la zone.
+- `level` (*string*) : Current level identifier (lowercase).
+- `playerPosition` (*vec3*) : Player position.
+- `mission` (*table*) : Mission concerned (not used).
+- **returns**: boolean true if the player is in the zone.
 
 #### `gameplay_missions_startTrigger.defaultLocationDisplayMarker(location, playerPosition)`
 
-Dessine avec debugDrawer le marqueur d'une zone de démarrage : cylindre au sol de rayon `radius` et mât de 5 m. Rouge hors zone, vert à l'intérieur.
+Draws a start zone marker with debugDrawer: a ground cylinder of radius `radius` and a 5 m pole. Red outside the zone, green inside.
 
 - `location` (*table*) : Location {pos, radius}.
-- `playerPosition` (*vec3*) : Position du joueur.
+- `playerPosition` (*vec3*) : Player position.
 
 #### `gameplay_missions_startTrigger.getMissionClusters(mergeRadius)`
 
-Regroupe en clusters toutes les locations « coordinates » de toutes les missions, niveau par niveau, grâce à un quadtree. Deux zones se regroupent si leurs disques se chevauchent (rayon de fusion fixe si mergeRadius est donné).
+Groups all "coordinates" locations of all missions into clusters, level by level, using a quadtree. Two zones are grouped if their disks overlap (fixed merge radius if mergeRadius is given).
 
-- `mergeRadius` (*number|nil*) : Rayon (m) utilisé à la place du rayon propre de chaque location ; nil = rayons des missions.
-- **renvoie** : table Liste de clusters {type, level, pos, rot, radius, check, displayMarker, missionIds, clusterId}.
+- `mergeRadius` (*number|nil*) : Radius (m) used in place of each location's own radius; nil = the missions' radii.
+- **returns**: table List of clusters {type, level, pos, rot, radius, check, displayMarker, missionIds, clusterId}.
 
 #### `gameplay_missions_startTrigger.parseMission(mission)`
 
-Crée la liste des locations d'une mission à partir de mission.startTrigger. Vérifie le type et les champs obligatoires.
+Creates a mission's list of locations from mission.startTrigger. Checks the type and the required fields.
 
-- `mission` (*table*) : Mission dont le champ startTrigger existe (supposé vérifié par l'appelant).
-- **renvoie** : table Liste de locations (vide en cas d'erreur ou pour les types league/none).
-- **renvoie** : string|nil Message d'erreur (type invalide ou champs manquants), nil si tout va bien.
+- `mission` (*table*) : Mission whose startTrigger field exists (assumed checked by the caller).
+- **returns**: table List of locations (empty on error or for league/none types).
+- **returns**: string|nil Error message (invalid type or missing fields), nil if all is well.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/missions/startTrigger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/missions/startTrigger.lua`.*

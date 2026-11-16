@@ -1,37 +1,37 @@
 # `editor_missionEditor_setupModules`
 
-*Fichier : `lua/ge/extensions/editor/missionEditor/setupModules.lua` · VM : Game Engine (GE) · 817 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/missionEditor/setupModules.lua` · VM: Game Engine (GE) · 817 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/missionEditor/setupModules")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/missionEditor/setupModules")` (file under extensions/ but not a regular extension)
 
-Panneau « SetupModules » de l'éditeur de missions. Il édite mission.setupModules, trois modules activables : vehicles (véhicules proposés, véhicule du joueur, réglages de différentiels), traffic (nombre de véhicules, actifs, garés, taux de réapparition, groupe personnalisé) et environment (heure du jour normalisée, échelle de temps, vent, nuages, brouillard, réglages laissés à l'utilisateur). Il contient aussi la conversion de l'ancienne heure fixe vers normalizedTime et la détection de données mal formées. Le module renvoie un constructeur : require(...)(missionEditor).
+"SetupModules" panel of the mission editor. It edits mission.setupModules, three enableable modules: vehicles (offered vehicles, player vehicle, differential settings), traffic (number of vehicles, active, parked, respawn rate, custom group) and environment (normalized time of day, time scale, wind, clouds, fog, settings left to the user). It also contains the conversion of the old fixed time to normalizedTime and the detection of malformed data. The module returns a constructor: require(...)(missionEditor).
 
-## Remarques
+## Notes
 
-- normalizedTime : 0 = midi, 0.25 = coucher du soleil, 0.5 = minuit, 0.75 = lever du soleil, 1 = midi ; une valeur négative annule le réglage de l'heure de la mission ; > 1 est une erreur.
-- L'ancien champ time (heure fixe) est dit « legacy » ; la conversion utilise des tables de valeurs (axisTilt) par niveau (west_coast_usa par défaut) pour passer à normalizedTime.
-- Si la mission d'instance bloque un module (blockedSetupModules), il est affiché désactivé avec « not available for this mission type ». Pour vehicles, enabled est forcé à not isBlocked à chaque frame.
-- Traffic : amount = -1 signifie quantité automatique ; respawnRate va de 0 à 3 ; timeScale à 0 ignore le réglage.
-- Désactiver un module vide ses données (table.clear) ; les champs obsolètes setupModules.playerVehicle et setupModules.timeOfDay sont supprimés par setBackwardsCompatibility.
+- normalizedTime: 0 = noon, 0.25 = sunset, 0.5 = midnight, 0.75 = sunrise, 1 = noon; a negative value cancels the mission's time setting; > 1 is an error.
+- The old time field (fixed time) is called "legacy"; the conversion uses value tables (axisTilt) per level (west_coast_usa by default) to switch to normalizedTime.
+- If the instance mission blocks a module (blockedSetupModules), it is displayed disabled with "not available for this mission type". For vehicles, enabled is forced to not isBlocked every frame.
+- Traffic: amount = -1 means automatic quantity; respawnRate goes from 0 to 3; timeScale at 0 ignores the setting.
+- Disabling a module clears its data (table.clear); the obsolete fields setupModules.playerVehicle and setupModules.timeOfDay are removed by setBackwardsCompatibility.
 
-## Classe `C`
+## Class `C`
 
-Instance du panneau. Champs : missionEditor, name = 'SetupModules', mission, missionInstance, blockedSetupModules, ainsi que de nombreux tampons imgui (traffic*, todInput, normalizedTodInput, windSpeedInput, cloudCoverInput, fogDensityInput…).
+Instance of the panel. Fields: missionEditor, name = 'SetupModules', mission, missionInstance, blockedSetupModules, as well as many imgui buffers (traffic*, todInput, normalizedTodInput, windSpeedInput, cloudCoverInput, fogDensityInput...).
 
-Le module renvoie un constructeur : `local obj = require("editor_missionEditor_setupModules")(options)`.
+The module returns a constructor: `local obj = require("editor_missionEditor_setupModules")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:displayDiffSetup(veh)` | Combo de cases à cocher pour les réglages de différentiels d'un véhicule : toggleDifferentials, lockFrontDiffs, lockRearDiffs, setTransfercase (4hi), setRangebox (low), ou tous d'un coup. | 762 |
-| `C:draw()` | Dessine les trois sections Vehicles, Traffic et Environment avec leurs cases d'activation et champs. Utilise core_environment.getTimeOfDay et getTimeOfDayValueForNormalizedTime pour l'heure actuelle et la conversion. | 226 |
-| `C:getMissionIssues(m)` | Appelle setMission(m) puis signale les modules mal formés (error), l'heure fixe legacy (minor) et un normalizedTime invalide (error). | 163 |
-| `C:init(missionEditor)` | Constructeur : mémorise missionEditor et le nom du panneau. | 8 |
-| `C:setBackwardsCompatibility()` | Copie dans la mission les modules corrigés par l'instance de jeu (ceux marqués _compatibility) et supprime les modules obsolètes playerVehicle et timeOfDay. | 149 |
-| `C:setMission(mission)` | Définit la mission courante, applique la compatibilité ascendante et initialise tous les tampons de saisie depuis mission.setupModules. | 114 |
+| `C:displayDiffSetup(veh)` | Checkbox combo for a vehicle's differential settings: toggleDifferentials, lockFrontDiffs, lockRearDiffs, setTransfercase (4hi), setRangebox (low), or all at once. | 762 |
+| `C:draw()` | Draws the three sections Vehicles, Traffic and Environment with their enable checkboxes and fields. Uses core_environment.getTimeOfDay and getTimeOfDayValueForNormalizedTime for the current time and the conversion. | 226 |
+| `C:getMissionIssues(m)` | Calls setMission(m) then reports malformed modules (error), the legacy fixed time (minor) and an invalid normalizedTime (error). | 163 |
+| `C:init(missionEditor)` | Constructor: remembers missionEditor and the panel name. | 8 |
+| `C:setBackwardsCompatibility()` | Copies into the mission the modules fixed by the game instance (those marked _compatibility) and removes the obsolete modules playerVehicle and timeOfDay. | 149 |
+| `C:setMission(mission)` | Sets the current mission, applies backwards compatibility and initializes all the input buffers from mission.setupModules. | 114 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getTimeOfDay`, `getTimeOfDayValueForNormalizedTime`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/missionEditor/setupModules.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/missionEditor/setupModules.lua`.*

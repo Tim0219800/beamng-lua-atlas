@@ -2,28 +2,28 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraUtils/bigMapPan.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Aide partagée de déplacement et de zoom fluides pour les modes de caméra de la grande carte (bigMap / bigMapOrtho). Placée hors de cameraModes/ car les fichiers de ce dossier sont chargés automatiquement comme constructeurs de caméra. Les fonctions modifient directement les champs du mode de caméra passé en paramètre (cam).
---- Accès : extension `core_cameraUtils_bigMapPan` : `extensions.load("core_cameraUtils_bigMapPan")`, puis la globale `core_cameraUtils_bigMapPan`
+--- Shared helper for smooth movement and zoom for the big map camera modes (bigMap / bigMapOrtho). Placed outside cameraModes/ because the files in that folder are automatically loaded as camera constructors. The functions directly modify the fields of the camera mode passed as a parameter (cam).
+--- Access: extension `core_cameraUtils_bigMapPan`: `extensions.load("core_cameraUtils_bigMapPan")`, then the global `core_cameraUtils_bigMapPan`
 ---@class core_cameraUtils_bigMapPan
 core_cameraUtils_bigMapPan = {}
 
---- Fixe cam.panTarget pour centrer la vue sur worldPos : x,y = worldPos moins le décalage ; z = celui de cam.bigMapCamPosition (sinon celui de worldPos). Ne fait rien si worldPos est nil.
----Source : lua/ge/extensions/core/cameraUtils/bigMapPan.lua:11
----@param cam table mode de caméra appelant
----@param worldPos vec3|nil point du monde à centrer
----@param lookAtOffset vec3|nil vecteur caméra -> point visé (camToLookAtPoint) du mode appelant ; (0,0,0) par défaut
+--- Sets cam.panTarget to center the view on worldPos: x,y = worldPos minus the offset; z = that of cam.bigMapCamPosition (otherwise that of worldPos). Does nothing if worldPos is nil.
+---Source: lua/ge/extensions/core/cameraUtils/bigMapPan.lua:11
+---@param cam table calling camera mode
+---@param worldPos vec3|nil world point to center on
+---@param lookAtOffset vec3|nil camera -> aimed point vector (camToLookAtPoint) of the calling mode; (0,0,0) by default
 function core_cameraUtils_bigMapPan.setTarget(cam, worldPos, lookAtOffset) end
 
---- À appeler à chaque image : rapproche manualzoom.fov de zoomTarget et bigMapCamPosition (x,y) de panTarget, et annule les cibles si l'utilisateur bouge ou zoome.
----Source : lua/ge/extensions/core/cameraUtils/bigMapPan.lua:25
----@param cam table mode de caméra appelant
----@param dt number durée de l'image en secondes
----@param userMoving boolean vrai si l'utilisateur déplace la caméra (annule les cibles)
+--- To call every frame: moves manualzoom.fov toward zoomTarget and bigMapCamPosition (x,y) toward panTarget, and cancels the targets if the user moves or zooms.
+---Source: lua/ge/extensions/core/cameraUtils/bigMapPan.lua:25
+---@param cam table calling camera mode
+---@param dt number frame duration in seconds
+---@param userMoving boolean true if the user is moving the camera (cancels the targets)
 function core_cameraUtils_bigMapPan.update(cam, dt, userMoving) end
 
---- Fixe cam.zoomTarget par interpolation entre fovMax (facteur 0, dézoomé) et fovMin (facteur 1, zoomé).
----Source : lua/ge/extensions/core/cameraUtils/bigMapPan.lua:19
----@param cam table mode de caméra appelant
----@param factor number 0 = dézoomé (fovMax), 1 = zoomé (fovMin) ; borné à [0,1], non numérique = 0
+--- Sets cam.zoomTarget by interpolation between fovMax (factor 0, zoomed out) and fovMin (factor 1, zoomed in).
+---Source: lua/ge/extensions/core/cameraUtils/bigMapPan.lua:19
+---@param cam table calling camera mode
+---@param factor number 0 = zoomed out (fovMax), 1 = zoomed in (fovMin); clamped to [0,1], non-numeric = 0
 function core_cameraUtils_bigMapPan.zoomToFactor(cam, factor) end
 

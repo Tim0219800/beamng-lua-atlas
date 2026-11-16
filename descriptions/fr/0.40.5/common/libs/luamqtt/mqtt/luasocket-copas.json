@@ -1,0 +1,15 @@
+{
+  "path": "lua/common/libs/luamqtt/mqtt/luasocket-copas.lua",
+  "module": "Connecteur réseau luamqtt pour luasocket combiné à copas (E/S coopératives dans des coroutines). Même interface que le connecteur luasocket (connect, shutdown, send, receive, settimeout) mais send et receive passent par copas.send/copas.receive. À passer dans l'argument connector du client MQTT.",
+  "notes": [
+    "Utilise require('copas') par nom nu et require('socket') : ces modules ne sont pas forcément résolus par ce nom dans BeamNG (le jeu fournit libs/copas/copas).",
+    "settimeout met le socket en mode non bloquant (settimeout(0)) et ne mémorise le délai que dans conn.timeout."
+  ],
+  "functions": {
+    "connect": {"desc": "Ouvre la connexion TCP via socket.connect et la stocke dans conn.sock.", "params": {"conn": {"type": "table", "desc": "host, port."}}, "returns": [{"type": "boolean", "desc": "Succès."}, {"type": "string|nil", "desc": "Erreur."}]},
+    "shutdown": {"desc": "Appelle conn.sock:shutdown().", "params": {"conn": {"type": "table", "desc": "Connexion."}}},
+    "send": {"desc": "Envoie via copas.send.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "data": {"type": "string", "desc": "Données."}, "i": {"type": "integer|nil", "desc": "Début."}, "j": {"type": "integer|nil", "desc": "Fin."}}},
+    "receive": {"desc": "Reçoit size octets via copas.receive.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "size": {"type": "integer", "desc": "Octets."}}},
+    "settimeout": {"desc": "Mémorise le délai dans conn.timeout et passe le socket en non bloquant.", "params": {"conn": {"type": "table", "desc": "Connexion."}, "timeout": {"type": "number", "desc": "Secondes."}}}
+  }
+}

@@ -1,51 +1,51 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/loadLevel.lua",
-  "module": "Nœud « Load Level » (couleur bleue, icône public). Charge un niveau : levelPath est relatif à levels/ (info.json est ajouté automatiquement). Entrées : flow, levelPath (modèles = tous les niveaux), model et config (cachés, pour faire apparaître un véhicule précis). Sortie : flow, activé quand le niveau est chargé. Machine à états : 1 démarre le chargement (core_levels.startLevel), 2 attend, 3 attend delayBufferFrames puis émet onClientPostStartMission/onClientStartMission et recharge la carte (map.assureLoad), 4 terminé. Données du nœud : preventPlayerSpawning, forceLevelLoad, delayBufferFrames, stopRunningOnClientEndMission, noLoadInEdit, customLoadingScreen.",
+  "module": "Node \"Load Level\" (blue color, public icon). Loads a level: levelPath is relative to levels/ (info.json is added automatically). Inputs: flow, levelPath (templates = all levels), model and config (hidden, to spawn a specific vehicle). Output: flow, activated when the level is loaded. State machine: 1 starts the loading (core_levels.startLevel), 2 waits, 3 waits delayBufferFrames then emits onClientPostStartMission/onClientStartMission and reloads the map (map.assureLoad), 4 finished. Node data: preventPlayerSpawning, forceLevelLoad, delayBufferFrames, stopRunningOnClientEndMission, noLoadInEdit, customLoadingScreen.",
   "notes": [
-    "Si l'éditeur est actif, il est arrêté pendant le chargement puis réactivé.",
-    "Dans work, self.stopRunningOnClientEndMission (champ du nœud) est utilisé comme valeur de mgr.stopRunningOnClientEndMission, mais il n'est jamais défini : il vaut nil.",
-    "Le commentaire de config dit « specific color » alors que le pin est la config du véhicule."
+    "If the editor is active, it is stopped during loading then reactivated.",
+    "In work, self.stopRunningOnClientEndMission (node field) is used as the value of mgr.stopRunningOnClientEndMission, but it is never defined: it is nil.",
+    "The config comment says \"specific color\" while the pin is the vehicle config."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise l'état à 1, le pin flow à false et les données par défaut (preventPlayerSpawning=true, forceLevelLoad=true, delayBufferFrames=0, noLoadInEdit=true, customLoadingScreen=false...).",
+          "desc": "Initializes the state to 1, the flow pin to false and the default data (preventPlayerSpawning=true, forceLevelLoad=true, delayBufferFrames=0, noLoadInEdit=true, customLoadingScreen=false...).",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet l'état à 1, flow à false et efface mgr.__delayedLoadingScreenFunctions.",
+          "desc": "Resets the state to 1, flow to false and clears mgr.__delayedLoadingScreenFunctions.",
           "internal": true
         },
         "postInit": {
-          "desc": "Remplit les modèles du pin levelPath avec la liste triée de getAllLevelIdentifiers().",
+          "desc": "Fills the templates of the levelPath pin with the sorted list from getAllLevelIdentifiers().",
           "internal": true
         },
         "onLoadingScreenFadeout": {
-          "desc": "Hook appelé au fondu de sortie de l'écran de chargement ; passe à l'état 3 avec le délai de frames, sauf si déjà à l'état 4.",
+          "desc": "Hook called on the fade-out of the loading screen; goes to state 3 with the frame delay, unless already in state 4.",
           "params": {
             "missionFile": {
               "type": "string",
-              "desc": "Fichier de mission chargé (utilisé pour le log)."
+              "desc": "Loaded mission file (used for the log)."
             }
           },
           "internal": false
         },
         "work": {
-          "desc": "Fait avancer la machine à états. Si le niveau demandé est déjà chargé (et forceLevelLoad faux ou éditeur actif avec noLoadInEdit), passe directement à 4. Sinon lance core_levels.startLevel (en désactivant l'apparition automatique du joueur selon la donnée), puis finalise en état 3.",
+          "desc": "Advances the state machine. If the requested level is already loaded (and forceLevelLoad is false or the editor is active with noLoadInEdit), goes directly to 4. Otherwise starts core_levels.startLevel (disabling the automatic player spawn according to the data), then finalizes in state 3.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche l'état courant dans le corps du nœud.",
+          "desc": "Displays the current state in the node body.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true

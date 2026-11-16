@@ -1,10 +1,13 @@
 {
   "path": "lua/ge/extensions/ui/lightRunnerSelector/general.lua",
-  "module": "Backend du sélecteur en grille pour l'assistant Vue LightRunner. Il réutilise les mêmes niveaux/pistes que la course rapide (scenario_quickRaceLoader) : seule la sélection de véhicule est restreinte (voiture/camion compatibles powerglow), ailleurs dans les filtres du sélecteur de véhicules. Le module copie simplement dans M toutes les fonctions du backend créé par `oneshotRaceSelector/core` avec le descripteur `quickRaceTrackDescriptor.build(\"lightRunnerSelector\")`.",
+  "module": "Grid selector backend for the LightRunner Vue wizard. It reuses the same levels/tracks as the quick race (scenario_quickRaceLoader): only the vehicle selection is restricted (powerglow-compatible car/truck), elsewhere in the vehicle selector's filters. The module simply copies into M all the functions of the backend created by `oneshotRaceSelector/core` with the descriptor `quickRaceTrackDescriptor.build(\"lightRunnerSelector\")`.",
   "notes": [
-    "Les fonctions exportées sont celles fabriquées par createBackend (non listées dans la page auto) ; ce fichier ne définit rien d'autre que `dependencies`."
+    "The exported functions are those built by createBackend (not listed in the auto page); this file defines nothing else except `dependencies`."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "{\"scenario_quickRaceLoader\"}."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "{\"scenario_quickRaceLoader\"}."
+    }
   }
 }

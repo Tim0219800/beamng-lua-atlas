@@ -1,36 +1,57 @@
 {
   "path": "lua/ge/extensions/ui/credits.lua",
-  "module": "Joue la musique des crédits (évènement FMOD « event:>Music>credits » sur le canal AudioGui) avec des fondus de volume. Le chargement de l'extension lance la musique avec un fondu d'entrée de 0,4 s ; le déchargement supprime la source sonore.",
-  "usage": "extensions.load('ui_credits')\n-- plus tard :\nui_credits.stopWithFade(1.0, function() extensions.unload('ui_credits') end)",
+  "module": "Plays the credits music (FMOD event \"event:>Music>credits\" on the AudioGui channel) with volume fades. Loading the extension starts the music with a 0.4 s fade-in; unloading deletes the sound source.",
+  "usage": "extensions.load('ui_credits')\n-- later:\nui_credits.stopWithFade(1.0, function() extensions.unload('ui_credits') end)",
   "notes": [
-    "Le fondu est progressé dans onUpdate avec dtReal (temps réel, indépendant de la pause).",
-    "La durée minimale d'un fondu est 0,001 s.",
-    "Les fonctions de volume ne font rien si l'objet son n'a pas de méthode setVolume."
+    "The fade is advanced in onUpdate with dtReal (real time, independent of pause).",
+    "The minimum duration of a fade is 0.001 s.",
+    "The volume functions do nothing if the sound object has no setVolume method."
   ],
   "functions": {
     "startWithFade": {
-      "desc": "Crée la source sonore des crédits si besoin, la démarre à volume 0 si elle ne joue pas encore, puis fait un fondu vers le volume 1.",
-      "params": {"duration": {"type": "number|nil", "desc": "Durée du fondu en secondes (défaut 0,4)."}},
-      "returns": [{"type": "boolean", "desc": "false si la source sonore n'a pas pu être créée, sinon true."}]
+      "desc": "Creates the credits sound source if needed, starts it at volume 0 if it is not yet playing, then fades to volume 1.",
+      "params": {
+        "duration": {
+          "type": "number|nil",
+          "desc": "Fade duration in seconds (default 0.4)."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the sound source could not be created, otherwise true."
+        }
+      ]
     },
     "stopWithFade": {
-      "desc": "Fait un fondu vers 0 puis arrête et supprime la source, puis appelle onStopped. S'il n'y a pas de son, arrête immédiatement.",
+      "desc": "Fades to 0 then stops and deletes the source, then calls onStopped. If there is no sound, stops immediately.",
       "params": {
-        "duration": {"type": "number|nil", "desc": "Durée du fondu en secondes (défaut 0,4)."},
-        "onStopped": {"type": "function|nil", "desc": "Callback sans argument appelé une fois la musique arrêtée."}
+        "duration": {
+          "type": "number|nil",
+          "desc": "Fade duration in seconds (default 0.4)."
+        },
+        "onStopped": {
+          "type": "function|nil",
+          "desc": "Callback with no argument called once the music has stopped."
+        }
       }
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension : lance startWithFade avec la durée par défaut (0,4 s).",
+      "desc": "Hook called when the extension loads: starts startWithFade with the default duration (0.4 s).",
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement : arrête et supprime la source sonore et libère le groupe de paramètres.",
+      "desc": "Hook called on unload: stops and deletes the sound source and frees the parameter group.",
       "internal": true
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque frame : fait avancer le fondu en cours et appelle son callback à la fin.",
-      "params": {"dtReal": {"type": "number", "desc": "Temps réel écoulé depuis la dernière frame (s)."}},
+      "desc": "Hook called every frame: advances the current fade and calls its callback at the end.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time elapsed since the last frame (s)."
+        }
+      },
       "internal": true
     }
   }

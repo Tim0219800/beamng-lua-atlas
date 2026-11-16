@@ -1,0 +1,7 @@
+{
+  "path": "lua/console/bananabench-json.lua",
+  "module": "Script de la VM console : met stdout en mode ligne par ligne (pour que le processus parent lise la progression en direct), exécute bench.physics() de bananabench puis écrit le résultat complet en JSON avec jsonWriteFile (indenté). Nom du fichier : deuxième argument de la ligne de commande (`args[2]`), sinon `bananabench.json`.",
+  "notes": [
+    "S'exécute au chargement (pas de fonction exportée) ; utilise la globale `args` fournie par la console."
+  ]
+}

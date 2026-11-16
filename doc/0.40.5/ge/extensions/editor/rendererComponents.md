@@ -1,30 +1,30 @@
 # `editor_rendererComponents`
 
-*Fichier : `lua/ge/extensions/editor/rendererComponents.lua` · VM : Game Engine (GE) · 977 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rendererComponents.lua` · VM: Game Engine (GE) · 977 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_rendererComponents` : `extensions.load("editor_rendererComponents")`, puis la globale `editor_rendererComponents`
+**Access:** extension `editor_rendererComponents`: `extensions.load("editor_rendererComponents")`, then the global `editor_rendererComponents`
 
-Fenêtre « Renderer Components » de l'éditeur (menu Debug) pour régler en direct les effets de rendu : profondeur de champ (DOF), HDR, SSAO, anti-aliasing, flou de mouvement, bloom, ombres en espace écran, CloudLayer, et en build non-shipping Coconut, Cluster Shading et Shadows. Chaque onglet n'apparaît que si l'objet post-effet correspondant existe dans la scène. Un menu « Reset All » et des boutons de réinitialisation par onglet remettent les valeurs par défaut. S'appuie sur core/settings/graphic et client/postFx/ssao.
+Editor "Renderer Components" window (Debug menu) to adjust rendering effects live: depth of field (DOF), HDR, SSAO, anti-aliasing, motion blur, bloom, screen-space shadows, CloudLayer, and in non-shipping builds Coconut, Cluster Shading and Shadows. Each tab only appears if the corresponding post-effect object exists in the scene. A "Reset All" menu and per-tab reset buttons restore the default values. Relies on core/settings/graphic and client/postFx/ssao.
 
-## Remarques
+## Notes
 
-- Le commentaire du fichier dit que c'est un utilitaire pour les créateurs de niveaux.
-- L'onglet Weather du CloudLayer permet de régénérer la weather map avec une graine aléatoire (max 2147483647).
-- onEditorActivated applique à DOFPostEffect l'état enregistré (debugModeEnabled, enable/disable) ; il suppose que DOFSettings est initialisé.
+- The file's comment says it is a utility for level creators.
+- The CloudLayer's Weather tab lets you regenerate the weather map with a random seed (max 2147483647).
+- onEditorActivated applies the saved state to DOFPostEffect (debugModeEnabled, enable/disable); it assumes DOFSettings is initialized.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_rendererComponents.onEditorActivated()` | Hook : à l'activation de l'éditeur, initialise les réglages si besoin et réapplique l'état du DOFPostEffect (mode debug, enable/disable). *(interne)* *(hook)* | 955 |
-| `editor_rendererComponents.onEditorGui()` | Hook : dessine la fenêtre avec barre de menu et barre d'onglets ; un onglet n'est affiché que si le post-effet/objet existe. *(interne)* *(hook)* | 866 |
-| `editor_rendererComponents.onEditorInitialized()` | Hook : ajoute les entrées de menu Debug (Renderer Components, et Cluster Shading hors shipping), enregistre la fenêtre (300x500), initialise les réglages et capture les valeurs par défaut des ombres en espace écran. *(interne)* *(hook)* | 944 |
+| `editor_rendererComponents.onEditorActivated()` | Hook: on editor activation, initializes the settings if needed and reapplies the DOFPostEffect state (debug mode, enable/disable). *(internal)* *(hook)* | 955 |
+| `editor_rendererComponents.onEditorGui()` | Hook: draws the window with a menu bar and tab bar; a tab is only displayed if the post-effect/object exists. *(internal)* *(hook)* | 866 |
+| `editor_rendererComponents.onEditorInitialized()` | Hook: adds the Debug menu entries (Renderer Components, and Cluster Shading outside shipping), registers the window (300x500), initializes the settings and captures the default screen-space shadow values. *(internal)* *(hook)* | 944 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `obj:` `getField`, `setField`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rendererComponents.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rendererComponents.lua`.*

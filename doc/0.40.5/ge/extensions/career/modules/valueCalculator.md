@@ -1,109 +1,109 @@
 # `career_modules_valueCalculator`
 
-*Fichier : `lua/ge/extensions/career/modules/valueCalculator.lua` · VM : Game Engine (GE) · 245 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/valueCalculator.lua` · VM: Game Engine (GE) · 245 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_valueCalculator` : `extensions.load("career_modules_valueCalculator")`, puis la globale `career_modules_valueCalculator`
+**Access:** extension `career_modules_valueCalculator`: `extensions.load("career_modules_valueCalculator")`, then the global `career_modules_valueCalculator`
 
-Calcul de la valeur et de l'état de réparation des véhicules et pièces de la carrière : dépréciation par année d'âge (table depreciationByYear), perte liée au kilométrage (odomètre), valeur de ferraille (5 % de la valeur), valeur d'un véhicule d'inventaire en tenant compte des pièces ajoutées/retirées et des dégâts, coût et durée de réparation (pièces à intégrité 0).
+Computation of the value and repair state of career vehicles and parts: depreciation per year of age (depreciationByYear table), loss related to mileage (odometer), scrap value (5% of the value), value of an inventory vehicle taking added/removed parts and damage into account, repair cost and duration (parts with integrity 0).
 
-## Remarques
+## Notes
 
-- Constantes : perte de 0,0000025 par km relatif, ferraille 5 %, 20 s de réparation par pièce, seuil de 3 pièces cassées pour considérer le véhicule à réparer, valeur minimale min(500, 5 % de la valeur neuve).
-- L'année de référence est codée en dur à 2023 (âge = 2023 - année) dans getPartValue et getVehicleValue.
-- Prix de réparation : 60 % de part.value (700 par défaut) pour chaque pièce dont integrityValue vaut 0.
-- Dans la valeur d'un véhicule, les pièces ajoutées comptent pour 50 % de leur valeur et les pièces retirées sont soustraites à 50 %.
-- partConditionsNeedRepair ne tient pas compte des exceptions (pare-chocs, portes, rétroviseurs, face avant) : l'ancienne logique est en commentaire.
+- Constants: loss of 0.0000025 per relative km, scrap 5%, 20 s of repair per part, threshold of 3 broken parts to consider the vehicle in need of repair, minimum value min(500, 5% of the new value).
+- The reference year is hardcoded to 2023 (age = 2023 - year) in getPartValue and getVehicleValue.
+- Repair price: 60% of part.value (700 by default) for each part whose integrityValue is 0.
+- In a vehicle's value, added parts count for 50% of their value and removed parts are subtracted at 50%.
+- partConditionsNeedRepair does not take exceptions into account (bumpers, doors, mirrors, front end): the old logic is commented out.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_valueCalculator.getAdjustedVehicleBaseValue(value, vehicleCondition)` | Valeur ajustée d'un objet selon son âge et son kilométrage : dépréciation annuelle, perte par kilométrage, plus la valeur de ferraille. | 47 |
-| `career_modules_valueCalculator.getBrokenPartsThreshold()` | Retourne le seuil de pièces cassées (3). | 229 |
-| `career_modules_valueCalculator.getInventoryVehicleValue(inventoryId, ignoreDamage)` | Valeur actuelle d'un véhicule d'inventaire (base ajustée + pièces - réparations, plancher à la valeur minimale). | 194 |
-| `career_modules_valueCalculator.getNumberOfBrokenParts(partConditions)` | Compte les pièces dont integrityValue vaut 0. | 200 |
-| `career_modules_valueCalculator.getPartDifference(originalParts, newParts, changedSlots)` | Compare les pièces d'origine d'un véhicule aux pièces actuelles et retourne les pièces ajoutées et retirées par emplacement. | 55 |
-| `career_modules_valueCalculator.getPartValue(part)` | Valeur d'une pièce : valeur ajustée par âge et kilométrage, -5 % si apprêtée (primered), réduite selon le nombre de réparations. | 91 |
-| `career_modules_valueCalculator.getRepairDetails(invVehInfo)` | API dégâts : calcule prix, durée et nombre de pièces à remplacer pour un véhicule d'inventaire. | 133 |
-| `career_modules_valueCalculator.getVehicleMileageById(inventoryId)` | Retourne le kilométrage (odomètre de la pièce principale) d'un véhicule d'inventaire. 0 si introuvable. | 33 |
-| `career_modules_valueCalculator.partConditionsNeedRepair(partConditions)` | Indique si le nombre de pièces cassées atteint le seuil (3). | 219 |
+| `career_modules_valueCalculator.getAdjustedVehicleBaseValue(value, vehicleCondition)` | Adjusted value of an item according to its age and mileage: yearly depreciation, mileage loss, plus the scrap value. | 47 |
+| `career_modules_valueCalculator.getBrokenPartsThreshold()` | Returns the broken parts threshold (3). | 229 |
+| `career_modules_valueCalculator.getInventoryVehicleValue(inventoryId, ignoreDamage)` | Current value of an inventory vehicle (adjusted base + parts - repairs, floored at the minimum value). | 194 |
+| `career_modules_valueCalculator.getNumberOfBrokenParts(partConditions)` | Counts the parts whose integrityValue is 0. | 200 |
+| `career_modules_valueCalculator.getPartDifference(originalParts, newParts, changedSlots)` | Compares a vehicle's original parts to the current parts and returns the added and removed parts per slot. | 55 |
+| `career_modules_valueCalculator.getPartValue(part)` | Value of a part: value adjusted by age and mileage, -5% if primered, reduced according to the number of repairs. | 91 |
+| `career_modules_valueCalculator.getRepairDetails(invVehInfo)` | Damage API: computes the price, duration and number of parts to replace for an inventory vehicle. | 133 |
+| `career_modules_valueCalculator.getVehicleMileageById(inventoryId)` | Returns the mileage (odometer of the main part) of an inventory vehicle. 0 if not found. | 33 |
+| `career_modules_valueCalculator.partConditionsNeedRepair(partConditions)` | Indicates whether the number of broken parts reaches the threshold (3). | 219 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_valueCalculator.getAdjustedVehicleBaseValue(value, vehicleCondition)`
 
-Valeur ajustée d'un objet selon son âge et son kilométrage : dépréciation annuelle, perte par kilométrage, plus la valeur de ferraille.
+Adjusted value of an item according to its age and mileage: yearly depreciation, mileage loss, plus the scrap value.
 
-- `value` (*number*) : Valeur de base.
-- `vehicleCondition` (*table*) : {age = années, mileage = odomètre}.
-- **renvoie** : number Valeur ajustée.
+- `value` (*number*) : Base value.
+- `vehicleCondition` (*table*) : {age = years, mileage = odometer}.
+- **returns**: number Adjusted value.
 
 #### `career_modules_valueCalculator.getBrokenPartsThreshold()`
 
-Retourne le seuil de pièces cassées (3).
+Returns the broken parts threshold (3).
 
-- **renvoie** : integer Seuil.
+- **returns**: integer Threshold.
 
 #### `career_modules_valueCalculator.getInventoryVehicleValue(inventoryId, ignoreDamage)`
 
-Valeur actuelle d'un véhicule d'inventaire (base ajustée + pièces - réparations, plancher à la valeur minimale).
+Current value of an inventory vehicle (adjusted base + parts - repairs, floored at the minimum value).
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- `ignoreDamage` (*boolean|nil*) : Si vrai, ne déduit pas le coût de réparation.
-- **renvoie** : number|nil Valeur, ou nil si le véhicule n'existe pas.
+- `inventoryId` (*integer*) : Inventory id.
+- `ignoreDamage` (*boolean|nil*) : If true, does not deduct the repair cost.
+- **returns**: number|nil Value, or nil if the vehicle does not exist.
 
 #### `career_modules_valueCalculator.getNumberOfBrokenParts(partConditions)`
 
-Compte les pièces dont integrityValue vaut 0.
+Counts the parts whose integrityValue is 0.
 
-- `partConditions` (*table|nil*) : Conditions par chemin de pièce.
-- **renvoie** : integer Nombre de pièces cassées (0 si l'argument n'est pas une table).
+- `partConditions` (*table|nil*) : Conditions per part path.
+- **returns**: integer Number of broken parts (0 if the argument is not a table).
 
 #### `career_modules_valueCalculator.getPartDifference(originalParts, newParts, changedSlots)`
 
-Compare les pièces d'origine d'un véhicule aux pièces actuelles et retourne les pièces ajoutées et retirées par emplacement.
+Compares a vehicle's original parts to the current parts and returns the added and removed parts per slot.
 
-- `originalParts` (*table<string, table>*) : Pièces d'origine par slot (avec .name).
-- `newParts` (*table<string, string>*) : Noms des pièces actuelles par slot.
-- `changedSlots` (*table<string, boolean>*) : Slots modifiés (pour détecter une pièce identique remplacée).
-- **renvoie** : table<string, string> addedParts (slot -> nom).
-- **renvoie** : table removedParts.
+- `originalParts` (*table<string, table>*) : Original parts per slot (with .name).
+- `newParts` (*table<string, string>*) : Names of the current parts per slot.
+- `changedSlots` (*table<string, boolean>*) : Modified slots (to detect an identical part being replaced).
+- **returns**: table<string, string> addedParts (slot -> name).
+- **returns**: table removedParts.
 
 #### `career_modules_valueCalculator.getPartValue(part)`
 
-Valeur d'une pièce : valeur ajustée par âge et kilométrage, -5 % si apprêtée (primered), réduite selon le nombre de réparations.
+Value of a part: value adjusted by age and mileage, -5% if primered, reduced according to the number of repairs.
 
-- `part` (*table*) : Pièce avec value, year, partCondition.odometer, primered, repairCount.
-- **renvoie** : number Valeur de la pièce.
+- `part` (*table*) : Part with value, year, partCondition.odometer, primered, repairCount.
+- **returns**: number Part value.
 
 #### `career_modules_valueCalculator.getRepairDetails(invVehInfo)`
 
-API dégâts : calcule prix, durée et nombre de pièces à remplacer pour un véhicule d'inventaire.
+Damage API: computes the price, duration and number of parts to replace for an inventory vehicle.
 
-- `invVehInfo` (*table*) : Véhicule d'inventaire (id, partConditions, config.partsTree).
-- **renvoie** : table {price, repairTime, partsCountToBeReplaced}.
+- `invVehInfo` (*table*) : Inventory vehicle (id, partConditions, config.partsTree).
+- **returns**: table {price, repairTime, partsCountToBeReplaced}.
 
 #### `career_modules_valueCalculator.getVehicleMileageById(inventoryId)`
 
-Retourne le kilométrage (odomètre de la pièce principale) d'un véhicule d'inventaire. 0 si introuvable.
+Returns the mileage (odometer of the main part) of an inventory vehicle. 0 if not found.
 
-- `inventoryId` (*integer*) : Id d'inventaire.
-- **renvoie** : number Odomètre (unité du jeu pour partCondition.odometer, déduit du code).
+- `inventoryId` (*integer*) : Inventory id.
+- **returns**: number Odometer (game unit for partCondition.odometer, inferred from code).
 
 #### `career_modules_valueCalculator.partConditionsNeedRepair(partConditions)`
 
-Indique si le nombre de pièces cassées atteint le seuil (3).
+Indicates whether the number of broken parts reaches the threshold (3).
 
-- `partConditions` (*table|nil*) : Conditions par chemin de pièce.
-- **renvoie** : boolean true si le véhicule doit être réparé.
+- `partConditions` (*table|nil*) : Conditions per part path.
+- **returns**: boolean true if the vehicle needs repair.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'career_career'}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/valueCalculator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/valueCalculator.lua`.*

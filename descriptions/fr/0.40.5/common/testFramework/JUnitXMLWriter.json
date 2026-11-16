@@ -1,0 +1,20 @@
+{
+  "path": "lua/common/testFramework/JUnitXMLWriter.lua",
+  "module": "Écrivain de résultats de tests au format XML JUnit pour testFramework/TestManager. Construit un DOM (testsuites > testsuite > testcase, avec un élément failure pour chaque test en échec) avec libs/slaxml/slaxdom, le sérialise avec indentation de 2 espaces et l'écrit avec writeFile.",
+  "notes": [
+    "Le nom de la suite est `suiteName`, ou `results.suiteName`, ou \"LuaUnitTests\" par défaut.",
+    "Un test en échec porte un élément <failure type=\"ExpectedFailure\"|\"Failure\"> dont le texte est errorMessage.",
+    "Appelé par TestManager:run seulement si options.writeXml == true et qu'un fichier de sortie est donné."
+  ],
+  "functions": {
+    "write": {
+      "desc": "Écrit les résultats de tests dans un fichier XML JUnit et logue le chemin.",
+      "params": {
+        "results": {"type": "table", "desc": "{testResults = {{name, duration, passed, expectedToFail, errorMessage}}, testFailCount, totalDuration, suiteName?}."},
+        "outputFile": {"type": "string", "desc": "Chemin du fichier XML (writeFile)."},
+        "suiteName": {"type": "string|nil", "desc": "Nom de la suite de tests."}
+      },
+      "returns": []
+    }
+  }
+}

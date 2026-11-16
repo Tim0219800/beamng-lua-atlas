@@ -1,72 +1,164 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/curveWiden.lua",
-  "module": "Élargissement de chaussée dans les virages pour les routes « engineered » des outils de route de l'éditeur. Calcule, par station de la ligne centrale (group.divPoints), un élargissement automatique selon la courbure soutenue (plus le virage est serré par rapport au rayon de conception group.engRadiusM, plus la route s'élargit, jusqu'à curveWidenMaxM) auquel s'ajoutent les extraWidenM par virage. Tout est lissé sur une distance physique (longueur d'arc), pas sur un nombre de stations.",
+  "module": "Road widening in turns for the 'engineered' roads of the editor's road tools. Computes, per centerline station (group.divPoints), an automatic widening based on the sustained curvature (the tighter the turn relative to the design radius group.engRadiusM, the wider the road gets, up to curveWidenMaxM) to which the extraWidenM per turn are added. Everything is smoothed over a physical distance (arc length), not over a number of stations.",
   "notes": [
-    "Actif uniquement si group.geometryMode == 'engineered' ; les routes lisses (Catmull-Rom) ne s'élargissent pas.",
-    "Champs lus du groupe : curveWidenMaxM (défaut 2.5 m, total des deux côtés), curveWidenRunoffM (défaut 20 m, longueur d'entrée/sortie), engRadiusM (défaut 40 m), divCurv (courbure exacte si de longueur n), discMap, corners[i].extraWidenM, divWidths.",
-    "Début d'élargissement au rayon de conception, plein élargissement à 0.35 x ce rayon (plancher 6 m) ; rampe en smoothstep.",
-    "edgeWiden : véhicule de conception de 6 m (offtrackLenM), seuil minimal par voie 0.3 m.",
-    "smoothByDistance modifie le tableau en place."
+    "Active only if group.geometryMode == 'engineered'; smooth roads (Catmull-Rom) do not widen.",
+    "Fields read from the group: curveWidenMaxM (default 2.5 m, total of both sides), curveWidenRunoffM (default 20 m, entry/exit length), engRadiusM (default 40 m), divCurv (exact curvature if of length n), discMap, corners[i].extraWidenM, divWidths.",
+    "Widening starts at the design radius, full widening at 0.35 x that radius (floor 6 m); smoothstep ramp.",
+    "edgeWiden: 6 m design vehicle (offtrackLenM), minimum threshold per lane 0.3 m.",
+    "smoothByDistance modifies the array in place."
   ],
   "fields": {
-    "DEFAULT_MAX": {"type": "number", "desc": "Élargissement maximal par défaut (2.5 m au total, répartis sur les deux côtés)."},
-    "DEFAULT_RUNOFF": {"type": "number", "desc": "Longueur par défaut (20 m) sur laquelle l'élargissement entre/sort."}
+    "DEFAULT_MAX": {
+      "type": "number",
+      "desc": "Default maximum widening (2.5 m in total, split over both sides)."
+    },
+    "DEFAULT_RUNOFF": {
+      "type": "number",
+      "desc": "Default length (20 m) over which the widening enters/exits."
+    }
   },
   "functions": {
     "signedCurvatureAt": {
-      "desc": "Courbure horizontale signée à la station i (0 aux extrémités ou si dégénérée). Positif = virage à gauche, négatif = à droite.",
+      "desc": "Signed horizontal curvature at station i (0 at the ends or if degenerate). Positive = left turn, negative = right.",
       "params": {
-        "div": {"type": "table", "desc": "Points de la ligne centrale {x,y,z}"},
-        "i": {"type": "integer", "desc": "Indice de station"},
-        "n": {"type": "integer", "desc": "Nombre de stations"}
+        "div": {
+          "type": "table",
+          "desc": "Centerline points {x,y,z}"
+        },
+        "i": {
+          "type": "integer",
+          "desc": "Station index"
+        },
+        "n": {
+          "type": "integer",
+          "desc": "Number of stations"
+        }
       },
-      "returns": [{"type": "number", "desc": "Courbure en 1/m."}]
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Curvature in 1/m."
+        }
+      ]
     },
     "arcLengths": {
-      "desc": "Longueur d'arc cumulée le long des divPoints (s[1] = 0), en 3D. Sert à exprimer le runoff en vraie distance.",
+      "desc": "Cumulative arc length along the divPoints (s[1] = 0), in 3D. Used to express the runoff as a true distance.",
       "params": {
-        "div": {"type": "table", "desc": "Points {x,y,z}"},
-        "n": {"type": "integer", "desc": "Nombre de points"}
+        "div": {
+          "type": "table",
+          "desc": "Points {x,y,z}"
+        },
+        "n": {
+          "type": "integer",
+          "desc": "Number of points"
+        }
       },
-      "returns": [{"type": "number[]", "desc": "Tableau s des longueurs cumulées (m)."}]
+      "returns": [
+        {
+          "type": "number[]",
+          "desc": "Array s of cumulative lengths (m)."
+        }
+      ]
     },
     "smoothByDistance": {
-      "desc": "Lisse en place un tableau signé par moyenne en boîte sur une demi-fenêtre physique hw (m), chaque échantillon étant pondéré par la longueur d'arc qu'il représente. Évite que la zone dense d'un virage domine la moyenne et crée un décrochement latéral à la jonction droite/arc.",
+      "desc": "Smooths in place a signed array by box averaging over a physical half-window hw (m), each sample being weighted by the arc length it represents. Prevents the dense area of a turn from dominating the average and creating a lateral step at the straight/arc junction.",
       "params": {
-        "arr": {"type": "number[]", "desc": "Valeurs à lisser (modifié en place)"},
-        "s": {"type": "number[]", "desc": "Table de longueurs d'arc"},
-        "n": {"type": "integer", "desc": "Nombre d'échantillons"},
-        "hw": {"type": "number", "desc": "Demi-fenêtre en mètres ; sans effet si <= 0 ou n < 3"}
+        "arr": {
+          "type": "number[]",
+          "desc": "Values to smooth (modified in place)"
+        },
+        "s": {
+          "type": "number[]",
+          "desc": "Arc length table"
+        },
+        "n": {
+          "type": "integer",
+          "desc": "Number of samples"
+        },
+        "hw": {
+          "type": "number",
+          "desc": "Half-window in meters; no effect if <= 0 or n < 3"
+        }
       }
     },
     "stationWiden": {
-      "desc": "Élargissement TOTAL par station (m, réparti sur les deux côtés) : élargissement automatique de courbure plus extraWidenM par virage, lissé en longueur d'arc. Zéro en ligne droite, si curveWidenMaxM = 0 sans surcharge de virage, et hors mode engineered.",
+      "desc": "TOTAL widening per station (m, split over both sides): automatic curvature widening plus extraWidenM per turn, smoothed over arc length. Zero on a straight line, if curveWidenMaxM = 0 without a turn override, and outside engineered mode.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe/route (geometryMode, curveWidenMaxM, curveWidenRunoffM, engRadiusM, divCurv, discMap, corners)."},
-        "div": {"type": "table", "desc": "divPoints"},
-        "s": {"type": "number[]", "desc": "Résultat de arcLengths"},
-        "n": {"type": "integer", "desc": "Nombre de stations"}
-      },
-      "returns": [{"type": "number[]", "desc": "Élargissement par station (m)."}]
-    },
-    "applyDivWidthWiden": {
-      "desc": "Ajoute l'élargissement par station à group.divWidths en place (à appeler une fois par passe 'dirty', juste après l'échantillonnage des largeurs de base). Pour les outils dont le mesh est symétrique selon divWidths, cela élargit le bitume lui-même ; heroRoad élargit son mesh séparément et ne s'en sert que pour déplacer marquages/ruban. Sans effet si rien ne s'élargit.",
-      "params": {"group": {"type": "table", "desc": "Groupe avec divPoints et divWidths."}}
-    },
-    "edgeWiden": {
-      "desc": "Élargissement réel par station sur chaque bord (gauche et droit par rapport au sens de marche) : chaque voie prend le « offtracking » du véhicule de conception sur le rayon soutenu, R - sqrt(R^2 - L^2) avec L = 6 m, supprimé sous 0.3 m, le tout plafonné à curveWidenMaxM. Va sur le bord intérieur du virage ; une route à chaussées séparées élargit chaque chaussée sur son bord extérieur (le terre-plein n'a pas de place).",
-      "params": {
-        "group": {"type": "table", "desc": "Groupe/route."},
-        "div": {"type": "table", "desc": "divPoints"},
-        "s": {"type": "number[]", "desc": "Longueurs d'arc"},
-        "n": {"type": "integer", "desc": "Nombre de stations"},
-        "lanesL": {"type": "number", "desc": "Nombre de voies à gauche"},
-        "lanesR": {"type": "number", "desc": "Nombre de voies à droite"},
-        "divided": {"type": "boolean", "desc": "true si chaussées séparées"}
+        "group": {
+          "type": "table",
+          "desc": "Group/road (geometryMode, curveWidenMaxM, curveWidenRunoffM, engRadiusM, divCurv, discMap, corners)."
+        },
+        "div": {
+          "type": "table",
+          "desc": "divPoints"
+        },
+        "s": {
+          "type": "number[]",
+          "desc": "Result of arcLengths"
+        },
+        "n": {
+          "type": "integer",
+          "desc": "Number of stations"
+        }
       },
       "returns": [
-        {"type": "number[]", "desc": "Élargissement du bord gauche par station (m)"},
-        {"type": "number[]", "desc": "Élargissement du bord droit par station (m)"}
+        {
+          "type": "number[]",
+          "desc": "Widening per station (m)."
+        }
+      ]
+    },
+    "applyDivWidthWiden": {
+      "desc": "Adds the per-station widening to group.divWidths in place (to be called once per 'dirty' pass, right after sampling the base widths). For tools whose mesh is symmetric according to divWidths, this widens the asphalt itself; heroRoad widens its mesh separately and only uses it to shift markings/ribbon. No effect if nothing widens.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Group with divPoints and divWidths."
+        }
+      }
+    },
+    "edgeWiden": {
+      "desc": "Actual widening per station on each edge (left and right relative to the direction of travel): each lane takes the design vehicle's 'offtracking' over the sustained radius, R - sqrt(R^2 - L^2) with L = 6 m, suppressed below 0.3 m, all capped at curveWidenMaxM. Goes on the inner edge of the turn; a divided road widens each carriageway on its outer edge (the median has no room).",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Group/road."
+        },
+        "div": {
+          "type": "table",
+          "desc": "divPoints"
+        },
+        "s": {
+          "type": "number[]",
+          "desc": "Arc lengths"
+        },
+        "n": {
+          "type": "integer",
+          "desc": "Number of stations"
+        },
+        "lanesL": {
+          "type": "number",
+          "desc": "Number of lanes on the left"
+        },
+        "lanesR": {
+          "type": "number",
+          "desc": "Number of lanes on the right"
+        },
+        "divided": {
+          "type": "boolean",
+          "desc": "true if divided carriageways"
+        }
+      },
+      "returns": [
+        {
+          "type": "number[]",
+          "desc": "Left edge widening per station (m)"
+        },
+        {
+          "type": "number[]",
+          "desc": "Right edge widening per station (m)"
+        }
       ]
     }
   }

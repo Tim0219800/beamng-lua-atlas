@@ -1,59 +1,59 @@
 # `core_multiseatCamera`
 
-*Fichier : `lua/ge/extensions/core/multiseatCamera.lua` · VM : Game Engine (GE) · 119 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/multiseatCamera.lua` · VM: Game Engine (GE) · 119 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_multiseatCamera` : `extensions.load("core_multiseatCamera")`, puis la globale `core_multiseatCamera`
+**Access:** extension `core_multiseatCamera`: `extensions.load("core_multiseatCamera")`, then the global `core_multiseatCamera`
 
-Extension GE `core_multiseatCamera` : caméra partagée du mode multi-joueur local (multiseat) quand tous les joueurs voient le même écran. Elle calcule la position moyenne des véhicules des joueurs assignés, règle la distance de la caméra pour que tous soient visibles (distance maximale à la moyenne, x2 + 10 m, FOV 40) et la place sur le véhicule du joueur 0 via core_camera. Elle s'active quand le réglage 'multiseat' est vrai, qu'il y a plus d'un joueur, et que l'écran n'est pas partagé en split-screen (ou que le mode split est 'shared').
+GE extension `core_multiseatCamera`: shared camera for local multiplayer (multiseat) mode when all players see the same screen. It computes the average position of the assigned players' vehicles, sets the camera distance so that all are visible (maximum distance to the average, x2 + 10 m, FOV 40) and places it on player 0's vehicle via core_camera. It activates when the 'multiseat' setting is true, there is more than one player, and the screen is not split (or the split mode is 'shared').
 
-## Exemple
+## Example
 
 ```lua
--- activée automatiquement par les hooks onSettingsChanged / onSplitScreenChanged ; pas d'API publique
+-- activated automatically by the onSettingsChanged / onSplitScreenChanged hooks; no public API
 ```
 
-## Remarques
+## Notes
 
-- Aucune fonction publique : tout passe par des hooks. onUpdate vaut `nop` au départ (fonction vide) et n'est remplacée par la vraie boucle que quand la caméra est activée ; extensions.hookUpdate('onUpdate') ré-enregistre alors le hook.
-- L'analyse statique signale `nop` comme non définie dans ce fichier : c'est une fonction globale du jeu (utils), le fichier fait require('utils').
-- onUpdate ne fait rien si la caméra libre est active pour le joueur 0. La boucle utilise map.objects (positions des véhicules) et core_input_bindings.getAssignedPlayers().
-- Au désactivation, la configuration de caméra de tous les véhicules est réinitialisée (core_camera.resetConfiguration, setRef nil, resetCameraByID). onSerialize désactive la caméra avant un rechargement Lua.
-- Remarque : le calcul de `meanDirection` (meanLocation - lastLocation - pos) mélange une différence de positions moyennes et la position du joueur 0 ; le résultat sert de référence latérale/arrière à setRef (déduit du code, pas de commentaire explicatif).
+- No public function: everything goes through hooks. onUpdate is `nop` at first (empty function) and is only replaced by the real loop when the camera is activated; extensions.hookUpdate('onUpdate') then re-registers the hook.
+- Static analysis reports `nop` as undefined in this file: it is a global game function (utils), the file does require('utils').
+- onUpdate does nothing if the free camera is active for player 0. The loop uses map.objects (vehicle positions) and core_input_bindings.getAssignedPlayers().
+- On deactivation, the camera configuration of all vehicles is reset (core_camera.resetConfiguration, setRef nil, resetCameraByID). onSerialize deactivates the camera before a Lua reload.
+- Note: the computation of `meanDirection` (meanLocation - lastLocation - pos) mixes a difference of average positions and the position of player 0; the result serves as a lateral/rear reference for setRef (inferred from code, no explanatory comment).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_multiseatCamera.onSerialize()` | Avant un rechargement Lua : désactive la caméra partagée si elle était active. *(interne)* *(hook)* | 106 |
-| `core_multiseatCamera.onSettingsChanged()` | Hook appelé quand les réglages changent : active ou désactive la caméra partagée selon que le réglage multiseat est vrai, que render_splitScreen est chargé, qu'il y a plus d'un joueur et que le split-screen est inactif ou en mode 'shared'. *(interne)* *(hook)* | 98 |
-| `core_multiseatCamera.onSplitScreenChanged(splitScreenEnabled, playerCount, layout, mode)` | Hook appelé quand la configuration du split-screen change : la caméra partagée est active si le split-screen est désactivé ou en mode 'shared'. *(interne)* *(hook)* | 102 |
+| `core_multiseatCamera.onSerialize()` | Before a Lua reload: deactivates the shared camera if it was active. *(internal)* *(hook)* | 106 |
+| `core_multiseatCamera.onSettingsChanged()` | Hook called when settings change: enables or disables the shared camera depending on whether the multiseat setting is true, render_splitScreen is loaded, there is more than one player and split-screen is inactive or in 'shared' mode. *(internal)* *(hook)* | 98 |
+| `core_multiseatCamera.onSplitScreenChanged(splitScreenEnabled, playerCount, layout, mode)` | Hook called when the split-screen configuration changes: the shared camera is active if split-screen is disabled or in 'shared' mode. *(internal)* *(hook)* | 102 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_multiseatCamera.onSplitScreenChanged(splitScreenEnabled, playerCount, layout, mode)`
 
-Hook appelé quand la configuration du split-screen change : la caméra partagée est active si le split-screen est désactivé ou en mode 'shared'.
+Hook called when the split-screen configuration changes: the shared camera is active if split-screen is disabled or in 'shared' mode.
 
-- `splitScreenEnabled` (*boolean*) : Split-screen actif.
-- `playerCount` (*integer*) : Nombre de joueurs (non utilisé).
-- `layout` (*any*) : Disposition (non utilisée).
-- `mode` (*string*) : Mode du split-screen, 'shared' pour un écran commun.
+- `splitScreenEnabled` (*boolean*) : Split-screen active.
+- `playerCount` (*integer*) : Number of players (unused).
+- `layout` (*any*) : Layout (unused).
+- `mode` (*string*) : Split-screen mode, 'shared' for a common screen.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onUpdate` | function | nop tant que la caméra n'est pas activée, puis la boucle de calcul de la caméra partagée. |
+| `onUpdate` | function | nop until the camera is activated, then the shared camera computation loop. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onUpdate` — écouté par 186 module(s)
+- `onUpdate` — listened to by 186 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/multiseatCamera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/multiseatCamera.lua`.*

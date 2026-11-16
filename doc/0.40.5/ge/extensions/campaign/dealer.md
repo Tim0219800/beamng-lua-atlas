@@ -1,98 +1,98 @@
 # `campaign_dealer`
 
-*Fichier : `lua/ge/extensions/campaign/dealer.lua` · VM : Game Engine (GE) · 134 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/campaign/dealer.lua` · VM: Game Engine (GE) · 134 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `campaign_dealer` : `extensions.load("campaign_dealer")`, puis la globale `campaign_dealer`
+**Access:** extension `campaign_dealer`: `extensions.load("campaign_dealer")`, then the global `campaign_dealer`
 
-Concessionnaire de la campagne : tient un stock (M.state.stock) indexé par type d'objet en majuscules. Un stock est soit une liste de tables (véhicules {model, config}), soit un nombre cumulé. Sauvegardé et restauré avec la campagne (onSaveCampaign / onResumeCampaign). La fonction buy est vide (non implémentée).
+Campaign dealer: holds a stock (M.state.stock) keyed by uppercase item type. A stock is either a list of tables (vehicles {model, config}) or an accumulated number. Saved and restored with the campaign (onSaveCampaign / onResumeCampaign). The buy function is empty (not implemented).
 
-## Exemple
+## Example
 
 ```lua
 campaign_dealer.addToStock('$$$_vehicles', {model='pickup', config='base'})
 local stock = campaign_dealer.getStock('$$$_VEHICLES')
 ```
 
-## Remarques
+## Notes
 
-- addToStock et removeFromStock passent itemType en majuscules ; getStock ne le fait pas : il faut donc lui donner le type déjà en majuscules.
-- Bug probable : existItem considère un doublon dès qu'un seul champ de l'entrée existante est égal à celui de valueObj (pas tous les champs) ; deux véhicules du même modèle avec une config différente sont donc vus comme identiques.
-- removeFromStock compare model et config des entrées et laisse des print de débogage ; pour un stock numérique il soustrait la valeur.
-- onDeserialized ne fait que journaliser ; onResumeCampaign remplace M.state par les données reçues (sans copie).
+- addToStock and removeFromStock uppercase itemType; getStock does not: it must therefore be given the type already in uppercase.
+- Probable bug: existItem considers an entry a duplicate as soon as a single field of the existing entry equals that of valueObj (not all fields); two vehicles of the same model with a different config are therefore seen as identical.
+- removeFromStock compares the model and config of the entries and leaves debug prints; for a numeric stock it subtracts the value.
+- onDeserialized only logs; onResumeCampaign replaces M.state with the received data (without copying).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `campaign_dealer.addToStock(itemType, valueObj)` | Ajoute un objet (table, sans doublon selon existItem) ou une quantité (nombre) au stock du type donné. Crée l'entrée si besoin. | 32 |
-| `campaign_dealer.buy(itemType, index)` | Prévue pour acheter un objet du stock ; le corps est vide dans cette version. | 98 |
-| `campaign_dealer.getStock(itemType)` | Retourne une copie profonde du stock d'un type (crée une liste vide si absent). | 61 |
-| `campaign_dealer.onDeserialized(data)` | Hook appelé après désérialisation ; ne fait que journaliser. *(interne)* *(hook)* | 108 |
-| `campaign_dealer.onResumeCampaign(campaignInProgress, data)` | Hook de reprise de campagne : remplace M.state par data. *(interne)* *(hook)* | 118 |
-| `campaign_dealer.onSaveCampaign(saveCallback)` | Hook de sauvegarde de la campagne : appelle saveCallback(M.__globalAlias__, copie de l'état). *(interne)* *(hook)* | 113 |
-| `campaign_dealer.onSerialize()` | Hook de sérialisation : retourne une copie profonde de M.state. *(interne)* *(hook)* | 102 |
-| `campaign_dealer.removeFromStock(itemType, valueObj)` | Retire du stock la première entrée dont model et config correspondent (valeur table) ou soustrait la quantité (valeur nombre). | 68 |
+| `campaign_dealer.addToStock(itemType, valueObj)` | Adds an object (table, no duplicates according to existItem) or a quantity (number) to the stock of the given type. Creates the entry if needed. | 32 |
+| `campaign_dealer.buy(itemType, index)` | Intended to buy an object from the stock; the body is empty in this version. | 98 |
+| `campaign_dealer.getStock(itemType)` | Returns a deep copy of the stock of a type (creates an empty list if absent). | 61 |
+| `campaign_dealer.onDeserialized(data)` | Hook called after deserialization; only logs. *(internal)* *(hook)* | 108 |
+| `campaign_dealer.onResumeCampaign(campaignInProgress, data)` | Campaign resume hook: replaces M.state with data. *(internal)* *(hook)* | 118 |
+| `campaign_dealer.onSaveCampaign(saveCallback)` | Campaign save hook: calls saveCallback(M.__globalAlias__, copy of the state). *(internal)* *(hook)* | 113 |
+| `campaign_dealer.onSerialize()` | Serialization hook: returns a deep copy of M.state. *(internal)* *(hook)* | 102 |
+| `campaign_dealer.removeFromStock(itemType, valueObj)` | Removes from the stock the first entry whose model and config match (table value) or subtracts the quantity (number value). | 68 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `campaign_dealer.addToStock(itemType, valueObj)`
 
-Ajoute un objet (table, sans doublon selon existItem) ou une quantité (nombre) au stock du type donné. Crée l'entrée si besoin.
+Adds an object (table, no duplicates according to existItem) or a quantity (number) to the stock of the given type. Creates the entry if needed.
 
-- `itemType` (*string*) : Type du stock (converti en majuscules).
-- `valueObj` (*table|number*) : Objet à ajouter ou quantité.
+- `itemType` (*string*) : Stock type (converted to uppercase).
+- `valueObj` (*table|number*) : Object to add or quantity.
 
 #### `campaign_dealer.buy(itemType, index)`
 
-Prévue pour acheter un objet du stock ; le corps est vide dans cette version.
+Intended to buy an object from the stock; the body is empty in this version.
 
-- `itemType` (*string*) : Type de stock.
-- `index` (*integer*) : Position de l'objet (déduit du nom).
+- `itemType` (*string*) : Stock type.
+- `index` (*integer*) : Position of the object (inferred from the name).
 
 #### `campaign_dealer.getStock(itemType)`
 
-Retourne une copie profonde du stock d'un type (crée une liste vide si absent).
+Returns a deep copy of the stock of a type (creates an empty list if absent).
 
-- `itemType` (*string*) : Type de stock, tel qu'enregistré (majuscules).
-- **renvoie** : table|number Copie du stock.
+- `itemType` (*string*) : Stock type, as registered (uppercase).
+- **returns**: table|number Copy of the stock.
 
 #### `campaign_dealer.onDeserialized(data)`
 
-Hook appelé après désérialisation ; ne fait que journaliser.
+Hook called after deserialization; only logs.
 
-- `data` (*table*) : Données désérialisées (non utilisées).
+- `data` (*table*) : Deserialized data (not used).
 
 #### `campaign_dealer.onResumeCampaign(campaignInProgress, data)`
 
-Hook de reprise de campagne : remplace M.state par data.
+Campaign resume hook: replaces M.state with data.
 
-- `campaignInProgress` (*any*) : Campagne en cours (non utilisé).
-- `data` (*table*) : État sauvegardé.
+- `campaignInProgress` (*any*) : Current campaign (not used).
+- `data` (*table*) : Saved state.
 
 #### `campaign_dealer.onSaveCampaign(saveCallback)`
 
-Hook de sauvegarde de la campagne : appelle saveCallback(M.__globalAlias__, copie de l'état).
+Campaign save hook: calls saveCallback(M.__globalAlias__, copy of the state).
 
-- `saveCallback` (*function*) : Reçoit (alias global du module, données).
+- `saveCallback` (*function*) : Receives (module global alias, data).
 
 #### `campaign_dealer.onSerialize()`
 
-Hook de sérialisation : retourne une copie profonde de M.state.
+Serialization hook: returns a deep copy of M.state.
 
-- **renvoie** : table Copie de l'état.
+- **returns**: table Copy of the state.
 
 #### `campaign_dealer.removeFromStock(itemType, valueObj)`
 
-Retire du stock la première entrée dont model et config correspondent (valeur table) ou soustrait la quantité (valeur nombre).
+Removes from the stock the first entry whose model and config match (table value) or subtracts the quantity (number value).
 
-- `itemType` (*string*) : Type du stock (converti en majuscules).
-- `valueObj` (*table|number*) : Objet {model, config} à retirer ou quantité.
+- `itemType` (*string*) : Stock type (converted to uppercase).
+- `valueObj` (*table|number*) : Object {model, config} to remove or quantity.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `state` | table | État sauvegardé : {stock = table<string, table\|number>}. |
+| `state` | table | Saved state: {stock = table<string, table\|number>}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/campaign/dealer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/campaign/dealer.lua`.*

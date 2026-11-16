@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/beamstate/reload.lua",
-  "module": "Nœud « Reload Vehicle » (catégorie `repeat_p_duration`, tag reset). Recharge le véhicule (`veh:reload()`), c'est-à-dire un rechargement complet de l'objet véhicule. Pin d'entrée : `vehId`. Si `vehId` n'est pas branché, le nœud prend le véhicule joueur (`getPlayerVehicle(0)`).",
+  "module": "Node \"Reload Vehicle\" (category `repeat_p_duration`, tag reset). Reloads the vehicle (`veh:reload()`), i.e. a full reload of the vehicle object. Input pin: `vehId`. If `vehId` is not connected, the node takes the player vehicle (`getPlayerVehicle(0)`).",
   "notes": [
-    "Appelé à chaque frame tant que le flux est actif : relier à une impulsion pour ne recharger qu'une fois."
+    "Called every frame while the flow is active: connect it to a pulse to reload only once."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "work": {
-          "desc": "Appelle `veh:reload()` sur le véhicule trouvé.",
+          "desc": "Calls `veh:reload()` on the found vehicle.",
           "internal": true
         }
       }

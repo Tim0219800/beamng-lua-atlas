@@ -1,11 +1,33 @@
 {
   "path": "lua/ge/extensions/telemetry/trackers/performanceWarnings.lua",
-  "module": "Suiveur de télémétrie des avertissements matériels de performance affichés au joueur : chaque avertissement (catégorie + message) n'est rapporté qu'une seule fois par session (évènement « performanceHardwareWarning » avec catégorie, message, gravité, contexte et acquittement).",
+  "module": "Telemetry tracker for the hardware performance warnings shown to the player: each warning (category + message) is reported only once per session (\"performanceHardwareWarning\" event with category, message, severity, context and acknowledgment).",
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "telemetry_core."
+    }
   },
   "functions": {
-    "onPerformanceHardwareWarning": {"desc": "Hook appelé quand le jeu émet un avertissement matériel de performance ; dédoublonne par catégorie et message.", "params": {"category": {"type": "string", "desc": "Catégorie de l'avertissement."}, "warning": {"type": "table", "desc": "{msg, type (gravité), context, ack}"}}, "returns": [], "internal": true},
-    "onExtensionLoaded": {"desc": "Hook appelé au chargement : déchargement manuel.", "params": {}, "returns": [], "internal": true}
+    "onPerformanceHardwareWarning": {
+      "desc": "Hook called when the game emits a hardware performance warning; deduplicates by category and message.",
+      "params": {
+        "category": {
+          "type": "string",
+          "desc": "Warning category."
+        },
+        "warning": {
+          "type": "table",
+          "desc": "{msg, type (severity), context, ack}"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook called on load: manual unload.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
   }
 }

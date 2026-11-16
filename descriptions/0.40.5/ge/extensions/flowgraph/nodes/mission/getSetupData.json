@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/getSetupData.lua",
-  "module": "Noeud flowgraph 'Get Mission Setup Data' (categorie provider). Expose sur ses sorties les valeurs des modules de preparation de mission (self.mgr.activity.setupModules) : utilisation du vehicule d'origine du joueur, modele/config choisis, et reglages du trafic (actif, trafic precedent, quantite, quantite active, taux de reapparition).",
+  "module": "Flowgraph node 'Get Mission Setup Data' (provider category). Exposes on its outputs the values of the mission setup modules (self.mgr.activity.setupModules): use of the player's original vehicle, chosen model/config, and traffic settings (active, previous traffic, amount, active amount, respawn rate).",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "work": {
-          "desc": "Si une activite avec setupModules existe, recopie data.vehicles.* et data.traffic.* vers les pins (booleens forces, valeurs par defaut '' ou 0).",
+          "desc": "If an activity with setupModules exists, copies data.vehicles.* and data.traffic.* to the pins (booleans forced, default values '' or 0).",
           "internal": true
         }
       }

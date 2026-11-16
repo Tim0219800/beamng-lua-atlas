@@ -1,83 +1,122 @@
 {
   "path": "lua/ge/extensions/editor/raceEditor/pacenotes.lua",
-  "module": "Sous-fenêtre « Pacenotes » de l'éditeur de course (raceEditor). Elle permet de lister, sélectionner, créer (Shift + glisser dans le monde pour définir position, rayon et direction), déplacer au gizmo, et supprimer des pacenotes du chemin courant (path.pacenotes). Les actions passent par editor.history (annuler/rétablir). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/raceEditor/pacenotes')(raceEditor).",
+  "module": "\"Pacenotes\" sub-window of the race editor (raceEditor). It lets you list, select, create (Shift + drag in the world to set position, radius and direction), move with the gizmo, and delete pacenotes of the current path (path.pacenotes). Actions go through editor.history (undo/redo). The module returns a constructor: require('/lua/ge/extensions/editor/raceEditor/pacenotes')(raceEditor).",
   "notes": [
-    "Cette fenêtre est commentée dans raceEditor.lua (table.insert ... pacenotes) : elle n'est pas chargée dans le jeu 0.40.5.",
-    "C:selectPacenote teste self.note, champ qui n'est jamais défini dans ce fichier ; s'il était renseigné, la fonction se rappellerait elle-même indéfiniment. C:onEditModeActivate teste aussi self.note.",
-    "C:selector indexe segments.objects[node[fieldName]] : avec la valeur -1 (« None ») l'entrée n'existe pas dans la table, ce qui provoquerait une erreur sur .name."
+    "This window is commented out in raceEditor.lua (table.insert ... pacenotes): it is not loaded in game 0.40.5.",
+    "C:selectPacenote tests self.note, a field that is never set in this file; if it were set, the function would call itself indefinitely. C:onEditModeActivate also tests self.note.",
+    "C:selector indexes segments.objects[node[fieldName]]: with the value -1 (\"None\") the entry does not exist in the table, which would cause an error on .name."
   ],
   "classes": {
     "C": {
-      "desc": "Fenêtre Pacenotes. Créée par le constructeur renvoyé par le module, avec init(raceEditor). windowDescription = 'Pacenotes'. Les méthodes sont appelées par raceEditor.lua (setPath, selected, unselect, draw, onEditModeActivate).",
+      "desc": "Pacenotes window. Created by the constructor returned by the module, with init(raceEditor). windowDescription = 'Pacenotes'. The methods are called by raceEditor.lua (setPath, selected, unselect, draw, onEditModeActivate).",
       "functions": {
         "init": {
-          "desc": "Initialise la fenêtre : mémorise raceEditor, index de sélection nil et mouseInfo vide.",
-          "params": {"raceEditor": {"type": "table", "desc": "Module editor_raceEditor (fournit allowGizmo)."}},
+          "desc": "Initializes the window: stores raceEditor, selection index nil and empty mouseInfo.",
+          "params": {
+            "raceEditor": {
+              "type": "table",
+              "desc": "Module editor_raceEditor (provides allowGizmo)."
+            }
+          },
           "internal": true
         },
         "setPath": {
-          "desc": "Définit le chemin de course (gameplay/race/path) édité.",
-          "params": {"path": {"type": "table", "desc": "Objet chemin de course."}}
+          "desc": "Sets the race path (gameplay/race/path) being edited.",
+          "params": {
+            "path": {
+              "type": "table",
+              "desc": "Race path object."
+            }
+          }
         },
         "selected": {
-          "desc": "Appelé quand l'onglet devient actif : désélectionne, dessine les pacenotes en mode « normal », les segments en « faded », ajoute le raccourci Shift « Add New » et récupère la carte de navigation (map.getMap()).",
+          "desc": "Called when the tab becomes active: deselects, draws pacenotes in \"normal\" mode, segments in \"faded\" mode, adds the Shift shortcut \"Add New\" and fetches the navigation map (map.getMap()).",
           "internal": true
         },
         "unselect": {
-          "desc": "Appelé quand l'onglet est quitté : cache les pacenotes (_drawMode = 'none') et retire le raccourci Shift.",
+          "desc": "Called when the tab is left: hides pacenotes (_drawMode = 'none') and removes the Shift shortcut.",
           "internal": true
         },
         "selectPacenote": {
-          "desc": "Sélectionne la pacenote d'ID id (nil pour aucune). Voir notes sur le rappel récursif conditionnel à self.note.",
-          "params": {"id": {"type": "integer|nil", "desc": "ID de la pacenote."}}
+          "desc": "Selects the pacenote with ID id (nil for none). See notes on the recursive call conditional on self.note.",
+          "params": {
+            "id": {
+              "type": "integer|nil",
+              "desc": "Pacenote ID."
+            }
+          }
         },
         "updateTransform": {
-          "desc": "Place le gizmo d'axes sur la pacenote d'index donné, orienté selon sa normale en alignement local. Sans effet si le gizmo n'est pas autorisé.",
-          "params": {"index": {"type": "integer", "desc": "ID de la pacenote."}}
+          "desc": "Places the axis gizmo on the pacenote at the given index, oriented along its normal in local alignment. No effect if the gizmo is not allowed.",
+          "params": {
+            "index": {
+              "type": "integer",
+              "desc": "Pacenote ID."
+            }
+          }
         },
         "beginDrag": {
-          "desc": "Début de manipulation au gizmo : mémorise l'état sérialisé, la rotation et le rayon de la pacenote (navRadiusScale si mode navgraph).",
+          "desc": "Start of gizmo manipulation: stores the serialized state, rotation and radius of the pacenote (navRadiusScale in navgraph mode).",
           "internal": true
         },
         "dragging": {
-          "desc": "Pendant la manipulation : applique translation (pos), rotation (normal) ou mise à l'échelle (radius, jamais négatif) du gizmo à la pacenote.",
+          "desc": "During manipulation: applies gizmo translation (pos), rotation (normal) or scaling (radius, never negative) to the pacenote.",
           "internal": true
         },
         "endDragging": {
-          "desc": "Fin de manipulation : valide l'action d'historique « Manipulated Note via Gizmo » (avant/après via onSerialize/onDeserialized).",
+          "desc": "End of manipulation: commits the \"Manipulated Note via Gizmo\" history action (before/after via onSerialize/onDeserialized).",
           "internal": true
         },
         "onEditModeActivate": {
-          "desc": "Appelé à l'activation du mode d'édition de course (voir notes).",
+          "desc": "Called when the race edit mode is activated (see notes).",
           "internal": true
         },
         "draw": {
-          "desc": "Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau de détail.",
-          "params": {"mouseInfo": {"type": "table", "desc": "Infos souris (valid, down, up, hold, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos)."}},
+          "desc": "Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the list and the detail panel.",
+          "params": {
+            "mouseInfo": {
+              "type": "table",
+              "desc": "Mouse info (valid, down, up, hold, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos)."
+            }
+          },
           "internal": true
         },
         "createManualPacenote": {
-          "desc": "Affiche l'aide de création et l'aperçu (sphère, prismes) pendant le glisser, puis au relâchement crée une pacenote manuelle (rayon 5 si le glisser est ≤ 1 m) via l'historique ; la direction est donnée par le glisser.",
+          "desc": "Displays the creation help and the preview (sphere, prisms) during the drag, then on release creates a manual pacenote (radius 5 if the drag is ≤ 1 m) via history; the direction is given by the drag.",
           "internal": true
         },
         "mouseOverPacenotes": {
-          "desc": "Renvoie la pacenote dont la sphère est traversée par le rayon souris, la plus proche de la caméra.",
-          "returns": [{"type": "table|nil", "desc": "Pacenote survolée ou nil."}]
+          "desc": "Returns the pacenote whose sphere is crossed by the mouse ray, the one closest to the camera.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Hovered pacenote or nil."
+            }
+          ]
         },
         "input": {
-          "desc": "Gère la souris : avec Shift, création manuelle ; sinon clic sur une pacenote pour la sélectionner (ou aucune).",
+          "desc": "Handles the mouse: with Shift, manual creation; otherwise click on a pacenote to select it (or none).",
           "internal": true
         },
         "drawPacenoteList": {
-          "desc": "Dessine la liste des pacenotes triées (+ entrée « New... ») et le panneau de la pacenote courante (suppression, déplacement, champs).",
+          "desc": "Draws the sorted pacenote list (+ \"New...\" entry) and the current pacenote panel (delete, move, fields).",
           "internal": true
         },
         "selector": {
-          "desc": "Liste déroulante pour choisir un segment (ou « None » = -1) dans un champ de la pacenote courante, avec action d'historique.",
+          "desc": "Dropdown to choose a segment (or \"None\" = -1) in a field of the current pacenote, with a history action.",
           "params": {
-            "name": {"type": "string", "desc": "Libellé de la liste."},
-            "fieldName": {"type": "string", "desc": "Champ de la pacenote modifié (contient un ID de segment)."},
-            "tt": {"type": "string|nil", "desc": "Infobulle."}
+            "name": {
+              "type": "string",
+              "desc": "Dropdown label."
+            },
+            "fieldName": {
+              "type": "string",
+              "desc": "Modified pacenote field (contains a segment ID)."
+            },
+            "tt": {
+              "type": "string|nil",
+              "desc": "Tooltip."
+            }
           }
         }
       }

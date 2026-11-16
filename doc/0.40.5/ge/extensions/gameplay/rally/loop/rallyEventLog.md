@@ -1,12 +1,12 @@
 # `gameplay_rally_loop_rallyEventLog`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/loop/rallyEventLog.lua` · VM : Game Engine (GE) · 199 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/loop/rallyEventLog.lua` · VM: Game Engine (GE) · 199 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/loop/rallyEventLog")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/loop/rallyEventLog")` (file under extensions/ but not a regular extension)
 
-Journal des évènements d'une boucle de rallye. Chaque entrée (item) porte un timestamp, un eventId, un eventGroup, un type ('penalty', etc.) et une table data. À chaque ajout, les agrégats sont recalculés : pénalité totale, temps de spéciale total, temps total (spéciales + pénalités) et résumé des pénalités par groupe et par type. Utilisé par rallyLoopManager et rallyAttempts.
+Event log of a rally loop. Each entry (item) carries a timestamp, an eventId, an eventGroup, a type ('penalty', etc.) and a data table. On each addition, the aggregates are recomputed: total penalty, total stage time, total time (stages + penalties) and penalty summary by group and by type. Used by rallyLoopManager and rallyAttempts.
 
-## Exemple
+## Example
 
 ```lua
 local log = require('gameplay_rally_loop_rallyEventLog')()
@@ -14,36 +14,36 @@ log:addItem({eventId='ss1', eventGroup='SS1'}, 12.3, 'penalty', {penaltyType='sp
 print(log:getTotalPenalty())
 ```
 
-## Remarques
+## Notes
 
-- Le module renvoie une fonction constructeur ; les options passées sont transmises à C:init (qui n'en utilise aucune).
-- Seuls les items dont data.stageTimeSecs existe comptent comme temps de spéciale ; seuls les items de type 'penalty' avec data.amount comptent dans la pénalité.
-- Un item sans data provoquerait une erreur dans getStageTimes/_calcTotalStageTime (accès à item.data.stageTimeSecs sans garde).
-- C:clear() vide items et itemsByEventGroup mais ne remet pas aggregatedItems à zéro : les totaux restent ceux d'avant jusqu'au prochain addItem.
+- The module returns a constructor function; the options passed are forwarded to C:init (which uses none).
+- Only items whose data.stageTimeSecs exists count as stage time; only items of type 'penalty' with data.amount count in the penalty.
+- An item without data would cause an error in getStageTimes/_calcTotalStageTime (access to item.data.stageTimeSecs without a guard).
+- C:clear() empties items and itemsByEventGroup but does not reset aggregatedItems: the totals stay as before until the next addItem.
 
-## Classe `C`
+## Class `C`
 
-Journal d'évènements. Champs d'instance : items (liste ordonnée), itemsByEventGroup (table eventGroup -> liste), aggregatedItems (totalPenalty, totalStageTime, totalTime, penaltySummary).
+Event log. Instance fields: items (ordered list), itemsByEventGroup (table eventGroup -> list), aggregatedItems (totalPenalty, totalStageTime, totalTime, penaltySummary).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_loop_rallyEventLog")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_loop_rallyEventLog")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_calcPenaltySummary()` | Construit le résumé des pénalités par groupe puis par penaltyType. | 115 |
-| `C:_calcTotalPenalty()` | Somme data.amount des items de type 'penalty'. | 95 |
-| `C:_calcTotalStageTime()` | Somme data.stageTimeSecs de tous les items. | 105 |
-| `C:addItem(event, timestamp, type, data)` | Ajoute une entrée au journal et au groupe de l'évènement, puis recalcule les agrégats. eventId et eventGroup valent 'unknown' s'ils sont absents. | 19 |
-| `C:clear()` | Vide le journal (items et groupes) et log un message de debug. Les agrégats ne sont pas recalculés. | 185 |
-| `C:getAllItems()` | Renvoie tous les items dans l'ordre d'ajout. | 55 |
-| `C:getItemsByEventGroup(eventGroup)` | Renvoie les items d'un groupe d'évènements (table vide si aucun). | 51 |
-| `C:getItemsByType(type)` | Renvoie les items dont le type correspond. | 59 |
-| `C:getPenaltySummary()` | Résumé des pénalités : {totalPenalty, groups = {{eventGroup, totalPenalty, penalties = {{type, count, amount}}}}}. Les groupes suivent l'ordre de première apparition, les pénalités sont triées par type. | 91 |
-| `C:getStageTimes()` | Renvoie les items qui portent data.stageTimeSecs (un par spéciale terminée). | 69 |
-| `C:getTotalPenalty()` | Pénalité totale en secondes (0 si rien). | 79 |
-| `C:getTotalStageTime()` | Somme des temps de spéciales en secondes. | 83 |
-| `C:getTotalTime()` | Temps de spéciales plus pénalités, en secondes. | 87 |
-| `C:init()` | Initialise les listes vides. Appelé par le constructeur. | 9 |
-| `C:recalculateAggregatedItems()` | Recalcule totalPenalty, totalStageTime, totalTime et penaltySummary. Appelé par addItem. | 43 |
+| `C:_calcPenaltySummary()` | Builds the penalty summary by group then by penaltyType. | 115 |
+| `C:_calcTotalPenalty()` | Sum of data.amount of the items of type 'penalty'. | 95 |
+| `C:_calcTotalStageTime()` | Sum of data.stageTimeSecs of all items. | 105 |
+| `C:addItem(event, timestamp, type, data)` | Adds an entry to the log and to the event's group, then recomputes the aggregates. eventId and eventGroup are 'unknown' if absent. | 19 |
+| `C:clear()` | Empties the log (items and groups) and logs a debug message. The aggregates are not recomputed. | 185 |
+| `C:getAllItems()` | Returns all the items in the order they were added. | 55 |
+| `C:getItemsByEventGroup(eventGroup)` | Returns the items of an event group (empty table if none). | 51 |
+| `C:getItemsByType(type)` | Returns the items whose type matches. | 59 |
+| `C:getPenaltySummary()` | Penalty summary: {totalPenalty, groups = {{eventGroup, totalPenalty, penalties = {{type, count, amount}}}}}. Groups follow the order of first appearance, penalties are sorted by type. | 91 |
+| `C:getStageTimes()` | Returns the items that carry data.stageTimeSecs (one per completed stage). | 69 |
+| `C:getTotalPenalty()` | Total penalty in seconds (0 if none). | 79 |
+| `C:getTotalStageTime()` | Sum of the stage times in seconds. | 83 |
+| `C:getTotalTime()` | Stage times plus penalties, in seconds. | 87 |
+| `C:init()` | Initializes the empty lists. Called by the constructor. | 9 |
+| `C:recalculateAggregatedItems()` | Recomputes totalPenalty, totalStageTime, totalTime and penaltySummary. Called by addItem. | 43 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/loop/rallyEventLog.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/loop/rallyEventLog.lua`.*

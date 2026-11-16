@@ -1,76 +1,155 @@
 {
   "path": "lua/ge/extensions/flowgraph/builder.lua",
-  "module": "Constructeur de nœuds de l'éditeur flowgraph (portage Lua en cours d'une classe C++ de l'exemple blueprints de imgui-node-editor). Il organise le dessin d'un nœud en étapes (begin, header, content, input, middle, output, end), mesure les groupes ImGui de chaque zone, dessine la texture d'en-tête et aligne la largeur du nœud sur la grille de 14 pixels. Utilisé par basenode:draw ; sans intérêt hors de l'éditeur.",
+  "module": "Node builder of the flowgraph editor (ongoing Lua port of a C++ class from the imgui-node-editor blueprints example). It organizes the drawing of a node in stages (begin, header, content, input, middle, output, end), measures the ImGui groups of each area, draws the header texture and aligns the node width to the 14-pixel grid. Used by basenode:draw; of no interest outside the editor.",
   "usage": "local builder = require('/lua/ge/extensions/flowgraph/builder')()\nbuilder:Begin(node.id)\nbuilder:Header(im.ImVec4(0.2,0.4,0.8,1)) ; im.TextUnformatted('Titre') ; builder:EndHeader()\nbuilder:Input(pin) ; im.Text('in') ; builder:EndInput()\nbuilder:Middle() ; im.Text('milieu')\nbuilder:Output(pin) ; im.Text('out') ; builder:EndOutput()\nbuilder:End(node)",
   "notes": [
-    "Le module renvoie une fonction : require(...)(options) crée une instance (la table options, si fournie, devient l'objet) et appelle init().",
-    "La machine à états self.CurrentStage vaut 'invalid' hors dessin. SetStage ouvre/ferme les groupes et ID ImGui et mesure leftPinSize, centerSize, rightPinSize, HeaderRect, ContentRect, NodeRect.",
-    "Bug : createRect().is_empty utilise les variables globales w et h (nil) au lieu de res.w/res.h ; elle renvoie toujours false.",
-    "C:init empile des styles (NodeBorder, NodeRounding) sur ui_flowgraph_editor sans les dépiler dans la même fonction.",
-    "drawDebug vaut true à l'initialisation ; basenode:draw le règle ensuite selon la préférence flowgraph.debug.viewMode == 'geometry'.",
-    "Largeur de la sortie : le padding avant le groupe 'output' arrondit la largeur du nœud à un multiple de 14 px et tient compte de expectedHeaderWidth."
+    "The module returns a function: require(...)(options) creates an instance (the options table, if provided, becomes the object) and calls init().",
+    "The state machine self.CurrentStage is 'invalid' outside drawing. SetStage opens/closes the ImGui groups and IDs and measures leftPinSize, centerSize, rightPinSize, HeaderRect, ContentRect, NodeRect.",
+    "Bug: createRect().is_empty uses the global variables w and h (nil) instead of res.w/res.h; it always returns false.",
+    "C:init pushes styles (NodeBorder, NodeRounding) on ui_flowgraph_editor without popping them in the same function.",
+    "drawDebug is true at initialization; basenode:draw then sets it according to the preference flowgraph.debug.viewMode == 'geometry'.",
+    "Output width: the padding before the 'output' group rounds the node width to a multiple of 14 px and takes expectedHeaderWidth into account."
   ],
   "classes": {
     "C": {
-      "desc": "Instance de builder créée par require('...flowgraph/builder')(opts).",
+      "desc": "Builder instance created by require('...flowgraph/builder')(opts).",
       "functions": {
-        "init": {"desc": "Initialise l'état (stage 'invalid', tailles à 0, texture d'en-tête art/imgui_node_header_alt.png) et empile les styles NodeBorder/NodeRounding.", "internal": true},
+        "init": {
+          "desc": "Initializes the state (stage 'invalid', sizes at 0, header texture art/imgui_node_header_alt.png) and pushes the NodeBorder/NodeRounding styles.",
+          "internal": true
+        },
         "Begin": {
-          "desc": "Commence un nœud : réinitialise l'en-tête, empile NodePadding, appelle BeginNode et passe à l'étape 'begin'.",
-          "params": {"nodeID": {"type": "integer", "desc": "id du nœud dans l'éditeur"}}
-        },
-        "End": {
-          "desc": "Termine le nœud : passe à l'étape 'end', appelle node:customDrawEnd(self) s'il existe, EndNode, dessine la texture d'en-tête arrondie, la ligne de séparation et les rectangles de debug, puis revient à 'invalid'.",
-          "params": {"node": {"type": "table", "desc": "nœud flowgraph dessiné"}}
-        },
-        "Header": {
-          "desc": "Ouvre la zone d'en-tête avec la couleur donnée.",
-          "params": {"color": {"type": "ImVec4", "desc": "couleur d'en-tête"}}
-        },
-        "EndHeader": {"desc": "Ferme l'en-tête et passe à l'étape 'content'."},
-        "Input": {
-          "desc": "Ouvre (si besoin) la zone d'entrées et commence un pin d'entrée.",
-          "params": {"pin": {"type": "table", "desc": "pin à dessiner (utilise pin.id)"}}
-        },
-        "EndInput": {"desc": "Termine le pin d'entrée courant (EndPin)."},
-        "Output": {
-          "desc": "Ouvre (si besoin) la zone de sorties et commence un pin de sortie.",
-          "params": {"pin": {"type": "table", "desc": "pin à dessiner"}}
-        },
-        "EndOutput": {"desc": "Termine le pin de sortie courant (EndPin)."},
-        "BeginPinDynamic": {
-          "desc": "Appelle Input ou Output selon pin.direction ('in' ou 'out').",
-          "params": {"pin": {"type": "table", "desc": "pin avec champ direction"}}
-        },
-        "EndPinDynamic": {
-          "desc": "Appelle EndInput ou EndOutput selon pin.direction.",
-          "params": {"pin": {"type": "table", "desc": "pin avec champ direction"}}
-        },
-        "Middle": {"desc": "Passe à l'étape 'middle' (zone centrale du nœud, pour drawMiddle)."},
-        "expectOutPinWidth": {
-          "desc": "Mémorise la largeur attendue des pins de sortie, utilisée pour aligner le nœud sur la grille.",
-          "params": {"width": {"type": "number", "desc": "largeur en pixels"}}
-        },
-        "setExpectedHeaderSize": {
-          "desc": "Mémorise la largeur attendue de l'en-tête (texte + icônes).",
-          "params": {"width": {"type": "number", "desc": "largeur en pixels"}}
-        },
-        "SetStage": {
-          "desc": "Change l'étape de dessin : ferme les groupes de l'ancienne étape en mesurant leurs rectangles, puis ouvre ceux de la nouvelle. Pour 'output', ajoute un padding pour arrondir à la grille.",
-          "params": {"stage": {"type": "string", "desc": "'begin', 'header', 'content', 'input', 'middle', 'output', 'end' ou 'invalid'"}},
-          "returns": [{"type": "boolean", "desc": "false si l'étape est déjà la courante, sinon true"}]
-        },
-        "Pin": {
-          "desc": "Appelle ui_flowgraph_editor.BeginPin(pin.id, kind).",
+          "desc": "Begins a node: resets the header, pushes NodePadding, calls BeginNode and moves to the 'begin' stage.",
           "params": {
-            "pin": {"type": "table", "desc": "pin à dessiner"},
-            "kind": {"type": "integer", "desc": "PinKind_Input ou PinKind_Output"}
+            "nodeID": {
+              "type": "integer",
+              "desc": "node id in the editor"
+            }
           }
         },
-        "EndPin": {"desc": "Appelle ui_flowgraph_editor.EndPin()."},
+        "End": {
+          "desc": "Ends the node: moves to the 'end' stage, calls node:customDrawEnd(self) if it exists, EndNode, draws the rounded header texture, the separator line and the debug rectangles, then returns to 'invalid'.",
+          "params": {
+            "node": {
+              "type": "table",
+              "desc": "flowgraph node being drawn"
+            }
+          }
+        },
+        "Header": {
+          "desc": "Opens the header area with the given color.",
+          "params": {
+            "color": {
+              "type": "ImVec4",
+              "desc": "header color"
+            }
+          }
+        },
+        "EndHeader": {
+          "desc": "Closes the header and moves to the 'content' stage."
+        },
+        "Input": {
+          "desc": "Opens (if needed) the inputs area and begins an input pin.",
+          "params": {
+            "pin": {
+              "type": "table",
+              "desc": "pin to draw (uses pin.id)"
+            }
+          }
+        },
+        "EndInput": {
+          "desc": "Ends the current input pin (EndPin)."
+        },
+        "Output": {
+          "desc": "Opens (if needed) the outputs area and begins an output pin.",
+          "params": {
+            "pin": {
+              "type": "table",
+              "desc": "pin to draw"
+            }
+          }
+        },
+        "EndOutput": {
+          "desc": "Ends the current output pin (EndPin)."
+        },
+        "BeginPinDynamic": {
+          "desc": "Calls Input or Output according to pin.direction ('in' or 'out').",
+          "params": {
+            "pin": {
+              "type": "table",
+              "desc": "pin with a direction field"
+            }
+          }
+        },
+        "EndPinDynamic": {
+          "desc": "Calls EndInput or EndOutput according to pin.direction.",
+          "params": {
+            "pin": {
+              "type": "table",
+              "desc": "pin with a direction field"
+            }
+          }
+        },
+        "Middle": {
+          "desc": "Moves to the 'middle' stage (central area of the node, for drawMiddle)."
+        },
+        "expectOutPinWidth": {
+          "desc": "Stores the expected width of the output pins, used to align the node to the grid.",
+          "params": {
+            "width": {
+              "type": "number",
+              "desc": "width in pixels"
+            }
+          }
+        },
+        "setExpectedHeaderSize": {
+          "desc": "Stores the expected width of the header (text + icons).",
+          "params": {
+            "width": {
+              "type": "number",
+              "desc": "width in pixels"
+            }
+          }
+        },
+        "SetStage": {
+          "desc": "Changes the drawing stage: closes the groups of the old stage while measuring their rectangles, then opens those of the new one. For 'output', adds padding to round to the grid.",
+          "params": {
+            "stage": {
+              "type": "string",
+              "desc": "'begin', 'header', 'content', 'input', 'middle', 'output', 'end' or 'invalid'"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false if the stage is already the current one, otherwise true"
+            }
+          ]
+        },
+        "Pin": {
+          "desc": "Calls ui_flowgraph_editor.BeginPin(pin.id, kind).",
+          "params": {
+            "pin": {
+              "type": "table",
+              "desc": "pin to draw"
+            },
+            "kind": {
+              "type": "integer",
+              "desc": "PinKind_Input or PinKind_Output"
+            }
+          }
+        },
+        "EndPin": {
+          "desc": "Calls ui_flowgraph_editor.EndPin()."
+        },
         "makeAlignmentPin": {
-          "desc": "Dessine un pin d'entrée factice (dummy de 12 px de haut) servant à aligner les nœuds qui n'ont aucune entrée visible.",
-          "params": {"pin": {"type": "table", "desc": "pin d'alignement (sa direction est forcée à 'in')"}}
+          "desc": "Draws a dummy input pin (12 px high dummy) used to align nodes that have no visible input.",
+          "params": {
+            "pin": {
+              "type": "table",
+              "desc": "alignment pin (its direction is forced to 'in')"
+            }
+          }
         }
       }
     }

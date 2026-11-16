@@ -1,50 +1,50 @@
 # `editor_resourceChecker`
 
-*Fichier : `lua/ge/extensions/editor/resourceChecker.lua` · VM : Game Engine (GE) · 1841 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/resourceChecker.lua` · VM: Game Engine (GE) · 1841 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_resourceChecker` : `extensions.load("editor_resourceChecker")`, puis la globale `editor_resourceChecker`
+**Access:** extension `editor_resourceChecker`: `extensions.load("editor_resourceChecker")`, then the global `editor_resourceChecker`
 
-Fenêtre « Resources Checker » de l'éditeur (menu Assets) pour auditer les ressources du niveau courant. Trois onglets : « Materials Verification » (version des matériaux, doublons, suppression de pid, conversion en PNG, vérification des cartes/fichiers de textures, matériaux manquants ou factices), « Resources Explorer » (TSStatics chargés, ForestItems, terrains, matériaux/meshes/textures utilisés ou non, données de collision) et « Asset Stats » (scan des fichiers, treemap et liste par taille). Permet aussi d'aperçu d'images, de résoudre des doublons et de supprimer des fichiers inutilisés. Les calculs lourds sont faits par resourceUtil (extensions.editor_resourceChecker_resourceUtil) qui renvoie ses résultats par jobData.
+Editor "Resources Checker" window (Assets menu) to audit the current level's resources. Three tabs: "Materials Verification" (material version, duplicates, pid removal, PNG conversion, verification of texture maps/files, missing or dummy materials), "Resources Explorer" (loaded TSStatics, ForestItems, terrains, used or unused materials/meshes/textures, collision data) and "Asset Stats" (file scan, treemap and list by size). Also allows image preview, resolving duplicates and deleting unused files. The heavy computations are done by resourceUtil (extensions.editor_resourceChecker_resourceUtil) which returns its results through jobData.
 
-## Remarques
+## Notes
 
-- resourceUtil est lu à l'initialisation du fichier (extensions.editor_resourceChecker_resourceUtil) : il vaut nil si cette extension n'est pas déjà chargée à ce moment.
-- jobData(type, data) : type 2 stocke le résultat du vérificateur de matériaux, type 3 celui de l'explorateur de ressources ; les autres types sont ignorés.
-- onEditorActivated et onEditorDeactivated sont vides.
-- Des actions de ce panneau suppriment des fichiers du niveau (« Remove selected files », « Remove all unused files ») : à utiliser avec prudence.
+- resourceUtil is read at file initialization (extensions.editor_resourceChecker_resourceUtil): it is nil if that extension is not already loaded at that moment.
+- jobData(type, data): type 2 stores the material checker result, type 3 that of the resources explorer; the other types are ignored.
+- onEditorActivated and onEditorDeactivated are empty.
+- Some actions of this panel delete level files ("Remove selected files", "Remove all unused files"): use with caution.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_resourceChecker.jobData(type, data)` | Reçoit le résultat d'un job asynchrone de resourceUtil et le range pour l'affichage. *(interne)* | 1805 |
-| `editor_resourceChecker.onEditorActivated()` | Hook à l'activation de l'éditeur ; vide. *(interne)* *(hook)* | 1818 |
-| `editor_resourceChecker.onEditorDeactivated()` | Hook à la désactivation de l'éditeur ; vide. *(interne)* *(hook)* | 1822 |
-| `editor_resourceChecker.onEditorGui()` | Hook : dessine la fenêtre à onglets, l'aperçu d'image et le résolveur de doublons. *(interne)* *(hook)* | 1778 |
-| `editor_resourceChecker.onEditorInitialized()` | Hook : ajoute l'entrée de menu « Resources Checker » (groupe Assets) et enregistre les trois fenêtres (principale, aperçu d'image, doublons). *(interne)* *(hook)* | 1826 |
-| `editor_resourceChecker.onWindowMenuItem()` | Affiche la fenêtre « resourceChecker » (appelé par l'entrée de menu). *(interne)* *(hook)* | 17 |
-| `editor_resourceChecker.updateDuplicateTable(data)` | Remplace la table des doublons affichée dans le résolveur de doublons. *(interne)* | 1814 |
+| `editor_resourceChecker.jobData(type, data)` | Receives the result of an asynchronous resourceUtil job and stores it for display. *(internal)* | 1805 |
+| `editor_resourceChecker.onEditorActivated()` | Hook on editor activation; empty. *(internal)* *(hook)* | 1818 |
+| `editor_resourceChecker.onEditorDeactivated()` | Hook on editor deactivation; empty. *(internal)* *(hook)* | 1822 |
+| `editor_resourceChecker.onEditorGui()` | Hook: draws the tabbed window, the image preview and the duplicate resolver. *(internal)* *(hook)* | 1778 |
+| `editor_resourceChecker.onEditorInitialized()` | Hook: adds the "Resources Checker" menu entry (Assets group) and registers the three windows (main, image preview, duplicates). *(internal)* *(hook)* | 1826 |
+| `editor_resourceChecker.onWindowMenuItem()` | Shows the "resourceChecker" window (called by the menu entry). *(internal)* *(hook)* | 17 |
+| `editor_resourceChecker.updateDuplicateTable(data)` | Replaces the duplicates table displayed in the duplicate resolver. *(internal)* | 1814 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_resourceChecker.jobData(type, data)`
 
-Reçoit le résultat d'un job asynchrone de resourceUtil et le range pour l'affichage.
+Receives the result of an asynchronous resourceUtil job and stores it for display.
 
-- `type` (*integer*) : 2 = résultats de vérification des matériaux, 3 = résultats de l'explorateur de ressources.
-- `data` (*any*) : Données du job.
+- `type` (*integer*) : 2 = material verification results, 3 = resources explorer results.
+- `data` (*any*) : Job data.
 
 #### `editor_resourceChecker.updateDuplicateTable(data)`
 
-Remplace la table des doublons affichée dans le résolveur de doublons.
+Replaces the duplicates table displayed in the duplicate resolver.
 
-- `data` (*table*) : Table de doublons calculée par resourceUtil (déduit du code).
+- `data` (*table*) : Duplicates table computed by resourceUtil (inferred from code).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `stat`
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObject`, `getAllObjects`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/resourceChecker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/resourceChecker.lua`.*

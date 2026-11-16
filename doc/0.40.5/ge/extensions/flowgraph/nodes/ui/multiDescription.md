@@ -1,29 +1,29 @@
 # `flowgraph_nodes_ui_multiDescription`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/multiDescription.lua` · VM : Game Engine (GE) · 96 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/multiDescription.lua` · VM: Game Engine (GE) · 96 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/multiDescription")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/multiDescription")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Multi Description » (catégorie repeat_instant) : fusionne plusieurs textes en une description multiple pour Start Screen / End Screen. Entrées « value_i » (any) ; sortie « value » (table de type multiTranslationObject : liste des valeurs).
+Flowgraph node "Multi Description" (category repeat_instant): merges several texts into a multiple description for Start Screen / End Screen. Inputs "value_i" (any); output "value" (table of type multiTranslationObject: list of values).
 
-## Remarques
+## Notes
 
-- drawMiddle utilise self.data.pattern, hérité d'un autre nœud (en pratique nil).
+- drawMiddle uses self.data.pattern, inherited from another node (nil in practice).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(res)` | Restaure count. | 69 |
-| `C:_onSerialize(res)` | Sauvegarde count. | 65 |
-| `C:drawCustomProperties()` | Champ « Count ». | 29 |
-| `C:drawMiddle(builder, style)` | Affiche self.data.pattern (10 premiers caractères) si défini. | 82 |
+| `C:_onDeserialized(res)` | Restores count. | 69 |
+| `C:_onSerialize(res)` | Saves count. | 65 |
+| `C:drawCustomProperties()` | "Count" field. | 29 |
+| `C:drawMiddle(builder, style)` | Displays self.data.pattern (first 10 characters) if defined. | 82 |
 | `C:init()` | count = 1. | 21 |
-| `C:postInit()` | Crée les pins initiaux. | 25 |
-| `C:updatePins(old, new)` | Ajuste le nombre de pins value_i. | 47 |
-| `C:work()` | Construit la liste des valeurs d'entrée et l'écrit sur « value ». | 75 |
+| `C:postInit()` | Creates the initial pins. | 25 |
+| `C:updatePins(old, new)` | Adjusts the number of value_i pins. | 47 |
+| `C:work()` | Builds the list of input values and writes it to "value". | 75 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/multiDescription.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/multiDescription.lua`.*

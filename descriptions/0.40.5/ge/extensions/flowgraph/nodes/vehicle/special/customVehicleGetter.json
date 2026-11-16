@@ -1,48 +1,48 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/special/customVehicleGetter.lua",
-  "module": "Nœud « Get Custom Vehicle Value » (comportement `duration`, `once`). Évalue côté véhicule une expression Lua (`data.fun`, par exemple `electrics.values.ignition` ou `electrics.values.hazard_enabled`, choisie dans une liste ou personnalisée) et renvoie le résultat via `obj:queueGameEngineLua` vers `returnValue`. Pins d'entrée : `flow`, `reset`, `VehId` ; sorties : `flow` (quand la valeur est arrivée, avec un délai de quelques frames), `value` (any), `valBool` (bool : valeur ~= 0 si number, sinon nil).",
+  "module": "Node \"Get Custom Vehicle Value\" (`duration`, `once` behavior). Evaluates on the vehicle side a Lua expression (`data.fun`, for example `electrics.values.ignition` or `electrics.values.hazard_enabled`, chosen from a list or custom) and returns the result via `obj:queueGameEngineLua` to `returnValue`. Input pins: `flow`, `reset`, `VehId`; outputs: `flow` (when the value has arrived, with a delay of a few frames), `value` (any), `valBool` (bool: value ~= 0 if number, otherwise nil).",
   "notes": [
-    "Le pin d'entrée s'appelle `VehId` (majuscule) mais le code lit `self.pinIn.vehId` : le véhicule choisi est donc ignoré et le véhicule joueur est utilisé.",
-    "L'expression est insérée telle quelle dans une commande Lua : à ne pas alimenter avec une source non fiable."
+    "The input pin is named `VehId` (capital) but the code reads `self.pinIn.vehId`: the chosen vehicle is therefore ignored and the player vehicle is used.",
+    "The expression is inserted as is into a Lua command: do not feed it with an untrusted source."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_executionStarted": {
-          "desc": "Efface la valeur reçue.",
+          "desc": "Clears the received value.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Liste déroulante des fonctions prédéfinies et champ de texte pour une fonction personnalisée.",
+          "desc": "Dropdown list of predefined functions and text field for a custom function.",
           "internal": true
         },
         "getCmd": {
-          "desc": "Construit la commande Lua envoyée au véhicule.",
+          "desc": "Builds the Lua command sent to the vehicle.",
           "internal": false,
           "params": {
             "action": {
               "type": "string|nil",
-              "desc": "Action transmise à `buttonPushed`."
+              "desc": "Action passed to `buttonPushed`."
             }
           }
         },
         "init": {
-          "desc": "Constructeur ; `data.fun` = première fonction de la liste.",
+          "desc": "Constructor; `data.fun` = first function of the list.",
           "internal": true
         },
         "returnValue": {
-          "desc": "Appelé en retour par la VM véhicule avec la valeur sérialisée ; la désérialise dans `returnedValue`.",
+          "desc": "Called back by the vehicle VM with the serialized value; deserializes it into `returnedValue`.",
           "internal": false,
           "params": {
             "value": {
               "type": "string",
-              "desc": "Valeur sérialisée renvoyée par la VM véhicule."
+              "desc": "Serialized value returned by the vehicle VM."
             }
           }
         },
         "work": {
-          "desc": "Envoie la commande au véhicule une fois, puis expose `value`/`valBool` dès réception.",
+          "desc": "Sends the command to the vehicle once, then exposes `value`/`valBool` upon reception.",
           "internal": true
         }
       }

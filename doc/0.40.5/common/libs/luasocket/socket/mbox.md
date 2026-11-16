@@ -1,12 +1,12 @@
 # `libs_luasocket_socket_mbox`
 
-*Fichier : `lua/common/libs/luasocket/socket/mbox.lua` · VM : Commun (GE + véhicule) · 93 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/luasocket/socket/mbox.lua` · VM: Common (GE + vehicle) · 93 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/luasocket/socket/mbox")`
+**Access:** `require("libs/luasocket/socket/mbox")`
 
-Analyseur de boîtes aux lettres au format mbox de LuaSocket : découpe un fichier mbox en messages, sépare en-têtes et corps, interprète les en-têtes et l'adresse de l'expéditeur. Utilitaire de courrier électronique sans lien direct avec le jeu.
+LuaSocket mbox mailbox parser: splits an mbox file into messages, separates headers and body, interprets the headers and the sender address. E-mail utility with no direct link to the game.
 
-## Exemple
+## Example
 
 ```lua
 local mbox = require('libs/luasocket/socket/mbox')
@@ -14,84 +14,84 @@ local messages = mbox.parse(contenuMbox)
 print(messages[1].headers.subject, messages[1].body)
 ```
 
-## Remarques
+## Notes
 
-- Bug : split_mbox assigne la globale 'mbox' (variable sans local), ce qui crée/écrase _G.mbox à chaque appel ; de plus, si 'module' existe, le module est lui aussi publié dans la globale mbox.
-- Les noms d'en-têtes de parse_headers sont passés en minuscules ; les en-têtes répétés sont joints par ', '.
+- Bug: split_mbox assigns the global 'mbox' (variable without local), which creates/overwrites _G.mbox on each call; moreover, if 'module' exists, the module is also published in the global mbox.
+- The header names from parse_headers are lowercased; repeated headers are joined with ', '.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_luasocket_socket_mbox.parse(mbox_s)` | Analyse tout un fichier mbox : liste de messages {headers, body}. | 77 |
-| `libs_luasocket_socket_mbox.parse_from(from)` | Extrait nom et adresse d'un champ 'From' du type 'Nom <adresse>' (ou une simple adresse). | 51 |
-| `libs_luasocket_socket_mbox.parse_header(header_s)` | Décompose une ligne d'en-tête 'Nom: valeur'. | 29 |
-| `libs_luasocket_socket_mbox.parse_headers(headers_s)` | Analyse un bloc d'en-têtes en table nom (minuscules) -> valeur. | 36 |
-| `libs_luasocket_socket_mbox.parse_message(message_s)` | Analyse un message : renvoie {headers = table des en-têtes analysés, body = corps}. | 85 |
-| `libs_luasocket_socket_mbox.split_headers(headers_s)` | Découpe un bloc d'en-têtes en lignes, en dépliant les lignes de continuation. | 21 |
-| `libs_luasocket_socket_mbox.split_mbox(mbox_s)` | Découpe un fichier mbox en messages bruts, séparés par les lignes 'From ...' précédées d'une ligne vide. | 63 |
-| `libs_luasocket_socket_mbox.split_message(message_s)` | Sépare un message en en-têtes et corps (premier saut de ligne vide). Convertit CRLF en LF. | 7 |
+| `libs_luasocket_socket_mbox.parse(mbox_s)` | Parses a whole mbox file: list of messages {headers, body}. | 77 |
+| `libs_luasocket_socket_mbox.parse_from(from)` | Extracts name and address from a 'From' field of the form 'Name <address>' (or a plain address). | 51 |
+| `libs_luasocket_socket_mbox.parse_header(header_s)` | Splits a 'Name: value' header line. | 29 |
+| `libs_luasocket_socket_mbox.parse_headers(headers_s)` | Parses a header block into a table name (lowercase) -> value. | 36 |
+| `libs_luasocket_socket_mbox.parse_message(message_s)` | Parses a message: returns {headers = table of parsed headers, body = body}. | 85 |
+| `libs_luasocket_socket_mbox.split_headers(headers_s)` | Splits a header block into lines, unfolding continuation lines. | 21 |
+| `libs_luasocket_socket_mbox.split_mbox(mbox_s)` | Splits an mbox file into raw messages, separated by 'From ...' lines preceded by an empty line. | 63 |
+| `libs_luasocket_socket_mbox.split_message(message_s)` | Splits a message into headers and body (first empty line). Converts CRLF to LF. | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_luasocket_socket_mbox.parse(mbox_s)`
 
-Analyse tout un fichier mbox : liste de messages {headers, body}.
+Parses a whole mbox file: list of messages {headers, body}.
 
-- `mbox_s` (*string*) : Contenu mbox.
-- **renvoie** : table[] Messages.
+- `mbox_s` (*string*) : Mbox contents.
+- **returns**: table[] Messages.
 
 #### `libs_luasocket_socket_mbox.parse_from(from)`
 
-Extrait nom et adresse d'un champ 'From' du type 'Nom <adresse>' (ou une simple adresse).
+Extracts name and address from a 'From' field of the form 'Name <address>' (or a plain address).
 
-- `from` (*string*) : Valeur du champ From.
-- **renvoie** : string Nom (l'adresse si vide, guillemets retirés).
-- **renvoie** : string Adresse.
+- `from` (*string*) : Value of the From field.
+- **returns**: string Name (the address if empty, quotes removed).
+- **returns**: string Address.
 
 #### `libs_luasocket_socket_mbox.parse_header(header_s)`
 
-Décompose une ligne d'en-tête 'Nom: valeur'.
+Splits a 'Name: value' header line.
 
-- `header_s` (*string*) : Ligne d'en-tête.
-- **renvoie** : string|nil Nom.
-- **renvoie** : string|nil Valeur.
+- `header_s` (*string*) : Header line.
+- **returns**: string|nil Name.
+- **returns**: string|nil Value.
 
 #### `libs_luasocket_socket_mbox.parse_headers(headers_s)`
 
-Analyse un bloc d'en-têtes en table nom (minuscules) -> valeur.
+Parses a header block into a table name (lowercase) -> value.
 
-- `headers_s` (*string*) : En-têtes bruts.
-- **renvoie** : table<string, string> En-têtes.
+- `headers_s` (*string*) : Raw headers.
+- **returns**: table<string, string> Headers.
 
 #### `libs_luasocket_socket_mbox.parse_message(message_s)`
 
-Analyse un message : renvoie {headers = table des en-têtes analysés, body = corps}.
+Parses a message: returns {headers = table of parsed headers, body = body}.
 
-- `message_s` (*string*) : Message brut.
-- **renvoie** : table Message.
+- `message_s` (*string*) : Raw message.
+- **returns**: table Message.
 
 #### `libs_luasocket_socket_mbox.split_headers(headers_s)`
 
-Découpe un bloc d'en-têtes en lignes, en dépliant les lignes de continuation.
+Splits a header block into lines, unfolding continuation lines.
 
-- `headers_s` (*string*) : En-têtes bruts.
-- **renvoie** : string[] Une chaîne par en-tête.
+- `headers_s` (*string*) : Raw headers.
+- **returns**: string[] One string per header.
 
 #### `libs_luasocket_socket_mbox.split_mbox(mbox_s)`
 
-Découpe un fichier mbox en messages bruts, séparés par les lignes 'From ...' précédées d'une ligne vide.
+Splits an mbox file into raw messages, separated by 'From ...' lines preceded by an empty line.
 
-- `mbox_s` (*string*) : Contenu du fichier mbox.
-- **renvoie** : string[] Messages bruts.
+- `mbox_s` (*string*) : Contents of the mbox file.
+- **returns**: string[] Raw messages.
 
 #### `libs_luasocket_socket_mbox.split_message(message_s)`
 
-Sépare un message en en-têtes et corps (premier saut de ligne vide). Convertit CRLF en LF.
+Splits a message into headers and body (first empty line). Converts CRLF to LF.
 
-- `message_s` (*string*) : Message brut.
-- **renvoie** : string En-têtes bruts (chaîne vide s'il n'y en a pas).
-- **renvoie** : string Corps.
+- `message_s` (*string*) : Raw message.
+- **returns**: string Raw headers (empty string if there are none).
+- **returns**: string Body.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/luasocket/socket/mbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/luasocket/socket/mbox.lua`.*

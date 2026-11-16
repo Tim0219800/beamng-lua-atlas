@@ -2,243 +2,243 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/statistic.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension de statistiques de jeu. Elle tient des métriques nommées (compteurs, valeurs, minuteurs) enregistrées dans settings/cloud/gameplay_stat.json, et une copie séparée par profil de carrière (career/gameplay_stat.json dans le slot de sauvegarde). Elle mesure le temps passé par mode, niveau et activité, compte des événements (véhicules apparus, resets, changements de véhicule, scénarios finis) et charge les modules de gameplay/statisticModules (watchJturn, watchRollover…) dont la fonction workload est appelée tour à tour sur le véhicule du joueur. Les moddeurs s'en servent pour lire, incrémenter ou observer des métriques.
---- Accès : extension `gameplay_statistic` : `extensions.load("gameplay_statistic")`, puis la globale `gameplay_statistic`
+--- Game statistics extension. It keeps named metrics (counters, values, timers) recorded in settings/cloud/gameplay_stat.json, and a separate copy per career profile (career/gameplay_stat.json in the save slot). It measures time spent per mode, level and activity, counts events (spawned vehicles, resets, vehicle switches, finished scenarios) and loads the gameplay/statisticModules modules (watchJturn, watchRollover...) whose workload function is called in turn on the player's vehicle. Modders use it to read, increment or observe metrics.
+--- Access: extension `gameplay_statistic`: `extensions.load("gameplay_statistic")`, then the global `gameplay_statistic`
 ---@class gameplay_statistic
----@field dependencies string[] Extensions chargées avant : ui_imgui et core_gamestate.
+---@field dependencies string[] Extensions loaded beforehand: ui_imgui and core_gamestate.
 gameplay_statistic = {}
 
---- Ajoute une fonction à la file des surveillances par véhicule. Appelée fn(vehicleObj, vehicleId, dtSim), une fonction par frame en tourniquet.
----Source : lua/ge/extensions/gameplay/statistic.lua:128
----@param fn function Fonction de surveillance.
+--- Adds a function to the per-vehicle watch queue. Called fn(vehicleObj, vehicleId, dtSim), one function per frame in round-robin.
+---Source: lua/ge/extensions/gameplay/statistic.lua:128
+---@param fn function Watch function.
 function gameplay_statistic.addSchedule(fn) end
 
---- Enregistre une fonction appelée quand une métrique change. Signature du callback : fn(name, oldEntry, newEntry) ; newEntry.career indique le contexte carrière. Avec trigger, appelée une seule fois quand la valeur atteint le seuil.
----Source : lua/ge/extensions/gameplay/statistic.lua:356
----@param name string Nom de métrique, ou motif contenant « * ».
----@param trigger number|nil Seuil de valeur ; nil = à chaque changement.
+--- Registers a function called when a metric changes. Callback signature: fn(name, oldEntry, newEntry); newEntry.career indicates the career context. With trigger, called only once when the value reaches the threshold.
+---Source: lua/ge/extensions/gameplay/statistic.lua:356
+---@param name string Metric name, or pattern containing "*".
+---@param trigger number|nil Value threshold; nil = on every change.
 ---@param callbackFunction function Callback.
----@param career boolean|nil Écouter les métriques de carrière.
+---@param career boolean|nil Listen to career metrics.
 function gameplay_statistic.callbackRegister(name, trigger, callbackFunction, career) end
 
---- Retire un callback enregistré (mêmes name, trigger, fonction et career).
----Source : lua/ge/extensions/gameplay/statistic.lua:382
----@param name string Nom ou motif.
----@param trigger number|nil Seuil utilisé à l'enregistrement.
+--- Removes a registered callback (same name, trigger, function and career).
+---Source: lua/ge/extensions/gameplay/statistic.lua:382
+---@param name string Name or pattern.
+---@param trigger number|nil Threshold used at registration.
 ---@param callbackFunction function Callback.
----@param career boolean|nil Contexte carrière.
----@return boolean  true si retiré.
+---@param career boolean|nil Career context.
+---@return boolean  true if removed.
 function gameplay_statistic.callbackRemove(name, trigger, callbackFunction, career) end
 
---- Enregistre le temps écoulé de tous les minuteurs en cours (sans les arrêter).
----Source : lua/ge/extensions/gameplay/statistic.lua:782
+--- Records the elapsed time of all running timers (without stopping them).
+---Source: lua/ge/extensions/gameplay/statistic.lua:782
 function gameplay_statistic.forceTimerUpdate() end
 
---- Ajoute value à la métrique name (la crée si absente), pour les statistiques générales et, si la carrière est active, pour celles de la carrière. Déclenche les callbacks associés.
----Source : lua/ge/extensions/gameplay/statistic.lua:230
----@param name string Nom de la métrique.
----@param value number Valeur à ajouter.
----@param aggregate boolean|nil Suivre aussi last, count, min, max.
+--- Adds value to the metric name (creates it if absent), for general statistics and, if career is active, for career statistics. Triggers the associated callbacks.
+---Source: lua/ge/extensions/gameplay/statistic.lua:230
+---@param name string Metric name.
+---@param value number Value to add.
+---@param aggregate boolean|nil Also track last, count, min, max.
 function gameplay_statistic.metricAdd(name, value, aggregate) end
 
---- Renvoie une copie de l'entrée d'une métrique.
----Source : lua/ge/extensions/gameplay/statistic.lua:293
----@param name string Nom de la métrique.
----@param carreer boolean|nil true pour lire les données de la carrière (si active).
----@return table|nil  {value, …} ou nil si inconnue.
+--- Returns a copy of a metric's entry.
+---Source: lua/ge/extensions/gameplay/statistic.lua:293
+---@param name string Metric name.
+---@param carreer boolean|nil true to read career data (if active).
+---@return table|nil  {value, ...} or nil if unknown.
 function gameplay_statistic.metricGet(name, carreer) end
 
---- Renvoie les copies de toutes les métriques dont le nom correspond à un motif Lua (string.match).
----Source : lua/ge/extensions/gameplay/statistic.lua:307
----@param namePattern string Motif Lua.
----@param carreer boolean|nil true pour la carrière (si active).
----@return table<string, table>  nom -> entrée.
+--- Returns copies of all metrics whose name matches a Lua pattern (string.match).
+---Source: lua/ge/extensions/gameplay/statistic.lua:307
+---@param namePattern string Lua pattern.
+---@param carreer boolean|nil true for career (if active).
+---@return table<string, table>  name -> entry.
 function gameplay_statistic.metricGetMatchPattern(namePattern, carreer) end
 
---- Fixe la valeur de la métrique (général et carrière). Déclenche les callbacks.
----Source : lua/ge/extensions/gameplay/statistic.lua:273
----@param name string Nom de la métrique.
----@param value number Nouvelle valeur.
----@param aggregate boolean|nil Suivre aussi count, min, max.
+--- Sets the metric value (general and career). Triggers the callbacks.
+---Source: lua/ge/extensions/gameplay/statistic.lua:273
+---@param name string Metric name.
+---@param value number New value.
+---@param aggregate boolean|nil Also track count, min, max.
 function gameplay_statistic.metricSet(name, value, aggregate) end
 
---- Hook appelé à l'activation ou désactivation de la carrière : charge ou libère les statistiques du profil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:757
----@param active boolean true si la carrière devient active.
+--- Hook called when career is activated or deactivated: loads or frees the profile statistics.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:757
+---@param active boolean true if career becomes active.
 function gameplay_statistic.onCareerActive(active) end
 
---- Hook appelé à la fin d'un niveau : termine l'activité et sauvegarde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:526
----@param levelPath string Chemin du niveau.
+--- Hook called at the end of a level: ends the activity and saves.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:526
+---@param levelPath string Level path.
 function gameplay_statistic.onClientEndMission(levelPath) end
 
---- Hook appelé après le chargement du niveau : démarre l'activité et recharge les sous-modules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:531
----@param levelPath string Chemin du niveau.
+--- Hook called after the level loads: starts the activity and reloads the submodules.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:531
+---@param levelPath string Level path.
 function gameplay_statistic.onClientPostStartMission(levelPath) end
 
---- Hook appelé au début d'un niveau : redémarre le suivi d'activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:522
----@param levelPath string Chemin du niveau.
+--- Hook called at the start of a level: restarts activity tracking.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:522
+---@param levelPath string Level path.
 function gameplay_statistic.onClientStartMission(levelPath) end
 
---- Hook : recharge le fichier et restaure l'état après rechargement Lua.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:94
----@param data table Données de onSerialize.
+--- Hook: reloads the file and restores the state after a Lua reload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:94
+---@param data table Data from onSerialize.
 function gameplay_statistic.onDeserialized(data) end
 
---- Hook : démarre le minuteur general/editor.time.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:544
+--- Hook: starts the general/editor.time timer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:544
 function gameplay_statistic.onEditorActivated() end
 
---- Hook : arrête le minuteur general/editor.time.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:548
+--- Hook: stops the general/editor.time timer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:548
 function gameplay_statistic.onEditorDeactivated() end
 
---- Hook appelé à la fermeture du jeu : termine l'activité et sauvegarde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:71
+--- Hook called when the game closes: ends the activity and saves.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:71
 function gameplay_statistic.onExit() end
 
---- Hook : charge le fichier de statistiques et les sous-modules statisticModules.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:776
+--- Hook: loads the statistics file and the statisticModules submodules.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:776
 function gameplay_statistic.onExtensionLoaded() end
 
---- Hook : sauvegarde.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:78
+--- Hook: saves.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:78
 function gameplay_statistic.onExtensionUnloaded() end
 
---- Hook appelé au changement d'état de jeu : redémarre le suivi d'activité (ignoré en carrière tant que le temps réel est à 0).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:582
----@param newState table|nil Nouvel état.
+--- Hook called on game state change: restarts activity tracking (ignored in career while real time is 0).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:582
+---@param newState table|nil New state.
 function gameplay_statistic.onGameStateUpdate(newState) end
 
---- Hook : incrémente vehicle/spawned.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:595
+--- Hook: increments vehicle/spawned.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:595
 function gameplay_statistic.onPlayerVehicleCloned() end
 
---- Hook appelé à la sauvegarde du profil de carrière : écrit career/gameplay_stat.json dans le slot.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:747
----@param currentSavePath string Dossier du slot de sauvegarde.
+--- Hook called when the career profile is saved: writes career/gameplay_stat.json in the slot.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:747
+---@param currentSavePath string Save slot folder.
 function gameplay_statistic.onSaveCurrentProfile(currentSavePath) end
 
---- Hook appelé à la fin d'un scénario : incrémente scenario/finished.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:566
----@param scenario table Scénario.
+--- Hook called at the end of a scenario: increments scenario/finished.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:566
+---@param scenario table Scenario.
 function gameplay_statistic.onScenarioFinished(scenario) end
 
---- Hook appelé au chargement d'un scénario : redémarre le suivi d'activité.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:559
----@param scenario table Scénario.
+--- Hook called when a scenario loads: restarts activity tracking.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:559
+---@param scenario table Scenario.
 function gameplay_statistic.onScenarioLoaded(scenario) end
 
---- Hook appelé au redémarrage d'un scénario : incrémente scenario/restarted.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:574
----@param scenario table Scénario.
+--- Hook called when a scenario restarts: increments scenario/restarted.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:574
+---@param scenario table Scenario.
 function gameplay_statistic.onScenarioRestarted(scenario) end
 
---- Hook : sauvegarde puis renvoie l'état (activité, niveau, mode, minuteurs) avant rechargement Lua.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:82
+--- Hook: saves then returns the state (activity, level, mode, timers) before a Lua reload.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:82
 function gameplay_statistic.onSerialize() end
 
---- Hook : incrémente vehicle/spawned.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:598
+--- Hook: increments vehicle/spawned.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:598
 function gameplay_statistic.onSpawnDefaultVehicle() end
 
---- Hook appelé à chaque frame : cumule les temps réel et simulé, exécute une fonction de surveillance du véhicule joueur, dessine la fenêtre de debug si ouverte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:603
----@param dtReal number Temps réel écoulé (s).
----@param dtSim number Temps simulé écoulé (s).
----@param dtRaw number Temps brut écoulé (s).
+--- Hook called every frame: accumulates real and simulated times, runs a watch function on the player vehicle, draws the debug window if open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:603
+---@param dtReal number Elapsed real time (s).
+---@param dtSim number Simulated time elapsed (s).
+---@param dtRaw number Raw elapsed time (s).
 function gameplay_statistic.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook : oublie le véhicule du joueur s'il est détruit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:720
----@param vid integer Identifiant du véhicule.
+--- Hook: forgets the player's vehicle if it is destroyed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:720
+---@param vid integer Vehicle identifier.
 function gameplay_statistic.onVehicleDestroyed(vid) end
 
---- Hook : incrémente vehicle/reset si c'est le véhicule du joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:716
----@param vid integer Identifiant du véhicule.
+--- Hook: increments vehicle/reset if it is the player's vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:716
+---@param vid integer Vehicle identifier.
 function gameplay_statistic.onVehicleResetted(vid) end
 
---- Hook : incrémente vehicle/spawned.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:592
+--- Hook: increments vehicle/spawned.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:592
 function gameplay_statistic.onVehicleSelectorReplaceCurrent() end
 
---- Hook : incrémente vehicle/spawned.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:589
+--- Hook: increments vehicle/spawned.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:589
 function gameplay_statistic.onVehicleSelectorSpawnNew() end
 
---- Hook appelé à l'apparition d'un véhicule ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:701
----@param vid integer Identifiant du véhicule.
----@param v userdata Objet véhicule.
+--- Hook called when a vehicle spawns; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:701
+---@param vid integer Vehicle identifier.
+---@param v userdata Vehicle object.
 function gameplay_statistic.onVehicleSpawned(vid, v) end
 
---- Hook appelé au changement de véhicule : pour le joueur 0, mémorise le véhicule et incrémente vehicle/switch.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:704
----@param oldid integer Ancien véhicule.
----@param newid integer Nouveau véhicule (-1 si aucun).
----@param player integer Indice du joueur.
+--- Hook called on vehicle switch: for player 0, stores the vehicle and increments vehicle/switch.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:704
+---@param oldid integer Old vehicle.
+---@param newid integer New vehicle (-1 if none).
+---@param player integer Player index.
 function gameplay_statistic.onVehicleSwitched(oldid, newid, player) end
 
---- Hook appelé au changement d'état du monde ; ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/statistic.lua:540
----@param worldReadyState integer État.
+--- Hook called on world state change; does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/statistic.lua:540
+---@param worldReadyState integer State.
 function gameplay_statistic.onWorldReadyState(worldReadyState) end
 
---- Retire une fonction de la file des surveillances.
----Source : lua/ge/extensions/gameplay/statistic.lua:133
----@param fn function Fonction ajoutée avec addSchedule.
----@return boolean  true si retirée.
+--- Removes a function from the watch queue.
+---Source: lua/ge/extensions/gameplay/statistic.lua:133
+---@param fn function Function added with addSchedule.
+---@return boolean  true if removed.
 function gameplay_statistic.removeSchedule(fn) end
 
---- Sauvegarde si nécessaire puis envoie à l'interface l'évènement StatisticData avec {general = entrées, career = entrées si active}.
----Source : lua/ge/extensions/gameplay/statistic.lua:735
+--- Saves if needed then sends the StatisticData event to the UI with {general = entries, career = entries if active}.
+---Source: lua/ge/extensions/gameplay/statistic.lua:735
 function gameplay_statistic.sendGUIState() end
 
---- Ouvre ou ferme la fenêtre imgui de debug « gameplay_statistic Debugger » (modules, entrées, callbacks).
----Source : lua/ge/extensions/gameplay/statistic.lua:727
----@param newValue boolean true pour afficher.
+--- Opens or closes the imgui debug window "gameplay_statistic Debugger" (modules, entries, callbacks).
+---Source: lua/ge/extensions/gameplay/statistic.lua:727
+---@param newValue boolean true to show.
 function gameplay_statistic.setDebug(newValue) end
 
---- Démarre un minuteur nommé. Si un minuteur de ce nom tourne déjà, l'appel est ignoré avec un avertissement.
----Source : lua/ge/extensions/gameplay/statistic.lua:323
----@param name string Nom (aussi nom de la métrique alimentée).
----@param increment boolean|nil true (défaut) : ajoute le temps avec metricAdd ; false : metricSet.
----@param aggregate boolean|nil Mode agrégat (défaut false).
----@param useSimTime boolean|nil Utiliser le temps simulé plutôt que le temps réel (défaut false).
+--- Starts a named timer. If a timer with this name is already running, the call is ignored with a warning.
+---Source: lua/ge/extensions/gameplay/statistic.lua:323
+---@param name string Name (also the name of the metric fed).
+---@param increment boolean|nil true (default): adds the time with metricAdd; false: metricSet.
+---@param aggregate boolean|nil Aggregate mode (default false).
+---@param useSimTime boolean|nil Use simulated time rather than real time (default false).
 function gameplay_statistic.timerStart(name, increment, aggregate, useSimTime) end
 
---- Arrête le minuteur et enregistre le temps écoulé dans la métrique.
----Source : lua/ge/extensions/gameplay/statistic.lua:346
----@param name string Nom du minuteur.
----@return number  Secondes écoulées depuis le dernier enregistrement (0 si le minuteur n'existe pas).
+--- Stops the timer and records the elapsed time in the metric.
+---Source: lua/ge/extensions/gameplay/statistic.lua:346
+---@param name string Timer name.
+---@return number  Seconds elapsed since the last recording (0 if the timer does not exist).
 function gameplay_statistic.timerStop(name) end
 

@@ -1,133 +1,133 @@
 # `ui_photomode_presets`
 
-*Fichier : `lua/ge/extensions/ui/photomode/presets.lua` · VM : Game Engine (GE) · 484 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/presets.lua` · VM: Game Engine (GE) · 484 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_presets` : `extensions.load("ui_photomode_presets")`, puis la globale `ui_photomode_presets`
+**Access:** extension `ui_photomode_presets`: `extensions.load("ui_photomode_presets")`, then the global `ui_photomode_presets`
 
-Gestion des presets du mode photo, de trois types : camera, scene et effects. Chaque type est stocké dans un fichier JSON sous settings/photomode/presets/ (camera.json, scene.json, effects.json) ; l'état est capturé ou appliqué par les modules ui_photomode_camera, _scene et _effects. Le module gère aussi un preset temporaire « Defaults » (état capturé au début de la session) et les presets temporaires fournis par ces modules.
+Management of photo mode presets, of three types: camera, scene and effects. Each type is stored in a JSON file under settings/photomode/presets/ (camera.json, scene.json, effects.json); the state is captured or applied by the modules ui_photomode_camera, _scene and _effects. The module also manages a temporary "Defaults" preset (state captured at the start of the session) and the temporary presets provided by these modules.
 
-## Remarques
+## Notes
 
-- Format du fichier : {version=1, presets={...}} ; chaque preset a id (UUID), type, version=1, name, createdAt, updatedAt, origin, data. Les nouveaux presets sont insérés en tête de liste.
-- Le preset par défaut a l'identifiant "__defaults" et temporary=true ; le supprimer ne l'efface pas du disque, il est seulement masqué jusqu'à resetTemporaryPresets.
-- Les presets de caméra de type scène (data.cameraPresetType == "scene") ne sont listés/applicables que dans le niveau dont l'identifiant correspond à data.levelId.
-- Les fonctions renvoient {ok=false, reason=...} en cas d'échec (preset_type_invalid, preset_not_found, preset_capture_failed, preset_write_failed, preset_bundle_invalid). En cas de succès, la table ne contient pas forcément le champ ok.
-- renamePreset et deletePreset ne touchent que les presets du fichier (le renommage d'un preset temporaire renvoie preset_not_found).
-- Nom vide : remplacé par "Untitled preset".
+- File format: {version=1, presets={...}}; each preset has id (UUID), type, version=1, name, createdAt, updatedAt, origin, data. New presets are inserted at the head of the list.
+- The default preset has the identifier "__defaults" and temporary=true; deleting it does not erase it from disk, it is only hidden until resetTemporaryPresets.
+- Scene-type camera presets (data.cameraPresetType == "scene") are listed/applicable only in the level whose identifier matches data.levelId.
+- The functions return {ok=false, reason=...} on failure (preset_type_invalid, preset_not_found, preset_capture_failed, preset_write_failed, preset_bundle_invalid). On success, the table does not necessarily contain the ok field.
+- renamePreset and deletePreset only affect presets in the file (renaming a temporary preset returns preset_not_found).
+- Empty name: replaced by "Untitled preset".
 
-**Dépendances (chargées avant) :** `ui_photomode_camera`, `ui_photomode_scene`, `ui_photomode_effects`
+**Dependencies (loaded first):** `ui_photomode_camera`, `ui_photomode_scene`, `ui_photomode_effects`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_presets.applyPreset(presetType, presetId, options)` | Applique un preset par identifiant (défaut, temporaire ou du fichier) via applyPresetState du module concerné. | 275 |
-| `ui_photomode_presets.applyPresetPayload(presetType, payload)` | Applique directement une charge utile de preset (par exemple importée depuis les métadonnées d'une capture), sans passer par le stockage. | 398 |
-| `ui_photomode_presets.captureSessionDefaultPresets()` | Capture, pour chaque type de preset, l'état par défaut courant (captureDefaultPresetState du module concerné). Sert de contenu au preset « Defaults ». À appeler au début d'une session photo. | 129 |
-| `ui_photomode_presets.deletePreset(presetType, presetId)` | Supprime un preset du fichier ; pour le preset par défaut ou un preset temporaire, le masque seulement. | 320 |
-| `ui_photomode_presets.discoverTemporaryPresets(presetType)` | Active l'inclusion des presets temporaires du module (getTemporaryPresetList) pour ce type, puis renvoie la liste complète. | 228 |
-| `ui_photomode_presets.getScreenshotPresetBundle()` | Capture l'état courant des trois modules sous forme de bundle destiné aux métadonnées d'une capture d'écran. | 462 |
-| `ui_photomode_presets.listPresets(presetType)` | Liste les presets d'un type : le preset par défaut (s'il n'est pas masqué), les presets temporaires déjà découverts, puis ceux du fichier disponibles dans le niveau courant. | 213 |
-| `ui_photomode_presets.renamePreset(presetType, presetId, name)` | Renomme un preset enregistré dans le fichier et met à jour updatedAt. | 373 |
-| `ui_photomode_presets.resetTemporaryPresets()` | Réinitialise l'état temporaire : presets découverts, presets masqués et états par défaut capturés de la session. | 58 |
-| `ui_photomode_presets.saveCurrentPreset(presetType, name, options)` | Capture l'état courant du module du type donné (capturePresetState) et l'enregistre comme nouveau preset en tête du fichier. | 245 |
-| `ui_photomode_presets.savePresetBundle(bundle, namePrefix, origin)` | Enregistre un bundle de presets : pour chacun de camera, scene, effects présent dans le bundle, appelle savePresetPayload avec le nom « <préfixe> <type> ». S'arrête au premier échec. | 436 |
-| `ui_photomode_presets.savePresetPayload(presetType, name, payload, origin)` | Enregistre une charge utile fournie (sans capture de l'état courant) comme nouveau preset en tête du fichier. | 415 |
+| `ui_photomode_presets.applyPreset(presetType, presetId, options)` | Applies a preset by identifier (default, temporary or from the file) via the relevant module's applyPresetState. | 275 |
+| `ui_photomode_presets.applyPresetPayload(presetType, payload)` | Directly applies a preset payload (for example imported from a capture's metadata), without going through storage. | 398 |
+| `ui_photomode_presets.captureSessionDefaultPresets()` | Captures, for each preset type, the current default state (captureDefaultPresetState of the relevant module). Serves as the content of the "Defaults" preset. To be called at the start of a photo session. | 129 |
+| `ui_photomode_presets.deletePreset(presetType, presetId)` | Deletes a preset from the file; for the default preset or a temporary preset, only hides it. | 320 |
+| `ui_photomode_presets.discoverTemporaryPresets(presetType)` | Enables the inclusion of the module's temporary presets (getTemporaryPresetList) for this type, then returns the full list. | 228 |
+| `ui_photomode_presets.getScreenshotPresetBundle()` | Captures the current state of the three modules as a bundle intended for a screenshot's metadata. | 462 |
+| `ui_photomode_presets.listPresets(presetType)` | Lists the presets of a type: the default preset (if not hidden), the temporary presets already discovered, then those from the file available in the current level. | 213 |
+| `ui_photomode_presets.renamePreset(presetType, presetId, name)` | Renames a preset saved in the file and updates updatedAt. | 373 |
+| `ui_photomode_presets.resetTemporaryPresets()` | Resets the temporary state: discovered presets, hidden presets and the session's captured default states. | 58 |
+| `ui_photomode_presets.saveCurrentPreset(presetType, name, options)` | Captures the current state of the module of the given type (capturePresetState) and saves it as a new preset at the head of the file. | 245 |
+| `ui_photomode_presets.savePresetBundle(bundle, namePrefix, origin)` | Saves a preset bundle: for each of camera, scene, effects present in the bundle, calls savePresetPayload with the name "<prefix> <type>". Stops at the first failure. | 436 |
+| `ui_photomode_presets.savePresetPayload(presetType, name, payload, origin)` | Saves a given payload (without capturing the current state) as a new preset at the head of the file. | 415 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_presets.applyPreset(presetType, presetId, options)`
 
-Applique un preset par identifiant (défaut, temporaire ou du fichier) via applyPresetState du module concerné.
+Applies a preset by identifier (default, temporary or from the file) via the relevant module's applyPresetState.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- `presetId` (*string*) : Identifiant du preset, ou "__defaults".
-- `options` (*table|nil*) : Options transmises à applyPresetState ({} par défaut).
-- **renvoie** : table {preset, state} ou {ok=false, reason}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- `presetId` (*string*) : Preset identifier, or "__defaults".
+- `options` (*table|nil*) : Options passed to applyPresetState ({} by default).
+- **returns**: table {preset, state} or {ok=false, reason}.
 
 #### `ui_photomode_presets.applyPresetPayload(presetType, payload)`
 
-Applique directement une charge utile de preset (par exemple importée depuis les métadonnées d'une capture), sans passer par le stockage.
+Directly applies a preset payload (for example imported from a capture's metadata), without going through storage.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- `payload` (*table*) : Table de preset ; si elle contient un champ data, c'est lui qui est appliqué, sinon la table entière.
-- **renvoie** : table {state} ou {ok=false, reason}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- `payload` (*table*) : Preset table; if it contains a data field, that is what is applied, otherwise the whole table.
+- **returns**: table {state} or {ok=false, reason}.
 
 #### `ui_photomode_presets.deletePreset(presetType, presetId)`
 
-Supprime un preset du fichier ; pour le preset par défaut ou un preset temporaire, le masque seulement.
+Deletes a preset from the file; for the default preset or a temporary preset, only hides it.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- `presetId` (*string*) : Identifiant du preset.
-- **renvoie** : table {presets} (liste à jour) ou {ok=false, reason}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- `presetId` (*string*) : Preset identifier.
+- **returns**: table {presets} (updated list) or {ok=false, reason}.
 
 #### `ui_photomode_presets.discoverTemporaryPresets(presetType)`
 
-Active l'inclusion des presets temporaires du module (getTemporaryPresetList) pour ce type, puis renvoie la liste complète.
+Enables the inclusion of the module's temporary presets (getTemporaryPresetList) for this type, then returns the full list.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- **renvoie** : table {presets=table[]} ou {ok=false, reason, presets={}}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- **returns**: table {presets=table[]} or {ok=false, reason, presets={}}.
 
 #### `ui_photomode_presets.getScreenshotPresetBundle()`
 
-Capture l'état courant des trois modules sous forme de bundle destiné aux métadonnées d'une capture d'écran.
+Captures the current state of the three modules as a bundle intended for a screenshot's metadata.
 
-- **renvoie** : table {schemaVersion=1, camera={version,type,data}, scene={...}, effects={...}}.
+- **returns**: table {schemaVersion=1, camera={version,type,data}, scene={...}, effects={...}}.
 
 #### `ui_photomode_presets.listPresets(presetType)`
 
-Liste les presets d'un type : le preset par défaut (s'il n'est pas masqué), les presets temporaires déjà découverts, puis ceux du fichier disponibles dans le niveau courant.
+Lists the presets of a type: the default preset (if not hidden), the temporary presets already discovered, then those from the file available in the current level.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- **renvoie** : table {presets=table[]} ou {ok=false, reason, presets={}}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- **returns**: table {presets=table[]} or {ok=false, reason, presets={}}.
 
 #### `ui_photomode_presets.renamePreset(presetType, presetId, name)`
 
-Renomme un preset enregistré dans le fichier et met à jour updatedAt.
+Renames a preset saved in the file and updates updatedAt.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- `presetId` (*string*) : Identifiant du preset.
-- `name` (*string*) : Nouveau nom.
-- **renvoie** : table {preset, presets} ou {ok=false, reason}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- `presetId` (*string*) : Preset identifier.
+- `name` (*string*) : New name.
+- **returns**: table {preset, presets} or {ok=false, reason}.
 
 #### `ui_photomode_presets.saveCurrentPreset(presetType, name, options)`
 
-Capture l'état courant du module du type donné (capturePresetState) et l'enregistre comme nouveau preset en tête du fichier.
+Captures the current state of the module of the given type (capturePresetState) and saves it as a new preset at the head of the file.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- `name` (*string*) : Nom du preset.
-- `options` (*table|nil*) : Options passées à capturePresetState ({} par défaut).
-- **renvoie** : table {preset, presets} ou {ok=false, reason}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- `name` (*string*) : Preset name.
+- `options` (*table|nil*) : Options passed to capturePresetState ({} by default).
+- **returns**: table {preset, presets} or {ok=false, reason}.
 
 #### `ui_photomode_presets.savePresetBundle(bundle, namePrefix, origin)`
 
-Enregistre un bundle de presets : pour chacun de camera, scene, effects présent dans le bundle, appelle savePresetPayload avec le nom « <préfixe> <type> ». S'arrête au premier échec.
+Saves a preset bundle: for each of camera, scene, effects present in the bundle, calls savePresetPayload with the name "<prefix> <type>". Stops at the first failure.
 
 - `bundle` (*table*) : Table {camera=..., scene=..., effects=...}.
-- `namePrefix` (*string*) : Préfixe des noms.
-- `origin` (*any*) : Provenance transmise à chaque preset.
-- **renvoie** : table {imported={camera=preset, scene=preset, effects=preset}} ou {ok=false, reason}.
+- `namePrefix` (*string*) : Name prefix.
+- `origin` (*any*) : Provenance passed to each preset.
+- **returns**: table {imported={camera=preset, scene=preset, effects=preset}} or {ok=false, reason}.
 
 #### `ui_photomode_presets.savePresetPayload(presetType, name, payload, origin)`
 
-Enregistre une charge utile fournie (sans capture de l'état courant) comme nouveau preset en tête du fichier.
+Saves a given payload (without capturing the current state) as a new preset at the head of the file.
 
-- `presetType` (*string*) : "camera", "scene" ou "effects".
-- `name` (*string*) : Nom du preset.
-- `payload` (*table*) : Données du preset (champ data ou table entière).
-- `origin` (*any*) : Provenance stockée dans le champ origin du preset (déduit du code).
-- **renvoie** : table {preset, presets} ou {ok=false, reason}.
+- `presetType` (*string*) : "camera", "scene" or "effects".
+- `name` (*string*) : Preset name.
+- `payload` (*table*) : Preset data (data field or whole table).
+- `origin` (*any*) : Provenance stored in the preset's origin field (inferred from code).
+- **returns**: table {preset, presets} or {ok=false, reason}.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : ui_photomode_camera, ui_photomode_scene, ui_photomode_effects. |
+| `dependencies` | table<integer, string> | Extensions loaded before: ui_photomode_camera, ui_photomode_scene, ui_photomode_effects. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 - `FS:` `directoryCreate`, `directoryExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/presets.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/presets.lua`.*

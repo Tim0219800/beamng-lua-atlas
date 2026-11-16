@@ -1,62 +1,99 @@
 {
   "path": "lua/ge/extensions/gameplay/crawl/debug.lua",
-  "module": "Fenêtre de debug ImGui « Crawl Debug Window » du mode crawl, réservée aux développeurs (désactivée par défaut). Une fois activée, elle affiche pour le premier crawler actif : infos du parcours, position et vitesse du véhicule, statut dans la zone, points de pénalité (seuil DNF à 50), cooldowns d'infractions, point de récupération, point de sortie de zone (DNF à 10 m), liste des noeuds avec temps, journal des 20 derniers évènements et statut du parcours. Les données viennent de gameplay_crawl_utils.getCrawlState.",
+  "module": "ImGui debug window \"Crawl Debug Window\" of crawl mode, reserved for developers (disabled by default). Once enabled, it displays for the first active crawler: trail info, vehicle position and speed, status in the zone, penalty points (DNF threshold 50), infraction cooldowns, recovery point, zone exit point (DNF at 10 m), list of nodes with times, log of the last 20 events and trail status. The data comes from gameplay_crawl_utils.getCrawlState.",
   "usage": "gameplay_crawl_debug.setEnableDebugWindow(true)",
   "notes": [
-    "La fenêtre s'ouvre à onCrawlStarted seulement si enableDebugWindow est vrai.",
-    "Dans drawDebugWindow, im.Begin reçoit une nouvelle im.BoolPtr(debugWindowOpen) à chaque image : le bouton de fermeture de la fenêtre ne modifie donc pas debugWindowOpen (la fermeture n'est détectée que par la valeur de retour).",
-    "getBoundaryStatus lit gameplay_crawl_general.activeTrail.boundary et appelle boundary:containsPoint2D.",
-    "Seul le premier crawler actif trouvé est affiché."
+    "The window opens on onCrawlStarted only if enableDebugWindow is true.",
+    "In drawDebugWindow, im.Begin receives a new im.BoolPtr(debugWindowOpen) every frame: the window's close button therefore does not modify debugWindowOpen (closing is only detected through the return value).",
+    "getBoundaryStatus reads gameplay_crawl_general.activeTrail.boundary and calls boundary:containsPoint2D.",
+    "Only the first active crawler found is displayed."
   ],
   "functions": {
     "setEnableDebugWindow": {
-      "desc": "Active ou désactive la fenêtre de debug ; la désactivation la ferme et vide les données.",
-      "params": {"enabled": {"type": "boolean", "desc": "true pour activer."}},
+      "desc": "Enables or disables the debug window; disabling it closes it and empties the data.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "true to enable."
+        }
+      },
       "internal": false
     },
     "getEnableDebugWindow": {
-      "desc": "Indique si la fenêtre de debug est activée.",
-      "returns": [{"type": "boolean", "desc": "État."}],
+      "desc": "Tells whether the debug window is enabled.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "State."
+        }
+      ],
       "internal": false
     },
     "clearDebugData": {
-      "desc": "Vide les données affichées.",
+      "desc": "Empties the displayed data.",
       "internal": false
     },
     "onCrawlStarted": {
-      "desc": "Hook appelé au début d'un crawl : ouvre la fenêtre si le debug est activé.",
-      "params": {"eventData": {"type": "table", "desc": "Données de l'évènement (non utilisées)."}},
+      "desc": "Hook called at the start of a crawl: opens the window if debug is enabled.",
+      "params": {
+        "eventData": {
+          "type": "table",
+          "desc": "Event data (unused)."
+        }
+      },
       "internal": true
     },
     "onCrawlComplete": {
-      "desc": "Hook appelé à la fin d'un crawl : marque les données comme terminées (isFinished).",
-      "params": {"eventData": {"type": "table", "desc": "Données de l'évènement (non utilisées)."}},
+      "desc": "Hook called at the end of a crawl: marks the data as finished (isFinished).",
+      "params": {
+        "eventData": {
+          "type": "table",
+          "desc": "Event data (unused)."
+        }
+      },
       "internal": true
     },
     "onCrawlDisqualified": {
-      "desc": "Hook appelé en cas de disqualification : marque les données comme terminées et disqualifiées.",
-      "params": {"eventData": {"type": "table", "desc": "Données de l'évènement (non utilisées)."}},
+      "desc": "Hook called on disqualification: marks the data as finished and disqualified.",
+      "params": {
+        "eventData": {
+          "type": "table",
+          "desc": "Event data (unused)."
+        }
+      },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension : réinitialise l'état de la fenêtre.",
+      "desc": "Hook called when the extension loads: resets the window state.",
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement de l'extension : réinitialise l'état de la fenêtre.",
+      "desc": "Hook called when the extension unloads: resets the window state.",
       "internal": true
     },
     "onPreRender": {
-      "desc": "Hook appelé avant le rendu : met à jour les données depuis le premier crawler actif et dessine la fenêtre.",
+      "desc": "Hook called before rendering: updates the data from the first active crawler and draws the window.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
       },
       "internal": true
     }
   },
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : {'ui_imgui'}."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: {'ui_imgui'}."
+    }
   }
 }

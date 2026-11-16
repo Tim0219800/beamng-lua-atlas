@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes.lua",
+  "module": "Registre racine des routes du routeur UI : l'unique point d'entrée explicite pour enregistrer les familles de routes de premier niveau. Chaque entrée `{ include = \"nom\" }` monte le module de routes/nom.lua (Root + Children). Il n'y a pas de découverte automatique par le système de fichiers : un module n'est enregistré que s'il est listé ici (ou ajouté à l'exécution via routeManager.addVueRoutes / registerModRoutes). Lu par routeManager.",
+  "notes": [
+    "Global.include désigne le module des routes globales à un seul segment (play, /mainmenu…), ici « global ».",
+    "La liste contient « livery » alors qu'aucun fichier routes/livery.lua n'est présent dans 0.40.5 ; seul « liveries » existe. Cette entrée est ignorée avec un avertissement."
+  ],
+  "fields": {
+    "Children": {"type": "table[]", "desc": "Liste d'entrées `{ include = \"module\" }` : bigmap, campaign, career, debug, default, firstDrive, freeroamLevels, freeroamWizard, garage, legal, livery, liveries, menu, mission, mods, multiseat, multiplayer, options, pause, radial, scenario, taxi, trackBuilder."},
+    "Global": {"type": "table", "desc": "`{ include = \"global\" }` : module des routes globales plates (play, /mainmenu, etc.)."}
+  }
+}

@@ -1,40 +1,62 @@
 {
   "path": "lua/ge/extensions/telemetry/trackers/career.lua",
-  "module": "Suiveur de télémétrie du mode carrière : mesure la durée pendant laquelle une carrière est jouée (activité « careerActive » avec l'état de la sauvegarde à l'ouverture : argent, beamXP, bons, nombre de véhicules, nouvelle sauvegarde, tutoriel) et enregistre les véhicules achetés (vehicleAddedToInventory) et vendus (vehicleSold). Il passe par telemetry_core.startActivity/endActivity/addEvent.",
+  "module": "Career mode telemetry tracker: measures how long a career is played (activity \"careerActive\" with the save state at opening: money, beamXP, vouchers, vehicle count, new save, tutorial) and records the vehicles bought (vehicleAddedToInventory) and sold (vehicleSold). It goes through telemetry_core.startActivity/endActivity/addEvent.",
   "notes": [
-    "Extension en déchargement manuel ; lors d'un rechargement Lua, onExtensionUnloaded ferme l'activité en cours (sinon elle n'aurait pas de durée).",
-    "onBeforeVehicleSell ne fait rien si l'inventaire ne contient pas inventoryId."
+    "Extension in manual unload; on a Lua reload, onExtensionUnloaded closes the activity in progress (otherwise it would have no duration).",
+    "onBeforeVehicleSell does nothing if the inventory does not contain inventoryId."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "telemetry_core."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "telemetry_core."
+    }
   },
   "functions": {
     "onCareerActive": {
-      "desc": "Hook appelé quand la carrière devient active ou inactive : démarre ou termine l'activité careerActive (avec les attributs du joueur au démarrage).",
-      "params": {"active": {"type": "boolean", "desc": "true si la carrière démarre."}, "newSave": {"type": "boolean", "desc": "true si c'est une nouvelle sauvegarde."}},
+      "desc": "Hook called when the career becomes active or inactive: starts or ends the careerActive activity (with the player's attributes at start).",
+      "params": {
+        "active": {
+          "type": "boolean",
+          "desc": "true if the career is starting."
+        },
+        "newSave": {
+          "type": "boolean",
+          "desc": "true if it is a new save."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onVehicleAddedToInventory": {
-      "desc": "Hook appelé à l'ajout d'un véhicule à l'inventaire : enregistre modèle, nom et prix d'achat.",
-      "params": {"data": {"type": "table", "desc": "Contient vehicleInfo (model_key, Name) et purchaseData (prices)."}},
+      "desc": "Hook called when a vehicle is added to the inventory: records model, name and purchase price.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Contains vehicleInfo (model_key, Name) and purchaseData (prices)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onBeforeVehicleSell": {
-      "desc": "Hook appelé avant la vente d'un véhicule : enregistre modèle, nom et prix de vente.",
-      "params": {"data": {"type": "table", "desc": "Contient inventoryId et price."}},
+      "desc": "Hook called before a vehicle is sold: records model, name and sale price.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Contains inventoryId and price."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement : passe l'extension en déchargement manuel.",
+      "desc": "Hook called on load: sets the extension to manual unload.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onExtensionUnloaded": {
-      "desc": "Hook appelé au déchargement : un rechargement Lua détruit les suiveurs sans onExit, donc l'activité carrière est fermée ici aussi.",
+      "desc": "Hook called on unload: a Lua reload destroys the trackers without onExit, so the career activity is also closed here.",
       "params": {},
       "returns": [],
       "internal": true

@@ -2,175 +2,175 @@
 -- tim19Atlas stub generated from lua/ge/server/commands.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Commandes de caméra et de placement du joueur, appelées en grande partie par le côté C++ et les actions d'entrée : basculer entre caméra de jeu et caméra libre, vitesse de la caméra libre, déposer la caméra sur le véhicule ou le véhicule à la position de la caméra, lire/écrire la transformée de la caméra libre en JSON. Contient aussi d'anciennes fonctions globales (getCameraPosition, setCameraFov…) conservées pour compatibilité, qui redirigent vers core_camera en journalisant un avertissement de dépréciation (une fois par fonction).
---- Accès : globale `commands`
+--- Camera and player placement commands, largely called by the C++ side and the input actions: switching between the game camera and the free camera, free camera speed, dropping the camera on the vehicle or the vehicle at the camera position, reading/writing the free camera transform as JSON. It also contains old global functions (getCameraPosition, setCameraFov…) kept for compatibility, which redirect to core_camera while logging a deprecation warning (once per function).
+--- Access: global `commands`
 ---@class commands
----@field getGame any Rétrocompatibilité ; vaut nil si la globale getGame n'existe pas.
----@field onSettingsChanged any Exporté depuis une variable non définie dans ce fichier : vaut nil (voir notes).
+---@field getGame any Backward compatibility; is nil if the global getGame does not exist.
+---@field onSettingsChanged any Exported from a variable not defined in this file: is nil (see notes).
 commands = {}
 
---- Applique un plan : déplace le cluster de nœuds du véhicule (setClusterPosRelRot), annule sa vitesse et met à jour la transformée d'origine.
----Source : lua/ge/server/commands.lua:128
----@param player integer|nil indice du joueur (non utilisé)
----@param plan table plan retourné par planDropPlayerAtCameraNoReset
----@return boolean  faux si le véhicule du plan n'existe plus
+--- Applies a plan: moves the vehicle's node cluster (setClusterPosRelRot), cancels its velocity and updates the origin transform.
+---Source: lua/ge/server/commands.lua:128
+---@param player integer|nil player index (unused)
+---@param plan table plan returned by planDropPlayerAtCameraNoReset
+---@return boolean  false if the plan's vehicle no longer exists
 function commands.applyDropPlayerAtCameraNoResetPlan(player, plan) end
 
---- Modifie la vitesse normale de la caméra (typiquement Alt + molette).
----Source : lua/ge/server/commands.lua:53
----@param val number variation de vitesse (transmise à core_camera.changeSpeed)
+--- Changes the camera's normal speed (typically Alt + wheel).
+---Source: lua/ge/server/commands.lua:53
+---@param val number speed change (passed to core_camera.changeSpeed)
 function commands.changeCameraSpeed(val) end
 
---- Passe en caméra libre et la place à la position et orientation du véhicule du joueur.
----Source : lua/ge/server/commands.lua:73
----@param player integer|nil indice du joueur
+--- Switches to the free camera and places it at the position and orientation of the player's vehicle.
+---Source: lua/ge/server/commands.lua:73
+---@param player integer|nil player index
 function commands.dropCameraAtPlayer(player) end
 
---- Téléporte le véhicule du joueur à la position de la caméra, orienté selon la direction horizontale de la caméra, puis repasse en caméra de jeu (la caméra bigMap devient orbit) et la réinitialise.
----Source : lua/ge/server/commands.lua:82
----@param player integer|nil indice du joueur
+--- Teleports the player's vehicle to the camera position, oriented along the camera's horizontal direction, then switches back to the game camera (the bigMap camera becomes orbit) and resets it.
+---Source: lua/ge/server/commands.lua:82
+---@param player integer|nil player index
 function commands.dropPlayerAtCamera(player) end
 
---- Dépose le véhicule à la caméra sans reset. Si multiplayer_vehicleSync existe, délègue la demande à celui-ci ; sinon appelle dropPlayerAtCameraNoResetImpl.
----Source : lua/ge/server/commands.lua:148
----@param player integer|nil indice du joueur
+--- Drops the vehicle at the camera without reset. If multiplayer_vehicleSync exists, delegates the request to it; otherwise calls dropPlayerAtCameraNoResetImpl.
+---Source: lua/ge/server/commands.lua:148
+---@param player integer|nil player index
 function commands.dropPlayerAtCameraNoReset(player) end
 
---- Planifie puis applique le dépôt sans reset, puis remet la caméra en mode jeu.
----Source : lua/ge/server/commands.lua:140
----@param player integer|nil indice du joueur
----@return table|nil  le plan appliqué, ou nil en cas d'échec
+--- Plans then applies the drop without reset, then puts the camera back in game mode.
+---Source: lua/ge/server/commands.lua:140
+---@param player integer|nil player index
+---@return table|nil  the applied plan, or nil on failure
 function commands.dropPlayerAtCameraNoResetImpl(player) end
 
---- Retourne l'objet de scène « gameCamera » (rétrocompatibilité).
----Source : lua/ge/server/commands.lua:31
----@return table|nil  objet gameCamera
+--- Returns the "gameCamera" scene object (backward compatibility).
+---Source: lua/ge/server/commands.lua:31
+---@return table|nil  gameCamera object
 function commands.getCamera() end
 
---- Retourne la position et la rotation de la caméra sous forme de chaîne JSON.
----Source : lua/ge/server/commands.lua:164
----@return string  '[x, y, z, qx, qy, qz, qw]' (position à 2 décimales)
+--- Returns the camera's position and rotation as a JSON string.
+---Source: lua/ge/server/commands.lua:164
+---@return string  '[x, y, z, qx, qy, qz, qw]' (position to 2 decimals)
 function commands.getCameraTransformJson() end
 
---- Initialise la caméra principale : vide les entrées de core_camera, retrouve l'objet « gameCamera », l'attache à la vue 'main', émet le hook onCameraHandlerSet et remet la configuration de caméra par défaut.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/server/commands.lua:8
----@return table|nil  objet de la scène gameCamera, ou nil s'il est introuvable
+--- Initializes the main camera: empties the core_camera inputs, finds the "gameCamera" object, attaches it to the 'main' view, emits the onCameraHandlerSet hook and resets the camera configuration to default.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/server/commands.lua:8
+---@return table|nil  gameCamera scene object, or nil if not found
 function commands.initCamera() end
 
---- Indique si la caméra active du joueur est « free ».
----Source : lua/ge/server/commands.lua:27
----@param player integer|nil indice du joueur
----@return boolean  vrai si la caméra libre est active
+--- Indicates whether the player's active camera is "free".
+---Source: lua/ge/server/commands.lua:27
+---@param player integer|nil player index
+---@return boolean  true if the free camera is active
 function commands.isFreeCamera(player) end
 
---- Hook appelé au début d'une saisie de nœud (node grab) : émet onNodegrab(true), mémorise si la caméra était libre et, si la saisie ne passe pas par le véhicule joueur, bascule en caméra libre.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/server/commands.lua:58
----@param usingPlayerVehicle boolean vrai si la saisie utilise le véhicule du joueur
+--- Hook called at the start of a node grab: emits onNodegrab(true), remembers whether the camera was free and, if the grab does not go through the player vehicle, switches to the free camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/server/commands.lua:58
+---@param usingPlayerVehicle boolean true if the grab uses the player's vehicle
 function commands.onNodegrabStart(usingPlayerVehicle) end
 
---- Hook appelé à la fin de la saisie de nœud : émet onNodegrab(false) et revient en caméra de jeu si la caméra libre avait été activée par la saisie.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/server/commands.lua:66
----@param usingPlayerVehicle boolean vrai si la saisie utilisait le véhicule du joueur (non utilisé)
+--- Hook called at the end of the node grab: emits onNodegrab(false) and returns to the game camera if the free camera had been activated by the grab.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/server/commands.lua:66
+---@param usingPlayerVehicle boolean true if the grab used the player's vehicle (unused)
 function commands.onNodegrabStop(usingPlayerVehicle) end
 
---- Calcule un plan de dépôt du véhicule à la position de la caméra sans le réinitialiser (la déformation est conservée).
----Source : lua/ge/server/commands.lua:106
----@param player integer|nil indice du joueur
----@return table|nil  plan {vid, nodeId, clusterId, x, y, z, rx, ry, rz, rw, origin*}, ou nil si pas de véhicule
+--- Computes a plan for dropping the vehicle at the camera position without resetting it (the deformation is kept).
+---Source: lua/ge/server/commands.lua:106
+---@param player integer|nil player index
+---@return table|nil  plan {vid, nodeId, clusterId, x, y, z, rx, ry, rz, rw, origin*}, or nil if no vehicle
 function commands.planDropPlayerAtCameraNoReset(player) end
 
---- Repasse en caméra de jeu (bigMap devient orbit) et réinitialise la caméra du joueur ; étape finale du dépôt sans reset.
----Source : lua/ge/server/commands.lua:98
----@param player integer|nil indice du joueur
+--- Switches back to the game camera (bigMap becomes orbit) and resets the player's camera; final step of the drop without reset.
+---Source: lua/ge/server/commands.lua:98
+---@param player integer|nil player index
 function commands.resetDropPlayerAtCameraNoResetCamera(player) end
 
---- Alias de compatibilité de setFreeCamera. Appelée par le C++.
----Source : lua/ge/server/commands.lua:40
----@param player integer|nil indice du joueur
+--- Compatibility alias of setFreeCamera. Called by the C++.
+---Source: lua/ge/server/commands.lua:40
+---@param player integer|nil player index
 function commands.setCameraFree(player) end
 
---- Alias de compatibilité de setGameCamera.
----Source : lua/ge/server/commands.lua:33
----@param player integer|nil indice du joueur
+--- Compatibility alias of setGameCamera.
+---Source: lua/ge/server/commands.lua:33
+---@param player integer|nil player index
 function commands.setCameraPlayer(player) end
 
---- Active la caméra libre (initialisée à la transformée actuelle de la vue), la réinitialise et émet onCameraToggled (FreeCam) pour la vue principale. Appelée par le C++.
----Source : lua/ge/server/commands.lua:40
----@param player integer|nil indice du joueur
+--- Activates the free camera (initialized to the view's current transform), resets it and emits onCameraToggled (FreeCam) for the main view. Called by the C++.
+---Source: lua/ge/server/commands.lua:40
+---@param player integer|nil player index
 function commands.setFreeCamera(player) end
 
---- Active la caméra libre puis lui applique la transformée décrite par une chaîne JSON de 7 nombres (x, y, z, qx, qy, qz, qw). Ignore silencieusement un JSON invalide ou incomplet.
----Source : lua/ge/server/commands.lua:170
----@param json string chaîne produite par getCameraTransformJson
+--- Activates the free camera then applies to it the transform described by a JSON string of 7 numbers (x, y, z, qx, qy, qz, qw). Silently ignores invalid or incomplete JSON.
+---Source: lua/ge/server/commands.lua:170
+---@param json string string produced by getCameraTransformJson
 function commands.setFreeCameraTransformJson(json) end
 
---- Repasse en caméra de jeu pour la vue du joueur ; émet onCameraToggled (GameCam) pour la vue principale. Alias : setCameraPlayer.
----Source : lua/ge/server/commands.lua:33
----@param player integer|nil indice du joueur
+--- Switches back to the game camera for the player's view; emits onCameraToggled (GameCam) for the main view. Alias: setCameraPlayer.
+---Source: lua/ge/server/commands.lua:33
+---@param player integer|nil player index
 function commands.setGameCamera(player) end
 
---- Bascule la caméra : en écran partagé, bascule la caméra libre de la vue du joueur ; sinon passe au groupe de caméras suivant (core_camera.cycleCameraGroup, Maj+C).
----Source : lua/ge/server/commands.lua:156
----@param player integer|nil indice du joueur (0 par défaut)
+--- Toggles the camera: in split screen, toggles the free camera of the player's view; otherwise moves to the next camera group (core_camera.cycleCameraGroup, Shift+C).
+---Source: lua/ge/server/commands.lua:156
+---@param player integer|nil player index (0 by default)
 function commands.toggleCamera(player) end
 
---- Active ou coupe le modificateur de vitesse rapide de la caméra libre (typiquement la touche Maj).
----Source : lua/ge/server/commands.lua:48
----@param enabled boolean vrai pour accélérer
+--- Enables or disables the free camera's fast speed modifier (typically the Shift key).
+---Source: lua/ge/server/commands.lua:48
+---@param enabled boolean true to speed up
 function commands.toggleFastSpeed(enabled) end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getForward.
----Source : lua/ge/server/commands.lua:222
+--- (Global function, not in M.) Deprecated: use core_camera.getForward.
+---Source: lua/ge/server/commands.lua:222
 function getCameraForward() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovDeg (retourne des degrés).
----Source : lua/ge/server/commands.lua:226
+--- (Global function, not in M.) Deprecated: use core_camera.getFovDeg (returns degrees).
+---Source: lua/ge/server/commands.lua:226
 function getCameraFov() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovDeg.
----Source : lua/ge/server/commands.lua:224
+--- (Global function, not in M.) Deprecated: use core_camera.getFovDeg.
+---Source: lua/ge/server/commands.lua:224
 function getCameraFovDeg() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getFovRad.
----Source : lua/ge/server/commands.lua:225
+--- (Global function, not in M.) Deprecated: use core_camera.getFovRad.
+---Source: lua/ge/server/commands.lua:225
 function getCameraFovRad() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getPosition.
----Source : lua/ge/server/commands.lua:219
+--- (Global function, not in M.) Deprecated: use core_camera.getPosition.
+---Source: lua/ge/server/commands.lua:219
 function getCameraPosition() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getQuat.
----Source : lua/ge/server/commands.lua:223
+--- (Global function, not in M.) Deprecated: use core_camera.getQuat.
+---Source: lua/ge/server/commands.lua:223
 function getCameraQuat() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getRight.
----Source : lua/ge/server/commands.lua:221
+--- (Global function, not in M.) Deprecated: use core_camera.getRight.
+---Source: lua/ge/server/commands.lua:221
 function getCameraRight() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.getUp.
----Source : lua/ge/server/commands.lua:220
+--- (Global function, not in M.) Deprecated: use core_camera.getUp.
+---Source: lua/ge/server/commands.lua:220
 function getCameraUp() end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le FOV en degrés si la caméra libre est active.
----Source : lua/ge/server/commands.lua:213
----@param fovDeg number FOV en degrés
+--- (Global function, not in M.) Deprecated: use core_camera.setFOV. Sets the FOV in degrees if the free camera is active.
+---Source: lua/ge/server/commands.lua:213
+---@param fovDeg number FOV in degrees
 function setCameraFov(fovDeg) end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le champ de vision (degrés) si la caméra libre est active.
----Source : lua/ge/server/commands.lua:197
----@param fovDeg number FOV en degrés
+--- (Global function, not in M.) Deprecated: use core_camera.setFOV. Sets the field of view (degrees) if the free camera is active.
+---Source: lua/ge/server/commands.lua:197
+---@param fovDeg number FOV in degrees
 function setCameraFovDeg(fovDeg) end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setFOV. Règle le FOV (radians, converti en degrés) si la caméra libre est active.
----Source : lua/ge/server/commands.lua:207
----@param fovRad number FOV en radians
+--- (Global function, not in M.) Deprecated: use core_camera.setFOV. Sets the FOV (radians, converted to degrees) if the free camera is active.
+---Source: lua/ge/server/commands.lua:207
+---@param fovRad number FOV in radians
 function setCameraFovRad(fovRad) end
 
---- (Fonction globale, pas dans M.) Déprécié : utiliser core_camera.setPosRot. Applique position et quaternion à la caméra du joueur 0.
----Source : lua/ge/server/commands.lua:192
+--- (Global function, not in M.) Deprecated: use core_camera.setPosRot. Applies position and quaternion to player 0's camera.
+---Source: lua/ge/server/commands.lua:192
 ---@param px number x
 ---@param py number y
 ---@param pz number z

@@ -1,33 +1,54 @@
 {
   "path": "lua/vehicle/controller/dragTimer.lua",
-  "module": "Contrôleur auxiliaire de chronométrage de drag (accélération). Machine à états ready, countdown, measuring, done : quand le transbrake est actif et l'accélérateur appuyé, un compte à rebours de 3 s démarre ; à la fin, il relâche le transbrake (contrôleur nommé \"transbrake\") et mesure les temps au 60 pieds (18,288 m), 1/8 de mile (201,168 m) et 1/4 de mile (402,336 m) ainsi que les vitesses à ces deux derniers repères, puis affiche les résultats dans la console (en mph). Ordre lié au périphérique `gearbox`.",
+  "module": "Auxiliary drag (acceleration) timing controller. State machine ready, countdown, measuring, done: when the transbrake is active and the throttle pressed, a 3 s countdown starts; at the end, it releases the transbrake (controller named \"transbrake\") and measures the times at 60 feet (18.288 m), 1/8 mile (201.168 m) and 1/4 mile (402.336 m) as well as the speeds at these last two marks, then displays the results in the console (in mph). Order tied to the `gearbox` device.",
   "notes": [
-    "`M.relevantDevice = \"gearbox\"`. Aucune clé jbeam n'est lue.",
-    "Utilise `electrics.values.transbrake` et `electrics.values.throttle`. Le relâchement du compte à rebours (accélérateur lâché ou transbrake coupé) revient à `ready`.",
-    "Dépend de l'existence d'un contrôleur nommé exactement \"transbrake\" : `controller.getController(\"transbrake\").setTransbrake(false)` est appelé sans test (erreur s'il n'existe pas).",
-    "La mesure s'arrête après 25 s même sans avoir atteint le quart de mile. Les résultats sont seulement imprimés (print) et un message UI « Results are in! » est affiché ; ils ne sont pas stockés dans electrics.",
-    "Pas de fonction `reset` : controller.reset rappelle init (état ready)."
+    "`M.relevantDevice = \"gearbox\"`. No jbeam key is read.",
+    "Uses `electrics.values.transbrake` and `electrics.values.throttle`. Releasing during the countdown (throttle released or transbrake cut) goes back to `ready`.",
+    "Depends on the existence of a controller named exactly \"transbrake\": `controller.getController(\"transbrake\").setTransbrake(false)` is called without a test (error if it does not exist).",
+    "Measurement stops after 25 s even without having reached the quarter mile. The results are only printed (print) and a UI message \"Results are in!\" is displayed; they are not stored in electrics.",
+    "No `reset` function: controller.reset calls init again (ready state)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "relevantDevice": {"type": "string", "desc": "\"gearbox\" : périphérique powertrain utilisé pour l'ordre d'appel."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "relevantDevice": {
+      "type": "string",
+      "desc": "\"gearbox\": powertrain device used for the call order."
+    }
   },
   "functions": {
     "updateGFX": {
-      "desc": "Vide (le travail est fait dans update).",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Empty (the work is done in update).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "update": {
-      "desc": "Pas physique : fait avancer la machine à états (armement, compte à rebours, mesure, affichage des résultats).",
-      "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}},
+      "desc": "Physics step: advances the state machine (arming, countdown, measurement, results display).",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Physics step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Remet la machine à l'état ready et tous les temps à 0.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (non utilisées)."}},
+      "desc": "Puts the state machine back to ready and all times to 0.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data (unused)."
+        }
+      },
       "returns": [],
       "internal": true
     }

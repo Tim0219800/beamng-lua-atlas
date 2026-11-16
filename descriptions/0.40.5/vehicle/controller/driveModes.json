@@ -1,125 +1,213 @@
 {
   "path": "lua/vehicle/controller/driveModes.lua",
-  "module": "Contrôleur auxiliaire de modes de conduite (Eco, Sport, Neige, etc., ou modes de différentiel/gamme pour un 4x4). Chaque mode est un ensemble de réglages typés qui sont appliqués d'un coup quand on change de mode : échappement, turbo, compresseur, boîte automatique, paramètres d'un autre contrôleur (`setParameters`), mode d'un périphérique powertrain, valeur electrics, entrée de menu radial et bouton du panneau de contrôle simplifié. On peut en instancier plusieurs (un par fonction : conduite, différentiel, gamme...). Le mode par défaut est appliqué dans initLastStage.",
+  "module": "Auxiliary drive modes controller (Eco, Sport, Snow, etc., or differential/range modes for a 4x4). Each mode is a set of typed settings applied all at once when the mode changes: exhaust, turbo, supercharger, automatic gearbox, parameters of another controller (`setParameters`), mode of a powertrain device, electrics value, radial menu entry and simplified control panel button. Several can be instantiated (one per function: driving, differential, range...). The default mode is applied in initLastStage.",
   "usage": "local dm = controller.getControllerSafe(\"driveModes\")\ndm.nextDriveMode()\nprint(dm.getCurrentDriveModeKey())\ndm.setDriveMode(\"sport\", true)",
   "notes": [
-    "Clés jbeam de l'instance : `uiName`, `quickAccessTitle` (\"ui.radialmenu2.ESC\"), `quickAccessIcon`, `quickAccessLevel` (\"/vehicleFeatures/\"), `radialIcon`, `defaultMode` (clé du mode initial), `defaultSettings` (table d'en-tête de réglages appliqués à tous les modes). Toutes les clés commençant par `modes` (par ex. modes, modes_sport) sont fusionnées en une seule table de modes ; toutes celles commençant par `enabledModes` listent les clés de modes réellement utilisables.",
-    "Un mode : `{name, order, settings}` où settings est une table d'en-tête de réglages. Types de réglage reconnus par applyDriveMode : \"exhaust\" (name, mufflingOffset, gainOffset), \"turbocharger\" (name, wastegateOffset), \"supercharger\" (name, bypassPressure), \"transmission\" (defaultForwardMode, appelle `controller.mainController.setDefaultForwardMode`), \"quickAccess\" (icon, title), \"simpleControlButton\" (buttonId, uiName, icon, color, offColor, offColorElectric, onClick, remove), \"controller\" (controllerName + autres champs passés à `setParameters` du contrôleur cible), \"powertrainDeviceMode\" (deviceName, mode), \"electricsValue\" (electricsName, value).",
-    "Clé d'un réglage = `key`, sinon deviceName, electricsName, controllerName ou type. Un réglage d'un mode remplace celui de `defaultSettings` de même clé. Ordre d'application : les réglages de clé `yawControl` et `tractionControl` sont triés en premier (rang 0), tous les autres ont le rang 1 (ordre relatif entre eux non garanti).",
-    "Anomalie : le test de doublon d'ordre dans init regarde `driveModes[mode.order]` alors que la table est indexée par clé de mode, il ne détecte donc normalement rien.",
-    "Les tables `driveModes` et `enabledDriveModes` sont de niveau module et ne sont pas vidées dans init.",
-    "`reset` ne réinitialise que le titre et l'icône du menu radial ; le mode actif est réappliqué par resetLastStage.",
-    "État sauvegardé : `getState` renvoie la clé sous `<nom>ActiveMode`; `serialize` renvoie {activeDriveModeKey, activeDriveModeIndex}."
+    "Instance jbeam keys: `uiName`, `quickAccessTitle` (\"ui.radialmenu2.ESC\"), `quickAccessIcon`, `quickAccessLevel` (\"/vehicleFeatures/\"), `radialIcon`, `defaultMode` (key of the initial mode), `defaultSettings` (header table of settings applied to all modes). All keys starting with `modes` (e.g. modes, modes_sport) are merged into a single table of modes; all those starting with `enabledModes` list the keys of the modes actually usable.",
+    "A mode: `{name, order, settings}` where settings is a header table of settings. Setting types recognized by applyDriveMode: \"exhaust\" (name, mufflingOffset, gainOffset), \"turbocharger\" (name, wastegateOffset), \"supercharger\" (name, bypassPressure), \"transmission\" (defaultForwardMode, calls `controller.mainController.setDefaultForwardMode`), \"quickAccess\" (icon, title), \"simpleControlButton\" (buttonId, uiName, icon, color, offColor, offColorElectric, onClick, remove), \"controller\" (controllerName + other fields passed to the target controller's `setParameters`), \"powertrainDeviceMode\" (deviceName, mode), \"electricsValue\" (electricsName, value).",
+    "A setting's key = `key`, otherwise deviceName, electricsName, controllerName or type. A mode's setting replaces the one from `defaultSettings` with the same key. Application order: the settings with key `yawControl` and `tractionControl` are sorted first (rank 0), all others have rank 1 (relative order among them not guaranteed).",
+    "Anomaly: the duplicate order test in init looks at `driveModes[mode.order]` whereas the table is keyed by mode key, so it normally detects nothing.",
+    "The `driveModes` and `enabledDriveModes` tables are module-level and are not emptied in init.",
+    "`reset` only resets the radial menu title and icon; the active mode is reapplied by resetLastStage.",
+    "Saved state: `getState` returns the key under `<name>ActiveMode`; `serialize` returns {activeDriveModeKey, activeDriveModeIndex}."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
     "updateGFX": {
-      "desc": "Chaque frame : met à jour la couleur (active ou éteinte) des boutons de contrôle simplifié selon leur electrics `offColorElectric`.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: updates the color (active or off) of the simplified control buttons according to their `offColorElectric` electrics.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setSimpleControlButton": {
-      "desc": "Crée, met à jour ou supprime un bouton du panneau de contrôle simplifié (`ui_simplePowertrainControl`). Le clic par défaut appelle `nextDriveMode()` de ce contrôleur.",
+      "desc": "Creates, updates or removes a button of the simplified control panel (`ui_simplePowertrainControl`). The default click calls this controller's `nextDriveMode()`.",
       "params": {
-        "id": {"type": "string", "desc": "Identifiant du bouton."},
-        "buttonUIName": {"type": "string", "desc": "Nom affiché."},
-        "icon": {"type": "string", "desc": "Icône."},
-        "color": {"type": "string", "desc": "Couleur (hexadécimal) quand actif."},
-        "offColor": {"type": "string|nil", "desc": "Couleur éteinte (défaut \"343434\")."},
-        "offColorElectric": {"type": "string|nil", "desc": "Nom d'electrics : à 1 ou plus, le bouton prend `offColor`."},
-        "onClick": {"type": "string|nil", "desc": "Code Lua exécuté au clic."},
-        "remove": {"type": "boolean|nil", "desc": "true pour supprimer le bouton."}
+        "id": {
+          "type": "string",
+          "desc": "Button identifier."
+        },
+        "buttonUIName": {
+          "type": "string",
+          "desc": "Displayed name."
+        },
+        "icon": {
+          "type": "string",
+          "desc": "Icon."
+        },
+        "color": {
+          "type": "string",
+          "desc": "Color (hexadecimal) when active."
+        },
+        "offColor": {
+          "type": "string|nil",
+          "desc": "Off color (default \"343434\")."
+        },
+        "offColorElectric": {
+          "type": "string|nil",
+          "desc": "Electrics name: at 1 or more, the button takes `offColor`."
+        },
+        "onClick": {
+          "type": "string|nil",
+          "desc": "Lua code run on click."
+        },
+        "remove": {
+          "type": "boolean|nil",
+          "desc": "true to remove the button."
+        }
       },
       "returns": [],
       "internal": false
     },
     "updateSimpleControlButtons": {
-      "desc": "Renvoie l'état de tous les boutons au panneau de contrôle simplifié (appelée par controller.updateSimpleControlButtons).",
+      "desc": "Sends the state of all buttons back to the simplified control panel (called by controller.updateSimpleControlButtons).",
       "params": {},
       "returns": [],
       "internal": false
     },
     "setDriveMode": {
-      "desc": "Active le mode de clé donnée : retrouve son index parmi les modes activés, applique tous ses réglages et affiche un message UI sauf si silent. Clé inconnue ou nil : ne fait rien.",
+      "desc": "Activates the mode with the given key: finds its index among the enabled modes, applies all its settings and displays a UI message unless silent. Unknown or nil key: does nothing.",
       "params": {
-        "modeKey": {"type": "string|nil", "desc": "Clé du mode."},
-        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+        "modeKey": {
+          "type": "string|nil",
+          "desc": "Mode key."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true to not display a message."
+        }
       },
       "returns": [],
       "internal": false
     },
     "nextDriveMode": {
-      "desc": "Passe au mode activé suivant, avec retour au premier à la fin.",
+      "desc": "Switches to the next enabled mode, wrapping back to the first at the end.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "previousDriveMode": {
-      "desc": "Passe au mode activé précédent, avec retour au dernier au début.",
+      "desc": "Switches to the previous enabled mode, wrapping back to the last at the start.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "getCurrentDriveModeKey": {
-      "desc": "Renvoie la clé du mode actif.",
+      "desc": "Returns the key of the active mode.",
       "params": {},
-      "returns": [{"type": "string|nil", "desc": "Clé du mode actif, nil si aucun."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Key of the active mode, nil if none."
+        }
+      ],
       "internal": false
     },
     "getDriveModeData": {
-      "desc": "Renvoie les données d'un mode (key, name, order, settings, settingsOrder).",
-      "params": {"modeKey": {"type": "string|nil", "desc": "Clé du mode."}},
-      "returns": [{"type": "table|nil", "desc": "Données du mode, nil si inconnu."}],
+      "desc": "Returns a mode's data (key, name, order, settings, settingsOrder).",
+      "params": {
+        "modeKey": {
+          "type": "string|nil",
+          "desc": "Mode key."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Mode data, nil if unknown."
+        }
+      ],
       "internal": false
     },
     "reset": {
-      "desc": "Restaure le titre et l'icône du menu radial lus dans le jbeam.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}},
+      "desc": "Restores the radial menu title and icon read from the jbeam.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "resetLastStage": {
-      "desc": "Réapplique le mode actif après le reset.",
+      "desc": "Reapplies the active mode after the reset.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "serialize": {
-      "desc": "Renvoie le mode actif pour la sauvegarde.",
+      "desc": "Returns the active mode for the save.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "{activeDriveModeKey, activeDriveModeIndex}, nil si aucun mode."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{activeDriveModeKey, activeDriveModeIndex}, nil if no mode."
+        }
+      ],
       "internal": true
     },
     "deserialize": {
-      "desc": "Restaure le mode actif depuis serialize.",
-      "params": {"data": {"type": "table|nil", "desc": "Données de serialize."}},
+      "desc": "Restores the active mode from serialize.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Serialize data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "getState": {
-      "desc": "Renvoie la clé du mode actif sous `<nom>ActiveMode`.",
+      "desc": "Returns the key of the active mode under `<name>ActiveMode`.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table d'état."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State table."
+        }
+      ],
       "internal": false
     },
     "setState": {
-      "desc": "Active silencieusement le mode donné s'il existe et diffère du mode actif.",
-      "params": {"data": {"type": "table|nil", "desc": "Table d'état."}},
+      "desc": "Silently activates the given mode if it exists and differs from the active mode.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "State table."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "init": {
-      "desc": "Lit les modes (clés `modes*`), les modes activés (`enabledModes*`) et les réglages par défaut depuis le jbeam, trie les modes et enregistre l'entrée du menu radial.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Reads the modes (`modes*` keys), the enabled modes (`enabledModes*`) and the default settings from the jbeam, sorts the modes and registers the radial menu entry.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "initLastStage": {
-      "desc": "Choisit le mode par défaut (`defaultMode` s'il est activé, sinon le premier) et l'applique.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Chooses the default mode (`defaultMode` if enabled, otherwise the first) and applies it.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     }

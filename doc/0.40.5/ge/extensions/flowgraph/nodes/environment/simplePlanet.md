@@ -1,31 +1,31 @@
 # `flowgraph_nodes_environment_simplePlanet`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/simplePlanet.lua` · VM : Game Engine (GE) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/simplePlanet.lua` · VM: Game Engine (GE) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/simplePlanet")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/simplePlanet")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Simple Planet » (catégorie once_p_duration). Crée une source de gravité sphérique pour un véhicule en envoyant obj:setPlanets({x,y,z,rayon,masse}) à sa VM. Pins d'entrée : vehId (défaut : véhicule joueur 0), position (vec3), radius, mass. Exécuté une seule fois ; le reset du nœud ou l'arrêt du graphe vide les planètes (obj:setPlanets({})).
+Flowgraph node "Simple Planet" (category once_p_duration). Creates a spherical gravity source for a vehicle by sending obj:setPlanets({x,y,z,radius,mass}) to its VM. Input pins: vehId (default: player vehicle 0), position (vec3), radius, mass. Executed only once; the node reset or the graph stop empties the planets (obj:setPlanets({})).
 
-## Remarques
+## Notes
 
-- Si position, mass ou radius est nil, le nœud ne fait rien.
-- Si vehId ne correspond à aucun objet, self.vehicle est nil et queueLuaCommand plante (non protégé).
-- Ancien pin vehID renommé vehId (legacyPins). La description du pin vehId parle de gravité mais il désigne le véhicule cible.
+- If position, mass or radius is nil, the node does nothing.
+- If vehId matches no object, self.vehicle is nil and queueLuaCommand crashes (unprotected).
+- Old pin vehID renamed vehId (legacyPins). The description of the vehId pin talks about gravity but it designates the target vehicle.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset. | 62 |
-| `C:init()` | Initialise self.vehicle à nil. | 29 |
-| `C:onNodeReset()` | Si un véhicule a été ciblé, lui envoie obj:setPlanets({}) et oublie la référence. | 33 |
-| `C:workOnce()` | Construit la commande obj:setPlanets({x,y,z,radius,mass}) et l'envoie au véhicule ciblé. | 40 |
+| `C:_executionStopped()` | Calls onNodeReset. | 62 |
+| `C:init()` | Initializes self.vehicle to nil. | 29 |
+| `C:onNodeReset()` | If a vehicle was targeted, sends it obj:setPlanets({}) and forgets the reference. | 33 |
+| `C:workOnce()` | Builds the command obj:setPlanets({x,y,z,radius,mass}) and sends it to the targeted vehicle. | 40 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/simplePlanet.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/simplePlanet.lua`.*

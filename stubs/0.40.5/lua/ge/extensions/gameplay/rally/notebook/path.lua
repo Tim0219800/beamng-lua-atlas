@@ -2,548 +2,548 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/notebook/path.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Instance de carnet. Champs : _uid, id, name (« Primary » par défaut), description, authors, metadata, version, created_at, updated_at, pacenotes (sortedList), fname, validation_issues, audioMode (structuredOffline par défaut), snaproad, caches (compositeurs, voicepack, métadonnées, mapping audio custom).
+--- Notebook instance. Fields: _uid, id, name ("Primary" by default), description, authors, metadata, version, created_at, updated_at, pacenotes (sortedList), fname, validation_issues, audioMode (structuredOffline by default), snaproad, caches (compositors, voicepack, metadata, custom audio mapping).
 ---@class gameplay_rally_notebook_path
 local gameplay_rally_notebook_path = {}
 
---- Première clé de langue trouvée dans les notes des pacenotes, ou nil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:655
----@return string|nil  Langue.
+--- First language key found in the pacenotes' notes, or nil.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:655
+---@return string|nil  Language.
 function gameplay_rally_notebook_path:_detectFirstNotesLanguage() end
 
---- Choix de voicepack en cours : celui de l'éditeur si ce carnet est le courant, sinon celui du RallyManager actif. Renvoie aussi un booléen « écrit les réglages » (voir notes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:81
----@return table|nil  Choix.
+--- Current voicepack choice: the editor's if this notebook is the current one, otherwise that of the active RallyManager. Also returns a "writes settings" boolean (see notes).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:81
+---@return table|nil  Choices.
 ---@return boolean  writesSettings.
 function gameplay_rally_notebook_path:_getRallyManagerPick() end
 
---- Chemin du fichier de métadonnées d'un dossier de mode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1580
----@param audioModeDir string Sous-dossier du mode.
----@return string  Chemin.
+--- Path of the metadata file of a mode folder.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1580
+---@param audioModeDir string Mode subfolder.
+---@return string  Path.
 function gameplay_rally_notebook_path:_missionPacenoteMetadataFile(audioModeDir) end
 
---- Recale tous les waypoints sur le terrain.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:645
+--- Snaps all waypoints back to the terrain.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:645
 function gameplay_rally_notebook_path:allToTerrain() end
 
---- Table de tous les waypoints indexée par identifiant.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:613
+--- Table of all waypoints keyed by identifier.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:613
 ---@return table<integer, table>  Waypoints.
 function gameplay_rally_notebook_path:allWaypoints() end
 
---- Crée une pacenote par entrée et la désérialise.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:213
----@param pacenotes table[] Données sérialisées de pacenotes.
+--- Creates one pacenote per entry and deserializes it.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:213
+---@param pacenotes table[] Serialized pacenote data.
 function gameplay_rally_notebook_path:appendPacenotes(pacenotes) end
 
---- Force csImmediate pour la première pacenote et dynamic pour les autres.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:702
+--- Forces csImmediate for the first pacenote and dynamic for the others.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:702
 function gameplay_rally_notebook_path:autoManageTriggerTypes() end
 
---- Recalcule les appels de distance : vide les champs avant/après (hors champs bloqués ou isolés), puis pour chaque paire de pacenotes consécutives non isolées met un mot de liaison (« avant » de la suivante) ou une distance (« après » de la courante) selon le compositeur. S'arrête si la snaproad ou le compositeur manque.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:806
+--- Recomputes the distance calls: clears the before/after fields (except blocked or isolated fields), then for each pair of consecutive non-isolated pacenotes sets a link word (the next one's "before") or a distance (the current one's "after") according to the compositor. Stops if the snaproad or the compositor is missing.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:806
 function gameplay_rally_notebook_path:autofillDistanceCalls() end
 
---- Nom du fichier du carnet (avec extensions).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:279
----@return string|nil  Nom.
+--- Notebook file name (with extensions).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:279
+---@return string|nil  Name.
 function gameplay_rally_notebook_path:basename() end
 
---- Nom sans les deux extensions (.notebook.json).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:285
----@return string|nil  Nom.
+--- Name without the two extensions (.notebook.json).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:285
+---@return string|nil  Name.
 function gameplay_rally_notebook_path:basenameNoExt() end
 
---- Recompile toutes les pacenotes (numéros d'ordre visuels, vide des caches) et journalise celles en échec.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:868
+--- Recompiles all pacenotes (visual order numbers, clears caches) and logs the ones that fail.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:868
 function gameplay_rally_notebook_path:cacheCompiledPacenotes() end
 
---- Vérifie qu'une ancre est possible : clip présent sur disque et ordre monotone avec les autres ancres.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1419
+--- Checks that an anchor is possible: clip present on disk and monotonic order with the other anchors.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1419
 ---@param pacenote table Pacenote.
 ---@param basename string Clip.
 ---@return boolean  Possible.
----@return string|nil  Raison du refus.
+---@return string|nil  Reason for the refusal.
 function gameplay_rally_notebook_path:canSetCustomAudioAnchor(pacenote, basename) end
 
---- Renomme chaque pacenote « <base> <index> » selon sa position et reconstruit l'index des noms.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:403
+--- Renames each pacenote "<base> <index>" according to its position and rebuilds the name index.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:403
 function gameplay_rally_notebook_path:cleanupPacenoteNames() end
 
---- Retire la marque à faire de toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1126
+--- Removes the to-do mark from all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1126
 function gameplay_rally_notebook_path:clearAllTodo() end
 
---- Réinitialise les échecs de compilation de toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:888
+--- Resets the compile failures of all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:888
 function gameplay_rally_notebook_path:clearCompilationFailures() end
 
---- Retire l'ancre d'un clip.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1465
+--- Removes a clip's anchor.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1465
 ---@param basename string Clip.
----@return boolean  true si quelque chose a changé.
+---@return boolean  true if something changed.
 function gameplay_rally_notebook_path:clearCustomAudioAnchor(basename) end
 
---- Vide le cache des surcharges système et leurs métadonnées.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1544
+--- Clears the cache of the system overrides and their metadata.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1544
 function gameplay_rally_notebook_path:clearCustomSystemPacenoteCache() end
 
---- Remet toutes les pacenotes en mode audio auto (suivre celui du carnet).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1666
+--- Puts all pacenotes back in auto audio mode (follow the notebook's).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1666
 function gameplay_rally_notebook_path:clearPacenoteAudioModeOverrides() end
 
---- Vide les audioObjs résolus de toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:882
+--- Clears the resolved audioObjs of all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:882
 function gameplay_rally_notebook_path:clearResolvedAudioObjs() end
 
---- Infos d'ancre d'un clip.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1415
----@param basename string Nom du clip.
----@return table|nil  Infos.
+--- Anchor info of a clip.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1415
+---@param basename string Clip name.
+---@return table|nil  Info.
 function gameplay_rally_notebook_path:customAudioAnchorInfoFor(basename) end
 
---- Clips assignés à une pacenote.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1403
+--- Clips assigned to a pacenote.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1403
 ---@param pacenote table|nil Pacenote.
----@return string[]  Noms de clips.
+---@return string[]  Clip names.
 function gameplay_rally_notebook_path:customAudioBasenamesFor(pacenote) end
 
---- Voicepack propriétaire de l'audio custom : celui de la mission, sinon le voicepack actif.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1234
----@return table|nil  Entrée.
+--- Voicepack that owns the custom audio: the mission's, otherwise the active voicepack.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1234
+---@return table|nil  Entry.
 function gameplay_rally_notebook_path:customAudioEntry() end
 
---- Sous-dossier audio/ du voicepack propriétaire.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1249
----@return string|nil  Chemin.
+--- audio/ subfolder of the owning voicepack.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1249
+---@return string|nil  Path.
 function gameplay_rally_notebook_path:customPacenotesAudioDir() end
 
---- Dossier des surcharges mission des pacenotes système : <mission>/<notebooksPath>/custom/<carnet>.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1512
----@return string  Chemin.
+--- Folder of the mission overrides of the system pacenotes: <mission>/<notebooksPath>/custom/<notebook>.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1512
+---@return string  Path.
 function gameplay_rally_notebook_path:customPacenotesBaseDir() end
 
---- Dossier racine du voicepack propriétaire (clips, metadata, transcriptions).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1241
----@return string|nil  Chemin.
+--- Root folder of the owning voicepack (clips, metadata, transcriptions).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1241
+---@return string|nil  Path.
 function gameplay_rally_notebook_path:customPacenotesDir() end
 
---- Remplace la liste par une sortedList vide.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:220
+--- Replaces the list with an empty sortedList.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:220
 function gameplay_rally_notebook_path:deleteAllPacenotes() end
 
---- Supprime une langue de toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1678
----@param lang string Langue.
+--- Removes a language from all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1678
+---@param lang string Language.
 function gameplay_rally_notebook_path:deletePacenoteLanguage(lang) end
 
---- Dossier du fichier du carnet.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:273
----@return string|nil  Chemin.
+--- Folder of the notebook file.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:273
+---@return string|nil  Path.
 function gameplay_rally_notebook_path:dir() end
 
---- Dessin 3D du carnet dans l'éditeur : sélection (et voisines selon les préférences), ou toutes les pacenotes en arc-en-ciel si rien n'est sélectionné.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:484
----@param pacenoteToolsState table|nil État des outils.
----@param globalOpacity number Opacité.
+--- 3D drawing of the notebook in the editor: the selection (and neighbors according to preferences), or all pacenotes in rainbow colors if nothing is selected.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:484
+---@param pacenoteToolsState table|nil Tools state.
+---@param globalOpacity number Opacity.
 function gameplay_rally_notebook_path:drawDebugNotebook(pacenoteToolsState, globalOpacity) end
 
---- Dessine les pacenotes qui chevauchent la fenêtre de distance donnée (création de pacenote).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:529
----@param pacenoteToolsState table État.
----@param globalOpacity number Opacité.
----@param window table|nil { startDistance, endDistance } le long de la route.
+--- Draws the pacenotes that overlap the given distance window (pacenote creation).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:529
+---@param pacenoteToolsState table State.
+---@param globalOpacity number Opacity.
+---@param window table|nil { startDistance, endDistance } along the road.
 function gameplay_rally_notebook_path:drawDebugNotebookForPartitionAllSnaproad(pacenoteToolsState, globalOpacity, window) end
 
---- Les n pacenotes dont le waypoint cornerStart est le plus proche de pos (voir notes sur un nil possible).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:894
+--- The n pacenotes whose cornerStart waypoint is closest to pos (see notes about a possible nil).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:894
 ---@param pos vec3 Position.
----@param n integer Nombre.
----@return table[]  Pacenotes triées par distance.
+---@param n integer Number.
+---@return table[]  Pacenotes sorted by distance.
 function gameplay_rally_notebook_path:findNClosestPacenotes(pos, n) end
 
---- Pacenote suivante non isolée après l'indice i.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:849
----@param i integer Indice dans la liste triée.
+--- Next non-isolated pacenote after index i.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:849
+---@param i integer Index in the sorted list.
 ---@return table|nil  Pacenote.
 function gameplay_rally_notebook_path:findNextNonIsolated(i) end
 
---- Génère le texte libre à partir du structuré pour toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:741
+--- Generates the freeform text from the structured one for all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:741
 function gameplay_rally_notebook_path:generateAllFreeform() end
 
---- Efface les pacenotes et en crée une par virage détecté (waypoints cs/ce posés sur la snaproad si disponible, normales alignées, sortOrder = 5*i), puis trie, renomme et remplit les distances.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:747
----@param corners table[] Virages de pacenoteGenerator.detectCorners (pos, posEnd).
+--- Clears the pacenotes and creates one per detected corner (cs/ce waypoints placed on the snaproad if available, normals aligned, sortOrder = 5*i), then sorts, renames and fills in the distances.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:747
+---@param corners table[] Corners from pacenoteGenerator.detectCorners (pos, posEnd).
 function gameplay_rally_notebook_path:generatePacenotes(corners) end
 
---- Nom du style de compositeur déclaré par le voicepack actif (compositorStyle) ; nil si absent ou, en mode custom, si le module de style n'existe pas.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:134
----@return string|nil  Nom du style.
+--- Name of the compositor style declared by the active voicepack (compositorStyle); nil if absent or, in custom mode, if the style module does not exist.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:134
+---@return string|nil  Style name.
 function gameplay_rally_notebook_path:getActiveCompositorName() end
 
---- Pacenotes précédente, sélectionnée et suivante d'un identifiant.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:463
----@param selected_pn_id integer|nil Identifiant de la sélection.
----@return table|nil  Précédente.
----@return table|nil  Sélectionnée.
----@return table|nil  Suivante.
+--- Previous, selected and next pacenotes of an identifier.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:463
+---@param selected_pn_id integer|nil Selection identifier.
+---@return table|nil  Previous.
+---@return table|nil  Selected.
+---@return table|nil  Next.
 function gameplay_rally_notebook_path:getAdjacentPacenoteSet(selected_pn_id) end
 
---- Mode audio du carnet (propriété sauvegardée, non surchargée par le voicepack).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1146
+--- The notebook's audio mode (saved property, not overridden by the voicepack).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1146
 ---@return integer|nil  RallyEnums.pacenoteAudioMode.
 function gameplay_rally_notebook_path:getAudioMode() end
 
---- Infos sur les ancres posées (clip -> pacenote) : points triés par clip et table par nom, avec indicateurs duplicate, nonMonotonic, invalid.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1295
+--- Info about the placed anchors (clip -> pacenote): points sorted by clip and a table by name, with the flags duplicate, nonMonotonic, invalid.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1295
 ---@return table  { points, byBasename }.
 function gameplay_rally_notebook_path:getCustomAudioAnchorInfo() end
 
---- Répartit les clips sur les pacenotes : les clips ancrés vont à leur pacenote, les autres sont interpolés linéairement entre ancres voisines (bornes implicites 0 et fin).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1349
----@return table<integer, string[]>  Identifiant de pacenote -> clips.
+--- Distributes the clips over the pacenotes: anchored clips go to their pacenote, the others are linearly interpolated between neighboring anchors (implicit bounds 0 and end).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1349
+---@return table<integer, string[]>  Pacenote identifier -> clips.
 function gameplay_rally_notebook_path:getCustomAudioAssignment() end
 
---- Version mode custom sans compositeur : cherche pacenote_system_<nom>_<n>.ogg dans le voicepack actif pour chaque nom de systemPacenotes.required (variantes sondées par indices croissants).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:993
----@return table  Pacenotes système.
----@return table  Métadonnées.
+--- Custom mode version without compositor: looks for pacenote_system_<name>_<n>.ogg in the active voicepack for each name of systemPacenotes.required (variants probed by increasing indices).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:993
+---@return table  System pacenotes.
+---@return table  Metadata.
 function gameplay_rally_notebook_path:getCustomSystemPacenotesForAudioMode() end
 
---- Liste d'une seule langue { language, codrivers = {} } (langue détectée ou par défaut).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:634
----@return table[]  Langues.
+--- List of a single language { language, codrivers = {} } (detected or default language).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:634
+---@return table[]  Languages.
 function gameplay_rally_notebook_path:getLanguages() end
 
---- Dossier de la mission (deux niveaux au-dessus du fichier du carnet) ; nil sans fname.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:244
----@return string|nil  Chemin.
+--- Mission folder (two levels above the notebook file); nil without fname.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:244
+---@return string|nil  Path.
 function gameplay_rally_notebook_path:getMissionDir() end
 
---- Identifiant de mission (partie du dossier après /missions/), p. ex. gridmap_v2/rallyStage/rally-test-1 ; nil sans fichier.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:235
----@return string|nil  Identifiant.
+--- Mission identifier (part of the folder after /missions/), e.g. gridmap_v2/rallyStage/rally-test-1; nil without a file.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:235
+---@return string|nil  Identifier.
 function gameplay_rally_notebook_path:getMissionId() end
 
---- Champ missionType du info.json de la mission, ou nil.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:260
+--- missionType field of the mission's info.json, or nil.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:260
 ---@return string|nil  Type.
 function gameplay_rally_notebook_path:getMissionType() end
 
---- Incrémente et renvoie le compteur d'identifiants du carnet.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:18
----@return integer  Identifiant unique.
+--- Increments and returns the notebook's identifier counter.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:18
+---@return integer  Unique identifier.
 function gameplay_rally_notebook_path:getNextUniqueIdentifier() end
 
---- Idem pour le compositeur hors ligne (instance séparée).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:173
+--- Same for the offline compositor (separate instance).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:173
 ---@return table|nil  TextCompositor.
 function gameplay_rally_notebook_path:getOfflineTextCompositor() end
 
---- Tire une variante pondérée d'une pacenote système.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1077
----@param desiredPrefix string Nom de la pacenote système.
----@return table|nil  Variante.
----@return table|nil  Métadonnées.
+--- Draws a weighted variant of a system pacenote.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1077
+---@param desiredPrefix string Name of the system pacenote.
+---@return table|nil  Variant.
+---@return table|nil  Metadata.
 function gameplay_rally_notebook_path:getRandomSystemPacenote(desiredPrefix) end
 
---- Snaproad attachée.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:67
+--- Attached snaproad.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:67
 ---@return table|nil  Snaproad.
 function gameplay_rally_notebook_path:getSnaproad() end
 
---- Pacenotes système (compte à rebours, avertissements…) selon le mode audio, avec surcharges custom de mission ; renvoie la table nom -> variantes et les métadonnées audio.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:919
----@return table  Pacenotes système.
----@return table|nil  Métadonnées.
+--- System pacenotes (countdown, warnings…) according to the audio mode, with mission custom overrides; returns the name -> variants table and the audio metadata.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:919
+---@return table  System pacenotes.
+---@return table|nil  Metadata.
 function gameplay_rally_notebook_path:getSystemPacenotesForAudioMode() end
 
---- Compositeur texte (créé et chargé à la demande, mis en cache) ; nil et log 'E' si aucun voicepack ne correspond (sauf en mode custom).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:148
+--- Text compositor (created and loaded on demand, cached); nil and 'E' log if no voicepack matches (except in custom mode).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:148
 ---@return table|nil  TextCompositor.
 function gameplay_rally_notebook_path:getTextCompositor() end
 
---- Compositeur visuel construit sur le compositeur texte ; nil s'il n'y a pas de compositeur texte.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:199
+--- Visual compositor built on the text compositor; nil if there is no text compositor.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:199
 ---@return table|nil  VisualCompositor.
 function gameplay_rally_notebook_path:getVisualCompositor2() end
 
---- Waypoint d'identifiant donné, ou nil.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:623
----@param wpId integer Identifiant.
+--- Waypoint with the given identifier, or nil.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:623
+---@param wpId integer Identifier.
 ---@return table|nil  Waypoint.
 function gameplay_rally_notebook_path:getWaypoint(wpId) end
 
---- true s'il y a au moins une pacenote.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:228
----@return boolean  Résultat.
+--- true if there is at least one pacenote.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:228
+---@return boolean  Result.
 function gameplay_rally_notebook_path:hasAnyPacenotes() end
 
---- Constructeur : champs par défaut, liste de pacenotes vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:23
----@param name string|nil Nom du carnet.
+--- Constructor: default fields, empty pacenote list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:23
+---@param name string|nil Notebook name.
 function gameplay_rally_notebook_path:init(name) end
 
---- Vide le cache du voicepack actif et des métadonnées hors ligne.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:115
+--- Clears the cache of the active voicepack and of the offline metadata.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:115
 function gameplay_rally_notebook_path:invalidateActiveVoicepackCache() end
 
---- Vide les caches custom (mapping, scan disque, métadonnées, transcriptions).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1408
+--- Clears the custom caches (mapping, disk scan, metadata, transcriptions).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1408
 function gameplay_rally_notebook_path:invalidateCustomAudioMapping() end
 
---- true si mode custom.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1173
----@return boolean  Résultat.
+--- true if custom mode.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1173
+---@return boolean  Result.
 function gameplay_rally_notebook_path:isAudioModeCustom() end
 
---- true si mode freeform.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1169
----@return boolean  Résultat.
+--- true if freeform mode.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1169
+---@return boolean  Result.
 function gameplay_rally_notebook_path:isAudioModeFreeform() end
 
---- true si mode structuredOffline.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1165
----@return boolean  Résultat.
+--- true if structuredOffline mode.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1165
+---@return boolean  Result.
 function gameplay_rally_notebook_path:isAudioModeOfflineStructured() end
 
---- true si mode structuredOnline.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1161
----@return boolean  Résultat.
+--- true if structuredOnline mode.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1161
+---@return boolean  Result.
 function gameplay_rally_notebook_path:isAudioModeOnlineStructured() end
 
---- true si la version du carnet est 2 ou absente.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1182
----@return boolean  Résultat.
+--- true if the notebook version is 2 or absent.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1182
+---@return boolean  Result.
 function gameplay_rally_notebook_path:isV2() end
 
---- true si la version est 3.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1186
----@return boolean  Résultat.
+--- true if the version is 3.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1186
+---@return boolean  Result.
 function gameplay_rally_notebook_path:isV3() end
 
---- true si validation_issues est vide.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:331
----@return boolean  Résultat.
+--- true if validation_issues is empty.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:331
+---@return boolean  Result.
 function gameplay_rally_notebook_path:is_valid() end
 
---- Métadonnées (durées…) des clips custom, en cache ({} si absent).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1595
----@return table  Métadonnées.
+--- Metadata (durations…) of the custom clips, cached ({} if absent).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1595
+---@return table  Metadata.
 function gameplay_rally_notebook_path:loadCustomPacenoteMetadata() end
 
---- Transcriptions des clips custom (clip -> { description }), en cache.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1609
+--- Transcriptions of the custom clips (clip -> { description }), cached.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1609
 ---@return table  Transcriptions.
 function gameplay_rally_notebook_path:loadCustomPacenoteTranscriptions() end
 
---- Métadonnées des surcharges système : fusion du fichier partagé et du fichier de mission.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1549
----@return table  Métadonnées.
+--- Metadata of the system overrides: merge of the shared file and the mission file.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1549
+---@return table  Metadata.
 function gameplay_rally_notebook_path:loadCustomSystemPacenoteMetadata() end
 
---- Métadonnées du dossier freeform de la mission ; nil si absent.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1648
----@return table|nil  Métadonnées.
+--- Metadata of the mission's freeform folder; nil if absent.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1648
+---@return table|nil  Metadata.
 function gameplay_rally_notebook_path:loadFreeformPacenoteMetadata() end
 
---- Métadonnées du voicepack actif (mode structuré hors ligne), en cache par voicepack.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1623
----@return table  Métadonnées.
+--- Metadata of the active voicepack (structured offline mode), cached per voicepack.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1623
+---@return table  Metadata.
 function gameplay_rally_notebook_path:loadOfflineStructuredPacenoteMetadata() end
 
---- Métadonnées du dossier structuré en ligne de la mission ; nil si le fichier n'existe pas.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1639
----@return table|nil  Métadonnées.
+--- Metadata of the mission's structured online folder; nil if the file does not exist.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1639
+---@return table|nil  Metadata.
 function gameplay_rally_notebook_path:loadOnlineStructuredPacenoteMetadata() end
 
---- Métadonnées du dossier system de la mission ; nil si absent.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1657
----@return table|nil  Métadonnées.
+--- Metadata of the mission's system folder; nil if absent.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1657
+---@return table|nil  Metadata.
 function gameplay_rally_notebook_path:loadSystemPacenoteMetadata() end
 
---- Marque toutes les pacenotes à faire.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1120
+--- Marks all pacenotes as to do.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1120
 function gameplay_rally_notebook_path:markAllTodo() end
 
---- Marque à faire la pacenote donnée et toutes les suivantes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1132
----@param pacenote table Pacenote de départ.
+--- Marks the given pacenote and all following ones as to do.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1132
+---@param pacenote table Starting pacenote.
 function gameplay_rally_notebook_path:markRestTodo(pacenote) end
 
---- Chemin du fichier audio d'un texte : <dossier du mode>/<nom dérivé du hash du texte>. nil sans compositeur.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1572
----@param audioModeDir string Sous-dossier du mode.
----@param pacenoteTextOut string Texte de la pacenote.
----@return string|nil  Chemin.
+--- Path of a text's audio file: <mode folder>/<name derived from the text hash>. nil without compositor.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1572
+---@param audioModeDir string Mode subfolder.
+---@param pacenoteTextOut string Pacenote text.
+---@return string|nil  Path.
 function gameplay_rally_notebook_path:missionPacenoteAudioFile(audioModeDir, pacenoteTextOut) end
 
---- Dossier des audios générés : <mission>/<notebooksPath>/<generatedPacenotesDir>/<carnet>/<audioModeDir>.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1190
----@param audioModeDir string Sous-dossier du mode (rallyUtil.structuredDir, freeformDir, systemDir).
----@return string|nil  Chemin.
+--- Folder of the generated audio: <mission>/<notebooksPath>/<generatedPacenotesDir>/<notebook>/<audioModeDir>.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1190
+---@param audioModeDir string Mode subfolder (rallyUtil.structuredDir, freeformDir, systemDir).
+---@return string|nil  Path.
 function gameplay_rally_notebook_path:missionPacenotesDir(audioModeDir) end
 
---- Entrée du voicepack de mission dont la liste notebooks contient ce carnet.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1212
----@return table|nil  Entrée.
+--- Mission voicepack entry whose notebooks list contains this notebook.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1212
+---@return table|nil  Entry.
 function gameplay_rally_notebook_path:missionVoicepackEntryForNotebook() end
 
---- Prochaine lettre d'import (« Import_X ») ; 'A' par défaut.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:378
----@return string  Lettre.
+--- Next import letter ("Import_X"); 'A' by default.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:378
+---@return string  Letter.
 function gameplay_rally_notebook_path:nextImportIdent() end
 
---- Recharge le carnet depuis des données JSON (version, métadonnées, mode audio, pacenotes) ; migre v2 vers v3.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:557
----@param data table|nil Données.
+--- Reloads the notebook from JSON data (version, metadata, audio mode, pacenotes); migrates v2 to v3.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:557
+---@param data table|nil Data.
 function gameplay_rally_notebook_path:onDeserialized(data) end
 
---- Appelé quand les réglages changent : invalide voicepack et compositeurs, puis recompile les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:859
+--- Called when settings change: invalidates the voicepack and compositors, then recompiles the pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:859
 function gameplay_rally_notebook_path:onRallySettingsChanged() end
 
---- Données à sauvegarder : name, description, authors, metadata, dates, pacenotes, audioMode, version.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:543
----@return table  Table JSON.
+--- Data to save: name, description, authors, metadata, dates, pacenotes, audioMode, version.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:543
+---@return table  JSON table.
 function gameplay_rally_notebook_path:onSerialize() end
 
---- Nettoie le texte libre de chaque pacenote.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:694
+--- Trims the freeform text of each pacenote.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:694
 function gameplay_rally_notebook_path:refreshAllFreeformNotes() end
 
---- Rafraîchit les textes structurés puis libres de toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:680
+--- Refreshes the structured then freeform texts of all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:680
 function gameplay_rally_notebook_path:refreshAllPacenotes() end
 
---- Oublie le compositeur texte en cache et recompose le texte structuré de chaque pacenote (sans effet en mode custom).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:685
+--- Forgets the cached text compositor and recomposes the structured text of each pacenote (no effect in custom mode).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:685
 function gameplay_rally_notebook_path:refreshAllStructuredNotes() end
 
---- Chaîne complète : noms (cleanupNames), types de déclenchement, remesure (remeasure), distances, textes. Journalise la durée.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:723
----@param opts table|nil cleanupNames=false et/ou remeasure=false pour sauter une étape.
+--- Full chain: names (cleanupNames), trigger types, remeasure (remeasure), distances, texts. Logs the duration.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:723
+---@param opts table|nil cleanupNames=false and/or remeasure=false to skip a step.
 function gameplay_rally_notebook_path:refreshPacenotes(opts) end
 
---- Relit le fichier du carnet et le désérialise.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:316
+--- Rereads the notebook file and deserializes it.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:316
 function gameplay_rally_notebook_path:reload() end
 
---- Pour chaque pacenote, partitionne la snaproad sur elle et mesure le virage (sans effet sans snaproad).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:711
+--- For each pacenote, partitions the snaproad over it and measures the corner (no effect without snaproad).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:711
 function gameplay_rally_notebook_path:remeasureAllPacenotes() end
 
---- Résout (cache par mission + choix) le voicepack effectif via voicepack.resolveEffectiveEntry.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:122
+--- Resolves (cache per mission + choice) the effective voicepack via voicepack.resolveEffectiveEntry.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:122
 ---@return any  Voicepack.
----@return table|nil  Entrée de voicepack.
----@return any  Troisième résultat de resolveEffectiveEntry.
+---@return table|nil  Voicepack entry.
+---@return any  Third result of resolveEffectiveEntry.
 function gameplay_rally_notebook_path:resolveActiveVoicepack() end
 
---- Cherche les surcharges audio des pacenotes système (<nom>_<i>.ogg, ou <nom>.ogg si variante unique) dans le dossier partagé du jeu puis dans la mission (la mission l'emporte) ; résultat en cache.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1518
----@param systemPacenotes table nom -> variantes.
----@return table<string, string>  Clé nom_i -> chemin.
+--- Looks for the audio overrides of the system pacenotes (<name>_<i>.ogg, or <name>.ogg if a single variant) in the game's shared folder then in the mission (the mission wins); result is cached.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1518
+---@param systemPacenotes table name -> variants.
+---@return table<string, string>  Key name_i -> path.
 function gameplay_rally_notebook_path:resolveAllCustomSystemPacenotes(systemPacenotes) end
 
---- Chemin complet d'un clip via le voicepack propriétaire (avec repli reuseAudioFrom).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1280
----@param basename string|nil Nom du clip.
----@return string|nil  Chemin.
+--- Full path of a clip via the owning voicepack (with reuseAudioFrom fallback).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1280
+---@param basename string|nil Clip name.
+---@return string|nil  Path.
 function gameplay_rally_notebook_path:resolveCustomAudioBasename(basename) end
 
---- Écrit le carnet en JSON (met à jour updated_at).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:297
----@param fname string|nil Chemin (défaut self.fname).
----@return boolean  Succès.
+--- Writes the notebook as JSON (updates updated_at).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:297
+---@param fname string|nil Path (default self.fname).
+---@return boolean  Success.
 function gameplay_rally_notebook_path:save(fname) end
 
---- Liste triée (cache) des clips pacenote_*.ogg numérotés présents dans le dossier audio custom ; les clips système sont exclus.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1260
----@return string[]  Noms de fichiers.
+--- Sorted list (cache) of the numbered pacenote_*.ogg clips present in the custom audio folder; system clips are excluded.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1260
+---@return string[]  File names.
 function gameplay_rally_notebook_path:scanCustomAudioBasenames() end
 
---- Copilote factice (voir notes).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:666
+--- Dummy co-driver (see notes).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:666
 ---@return table  { id, name, language, voice }.
 function gameplay_rally_notebook_path:selectedCodriver() end
 
---- Langue du copilote factice.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:675
----@return string  Langue.
+--- Language of the dummy co-driver.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:675
+---@return string  Language.
 function gameplay_rally_notebook_path:selectedCodriverLanguage() end
 
---- Définit les voisines (précédente/suivante) de la pacenote d'identifiant donné et efface celles des autres.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1094
----@param pacenote_id integer Identifiant.
+--- Sets the neighbors (previous/next) of the pacenote with the given identifier and clears those of the others.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1094
+---@param pacenote_id integer Identifier.
 function gameplay_rally_notebook_path:setAdjacentNotes(pacenote_id) end
 
---- Définit les voisines de toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1107
+--- Sets the neighbors of all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1107
 function gameplay_rally_notebook_path:setAllAdjacentNotes() end
 
---- Fixe le rayon des waypoints de toutes les pacenotes.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:639
----@param newRadius number Rayon en mètres.
----@param wpType string|nil Type de waypoint à filtrer.
+--- Sets the radius of the waypoints of all pacenotes.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:639
+---@param newRadius number Radius in meters.
+---@param wpType string|nil Waypoint type to filter on.
 function gameplay_rally_notebook_path:setAllRadii(newRadius, wpType) end
 
---- Définit le mode audio du carnet.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1157
+--- Sets the notebook's audio mode.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1157
 ---@param mode integer RallyEnums.pacenoteAudioMode.
 function gameplay_rally_notebook_path:setAudioMode(mode) end
 
---- Pose l'ancre d'un clip sur une pacenote (retire l'ancienne ancre du clip), invalide les caches.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1444
+--- Places a clip's anchor on a pacenote (removes the clip's old anchor), invalidates the caches.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1444
 ---@param pacenote table Pacenote.
 ---@param basename string Clip.
----@return boolean  Succès.
+---@return boolean  Success.
 function gameplay_rally_notebook_path:setCustomAudioAnchor(pacenote, basename) end
 
---- Définit le fichier du carnet et invalide le cache du voicepack.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:292
----@param newFname string Chemin.
+--- Sets the notebook file and invalidates the voicepack cache.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:292
+---@param newFname string Path.
 function gameplay_rally_notebook_path:setFname(newFname) end
 
---- Attache la snaproad (fournie par l'éditeur ou le RallyManager) et, si non nil, relance autofillDistanceCalls().
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:60
+--- Attaches the snaproad (provided by the editor or the RallyManager) and, if non-nil, reruns autofillDistanceCalls().
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:60
 ---@param sn table|nil Snaproad.
 function gameplay_rally_notebook_path:setSnaproad(sn) end
 
---- Trie les pacenotes par numéro final du nom (puis par nom), met à jour sortOrder et invalide le mapping audio custom.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:359
+--- Sorts the pacenotes by trailing number of the name (then by name), updates sortOrder and invalidates the custom audio mapping.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:359
 function gameplay_rally_notebook_path:sortPacenotesByName() end
 
---- Après un nouvel export audio : rescanne le disque et supprime les ancres dont le fichier a disparu.
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1490
+--- After a new audio export: rescans the disk and removes the anchors whose file has disappeared.
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1490
 function gameplay_rally_notebook_path:syncCustomAudioFromDisk() end
 
---- Migration v2 vers v3 : migre chaque pacenote, passe la version à "3" et relance l'autofill.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:602
+--- Migration v2 to v3: migrates each pacenote, sets the version to "3" and reruns autofill.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:602
 function gameplay_rally_notebook_path:upgradeFromV2ToV3() end
 
---- Ne fait que réinitialiser les échecs de compilation (le copilote n'est plus sauvegardé).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1672
----@param codriver any Non utilisé.
+--- Only resets the compile failures (the co-driver is no longer saved).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1672
+---@param codriver any Not used.
 function gameplay_rally_notebook_path:useCodriver(codriver) end
 
---- true si le mode est structuré (en ligne ou hors ligne).
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:1177
----@return boolean  Résultat.
+--- true if the mode is structured (online or offline).
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:1177
+---@return boolean  Result.
 function gameplay_rally_notebook_path:useStructured() end
 
---- Vide validation_issues (aucune règle réelle).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rally/notebook/path.lua:327
+--- Empties validation_issues (no real rule).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rally/notebook/path.lua:327
 function gameplay_rally_notebook_path:validate() end
 

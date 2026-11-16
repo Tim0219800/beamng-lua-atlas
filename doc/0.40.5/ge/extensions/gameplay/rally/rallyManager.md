@@ -1,12 +1,12 @@
 # `gameplay_rally_rallyManager`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/rallyManager.lua` · VM : Game Engine (GE) · 1290 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/rallyManager.lua` · VM: Game Engine (GE) · 1290 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/rallyManager")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/rallyManager")` (file under extensions/ but not a regular extension)
 
-Gestionnaire d'une mission de rallye chargée (spéciale ou section de route). Un objet RallyManager regroupe le notebook (pacenotes), le chemin de course (race.json), la driveline enregistrée (DrivelineV3 / DrivelineRoute), le suivi du véhicule (VehicleTracker), le gestionnaire audio, la file d'attente des pacenotes, l'observateur d'étape (StageObserver) et le chronomètre (StageTimingState). Il déclenche les pacenotes audio et visuelles, gère les récupérations du véhicule, les temps intermédiaires et l'état de la spéciale pour l'UI. Il est créé et possédé par l'extension gameplay_rally (gameplay_rally.getRallyManager()). Le module renvoie un constructeur.
+Manager of a loaded rally mission (special stage or road section). A RallyManager object groups the notebook (pacenotes), the race path (race.json), the recorded driveline (DrivelineV3 / DrivelineRoute), vehicle tracking (VehicleTracker), the audio manager, the pacenote queue, the stage observer (StageObserver) and the timer (StageTimingState). It triggers the audio and visual pacenotes, handles vehicle recoveries, split times and the stage state for the UI. It is created and owned by the gameplay_rally extension (gameplay_rally.getRallyManager()). The module returns a constructor.
 
-## Exemple
+## Example
 
 ```lua
 local rm = gameplay_rally.getRallyManager()
@@ -16,122 +16,122 @@ if rm then
 end
 ```
 
-## Remarques
+## Notes
 
-- Le constructeur est appelé avec (missionDir, missionId) ; les ressources (notebook, driveline, audio) ne sont construites que par rebuildAssets.
-- La file de pacenotes (dequeue) peut contenir la valeur spéciale 'HOLD' : tant qu'elle est en tête, aucun pacenote n'est joué. Elle est utilisée pour les virages lents (slowCorner) et libérée par clearQueueHold.
-- Les paramètres d'activation sont lus dans settings : rallyAudioPacenotes et rallyVisualPacenotes. Un notebook en mode audio personnalisé n'émet pas de pacenotes visuels.
-- Modes d'autorité du chrono : 'shadow' (par défaut, source = données de course 'race') ou 'tracker' (source = observateur de passage). Toute autre valeur est ramenée à 'shadow'.
-- Les récupérations de véhicule appellent extensions.hook('onVehicleTeleportedToLastRoad', vehId) ; recoverVehicleToRouteDeparture appelle aussi extensions.hook('onRallyRouteRecoveryComplete', {vehId, repairVehicle, recoveryData}).
-- getActiveStageData renvoie toujours la même table réutilisée (variable locale du module) : copier les valeurs si elles doivent être conservées entre deux appels.
-- Bug potentiel : plusieurs méthodes ne vérifient pas que drivelineRoute existe (getPointDistanceFromStartMeters/Km, getRaceCompletionData) et provoquent une erreur sur nil avant le chargement ; getTimeAllocationSecs divise par drivelineV3:getSpeedLimitKph() sans tester une valeur nil ou nulle ; codriver et closestPacenoteToVehicle supposent notebook / vehicleTracker non nil.
-- addRecoveryRaceTime utilise toujours les pénalités d'une spéciale (« Single stages are always a special stage », commentaire du code) et ignore la table des pénalités hors spéciale de recoveryClockAdvance.
+- The constructor is called with (missionDir, missionId); the resources (notebook, driveline, audio) are only built by rebuildAssets.
+- The pacenote queue (dequeue) can contain the special value 'HOLD': while it is at the head, no pacenote is played. It is used for slow corners (slowCorner) and released by clearQueueHold.
+- The activation parameters are read from settings: rallyAudioPacenotes and rallyVisualPacenotes. A notebook in custom audio mode does not emit visual pacenotes.
+- Timer authority modes: 'shadow' (default, source = 'race' race data) or 'tracker' (source = crossing observer). Any other value falls back to 'shadow'.
+- Vehicle recoveries call extensions.hook('onVehicleTeleportedToLastRoad', vehId); recoverVehicleToRouteDeparture also calls extensions.hook('onRallyRouteRecoveryComplete', {vehId, repairVehicle, recoveryData}).
+- getActiveStageData always returns the same reused table (module local variable): copy the values if they must be kept between two calls.
+- Potential bug: several methods do not check that drivelineRoute exists (getPointDistanceFromStartMeters/Km, getRaceCompletionData) and raise an error on nil before loading; getTimeAllocationSecs divides by drivelineV3:getSpeedLimitKph() without testing for a nil or zero value; codriver and closestPacenoteToVehicle assume notebook / vehicleTracker are non-nil.
+- addRecoveryRaceTime always uses the penalties of a special stage ("Single stages are always a special stage", code comment) and ignores the non-special-stage penalties table of recoveryClockAdvance.
 
-## Classe `C`
+## Class `C`
 
-Objet RallyManager renvoyé par le constructeur du module.
+RallyManager object returned by the module's constructor.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_rallyManager")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_rallyManager")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_playbackAllowed(pacenote)` | Appelle pacenote:playbackAllowed() ; en cas d'erreur, l'erreur est loggée et la lecture est autorisée. | 647 |
-| `C:_refreshNotebookForVoicepackPick()` | Invalide les caches de voicepack et d'audio personnalisé du notebook et lui signale un changement de réglages. | 87 |
-| `C:addRecoveryRaceTime(recoveryType)` | Ajoute au chrono la pénalité d'une récupération (RecoveryClockAdvance.getSpecialStageSeconds). | 1096 |
-| `C:clearQueueHold()` | Retire le HOLD en tête de file de pacenotes, s'il y est. | 743 |
-| `C:clearResolvedAudioObjs()` | Demande au notebook d'oublier les objets audio résolus. | 609 |
-| `C:clearSplitTimes()` | Efface tous les temps et marqueurs d'observation des splits puis réinitialise le chrono d'étape. | 1259 |
-| `C:closestPacenoteToVehicle()` | Pacenote le plus proche de la position du véhicule suivi. | 788 |
-| `C:codriver()` | Copilote sélectionné du notebook. | 328 |
-| `C:drawPacenotesForDriving()` | Dessine en debug le prochain pacenote : le waypoint de début de virage avec le texte compilé. | 702 |
-| `C:enqueueHold()` | Ajoute une valeur HOLD à la fin de la file : les pacenotes suivants attendent sa libération. | 756 |
-| `C:enqueuePacenote(pacenote)` | Ajoute un pacenote à la fin de la file. | 751 |
-| `C:enqueuePauseSecs(secs)` | Ajoute une pause dans la file audio. | 842 |
-| `C:enqueueRandomSystemPacenote(name, audioLenOffset)` | Choisit un pacenote système aléatoire par nom, lit la durée audio dans ses métadonnées (+ audioLenOffset) et l'envoie à l'AudioManager. Logue une erreur si le nom, le fichier audio ou la durée sont invalides. | 802 |
-| `C:getActiveStageData()` | Construit l'état de la spéciale pour l'UI : currentSSTime (secondes au dixième), isActive, isComplete, splits, authorityMode, source ('race', 'tracker' ou 'trackerFallback'), completion {distPct, totalDistM}. Dépend du mode d'autorité et de l'état de l'observateur. | 1167 |
-| `C:getAudioManager()` | Gestionnaire audio, nil avant rebuildAssets. | 140 |
-| `C:getDrivelineRoute()` | Objet DrivelineRoute. | 870 |
-| `C:getErrorMsgForUser()` | Dernier message d'erreur destiné à l'utilisateur (race.json manquant, notebook invalide, etc.). | 108 |
-| `C:getLastPlayedPacenote()` | Dernier pacenote joué (retrouvé par son index dans le notebook s'il existe). | 892 |
-| `C:getLastPlayedPacenoteRecoveryPose(distanceBefore)` | Calcule une position et rotation de récupération placées avant le dernier pacenote joué. | 900 |
-| `C:getLiaisonAllocatedTimeSecs()` | Temps alloué de la liaison en secondes. | 1021 |
-| `C:getLoopPrefabPath()` | Chemin du fichier loopPrefab.prefab.json dans le dossier de la mission. | 1279 |
-| `C:getMissionDir()` | Dossier de la mission. | 132 |
-| `C:getMissionId()` | Identifiant de la mission. | 128 |
-| `C:getMissionName()` | Nom traduit de la mission, calculé une fois puis mis en cache. | 185 |
-| `C:getMissionStartTrigger()` | Déclencheur de départ (startTrigger) de la mission dans gameplay_missions_missions ; nil et erreur loggée si la mission est introuvable. | 194 |
-| `C:getNextPacenotes()` | Liste contenant le prochain pacenote de la driveline (un seul élément, éventuellement nil). | 797 |
-| `C:getNotebookPath()` | Notebook chargé (objet NotebookPath), nil avant rebuildAssets. | 136 |
-| `C:getPacenoteProcessingEnabled()` | Indique si le traitement de la file de pacenotes est actif. | 112 |
-| `C:getPathnodeObservationList()` | Liste ordonnée par distance des pathnodes à observer (splits, arrivée). | 422 |
-| `C:getPointDistanceFromStartKm(point)` | Distance du point depuis le départ le long de la route, en kilomètres. | 363 |
-| `C:getPointDistanceFromStartMeters(point)` | Distance du point depuis le départ le long de la route, en mètres. | 359 |
-| `C:getRaceCompletionData()` | Progression de la course : distM (distance en m) et distPct (0 à 1) ; le code lit aussi totalDistM. | 1061 |
-| `C:getRaceData()` | Données de course courantes (états des véhicules, temps), fournies par setRaceData. | 148 |
-| `C:getRaceDistanceMeters()` | Distance de course entre départ et arrivée le long de la driveline. | 1049 |
-| `C:getRacePath()` | Chemin de course chargé depuis race.json. | 144 |
-| `C:getRecoveryDestinationPos()` | Position de destination d'une récupération : la pose de reprise, sinon le point de route devant le véhicule. | 998 |
-| `C:getRouteDepartureRecoveryPose(options)` | Calcule la pose de récupération après une sortie de route (DrivelineRoute:vehiclePlacementPosAndRotForRecovery). | 939 |
-| `C:getSSStartLinePos()` | Position de départ nommée « SS_start_line » (ligne de départ de la spéciale). | 177 |
-| `C:getSSStopControlPos()` | Position de départ nommée « SS_stop_control » (contrôle d'arrêt). | 181 |
-| `C:getSpeedLimitKph()` | Limite de vitesse de la driveline en km/h. | 1014 |
-| `C:getSplitDataIndex()` | Index des splits par pathnodeId. | 415 |
-| `C:getSplitDataList()` | Liste des données de splits du DrivelineRoute. | 408 |
-| `C:getStageObserverState()` | État de l'observateur d'étape (StageObserver:getState). | 1077 |
-| `C:getStageRuntimeAuthorityMode()` | Mode d'autorité courant ('shadow' par défaut). | 1073 |
-| `C:getStageRuntimeTime()` | Temps de la spéciale en secondes : temps de fin du tracker s'il existe, sinon temps du chrono. | 1087 |
-| `C:getStageTimingState()` | Instantané de l'état du chrono (StageTimingState:getState). | 1092 |
-| `C:getStartAndFinishStartPositions()` | Renvoie la position de départ (SS_start_line, à défaut TC_in) et le dernier pathnode (arrivée lancée, pas le contrôle d'arrêt). | 1033 |
-| `C:getStartPositionByName(name)` | Cherche une position de départ du chemin de course par son nom. | 156 |
-| `C:getTCInPos()` | Position de départ nommée « TC_in » (entrée du contrôle horaire). | 169 |
-| `C:getTCOutPos()` | Position de départ nommée « TC_out » (sortie du contrôle horaire). | 173 |
-| `C:getTimeAllocationSecs()` | Temps alloué en secondes pour parcourir la route à la vitesse limite de la driveline (distance / vitesse). | 367 |
-| `C:getTimeAllocationString()` | Temps alloué arrondi à la minute supérieure, au format « Xh Ym ». | 387 |
-| `C:getTrackerStageTime()` | Temps de la spéciale vu par le tracker : observateur, sinon fin du tracker, chrono actif, ou temps de course. | 1122 |
-| `C:getVoicepackPick()` | Choix de voicepack de la session ; {type='preferences'} par défaut. | 79 |
-| `C:getVoicepackPickWritesSettings()` | Indique si le choix de voicepack est écrit dans les réglages (vrai sauf si explicitement désactivé). | 83 |
-| `C:hasAnyPacenotes()` | Indique si le notebook contient des pacenotes. | 1028 |
-| `C:init(missionDir, missionId)` | Initialise tous les champs (file de pacenotes, notebook, racePath, driveline, audio nil, StageObserver, StageTimingState, mode d'autorité 'shadow') pour la mission donnée. | 36 |
-| `C:onSettingsChanged()` | Appelé quand les réglages rally changent : prévient le notebook et vide la file audio. | 626 |
-| `C:onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame par gameplay_rally : met à jour le tracker, le DrivelineRoute, le chrono (avance de dtSim), les observations de splits, l'audio, puis traite la file de pacenotes. | 717 |
-| `C:onVehicleResetted()` | Appelé quand le véhicule est remis en place : vide les audio résolus et resynchronise (en préservant le tracker de récupération une seule fois si demandé). | 637 |
-| `C:playFirstPacenote()` | Joue (audio) le premier pacenote trié du notebook et le mémorise comme dernier joué. | 853 |
-| `C:processPacenoteQueue()` | Si le traitement est actif et que la tête n'est pas HOLD, dépile un pacenote et le joue via triggerPacenote. | 763 |
-| `C:rebuildAssets(options)` | Construit tout le contexte d'exécution : VehicleTracker, race.json, notebook, AudioManager, driveline (DrivelineV3) et DrivelineRoute, snaproad du notebook, pacenotes compilés, puis runtimeResync. En cas d'échec, errorMsgForUser est renseigné. | 447 |
-| `C:recordSplit(pathnodeId, time)` | Enregistre le temps d'une course pour un split (via l'observateur, ou directement dans splitData). | 1246 |
-| `C:recoverVehicleToLastPlayedPacenote(veh, options)` | Téléporte le véhicule 10 m (ou options.distanceBefore) avant le dernier pacenote joué, resynchronise puis déclenche le hook onVehicleTeleportedToLastRoad. | 918 |
-| `C:recoverVehicleToRouteDeparture(veh, options)` | Téléporte le véhicule au point de reprise de la route, avec réparation selon options.repairVehicle / resetVehicle / gameplay_rally.getRecoveryRepairVehicle (vrai par défaut), puis déclenche les hooks onVehicleTeleportedToLastRoad et onRallyRouteRecoveryComplete. | 960 |
-| `C:reloadVoicepackAssets(pick, opts)` | Change de voicepack puis reconstruit tous les états dérivés du compositeur (y compris les appels de distance). | 552 |
-| `C:resetAudioQueue()` | Vide la file audio de l'AudioManager. | 1009 |
-| `C:resetPacenoteRuntime()` | Efface les pacenotes visuels, la file audio et la file de pacenotes. | 575 |
-| `C:resetStageRuntime()` | Réinitialise l'état de suivi de la spéciale : chrono, observateur, drapeaux de fin, et réapplique le mode d'autorité à l'observateur. | 561 |
-| `C:resolveAndLoadNotebook()` | Choisit le voicepack actif (choix exact ou préférences/MRU) puis charge le notebook correspondant de la mission. Si aucun n'existe, renvoie un notebook vide en mémoire (« Route Preview ») pour prévisualiser une route sans pacenotes. | 432 |
-| `C:resyncAfterTeleport(options)` | Resynchronise l'état après un déplacement du véhicule : vide les files, oublie l'emprise de l'observateur et demande au DrivelineRoute de recalculer (immédiatement si deferRuntime == false, sinon au prochain onUpdate). | 581 |
-| `C:runtimeResync(options)` | Vide les audio résolus, réinitialise le chrono d'étape, puis appelle resyncAfterTeleport. | 615 |
-| `C:sampleRaceStageTime(vehId)` | Temps de la spéciale pour un véhicule : celui du chrono si actif ou terminé par le tracker, sinon celui des données de course (temps de fin si terminé). | 1110 |
-| `C:sendPacenoteToAudioManager(pacenote)` | Envoie le pacenote à l'AudioManager pour lecture audio. | 847 |
-| `C:setLastPlayedPacenote(pacenote)` | Mémorise le dernier pacenote joué, son nom et son index dans la liste triée du notebook. | 874 |
-| `C:setPacenoteProcessingEnabled(enabled)` | Active ou suspend le traitement de la file de pacenotes. | 116 |
-| `C:setPreserveRecoveryTrackerOnNextVehicleReset(val)` | Indique que le prochain reset du véhicule doit préserver le suivi statique de la récupération. | 633 |
-| `C:setRaceData(raceData)` | Mémorise les données de course courantes. | 152 |
-| `C:setStageRuntimeActive(active)` | Démarre ou arrête le chrono de l'étape ; ne démarre pas si l'étape est déjà terminée. | 1081 |
-| `C:setStageRuntimeAuthorityMode(mode)` | Définit le mode d'autorité du chrono ('tracker' ou 'shadow') et le transmet à l'observateur. | 1066 |
-| `C:setVoicepackPick(pick, opts)` | Définit le voicepack de la session (type 'auto' converti en 'preferences'), l'ajoute à la liste MRU si nécessaire, puis rafraîchit le notebook sauf si deferNotebookRefresh. | 96 |
-| `C:setupDrivelineRouteHooks()` | Branche les callbacks du DrivelineRoute (CsDynamic, CsImmediate, CsStatic, CeStatic, décalages -40 pour Cs et -5 pour Ce, pourcentage de virage 0.5) : ils mettent le pacenote en file, ajoutent un HOLD pour les virages lents, effacent le pacenote visuel et libèrent le HOLD selon la règle du pacenote. | 230 |
-| `C:triggerClearAllVisualPacenotes()` | Efface tous les pacenotes visuels (guihooks 'clearAllVisualPacenotes'). | 695 |
-| `C:triggerClearVisualPacenote(pacenote)` | Efface un pacenote visuel (guihooks 'clearOneVisualPacenote' avec visualSerialNo). | 687 |
-| `C:triggerPacenote(pacenote)` | Joue un pacenote si la lecture est autorisée : l'envoie à l'audio (réglage rallyAudioPacenotes) et déclenche l'affichage visuel (réglage rallyVisualPacenotes, sauf notebook audio personnalisé). | 203 |
-| `C:triggerShowVisualPacenote(pacenote)` | Envoie le pacenote compilé à l'UI via guihooks 'showVisualPacenote2'. Ignoré s'il n'a pas d'événement visuel ou aucune icône (visualPacenotes vide). | 661 |
-| `C:updateTrackerSplitObservations()` | Appelle StageObserver:update avec le tracker statique, les nodes d'observation et les temps de frame, puis recopie la fin d'étape et termine le chrono si l'observateur a détecté l'arrivée. | 1133 |
+| `C:_playbackAllowed(pacenote)` | Calls pacenote:playbackAllowed(); on error, the error is logged and playback is allowed. | 647 |
+| `C:_refreshNotebookForVoicepackPick()` | Invalidates the notebook's voicepack and custom audio caches and notifies it of a settings change. | 87 |
+| `C:addRecoveryRaceTime(recoveryType)` | Adds a recovery's penalty to the timer (RecoveryClockAdvance.getSpecialStageSeconds). | 1096 |
+| `C:clearQueueHold()` | Removes the HOLD at the head of the pacenote queue, if it is there. | 743 |
+| `C:clearResolvedAudioObjs()` | Asks the notebook to forget the resolved audio objects. | 609 |
+| `C:clearSplitTimes()` | Clears all the splits' times and observation markers then resets the stage timer. | 1259 |
+| `C:closestPacenoteToVehicle()` | Pacenote closest to the tracked vehicle's position. | 788 |
+| `C:codriver()` | Selected co-driver of the notebook. | 328 |
+| `C:drawPacenotesForDriving()` | Debug-draws the next pacenote: the corner start waypoint with the compiled text. | 702 |
+| `C:enqueueHold()` | Adds a HOLD value to the end of the queue: the following pacenotes wait for its release. | 756 |
+| `C:enqueuePacenote(pacenote)` | Adds a pacenote to the end of the queue. | 751 |
+| `C:enqueuePauseSecs(secs)` | Adds a pause to the audio queue. | 842 |
+| `C:enqueueRandomSystemPacenote(name, audioLenOffset)` | Picks a random system pacenote by name, reads the audio duration from its metadata (+ audioLenOffset) and sends it to the AudioManager. Logs an error if the name, the audio file or the duration are invalid. | 802 |
+| `C:getActiveStageData()` | Builds the special stage state for the UI: currentSSTime (seconds to the tenth), isActive, isComplete, splits, authorityMode, source ('race', 'tracker' or 'trackerFallback'), completion {distPct, totalDistM}. Depends on the authority mode and the observer state. | 1167 |
+| `C:getAudioManager()` | Audio manager, nil before rebuildAssets. | 140 |
+| `C:getDrivelineRoute()` | DrivelineRoute object. | 870 |
+| `C:getErrorMsgForUser()` | Last error message intended for the user (missing race.json, invalid notebook, etc.). | 108 |
+| `C:getLastPlayedPacenote()` | Last played pacenote (retrieved by its index in the notebook if it exists). | 892 |
+| `C:getLastPlayedPacenoteRecoveryPose(distanceBefore)` | Computes a recovery position and rotation placed before the last played pacenote. | 900 |
+| `C:getLiaisonAllocatedTimeSecs()` | Time allocated for the road section in seconds. | 1021 |
+| `C:getLoopPrefabPath()` | Path of the loopPrefab.prefab.json file in the mission folder. | 1279 |
+| `C:getMissionDir()` | Mission folder. | 132 |
+| `C:getMissionId()` | Mission identifier. | 128 |
+| `C:getMissionName()` | Translated name of the mission, computed once then cached. | 185 |
+| `C:getMissionStartTrigger()` | Start trigger (startTrigger) of the mission in gameplay_missions_missions; nil and a logged error if the mission is not found. | 194 |
+| `C:getNextPacenotes()` | List containing the driveline's next pacenote (a single element, possibly nil). | 797 |
+| `C:getNotebookPath()` | Loaded notebook (NotebookPath object), nil before rebuildAssets. | 136 |
+| `C:getPacenoteProcessingEnabled()` | Indicates whether pacenote queue processing is active. | 112 |
+| `C:getPathnodeObservationList()` | List ordered by distance of the pathnodes to observe (splits, finish). | 422 |
+| `C:getPointDistanceFromStartKm(point)` | Distance of the point from the start along the road, in kilometers. | 363 |
+| `C:getPointDistanceFromStartMeters(point)` | Distance of the point from the start along the road, in meters. | 359 |
+| `C:getRaceCompletionData()` | Race progress: distM (distance in m) and distPct (0 to 1); the code also reads totalDistM. | 1061 |
+| `C:getRaceData()` | Current race data (vehicle states, times), provided by setRaceData. | 148 |
+| `C:getRaceDistanceMeters()` | Race distance between start and finish along the driveline. | 1049 |
+| `C:getRacePath()` | Race path loaded from race.json. | 144 |
+| `C:getRecoveryDestinationPos()` | Destination position of a recovery: the resume pose, otherwise the road point ahead of the vehicle. | 998 |
+| `C:getRouteDepartureRecoveryPose(options)` | Computes the recovery pose after leaving the road (DrivelineRoute:vehiclePlacementPosAndRotForRecovery). | 939 |
+| `C:getSSStartLinePos()` | Start position named "SS_start_line" (special stage start line). | 177 |
+| `C:getSSStopControlPos()` | Start position named "SS_stop_control" (stop control). | 181 |
+| `C:getSpeedLimitKph()` | Driveline speed limit in km/h. | 1014 |
+| `C:getSplitDataIndex()` | Index of the splits by pathnodeId. | 415 |
+| `C:getSplitDataList()` | List of the DrivelineRoute's splits data. | 408 |
+| `C:getStageObserverState()` | State of the stage observer (StageObserver:getState). | 1077 |
+| `C:getStageRuntimeAuthorityMode()` | Current authority mode ('shadow' by default). | 1073 |
+| `C:getStageRuntimeTime()` | Special stage time in seconds: the tracker's finish time if it exists, otherwise the timer's time. | 1087 |
+| `C:getStageTimingState()` | Snapshot of the timer state (StageTimingState:getState). | 1092 |
+| `C:getStartAndFinishStartPositions()` | Returns the start position (SS_start_line, otherwise TC_in) and the last pathnode (flying finish, not the stop control). | 1033 |
+| `C:getStartPositionByName(name)` | Looks for a start position of the race path by its name. | 156 |
+| `C:getTCInPos()` | Start position named "TC_in" (time control entry). | 169 |
+| `C:getTCOutPos()` | Start position named "TC_out" (time control exit). | 173 |
+| `C:getTimeAllocationSecs()` | Time allocated in seconds to travel the road at the driveline's speed limit (distance / speed). | 367 |
+| `C:getTimeAllocationString()` | Allocated time rounded up to the next minute, in the format "Xh Ym". | 387 |
+| `C:getTrackerStageTime()` | Special stage time as seen by the tracker: observer, otherwise tracker finish, active timer, or race time. | 1122 |
+| `C:getVoicepackPick()` | Session voicepack choice; {type='preferences'} by default. | 79 |
+| `C:getVoicepackPickWritesSettings()` | Indicates whether the voicepack choice is written to the settings (true unless explicitly disabled). | 83 |
+| `C:hasAnyPacenotes()` | Indicates whether the notebook contains pacenotes. | 1028 |
+| `C:init(missionDir, missionId)` | Initializes all fields (pacenote queue, notebook, racePath, driveline, audio nil, StageObserver, StageTimingState, authority mode 'shadow') for the given mission. | 36 |
+| `C:onSettingsChanged()` | Called when the rally settings change: notifies the notebook and empties the audio queue. | 626 |
+| `C:onUpdate(dtReal, dtSim, dtRaw)` | Called every frame by gameplay_rally: updates the tracker, the DrivelineRoute, the timer (advances by dtSim), the split observations, the audio, then processes the pacenote queue. | 717 |
+| `C:onVehicleResetted()` | Called when the vehicle is put back in place: clears the resolved audio and resyncs (preserving the recovery tracker once only if requested). | 637 |
+| `C:playFirstPacenote()` | Plays (audio) the notebook's first sorted pacenote and stores it as the last played. | 853 |
+| `C:processPacenoteQueue()` | If processing is active and the head is not HOLD, dequeues a pacenote and plays it via triggerPacenote. | 763 |
+| `C:rebuildAssets(options)` | Builds the whole runtime context: VehicleTracker, race.json, notebook, AudioManager, driveline (DrivelineV3) and DrivelineRoute, notebook snaproad, compiled pacenotes, then runtimeResync. On failure, errorMsgForUser is set. | 447 |
+| `C:recordSplit(pathnodeId, time)` | Records a race's time for a split (via the observer, or directly in splitData). | 1246 |
+| `C:recoverVehicleToLastPlayedPacenote(veh, options)` | Teleports the vehicle 10 m (or options.distanceBefore) before the last played pacenote, resyncs then triggers the onVehicleTeleportedToLastRoad hook. | 918 |
+| `C:recoverVehicleToRouteDeparture(veh, options)` | Teleports the vehicle to the road's resume point, with repair according to options.repairVehicle / resetVehicle / gameplay_rally.getRecoveryRepairVehicle (true by default), then triggers the onVehicleTeleportedToLastRoad and onRallyRouteRecoveryComplete hooks. | 960 |
+| `C:reloadVoicepackAssets(pick, opts)` | Changes the voicepack then rebuilds all the compositor-derived states (including the distance calls). | 552 |
+| `C:resetAudioQueue()` | Empties the AudioManager's audio queue. | 1009 |
+| `C:resetPacenoteRuntime()` | Clears the visual pacenotes, the audio queue and the pacenote queue. | 575 |
+| `C:resetStageRuntime()` | Resets the stage tracking state: timer, observer, end flags, and reapplies the authority mode to the observer. | 561 |
+| `C:resolveAndLoadNotebook()` | Chooses the active voicepack (exact choice or preferences/MRU) then loads the mission's matching notebook. If none exists, returns an empty in-memory notebook ("Route Preview") to preview a route without pacenotes. | 432 |
+| `C:resyncAfterTeleport(options)` | Resynchronizes the state after a vehicle move: empties the queues, forgets the observer's footprint and asks the DrivelineRoute to recompute (immediately if deferRuntime == false, otherwise at the next onUpdate). | 581 |
+| `C:runtimeResync(options)` | Clears the resolved audio, resets the stage timer, then calls resyncAfterTeleport. | 615 |
+| `C:sampleRaceStageTime(vehId)` | Special stage time for a vehicle: the timer's if active or finished by the tracker, otherwise that of the race data (finish time if finished). | 1110 |
+| `C:sendPacenoteToAudioManager(pacenote)` | Sends the pacenote to the AudioManager for audio playback. | 847 |
+| `C:setLastPlayedPacenote(pacenote)` | Stores the last played pacenote, its name and its index in the notebook's sorted list. | 874 |
+| `C:setPacenoteProcessingEnabled(enabled)` | Enables or suspends pacenote queue processing. | 116 |
+| `C:setPreserveRecoveryTrackerOnNextVehicleReset(val)` | Indicates that the next vehicle reset must preserve the recovery's static tracking. | 633 |
+| `C:setRaceData(raceData)` | Stores the current race data. | 152 |
+| `C:setStageRuntimeActive(active)` | Starts or stops the stage timer; does not start if the stage is already finished. | 1081 |
+| `C:setStageRuntimeAuthorityMode(mode)` | Sets the timer authority mode ('tracker' or 'shadow') and passes it to the observer. | 1066 |
+| `C:setVoicepackPick(pick, opts)` | Sets the session voicepack (type 'auto' converted to 'preferences'), adds it to the MRU list if needed, then refreshes the notebook unless deferNotebookRefresh. | 96 |
+| `C:setupDrivelineRouteHooks()` | Wires up the DrivelineRoute callbacks (CsDynamic, CsImmediate, CsStatic, CeStatic, -40 offsets for Cs and -5 for Ce, corner percentage 0.5): they queue the pacenote, add a HOLD for slow corners, clear the visual pacenote and release the HOLD according to the pacenote's rule. | 230 |
+| `C:triggerClearAllVisualPacenotes()` | Clears all visual pacenotes (guihooks 'clearAllVisualPacenotes'). | 695 |
+| `C:triggerClearVisualPacenote(pacenote)` | Clears one visual pacenote (guihooks 'clearOneVisualPacenote' with visualSerialNo). | 687 |
+| `C:triggerPacenote(pacenote)` | Plays a pacenote if playback is allowed: sends it to the audio (rallyAudioPacenotes setting) and triggers the visual display (rallyVisualPacenotes setting, except for a custom audio notebook). | 203 |
+| `C:triggerShowVisualPacenote(pacenote)` | Sends the compiled pacenote to the UI via guihooks 'showVisualPacenote2'. Ignored if it has no visual event or no icon (empty visualPacenotes). | 661 |
+| `C:updateTrackerSplitObservations()` | Calls StageObserver:update with the static tracker, the observation nodes and the frame times, then copies the stage end and ends the timer if the observer detected the finish. | 1133 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRallyRouteRecoveryComplete` — écouté par 1 module(s)
+- `onRallyRouteRecoveryComplete` — listened to by 1 module(s)
 - `onVehicleTeleportedToLastRoad`
 
-**Évènements UI (guihooks.trigger) :** `clearAllVisualPacenotes`, `clearOneVisualPacenote`, `showVisualPacenote2`
+**UI events (guihooks.trigger):** `clearAllVisualPacenotes`, `clearOneVisualPacenote`, `showVisualPacenote2`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/rallyManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/rallyManager.lua`.*

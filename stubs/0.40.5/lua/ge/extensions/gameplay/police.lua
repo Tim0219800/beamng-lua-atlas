@@ -2,229 +2,229 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/police.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Logique de police du trafic : suit les véhicules ayant le rôle 'police', gère les poursuites (niveaux -1 à 3 selon le score d'infractions), l'arrestation, l'évasion, la libération, les barrages routiers (véhicules et accessoires), et la file d'attente des suspects aléatoires. Elle s'appuie sur gameplay_traffic (données de trafic, rôles). Un moddeur s'en sert pour lancer ou terminer une poursuite, régler les variables de poursuite ou installer un barrage.
---- Accès : extension `gameplay_police` : `extensions.load("gameplay_police")`, puis la globale `gameplay_police`
+--- Traffic police logic: tracks vehicles with the 'police' role, handles pursuits (levels -1 to 3 depending on the offense score), arrest, evasion, release, roadblocks (vehicles and props), and the queue of random suspects. It relies on gameplay_traffic (traffic data, roles). A modder uses it to start or end a pursuit, set the pursuit variables or set up a roadblock.
+--- Access: extension `gameplay_police`: `extensions.load("gameplay_police")`, then the global `gameplay_police`
 ---@class gameplay_police
----@field enabled boolean Si false, la logique de police à l'exécution (onUpdate) est suspendue. Vaut true par défaut.
+---@field enabled boolean If false, the police logic at runtime (onUpdate) is suspended. Is true by default.
 gameplay_police = {}
 
---- Déclare immédiatement un véhicule arrêté : messages optionnels (contravention ou arrestation, liste des infractions), émet onPursuitAction 'arrest' puis setPursuitMode(-1) pour les policiers qui le ciblent. Fonctionne comme prévu si la cible a le rôle suspect.
----Source : lua/ge/extensions/gameplay/police.lua:456
----@param id integer Véhicule arrêté.
----@param showMessages boolean|nil Afficher les messages d'interface.
+--- Immediately declares a vehicle arrested: optional messages (ticket or arrest, list of offenses), emits onPursuitAction 'arrest' then setPursuitMode(-1) for the police targeting it. Works as intended if the target has the suspect role.
+---Source: lua/ge/extensions/gameplay/police.lua:456
+---@param id integer Arrested vehicle.
+---@param showMessages boolean|nil Show the UI messages.
 function gameplay_police.arrestVehicle(id, showMessages) end
 
---- Indique combien des véhicules fournis tiennent dans la largeur d'un barrage (du plus court au plus long, longueur = plus grande étendue de la boîte, ou l'axe choisi par useLength).
----Source : lua/ge/extensions/gameplay/police.lua:56
----@param vehIds integer[] Ids de véhicules ou d'accessoires.
----@param rbWidth number|nil Largeur maximale du barrage en mètres (défaut 10).
----@param useLength boolean|nil nil = meilleur axe ; true = étendue Y ; false = étendue X.
----@return integer[]  Ids qui tiennent dans le barrage (nil si vehIds n'est pas une table).
----@return number  Longueur totale occupée en mètres.
+--- Indicates how many of the provided vehicles fit in the width of a roadblock (from shortest to longest, length = largest extent of the box, or the axis chosen by useLength).
+---Source: lua/ge/extensions/gameplay/police.lua:56
+---@param vehIds integer[] Vehicle or prop ids.
+---@param rbWidth number|nil Maximum roadblock width in meters (default 10).
+---@param useLength boolean|nil nil = best axis; true = Y extent; false = X extent.
+---@return integer[]  Ids that fit in the roadblock (nil if vehIds is not a table).
+---@return number  Total length occupied in meters.
 function gameplay_police.checkRoadblock(vehIds, rbWidth, useLength) end
 
---- Déclare immédiatement qu'un véhicule a échappé à la police : émet onPursuitAction 'evade' puis setPursuitMode(0).
----Source : lua/ge/extensions/gameplay/police.lua:493
----@param id integer Véhicule.
----@param showMessages boolean|nil Afficher les messages d'interface.
+--- Immediately declares that a vehicle escaped the police: emits onPursuitAction 'evade' then setPursuitMode(0).
+---Source: lua/ge/extensions/gameplay/police.lua:493
+---@param id integer Vehicle.
+---@param showMessages boolean|nil Show the UI messages.
 function gameplay_police.evadeVehicle(id, showMessages) end
 
---- Police active la plus proche de la cible, d'après les distances mises en cache dans role.validTargets.
----Source : lua/ge/extensions/gameplay/police.lua:277
----@param targetId integer|nil Id de la cible.
----@param isVisible boolean|nil Ne garder que les policiers voyant la cible (ignoré si vars.useVisibility est false).
----@param isUsable boolean|nil Exclure les policiers à l'état 'disabled'.
----@return integer|nil  Id du policier.
----@return number  Distance (math.huge si aucun).
----@return number  Distance interactive (le policier regarde devant).
+--- Active police closest to the target, based on the distances cached in role.validTargets.
+---Source: lua/ge/extensions/gameplay/police.lua:277
+---@param targetId integer|nil Target id.
+---@param isVisible boolean|nil Keep only the police that see the target (ignored if vars.useVisibility is false).
+---@param isUsable boolean|nil Exclude police in the 'disabled' state.
+---@return integer|nil  Police vehicle id.
+---@return number  Distance (math.huge if none).
+---@return number  Interactive distance (the police is facing forward).
 function gameplay_police.getNearestPoliceVehicle(targetId, isVisible, isUsable) end
 
---- Alias de getPoliceVehicles.
----Source : lua/ge/extensions/gameplay/police.lua:273
----@return table<integer, table>  Véhicules de police.
+--- Alias of getPoliceVehicles.
+---Source: lua/ge/extensions/gameplay/police.lua:273
+---@return table<integer, table>  Police vehicles.
 function gameplay_police.getPolice() end
 
---- Alias de getPursuitVars.
----Source : lua/ge/extensions/gameplay/police.lua:603
----@return table  Variables (référence directe).
+--- Alias of getPursuitVars.
+---Source: lua/ge/extensions/gameplay/police.lua:603
+---@return table  Variables (direct reference).
 function gameplay_police.getPoliceVars() end
 
---- Table des véhicules de police du trafic, par id de véhicule (données de gameplay_traffic). Alias : getPolice.
----Source : lua/ge/extensions/gameplay/police.lua:273
----@return table<integer, table>  Véhicules de police.
+--- Table of the traffic police vehicles, by vehicle id (gameplay_traffic data). Alias: getPolice.
+---Source: lua/ge/extensions/gameplay/police.lua:273
+---@return table<integer, table>  Police vehicles.
 function gameplay_police.getPoliceVehicles() end
 
---- Données de poursuite (veh.pursuit) d'un véhicule du trafic. Conservée pour compatibilité.
----Source : lua/ge/extensions/gameplay/police.lua:594
----@param id integer|nil Véhicule (défaut joueur 0).
----@return table|nil  Table pursuit (mode, score, timers, offensesList…).
+--- Pursuit data (veh.pursuit) of a traffic vehicle. Kept for compatibility.
+---Source: lua/ge/extensions/gameplay/police.lua:594
+---@param id integer|nil Vehicle (default player 0).
+---@return table|nil  pursuit table (mode, score, timers, offensesList...).
 function gameplay_police.getPursuitData(id) end
 
---- Variables de poursuite actuelles. Alias : getPoliceVars.
----Source : lua/ge/extensions/gameplay/police.lua:603
----@return table  Variables (référence directe).
+--- Current pursuit variables. Alias: getPoliceVars.
+---Source: lua/ge/extensions/gameplay/police.lua:603
+---@return table  Variables (direct reference).
 function gameplay_police.getPursuitVars() end
 
---- Ajoute un objet comme accessoire de barrage, s'il existe, n'est pas déjà un véhicule de trafic et n'est pas déjà enregistré.
----Source : lua/ge/extensions/gameplay/police.lua:235
----@param propId integer Id de l'objet.
+--- Adds an object as a roadblock prop, if it exists, is not already a traffic vehicle and is not already registered.
+---Source: lua/ge/extensions/gameplay/police.lua:235
+---@param propId integer Object id.
 function gameplay_police.insertProp(propId) end
 
---- Statut de poursuite d'un véhicule du trafic : pour un policier, vrai s'il poursuit (éventuellement targetId) ; pour un suspect, vrai si pursuit.mode > 0.
----Source : lua/ge/extensions/gameplay/police.lua:299
----@param id integer|nil Véhicule (défaut joueur 0).
----@param targetId integer|nil Filtre sur la cible poursuivie (policiers seulement).
----@return boolean  En poursuite.
----@return boolean  Le véhicule est un policier.
+--- Pursuit status of a traffic vehicle: for a police vehicle, true if it is pursuing (optionally targetId); for a suspect, true if pursuit.mode > 0.
+---Source: lua/ge/extensions/gameplay/police.lua:299
+---@param id integer|nil Vehicle (default player 0).
+---@param targetId integer|nil Filter on the pursued target (police only).
+---@return boolean  In pursuit.
+---@return boolean  The vehicle is a police vehicle.
 function gameplay_police.isVehicleInPursuit(id, targetId) end
 
---- Hook de fin de niveau : vide la liste de police et réinitialise les variables de poursuite.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:707
+--- Level end hook: clears the police list and resets the pursuit variables.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:707
 function gameplay_police.onClientEndMission() end
 
---- Hook après rechargement Lua : restaure vars et policePropIds.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:762
----@param data table Résultat de onSerialize.
+--- Hook after Lua reload: restores vars and policePropIds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:762
+---@param data table Result of onSerialize.
 function gameplay_police.onDeserialized(data) end
 
---- Hook avant rechargement Lua : renvoie {vars, propIds} et vide la liste de police (reconstruite ensuite).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:756
+--- Hook before Lua reload: returns {vars, propIds} and clears the police list (rebuilt afterwards).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:756
 ---@return table  {vars, propIds}
 function gameplay_police.onSerialize() end
 
---- Hook de trafic : suit les changements de rôle (action 'changeRole') pour ajouter ou retirer un véhicule de la liste de police.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:607
----@param id integer Véhicule.
----@param action string Nom de l'action.
----@param data table Pour 'changeRole' : name, prevName.
+--- Traffic hook: tracks role changes ('changeRole' action) to add or remove a vehicle from the police list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:607
+---@param id integer Vehicle.
+---@param action string Name of the action.
+---@param data table For 'changeRole': name, prevName.
 function gameplay_police.onTrafficAction(id, action, data) end
 
---- Hook de gameplay_traffic : enregistre le fournisseur de véhicules spéciaux 'police' (priorité 10, au moins 3 véhicules de trafic au total, 25 % du total arrondi au supérieur si options.police). Le groupe vient d'un fichier de groupe (si options.autoLoadFromFile ou le réglage trafficSmartSelections), sinon de trafficUtils.createPoliceGroup, sinon des fullsize/police.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:26
+--- gameplay_traffic hook: registers the 'police' special vehicle provider (priority 10, at least 3 traffic vehicles in total, 25% of the total rounded up if options.police). The group comes from a group file (if options.autoLoadFromFile or the trafficSmartSelections setting), otherwise from trafficUtils.createPoliceGroup, otherwise from the fullsize/police.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:26
 function gameplay_police.onTrafficSpecialVehiclesProviders() end
 
---- Hook au démarrage du trafic : logue le nombre de véhicules de police et d'accessoires.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:635
+--- Hook at traffic start: logs the number of police vehicles and props.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:635
 function gameplay_police.onTrafficStarted() end
 
---- Hook à l'arrêt du trafic : vide la liste de police.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:642
+--- Hook at traffic stop: clears the police list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:642
 function gameplay_police.onTrafficStopped() end
 
---- Hook : ajoute le véhicule à la liste de police si son rôle est 'police'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:623
----@param id integer Véhicule ajouté.
+--- Hook: adds the vehicle to the police list if its role is 'police'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:623
+---@param id integer Vehicle added.
 function gameplay_police.onTrafficVehicleAdded(id) end
 
---- Hook : retire le véhicule de la liste de police.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:629
----@param id integer Véhicule retiré.
+--- Hook: removes the vehicle from the police list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:629
+---@param id integer Vehicle removed.
 function gameplay_police.onTrafficVehicleRemoved(id) end
 
---- Appelé à chaque image. Pour chaque véhicule du trafic, déclenche setPursuitMode quand le score atteint un nouveau palier de scoreLevels (avec un court délai au début). Gère aussi le minuteur de suspect aléatoire.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:712
----@param dt number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
+--- Called every frame. For each traffic vehicle, triggers setPursuitMode when the score reaches a new scoreLevels step (with a short delay at the start). Also handles the random suspect timer.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:712
+---@param dt number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
 function gameplay_police.onUpdate(dt, dtSim) end
 
---- Hook : retire l'objet détruit de la liste d'accessoires.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:700
----@param id integer Objet détruit.
+--- Hook: removes the destroyed object from the props list.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:700
+---@param id integer Destroyed object.
 function gameplay_police.onVehicleDestroyed(id) end
 
---- Hook de réinitialisation d'un véhicule IA : choisit éventuellement un suspect aléatoire parmi les véhicules 'standard' quand le minuteur est écoulé, ou ramène un suspect non 'wanted' au rôle standard.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:683
----@param id integer Véhicule réinitialisé.
+--- AI vehicle reset hook: optionally picks a random suspect among the 'standard' vehicles when the timer has elapsed, or returns a non-'wanted' suspect to the standard role.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:683
+---@param id integer Vehicle reset.
 function gameplay_police.onVehicleResetted(id) end
 
---- Hook de changement de véhicule contrôlé : insère le nouveau véhicule dans le trafic si besoin ; lors d'un passage à pied/en véhicule (jbeam 'unicycle') pendant une poursuite, transfère les données de poursuite au nouveau véhicule, relance le mode, et force l'arrestation en cas de retour dans un véhicule sous les yeux de la police. Marque ignorePolice pour éviter l'auto-arrestation d'un policier descendant.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/police.lua:646
----@param oldId integer Ancien véhicule.
----@param newId integer Nouveau véhicule.
+--- Controlled vehicle change hook: inserts the new vehicle into traffic if needed; on a switch on foot/in vehicle (jbeam 'unicycle') during a pursuit, transfers the pursuit data to the new vehicle, restarts the mode, and forces the arrest on a return to a vehicle in front of the police. Sets ignorePolice to avoid the self-arrest of a police officer getting out.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/police.lua:646
+---@param oldId integer Old vehicle.
+---@param newId integer New vehicle.
 function gameplay_police.onVehicleSwitched(oldId, newId) end
 
---- Place des véhicules en rang en travers d'une route (centrés sur pos, répartis sur placeData.width), puis les téléporte avec core_multiSpawn.placeGroup.
----Source : lua/ge/extensions/gameplay/police.lua:91
----@param vehIds integer[] Ids à placer.
----@param pos vec3 Centre du barrage.
----@param rot quat Orientation (la direction avant doit suivre la route).
----@param placeData table|nil width (défaut 10 m), angle (degrés, défaut 0), centerAngle (angle du véhicule central).
+--- Places vehicles in a row across a road (centered on pos, spread over placeData.width), then teleports them with core_multiSpawn.placeGroup.
+---Source: lua/ge/extensions/gameplay/police.lua:91
+---@param vehIds integer[] Ids to place.
+---@param pos vec3 Center of the roadblock.
+---@param rot quat Orientation (the forward direction must follow the road).
+---@param placeData table|nil width (default 10 m), angle (degrees, default 0), centerAngle (angle of the center vehicle).
 function gameplay_police.placeRoadblock(vehIds, pos, rot, placeData) end
 
---- Libère un véhicule après arrestation : émet onPursuitAction 'release' et remet le mode de poursuite à 0. Si le véhicule n'est pas du trafic, envoie controller.setFreeze(0) à son VM.
----Source : lua/ge/extensions/gameplay/police.lua:519
----@param id integer Véhicule.
----@param showMessages boolean|nil Afficher le message « drive away » si c'est le joueur.
+--- Releases a vehicle after arrest: emits onPursuitAction 'release' and sets the pursuit mode back to 0. If the vehicle is not traffic, sends controller.setFreeze(0) to its VM.
+---Source: lua/ge/extensions/gameplay/police.lua:519
+---@param id integer Vehicle.
+---@param showMessages boolean|nil Show the "drive away" message if it is the player.
 function gameplay_police.releaseVehicle(id, showMessages) end
 
---- Retire un accessoire de la liste de barrage.
----Source : lua/ge/extensions/gameplay/police.lua:242
----@param propId integer Id de l'objet.
+--- Removes a prop from the roadblock list.
+---Source: lua/ge/extensions/gameplay/police.lua:242
+---@param propId integer Object id.
 function gameplay_police.removeProp(propId) end
 
---- Alias de setPursuitVars.
----Source : lua/ge/extensions/gameplay/police.lua:265
----@param data table|nil|false Voir setPursuitVars.
+--- Alias of setPursuitVars.
+---Source: lua/ge/extensions/gameplay/police.lua:265
+---@param data table|nil|false See setPursuitVars.
 function gameplay_police.setPoliceVars(data) end
 
---- Active ou désactive tous les accessoires de barrage enregistrés ; avec reset, appelle recovery.loadHome() sur chacun.
----Source : lua/ge/extensions/gameplay/police.lua:226
----@param active boolean true pour activer.
----@param reset boolean|nil true pour remettre à leur position d'origine.
+--- Enables or disables all registered roadblock props; with reset, calls recovery.loadHome() on each.
+---Source: lua/ge/extensions/gameplay/police.lua:226
+---@param active boolean true to enable.
+---@param reset boolean|nil true to return them to their original position.
 function gameplay_police.setPropsActive(active, reset) end
 
---- Fixe le mode de poursuite d'une cible : -1 arrêté, 0 fin, 1 à 3 niveau. Met la cible au rôle suspect (action fleePolice), met à jour les policiers (pursuitStart, pursuitEnd, resetAction) et le score, puis émet onPursuitModeUpdate. Au passage de 0 à >0, émet onPursuitAction 'start'. Sans effet si la cible n'est pas du trafic ou a ignorePursuit.
----Source : lua/ge/extensions/gameplay/police.lua:325
----@param mode integer -1 à 3 (borné).
----@param targetId integer|nil Cible (défaut joueur 0).
----@param policeIds integer[]|integer|nil Policiers concernés (défaut tous ; un nombre seul est accepté).
+--- Sets a target's pursuit mode: -1 arrested, 0 end, 1 to 3 level. Gives the target the suspect role (fleePolice action), updates the police (pursuitStart, pursuitEnd, resetAction) and the score, then emits onPursuitModeUpdate. When going from 0 to >0, emits onPursuitAction 'start'. Has no effect if the target is not traffic or has ignorePursuit.
+---Source: lua/ge/extensions/gameplay/police.lua:325
+---@param mode integer -1 to 3 (clamped).
+---@param targetId integer|nil Target (default player 0).
+---@param policeIds integer[]|integer|nil Police concerned (default all; a single number is accepted).
 function gameplay_police.setPursuitMode(mode, targetId, policeIds) end
 
---- Fusionne data dans les variables de poursuite ; sans table valide (nil/false), les remet par défaut. Alias : setPoliceVars.
----Source : lua/ge/extensions/gameplay/police.lua:265
----@param data table|nil|false Variables à modifier (scoreLevels, strictness, arrestTime, arrestRadius, evadeTime, evadeRadius, suspectFrequency, roadblockFrequency, useVisibility, autoRelease).
+--- Merges data into the pursuit variables; without a valid table (nil/false), resets them to default. Alias: setPoliceVars.
+---Source: lua/ge/extensions/gameplay/police.lua:265
+---@param data table|nil|false Variables to change (scoreLevels, strictness, arrestTime, arrestRadius, evadeTime, evadeRadius, suspectFrequency, roadblockFrequency, useVisibility, autoRelease).
 function gameplay_police.setPursuitVars(data) end
 
---- Passe un véhicule de trafic au rôle 'suspect' avec l'action 'watchPolice' (conservée au rafraîchissement du rôle).
----Source : lua/ge/extensions/gameplay/police.lua:429
----@param id integer Id du véhicule.
+--- Sets a traffic vehicle to the 'suspect' role with the 'watchPolice' action (kept on role refresh).
+---Source: lua/ge/extensions/gameplay/police.lua:429
+---@param id integer Vehicle id.
 function gameplay_police.setSuspect(id) end
 
---- Règle le délai avant le prochain suspect aléatoire. Sans argument : 120 * coef * (1 - suspectFrequency)^2 + 15 à 45 s ; coef vaut 2, 1 après une arrestation du joueur policier, 5 après une évasion.
----Source : lua/ge/extensions/gameplay/police.lua:439
----@param time number|nil Délai en secondes ; nil = calcul automatique.
+--- Sets the delay before the next random suspect. With no argument: 120 * coef * (1 - suspectFrequency)^2 + 15 to 45 s; coef is 2, 1 after an arrest by the police player, 5 after an evasion.
+---Source: lua/ge/extensions/gameplay/police.lua:439
+---@param time number|nil Delay in seconds; nil = automatic calculation.
 function gameplay_police.setSuspectTimer(time) end
 
---- Prépare un scénario de poursuite : insère le suspect dans le trafic (sans désactivation par le pool de véhicules), désactive son respawn, lui donne le rôle suspect (pursuitMode), force le rôle 'police' aux policeIds fournis, et lance l'action 'watchPolice' sauf si preventAutoStart.
----Source : lua/ge/extensions/gameplay/police.lua:544
----@param suspectId integer|nil Suspect (défaut véhicule du joueur 0).
----@param policeIds integer[]|nil Policiers (défaut : policiers existants).
----@param options table|nil playerId, pursuitMode (défaut 2), preventAutoStart (défaut false).
----@return boolean  false si le suspect est introuvable ou s'il n'existe aucun policier.
+--- Prepares a pursuit scenario: inserts the suspect into traffic (without deactivation by the vehicle pool), disables its respawn, gives it the suspect role (pursuitMode), forces the 'police' role on the provided policeIds, and starts the 'watchPolice' action unless preventAutoStart.
+---Source: lua/ge/extensions/gameplay/police.lua:544
+---@param suspectId integer|nil Suspect (default player 0 vehicle).
+---@param policeIds integer[]|nil Police (default: existing police).
+---@param options table|nil playerId, pursuitMode (default 2), preventAutoStart (default false).
+---@return boolean  false if the suspect is not found or if there is no police.
 function gameplay_police.setupPursuitGameplay(suspectId, policeIds, options) end
 
---- Prépare et place un barrage devant la cible. Choisit les véhicules de police actifs, éloignés de plus de activeDist et derrière l'origine, qui peuvent cibler targetId. Cherche un point de route à spawnDist devant, calcule la largeur de route, ajuste l'angle aléatoirement, met les policiers en action 'roadblock' et place aussi des accessoires (propIds).
----Source : lua/ge/extensions/gameplay/police.lua:136
----@param targetId integer|nil Cible (défaut véhicule du joueur 0).
----@param roadblockVehIds integer[]|nil Véhicules candidats (défaut tous les véhicules de police).
----@param roadblockPropIds integer[]|nil Accessoires (défaut ceux de insertProp).
----@param originPos vec3|nil Origine (défaut position caméra).
----@param originDirVec vec3|nil Direction de l'origine (défaut avant de la caméra).
----@param activeDist number|nil Distance rayonnante (défaut 100 m) ; 0 ignore les tests de distance et de direction.
----@param spawnDist number|nil Distance minimale de placement (défaut 120 m) ; 0 force le placement à l'origine.
----@return table|nil  {vehIds, propIds} des éléments placés ; nil en cas d'échec.
+--- Prepares and places a roadblock in front of the target. Chooses the active police vehicles, farther than activeDist and behind the origin, that can target targetId. Looks for a road point at spawnDist ahead, computes the road width, adjusts the angle randomly, puts the police in 'roadblock' action and also places props (propIds).
+---Source: lua/ge/extensions/gameplay/police.lua:136
+---@param targetId integer|nil Target (default player 0 vehicle).
+---@param roadblockVehIds integer[]|nil Candidate vehicles (default all police vehicles).
+---@param roadblockPropIds integer[]|nil Props (default those of insertProp).
+---@param originPos vec3|nil Origin (default camera position).
+---@param originDirVec vec3|nil Origin direction (default camera forward).
+---@param activeDist number|nil Radiating distance (default 100 m); 0 skips the distance and direction tests.
+---@param spawnDist number|nil Minimum placement distance (default 120 m); 0 forces placement at the origin.
+---@return table|nil  {vehIds, propIds} of the placed elements; nil on failure.
 function gameplay_police.setupRoadblock(targetId, roadblockVehIds, roadblockPropIds, originPos, originDirVec, activeDist, spawnDist) end
 

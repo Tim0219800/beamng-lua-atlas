@@ -1,31 +1,31 @@
 # `flowgraph_nodes_vehicle_colors`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/colors.lua` · VM : Game Engine (GE) · 72 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/colors.lua` · VM: Game Engine (GE) · 72 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/colors")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/colors")` (file under extensions/ but not a regular extension)
 
-Nœud « Set Vehicle Colors » (catégorie `repeat_instant`, tags colors). Change les trois peintures du véhicule : `color1` (principale, `obj.color`), `color2` (`colorPalette0`), `color3` (`colorPalette1`). Chaque pin `color` est une table de 8 nombres : les 4 premiers = couleur de base (r,g,b,a), les 4 suivants = données métalliques passées à `createVehiclePaint`. Finit par `obj:setMetallicPaintData`. Pin `vehId` : si absent, véhicule joueur (`be:getPlayerVehicleID(0)`).
+Node "Set Vehicle Colors" (category `repeat_instant`, tags colors). Changes the three paints of the vehicle: `color1` (main, `obj.color`), `color2` (`colorPalette0`), `color3` (`colorPalette1`). Each `color` pin is a table of 8 numbers: the first 4 = base color (r,g,b,a), the next 4 = metallic data passed to `createVehiclePaint`. Ends with `obj:setMetallicPaintData`. Pin `vehId`: if absent, player vehicle (`be:getPlayerVehicleID(0)`).
 
-## Remarques
+## Notes
 
-- Appelé à chaque frame tant que le flux est actif.
-- Pas de test sur `obj` nil.
-- La couleur est convertie en linéaire (`asLinear4F`) avant d'être posée.
+- Called every frame while the flow is active.
+- No test on `obj` nil.
+- The color is converted to linear (`asLinear4F`) before being applied.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:postInit()` | Marque les trois pins couleur avec `colorSetup = {vehicleColor = true}` (sélecteur de peinture véhicule dans l'éditeur). | 29 |
-| `C:work()` | Crée une peinture par pin couleur non nil, l'applique à l'objet véhicule et envoie la liste des peintures avec `setMetallicPaintData`. | 43 |
+| `C:postInit()` | Marks the three color pins with `colorSetup = {vehicleColor = true}` (vehicle paint picker in the editor). | 29 |
+| `C:work()` | Creates a paint per non-nil color pin, applies it to the vehicle object and sends the list of paints with `setMetallicPaintData`. | 43 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `obj:` `setMetallicPaintData`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/colors.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/colors.lua`.*

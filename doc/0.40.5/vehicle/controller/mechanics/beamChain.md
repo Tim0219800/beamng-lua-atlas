@@ -1,68 +1,68 @@
 # `controller_mechanics_beamChain`
 
-*Fichier : `lua/vehicle/controller/mechanics/beamChain.lua` · VM : Véhicule · 78 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/mechanics/beamChain.lua` · VM: Vehicle · 78 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `mechanics/beamChain` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `mechanics/beamChain` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur de mécanique (type "auxiliary") qui relie deux poutres en série : à chaque pas physique, si la somme de leurs longueurs dépasse leur longueur combinée initiale, l'excès est retiré à parts égales des deux (obj:setBeamLength). Utile pour simuler une chaîne ou un câble à deux tronçons. Si l'une des poutres casse, l'autre est cassée aussi et le système se désactive.
+Mechanics controller (type "auxiliary") that links two beams in series: at each physics step, if the sum of their lengths exceeds their initial combined length, the excess is removed equally from both (obj:setBeamLength). Useful to simulate a chain or a cable with two sections. If one of the beams breaks, the other is broken too and the system disables itself.
 
-## Remarques
+## Notes
 
-- Clé jbeam : beamTag (obligatoire), tag de poutre qui doit correspondre à exactement 2 poutres (beamstate.tagBeamMap) ; sinon une erreur est journalisée et le contrôleur reste inactif (update et updateGFX restent nil).
-- Le hook beamBroken(id, energy) est appelé par le moteur quand une poutre casse.
+- jbeam key: beamTag (required), beam tag that must match exactly 2 beams (beamstate.tagBeamMap); otherwise an error is logged and the controller stays inactive (update and updateGFX stay nil).
+- The beamBroken(id, energy) hook is called by the engine when a beam breaks.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_mechanics_beamChain.beamBroken(id, energy)` | Hook : appelé quand une poutre casse ; si c'est l'une des deux, casse l'autre et désactive la chaîne. *(interne)* | 34 |
-| `controller_mechanics_beamChain.init(jbeamData)` | Retrouve les deux poutres du tag et mémorise leur longueur combinée. *(interne)* | 48 |
-| `controller_mechanics_beamChain.reset(jbeamData)` | Réactive la chaîne. *(interne)* | 44 |
-| `controller_mechanics_beamChain.update(dt)` | Chaque pas physique : retire l'excès de longueur à parts égales des deux poutres. (assignée dynamiquement) *(interne)* | dyn |
-| `controller_mechanics_beamChain.updateGFX(dt)` | Ne fait rien. (assignée dynamiquement) *(interne)* | dyn |
+| `controller_mechanics_beamChain.beamBroken(id, energy)` | Hook: called when a beam breaks; if it is one of the two, breaks the other and disables the chain. *(internal)* | 34 |
+| `controller_mechanics_beamChain.init(jbeamData)` | Finds the two beams of the tag and stores their combined length. *(internal)* | 48 |
+| `controller_mechanics_beamChain.reset(jbeamData)` | Reactivates the chain. *(internal)* | 44 |
+| `controller_mechanics_beamChain.update(dt)` | Every physics step: removes the excess length equally from the two beams. (dynamically assigned) *(internal)* | dyn |
+| `controller_mechanics_beamChain.updateGFX(dt)` | Does nothing. (dynamically assigned) *(internal)* | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_mechanics_beamChain.beamBroken(id, energy)`
 
-Hook : appelé quand une poutre casse ; si c'est l'une des deux, casse l'autre et désactive la chaîne.
+Hook: called when a beam breaks; if it is one of the two, breaks the other and disables the chain.
 
-- `id` (*integer*) : Identifiant (cid) de la poutre cassée.
-- `energy` (*number*) : Énergie de rupture.
+- `id` (*integer*) : Identifier (cid) of the broken beam.
+- `energy` (*number*) : Break energy.
 
 #### `controller_mechanics_beamChain.init(jbeamData)`
 
-Retrouve les deux poutres du tag et mémorise leur longueur combinée.
+Finds the two beams of the tag and stores their combined length.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_mechanics_beamChain.reset(jbeamData)`
 
-Réactive la chaîne.
+Reactivates the chain.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_mechanics_beamChain.update(dt)`
 
-Chaque pas physique : retire l'excès de longueur à parts égales des deux poutres. (assignée dynamiquement)
+Every physics step: removes the excess length equally from the two beams. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
 #### `controller_mechanics_beamChain.updateGFX(dt)`
 
-Ne fait rien. (assignée dynamiquement)
+Does nothing. (dynamically assigned)
 
-- `dt` (*number*) : Pas de temps (s).
+- `dt` (*number*) : Time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `breakBeam`, `getBeamLength`, `setBeamLength`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/mechanics/beamChain.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/mechanics/beamChain.lua`.*

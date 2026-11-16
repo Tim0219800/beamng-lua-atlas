@@ -2,439 +2,439 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/roadArchitect/profiles.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gestion des profils latéraux (coupes en travers) des routes de Road Architect. Un profil est une table indexée par numéro de voie : les clés négatives (-1 à -20) sont les voies de gauche, les clés positives (1 à 20) celles de droite, il n'y a pas de clé 0. Chaque voie a un type ('road_lane', 'sidewalk', 'shoulder', 'island'), une largeur et des hauteurs (champs width, heightL, heightR, ce sont des pointeurs ImGui à lire avec [0]). Le profil porte aussi des paramètres de style (condition d'usure, matériaux des lignes de peinture, fondus de bord, gouttière…) et un tableau layers de couches (peinture, décalques, usure). Le module charge les modèles de profil prédéfinis (fichiers roadArchitect/profiles/*.json : Rural, Urban, Hwy, Tracks, Barrier_Only, Lamps_Only…), fabrique les profils des jonctions, ajoute automatiquement les couches de peinture, d'usure et de fondu de bord, et sérialise/désérialise les profils vers JSON.
---- Accès : extension `editor_roadArchitect_profiles` : `extensions.load("editor_roadArchitect_profiles")`, puis la globale `editor_roadArchitect_profiles`
+--- Management of the lateral profiles (cross sections) of Road Architect roads. A profile is a table keyed by lane number: negative keys (-1 to -20) are the left lanes, positive keys (1 to 20) the right ones, there is no key 0. Each lane has a type ('road_lane', 'sidewalk', 'shoulder', 'island'), a width and heights (fields width, heightL, heightR, which are ImGui pointers to read with [0]). The profile also carries style parameters (wear condition, paint line materials, edge fades, gutter...) and a layers array of layers (paint, decals, wear). The module loads the predefined profile templates (roadArchitect/profiles/*.json files: Rural, Urban, Hwy, Tracks, Barrier_Only, Lamps_Only...), builds the junction profiles, automatically adds the paint, wear and edge fade layers, and serializes/deserializes profiles to JSON.
+--- Access: extension `editor_roadArchitect_profiles`: `extensions.load("editor_roadArchitect_profiles")`, then the global `editor_roadArchitect_profiles`
 ---@class editor_roadArchitect_profiles
----@field profiles table[] Tableau des profils actuellement présents dans l'éditeur (modèles prédéfinis puis profils créés ou chargés par l'utilisateur).
+---@field profiles table[] Array of the profiles currently present in the editor (predefined templates, then profiles created or loaded by the user).
 editor_roadArchitect_profiles = {}
 
---- Ajoute au profil une couche de ligne centrale (matériau p.centerlineMat, largeur 0.4) pour chaque section de voies de route à double sens (les sections à sens unique n'en reçoivent pas).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:134
----@param p table Profil.
----@param isPaint boolean Si vrai, la couche n'est pas marquée comme peinture (isPaint = not isPaint) ; reçoit prof.continueLinesToEnd[0] depuis autoPaintLines.
+--- Adds to the profile a centerline layer (material p.centerlineMat, width 0.4) for each section of two-way road lanes (one-way sections do not get one).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:134
+---@param p table Profile.
+---@param isPaint boolean If true, the layer is not marked as paint (isPaint = not isPaint); receives prof.continueLinesToEnd[0] from autoPaintLines.
 function editor_roadArchitect_profiles.addCenterline(p, isPaint) end
 
---- Ajoute les lignes de bord de chaussée (largeur 0.25) à gauche et/ou à droite de chaque section de voies de route, avec les matériaux p.edgeMatL et p.edgeMatR.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:172
----@param p table Profil.
----@param latOffL number Décalage latéral de la ligne de bord gauche (m).
----@param latOffR number Décalage latéral de la ligne de bord droite (m).
----@param isLeft boolean Créer les lignes de bord gauches.
----@param isRight boolean Créer les lignes de bord droites.
----@param isPaint boolean Même sens que pour addCenterline.
+--- Adds the road edge lines (width 0.25) on the left and/or right of each section of road lanes, with the materials p.edgeMatL and p.edgeMatR.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:172
+---@param p table Profile.
+---@param latOffL number Lateral offset of the left edge line (m).
+---@param latOffR number Lateral offset of the right edge line (m).
+---@param isLeft boolean Create the left edge lines.
+---@param isRight boolean Create the right edge lines.
+---@param isPaint boolean Same meaning as for addCenterline.
 function editor_roadArchitect_profiles.addEdgeLines(p, latOffL, latOffR, isLeft, isRight, isPaint) end
 
---- Ajoute des lignes d'arrêt (largeur 0.4, matériaux p.endStopMatS et p.endStopMatE) en fin de section pour les voies de route. Seul le cas isEnd est géré dans le code lu ; les voies de gauche et de droite reçoivent des couches distinctes (Stop line A et B).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:297
----@param p table Profil.
----@param isStart boolean Ligne d'arrêt au début de la route.
----@param isEnd boolean Ligne d'arrêt à la fin de la route.
+--- Adds stop lines (width 0.4, materials p.endStopMatS and p.endStopMatE) at the end of the section for road lanes. Only the isEnd case is handled in the code read; the left and right lanes get separate layers (Stop line A and B).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:297
+---@param p table Profile.
+---@param isStart boolean Stop line at the start of the road.
+---@param isEnd boolean Stop line at the end of the road.
 function editor_roadArchitect_profiles.addEndLine(p, isStart, isEnd) end
 
---- Ajoute une voie 'road_lane' (3.5 m, hauteur 0.01) au profil, à la position choisie, en décalant les voies existantes. Limité à 20 voies par côté.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2903
----@param selectedProfileIdx integer Indice du profil dans profiles.
----@param selectedLaneIdx integer Clé de voie de référence.
----@param side string 'left' ou 'right'.
----@param rel string Position relative : 'above' (côté gauche : avant la voie) ou 'below' (côté droit : après la voie).
+--- Adds a 'road_lane' lane (3.5 m, height 0.01) to the profile, at the chosen position, shifting the existing lanes. Limited to 20 lanes per side.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2903
+---@param selectedProfileIdx integer Index of the profile in profiles.
+---@param selectedLaneIdx integer Reference lane key.
+---@param side string 'left' or 'right'.
+---@param rel string Relative position: 'above' (left side: before the lane) or 'below' (right side: after the lane).
 function editor_roadArchitect_profiles.addLane(selectedProfileIdx, selectedLaneIdx, side, rel) end
 
---- Ajoute une ligne de séparation de voies (matériau p.laneMarkingsMat) entre chaque paire de voies de route adjacentes de même sens.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:252
----@param p table Profil.
----@param isPaint boolean Même sens que pour addCenterline.
+--- Adds a lane separation line (material p.laneMarkingsMat) between each pair of adjacent road lanes of the same direction.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:252
+---@param p table Profile.
+---@param isPaint boolean Same meaning as for addCenterline.
 function editor_roadArchitect_profiles.addLaneDivisionLines(p, isPaint) end
 
---- Insère une nouvelle couche vide ('new layer') du profil, au-dessus ou au-dessous de l'indice i.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:989
----@param p table Profil.
----@param i integer Indice de référence.
----@param dir string 'above' pour insérer avant l'indice i, sinon après (déduit du code).
+--- Inserts a new empty layer ('new layer') into the profile, above or below index i.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:989
+---@param p table Profile.
+---@param i integer Reference index.
+---@param dir string 'above' to insert before index i, otherwise after (inferred from code).
 function editor_roadArchitect_profiles.addLayer(p, i, dir) end
 
---- Ajoute à chaque voie 'road_lane' ou 'shoulder' comprise entre lMin et lMax une couche de traces de pneus légères (matériau m_tread_marks_clean) sur toute la longueur.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:455
----@param p table Profil.
----@param fadeS number Longueur de fondu au début (m).
----@param fadeE number Longueur de fondu à la fin (m).
----@param lMin integer Première clé de voie.
----@param lMax integer Dernière clé de voie.
+--- Adds to each 'road_lane' or 'shoulder' lane between lMin and lMax a light tire tracks layer (material m_tread_marks_clean) over the whole length.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:455
+---@param p table Profile.
+---@param fadeS number Fade length at the start (m).
+---@param fadeE number Fade length at the end (m).
+---@param lMin integer First lane key.
+---@param lMax integer Last lane key.
 function editor_roadArchitect_profiles.addLightTreadToLanes(p, fadeS, fadeE, lMin, lMax) end
 
---- Donne la largeur mWidth à toutes les voies de type 'road_lane' du profil (écrase les largeurs de la coupe).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2938
----@param profile table Profil.
----@param mWidth number Largeur unique (m).
+--- Gives the width mWidth to all 'road_lane' type lanes of the profile (overwrites the cross-section widths).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2938
+---@param profile table Profile.
+---@param mWidth number Single width (m).
 function editor_roadArchitect_profiles.applyMasterWidth(profile, mWidth) end
 
---- Indique si le profil contient au moins une voie de type 'sidewalk'.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1153
----@param p table Profil.
----@return boolean  true si un trottoir existe.
+--- Indicates whether the profile contains at least one 'sidewalk' type lane.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1153
+---@param p table Profile.
+---@return boolean  true if a sidewalk exists.
 function editor_roadArchitect_profiles.areSidewalksPresent(p) end
 
---- Ajoute des couches de fondu de bord (largeur 2.0, longueur de texture 18, décalage 0.5 m) pour chaque section de route ou d'accotement dont le côté n'est pas occupé par une autre voie autre qu'un îlot.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:383
----@param prof table Profil.
----@param isLeft boolean Créer les fondus du côté gauche.
----@param isRight boolean Créer les fondus du côté droit.
----@param mat string|nil Matériau (défaut m_road_asphalt_edge).
+--- Adds edge fade layers (width 2.0, texture length 18, offset 0.5 m) for each road or shoulder section whose side is not occupied by another lane other than an island.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:383
+---@param prof table Profile.
+---@param isLeft boolean Create the left-side fades.
+---@param isRight boolean Create the right-side fades.
+---@param mat string|nil Material (default m_road_asphalt_edge).
 function editor_roadArchitect_profiles.autoEdgeBlending(prof, isLeft, isRight, mat) end
 
---- Réinitialise prof.layers puis crée automatiquement ligne centrale, lignes de bord, ligne d'arrêt de fin et lignes de séparation de voies d'après les paramètres du profil (conditionEdgesL/R, conditionEndStopE, edgeLineGapL/R, continueLinesToEnd).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:374
----@param prof table Profil dont les couches sont recréées.
+--- Resets prof.layers then automatically creates centerline, edge lines, end stop line and lane separation lines from the profile parameters (conditionEdgesL/R, conditionEndStopE, edgeLineGapL/R, continueLinesToEnd).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:374
+---@param prof table Profile whose layers are recreated.
 function editor_roadArchitect_profiles.autoPaintLines(prof) end
 
---- Renvoie les clés de voies existantes, de la plus petite à la plus grande, avec en plus les listes séparées des clés de gauche et de droite.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1050
----@param profile table Profil.
----@return integer[]  Toutes les clés triées.
----@return integer[]  Clés de gauche.
----@return integer[]  Clés de droite.
+--- Returns the existing lane keys, from smallest to largest, plus the separate lists of left and right keys.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1050
+---@param profile table Profile.
+---@return integer[]  All keys, sorted.
+---@return integer[]  Left keys.
+---@return integer[]  Right keys.
 function editor_roadArchitect_profiles.computeLaneKeys(profile) end
 
---- Découpe le profil de gauche à droite en sections contiguës de voies d'un ou deux types donnés. Chaque section est { s, e, isOneWay, lanesL, lanesR } : clés de début et de fin, vrai si la section est entièrement d'un côté, nombre de voies à gauche et à droite.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:100
----@param profile table Profil de route.
----@param laneType1 string Premier type de voie accepté ('road_lane', 'sidewalk', 'shoulder', 'island').
----@param laneType2 string|nil Second type de voie accepté, facultatif.
----@return table[]  Tableau de sections { s, e, isOneWay, lanesL, lanesR }.
+--- Splits the profile from left to right into contiguous sections of lanes of one or two given types. Each section is { s, e, isOneWay, lanesL, lanesR }: start and end keys, true if the section is entirely on one side, number of lanes on the left and on the right.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:100
+---@param profile table Road profile.
+---@param laneType1 string First accepted lane type ('road_lane', 'sidewalk', 'shoulder', 'island').
+---@param laneType2 string|nil Second accepted lane type, optional.
+---@return table[]  Array of sections { s, e, isOneWay, lanesL, lanesR }.
 function editor_roadArchitect_profiles.computeSectionsByType(profile, laneType1, laneType2) end
 
---- Copie un profil en profondeur (nouveaux pointeurs ImGui, voies et couches) ; le nom est repris tel quel (même objet).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2768
----@param template table Profil à copier.
----@return table  Copie du profil.
+--- Deep-copies a profile (new ImGui pointers, lanes and layers); the name is kept as is (same object).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2768
+---@param template table Profile to copy.
+---@return table  Copy of the profile.
 function editor_roadArchitect_profiles.copyProfile(template) end
 
---- Crée le profil d'un pont simple : deux voies de route de largeur width et dont les hauteurs heightL et heightR valent depth.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1510
----@param width number Largeur de chaque voie (m).
----@param depth number Épaisseur/hauteur du tablier (m).
----@return table  Profil créé.
+--- Creates the profile of a simple bridge: two road lanes of width width whose heights heightL and heightR equal depth.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1510
+---@param width number Width of each lane (m).
+---@param depth number Deck thickness/height (m).
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createBridgeProfile(width, depth) end
 
---- Crée un profil pour l'import OpenDRIVE : chaque voie de lanes reçoit le type natif correspondant (driving, shoulder, parking, stop, median, entry/exit, rampes, slipLane… -> road_lane ; walking -> sidewalk ; restricted et none -> island ; autre -> road_lane) avec une largeur par défaut de 3.5 m (les vraies largeurs sont ajoutées ensuite nœud par nœud). Ajoute les lignes de peinture automatiques.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1217
----@param lanes table Table clé de voie -> { type = type OpenDRIVE (chaîne) }.
----@return table  Le profil créé.
----@return table  Table clé de voie -> type natif.
+--- Creates a profile for OpenDRIVE import: each lane of lanes gets the matching native type (driving, shoulder, parking, stop, median, entry/exit, ramps, slipLane... -> road_lane; walking -> sidewalk; restricted and none -> island; other -> road_lane) with a default width of 3.5 m (the real widths are added afterwards node by node). Adds the automatic paint lines.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1217
+---@param lanes table Table lane key -> { type = OpenDRIVE type (string) }.
+---@return table  The created profile.
+---@return table  Table lane key -> native type.
 function editor_roadArchitect_profiles.createCustomImportProfile(lanes) end
 
---- Crée le profil des routes de superposition de jonction (voir overlays.lua), sans couche.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1444
----@param width number Largeur de la voie (m).
----@return table  Profil créé.
+--- Creates the profile of the junction overlay roads (see overlays.lua), with no layer.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1444
+---@param width number Lane width (m).
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createOverlayProfile(width) end
 
---- Crée le profil d'une route de jonction à double sens : numLeftLanes voies à gauche, numRightLanes à droite, plus éventuellement un trottoir de chaque côté. Ajoute peinture et fondus de bord (les fondus ne sont créés que s'il n'y a pas de trottoirs).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1581
----@param numLeftLanes integer Voies à gauche.
----@param numRightLanes integer Voies à droite.
----@param width number Largeur des voies (m).
----@param sidewalkWidth number Largeur des trottoirs (m).
----@param sidewalkHeight number Hauteur des trottoirs (m).
----@param isSidewalk boolean Ajouter les trottoirs.
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of a two-way junction road: numLeftLanes lanes on the left, numRightLanes on the right, plus optionally a sidewalk on each side. Adds paint and edge fades (the fades are only created if there are no sidewalks).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1581
+---@param numLeftLanes integer Lanes on the left.
+---@param numRightLanes integer Lanes on the right.
+---@param width number Lane width (m).
+---@param sidewalkWidth number Sidewalk width (m).
+---@param sidewalkHeight number Sidewalk height (m).
+---@param isSidewalk boolean Add the sidewalks.
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoad(numLeftLanes, numRightLanes, width, sidewalkWidth, sidewalkHeight, isSidewalk, mat) end
 
---- Crée le profil d'une route de jonction à sens unique de numLanes voies, avec trottoirs éventuels.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1752
----@param numLanes integer Nombre de voies.
----@param width number Largeur des voies (m).
----@param sidewalkWidth number Largeur des trottoirs (m).
----@param sidewalkHeight number Hauteur des trottoirs (m).
----@param isSidewalk boolean Ajouter les trottoirs.
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of a one-way junction road with numLanes lanes, with optional sidewalks.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1752
+---@param numLanes integer Number of lanes.
+---@param width number Lane width (m).
+---@param sidewalkWidth number Sidewalk width (m).
+---@param sidewalkHeight number Sidewalk height (m).
+---@param isSidewalk boolean Add the sidewalks.
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoad1Way(numLanes, width, sidewalkWidth, sidewalkHeight, isSidewalk, mat) end
 
---- Crée le profil des sections d'extrémité (début et fin) d'une jonction d'autoroute : voies de route de chaque côté, deux accotements et un terre-plein central (îlot de largeur cResWidth).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2060
----@param numLanes integer Nombre de voies par sens.
----@param laneWidth number Largeur d'une voie (m).
----@param cResWidth number Largeur du terre-plein central (m).
----@param hardWidth number Largeur de la bande d'arrêt d'urgence (m).
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of the end sections (start and end) of a highway junction: road lanes on each side, two shoulders and a central reservation (island of width cResWidth).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2060
+---@param numLanes integer Number of lanes per direction.
+---@param laneWidth number Width of one lane (m).
+---@param cResWidth number Width of the central reservation (m).
+---@param hardWidth number Width of the emergency lane (m).
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadHwyCap(numLanes, laneWidth, cResWidth, hardWidth, mat) end
 
---- Crée le profil d'extrémité d'une jonction d'autoroute à sens unique (sans terre-plein central).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2390
----@param numLanes integer Nombre de voies.
----@param laneWidth number Largeur d'une voie (m).
----@param hardWidth number Largeur de la bande d'arrêt d'urgence (m).
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the end profile of a one-way highway junction (without central reservation).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2390
+---@param numLanes integer Number of lanes.
+---@param laneWidth number Width of one lane (m).
+---@param hardWidth number Width of the emergency lane (m).
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadHwyCap1W(numLanes, laneWidth, hardWidth, mat) end
 
---- Crée le profil de la partie urbaine d'une jonction de transition autoroute-urbain (voies, trottoirs éventuels, sens unique ou double).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2161
----@param numLanes integer Nombre de voies.
----@param laneWidth number Largeur d'une voie (m).
----@param isSidewalk boolean Ajouter des trottoirs.
----@param sidewalkWidth number Largeur des trottoirs (m).
----@param sidewalkHeight number Hauteur des trottoirs (m).
----@param isOneWay boolean Route à sens unique.
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of the urban part of a highway-urban transition junction (lanes, optional sidewalks, one-way or two-way).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2161
+---@param numLanes integer Number of lanes.
+---@param laneWidth number Width of one lane (m).
+---@param isSidewalk boolean Add sidewalks.
+---@param sidewalkWidth number Sidewalk width (m).
+---@param sidewalkHeight number Sidewalk height (m).
+---@param isOneWay boolean One-way road.
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadHwyCapUrban(numLanes, laneWidth, isSidewalk, sidewalkWidth, sidewalkHeight, isOneWay, mat) end
 
---- Crée le profil des routes de sortie à sens unique d'une jonction d'autoroute (deux voies de route, en positions 1 et 2).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2693
----@param laneWidth number Largeur d'une voie (m).
----@param hardWidth number Largeur de la bande d'arrêt d'urgence (m).
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of the one-way exit roads of a highway junction (two road lanes, at positions 1 and 2).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2693
+---@param laneWidth number Width of one lane (m).
+---@param hardWidth number Width of the emergency lane (m).
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadHwyExit(laneWidth, hardWidth, mat) end
 
---- Crée le profil de la section 2 d'une jonction d'autoroute (accotements décalés d'une voie : clés extrêmes à -numLanes-3 et numLanes+3).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2467
----@param numLanes integer Nombre de voies.
----@param laneWidth number Largeur d'une voie (m).
----@param cResWidth number Largeur du terre-plein central (m).
----@param hardWidth number Largeur de la bande d'arrêt d'urgence (m).
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of section 2 of a highway junction (shoulders shifted by one lane: extreme keys at -numLanes-3 and numLanes+3).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2467
+---@param numLanes integer Number of lanes.
+---@param laneWidth number Width of one lane (m).
+---@param cResWidth number Width of the central reservation (m).
+---@param hardWidth number Width of the emergency lane (m).
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadHwyS2(numLanes, laneWidth, cResWidth, hardWidth, mat) end
 
---- Crée le profil de la section 3 d'une jonction d'autoroute.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2568
----@param numLanes integer Nombre de voies.
----@param laneWidth number Largeur d'une voie (m).
----@param cResWidth number Largeur du terre-plein central (m).
----@param hardWidth number Largeur de la bande d'arrêt d'urgence (m).
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of section 3 of a highway junction.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2568
+---@param numLanes integer Number of lanes.
+---@param laneWidth number Width of one lane (m).
+---@param cResWidth number Width of the central reservation (m).
+---@param hardWidth number Width of the emergency lane (m).
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadHwyS3(numLanes, laneWidth, cResWidth, hardWidth, mat) end
 
---- Crée le profil des sections de transition (évasement) d'une jonction autoroute-urbain, à sens unique ou double.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2273
----@param numLanes integer Nombre de voies.
----@param laneWidth number Largeur d'une voie (m).
----@param cResWidth number Largeur du terre-plein central (m).
----@param hardWidth number Largeur de la bande d'arrêt d'urgence (m).
----@param isOneWay boolean Route à sens unique.
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of the transition (flaring) sections of a highway-urban junction, one-way or two-way.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2273
+---@param numLanes integer Number of lanes.
+---@param laneWidth number Width of one lane (m).
+---@param cResWidth number Width of the central reservation (m).
+---@param hardWidth number Width of the emergency lane (m).
+---@param isOneWay boolean One-way road.
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadHwyUrbanTrans(numLanes, laneWidth, cResWidth, hardWidth, isOneWay, mat) end
 
---- Crée le profil de la route de raccord serrée des jonctions en Y (voies de gauche et de droite plus un trottoir à droite, dont le côté de bordure peut être inversé).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1669
----@param numLeftLanes integer Voies à gauche.
----@param numRightLanes integer Voies à droite.
----@param width number Largeur des voies (m).
----@param sidewalkWidth number Largeur du trottoir (m).
----@param sidewalkHeight number Hauteur du trottoir (m).
----@param isSidewalk boolean Ajouter le trottoir.
----@param isFlipKerb boolean Inverser le côté de la bordure du trottoir (isLeftSide).
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of the tight connecting road of Y junctions (left and right lanes plus a sidewalk on the right, whose curb side can be reversed).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1669
+---@param numLeftLanes integer Lanes on the left.
+---@param numRightLanes integer Lanes on the right.
+---@param width number Lane width (m).
+---@param sidewalkWidth number Sidewalk width (m).
+---@param sidewalkHeight number Sidewalk height (m).
+---@param isSidewalk boolean Add the sidewalk.
+---@param isFlipKerb boolean Reverse the curb side of the sidewalk (isLeftSide).
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoadYSpecial(numLeftLanes, numRightLanes, width, sidewalkWidth, sidewalkHeight, isSidewalk, isFlipKerb, mat) end
 
---- Crée le profil d'une route de jonction avec un seul trottoir, du côté gauche ou droit.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1833
----@param numLeftLanes integer Voies à gauche.
----@param numRightLanes integer Voies à droite.
----@param width number Largeur des voies (m).
----@param sidewalkWidth number Largeur du trottoir (m).
----@param sidewalkHeight number Hauteur du trottoir (m).
----@param isLeftSide boolean Trottoir sur le côté gauche si vrai, sinon à droite.
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of a junction road with a single sidewalk, on the left or right side.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1833
+---@param numLeftLanes integer Lanes on the left.
+---@param numRightLanes integer Lanes on the right.
+---@param width number Lane width (m).
+---@param sidewalkWidth number Sidewalk width (m).
+---@param sidewalkHeight number Sidewalk height (m).
+---@param isLeftSide boolean Sidewalk on the left side if true, otherwise on the right.
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileForJctRoad_SW(numLeftLanes, numRightLanes, width, sidewalkWidth, sidewalkHeight, isLeftSide, mat) end
 
---- Crée un profil urbain simple (voies de route de 3.5 m, hauteur 0.01) à partir des métadonnées d'une route à décalque (decal road) créée avec d'autres outils, avec peinture automatique.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1369
----@param numLeftLanes integer Nombre de voies à gauche.
----@param numRightLanes integer Nombre de voies à droite.
----@return table  Profil créé.
+--- Creates a simple urban profile (road lanes of 3.5 m, height 0.01) from the metadata of a decal road created with other tools, with automatic paint.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1369
+---@param numLeftLanes integer Number of lanes on the left.
+---@param numRightLanes integer Number of lanes on the right.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createProfileFromDecalData(numLeftLanes, numRightLanes) end
 
---- Copie le modèle de profil templateName vers un nouveau profil (paramètres de style, voies et couches copiés en profondeur).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1297
----@param templateName any Nom du modèle à copier (voir getProfileFromName).
----@param newName any|nil Nom du nouveau profil (défaut un ArrayChar 'New Profile').
----@return table  Nouveau profil.
+--- Copies the profile template templateName to a new profile (style parameters, lanes and layers deep-copied).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1297
+---@param templateName any Name of the template to copy (see getProfileFromName).
+---@param newName any|nil Name of the new profile (default an ArrayChar 'New Profile').
+---@return table  New profile.
 function editor_roadArchitect_profiles.createProfileFromTemplate(templateName, newName) end
 
---- Crée le profil des routes circulaires d'un rond-point (numRBLanes voies de largeur laneWidthRB).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1992
----@param numRBLanes integer Nombre de voies de l'anneau.
----@param laneWidthRB number Largeur d'une voie (m).
----@param mat string|nil Matériau des fondus de bord.
----@return table  Profil créé.
+--- Creates the profile of the circular roads of a roundabout (numRBLanes lanes of width laneWidthRB).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1992
+---@param numRBLanes integer Number of lanes of the ring.
+---@param laneWidthRB number Width of one lane (m).
+---@param mat string|nil Edge fade material.
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createRoundaboutProfile(numRBLanes, laneWidthRB, mat) end
 
---- Crée un profil formé d'une unique voie de trottoir en position 1.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1922
----@param sidewalkWidth number Largeur (m).
----@param sidewalkHeight number Hauteur (m).
----@param isFlipKerb boolean|nil Inverse le côté de la bordure (faux par défaut).
----@return table  Profil créé.
+--- Creates a profile made of a single sidewalk lane at position 1.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1922
+---@param sidewalkWidth number Width (m).
+---@param sidewalkHeight number Height (m).
+---@param isFlipKerb boolean|nil Reverses the curb side (false by default).
+---@return table  Profile created.
 function editor_roadArchitect_profiles.createSidewalkOnlyProfile(sidewalkWidth, sidewalkHeight, isFlipKerb) end
 
---- Ajoute à M.profiles une copie du profil p nommée 'New Template' (création d'un modèle demandée par l'utilisateur).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3396
----@param p table Profil à copier.
+--- Adds to M.profiles a copy of profile p named 'New Template' (template creation requested by the user).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3396
+---@param p table Profile to copy.
 function editor_roadArchitect_profiles.createTemplateOnRequest(p) end
 
---- Passe au type de voie suivant : road_lane -> sidewalk -> shoulder -> island -> road_lane. Tout autre type est renvoyé inchangé.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1032
----@param t string Type de voie courant.
----@return string  Type suivant.
+--- Moves to the next lane type: road_lane -> sidewalk -> shoulder -> island -> road_lane. Any other type is returned unchanged.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1032
+---@param t string Current lane type.
+---@return string  Next type.
 function editor_roadArchitect_profiles.cycleLaneType(t) end
 
---- Passe au type de voie précédent (ordre inverse de cycleLaneType).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1041
----@param t string Type de voie courant.
----@return string  Type précédent.
+--- Moves to the previous lane type (reverse order of cycleLaneType).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1041
+---@param t string Current lane type.
+---@return string  Previous type.
 function editor_roadArchitect_profiles.cycleLaneTypeBack(t) end
 
---- Reconstruit un profil à partir de sa version sérialisée (valeurs par défaut pour les champs absents : nom 'New Profile', classe 'urban'). Renvoie nil si la donnée est nil.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3247
----@param pSer table|nil Profil sérialisé.
----@return table|nil  Profil reconstruit.
+--- Rebuilds a profile from its serialized version (default values for missing fields: name 'New Profile', class 'urban'). Returns nil if the data is nil.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3247
+---@param pSer table|nil Serialized profile.
+---@return table|nil  Rebuilt profile.
 function editor_roadArchitect_profiles.deserialiseProfile(pSer) end
 
---- Renvoie l'indice du profil de M.profiles dont le champ name est égal à name (comparaison ==), ou nil.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:834
----@param name any Nom recherché, comparé tel quel au champ name des profils.
----@return integer|nil  Indice dans profiles.
+--- Returns the index of the profile in M.profiles whose name field equals name (== comparison), or nil.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:834
+---@param name any Name searched, compared as is against the profiles' name field.
+---@return integer|nil  Index in profiles.
 function editor_roadArchitect_profiles.getIdFromName(name) end
 
---- Renvoie l'état des drapeaux de voies du module : { isCustom, isSidewalk } (voir updateLaneFlags).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1210
+--- Returns the state of the module's lane flags: { isCustom, isSidewalk } (see updateLaneFlags).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1210
 ---@return table  { isCustom = boolean, isSidewalk = boolean }.
 function editor_roadArchitect_profiles.getLaneFlags() end
 
---- Renvoie la plus petite et la plus grande clé de voie existante d'un profil (parcours de -20 à 20).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:88
----@param profile table Profil de route.
----@return integer  Clé minimale (100 si le profil est vide).
----@return integer  Clé maximale (-100 si le profil est vide).
+--- Returns the smallest and largest existing lane key of a profile (scan from -20 to 20).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:88
+---@param profile table Road profile.
+---@return integer  Minimum key (100 if the profile is empty).
+---@return integer  Maximum key (-100 if the profile is empty).
 function editor_roadArchitect_profiles.getMinMaxLaneKeys(profile) end
 
---- Compte les voies de gauche et de droite (tous types confondus).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1081
----@param profile table Profil.
----@return integer  Voies à gauche.
----@return integer  Voies à droite.
+--- Counts the left and right lanes (all types combined).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1081
+---@param profile table Profile.
+---@return integer  Lanes on the left.
+---@return integer  Lanes on the right.
 function editor_roadArchitect_profiles.getNumLanesLR(profile) end
 
---- Compte les voies de gauche et de droite de type 'road_lane' ou 'shoulder' uniquement.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1097
----@param profile table Profil.
----@return integer  Voies de route à gauche.
----@return integer  Voies de route à droite.
+--- Counts only the left and right lanes of type 'road_lane' or 'shoulder'.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1097
+---@param profile table Profile.
+---@return integer  Road lanes on the left.
+---@return integer  Road lanes on the right.
 function editor_roadArchitect_profiles.getNumRoadLanesLR(profile) end
 
---- Renvoie les clés de voies triées du plus petit au plus grand et leur nombre total.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1069
----@param profile table Profil.
----@return integer[]  Clés triées.
----@return integer  Nombre de voies.
+--- Returns the lane keys sorted from smallest to largest and their total count.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1069
+---@param profile table Profile.
+---@return integer[]  Sorted keys.
+---@return integer  Number of lanes.
 function editor_roadArchitect_profiles.getOrderedLanes(profile) end
 
---- Renvoie le profil dont le nom correspond à name (voir getIdFromName), ou nil.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:842
----@param name any Nom du profil.
----@return table|nil  Profil trouvé.
+--- Returns the profile whose name matches name (see getIdFromName), or nil.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:842
+---@param name any Profile name.
+---@return table|nil  Profile found.
 function editor_roadArchitect_profiles.getProfileFromName(name) end
 
---- Renvoie trois tables indexées par clé de voie : largeurs, hauteurs gauches et hauteurs droites, chacune sous forme de pointeurs ImGui (im.FloatPtr) prêts à être édités.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1164
----@param profile table Profil.
----@return table<integer, cdata>  Largeurs.
----@return table<integer, cdata>  Hauteurs gauches (heightL).
----@return table<integer, cdata>  Hauteurs droites (heightR).
+--- Returns three tables keyed by lane key: widths, left heights and right heights, each as ImGui pointers (im.FloatPtr) ready to be edited.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1164
+---@param profile table Profile.
+---@return table<integer, cdata>  Widths.
+---@return table<integer, cdata>  Left heights (heightL).
+---@return table<integer, cdata>  Right heights (heightR).
 function editor_roadArchitect_profiles.getWAndHByKey(profile) end
 
---- Somme des largeurs de toutes les voies du profil.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1176
----@param profile table Profil.
----@return number  Largeur totale en mètres.
+--- Sum of the widths of all lanes of the profile.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1176
+---@param profile table Profile.
+---@return number  Total width in meters.
 function editor_roadArchitect_profiles.getWidth(profile) end
 
---- Remet la caméra à la pose mémorisée avant la vue profil (si elle existe) et quitte la vue profil.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2852
+--- Returns the camera to the pose stored before the profile view (if it exists) and leaves the profile view.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2852
 function editor_roadArchitect_profiles.goToOldView() end
 
---- Mémorise la pose de la caméra, bascule en caméra libre et la place à la pose d'édition de profil. Ne fait rien si on est déjà en vue profil (le temps est alors renvoyé inchangé).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2840
----@param timer table Chronomètre (objet avec stopAndReset) remis à zéro.
----@param time number Temps courant de l'animation.
----@return number  0.0 si la vue vient d'être activée, sinon time.
+--- Stores the camera pose, switches to free camera and places it at the profile editing pose. Does nothing if already in profile view (the time is then returned unchanged).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2840
+---@param timer table Timer (object with stopAndReset) reset to zero.
+---@param time number Current animation time.
+---@return number  0.0 if the view has just been activated, otherwise time.
 function editor_roadArchitect_profiles.goToProfileView(timer, time) end
 
---- Indique si le profil convient à une jonction automatique parfaitement ajustée (route tirée au milieu d'une autre) : autant de voies à gauche qu'à droite, aucun îlot, 0 ou 2 trottoirs exactement placés aux bords et adjacents à une voie de route.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:1113
----@param profile table Profil testé.
----@return boolean|nil  true si valide, false ou nil sinon (nil si asymétrique).
+--- Indicates whether the profile is suitable for a perfectly fitted automatic junction (road drawn into the middle of another): as many lanes on the left as on the right, no island, 0 or exactly 2 sidewalks placed at the edges and adjacent to a road lane.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:1113
+---@param profile table Profile tested.
+---@return boolean|nil  true if valid, false or nil otherwise (nil if asymmetric).
 function editor_roadArchitect_profiles.isProfileValidForMidJctPerfect(profile) end
 
---- Échange la couche i avec sa voisine : avec dir == 'raise' elle monte (indice i - 1), sinon elle descend (indice i + 1).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:945
----@param p table Profil.
----@param i integer Indice de la couche.
----@param dir string 'raise' ou toute autre valeur pour descendre.
+--- Swaps layer i with its neighbor: with dir == 'raise' it moves up (index i - 1), otherwise it moves down (index i + 1).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:945
+---@param p table Profile.
+---@param i integer Layer index.
+---@param dir string 'raise' or any other value to move down.
 function editor_roadArchitect_profiles.layerChangePriority(p, i, dir) end
 
---- Ouvre un sélecteur de fichier JSON, lit le profil sérialisé et l'ajoute à M.profiles.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3373
+--- Opens a JSON file selector, reads the serialized profile and adds it to M.profiles.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3373
 function editor_roadArchitect_profiles.load() end
 
---- Charge les modèles de profil prédéfinis (fichiers roadArchitect/profiles/*.json) dans M.profiles, marqués non supprimables. Ne fait rien si M.profiles contient déjà des profils.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3413
+--- Loads the predefined profile templates (roadArchitect/profiles/*.json files) into M.profiles, marked non-deletable. Does nothing if M.profiles already contains profiles.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3413
 function editor_roadArchitect_profiles.populateProfileTemplates() end
 
---- Supprime de M.profiles tous les profils temporaires nommés 'Current Profile'.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3387
+--- Removes from M.profiles all temporary profiles named 'Current Profile'.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3387
 function editor_roadArchitect_profiles.removeAllTempCurrentProfiles() end
 
---- Supprime une voie du profil d'indice selectedProfileIdx dans M.profiles, décale les voies suivantes pour ne pas laisser de trou, puis retire les couches qui référencent des voies inexistantes.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2878
----@param selectedProfileIdx integer Indice du profil dans profiles.
----@param selectedLaneIdx integer Clé de la voie à supprimer.
----@param side string 'left' ou 'right'.
+--- Removes a lane from the profile at index selectedProfileIdx in M.profiles, shifts the following lanes so as not to leave a gap, then removes the layers that reference nonexistent lanes.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2878
+---@param selectedProfileIdx integer Index of the profile in profiles.
+---@param selectedLaneIdx integer Key of the lane to remove.
+---@param side string 'left' or 'right'.
 function editor_roadArchitect_profiles.removeLane(selectedProfileIdx, selectedLaneIdx, side) end
 
---- Supprime la couche d'indice i du profil (table.remove sur p.layers).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:131
----@param p table Profil.
----@param i integer Indice de la couche.
+--- Removes the layer at index i from the profile (table.remove on p.layers).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:131
+---@param p table Profile.
+---@param i integer Layer index.
 function editor_roadArchitect_profiles.removeLayer(p, i) end
 
---- Vide M.profiles puis recharge tous les modèles prédéfinis.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3424
+--- Empties M.profiles then reloads all the predefined templates.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3424
 function editor_roadArchitect_profiles.resetTemplates() end
 
---- Ouvre une boîte de dialogue d'enregistrement et écrit le profil sérialisé dans un fichier JSON { profile = ... } ; le nom du profil devient le nom du fichier.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3358
----@param p table Profil à enregistrer.
+--- Opens a save dialog and writes the serialized profile to a JSON file { profile = ... }; the profile name becomes the file name.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3358
+---@param p table Profile to save.
 function editor_roadArchitect_profiles.save(p) end
 
---- Convertit un profil en table sérialisable en JSON (pointeurs ImGui remplacés par leurs valeurs, name en chaîne).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:3142
----@param p table Profil.
----@return table  Données sérialisées.
+--- Converts a profile to a JSON-serializable table (ImGui pointers replaced by their values, name as a string).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:3142
+---@param p table Profile.
+---@return table  Serialized data.
 function editor_roadArchitect_profiles.serialiseProfile(p) end
 
---- Régénère les couches d'usure/état de la route r d'après les paramètres du profil (condition, graine, nombre de rustines et de nids-de-poule, traces de pneus, fissures, dégâts d'asphalte ou sol de terre selon la classe). Sort sans rien faire si la route a moins de 2 nœuds ou pas de renderData, et sans régénérer si aucune voie 'road_lane' n'existe (après avoir supprimé les couches non persistantes).
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:2948
----@param r table Route Road Architect.
+--- Regenerates the wear/condition layers of road r from the profile parameters (condition, seed, number of patches and potholes, tire tracks, cracks, asphalt damage or dirt ground depending on the class). Returns without doing anything if the road has fewer than 2 nodes or no renderData, and without regenerating if no 'road_lane' lane exists (after deleting the non-persistent layers).
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:2948
+---@param r table Road Architect road.
 function editor_roadArchitect_profiles.updateCondition(r) end
 
---- Met à jour les drapeaux du module (isCustom : une voie de type 'mesh' existe, isSidewalk : une voie 'sidewalk' existe), utilisés par l'interface pour savoir quels meshes statiques sont présents.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:845
----@param p table Profil examiné.
+--- Updates the module flags (isCustom: a 'mesh' type lane exists, isSidewalk: a 'sidewalk' lane exists), used by the UI to know which static meshes are present.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:845
+---@param p table Profile examined.
 function editor_roadArchitect_profiles.updateLaneFlags(p) end
 
---- Vide le profil de la route et le remplace par une copie du modèle templateName en conservant son nom d'origine.
----Source : lua/ge/extensions/editor/roadArchitect/profiles.lua:859
----@param road table Route dont le profil est remplacé.
----@param templateName any Nom du modèle (voir getProfileFromName).
+--- Empties the road's profile and replaces it with a copy of the templateName template, keeping its original name.
+---Source: lua/ge/extensions/editor/roadArchitect/profiles.lua:859
+---@param road table Road whose profile is replaced.
+---@param templateName any Template name (see getProfileFromName).
 function editor_roadArchitect_profiles.updateToNewTemplate(road, templateName) end
 

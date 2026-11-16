@@ -1,29 +1,29 @@
 # `core_settings_multiplayer`
 
-*Fichier : `lua/ge/extensions/core/settings/multiplayer.lua` · VM : Game Engine (GE) · 78 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/settings/multiplayer.lua` · VM: Game Engine (GE) · 78 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_settings_multiplayer` : `extensions.load("core_settings_multiplayer")`, puis la globale `core_settings_multiplayer`
+**Access:** extension `core_settings_multiplayer`: `extensions.load("core_settings_multiplayer")`, then the global `core_settings_multiplayer`
 
-Fournit les « option helpers » des réglages multijoueur. Chaque helper a une fonction set(value) qui répercute le réglage sur l'extension multiplayer_* correspondante si elle est chargée. Utilisé par core_settings_settings pour relier les options mp* à leurs extensions.
+Provides the "option helpers" of the multiplayer settings. Each helper has a set(value) function that forwards the setting to the matching multiplayer_* extension if it is loaded. Used by core_settings_settings to link the mp* options to their extensions.
 
-## Remarques
+## Notes
 
-- Les fonctions get sont commentées dans le code : seuls des set existent.
-- Chaque set vérifie que l'extension cible (multiplayer_nametags, multiplayer_vehicleSync, multiplayer_multiplayer, multiplayer_sessionManager) existe avant d'écrire.
+- The get functions are commented out in the code: only set functions exist.
+- Each set checks that the target extension (multiplayer_nametags, multiplayer_vehicleSync, multiplayer_multiplayer, multiplayer_sessionManager) exists before writing.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_settings_multiplayer.buildOptionHelpers()` | Construit et renvoie la table des helpers. Clés : mpNametagsEnabled (multiplayer_nametags.nametagsEnabled), mpNametagDistance (multiplayer_nametags.nametagDistance), mpEnableSwitchingToPlayerVehicles (multiplayer_vehicleSync.enableSwitchingToPlayerVehicles(value)), mpDebugMode (multiplayer_multiplayer.debugMode), mpUseCustomServiceURL (multiplayer_sessionManager.useCustomServiceURL), mpCustomServiceURL (multiplayer_sessionManager.customServiceURL). | 7 |
+| `core_settings_multiplayer.buildOptionHelpers()` | Builds and returns the helpers table. Keys: mpNametagsEnabled (multiplayer_nametags.nametagsEnabled), mpNametagDistance (multiplayer_nametags.nametagDistance), mpEnableSwitchingToPlayerVehicles (multiplayer_vehicleSync.enableSwitchingToPlayerVehicles(value)), mpDebugMode (multiplayer_multiplayer.debugMode), mpUseCustomServiceURL (multiplayer_sessionManager.useCustomServiceURL), mpCustomServiceURL (multiplayer_sessionManager.customServiceURL). | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_settings_multiplayer.buildOptionHelpers()`
 
-Construit et renvoie la table des helpers. Clés : mpNametagsEnabled (multiplayer_nametags.nametagsEnabled), mpNametagDistance (multiplayer_nametags.nametagDistance), mpEnableSwitchingToPlayerVehicles (multiplayer_vehicleSync.enableSwitchingToPlayerVehicles(value)), mpDebugMode (multiplayer_multiplayer.debugMode), mpUseCustomServiceURL (multiplayer_sessionManager.useCustomServiceURL), mpCustomServiceURL (multiplayer_sessionManager.customServiceURL).
+Builds and returns the helpers table. Keys: mpNametagsEnabled (multiplayer_nametags.nametagsEnabled), mpNametagDistance (multiplayer_nametags.nametagDistance), mpEnableSwitchingToPlayerVehicles (multiplayer_vehicleSync.enableSwitchingToPlayerVehicles(value)), mpDebugMode (multiplayer_multiplayer.debugMode), mpUseCustomServiceURL (multiplayer_sessionManager.useCustomServiceURL), mpCustomServiceURL (multiplayer_sessionManager.customServiceURL).
 
-- **renvoie** : table<string, {set: fun(value: any)}> Table nom d'option -> {set = function}.
+- **returns**: table<string, {set: fun(value: any)}> Table option name -> {set = function}.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/settings/multiplayer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/settings/multiplayer.lua`.*

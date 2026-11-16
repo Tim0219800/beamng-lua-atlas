@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/cameraAutoRotate.lua",
+  "module": "Noeud flowgraph 'Camera Look at Position' (categorie repeat_instant, fichier cameraAutoRotate). Passe en camera libre et oriente la camera pour regarder en permanence la position cible 'position', sans la deplacer (vecteur haut (0,0,1)).",
+  "notes": [
+    "Plante si le pin 'position' est nil (vec3(nil)).",
+    "L'appel setPosRot utilise l'index de joueur 0."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Active la camera libre si besoin puis applique core_camera.setPosRot avec la rotation quatFromDir(position - camPos, up).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

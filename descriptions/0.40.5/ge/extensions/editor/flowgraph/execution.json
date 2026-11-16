@@ -1,19 +1,44 @@
 {
   "path": "lua/ge/extensions/editor/flowgraph/execution.lua",
-  "module": "Fenêtre « Task Manager » (fg_execution) de l'éditeur Flowgraph : liste tous les projets flowgraph chargés (core_flowgraphManager.getAllManagers) avec leur état (en marche/arrêté, caché, transitoire) et permet de les démarrer ou arrêter tous d'un coup. Au démarrage global, applique les variables de mission du Mission Editor via missionVariableHelper avant setRunning(true). Les projets cachés/transitoires ne sont visibles qu'avec la préférence flowgraph.debug.editorDebug.",
+  "module": "\"Task Manager\" window (fg_execution) of the Flowgraph editor: lists all loaded flowgraph projects (core_flowgraphManager.getAllManagers) with their state (running/stopped, hidden, transient) and lets you start or stop them all at once. On global start, applies the Mission Editor's mission variables via missionVariableHelper before setRunning(true). Hidden/transient projects are only visible with the flowgraph.debug.editorDebug preference.",
   "notes": [
-    "Peut s'afficher seule (drawAlone, titre avec suffixe ##alone) ou dans l'éditeur (draw).",
-    "Le bouton de redémarrage global est commenté dans le code."
+    "Can be displayed alone (drawAlone, title with ##alone suffix) or inside the editor (draw).",
+    "The global restart button is commented out in the code."
   ],
   "classes": {
     "C": {
-      "desc": "Classe de la fenêtre Task Manager (windowName = 'fg_execution').",
+      "desc": "Task Manager window class (windowName = 'fg_execution').",
       "functions": {
-        "init": {"desc": "Récupère core_flowgraphManager et enregistre la fenêtre.", "params": {}, "internal": true},
-        "drawManager": {"desc": "Dessine la ligne d'un projet : icône d'état, visibilité, transitoire, nom et boutons.", "params": {"mgr": {"type": "table", "desc": "Manager flowgraph."}}, "internal": false},
-        "ExecutionView": {"desc": "Dessine le contenu : en-tête Projects, boutons Start All / Stop All, puis chaque projet.", "params": {}, "internal": false},
-        "drawAlone": {"desc": "Affiche la fenêtre hors du contexte d'un projet (self.mgr = nil).", "params": {}, "internal": false},
-        "draw": {"desc": "Dessine la fenêtre si elle est visible.", "params": {}, "internal": false}
+        "init": {
+          "desc": "Gets core_flowgraphManager and registers the window.",
+          "params": {},
+          "internal": true
+        },
+        "drawManager": {
+          "desc": "Draws a project's row: state icon, visibility, transient, name and buttons.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Flowgraph manager."
+            }
+          },
+          "internal": false
+        },
+        "ExecutionView": {
+          "desc": "Draws the content: Projects header, Start All / Stop All buttons, then each project.",
+          "params": {},
+          "internal": false
+        },
+        "drawAlone": {
+          "desc": "Displays the window outside a project's context (self.mgr = nil).",
+          "params": {},
+          "internal": false
+        },
+        "draw": {
+          "desc": "Draws the window if it is visible.",
+          "params": {},
+          "internal": false
+        }
       }
     }
   }

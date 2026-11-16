@@ -1,52 +1,52 @@
 # `gameplay_traffic_roadTracking`
 
-*Fichier : `lua/ge/extensions/gameplay/traffic/roadTracking.lua` · VM : Game Engine (GE) · 352 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/traffic/roadTracking.lua` · VM: Game Engine (GE) · 352 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/traffic/roadTracking")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/traffic/roadTracking")` (file under extensions/ but not a regular extension)
 
-Classe qui suit le placement et le comportement d'un véhicule sur la route : segment de route courant (n1, n2), position latérale, alignement avec la route, limite de vitesse, côté légal, et trois scores de faute (overSpeed, wrongWay, reckless) bornés de 0 à 1. Elle gère aussi les infractions de feux/stop via core_trafficSignals. Utilisée par le trafic pour détecter les infractions que la police peut sanctionner.
+Class that tracks a vehicle's placement and behavior on the road: current road segment (n1, n2), lateral position, alignment with the road, speed limit, legal side, and three fault scores (overSpeed, wrongWay, reckless) bounded from 0 to 1. It also handles light/stop violations via core_trafficSignals. Used by traffic to detect violations the police can penalize.
 
-## Exemple
+## Example
 
 ```lua
 local rt = require('/lua/ge/extensions/gameplay/traffic/roadTracking')({vehId = be:getPlayerVehicleID(0)})
--- à chaque frame :
+-- every frame:
 rt:onUpdate(dt)
-if rt.faults.overSpeed > 0.5 then --[[ excès de vitesse ]] end
+if rt.faults.overSpeed > 0.5 then --[[ speeding ]] end
 ```
 
-## Remarques
+## Notes
 
-- Le module renvoie un constructeur : le paramètre (table) est transformé en objet, et init(o.vehId) est appelé.
-- Les scores de faute sont plafonnés à 1 ; une valeur > 0,5 déclenche les infractions côté police (d'après le commentaire du code).
-- Vitesses en m/s : speedLimitFloor = 4,167 (15 km/h), speedLimitCoef = 1,125 (tolérance de 12,5 % avant l'excès de vitesse).
-- sideValue : 1 = côté/sens légal, -1 = côté illégal, -2 = sens interdit sur route à sens unique.
-- Sur route non publique (type 'private' ou drivability < 0,25), toutes les fautes sont remises à 0.
-- Les collisions sont accumulées depuis map.objects[vehId].objectCollisions ; elles peuvent être manquées si dt est trop grand.
-- init peut marquer self._invalid = true si le véhicule n'existe pas, mais lit ensuite quand même getObjectByID(vehId).initialNodePosBB, ce qui plante si le véhicule est absent.
-- highFrequency = true force la recherche de route à chaque frame ; fullStats est sérialisé mais n'est pas lu dans ce fichier.
+- The module returns a constructor: the parameter (table) is turned into an object, and init(o.vehId) is called.
+- Fault scores are capped at 1; a value > 0.5 triggers violations on the police side (according to the code comment).
+- Speeds in m/s: speedLimitFloor = 4.167 (15 km/h), speedLimitCoef = 1.125 (12.5% tolerance before speeding).
+- sideValue: 1 = legal side/direction, -1 = illegal side, -2 = wrong way on a one-way road.
+- On a non-public road (type 'private' or drivability < 0.25), all faults are reset to 0.
+- Collisions are accumulated from map.objects[vehId].objectCollisions; they may be missed if dt is too large.
+- init may set self._invalid = true if the vehicle does not exist, but then still reads getObjectByID(vehId).initialNodePosBB, which crashes if the vehicle is absent.
+- highFrequency = true forces the road search every frame; fullStats is serialized but is not read in this file.
 
-## Classe `C`
+## Class `C`
 
-Objet de suivi de route d'un véhicule. Champs principaux : vehId, pos/dirVec/vel (vec3), speed, n1/n2 (noms des nœuds de la route), linkData, speedLimit, speedRatio, alignment (≈1 si parallèle à la route), roadOffset, roadXnorm/roadYnorm (0 à 1), halfWidth, isOnRoad, isNearRoad, isPublicRoad, isOneWay, isReverse, legalSide, faults, timers, collisionIds, collisionCount, currSignal, signalAction, signalFault.
+A vehicle's road tracking object. Main fields: vehId, pos/dirVec/vel (vec3), speed, n1/n2 (road node names), linkData, speedLimit, speedRatio, alignment (~1 if parallel to the road), roadOffset, roadXnorm/roadYnorm (0 to 1), halfWidth, isOnRoad, isNearRoad, isPublicRoad, isOneWay, isReverse, legalSide, faults, timers, collisionIds, collisionCount, currSignal, signalAction, signalFault.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_traffic_roadTracking")(options)`.
+The module returns a constructor: `local obj = require("gameplay_traffic_roadTracking")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:calcVehOnRoad()` | Calcule la position du véhicule sur le segment n1-n2 : position longitudinale et latérale normalisée, demi-largeur interpolée, alignement, décalage par rapport à la ligne centrale, et isOnRoad. | 109 |
-| `C:init(vehId)` | Initialise l'objet : mesure l'emprise du véhicule (initialNodePosBB), calcule vehBasicRadius (demi-largeur ou demi-longueur minimale), fixe les seuils de vitesse, puis appelle refresh. | 16 |
-| `C:onDeserialized(data)` | Restaure la configuration depuis la table produite par onSerialize. | 338 |
-| `C:onSerialize()` | Sérialise la configuration (vehId, speedLimitFloor, speedLimitCoef, highFrequency, fullStats). | 328 |
-| `C:onUpdate(dt)` | Mise à jour par frame : actualise véhicule et route, cumule les collisions, puis fait évoluer les scores de faute (excès de vitesse, mauvais sens/côté, conduite imprudente) et suit les signaux de circulation (feu rouge, stop) pour renseigner signalAction et signalFault. | 193 |
-| `C:refresh()` | Remet à zéro toutes les tables et valeurs (fautes, timers, collisions, route), recalcule le côté légal (conduite à droite ou à gauche selon map.getRoadRules()), puis, si le véhicule est dans map.objects, met à jour le véhicule et la route courante. | 38 |
-| `C:resetValues()` | Remet à leurs valeurs neutres les valeurs de suivi actives (ratio de vitesse, alignement, décalage, fautes, timers, signal, collisions). | 68 |
-| `C:updateCurrentRoad()` | Cherche le meilleur segment de route (map.findBestRoad) pour la position et la direction actuelles, met à jour limite de vitesse, sens unique, route publique et ligne centrale (d'après la chaîne de voies '+'/'-'), oriente n1->n2 dans le sens de marche, puis appelle calcVehOnRoad. Si aucune route proche : isNearRoad = false et reset des valeurs. | 152 |
-| `C:updateVehicle()` | Met à jour la position au sol (centre de l'OOBB abaissé de la demi-hauteur), la direction, la vitesse (m/s) et isReverse (vitesse d'au moins 1 m/s dans le sens opposé à l'avant du véhicule). | 97 |
+| `C:calcVehOnRoad()` | Computes the vehicle's position on the n1-n2 segment: normalized longitudinal and lateral position, interpolated half-width, alignment, offset from the centerline, and isOnRoad. | 109 |
+| `C:init(vehId)` | Initializes the object: measures the vehicle's footprint (initialNodePosBB), computes vehBasicRadius (minimum half-width or half-length), sets the speed thresholds, then calls refresh. | 16 |
+| `C:onDeserialized(data)` | Restores the configuration from the table produced by onSerialize. | 338 |
+| `C:onSerialize()` | Serializes the configuration (vehId, speedLimitFloor, speedLimitCoef, highFrequency, fullStats). | 328 |
+| `C:onUpdate(dt)` | Per-frame update: refreshes vehicle and road, accumulates collisions, then evolves the fault scores (speeding, wrong direction/side, reckless driving) and tracks traffic signals (red light, stop) to fill in signalAction and signalFault. | 193 |
+| `C:refresh()` | Resets all tables and values (faults, timers, collisions, road), recalculates the legal side (right- or left-hand driving according to map.getRoadRules()), then, if the vehicle is in map.objects, updates the vehicle and the current road. | 38 |
+| `C:resetValues()` | Resets the active tracking values to their neutral values (speed ratio, alignment, offset, faults, timers, signal, collisions). | 68 |
+| `C:updateCurrentRoad()` | Looks for the best road segment (map.findBestRoad) for the current position and direction, updates speed limit, one-way, public road and centerline (from the lane string '+'/'-'), orients n1->n2 in the direction of travel, then calls calcVehOnRoad. If no road is nearby: isNearRoad = false and values reset. | 152 |
+| `C:updateVehicle()` | Updates the ground position (OOBB center lowered by half the height), the direction, the speed (m/s) and isReverse (speed of at least 1 m/s in the direction opposite to the vehicle's front). | 97 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/traffic/roadTracking.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/traffic/roadTracking.lua`.*

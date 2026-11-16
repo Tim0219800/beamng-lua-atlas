@@ -1,64 +1,64 @@
 # `gameplay_markers_walkingMarker`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/walkingMarker.lua` · VM : Game Engine (GE) · 315 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/walkingMarker.lua` · VM: Game Engine (GE) · 315 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_walkingMarker` : `extensions.load("gameplay_markers_walkingMarker")`, puis la globale `gameplay_markers_walkingMarker`
+**Access:** extension `gameplay_markers_walkingMarker`: `extensions.load("gameplay_markers_walkingMarker")`, then the global `gameplay_markers_walkingMarker`
 
-Marqueur de « portes » pour le joueur à pied (entrées de bâtiments, par exemple). Même principe que vehicleTrigger : chaque porte est une paire d'objets de scène (zone, icône) ; l'icône monte quand le personnage entre dans la zone, un écran 3D facultatif s'affiche 5 s, et le marqueur devient interactif. Contrairement à vehicleTrigger, le recouvrement n'est testé que si le joueur marche (data.isWalking) et sous la vitesse de croisière. Le module renvoie {create, cluster}.
+"Doors" marker for the player on foot (building entrances, for example). Same principle as vehicleTrigger: each door is a pair of scene objects (zone, icon); the icon rises when the character enters the zone, an optional 3D screen is displayed for 5 s, and the marker becomes interactive. Unlike vehicleTrigger, the overlap is only tested if the player is walking (data.isWalking) and below the cruising speed. The module returns {create, cluster}.
 
-## Remarques
+## Notes
 
-- cluster regroupe les POI dont les paires de noms de portes (nom zone + nom icône, triées) sont identiques ; id 'walkingMarker#<noms concaténés>'. Lit poi.markerInfo.walkingMarker.{doors, icon, iconLift, iconOffsetHeight, pos, radius, screens} ; icône par défaut poi_exclamationmark_round ; elemData regroupe les poi.data.
-- Le cluster ne renseigne pas pos ni radius : seuls visibilityPos et visibilityRadius sont définis, donc setup utilise la position nulle par défaut pour self.pos (utilisée par le son de l'écran).
-- Les ids d'icônes sont de la forme <cluster.id>-gsIcon-<idx> (préfixe repris de la station-service, sans conséquence fonctionnelle).
-- Chaque porte est évaluée séparément (overlap par porte), contrairement à vehicleTrigger où le résultat global est appliqué à toutes les portes.
-- drawAxisBox est un utilitaire de debug non utilisé.
+- cluster groups the POIs whose door name pairs (zone name + icon name, sorted) are identical; id 'walkingMarker#<concatenated names>'. Reads poi.markerInfo.walkingMarker.{doors, icon, iconLift, iconOffsetHeight, pos, radius, screens}; default icon poi_exclamationmark_round; elemData groups the poi.data.
+- The cluster does not fill in pos or radius: only visibilityPos and visibilityRadius are defined, so setup uses the default null position for self.pos (used by the screen's sound).
+- Icon ids are of the form <cluster.id>-gsIcon-<idx> (prefix reused from the gas station, no functional consequence).
+- Each door is evaluated separately (overlap per door), unlike vehicleTrigger where the global result is applied to all doors.
+- drawAxisBox is an unused debug utility.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_walkingMarker.cluster(pois, allClusters)` | Regroupe les POI walkingMarker ayant les mêmes noms de portes et ajoute un cluster par groupe à allClusters. *(interne)* | 278 |
-| `gameplay_markers_walkingMarker.create(...)` | Fabrique un marqueur de portes pour piéton (instance de C). | 269 |
+| `gameplay_markers_walkingMarker.cluster(pois, allClusters)` | Groups the walkingMarker POIs with the same door names and adds one cluster per group to allClusters. *(internal)* | 278 |
+| `gameplay_markers_walkingMarker.create(...)` | Builds a doors marker for pedestrians (instance of C). | 269 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_walkingMarker.cluster(pois, allClusters)`
 
-Regroupe les POI walkingMarker ayant les mêmes noms de portes et ajoute un cluster par groupe à allClusters.
+Groups the walkingMarker POIs with the same door names and adds one cluster per group to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.walkingMarker.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.walkingMarker.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_walkingMarker.create(...)`
 
-Fabrique un marqueur de portes pour piéton (instance de C).
+Builds a doors marker for pedestrians (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur de portes pour le joueur à pied.
+Doors marker for the player on foot.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Retire les icônes, cache les écrans et efface la liste des portes. | 174 |
-| `C:createObjects()` | Nettoie les objets existants (n'en crée pas). | 147 |
-| `C:drawAxisBox(corner, x, y, z, clr)` | Dessine une boîte de debug (arêtes et faces) par debugDrawer ; non utilisée ici. | 204 |
-| `C:drawOnMinimap(td)` | Dessine un cercle sur la minimap à la position de chaque icône de porte. | 262 |
-| `C:hide()` | Passe invisible, rend les icônes transparentes et cache les écrans. | 151 |
-| `C:init()` | Initialise visible = true. | 21 |
-| `C:instantFade(visible)` | Ne fait rien. | 200 |
-| `C:interactInPlayMode(interactData, interactableElements)` | Si canInteract et que le joueur est dans une porte, ajoute les données (elemData) du cluster aux éléments interactifs. | 190 |
-| `C:setup(cluster)` | Pour chaque porte, retrouve l'objet de zone et l'objet d'icône, calcule la boîte de la zone, cache l'écran associé et crée l'icône. | 25 |
-| `C:show()` | Repasse visible. | 169 |
-| `C:update(data)` | Chaque frame : teste, par porte, le recouvrement OBB/OBB (uniquement si le joueur marche et sous la vitesse de croisière), gère écrans, son, icônes et trait de debug, puis met à jour isInAreaChanged et anyOverlap. | 83 |
+| `C:clearObjects()` | Removes the icons, hides the screens and clears the door list. | 174 |
+| `C:createObjects()` | Cleans up existing objects (does not create any). | 147 |
+| `C:drawAxisBox(corner, x, y, z, clr)` | Draws a debug box (edges and faces) via debugDrawer; not used here. | 204 |
+| `C:drawOnMinimap(td)` | Draws a circle on the minimap at the position of each door icon. | 262 |
+| `C:hide()` | Becomes invisible, makes the icons transparent and hides the screens. | 151 |
+| `C:init()` | Initializes visible = true. | 21 |
+| `C:instantFade(visible)` | Does nothing. | 200 |
+| `C:interactInPlayMode(interactData, interactableElements)` | If canInteract and the player is in a door, adds the cluster's data (elemData) to the interactive elements. | 190 |
+| `C:setup(cluster)` | For each door, finds the zone object and the icon object, computes the zone's box, hides the associated screen and creates the icon. | 25 |
+| `C:show()` | Becomes visible again. | 169 |
+| `C:update(data)` | Every frame: tests, per door, the OBB/OBB overlap (only if the player is walking and below the cruising speed), handles screens, sound, icons and debug line, then updates isInAreaChanged and anyOverlap. | 83 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawTriSolid`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/walkingMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/walkingMarker.lua`.*

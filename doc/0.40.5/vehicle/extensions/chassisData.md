@@ -1,46 +1,46 @@
 # `chassisData`
 
-*Fichier : `lua/vehicle/extensions/chassisData.lua` · VM : Véhicule · 114 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/chassisData.lua` · VM: Vehicle · 114 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `chassisData` : `extensions.load (VM véhicule)("chassisData")`, puis la globale `chassisData`
+**Access:** extension `chassisData`: `extensions.load (vehicle VM)("chassisData")`, then the global `chassisData`
 
-Extension qui calcule l'empattement (wheelBase) et la largeur de voie (trackWidth) du véhicule à partir des positions des nœuds de roues dans les données jbeam, puis les renvoie par commande Lua à un autre objet (véhicule ou VM). Utilisée par des outils qui ont besoin de la géométrie du châssis.
+Extension that computes the vehicle's wheelbase (wheelBase) and track width (trackWidth) from the wheel node positions in the jbeam data, then returns them by Lua command to another object (vehicle or VM). Used by tools that need the chassis geometry.
 
-## Exemple
+## Example
 
 ```lua
--- demander les données au véhicule 12, résultat renvoyé à une fonction nommée
-extensions.chassisData.requestChassisData(objID, 'maFonctionReception', false)
--- la fonction recevra une chaîne JSON : {trackWidth, wheelBase, objectID, vehicleName}
+-- request the data from vehicle 12, result sent back to a named function
+extensions.chassisData.requestChassisData(objID, 'myReceiveFunction', false)
+-- the function will receive a JSON string: {trackWidth, wheelBase, objectID, vehicleName}
 ```
 
-## Remarques
+## Notes
 
-- Le résultat est mis en cache après le premier calcul réussi ; forceRefresh = true le recalcule.
-- Le calcul identifie les roues avant gauche, avant droite et arrière gauche par la position relative de node1 par rapport au centre des roues, dans le repère des refNodes. Si une de ces trois roues est introuvable (véhicule à moins de 3 roues, etc.), getChassisData renvoie nil et rien n'est envoyé.
-- Unités : mètres (positions jbeam). trackWidth = distance entre bords extérieurs des roues avant moins la demi-largeur d'un nœud de roue à l'autre, donc voie entre centres de bande de roulement. wheelBase = écart en Y entre les roues avant gauche et arrière gauche.
-- L'envoi se fait par obj:queueObjectLuaCommand(objID, "<callback>(<json>)") : la cible doit disposer d'une fonction globale accessible portant ce nom et recevoir une chaîne JSON entre guillemets.
-- Le nom de l'export est requestChassisData (alias de sendChassisData).
+- The result is cached after the first successful computation; forceRefresh = true recomputes it.
+- The computation identifies the front left, front right and rear left wheels by the relative position of node1 with respect to the wheel center, in the refNodes frame. If one of these three wheels cannot be found (vehicle with fewer than 3 wheels, etc.), getChassisData returns nil and nothing is sent.
+- Units: meters (jbeam positions). trackWidth = distance between the outer edges of the front wheels minus the half-width of a wheel node to the other, hence the track between tread centers. wheelBase = Y gap between the front left and rear left wheels.
+- Sending is done by obj:queueObjectLuaCommand(objID, "<callback>(<json>)"): the target must have an accessible global function with that name and receive a quoted JSON string.
+- The export name is requestChassisData (alias of sendChassisData).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `chassisData.requestChassisData(objID, callback, forceRefresh)` | Calcule (ou lit du cache) les données de châssis et les envoie à l'objet objID en appelant la fonction Lua callback avec le JSON des données en argument. | 101 |
+| `chassisData.requestChassisData(objID, callback, forceRefresh)` | Computes (or reads from cache) the chassis data and sends it to the object objID by calling the Lua function callback with the data JSON as argument. | 101 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `chassisData.requestChassisData(objID, callback, forceRefresh)`
 
-Calcule (ou lit du cache) les données de châssis et les envoie à l'objet objID en appelant la fonction Lua callback avec le JSON des données en argument.
+Computes (or reads from cache) the chassis data and sends it to the object objID by calling the Lua function callback with the data JSON as argument.
 
-- `objID` (*integer*) : Identifiant de l'objet destinataire.
-- `callback` (*string*) : Nom de la fonction Lua à appeler sur le destinataire.
-- `forceRefresh` (*boolean|nil*) : true pour ignorer le cache.
+- `objID` (*integer*) : Identifier of the destination object.
+- `callback` (*string*) : Name of the Lua function to call on the destination.
+- `forceRefresh` (*boolean|nil*) : true to ignore the cache.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `queueObjectLuaCommand`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/chassisData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/chassisData.lua`.*

@@ -1,24 +1,24 @@
 # `flowgraph_nodes_scene_camera_procedural_procDirectPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath.lua` · VM : Game Engine (GE) · 118 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath.lua` · VM: Game Engine (GE) · 118 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Procedural Direct Campath' (categorie once_p_duration). Genere une trajectoire de camera qui survole le trajet direct de 'from' a 'to' (survol depuis derriere le depart, montee a 180 m, puis regard vers l'arrivee avec zoom FOV 50 puis 30), de duree 'duration' (14 s par defaut) ; en option 'loop' ajoute des cles de retour. Le chemin est enregistre via camera:addCustomPath et son nom sort sur 'pathName'.
+Flowgraph node 'Procedural Direct Campath' (once_p_duration category). Generates a camera path that flies over the direct route from 'from' to 'to' (flyover from behind the start, climb to 180 m, then looking toward the destination with FOV zoom 50 then 30), of duration 'duration' (14 s by default); optionally 'loop' adds return keys. The path is registered via camera:addCustomPath and its name is output on 'pathName'.
 
-## Remarques
+## Notes
 
-- Les temps des cles sont exprimes en quatorziemes de 'duration'.
-- La variable locale 'fLen' (longueur bornee entre 300 et 1000) est calculee mais jamais utilisee, et 'mid' est calcule mais seul 'mid2' est inclus dans la trajectoire.
-- Le commentaire du code indique que la categorie devrait etre f_duration.
+- The key times are expressed in fourteenths of 'duration'.
+- The local variable 'fLen' (length clamped between 300 and 1000) is computed but never used, and 'mid' is computed but only 'mid2' is included in the path.
+- The code comment says the category should be f_duration.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Calcule les marqueurs (from, from2, mid2, to, to2 et, si loop, out/back/back2) en fonction de la direction horizontale from vers to, puis cree le chemin et ecrit pathName. | 24 |
+| `C:workOnce()` | Computes the markers (from, from2, mid2, to, to2 and, if loop, out/back/back2) according to the horizontal direction from to to, then creates the path and writes pathName. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/procedural/procDirectPath.lua`.*

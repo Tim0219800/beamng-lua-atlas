@@ -1,76 +1,564 @@
 {
   "path": "lua/ge/extensions/flowgraph/graph.lua",
-  "module": "Classe 'graph' du flowgraph : un graphe de nœuds et de liens appartenant à un manager (self.mgr). Un graphe a un type ('graph', 'macro' ou 'instance'), des nœuds, des liens, des pins, un variableStorage local et un parent éventuel (parentId). Il sait créer et supprimer nœuds et liens, vérifier la compatibilité des pins, sérialiser et désérialiser ses données et, pour un graphe racine, planifier l'ordre d'exécution des nœuds (plan). Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/graph')(mgr, name, forceId).",
+  "module": "Flowgraph 'graph' class: a graph of nodes and links belonging to a manager (self.mgr). A graph has a type ('graph', 'macro' or 'instance'), nodes, links, pins, a local variableStorage and an optional parent (parentId). It can create and delete nodes and links, check pin compatibility, serialize and deserialize its data and, for a root graph, plan the node execution order (plan). The module returns a constructor: require('/lua/ge/extensions/flowgraph/graph')(mgr, name, forceId).",
   "notes": [
-    "Les graphes sont stockés à plat dans mgr.graphs ; la hiérarchie vient de parentId (getChildren parcourt mgr.graphs et trie par id).",
-    "plan() ne fait rien pour un macro ni pour un graphe qui a un parent : seule la racine planifie, en agrégeant les nœuds et liens de ses enfants (gatherNodesAndLinks) et en résolvant les nœuds macro/integrated et macro/io (liens virtuels).",
-    "plan() détermine les nœuds racines (triggerable, ou sans pin d'entrée local avec une sortie flow), propage les 'couleurs de flux' et génère le code d'exécution ordonné (appels _workDynamicRepeat / _workDynamicOnce).",
-    "createNode crée aussi un lien caché depuis la pin enterState du nœud events/onUpdate vers la pin reset des nœuds 'once' si la préférence flowgraph.general.autoConnectResetPins est active.",
-    "deleteLink et deleteNode ne retirent pas tout de suite l'objet de l'éditeur : ils notent l'id dans mgr.linksToRemove / mgr.nodesToRemove, traités par le manager.",
-    "Bug probable : getDeepChild utilise current.children, champ commenté dans init (self.children n'existe pas), donc getMacro avec des indices non vides échoue.",
-    "getSiblings contient un print(parent.name) de débogage.",
-    "pinsCompatible peut renvoyer nil (au lieu de false) quand aucun type ne correspond."
+    "Graphs are stored flat in mgr.graphs; the hierarchy comes from parentId (getChildren iterates over mgr.graphs and sorts by id).",
+    "plan() does nothing for a macro or for a graph that has a parent: only the root plans, aggregating the nodes and links of its children (gatherNodesAndLinks) and resolving the macro/integrated and macro/io nodes (virtual links).",
+    "plan() determines the root nodes (triggerable, or with no local input pin and a flow output), propagates the \"flow colors\" and generates the ordered execution code (_workDynamicRepeat / _workDynamicOnce calls).",
+    "createNode also creates a hidden link from the enterState pin of the events/onUpdate node to the reset pin of 'once' nodes if the preference flowgraph.general.autoConnectResetPins is active.",
+    "deleteLink and deleteNode do not immediately remove the object from the editor: they record the id in mgr.linksToRemove / mgr.nodesToRemove, processed by the manager.",
+    "Probable bug: getDeepChild uses current.children, a field commented out in init (self.children does not exist), so getMacro with non-empty indices fails.",
+    "getSiblings contains a debug print(parent.name).",
+    "pinsCompatible can return nil (instead of false) when no type matches."
   ],
   "fields": {
-    "mgr": {"type": "table", "desc": "manager flowgraph propriétaire"},
-    "id": {"type": "integer", "desc": "id du graphe (forceId ou mgr:getNextFreeGraphNodeId())"},
-    "name": {"type": "string", "desc": "nom affiché"},
-    "type": {"type": "string", "desc": "'graph', 'macro' ou 'instance'"},
-    "parentId": {"type": "integer|nil", "desc": "id du graphe parent"},
-    "nodes": {"type": "table<integer, table>", "desc": "nœuds par id"},
-    "links": {"type": "table<integer, table>", "desc": "liens par id"},
-    "pins": {"type": "table<integer, table>", "desc": "pins par id"},
-    "variables": {"type": "table", "desc": "variableStorage du graphe"},
-    "dirty": {"type": "boolean", "desc": "graphe modifié (macros : instances à mettre à jour)"},
-    "onUpdateNodeId": {"type": "integer|nil", "desc": "id du nœud events/onUpdate du graphe"},
-    "isStateGraph": {"type": "boolean|nil", "desc": "vrai pour un graphe d'états"}
+    "mgr": {
+      "type": "table",
+      "desc": "owning flowgraph manager"
+    },
+    "id": {
+      "type": "integer",
+      "desc": "graph id (forceId or mgr:getNextFreeGraphNodeId())"
+    },
+    "name": {
+      "type": "string",
+      "desc": "displayed name"
+    },
+    "type": {
+      "type": "string",
+      "desc": "'graph', 'macro' or 'instance'"
+    },
+    "parentId": {
+      "type": "integer|nil",
+      "desc": "parent graph id"
+    },
+    "nodes": {
+      "type": "table<integer, table>",
+      "desc": "nodes keyed by id"
+    },
+    "links": {
+      "type": "table<integer, table>",
+      "desc": "links keyed by id"
+    },
+    "pins": {
+      "type": "table<integer, table>",
+      "desc": "pins keyed by id"
+    },
+    "variables": {
+      "type": "table",
+      "desc": "graph's variableStorage"
+    },
+    "dirty": {
+      "type": "boolean",
+      "desc": "modified graph (macros: instances to update)"
+    },
+    "onUpdateNodeId": {
+      "type": "integer|nil",
+      "desc": "id of the graph's events/onUpdate node"
+    },
+    "isStateGraph": {
+      "type": "boolean|nil",
+      "desc": "true for a state graph"
+    }
   },
   "classes": {
     "C": {
-      "desc": "Objet graphe renvoyé par le constructeur.",
+      "desc": "Graph object returned by the constructor.",
       "functions": {
-        "init": {"desc": "Initialise le graphe : id, nom, type 'graph', tables vides, variableStorage, position et zoom de vue.", "params": {"mgr": {"type": "table", "desc": "manager"}, "name": {"type": "string|nil", "desc": "nom (défaut 'Graph <id>')"}, "forceId": {"type": "integer|nil", "desc": "id imposé (désérialisation)"}}, "internal": true},
-        "getParent": {"desc": "Renvoie le graphe parent.", "returns": [{"type": "table|nil", "desc": "graphe parent"}]},
-        "getChildren": {"desc": "Renvoie les graphes enfants (parentId == id), triés par id.", "returns": [{"type": "table[]", "desc": "enfants"}]},
-        "clearVariableChangesChildren": {"desc": "Vide les changements de variables en attente de ce graphe et de ses descendants.", "params": {}},
-        "getRootGraph": {"desc": "Remonte jusqu'au graphe racine.", "returns": [{"type": "table", "desc": "racine"}]},
-        "getDirtyChildren": {"desc": "Collecte les ids de macros 'dirty' utilisés par des instances enfants.", "params": {"dirtyChildren": {"type": "table<integer, boolean>|nil", "desc": "table à remplir"}}, "returns": [{"type": "table<integer, boolean>", "desc": "ids de macros à mettre à jour"}]},
-        "setDirty": {"desc": "Marque le graphe (et ses enfants de même type) comme modifié ; par défaut en partant de la racine.", "params": {"dirty": {"type": "boolean", "desc": "état"}, "startFromRoot": {"type": "boolean|nil", "desc": "défaut true"}}},
-        "gatherNodesAndLinks": {"desc": "Ajoute à rNodes et rLinks les nœuds et liens de ce graphe et de ses enfants, et renseigne interInfo pour les nœuds macro/integrated.", "params": {"rNodes": {"type": "table[]", "desc": "liste de nœuds à remplir"}, "rLinks": {"type": "table[]", "desc": "liste de liens à remplir"}, "interInfo": {"type": "table", "desc": "informations d'intégration par nœud"}}},
-        "resolveInterHops": {"desc": "Suit les liens à travers les nœuds macro/integrated et macro/io pour créer des liens virtuels (virtualLink) entre le vrai émetteur et les vraies cibles.", "params": {"rLinks": {"type": "table[]", "desc": "liste de liens à compléter"}, "interInfo": {"type": "table", "desc": "informations d'intégration"}}},
-        "plan": {"desc": "Planifie l'exécution (graphe racine non-macro) : dépendances, racines de flux, propagation des couleurs, ordre des nœuds, génération du code d'exécution. Appelé par le manager avant de lancer ou après modification.", "internal": true},
-        "clear": {"desc": "Supprime les graphes enfants, détruit les nœuds et vide nodes, links, pins.", "params": {}},
-        "createNode": {"desc": "Crée un nœud d'un type donné (ex. 'events/onUpdate') à partir des modèles du manager. Journalise une erreur et renvoie nil si le type est inconnu. Marque les nœuds obsolètes dans leur nom.", "params": {"nodeType": {"type": "string", "desc": "chemin du type de nœud"}, "forceId": {"type": "integer|nil", "desc": "id imposé"}, "...": {"type": "any", "desc": "arguments passés au constructeur du nœud"}}, "returns": [{"type": "table|nil", "desc": "nœud créé"}]},
-        "moveNodeToGraph": {"desc": "Déplace un nœud vers un autre graphe en supprimant ses liens.", "params": {"node": {"type": "table", "desc": "nœud"}, "newGraph": {"type": "table", "desc": "graphe destination"}}},
-        "deleteNode": {"desc": "Supprime un nœud et ses liens (sauf nœuds undeleteable hors mode debug ; un nœud qui représente un graphe supprime ce graphe, sauf ignoreIntegratedNodes).", "params": {"node": {"type": "table", "desc": "nœud"}, "ignoreIntegratedNodes": {"type": "boolean|nil", "desc": "ne pas supprimer le graphe représenté"}}},
-        "createLink": {"desc": "Crée un lien entre une pin de sortie et une pin d'entrée (après avoir retiré la valeur codée en dur de la pin cible).", "params": {"startPin": {"type": "table", "desc": "pin source"}, "endPin": {"type": "table", "desc": "pin cible"}, "...": {"type": "any", "desc": "arguments supplémentaires"}}, "returns": [{"type": "table", "desc": "lien"}]},
-        "deleteLink": {"desc": "Supprime un lien : met à jour pinIn / _mInFlow de la cible, notifie pins et nœuds, planifie la suppression côté éditeur.", "params": {"link": {"type": "table", "desc": "lien"}}},
-        "_onSerialize": {"desc": "Sérialise le graphe (nom, nœuds, liens ordonnés, type, variables, vue, parentId…). Renvoie la table et le plus petit id utilisé.", "returns": [{"type": "table", "desc": "données"}, {"type": "integer", "desc": "plus petit id"}], "internal": true},
-        "_onDeserialized": {"desc": "Reconstruit le graphe (nœuds triés par id, liens, variables) depuis les données sérialisées.", "params": {"data": {"type": "table", "desc": "données"}}, "internal": true},
-        "linkExists": {"desc": "Vrai s'il existe déjà un lien entre ces deux pins.", "params": {"startPin": {"type": "table", "desc": "pin source"}, "endPin": {"type": "table", "desc": "pin cible"}}, "returns": [{"type": "boolean", "desc": "existe"}]},
-        "hasLink": {"desc": "Vrai si une pin d'entrée de type autre que flow/state est déjà liée.", "params": {"pin": {"type": "table", "desc": "pin"}}, "returns": [{"type": "boolean", "desc": "liée"}]},
-        "pinsCompatible": {"desc": "Teste la compatibilité des types de deux pins : 'any' accepte tout, les pins 'state' ne se lient qu'entre elles, les types table doivent avoir le même tableType ou 'generic'.", "params": {"sourcePin": {"type": "table", "desc": "pin"}, "targetPin": {"type": "table", "desc": "pin"}}, "returns": [{"type": "boolean|nil", "desc": "compatible"}]},
-        "canCreateLink": {"desc": "Vrai si un lien peut être créé entre a et b (directions opposées, nœuds différents, types compatibles, lien inexistant, noms égaux si matchName).", "params": {"a": {"type": "table", "desc": "pin"}, "b": {"type": "table", "desc": "pin"}, "newLinkInfo": {"type": "table|nil", "desc": "infos d'autorisation par nœud"}}, "returns": [{"type": "boolean", "desc": "autorisé"}]},
-        "findPin": {"desc": "Renvoie la pin d'id donné.", "params": {"pinId": {"type": "integer|nil", "desc": "id"}}, "returns": [{"type": "table|nil", "desc": "pin"}]},
-        "updateChildrenTypes": {"desc": "Applique un type à ce graphe et à ses descendants (s'arrête sur ignoreType).", "params": {"t": {"type": "string", "desc": "nouveau type"}, "ignoreType": {"type": "string|nil", "desc": "type à ne pas traverser"}}},
-        "_executionStarted": {"desc": "Appelé au démarrage du projet : notifie chaque nœud.", "internal": true},
-        "_onClear": {"desc": "Notifie les nœuds et le variableStorage d'un clear.", "internal": true},
-        "_executionStopped": {"desc": "Appelé à l'arrêt du projet : notifie les nœuds et le variableStorage.", "internal": true},
-        "getMacro": {"desc": "Pour un graphe de type 'instance', renvoie le graphe macro d'origine correspondant.", "returns": [{"type": "table|nil", "desc": "macro"}]},
-        "getInstanceRoot": {"desc": "Renvoie la racine de l'instance (premier ancêtre avec macroID).", "returns": [{"type": "table", "desc": "graphe"}]},
-        "getChildPosition": {"desc": "Renvoie la suite d'indices de ce graphe parmi les enfants depuis la racine de l'instance.", "returns": [{"type": "integer[]", "desc": "indices"}]},
-        "getDeepChild": {"desc": "Descend dans les enfants selon des indices (voir notes : utilise un champ children inexistant).", "params": {"indexes": {"type": "integer[]", "desc": "indices"}}, "returns": [{"type": "table|nil", "desc": "graphe"}]},
-        "getRecursiveHooksAndDependencies": {"desc": "Collecte récursivement les nœuds (pour leurs hooks) et les dépendances d'extensions déclarées par les nœuds.", "params": {"hooks": {"type": "table[]", "desc": "liste de nœuds à remplir"}, "deps": {"type": "table<string, boolean>", "desc": "dépendances à remplir"}}, "returns": [{"type": "table[]", "desc": "nœuds"}, {"type": "table<string, boolean>", "desc": "dépendances"}]},
-        "findNodeInChildren": {"desc": "Alias de findNodeRecursive.", "params": {"id": {"type": "integer", "desc": "id du nœud"}}, "returns": [{"type": "table|nil", "desc": "nœud"}]},
-        "findNodeRecursive": {"desc": "Cherche un nœud par id dans ce graphe puis dans ses enfants.", "params": {"id": {"type": "integer", "desc": "id du nœud"}}, "returns": [{"type": "table|nil", "desc": "nœud"}]},
-        "forceRecursiveNodeUpdatePosition": {"desc": "Force la mise à jour de la position éditeur de tous les nœuds (récursif).", "params": {}},
-        "toString": {"desc": "Texte 'nom (id / type)'.", "returns": [{"type": "string", "desc": "description"}]},
-        "_printStructure": {"desc": "Affiche récursivement l'arbre des graphes avec indentation.", "params": {"depth": {"type": "integer", "desc": "profondeur"}}, "internal": true},
-        "printStructure": {"desc": "Affiche l'arbre des graphes (seulement depuis une racine).", "params": {}},
-        "getParentWithStates": {"desc": "Comme getParent, mais si le graphe n'a pas de parent, renvoie le graphe d'états dont un nœud représente ce graphe.", "returns": [{"type": "table|nil", "desc": "parent"}]},
-        "getChildrenWithStates": {"desc": "Enfants du graphe, plus (pour un graphe d'états) les graphes non-états représentés par ses nœuds.", "returns": [{"type": "table[]", "desc": "enfants"}]},
-        "getSiblings": {"desc": "Renvoie les graphes frères (même parent, états compris) ; imprime le nom du parent (voir notes).", "returns": [{"type": "table[]", "desc": "frères"}]},
-        "getLocation": {"desc": "Renvoie le chemin du graphe depuis la racine (noms, ou ids si withIds), états parents compris.", "params": {"withIds": {"type": "boolean|nil", "desc": "renvoyer aussi les ids"}}}
+        "init": {
+          "desc": "Initializes the graph: id, name, type 'graph', empty tables, variableStorage, view position and zoom.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "manager"
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "name (default 'Graph <id>')"
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "forced id (deserialization)"
+            }
+          },
+          "internal": true
+        },
+        "getParent": {
+          "desc": "Returns the parent graph.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "parent graph"
+            }
+          ]
+        },
+        "getChildren": {
+          "desc": "Returns the child graphs (parentId == id), sorted by id.",
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "children"
+            }
+          ]
+        },
+        "clearVariableChangesChildren": {
+          "desc": "Clears the pending variable changes of this graph and its descendants.",
+          "params": {}
+        },
+        "getRootGraph": {
+          "desc": "Goes up to the root graph.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "root"
+            }
+          ]
+        },
+        "getDirtyChildren": {
+          "desc": "Collects the ids of 'dirty' macros used by child instances.",
+          "params": {
+            "dirtyChildren": {
+              "type": "table<integer, boolean>|nil",
+              "desc": "table to fill"
+            }
+          },
+          "returns": [
+            {
+              "type": "table<integer, boolean>",
+              "desc": "ids of macros to update"
+            }
+          ]
+        },
+        "setDirty": {
+          "desc": "Marks the graph (and its children of the same type) as modified; by default starting from the root.",
+          "params": {
+            "dirty": {
+              "type": "boolean",
+              "desc": "state"
+            },
+            "startFromRoot": {
+              "type": "boolean|nil",
+              "desc": "default true"
+            }
+          }
+        },
+        "gatherNodesAndLinks": {
+          "desc": "Adds to rNodes and rLinks the nodes and links of this graph and its children, and fills interInfo for macro/integrated nodes.",
+          "params": {
+            "rNodes": {
+              "type": "table[]",
+              "desc": "list of nodes to fill"
+            },
+            "rLinks": {
+              "type": "table[]",
+              "desc": "list of links to fill"
+            },
+            "interInfo": {
+              "type": "table",
+              "desc": "integration info per node"
+            }
+          }
+        },
+        "resolveInterHops": {
+          "desc": "Follows links through macro/integrated and macro/io nodes to create virtual links (virtualLink) between the real source and the real targets.",
+          "params": {
+            "rLinks": {
+              "type": "table[]",
+              "desc": "list of links to complete"
+            },
+            "interInfo": {
+              "type": "table",
+              "desc": "integration info"
+            }
+          }
+        },
+        "plan": {
+          "desc": "Plans the execution (non-macro root graph): dependencies, flow roots, color propagation, node order, execution code generation. Called by the manager before starting or after a modification.",
+          "internal": true
+        },
+        "clear": {
+          "desc": "Deletes the child graphs, destroys the nodes and clears nodes, links, pins.",
+          "params": {}
+        },
+        "createNode": {
+          "desc": "Creates a node of a given type (e.g. 'events/onUpdate') from the manager's templates. Logs an error and returns nil if the type is unknown. Marks obsolete nodes in their name.",
+          "params": {
+            "nodeType": {
+              "type": "string",
+              "desc": "node type path"
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "imposed id"
+            },
+            "...": {
+              "type": "any",
+              "desc": "arguments passed to the node constructor"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "created node"
+            }
+          ]
+        },
+        "moveNodeToGraph": {
+          "desc": "Moves a node to another graph, deleting its links.",
+          "params": {
+            "node": {
+              "type": "table",
+              "desc": "node"
+            },
+            "newGraph": {
+              "type": "table",
+              "desc": "destination graph"
+            }
+          }
+        },
+        "deleteNode": {
+          "desc": "Deletes a node and its links (except undeleteable nodes outside debug mode; a node that represents a graph deletes that graph, unless ignoreIntegratedNodes).",
+          "params": {
+            "node": {
+              "type": "table",
+              "desc": "node"
+            },
+            "ignoreIntegratedNodes": {
+              "type": "boolean|nil",
+              "desc": "do not delete the represented graph"
+            }
+          }
+        },
+        "createLink": {
+          "desc": "Creates a link between an output pin and an input pin (after removing the hardcoded value from the target pin).",
+          "params": {
+            "startPin": {
+              "type": "table",
+              "desc": "source pin"
+            },
+            "endPin": {
+              "type": "table",
+              "desc": "target pin"
+            },
+            "...": {
+              "type": "any",
+              "desc": "additional arguments"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "link"
+            }
+          ]
+        },
+        "deleteLink": {
+          "desc": "Deletes a link: updates pinIn / _mInFlow of the target, notifies pins and nodes, schedules the deletion on the editor side.",
+          "params": {
+            "link": {
+              "type": "table",
+              "desc": "link"
+            }
+          }
+        },
+        "_onSerialize": {
+          "desc": "Serializes the graph (name, nodes, ordered links, type, variables, view, parentId...). Returns the table and the smallest id used.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "data"
+            },
+            {
+              "type": "integer",
+              "desc": "smallest id"
+            }
+          ],
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Rebuilds the graph (nodes sorted by id, links, variables) from the serialized data.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "data"
+            }
+          },
+          "internal": true
+        },
+        "linkExists": {
+          "desc": "True if a link already exists between these two pins.",
+          "params": {
+            "startPin": {
+              "type": "table",
+              "desc": "source pin"
+            },
+            "endPin": {
+              "type": "table",
+              "desc": "target pin"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "exists"
+            }
+          ]
+        },
+        "hasLink": {
+          "desc": "True if an input pin of a type other than flow/state is already linked.",
+          "params": {
+            "pin": {
+              "type": "table",
+              "desc": "pin"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "linked"
+            }
+          ]
+        },
+        "pinsCompatible": {
+          "desc": "Tests the type compatibility of two pins: 'any' accepts everything, 'state' pins link only to each other, table types must have the same tableType or 'generic'.",
+          "params": {
+            "sourcePin": {
+              "type": "table",
+              "desc": "pin"
+            },
+            "targetPin": {
+              "type": "table",
+              "desc": "pin"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean|nil",
+              "desc": "compatible"
+            }
+          ]
+        },
+        "canCreateLink": {
+          "desc": "True if a link can be created between a and b (opposite directions, different nodes, compatible types, no existing link, equal names if matchName).",
+          "params": {
+            "a": {
+              "type": "table",
+              "desc": "pin"
+            },
+            "b": {
+              "type": "table",
+              "desc": "pin"
+            },
+            "newLinkInfo": {
+              "type": "table|nil",
+              "desc": "authorization info per node"
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "allowed"
+            }
+          ]
+        },
+        "findPin": {
+          "desc": "Returns the pin with the given id.",
+          "params": {
+            "pinId": {
+              "type": "integer|nil",
+              "desc": "id"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "pin"
+            }
+          ]
+        },
+        "updateChildrenTypes": {
+          "desc": "Applies a type to this graph and its descendants (stops at ignoreType).",
+          "params": {
+            "t": {
+              "type": "string",
+              "desc": "new type"
+            },
+            "ignoreType": {
+              "type": "string|nil",
+              "desc": "type not to traverse"
+            }
+          }
+        },
+        "_executionStarted": {
+          "desc": "Called when the project starts: notifies each node.",
+          "internal": true
+        },
+        "_onClear": {
+          "desc": "Notifies the nodes and the variableStorage of a clear.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Called when the project stops: notifies the nodes and the variableStorage.",
+          "internal": true
+        },
+        "getMacro": {
+          "desc": "For a graph of type 'instance', returns the corresponding original macro graph.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "macro"
+            }
+          ]
+        },
+        "getInstanceRoot": {
+          "desc": "Returns the root of the instance (first ancestor with macroID).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "graph"
+            }
+          ]
+        },
+        "getChildPosition": {
+          "desc": "Returns the sequence of indices of this graph among the children from the root of the instance.",
+          "returns": [
+            {
+              "type": "integer[]",
+              "desc": "indices"
+            }
+          ]
+        },
+        "getDeepChild": {
+          "desc": "Descends into the children according to indices (see notes: uses a nonexistent children field).",
+          "params": {
+            "indexes": {
+              "type": "integer[]",
+              "desc": "indices"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "graph"
+            }
+          ]
+        },
+        "getRecursiveHooksAndDependencies": {
+          "desc": "Recursively collects the nodes (for their hooks) and the extension dependencies declared by the nodes.",
+          "params": {
+            "hooks": {
+              "type": "table[]",
+              "desc": "list of nodes to fill"
+            },
+            "deps": {
+              "type": "table<string, boolean>",
+              "desc": "dependencies to fill"
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "nodes"
+            },
+            {
+              "type": "table<string, boolean>",
+              "desc": "dependencies"
+            }
+          ]
+        },
+        "findNodeInChildren": {
+          "desc": "Alias of findNodeRecursive.",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "node id"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "node"
+            }
+          ]
+        },
+        "findNodeRecursive": {
+          "desc": "Looks for a node by id in this graph then in its children.",
+          "params": {
+            "id": {
+              "type": "integer",
+              "desc": "node id"
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "node"
+            }
+          ]
+        },
+        "forceRecursiveNodeUpdatePosition": {
+          "desc": "Forces the update of the editor position of all nodes (recursive).",
+          "params": {}
+        },
+        "toString": {
+          "desc": "Text 'name (id / type)'.",
+          "returns": [
+            {
+              "type": "string",
+              "desc": "description"
+            }
+          ]
+        },
+        "_printStructure": {
+          "desc": "Recursively prints the tree of graphs with indentation.",
+          "params": {
+            "depth": {
+              "type": "integer",
+              "desc": "depth"
+            }
+          },
+          "internal": true
+        },
+        "printStructure": {
+          "desc": "Prints the tree of graphs (only from a root).",
+          "params": {}
+        },
+        "getParentWithStates": {
+          "desc": "Like getParent, but if the graph has no parent, returns the state graph in which a node represents this graph.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "parent"
+            }
+          ]
+        },
+        "getChildrenWithStates": {
+          "desc": "Children of the graph, plus (for a state graph) the non-state graphs represented by its nodes.",
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "children"
+            }
+          ]
+        },
+        "getSiblings": {
+          "desc": "Returns the sibling graphs (same parent, states included); prints the parent's name (see notes).",
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "siblings"
+            }
+          ]
+        },
+        "getLocation": {
+          "desc": "Returns the path of the graph from the root (names, or ids if withIds), parent states included.",
+          "params": {
+            "withIds": {
+              "type": "boolean|nil",
+              "desc": "also return the ids"
+            }
+          }
+        }
       }
     }
   }

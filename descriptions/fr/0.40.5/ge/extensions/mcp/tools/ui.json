@@ -1,0 +1,83 @@
+{
+  "path": "lua/ge/extensions/mcp/tools/ui.lua",
+  "module": "Outils MCP pour l'interface (CEF/Vue) : lire la route et l'état Pinia, naviguer, afficher/masquer l'UI, afficher un message, et piloter le DOM (JS arbitraire, clic, molette, saisie, clavier, survol) pour des tests d'interface. Les commandes JS sont envoyées avec be:executeJS ; les résultats reviennent à GE par window.beamng.sendEngineLua vers les callbacks `_cb.vueDump` / `_cb.uiEval`.",
+  "notes": [
+    "Attention sécurité : ui_eval exécute du JavaScript arbitraire dans l'UI.",
+    "ui_eval et dump_vue_state sont asynchrones : un appel renvoie le résultat de la demande précédente (s'il y en a un) ou un message « call again ». Dans ui_eval, si un résultat est déjà en attente il est renvoyé SANS relancer l'évaluation. Le corps JS peut être une expression (auto-retournée si le texte ne contient pas « return »).",
+    "Le sérialiseur de ui_eval est borné (profondeur 5, 200 éléments de tableau, 100 clés d'objet) ; les nœuds DOM sont réduits à un descripteur <tag#id.classe>.",
+    "ui_click, ui_scroll, ui_type, ui_key, ui_hover sont « fire-and-forget » (erreurs JS avalées, aucun retour sur le succès réel) : vérifier l'effet avec ui_eval. `nth` est 1-based.",
+    "Le callback ui_eval est partagé : `ui_eval` utilise shared.asyncResults.ui, `dump_vue_state` shared.asyncResults.vue."
+  ],
+  "fields": {
+    "schemas": {"type": "table<string, table>", "desc": "Schémas des outils d'interface."},
+    "cb": {"type": "table<string, function>", "desc": "Callbacks `vueDump(s)` et `uiEval(s)` : stockent la chaîne dans shared.asyncResults.vue / .ui."}
+  },
+  "functions": {
+    "get_ui_state": {
+      "desc": "État de l'UI : route/scope (ui_router.getState) et état de jeu (core_gamestate.getGameState).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON {route, gameState}."}, {"type": "boolean", "desc": "false."}],
+      "internal": false
+    },
+    "set_ui_state": {
+      "desc": "Navigue vers une route de l'UI (ui_router.navigate).",
+      "params": {"args": {"type": "table", "desc": "{route: string (ex. 'menu', 'menu.vehicles'), params?: table}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "internal": false
+    },
+    "dump_vue_state": {
+      "desc": "Demande un instantané de la route courante et des stores Pinia (asynchrone).",
+      "params": {},
+      "returns": [{"type": "string", "desc": "JSON {route, stores} précédent, ou message."}, {"type": "boolean", "desc": "false."}],
+      "internal": false
+    },
+    "toggle_ui": {
+      "desc": "Affiche/masque l'UI (comme Alt+U) via ui_visibility.",
+      "params": {"args": {"type": "table|nil", "desc": "{show?: boolean} true/false pour fixer, absent pour basculer."}},
+      "returns": [{"type": "string", "desc": "« ui visible: … »."}, {"type": "boolean", "desc": "true si ui_visibility absent."}],
+      "internal": false
+    },
+    "show_message": {
+      "desc": "Affiche un message dans l'app de messages du jeu via ui_message ; réutiliser la même category remplace le message précédent.",
+      "params": {"args": {"type": "table", "desc": "{text: string, ttl?: number s (défaut 5), category?: string (défaut 'mcp'), icon?: string (défaut 'info')}"}},
+      "returns": [{"type": "string", "desc": "« shown: … »."}, {"type": "boolean", "desc": "true si text manquant."}],
+      "internal": false
+    },
+    "ui_eval": {
+      "desc": "Évalue du JavaScript dans l'UI et renvoie sa valeur en JSON (asynchrone).",
+      "params": {"args": {"type": "table", "desc": "{js: string}"}},
+      "returns": [{"type": "string", "desc": "Résultat JSON ou message « dispatched »."}, {"type": "boolean", "desc": "true si js manquant."}],
+      "internal": false
+    },
+    "ui_click": {
+      "desc": "Simule un clic complet (pointerdown, mousedown, pointerup, mouseup, click, option dblclick) au centre d'un élément trouvé par sélecteur CSS ; clic droit déclenche aussi contextmenu.",
+      "params": {"args": {"type": "table", "desc": "{selector: string, nth?: integer, button?: 'left'|'middle'|'right'|0|1|2, doubleClick?: boolean}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si selector manquant."}],
+      "internal": false
+    },
+    "ui_scroll": {
+      "desc": "Envoie un évènement wheel à un élément (deltaY>0 = vers le bas ; 120 par défaut si aucun delta).",
+      "params": {"args": {"type": "table", "desc": "{selector: string, deltaX?: number, deltaY?: number, nth?: integer}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si selector manquant."}],
+      "internal": false
+    },
+    "ui_type": {
+      "desc": "Saisit du texte dans un input/textarea/contenteditable (fixe la valeur puis déclenche input et change, compatible v-model).",
+      "params": {"args": {"type": "table", "desc": "{selector: string, text: string, clear?: boolean (défaut true, false = ajoute), nth?: integer}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si paramètre manquant."}],
+      "internal": false
+    },
+    "ui_key": {
+      "desc": "Envoie un évènement clavier à un élément ou à l'élément actif.",
+      "params": {"args": {"type": "table", "desc": "{key: string (ex. 'Enter'), selector?: string, event?: 'down'|'up'|'press' (défaut keydown+keyup), nth?: integer}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si key manquant."}],
+      "internal": false
+    },
+    "ui_hover": {
+      "desc": "Simule un survol (pointerover, mouseover, pointerenter, mouseenter, pointermove, mousemove) d'un élément.",
+      "params": {"args": {"type": "table", "desc": "{selector: string, nth?: integer}"}},
+      "returns": [{"type": "string", "desc": "Message."}, {"type": "boolean", "desc": "true si selector manquant."}],
+      "internal": false
+    }
+  }
+}

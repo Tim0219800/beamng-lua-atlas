@@ -2,68 +2,68 @@
 -- tim19Atlas stub generated from lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Marqueur de zone dessiné par debug.
+--- Zone marker drawn by debug.
 ---@class scenario_raceMarkers_zoneAttention
 local scenario_raceMarkers_zoneAttention = {}
 
---- Efface la table d'identifiants.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:153
+--- Clears the identifier table.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:153
 function scenario_raceMarkers_zoneAttention:clearMarkers() end
 
---- Conservé pour la compatibilité d'API : ne crée aucun objet.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:149
+--- Kept for API compatibility: creates no object.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:149
 function scenario_raceMarkers_zoneAttention:createMarkers() end
 
---- Appelle setVisibility(false).
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:145
+--- Calls setVisibility(false).
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:145
 function scenario_raceMarkers_zoneAttention:hide() end
 
---- Constructeur : initialise l'état (invisible, mode 'hidden', couleur bleue).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:12
----@param id integer Identifiant unique.
+--- Constructor: initializes the state (invisible, mode 'hidden', blue color).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:12
+---@param id integer Unique identifier.
 function scenario_raceMarkers_zoneAttention:init(id) end
 
---- Règle l'état du compte à rebours qui pilote la couleur.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:130
----@param remaining number|nil Temps restant.
----@param total number|nil Durée totale.
----@param done boolean|nil true quand le compte est terminé (couleur orange foncé).
+--- Sets the countdown state that drives the color.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:130
+---@param remaining number|nil Remaining time.
+---@param total number|nil Total duration.
+---@param done boolean|nil true when the countdown is finished (dark orange color).
 function scenario_raceMarkers_zoneAttention:setCountdown(remaining, total, done) end
 
---- Règle la hauteur de la clôture dessinée.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:126
----@param h number|nil Hauteur en mètres ; nil garde la valeur actuelle.
+--- Sets the height of the drawn fence.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:126
+---@param h number|nil Height in meters; nil keeps the current value.
 function scenario_raceMarkers_zoneAttention:setFenceHeight(h) end
 
---- 'hidden' masque, autre mode affiche.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:113
----@param mode string Nom du mode.
+--- 'hidden' hides, other mode shows.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:113
+---@param mode string Mode name.
 function scenario_raceMarkers_zoneAttention:setMode(mode) end
 
---- Marque la zone comme « montante » : couleur orange foncé.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:136
----@param v boolean État.
+--- Marks the zone as "rising": dark orange color.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:136
+---@param v boolean State.
 function scenario_raceMarkers_zoneAttention:setRising(v) end
 
---- Associe la zone à dessiner, ou une simple position si wp n'est pas une zone.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:84
----@param wp table Objet zone {drawDebug, vertices, center?}, ou {zone = ...}, ou {pos, radius}.
+--- Associates the zone to draw, or a simple position if wp is not a zone.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:84
+---@param wp table Zone object {drawDebug, vertices, center?}, or {zone = ...}, or {pos, radius}.
 function scenario_raceMarkers_zoneAttention:setToCheckpoint(wp) end
 
---- Active ou désactive le dessin.
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:141
----@param v boolean Visibilité.
+--- Enables or disables drawing.
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:141
+---@param v boolean Visibility.
 function scenario_raceMarkers_zoneAttention:setVisibility(v) end
 
---- Appelle setVisibility(true).
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:146
+--- Calls setVisibility(true).
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:146
 function scenario_raceMarkers_zoneAttention:show() end
 
---- Appel par image : calcule la couleur cible (bleue, dégradé jaune vers orange pendant le compte à rebours, orange foncé si rising ou terminé), la lisse puis dessine la zone.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:34
----@param dt number Durée réelle (s).
----@param dtSim number Durée simulée (s).
+--- Per-frame call: computes the target color (blue, yellow-to-orange gradient during the countdown, dark orange if rising or finished), smooths it then draws the zone.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/scenario/raceMarkers/zoneAttention.lua:34
+---@param dt number Real duration (s).
+---@param dtSim number Simulated duration (s).
 function scenario_raceMarkers_zoneAttention:update(dt, dtSim) end
 

@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/colorPresets.lua",
+  "module": "Section « Color Presets » de l'outil Dynamic Decals. Liste des couleurs nommées stockées dans la préférence `dynamicDecalsTool.colorPresets.presets` (environ 42 par défaut : « iconic oraNGe », Aquamarine, Burgundy, Jet Black…). Chaque entrée {name, value={r,g,b,a}} peut être éditée, renommée, supprimée, filtrée par nom, et appliquée comme couleur de decal ou de fill layer.",
+  "notes": [
+    "Les valeurs sont des flottants 0..1 (RGBA).",
+    "Le champ de recherche est libellé « Texture Filter » (copié d'une autre section) alors qu'il filtre les noms de couleurs.",
+    "Le bouton « Add color preset » insère une couleur orange (1, 0.4, 0, 1) sans nom ; newPreset.name n'est pas utilisé.",
+    "La table `newPreset.value` est partagée entre tous les presets ajoutés : ils référencent la même table Lua tant que la préférence n'est pas relue."
+  ],
+  "functions": {
+    "onGui": {
+      "desc": "Dessine le filtre de recherche, la liste des presets (widget couleur, nom, boutons supprimer / appliquer comme couleur de decal via api.setDecalColor / appliquer comme couleur de fill layer via api.setFillLayerColor) et le bouton d'ajout. Sert à la fois de contenu de section et d'éditeur de la préférence `presets`.",
+      "params": {"guiId": {"type": "string", "desc": "Suffixe pour des identifiants ImGui uniques."}},
+      "returns": [],
+      "internal": true
+    },
+    "registerEditorPreferences": {
+      "desc": "Enregistre la sous-catégorie `dynamicDecalsTool.colorPresets` avec la table `presets` (liste par défaut de couleurs nommées) et son éditeur graphique (onGui).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère l'API et docs, enregistre la section « Color Presets » (ordre 121) et sa page de documentation.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

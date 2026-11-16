@@ -1,53 +1,53 @@
 # `jbeam_jbeamMod`
 
-*Fichier : `lua/common/extensions/jbeam/jbeamMod.lua` · VM : Commun (GE + véhicule) · 25 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/extensions/jbeam/jbeamMod.lua` · VM: Common (GE + vehicle) · 25 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `jbeam_jbeamMod` : `extensions.load("jbeam_jbeamMod")`, puis la globale `jbeam_jbeamMod`
+**Access:** extension `jbeam_jbeamMod`: `extensions.load("jbeam_jbeamMod")`, then the global `jbeam_jbeamMod`
 
-Extension d'exemple (commentaire du fichier : « an example of how you could add things into jbeam loading ») qui montre comment se brancher sur les deux phases de chargement JBeam. Les deux hooks se contentent d'écrire une ligne de log niveau I (« onJbeamLoadingPhase1/2 called :) »). Elle n'est pas chargée par défaut : il faut un extensions.load('jbeam_jbeamMod') (ligne commentée dans le fichier).
+Example extension (file comment: "an example of how you could add things into jbeam loading") showing how to hook into the two JBeam loading phases. Both hooks just write a level I log line ("onJbeamLoadingPhase1/2 called :)"). It is not loaded by default: an extensions.load('jbeam_jbeamMod') is needed (commented-out line in the file).
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('jbeam_jbeamMod')
--- puis copier le module et remplacer les log() par votre propre traitement des données JBeam
+-- then copy the module and replace the log() calls with your own JBeam data processing
 ```
 
-## Remarques
+## Notes
 
-- Aucun des arguments des hooks n'est utilisé dans le code ; leur sens exact vient du code appelant (non lu ici).
-- Les noms de logs utilisent le tag 'extensions.jbeam.jbeamMod'.
+- None of the hook arguments are used in the code; their exact meaning comes from the calling code (not read here).
+- The log names use the tag 'extensions.jbeam.jbeamMod'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_jbeamMod.onJbeamLoadingPhase1(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars)` | Hook appelé pendant la phase 1 du chargement JBeam d'un véhicule. Ici : écrit seulement un log « onJbeamLoadingPhase1 called :) ». *(interne)* *(hook)* | 14 |
-| `jbeam_jbeamMod.onJbeamLoadingPhase2(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars)` | Hook appelé pendant la phase 2 du chargement JBeam d'un véhicule. Ici : écrit seulement un log « onJbeamLoadingPhase2 called :) ». *(interne)* *(hook)* | 18 |
+| `jbeam_jbeamMod.onJbeamLoadingPhase1(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars)` | Hook called during phase 1 of a vehicle's JBeam loading. Here: only writes a log "onJbeamLoadingPhase1 called :)". *(internal)* *(hook)* | 14 |
+| `jbeam_jbeamMod.onJbeamLoadingPhase2(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars)` | Hook called during phase 2 of a vehicle's JBeam loading. Here: only writes a log "onJbeamLoadingPhase2 called :)". *(internal)* *(hook)* | 18 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_jbeamMod.onJbeamLoadingPhase1(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars)`
 
-Hook appelé pendant la phase 1 du chargement JBeam d'un véhicule. Ici : écrit seulement un log « onJbeamLoadingPhase1 called :) ».
+Hook called during phase 1 of a vehicle's JBeam loading. Here: only writes a log "onJbeamLoadingPhase1 called :)".
 
-- `loadingProgress` (*any*) : Non utilisé dans ce fichier.
-- `objID` (*integer*) : Non utilisé (déduit du nom : id de l'objet véhicule).
-- `vehicle` (*any*) : Non utilisé.
-- `unifyJournal` (*any*) : Non utilisé.
-- `vehicleConfig` (*table*) : Non utilisé (déduit du nom : configuration du véhicule).
-- `vars` (*any*) : Non utilisé.
+- `loadingProgress` (*any*) : Not used in this file.
+- `objID` (*integer*) : Not used (inferred from the name: vehicle object id).
+- `vehicle` (*any*) : Not used.
+- `unifyJournal` (*any*) : Not used.
+- `vehicleConfig` (*table*) : Not used (inferred from the name: vehicle configuration).
+- `vars` (*any*) : Not used.
 
 #### `jbeam_jbeamMod.onJbeamLoadingPhase2(loadingProgress, objID, vehicle, unifyJournal, vehicleConfig, vars)`
 
-Hook appelé pendant la phase 2 du chargement JBeam d'un véhicule. Ici : écrit seulement un log « onJbeamLoadingPhase2 called :) ».
+Hook called during phase 2 of a vehicle's JBeam loading. Here: only writes a log "onJbeamLoadingPhase2 called :)".
 
-- `loadingProgress` (*any*) : Non utilisé dans ce fichier.
-- `objID` (*integer*) : Non utilisé (déduit du nom : id de l'objet véhicule).
-- `vehicle` (*any*) : Non utilisé.
-- `unifyJournal` (*any*) : Non utilisé.
-- `vehicleConfig` (*table*) : Non utilisé (déduit du nom : configuration du véhicule).
-- `vars` (*any*) : Non utilisé.
+- `loadingProgress` (*any*) : Not used in this file.
+- `objID` (*integer*) : Not used (inferred from the name: vehicle object id).
+- `vehicle` (*any*) : Not used.
+- `unifyJournal` (*any*) : Not used.
+- `vehicleConfig` (*table*) : Not used (inferred from the name: vehicle configuration).
+- `vars` (*any*) : Not used.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/extensions/jbeam/jbeamMod.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/extensions/jbeam/jbeamMod.lua`.*

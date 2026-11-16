@@ -1,38 +1,38 @@
 # `flowgraph_nodes_vehicle_spawnVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/spawnVehicle.lua` · VM : Game Engine (GE) · 244 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/spawnVehicle.lua` · VM: Game Engine (GE) · 244 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/spawnVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/spawnVehicle")` (file under extensions/ but not a regular extension)
 
-Nœud « Spawn Vehicle » : crée un véhicule (`core_vehicles.spawnNewVehicle` ou `replaceVehicle` si `replacePlayer`), attend qu'il soit prêt puis expose son id. Pins d'entrée : `flow`, `reset` (impulsion, supprime et réinitialise), `model` (défaut 'pickup'), `config` (string ou table, défaut 'vehicles/pickup/d15_4wd_A.pc'), `pos` (vec3), `rot` (quat), et cachés `licenseText`, `color` (couleur ou nom de peinture), `randomColor`, `name`, `replacePlayer`, `keepCamera`, `keepVehicle`, `keepOnReset`. Sorties : `flow` (une fois chargé), `loaded` (impulsion), `vehId`. Machine à états `state` : 1 spawn, 2 attente `ready`, 3 sortie, 4 maintien, 5 échec.
+Node "Spawn Vehicle": creates a vehicle (`core_vehicles.spawnNewVehicle` or `replaceVehicle` if `replacePlayer`), waits until it is ready then exposes its id. Input pins: `flow`, `reset` (pulse, deletes and resets), `model` (default 'pickup'), `config` (string or table, default 'vehicles/pickup/d15_4wd_A.pc'), `pos` (vec3), `rot` (quat), and hidden `licenseText`, `color` (color or paint name), `randomColor`, `name`, `replacePlayer`, `keepCamera`, `keepVehicle`, `keepOnReset`. Outputs: `flow` (once loaded), `loaded` (pulse), `vehId`. State machine `state`: 1 spawn, 2 wait for `ready`, 3 output, 4 hold, 5 failure.
 
-## Remarques
+## Notes
 
-- Échec de spawn : réessaie chaque seconde pendant 10 s, puis log E, passe en état 5 et, si le flowgraph est lié à une activité, abandonne la mission avec fondu.
-- La rotation fournie est multipliée par `quat(0,0,1,0)` (180°).
-- Couleur aléatoire désactivée pour les configs de type Police ou Service.
-- `autoEnterVehicle` = non `keepCamera`.
+- Spawn failure: retries every second for 10 s, then E log, goes to state 5 and, if the flowgraph is linked to an activity, aborts the mission with a fade.
+- The provided rotation is multiplied by `quat(0,0,1,0)` (180°).
+- Random color disabled for Police or Service type configs.
+- `autoEnterVehicle` = not `keepCamera`.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Réinitialise l'état et les sorties au démarrage. | 93 |
-| `C:_executionStopped()` | Réinitialise l'état et la référence au véhicule. | 85 |
-| `C:drawMiddle(builder, style)` | Affichage central du nœud, vide. | 237 |
-| `C:getCmd(action)` | Construit une commande Lua pour appeler `buttonPushed(action)` sur ce nœud depuis une autre VM (déduit du code). | 233 |
-| `C:init()` | Constructeur ; état 1, sortie `flow` false. | 55 |
-| `C:onSpawnFailed()` | Appelé quand le spawn échoue : programme un nouvel essai (1 s) ou abandonne après 10 s. | 62 |
-| `C:postInit()` | Marque le pin `color` avec `colorSetup = {vehicleColor = true}`. | 79 |
-| `C:resetSpawnRetry()` | Remet à zéro le minuteur et le temps cumulé d'échecs de spawn. | 50 |
-| `C:work()` | Machine à états du spawn (voir module) ; gère aussi le `reset`. | 103 |
+| `C:_executionStarted()` | Resets the state and the outputs at start. | 93 |
+| `C:_executionStopped()` | Resets the state and the vehicle reference. | 85 |
+| `C:drawMiddle(builder, style)` | Central display of the node, empty. | 237 |
+| `C:getCmd(action)` | Builds a Lua command to call `buttonPushed(action)` on this node from another VM (inferred from code). | 233 |
+| `C:init()` | Constructor; state 1, `flow` output false. | 55 |
+| `C:onSpawnFailed()` | Called when the spawn fails: schedules a new attempt (1 s) or gives up after 10 s. | 62 |
+| `C:postInit()` | Marks the `color` pin with `colorSetup = {vehicleColor = true}`. | 79 |
+| `C:resetSpawnRetry()` | Resets the timer and the accumulated spawn failure time to zero. | 50 |
+| `C:work()` | Spawn state machine (see module); also handles `reset`. | 103 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`, `getId`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/spawnVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/spawnVehicle.lua`.*

@@ -1,34 +1,34 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/math/smoothers/linear.lua",
-  "module": "Noeud flowgraph 'Linear Smoother' (categorie simple). Lissage lineaire d'un signal avec newTemporalSmoothing : 'value' vers l'etat interne a la vitesse upRate (monte) ou downRate (descend), avec le pas de temps 'dt'. 'set' force l'etat. Sortie 'value'. Les descriptions des pins sont 'TODO' dans le code.",
+  "module": "Flowgraph node 'Linear Smoother' (simple category). Linear smoothing of a signal with newTemporalSmoothing: 'value' toward the internal state at speed upRate (rising) or downRate (falling), with time step 'dt'. 'set' forces the state. Output 'value'. The pin descriptions are 'TODO' in the code.",
   "notes": [
-    "Le lisseur n'existe qu'apres _executionStarted.",
-    "init ecrit C.oldSet (classe) au lieu de self.oldSet : partage entre instances.",
-    "Le champ C.todo du code indique 'Requires testing and should have flow pins'.",
-    "dt est nil si le pin n'est pas connecte."
+    "The smoother only exists after _executionStarted.",
+    "init writes C.oldSet (class) instead of self.oldSet: shared between instances.",
+    "The C.todo field in the code says 'Requires testing and should have flow pins'.",
+    "dt is nil if the pin is not connected."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Met C.oldSet=0 (au niveau de la classe).",
+          "desc": "Sets C.oldSet=0 (at class level).",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Cree le lisseur (newTemporalSmoothing).",
+          "desc": "Creates the smoother (newTemporalSmoothing).",
           "internal": true
         },
         "checkSetValue": {
-          "desc": "Si 'set' a change, force l'etat du lisseur a cette valeur.",
+          "desc": "If 'set' changed, forces the smoother state to that value.",
           "internal": true
         },
         "work": {
-          "desc": "Sans entree, sort l'etat courant ; sinon choisit le taux (upRate/downRate, defaut 1) et sort smoother:getWithRateUncapped(sample, dt, rate).",
+          "desc": "With no input, outputs the current state; otherwise chooses the rate (upRate/downRate, default 1) and outputs smoother:getWithRateUncapped(sample, dt, rate).",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche l'etat du lisseur.",
+          "desc": "Displays the smoother state.",
           "internal": true
         }
       }

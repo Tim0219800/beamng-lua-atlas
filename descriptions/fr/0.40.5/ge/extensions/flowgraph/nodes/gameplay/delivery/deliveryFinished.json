@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/delivery/deliveryFinished.lua",
+  "module": "Nœud flowgraph « Delivery Finished » (catégorie repeat_instant, livraison). Détecte la fin de la livraison (tous les objectifs atteints ou fin manuelle via le menu rapide). Pins d'entrée : flow. Sorties : finished (impulsion unique), isActive, failed, failReason (chaîne vide si réussite). Utilise isActive, isFinished, isFailed et getFailReason du module freeformDelivery.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise les états et sorties.", "internal": true},
+        "_executionStarted": {"desc": "Réinitialise les états et sorties.", "internal": true},
+        "_executionStopped": {"desc": "Réinitialise les états et sorties.", "internal": true},
+        "work": {"desc": "Si flow est actif, compare l'état fini à l'état précédent pour émettre finished une seule fois et renseigne failed/failReason."}
+      }
+    }
+  }
+}

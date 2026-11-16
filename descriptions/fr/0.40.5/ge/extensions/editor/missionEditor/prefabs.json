@@ -1,0 +1,30 @@
+{
+  "path": "lua/ge/extensions/editor/missionEditor/prefabs.lua",
+  "module": "Panneau « Prefabs » de l'éditeur de missions. Il édite la liste mission.prefabs (chemins de fichiers .prefab / .prefab.json) et le booléen prefabsRequireCollisionReload. Chaque ligne a un champ de chemin, un sélecteur de fichier, un indicateur d'existence (FS:fileExists) et un bouton « Spawn » qui instancie le prefab dans MissionGroup. Le module renvoie un constructeur : require(...)(missionEditor).",
+  "notes": [
+    "Spawn : spawnPrefab(nom unique, fichier, \"0 0 0\", \"0 0 1 0\", \"1 1 1\"), loadMode = 0, ajouté à scenetree.MissionGroup puis sélectionné dans l'éditeur.",
+    "Un nouveau prefab ajouté par « Add » vaut « / » tant qu'il n'est pas édité.",
+    "Le bouton de suppression utilise originalPrefabName dans son identifiant imgui ; la liste self.filenames est parallèle à mission.prefabs."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance du panneau. Champs : missionEditor, mission, filenames (tampons imgui), prefabsRequireCollisionReload.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur.",
+          "params": {"missionEditor": {"type": "table", "desc": "Module principal editor_missionEditor."}},
+          "internal": true
+        },
+        "setMission": {
+          "desc": "Définit la mission et recrée les tampons de texte depuis mission.prefabs.",
+          "params": {"mission": {"type": "table", "desc": "Mission courante."}},
+          "internal": true
+        },
+        "draw": {
+          "desc": "Dessine la liste des prefabs (suppression, chemin, sélecteur, état, spawn), le bouton « Add » et la case « Requires collision reload ».",
+          "internal": true
+        }
+      }
+    }
+  }
+}

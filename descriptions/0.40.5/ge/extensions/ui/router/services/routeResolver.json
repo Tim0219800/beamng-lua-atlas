@@ -1,24 +1,49 @@
 {
   "path": "lua/ge/extensions/ui/router/services/routeResolver.lua",
-  "module": "Service OBSOLÈTE du routeur UI : le flux principal construit désormais les NavigationEntries directement avec ResolvedRoute.createEntry(). Ce module reste pour d'éventuels appelants externes : il résout un nom de route en table résolue et compare deux routes.",
+  "module": "DEPRECATED UI router service: the main flow now builds NavigationEntries directly with ResolvedRoute.createEntry(). This module remains for possible external callers: it resolves a route name into a resolved table and compares two routes.",
   "functions": {
     "resolve": {
-      "desc": "Résout un nom de route (relatif possible, résolu avec utils.resolveRelativeRoute si une route courante est fournie) en route résolue via routeManager.getRoute puis ResolvedRoute.createResolved. Renvoie nil avec un avertissement si la route est introuvable ou la création échoue. Obsolète.",
+      "desc": "Resolves a route name (possibly relative, resolved with utils.resolveRelativeRoute if a current route is provided) into a resolved route via routeManager.getRoute then ResolvedRoute.createResolved. Returns nil with a warning if the route is not found or creation fails. Deprecated.",
       "params": {
-        "routeName": {"type": "string", "desc": "Nom de la route."},
-        "params": {"type": "table|nil", "desc": "Paramètres de la requête."},
-        "currentRoute": {"type": "table|nil", "desc": "Route courante (pour les noms relatifs)."}
+        "routeName": {
+          "type": "string",
+          "desc": "Name of the road."
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Query parameters."
+        },
+        "currentRoute": {
+          "type": "table|nil",
+          "desc": "Current route (for relative names)."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Route résolue."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Resolved route."
+        }
+      ],
       "internal": false
     },
     "isEqualRoutes": {
-      "desc": "Compare deux routes : même `name` et mêmes `params` (comparaison valeur à valeur, non récursive).",
+      "desc": "Compares two routes: same `name` and same `params` (value-by-value comparison, non-recursive).",
       "params": {
-        "routeA": {"type": "table", "desc": "Première route."},
-        "routeB": {"type": "table", "desc": "Seconde route."}
+        "routeA": {
+          "type": "table",
+          "desc": "First route."
+        },
+        "routeB": {
+          "type": "table",
+          "desc": "Second route."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si identiques ; false si l'une est nil."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if identical; false if either is nil."
+        }
+      ],
       "internal": false
     }
   }

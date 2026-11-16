@@ -1,8 +1,8 @@
 {
   "path": "lua/vehicle/powertrain/hydraulicWinch.lua",
-  "module": "Fichier vide (0 octet) dans BeamNG.drive 0.40.5. Il ne définit ni `new`, ni champ, ni fonction. Utiliser un composant `hydraulicWinch` dans le jbeam `powertrain` ferait échouer le chargement du module (require renvoie true au lieu d'une table, donc l'appel de `new` échouerait). Aucun autre fichier Lua du jeu ne référence `hydraulicWinch`.",
+  "module": "Empty file (0 bytes) in BeamNG.drive 0.40.5. It defines no `new`, field or function. Using a `hydraulicWinch` component in the `powertrain` jbeam would make the module load fail (require returns true instead of a table, so the call to `new` would fail). No other Lua file of the game references `hydraulicWinch`.",
   "notes": [
-    "Bug / reliquat : fichier présent mais vide. Pour un treuil réel, voir electricWinch (prototype) ou linearActuator, hydraulicCylinder, hydraulicPump."
+    "Bug / leftover: file present but empty. For a real winch, see electricWinch (prototype) or linearActuator, hydraulicCylinder, hydraulicPump."
   ],
   "fields": {},
   "functions": {},

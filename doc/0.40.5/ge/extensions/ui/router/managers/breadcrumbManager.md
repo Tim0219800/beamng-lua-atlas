@@ -1,48 +1,48 @@
 # `ui_router_managers_breadcrumbManager`
 
-*Fichier : `lua/ge/extensions/ui/router/managers/breadcrumbManager.lua` · VM : Game Engine (GE) · 105 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/managers/breadcrumbManager.lua` · VM: Game Engine (GE) · 105 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_managers_breadcrumbManager` : `extensions.load("ui_router_managers_breadcrumbManager")`, puis la globale `ui_router_managers_breadcrumbManager`
+**Access:** extension `ui_router_managers_breadcrumbManager`: `extensions.load("ui_router_managers_breadcrumbManager")`, then the global `ui_router_managers_breadcrumbManager`
 
-Construit le fil d'Ariane (breadcrumbs) d'une route pour le routeur. Pour une route non globale, il ajoute éventuellement un décorateur de module en tête, puis une miette par nœud de la chaîne de routes (label, abstract, isMinorRoute, routeName, params). Les titres peuvent être statiques (chaîne ou table non dynamique) ou dynamiques (fonction source appelée avec les paramètres, avec valeur de repli).
+Builds a route's breadcrumb for the router. For a non-global route, it optionally adds a module decorator at the head, then one crumb per node of the route chain (label, abstract, isMinorRoute, routeName, params). Titles can be static (string or non-dynamic table) or dynamic (source function called with the parameters, with fallback value).
 
-## Remarques
+## Notes
 
-- Un titre dynamique : {mode="dynamic", source=<référence de fonction>, paramKey?, fallback?}. Si paramKey est défini, seule params[paramKey] est passée à la source, sinon la table params entière. Une valeur nil ou vide donne fallback.
-- Le décorateur : celui fourni, sinon (si visible) la configuration du module via ui_router_routeManager.getModuleDecorator, en mode dynamique (source appelée avec params, repli config.fallback) ou statique ({label}). Il est ajouté comme première miette avec decorator=true et routeName=nil.
-- Une route avec global = true n'a aucune miette.
+- A dynamic title: {mode="dynamic", source=<function reference>, paramKey?, fallback?}. If paramKey is set, only params[paramKey] is passed to the source, otherwise the whole params table. A nil or empty value gives fallback.
+- The decorator: the one provided, otherwise (if visible) the module's configuration via ui_router_routeManager.getModuleDecorator, in dynamic mode (source called with params, fallback config.fallback) or static ({label}). It is added as the first crumb with decorator=true and routeName=nil.
+- A route with global = true has no crumb.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_managers_breadcrumbManager.buildBreadcrumbs(routename, route, params, decorator)` | Construit la liste des miettes pour une route : décorateur éventuel puis une miette par nœud renvoyé par ui_router_routeManager.getRouteNodes(routename). | 72 |
-| `ui_router_managers_breadcrumbManager.isDecoratorVisible()` | Indique si le décorateur est visible (NavigationState.isDecoratorVisible). | 100 |
-| `ui_router_managers_breadcrumbManager.setDecoratorVisible(visible)` | Affiche ou masque le décorateur dans le fil d'Ariane (délègue à NavigationState.setDecoratorVisible). | 96 |
+| `ui_router_managers_breadcrumbManager.buildBreadcrumbs(routename, route, params, decorator)` | Builds the list of crumbs for a route: optional decorator then one crumb per node returned by ui_router_routeManager.getRouteNodes(routename). | 72 |
+| `ui_router_managers_breadcrumbManager.isDecoratorVisible()` | Indicates whether the decorator is visible (NavigationState.isDecoratorVisible). | 100 |
+| `ui_router_managers_breadcrumbManager.setDecoratorVisible(visible)` | Shows or hides the decorator in the breadcrumb (delegates to NavigationState.setDecoratorVisible). | 96 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_managers_breadcrumbManager.buildBreadcrumbs(routename, route, params, decorator)`
 
-Construit la liste des miettes pour une route : décorateur éventuel puis une miette par nœud renvoyé par ui_router_routeManager.getRouteNodes(routename).
+Builds the list of crumbs for a route: optional decorator then one crumb per node returned by ui_router_routeManager.getRouteNodes(routename).
 
-- `routename` (*string*) : Nom de route de base.
-- `route` (*table*) : Configuration de la route (route.global désactive le fil d'Ariane).
-- `params` (*table|nil*) : Paramètres de route (utilisés pour les titres dynamiques).
-- `decorator` (*any|nil*) : Décorateur déjà résolu (sinon calculé si le décorateur est visible).
-- **renvoie** : table[] Miettes {label, abstract, isMinorRoute, routeName, params} ; le décorateur est {label, routeName=nil, decorator=true}.
+- `routename` (*string*) : Base route name.
+- `route` (*table*) : Route configuration (route.global disables the breadcrumb).
+- `params` (*table|nil*) : Route parameters (used for dynamic titles).
+- `decorator` (*any|nil*) : Already resolved decorator (otherwise computed if the decorator is visible).
+- **returns**: table[] Crumbs {label, abstract, isMinorRoute, routeName, params}; the decorator is {label, routeName=nil, decorator=true}.
 
 #### `ui_router_managers_breadcrumbManager.isDecoratorVisible()`
 
-Indique si le décorateur est visible (NavigationState.isDecoratorVisible).
+Indicates whether the decorator is visible (NavigationState.isDecoratorVisible).
 
-- **renvoie** : boolean true si visible.
+- **returns**: boolean true if visible.
 
 #### `ui_router_managers_breadcrumbManager.setDecoratorVisible(visible)`
 
-Affiche ou masque le décorateur dans le fil d'Ariane (délègue à NavigationState.setDecoratorVisible).
+Shows or hides the decorator in the breadcrumb (delegates to NavigationState.setDecoratorVisible).
 
-- `visible` (*boolean*) : true pour afficher.
+- `visible` (*boolean*) : true to show.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/managers/breadcrumbManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/managers/breadcrumbManager.lua`.*

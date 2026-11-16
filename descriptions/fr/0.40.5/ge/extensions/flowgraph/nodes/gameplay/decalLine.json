@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/decalLine.lua",
+  "module": "Nœud flowgraph « Decal Line » (catégorie repeat_instant, util/draw). Dessine une ligne de décalques du point posA au point posB, comme une barre de chargement. Pins d'entrée : posA, posB, decalScale, amount (32), inverted, decalPath, filling1, filling2 (0 à 100), et quatre couleurs (filledColor, fillingColor1, fillingColor2, backgroundColor). Soumet les décalques à Engine.Render.DynamicDecalMgr.addDecals.",
+  "notes": ["data.snapToTerrain = false est défini mais non utilisé dans ce fichier."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Définit data.snapToTerrain = false.", "internal": true},
+        "_executionStarted": {"desc": "Réinitialise le pool de décalques et les caches de couleurs.", "internal": true},
+        "work": {"desc": "Place les décalques par interpolation entre posA et posB, choisit leur couleur selon filling1/filling2 et les soumet au renderer."}
+      }
+    }
+  }
+}

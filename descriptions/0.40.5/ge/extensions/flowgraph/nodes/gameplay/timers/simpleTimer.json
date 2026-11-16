@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/timers/simpleTimer.lua",
-  "module": "Nœud flowgraph « Simple Timer » (catégorie once_f_duration). Timer tout-en-un : crée un timer (duration, ref dtSim/dtReal/dtRaw) au déclenchement puis publie chaque frame elapsed, remaining, duration, elapsedPercent (0 à 1) ; capTime borne ces valeurs une fois terminé. Passe en état de durée 'started' puis 'finished' quand le timer est complet. Les valeurs ne peuvent pas être modifiées après création.",
+  "module": "Flowgraph node \"Simple Timer\" (category once_f_duration). All-in-one timer: creates a timer (duration, ref dtSim/dtReal/dtRaw) on trigger, then publishes elapsed, remaining, duration, elapsedPercent (0 to 1) every frame; capTime clamps these values once finished. Goes to duration state 'started' then 'finished' when the timer is complete. Values cannot be modified after creation.",
   "notes": [
-    "onNodeReset contient des print de débogage (message « setting timer back »).",
-    "elapsedPercent divise par la durée : durée 0 donne inf/NaN."
+    "onNodeReset contains debug prints (message \"setting timer back\").",
+    "elapsedPercent divides by the duration: a duration of 0 gives inf/NaN."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStarted": {
-          "desc": "Met l'état de durée à 'inactive'.",
+          "desc": "Sets the duration state to 'inactive'.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Remet le temps écoulé du timer à 0 et l'état de durée à 'inactive'.",
+          "desc": "Resets the timer's elapsed time to 0 and the duration state to 'inactive'.",
           "internal": true
         },
         "postInit": {
-          "desc": "Définit les valeurs prédéfinies du pin ref (dtSim, dtReal, dtRaw).",
+          "desc": "Defines the preset values of the ref pin (dtSim, dtReal, dtRaw).",
           "internal": true
         },
         "work": {
-          "desc": "Met à jour elapsed/remaining/duration/elapsedPercent, passe à 'finished' quand le timer est complet.",
+          "desc": "Updates elapsed/remaining/duration/elapsedPercent, switches to 'finished' when the timer is complete.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Crée le timer via self.mgr.modules.timer:addTimer, publie timerId et passe l'état de durée à 'started'.",
+          "desc": "Creates the timer via self.mgr.modules.timer:addTimer, publishes timerId and sets the duration state to 'started'.",
           "internal": true
         }
       }

@@ -1,8 +1,8 @@
 {
   "path": "lua/vehicle/controller/hydraulics/truckCabTiltControl.lua",
-  "module": "Contrôleur auxiliaire pour la bascule de cabine d'un camion : quand au moins un verrou de cabine (contrôleur de groupe) est « attached », les vérins de bascule sont en mode de vanne \"float\" ; sinon \"closed\" (modes réglables).",
+  "module": "Auxiliary controller for a truck's cab tilt: when at least one cab latch (group controller) is \"attached\", the tilt cylinders are in \"float\" valve mode; otherwise \"closed\" (adjustable modes).",
   "notes": [
-    "Clés jbeam (défaut) : cabLatchControllers (noms de contrôleurs exposant getGroupState()), cabTiltCylinders (noms de vérins hydrauliques), tiltCylinderValveModeLatched (\"float\"), tiltCylinderValveModeUnlatched (\"closed\")."
+    "jbeam keys (default): cabLatchControllers (names of controllers exposing getGroupState()), cabTiltCylinders (names of hydraulic cylinders), tiltCylinderValveModeLatched (\"float\"), tiltCylinderValveModeUnlatched (\"closed\")."
   ],
   "fields": {
     "type": {
@@ -12,33 +12,33 @@
   },
   "functions": {
     "init": {
-      "desc": "Lit les noms de contrôleurs de verrou, de vérins et les modes de vanne.",
+      "desc": "Reads the latch controller names, the cylinder names and the valve modes.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Ne fait rien.",
+      "desc": "Does nothing.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam."
+          "desc": "Jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Chaque image : règle le type de vanne des vérins selon l'état des verrous.",
+      "desc": "Every frame: sets the valve type of the cylinders according to the latch state.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],

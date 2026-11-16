@@ -1,109 +1,109 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/storeStatics.lua",
-  "module": "Noeud flowgraph « Store Statics » (auteur BeamNG). Mémorise la position, rotation, échelle et shape des TSStatic sélectionnés dans l'éditeur (stockage dans le noeud, sauvegardé avec le graphe) puis les fait apparaître au flow. Dans l'éditeur, le panneau permet de stocker la sélection, tout faire apparaître/disparaître, sélectionner ou vider. Entrées : flow, reset ; sortie : flow.",
+  "module": "Flowgraph node \"Store Statics\" (author BeamNG). Remembers the position, rotation, scale and shape of the TSStatics selected in the editor (stored in the node, saved with the graph) then spawns them on flow. In the editor, the panel allows storing the selection, spawning/despawning everything, selecting or clearing. Inputs: flow, reset; output: flow.",
   "notes": [
-    "La description du noeud (« Creates and manages spawning TSStatic objects ») est copiée de Spawn TSStatic."
+    "The node's description (\"Creates and manages spawning TSStatic objects\") is copied from Spawn TSStatic."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise objets et storedObjects.",
+          "desc": "Initializes objects and storedObjects.",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Panneau de l'éditeur : liste des objets stockés, boutons Store Selected, Spawn All, Despawn All, Select All, Clear Storage.",
+          "desc": "Editor panel: list of stored objects, buttons Store Selected, Spawn All, Despawn All, Select All, Clear Storage.",
           "internal": true
         },
         "updateStoredObjects": {
-          "desc": "Remplace le stockage par les TSStatic donnés (relève leur transformation), supprime les originaux puis les recrée.",
+          "desc": "Replaces the storage with the given TSStatics (captures their transform), deletes the originals then recreates them.",
           "params": {
             "ids": {
               "type": "any",
-              "desc": "liste d'ids d'objets de la scène"
+              "desc": "list of scene object ids"
             }
           },
           "internal": true
         },
         "createObject": {
-          "desc": "Crée un TSStatic depuis les données stockées et renvoie son id.",
+          "desc": "Creates a TSStatic from the stored data and returns its id.",
           "params": {
             "pos": {
               "type": "any",
-              "desc": "table {x,y,z}"
+              "desc": "{x,y,z} table"
             },
             "rot": {
               "type": "any",
-              "desc": "table {x,y,z,w}"
+              "desc": "{x,y,z,w} table"
             },
             "scl": {
               "type": "any",
-              "desc": "table {x,y,z}"
+              "desc": "{x,y,z} table"
             },
             "shape": {
               "type": "any",
-              "desc": "chemin de la shape"
+              "desc": "shape path"
             }
           },
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Détecte si des objets stockés existent déjà dans la scène.",
+          "desc": "Detects whether stored objects already exist in the scene.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Supprime les objets sauf s'ils existaient avant le démarrage.",
+          "desc": "Deletes the objects unless they existed before start.",
           "internal": true
         },
         "clearObjects": {
-          "desc": "Supprime tous les objets créés et oublie leurs ids.",
+          "desc": "Deletes all created objects and forgets their ids.",
           "internal": true
         },
         "spawnObjects": {
-          "desc": "Crée tous les objets stockés (si aucun n'existe ou si force).",
+          "desc": "Creates all stored objects (if none exists or if force).",
           "params": {
             "force": {
               "type": "any",
-              "desc": "boolean : recrée même s'ils existent"
+              "desc": "boolean: recreate even if they exist"
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Sur reset, supprime ; sur flow, fait apparaître les objets stockés et active flow en sortie.",
+          "desc": "On reset, deletes; on flow, spawns the stored objects and activates flow on output.",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "desc": "End-of-mission hook: cleans up the objects created by the node.",
           "internal": true
         },
         "destroy": {
-          "desc": "Supprime les objets sauf s'ils existaient avant le démarrage.",
+          "desc": "Deletes the objects unless they existed before start.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde storedObjects.",
+          "desc": "Saves storedObjects.",
           "params": {
             "res": {
               "type": "any",
-              "desc": "table de sauvegarde"
+              "desc": "save table"
             }
           },
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Restaure storedObjects et oublie les ids courants.",
+          "desc": "Restores storedObjects and forgets the current ids.",
           "params": {
             "nodeData": {
               "type": "any",
-              "desc": "données sauvegardées"
+              "desc": "saved data"
             }
           },
           "internal": true

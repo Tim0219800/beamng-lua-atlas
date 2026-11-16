@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenIntro.lua",
+  "module": "Nœud « StartScreen Intro » (repeat_instant, couleur ui). Nœud combiné pour l'écran de démarrage : panneau d'intro, puis objectifs et notes (ratings). Entrées : flow, text (string ou table), includeObjectives, objectivesPage (string, page optionnelle, main par défaut), includeRatings. Sortie : flow (chainFlow).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "work": {
+          "desc": "Recopie flow. Si text est non vide, ajoute un textPanel « Intro » (page main). Si demandé, ajoute les objectifs (modules.ui:addObjectives, éventuellement sur la page objectivesPage) et les ratings (addRatings).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

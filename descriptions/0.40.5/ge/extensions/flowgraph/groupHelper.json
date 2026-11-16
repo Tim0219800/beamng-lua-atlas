@@ -1,25 +1,101 @@
 {
   "path": "lua/ge/extensions/flowgraph/groupHelper.lua",
-  "module": "Aide de l'éditeur flowgraph pour grouper et dégrouper des nœuds sélectionnés. Pour un graphe de flux, le groupe devient un sous-graphe (ou sous-macro) représenté par un nœud macro/integrated ; pour un graphe d'états, il devient un état de groupe. Le fichier contient aussi des fonctions de centrage des nœuds à partir de leur position dans l'éditeur. Le module renvoie un constructeur : require('/lua/ge/extensions/flowgraph/groupHelper')(mgr).",
+  "module": "Flowgraph editor helper for grouping and ungrouping selected nodes. For a flow graph, the group becomes a subgraph (or sub-macro) represented by a macro/integrated node; for a state graph, it becomes a group state. The file also contains functions to center nodes based on their position in the editor. The module returns a constructor: require('/lua/ge/extensions/flowgraph/groupHelper')(mgr).",
   "notes": [
-    "Usage éditeur uniquement : s'appuie sur mgr.selectedNodes et ui_flowgraph_editor (GetNodeSize, GetNodePosition).",
-    "Un nœud de taille 0x0 est traité comme 200 x 100.",
-    "Bug : ungroupSelection appelle self:ungroupFlowNode(), qui n'est définie nulle part dans le fichier ; dégrouper un nœud de flux provoque donc une erreur Lua.",
-    "groupFlowNodes renvoie le nœud integrated créé."
+    "Editor use only: relies on mgr.selectedNodes and ui_flowgraph_editor (GetNodeSize, GetNodePosition).",
+    "A node of size 0x0 is treated as 200 x 100.",
+    "Bug: ungroupSelection calls self:ungroupFlowNode(), which is defined nowhere in the file; ungrouping a flow node therefore raises a Lua error.",
+    "groupFlowNodes returns the integrated node created."
   ],
   "classes": {
     "C": {
-      "desc": "Objet renvoyé par le constructeur ; garde le manager dans self.mgr.",
+      "desc": "Object returned by the constructor; keeps the manager in self.mgr.",
       "functions": {
-        "init": {"desc": "Mémorise le manager.", "params": {"mgr": {"type": "table", "desc": "manager flowgraph"}}, "internal": true},
-        "getRectCenter": {"desc": "Calcule le rectangle englobant des nœuds et son centre.", "params": {"nodes": {"type": "table[]", "desc": "nœuds"}}, "returns": [{"type": "number[]", "desc": "{minX, minY, maxX, maxY}"}, {"type": "number[]", "desc": "{centreX, centreY}"}]},
-        "centerNodes": {"desc": "Replace un ensemble de nœuds autour d'une position en conservant leurs positions relatives (alignement sur la grille).", "params": {"nodes": {"type": "table[]", "desc": "nœuds à déplacer"}, "pos": {"type": "number[]", "desc": "{x, y} centre cible"}}},
-        "centerMultiNodes": {"desc": "Centre moveNodes sur le centre du rectangle englobant fixNodes.", "params": {"fixNodes": {"type": "table[]", "desc": "nœuds de référence"}, "moveNodes": {"type": "table[]", "desc": "nœuds à déplacer"}}},
-        "createGroupingFromSelection": {"desc": "Groupe la sélection : groupStateNodes dans un graphe d'états, sinon groupFlowNodes.", "returns": [{"type": "table|nil", "desc": "résultat du groupage"}]},
-        "groupStateNodes": {"desc": "Déplace les nœuds d'état sélectionnés (sauf entrée et sortie) dans un nouveau graphe d'état 'new group' et reconnecte les liens entrants et sortants via le nœud de groupe.", "params": {}},
-        "groupFlowNodes": {"desc": "Clone la sélection dans un nouveau sous-graphe ou sous-macro, copie les variables du graphe, recrée les liens internes et remplace la sélection par un nœud macro/integrated relié aux liens entrants et sortants.", "returns": [{"type": "table", "desc": "nœud integrated créé"}]},
-        "ungroupSelection": {"desc": "Dégroupe la sélection : ungroupStateNode dans un graphe d'états, sinon ungroupFlowNode (inexistante, voir notes).", "params": {}},
-        "ungroupStateNode": {"desc": "Remonte les nœuds internes (hors entrée/sortie) d'un état de groupe sélectionné dans le graphe courant et rétablit les liens.", "params": {}}
+        "init": {
+          "desc": "Stores the manager.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "flowgraph manager"
+            }
+          },
+          "internal": true
+        },
+        "getRectCenter": {
+          "desc": "Computes the bounding rectangle of the nodes and its center.",
+          "params": {
+            "nodes": {
+              "type": "table[]",
+              "desc": "nodes"
+            }
+          },
+          "returns": [
+            {
+              "type": "number[]",
+              "desc": "{minX, minY, maxX, maxY}"
+            },
+            {
+              "type": "number[]",
+              "desc": "{centerX, centerY}"
+            }
+          ]
+        },
+        "centerNodes": {
+          "desc": "Repositions a set of nodes around a position while keeping their relative positions (grid alignment).",
+          "params": {
+            "nodes": {
+              "type": "table[]",
+              "desc": "nodes to move"
+            },
+            "pos": {
+              "type": "number[]",
+              "desc": "{x, y} target center"
+            }
+          }
+        },
+        "centerMultiNodes": {
+          "desc": "Centers moveNodes on the center of the bounding rectangle of fixNodes.",
+          "params": {
+            "fixNodes": {
+              "type": "table[]",
+              "desc": "reference nodes"
+            },
+            "moveNodes": {
+              "type": "table[]",
+              "desc": "nodes to move"
+            }
+          }
+        },
+        "createGroupingFromSelection": {
+          "desc": "Groups the selection: groupStateNodes in a state graph, otherwise groupFlowNodes.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "grouping result"
+            }
+          ]
+        },
+        "groupStateNodes": {
+          "desc": "Moves the selected state nodes (except entry and exit) into a new 'new group' state graph and reconnects the incoming and outgoing links via the group node.",
+          "params": {}
+        },
+        "groupFlowNodes": {
+          "desc": "Clones the selection into a new subgraph or sub-macro, copies the graph's variables, recreates the internal links and replaces the selection with a macro/integrated node connected to the incoming and outgoing links.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "integrated node created"
+            }
+          ]
+        },
+        "ungroupSelection": {
+          "desc": "Ungroups the selection: ungroupStateNode in a state graph, otherwise ungroupFlowNode (nonexistent, see notes).",
+          "params": {}
+        },
+        "ungroupStateNode": {
+          "desc": "Moves the internal nodes (except entry/exit) of a selected group state up into the current graph and restores the links.",
+          "params": {}
+        }
       }
     }
   }

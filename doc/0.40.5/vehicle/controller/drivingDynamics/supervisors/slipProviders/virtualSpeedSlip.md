@@ -1,120 +1,120 @@
 # `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua` · VM : Véhicule · 173 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua` · VM: Vehicle · 173 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/supervisors/slipProviders/virtualSpeedSlip` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/supervisors/slipProviders/virtualSpeedSlip` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Fournisseur de glissement (type "auxiliary", defaultOrder 70, providerOrder 10) qui compare la vitesse de chaque roue à la vitesse virtuelle du véhicule (virtualSensors.virtual.speed) pour estimer le glissement. Il s'enregistre auprès des superviseurs tractionControl et absControl (si présents) et leur répond via calculateSlipTractionControl et calculateSlipABSControl. Les résultats sont écrits dans les structures de roue du superviseur (wheelData.slip, wheelGroup.maxSlip/minSlip/slipRange).
+Slip provider (type "auxiliary", defaultOrder 70, providerOrder 10) that compares each wheel's speed to the vehicle's virtual speed (virtualSensors.virtual.speed) to estimate slip. It registers with the tractionControl and absControl supervisors (if present) and answers them via calculateSlipTractionControl and calculateSlipABSControl. The results are written into the supervisor's wheel structures (wheelData.slip, wheelGroup.maxSlip/minSlip/slipRange).
 
-## Remarques
+## Notes
 
-- Glissement de traction = clamp((vitesseRoue + offset) / (vitesseVirtuelle + offset) - 1, 0, 0.5) * coefficient, lissé par wheelData.slipSmoother. Le coefficient est le minimum de : coefficient de couple (throttle du moteur, 0..0.01 -> 0..1), steeringCoef du superviseur, et la confiance de virtualSpeed (0.5..0.8 -> 0..1). La vitesse de roue est corrigée par vehicleData.turningCircleSpeedRatios.
-- Glissement d'ABS = valeur absolue de (rapport - 1) bornée à 0.5, multipliée par la confiance de vitesse, aussi lissée.
-- Paramètres modifiables : tractionControl.isEnabled, absControl.isEnabled. Quand le traction control est désactivé, les glissements sont remis à 0 et calculateSlipTractionControl renvoie false (le fournisseur suivant est alors essayé).
-- Aucune clé jbeam n'est lue. Le fournisseur dépend de CMU.virtualSensors et CMU.vehicleData.
+- Traction slip = clamp((wheelSpeed + offset) / (virtualSpeed + offset) - 1, 0, 0.5) * coefficient, smoothed by wheelData.slipSmoother. The coefficient is the minimum of: torque coefficient (motor throttle, 0..0.01 -> 0..1), the supervisor's steeringCoef, and the virtualSpeed confidence (0.5..0.8 -> 0..1). The wheel speed is corrected by vehicleData.turningCircleSpeedRatios.
+- ABS slip = absolute value of (ratio - 1) bounded to 0.5, multiplied by the speed confidence, also smoothed.
+- Modifiable parameters: tractionControl.isEnabled, absControl.isEnabled. When traction control is disabled, the slips are reset to 0 and calculateSlipTractionControl returns false (the next provider is then tried).
+- No jbeam key is read. The provider depends on CMU.virtualSensors and CMU.vehicleData.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipABSControl(wheelData, velocityOffset, dt)` | Calcule le glissement (en valeur absolue) d'une seule roue pour l'ABS. Appelé par le superviseur absControl. | 65 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipTractionControl(wheelGroup, steeringCoef, velocityOffset, dt)` | Calcule le glissement de chaque roue d'un groupe motorisé et les extrêmes du groupe. Appelé par tractionControl. | 27 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.getConfig()` | Renvoie une copie de la configuration. | 144 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.init(jbeamData)` | Passe isActive à true. *(interne)* | 109 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initLastStage(jbeamData)` | Sauvegarde les paramètres initiaux. *(interne)* | 125 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initSecondStage(jbeamData)` | S'enregistre comme fournisseur de glissement auprès de tractionControl et absControl. *(interne)* | 113 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.registerCMU(cmu)` | Mémorise la référence au CMU. *(interne)* | 102 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.reset()` | Ne fait rien. *(interne)* | 106 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.sendConfigData()` | Envoie la configuration au CMU. | 148 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setConfig(configTable)` | Remplace la configuration. | 140 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setDebugMode(debugEnabled)` | Active/désactive les paquets de debug. | 96 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setParameters(parameters)` | Applique tractionControl.isEnabled et absControl.isEnabled. | 135 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.shutdown()` | Désactive le fournisseur. | 129 |
-| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.updateGFX(dt)` | Vide (version debug : envoie l'état d'activation). *(interne)* | 84 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipABSControl(wheelData, velocityOffset, dt)` | Computes the slip (as an absolute value) of a single wheel for the ABS. Called by the absControl supervisor. | 65 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipTractionControl(wheelGroup, steeringCoef, velocityOffset, dt)` | Computes the slip of each wheel of a powered group and the group's extremes. Called by tractionControl. | 27 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.getConfig()` | Returns a copy of the configuration. | 144 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.init(jbeamData)` | Sets isActive to true. *(internal)* | 109 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initLastStage(jbeamData)` | Saves the initial parameters. *(internal)* | 125 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initSecondStage(jbeamData)` | Registers as a slip provider with tractionControl and absControl. *(internal)* | 113 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.registerCMU(cmu)` | Stores the reference to the CMU. *(internal)* | 102 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.reset()` | Does nothing. *(internal)* | 106 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.sendConfigData()` | Sends the configuration to the CMU. | 148 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setConfig(configTable)` | Replaces the configuration. | 140 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setDebugMode(debugEnabled)` | Enables/disables debug packets. | 96 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setParameters(parameters)` | Applies tractionControl.isEnabled and absControl.isEnabled. | 135 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.shutdown()` | Disables the provider. | 129 |
+| `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.updateGFX(dt)` | Empty (debug version: sends the enabled state). *(internal)* | 84 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipABSControl(wheelData, velocityOffset, dt)`
 
-Calcule le glissement (en valeur absolue) d'une seule roue pour l'ABS. Appelé par le superviseur absControl.
+Computes the slip (as an absolute value) of a single wheel for the ABS. Called by the absControl supervisor.
 
-- `wheelData` (*table*) : Données de roue {wd, slip, slipSmoother}.
-- `velocityOffset` (*number*) : Décalage de vitesse (m/s).
-- `dt` (*number*) : Pas de temps (s), non utilisé.
-- **renvoie** : boolean Vrai si le glissement a été calculé, false si désactivé.
+- `wheelData` (*table*) : Wheel data {wd, slip, slipSmoother}.
+- `velocityOffset` (*number*) : Speed offset (m/s).
+- `dt` (*number*) : Time step (s), unused.
+- **returns**: boolean True if the slip was computed, false if disabled.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.calculateSlipTractionControl(wheelGroup, steeringCoef, velocityOffset, dt)`
 
-Calcule le glissement de chaque roue d'un groupe motorisé et les extrêmes du groupe. Appelé par tractionControl.
+Computes the slip of each wheel of a powered group and the group's extremes. Called by tractionControl.
 
-- `wheelGroup` (*table*) : Groupe de roues {motor, wheels, wheelCount, maxSlip, minSlip, slipRange}.
-- `steeringCoef` (*number*) : Facteur 0.5..1 lié au braquage.
-- `velocityOffset` (*number*) : Décalage de vitesse (m/s) évitant la division par ~0 à basse vitesse.
-- `dt` (*number*) : Pas de temps (s), non utilisé.
-- **renvoie** : boolean Vrai si le glissement a été calculé, false si désactivé.
+- `wheelGroup` (*table*) : Wheel group {motor, wheels, wheelCount, maxSlip, minSlip, slipRange}.
+- `steeringCoef` (*number*) : 0.5..1 factor tied to steering.
+- `velocityOffset` (*number*) : Speed offset (m/s) avoiding division by ~0 at low speed.
+- `dt` (*number*) : Time step (s), unused.
+- **returns**: boolean True if the slip was computed, false if disabled.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.getConfig()`
 
-Renvoie une copie de la configuration.
+Returns a copy of the configuration.
 
-- **renvoie** : table Copie.
+- **returns**: table Copy.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.init(jbeamData)`
 
-Passe isActive à true.
+Sets isActive to true.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initLastStage(jbeamData)`
 
-Sauvegarde les paramètres initiaux.
+Saves the initial parameters.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.initSecondStage(jbeamData)`
 
-S'enregistre comme fournisseur de glissement auprès de tractionControl et absControl.
+Registers as a slip provider with tractionControl and absControl.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.registerCMU(cmu)`
 
-Mémorise la référence au CMU.
+Stores the reference to the CMU.
 
-- `cmu` (*table*) : Contrôleur CMU.
+- `cmu` (*table*) : CMU controller.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setConfig(configTable)`
 
-Remplace la configuration.
+Replaces the configuration.
 
 - `configTable` (*table*) : Table {tractionControl = {isEnabled}, absControl = {isEnabled}}.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setDebugMode(debugEnabled)`
 
-Active/désactive les paquets de debug.
+Enables/disables debug packets.
 
-- `debugEnabled` (*boolean*) : Vrai pour activer.
+- `debugEnabled` (*boolean*) : True to enable.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.setParameters(parameters)`
 
-Applique tractionControl.isEnabled et absControl.isEnabled.
+Applies tractionControl.isEnabled and absControl.isEnabled.
 
-- `parameters` (*table<string, any>*) : Paramètres à appliquer.
+- `parameters` (*table<string, any>*) : Parameters to apply.
 
 #### `controller_drivingDynamics_supervisors_slipProviders_virtualSpeedSlip.updateGFX(dt)`
 
-Vide (version debug : envoie l'état d'activation).
+Empty (debug version: sends the enabled state).
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultOrder` | number | Ordre d'exécution par défaut (70). |
-| `isActive` | boolean | Vrai après init. |
-| `providerOrder` | number | Ordre de priorité parmi les fournisseurs (10, plus petit = essayé en premier). |
+| `defaultOrder` | number | Default execution order (70). |
+| `isActive` | boolean | True after init. |
+| `providerOrder` | number | Priority order among the providers (10, lower = tried first). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/supervisors/slipProviders/virtualSpeedSlip.lua`.*

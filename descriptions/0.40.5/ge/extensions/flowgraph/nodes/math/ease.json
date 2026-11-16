@@ -1,35 +1,35 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/math/ease.lua",
-  "module": "Noeud flowgraph 'Ease' (categorie simple). Applique une fonction d'easing a la valeur d'entree (normalement entre 0 et 1) : linear, in/out/inOut pour Quad, Cubic, Quart, Quint, Sin, Exp et Circ. La fonction se choisit dans les proprietes du noeud.",
+  "module": "Flowgraph node 'Ease' (simple category). Applies an easing function to the input value (normally between 0 and 1): linear, in/out/inOut for Quad, Cubic, Quart, Quint, Sin, Exp and Circ. The function is chosen in the node properties.",
   "notes": [
-    "La liste de l'UI (easeFuncNameList) n'inclut pas inCubic, outCubic, inOutCubic, bien que definies dans easeFunctions."
+    "The UI list (easeFuncNameList) does not include inCubic, outCubic, inOutCubic, although they are defined in easeFunctions."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Fonction par defaut : linear.",
+          "desc": "Default function: linear.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Liste deroulante des fonctions d'easing.",
+          "desc": "Dropdown of easing functions.",
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde easeFuncName.",
+          "desc": "Saves easeFuncName.",
           "internal": true
         },
         "_onDeserialized": {
-          "desc": "Relit easeFuncName et la fonction associee.",
+          "desc": "Reads back easeFuncName and the associated function.",
           "internal": true
         },
         "work": {
-          "desc": "Si l'entree n'est pas nil/false, ecrit easeFunc(value) sur la sortie.",
+          "desc": "If the input is not nil/false, writes easeFunc(value) to the output.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche le nom de la fonction.",
+          "desc": "Displays the function name.",
           "internal": true
         }
       }

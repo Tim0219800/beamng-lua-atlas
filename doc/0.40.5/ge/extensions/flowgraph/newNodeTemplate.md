@@ -1,24 +1,24 @@
 # `flowgraph_newNodeTemplate`
 
-*Fichier : `lua/ge/extensions/flowgraph/newNodeTemplate.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/newNodeTemplate.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/newNodeTemplate")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/newNodeTemplate")` (file under extensions/ but not a regular extension)
 
-Modèle de départ pour écrire un nouveau nœud flowgraph (nom « New Node Template »). Il montre comment déclarer name, description, couleur/icône/catégorie/tags (en commentaires) et un C.pinSchema contenant un exemple de pin d'entrée et de sortie pour chaque type : flow, number, bool, string, vec3, quat, color, table, any et un pin à types multiples ({'number','bool'}). La méthode work() est vide. À copier par un moddeur, pas utilisé en jeu.
+Starting template for writing a new flowgraph node (name "New Node Template"). It shows how to declare name, description, color/icon/category/tags (in comments) and a C.pinSchema containing an example input and output pin for each type: flow, number, bool, string, vec3, quat, color, table, any and a multi-type pin ({'number','bool'}). The work() method is empty. To be copied by a modder, not used in game.
 
-## Remarques
+## Notes
 
-- Les pins de sortie de type table déclarent tableType = 'generic'.
-- Valeurs par défaut montrées : number 42, bool true, string 'Text', vec3 {1,2,3}, quat {0,0,0,1}, color {1,1,1,0.5}.
-- Le fichier se termine par return _flowgraph_createNode(C).
+- Output pins of type table declare tableType = 'generic'.
+- Default values shown: number 42, bool true, string 'Text', vec3 {1,2,3}, quat {0,0,0,1}, color {1,1,1,0.5}.
+- The file ends with return _flowgraph_createNode(C).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud modèle.
+Template node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelée à chaque frame où le nœud est actif ; vide dans le modèle. C'est là qu'on lit les pins d'entrée (self.pinIn.x.value) et écrit les sorties. | 42 |
+| `C:work()` | Called every frame the node is active; empty in the template. This is where you read the input pins (self.pinIn.x.value) and write the outputs. | 42 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/newNodeTemplate.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/newNodeTemplate.lua`.*

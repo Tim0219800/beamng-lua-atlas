@@ -2,57 +2,57 @@
 -- tim19Atlas stub generated from lua/vehicle/energyStorage/electricBattery.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Type de stockage d'énergie 'electricBattery' : batterie de véhicule électrique. L'énergie est gardée en joules (energyType 'electricEnergy') et configurée en kWh dans le jbeam. Instanciée par energyStorage.lua à partir d'une entrée jbeam de `type = "electricBattery"` ; les moteurs électriques la consomment via les périphériques du powertrain.
---- Accès : type de stockage d'énergie `electricBattery`, accessible par `energyStorage.getStorage("nom")`
+--- Energy storage type 'electricBattery': electric vehicle battery. Energy is kept in joules (energyType 'electricEnergy') and configured in kWh in the jbeam. Instantiated by energyStorage.lua from a jbeam entry with `type = "electricBattery"`; electric motors consume it through the powertrain devices.
+--- Access: energy storage type `electricBattery`, reachable with `energyStorage.getStorage("name")`
 ---@class energyStorage_electricBattery
 local energyStorage_electricBattery = {}
 
---- Crée un stockage de type batterie électrique à partir de l'entrée jbeam. Le stockage renvoyé est une table avec name, type, energyType, assignedDevices, capacity (kWh), startingCapacity (kWh), energyCapacity (J), initialStoredEnergy (J), storedEnergy, remainingRatio, remainingVolume, jbeamData et les méthodes listées dans la classe 'storage'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/energyStorage/electricBattery.lua:52
----@param jbeamData table Données jbeam fusionnées du stockage.
----@return table  Instance de stockage (classe 'storage').
+--- Creates an electric battery type storage from the jbeam entry. The returned storage is a table with name, type, energyType, assignedDevices, capacity (kWh), startingCapacity (kWh), energyCapacity (J), initialStoredEnergy (J), storedEnergy, remainingRatio, remainingVolume, jbeamData and the methods listed in the 'storage' class.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/energyStorage/electricBattery.lua:52
+---@param jbeamData table Merged jbeam data of the storage.
+---@return table  Storage instance ('storage' class).
 function energyStorage_electricBattery.new(jbeamData) end
 
---- Instance renvoyée par new(jbeamData). Les méthodes s'appellent avec la syntaxe `storage:methode(...)`.
+--- Instance returned by new(jbeamData). Methods are called with the `storage:method(...)` syntax.
 ---@class energyStorage_electricBattery_storage
 local energyStorage_electricBattery_storage = {}
 
---- Renvoie l'intégrité (toujours 1) et l'état {storedEnergy}.
----Source : lua/vehicle/energyStorage/electricBattery.lua:39
+--- Returns the integrity (always 1) and the state {storedEnergy}.
+---Source: lua/vehicle/energyStorage/electricBattery.lua:39
 ---@return number  integrityValue (1).
 ---@return table  {storedEnergy = J}.
 function energyStorage_electricBattery_storage:getPartCondition() end
 
---- Enregistre un périphérique du powertrain dans assignedDevices (par son nom).
----Source : lua/vehicle/energyStorage/electricBattery.lua:23
----@param device table Périphérique avec un champ name.
+--- Registers a powertrain device in assignedDevices (by its name).
+---Source: lua/vehicle/energyStorage/electricBattery.lua:23
+---@param device table Device with a name field.
 function energyStorage_electricBattery_storage:registerDevice(device) end
 
---- Restaure la charge de départ (startingCapacity en kWh convertie en J).
----Source : lua/vehicle/energyStorage/electricBattery.lua:48
+--- Restores the starting charge (startingCapacity in kWh converted to J).
+---Source: lua/vehicle/energyStorage/electricBattery.lua:48
 function energyStorage_electricBattery_storage:reset() end
 
---- Restaure l'état depuis la condition de pièce : un nombre est interprété comme fraction de energyCapacity, une table doit contenir storedEnergy.
----Source : lua/vehicle/energyStorage/electricBattery.lua:27
----@param odometer number Inutilisé.
----@param integrity number|table Fraction (0 à 1) ou {storedEnergy = J}.
----@param visual any Inutilisé.
+--- Restores the state from the part condition: a number is interpreted as a fraction of energyCapacity, a table must contain storedEnergy.
+---Source: lua/vehicle/energyStorage/electricBattery.lua:27
+---@param odometer number Unused.
+---@param integrity number|table Fraction (0 to 1) or {storedEnergy = J}.
+---@param visual any Unused.
 function energyStorage_electricBattery_storage:setPartCondition(odometer, integrity, visual) end
 
---- Fixe l'énergie à energyCapacity * ratio (ratio borné entre 0 et 1).
----Source : lua/vehicle/energyStorage/electricBattery.lua:15
----@param ratio number Niveau de charge de 0 à 1.
+--- Sets the energy to energyCapacity * ratio (ratio clamped between 0 and 1).
+---Source: lua/vehicle/energyStorage/electricBattery.lua:15
+---@param ratio number Charge level from 0 to 1.
 function energyStorage_electricBattery_storage:setRemainingRatio(ratio) end
 
---- Fixe l'énergie stockée et recalcule remainingVolume (kWh) et remainingRatio.
----Source : lua/vehicle/energyStorage/electricBattery.lua:9
----@param energy number Énergie en joules.
+--- Sets the stored energy and recomputes remainingVolume (kWh) and remainingRatio.
+---Source: lua/vehicle/energyStorage/electricBattery.lua:9
+---@param energy number Energy in joules.
 function energyStorage_electricBattery_storage:setStoredEnergy(energy) end
 
---- Appelé chaque frame par energyStorage.updateGFX : recalcule les valeurs dérivées.
----Source : lua/vehicle/energyStorage/electricBattery.lua:19
----@param dt number Pas de temps en secondes (inutilisé).
+--- Called every frame by energyStorage.updateGFX: recomputes the derived values.
+---Source: lua/vehicle/energyStorage/electricBattery.lua:19
+---@param dt number Time step in seconds (unused).
 function energyStorage_electricBattery_storage:updateGFX(dt) end
 
 return energyStorage_electricBattery

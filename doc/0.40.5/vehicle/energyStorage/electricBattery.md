@@ -1,57 +1,57 @@
 # `energyStorage_electricBattery`
 
-*Fichier : `lua/vehicle/energyStorage/electricBattery.lua` · VM : Véhicule · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/energyStorage/electricBattery.lua` · VM: Vehicle · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** type de stockage d'énergie `electricBattery`, accessible par `energyStorage.getStorage("nom")`
+**Access:** energy storage type `electricBattery`, reachable with `energyStorage.getStorage("name")`
 
-Type de stockage d'énergie 'electricBattery' : batterie de véhicule électrique. L'énergie est gardée en joules (energyType 'electricEnergy') et configurée en kWh dans le jbeam. Instanciée par energyStorage.lua à partir d'une entrée jbeam de `type = "electricBattery"` ; les moteurs électriques la consomment via les périphériques du powertrain.
+Energy storage type 'electricBattery': electric vehicle battery. Energy is kept in joules (energyType 'electricEnergy') and configured in kWh in the jbeam. Instantiated by energyStorage.lua from a jbeam entry with `type = "electricBattery"`; electric motors consume it through the powertrain devices.
 
-## Exemple
+## Example
 
 ```lua
 -- jbeam
 -- "energyStorage": [["name","type","batteryCapacity","startingCapacity"],["mainBattery","electricBattery",60,60]]
 ```
 
-## Remarques
+## Notes
 
-- Champs jbeam lus : name, type, batteryCapacity (kWh, défaut 0), startingCapacity (kWh, défaut = batteryCapacity).
-- Conversion : 1 kWh = 3 600 000 J. storedEnergy, energyCapacity, initialStoredEnergy sont en joules.
-- Anomalie de nommage : remainingVolume contient storedEnergy / 3600000, c'est-à-dire l'énergie en kWh, pas un volume.
-- updateGFX réécrit storedEnergy via setStoredEnergy chaque frame pour recalculer remainingVolume et remainingRatio ; aucune limite (clamp) n'est appliquée à storedEnergy à ce stade.
-- setRemainingRatio ne met à jour que storedEnergy (le reste est recalculé à la frame suivante).
-- Pas de fuite, pas de onBreak, pas de serialize/deserialize pour ce type.
+- jbeam fields read: name, type, batteryCapacity (kWh, default 0), startingCapacity (kWh, default = batteryCapacity).
+- Conversion: 1 kWh = 3,600,000 J. storedEnergy, energyCapacity, initialStoredEnergy are in joules.
+- Naming anomaly: remainingVolume contains storedEnergy / 3600000, i.e. the energy in kWh, not a volume.
+- updateGFX rewrites storedEnergy through setStoredEnergy every frame to recompute remainingVolume and remainingRatio; no limit (clamp) is applied to storedEnergy at this point.
+- setRemainingRatio only updates storedEnergy (the rest is recomputed on the next frame).
+- No leak, no onBreak, no serialize/deserialize for this type.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `energyStorage_electricBattery.new(jbeamData)` | Crée un stockage de type batterie électrique à partir de l'entrée jbeam. Le stockage renvoyé est une table avec name, type, energyType, assignedDevices, capacity (kWh), startingCapacity (kWh), energyCapacity (J), initialStoredEnergy (J), storedEnergy, remainingRatio, remainingVolume, jbeamData et les méthodes listées dans la classe 'storage'. *(interne)* | 52 |
+| `energyStorage_electricBattery.new(jbeamData)` | Creates an electric battery type storage from the jbeam entry. The returned storage is a table with name, type, energyType, assignedDevices, capacity (kWh), startingCapacity (kWh), energyCapacity (J), initialStoredEnergy (J), storedEnergy, remainingRatio, remainingVolume, jbeamData and the methods listed in the 'storage' class. *(internal)* | 52 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `energyStorage_electricBattery.new(jbeamData)`
 
-Crée un stockage de type batterie électrique à partir de l'entrée jbeam. Le stockage renvoyé est une table avec name, type, energyType, assignedDevices, capacity (kWh), startingCapacity (kWh), energyCapacity (J), initialStoredEnergy (J), storedEnergy, remainingRatio, remainingVolume, jbeamData et les méthodes listées dans la classe 'storage'.
+Creates an electric battery type storage from the jbeam entry. The returned storage is a table with name, type, energyType, assignedDevices, capacity (kWh), startingCapacity (kWh), energyCapacity (J), initialStoredEnergy (J), storedEnergy, remainingRatio, remainingVolume, jbeamData and the methods listed in the 'storage' class.
 
-- `jbeamData` (*table*) : Données jbeam fusionnées du stockage.
-- **renvoie** : table Instance de stockage (classe 'storage').
+- `jbeamData` (*table*) : Merged jbeam data of the storage.
+- **returns**: table Storage instance ('storage' class).
 
-## Classe `storage`
+## Class `storage`
 
-Instance renvoyée par new(jbeamData). Les méthodes s'appellent avec la syntaxe `storage:methode(...)`.
+Instance returned by new(jbeamData). Methods are called with the `storage:method(...)` syntax.
 
-Objet `storage` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `storage` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `storage:getPartCondition()` | Renvoie l'intégrité (toujours 1) et l'état {storedEnergy}. | 39 |
-| `storage:registerDevice(device)` | Enregistre un périphérique du powertrain dans assignedDevices (par son nom). | 23 |
-| `storage:reset()` | Restaure la charge de départ (startingCapacity en kWh convertie en J). | 48 |
-| `storage:setPartCondition(odometer, integrity, visual)` | Restaure l'état depuis la condition de pièce : un nombre est interprété comme fraction de energyCapacity, une table doit contenir storedEnergy. | 27 |
-| `storage:setRemainingRatio(ratio)` | Fixe l'énergie à energyCapacity * ratio (ratio borné entre 0 et 1). | 15 |
-| `storage:setStoredEnergy(energy)` | Fixe l'énergie stockée et recalcule remainingVolume (kWh) et remainingRatio. | 9 |
-| `storage:updateGFX(dt)` | Appelé chaque frame par energyStorage.updateGFX : recalcule les valeurs dérivées. | 19 |
+| `storage:getPartCondition()` | Returns the integrity (always 1) and the state {storedEnergy}. | 39 |
+| `storage:registerDevice(device)` | Registers a powertrain device in assignedDevices (by its name). | 23 |
+| `storage:reset()` | Restores the starting charge (startingCapacity in kWh converted to J). | 48 |
+| `storage:setPartCondition(odometer, integrity, visual)` | Restores the state from the part condition: a number is interpreted as a fraction of energyCapacity, a table must contain storedEnergy. | 27 |
+| `storage:setRemainingRatio(ratio)` | Sets the energy to energyCapacity * ratio (ratio clamped between 0 and 1). | 15 |
+| `storage:setStoredEnergy(energy)` | Sets the stored energy and recomputes remainingVolume (kWh) and remainingRatio. | 9 |
+| `storage:updateGFX(dt)` | Called every frame by energyStorage.updateGFX: recomputes the derived values. | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/energyStorage/electricBattery.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/energyStorage/electricBattery.lua`.*

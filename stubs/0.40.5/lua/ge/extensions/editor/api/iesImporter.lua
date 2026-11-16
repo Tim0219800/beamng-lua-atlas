@@ -2,116 +2,116 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/iesImporter.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Convertisseur de fichiers photométriques IES (profil de distribution lumineuse d'un luminaire) en texture « cookie » PNG pour les SpotLight de l'éditeur. Le module parse l'en-tête et les données IES (angles verticaux/horizontaux, candela, tilt), échantillonne l'intensité, génère une image carrée en niveaux de gris (projection perspective ou linéaire, rotation, recentrage, adoucissement des bords), l'enregistre en PNG et écrit un fichier annexe `.cookie.json` (nom, photométrie, angle de spot, lumens, watts, température de couleur). Le point d'entrée pratique est `generateToFile`.
---- Accès : extension `editor_api_iesImporter` : `extensions.load("editor_api_iesImporter")`, puis la globale `editor_api_iesImporter`
+--- Converter of IES photometric files (a luminaire's light distribution profile) into a PNG "cookie" texture for the editor's SpotLights. The module parses the IES header and data (vertical/horizontal angles, candela, tilt), samples the intensity, generates a square grayscale image (perspective or linear projection, rotation, recentering, edge softening), saves it as PNG and writes a companion `.cookie.json` file (name, photometry, spot angle, lumens, watts, color temperature). The practical entry point is `generateToFile`.
+--- Access: extension `editor_api_iesImporter`: `extensions.load("editor_api_iesImporter")`, then the global `editor_api_iesImporter`
 ---@class editor_api_iesImporter
 editor_api_iesImporter = {}
 
---- Construit la table de métadonnées (type "IESLightImport" version 1) : source, noms (suggestedObjectName nettoyé), assets, paramètres SpotLight (outerAngle, innerAngle, candela, lumens, watts, température de couleur), photométrie (pic, lumens, W, efficacité lm/W) et paramètres de conversion.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:1107
----@param ies table résultat de parseIES
----@param outPath string chemin du PNG
----@param opts table|nil options de génération/sauvegarde
----@param saveInfo table|nil saveInfo de saveImage
----@return table  métadonnées
+--- Builds the metadata table (type "IESLightImport" version 1): source, names (cleaned suggestedObjectName), assets, SpotLight parameters (outerAngle, innerAngle, candela, lumens, watts, color temperature), photometry (peak, lumens, W, lm/W efficacy) and conversion parameters.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:1107
+---@param ies table result of parseIES
+---@param outPath string path of the PNG
+---@param opts table|nil generation/save options
+---@param saveInfo table|nil saveInfo from saveImage
+---@return table  metadata
 function editor_api_iesImporter.buildCookieMetadata(ies, outPath, opts, saveInfo) end
 
---- Génère l'image cookie : pour chaque pixel d'une image size x size, calcule la direction de lumière (projection perspective ou linéaire, rotation, base centrée sur centerTheta/centerPhi), échantillonne l'IES et applique un masque circulaire (avec adoucissement edgeFeather).
----Source : lua/ge/extensions/editor/api/iesImporter.lua:663
----@param ies table résultat de parseIES
+--- Generates the cookie image: for each pixel of a size x size image, computes the light direction (perspective or linear projection, rotation, basis centered on centerTheta/centerPhi), samples the IES and applies a circular mask (with edgeFeather softening).
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:663
+---@param ies table result of parseIES
 ---@param opts table|nil {size, projection, rotate, centerTheta, centerPhi, angle, edgeFeather}
----@return table  {width, height, data (valeurs brutes, index y*size+x+1), _ies, generation = {size, angle, projection, rotate, centerTheta, centerPhi, edgeFeather}}
+---@return table  {width, height, data (raw values, index y*size+x+1), _ies, generation = {size, angle, projection, rotate, centerTheta, centerPhi, edgeFeather}}
 function editor_api_iesImporter.generateCookie(ies, opts) end
 
---- Pipeline complet : parse l'IES, (autoCenter : centre sur le pic), génère le cookie, sauvegarde le PNG et le .cookie.json.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:1241
----@param iesPath string fichier .ies source
----@param outPath string PNG de sortie
+--- Full pipeline: parses the IES, (autoCenter: centers on the peak), generates the cookie, saves the PNG and the .cookie.json.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:1241
+---@param iesPath string source .ies file
+---@param outPath string output PNG
 ---@param opts table|nil {size, angle, projection, rotate, centerTheta, centerPhi, autoCenter, edgeFeather, percentile, gamma, scale, invert, writeMetadata, noInfo}
----@return boolean  true si l'image est sauvegardée
+---@return boolean  true if the image is saved
 ---@return table  {imagePath, metadataPath, metadataWritten, saveInfo}
 function editor_api_iesImporter.generateToFile(iesPath, outPath, opts) end
 
---- Donne le chemin du fichier annexe : remplace `.color.png` ou `.png` par `.cookie.json`, sinon ajoute `.cookie.json`.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:983
----@param outPath string chemin du PNG
----@return string  chemin du .cookie.json
+--- Gives the companion file path: replaces `.color.png` or `.png` with `.cookie.json`, otherwise appends `.cookie.json`.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:983
+---@param outPath string path of the PNG
+---@return string  path of the .cookie.json
 function editor_api_iesImporter.getCookieMetadataPath(outPath) end
 
---- Renvoie la première valeur non vide de l'en-tête parmi une liste de clés (insensible à la casse).
----Source : lua/ge/extensions/editor/api/iesImporter.lua:269
----@param meta table résultat de parseHeaderMetadata
----@param keys string[] clés à essayer dans l'ordre (ex. {"MANUFAC"})
----@param fallback string|nil valeur par défaut ("" sinon)
----@return string  valeur trouvée ou fallback
+--- Returns the first non-empty header value among a list of keys (case-insensitive).
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:269
+---@param meta table result of parseHeaderMetadata
+---@param keys string[] keys to try in order (e.g. {"MANUFAC"})
+---@param fallback string|nil default value ("" otherwise)
+---@return string  value found or fallback
 function editor_api_iesImporter.getHeaderValue(meta, keys, fallback) end
 
---- Cherche la direction d'intensité maximale dans les données IES.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:458
----@param ies table résultat de parseIES
----@return number  theta du pic (degrés)
----@return number  phi du pic (degrés)
----@return number  candela au pic
----@return integer  indice horizontal
----@return integer  indice vertical
+--- Finds the direction of maximum intensity in the IES data.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:458
+---@param ies table result of parseIES
+---@return number  peak theta (degrees)
+---@return number  peak phi (degrees)
+---@return number  candela at the peak
+---@return integer  horizontal index
+---@return integer  vertical index
 function editor_api_iesImporter.getPeakDirection(ies) end
 
---- Déduit le chemin de sortie par défaut : même dossier et même nom que l'IES avec l'extension `.color.png`. Renvoie "" si le chemin est vide ou finit par /.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:1308
----@param iesPath string chemin du .ies
----@return string  chemin du PNG
+--- Infers the default output path: same folder and same name as the IES with the `.color.png` extension. Returns "" if the path is empty or ends with /.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:1308
+---@param iesPath string path of the .ies
+---@return string  path of the PNG
 function editor_api_iesImporter.inferCookiePathFromIES(iesPath) end
 
---- Lit l'en-tête d'un fichier IES (avant la ligne TILT=) : version, entrées [CLÉ] valeur, table `map` clé -> valeur (clés en majuscules, valeurs multiples jointes par \n, [MORE] concatène à la clé précédente) et liste `more`.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:209
----@param path string chemin du fichier .ies
+--- Reads the header of an IES file (before the TILT= line): version, [KEY] value entries, `map` table key -> value (keys in uppercase, multiple values joined by \n, [MORE] concatenates to the previous key) and `more` list.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:209
+---@param path string path of the .ies file
 ---@return table  {version, entries = {{key, value}}, map, more}
 function editor_api_iesImporter.parseHeaderMetadata(path) end
 
---- Parse un fichier IES complet : en-tête, tilt, nombre de lampes, lumens, multiplicateur de candela, type photométrique, unités, dimensions, angles et tableau candela[ih][iv] (multiplié par le multiplicateur et par les facteurs de tilt si TILT=INCLUDE).
----Source : lua/ge/extensions/editor/api/iesImporter.lua:332
----@param path string chemin du .ies
+--- Parses a complete IES file: header, tilt, number of lamps, lumens, candela multiplier, photometric type, units, dimensions, angles and candela[ih][iv] array (multiplied by the multiplier and by the tilt factors if TILT=INCLUDE).
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:332
+---@param path string path of the .ies
 ---@return table  {path, metadata, tilt, verticalAngles, horizontalAngles, candela, numLamps, lumensPerLamp, candelaMultiplier, photometricType, unitsType, width, length, height, ballastFactor, futureUse, inputWatts}
 function editor_api_iesImporter.parseIES(path) end
 
---- Trie les angles horizontaux avec leurs lignes de candela et, si les données couvrent plus de 180° sans atteindre 360°, ajoute une ligne à 360° copiée de la première pour le bouclage.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:501
----@param horizontalAngles number[] angles horizontaux
+--- Sorts the horizontal angles with their candela rows and, if the data covers more than 180° without reaching 360°, adds a 360° row copied from the first one for wrap-around.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:501
+---@param horizontalAngles number[] horizontal angles
 ---@param candela table candela[ih][iv]
----@return table  {h = angles triés, c = lignes de candela}
+---@return table  {h = sorted angles, c = candela rows}
 function editor_api_iesImporter.prepareHorizontalData(horizontalAngles, candela) end
 
---- Écrit dans le log un résumé de l'IES (nombre et plage d'angles, type photométrique, watts, pic de candela et sa direction).
----Source : lua/ge/extensions/editor/api/iesImporter.lua:484
----@param ies table résultat de parseIES
+--- Writes an IES summary to the log (number and range of angles, photometric type, watts, candela peak and its direction).
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:484
+---@param ies table result of parseIES
 function editor_api_iesImporter.printIESInfo(ies) end
 
---- Interpole l'intensité (candela) pour une direction (theta, phi) en tenant compte de la symétrie horizontale. Renvoie 0 si theta est hors de la plage verticale ou si les données sont vides.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:563
----@param theta number angle vertical en degrés
----@param phi number angle horizontal en degrés
----@param ies table résultat de parseIES
----@param prepared table|nil résultat de prepareHorizontalData (calculé si absent ; à fournir pour accélérer)
----@return number  intensité interpolée
+--- Interpolates the intensity (candela) for a direction (theta, phi) taking horizontal symmetry into account. Returns 0 if theta is outside the vertical range or if the data is empty.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:563
+---@param theta number vertical angle in degrees
+---@param phi number horizontal angle in degrees
+---@param ies table result of parseIES
+---@param prepared table|nil result of prepareHorizontalData (computed if absent; provide it to speed up)
+---@return number  interpolated intensity
 function editor_api_iesImporter.sampleIES(theta, phi, ies, prepared) end
 
---- Normalise l'image (percentile, scale, gamma, inversion éventuelle), l'écrit en PNG via GBitmap puis, sauf writeMetadata == false, écrit le fichier annexe .cookie.json.
----Source : lua/ge/extensions/editor/api/iesImporter.lua:869
----@param img table résultat de generateCookie
----@param outPath string chemin du PNG
+--- Normalizes the image (percentile, scale, gamma, optional inversion), writes it as PNG via GBitmap then, unless writeMetadata == false, writes the companion .cookie.json file.
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:869
+---@param img table result of generateCookie
+---@param outPath string path of the PNG
 ---@param opts table|nil {percentile, gamma, scale, invert, writeMetadata}
----@return boolean  true si le PNG a été écrit
----@return table  saveInfo : path, width, height, format, percentile, gamma, scale, invert, maxValue, nonzeroPixels, normalizationValue, metadataWritten, metadataPath
+---@return boolean  true if the PNG was written
+---@return table  saveInfo: path, width, height, format, percentile, gamma, scale, invert, maxValue, nonzeroPixels, normalizationValue, metadataWritten, metadataPath
 function editor_api_iesImporter.saveImage(img, outPath, opts) end
 
---- Construit les métadonnées et les écrit dans le .cookie.json (jsonWriteFile).
----Source : lua/ge/extensions/editor/api/iesImporter.lua:1230
----@param ies table résultat de parseIES
----@param outPath string chemin du PNG
+--- Builds the metadata and writes it to the .cookie.json (jsonWriteFile).
+---Source: lua/ge/extensions/editor/api/iesImporter.lua:1230
+---@param ies table result of parseIES
+---@param outPath string path of the PNG
 ---@param opts table|nil options
 ---@param saveInfo table|nil saveInfo
----@return boolean  toujours true
----@return string  chemin du .cookie.json
----@return table  métadonnées écrites
+---@return boolean  always true
+---@return string  path of the .cookie.json
+---@return table  metadata written
 function editor_api_iesImporter.writeCookieMetadata(ies, outPath, opts, saveInfo) end
 

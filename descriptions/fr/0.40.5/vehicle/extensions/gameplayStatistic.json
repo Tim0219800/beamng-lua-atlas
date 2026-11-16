@@ -1,0 +1,20 @@
+{
+  "path": "lua/vehicle/extensions/gameplayStatistic.lua",
+  "module": "Relais de statistiques de gameplay côté véhicule : transmet des métriques au module GE gameplay_statistic (metricAdd/metricSet) et exécute à tour de rôle, une par frame, des fonctions de surveillance enregistrées (planificateur). Au chargement il active les modules watchAirtime (temps en l'air) et watchBurnout (temps de burnout).",
+  "usage": "extensions.gameplayStatistic.metricAdd('vehicle/monCompteur', 3.5, true)",
+  "notes": [
+    "metricAdd/metricSet envoient une commande Lua au GE : gameplay_statistic.metricAdd(nom, valeur, aggregate). Le nom est sérialisé avec dumps, valeur et aggregate avec tostring.",
+    "Le planificateur exécute une seule fonction de statSchedule par frame, en rotation. Rien n'est exécuté si aucun joueur n'est assis et que ai.mode n'est pas 'disabled' (condition `not anyPlayerSeated and ai.mode ~= 'disabled'`).",
+    "onExtensionLoaded renvoie false (déchargement) si le véhicule n'a aucune roue et n'utilise ni hydros ni powertrain en pas de physique.",
+    "updateGFX vaut nil au repos et est activé par addSchedule via extensions.hookUpdate."
+  ],
+  "fields": {},
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : se décharge pour les véhicules sans roues ni physique de powertrain/hydros, sinon charge watchAirtime et watchBurnout et enregistre leur workload dans le planificateur.", "params": {}, "returns": [{"type": "boolean|nil", "desc": "false pour demander le déchargement."}], "internal": true},
+    "metricAdd": {"desc": "Ajoute une valeur à une métrique du GE.", "params": {"name": {"type": "string", "desc": "Nom de la métrique (ex. 'vehicle/airtime.time')."}, "value": {"type": "number", "desc": "Valeur à ajouter."}, "aggregate": {"type": "boolean|nil", "desc": "Transmis tel quel au GE (agrégation, déduit du code)."}}, "returns": [], "internal": false},
+    "metricSet": {"desc": "Fixe la valeur d'une métrique du GE.", "params": {"name": {"type": "string", "desc": "Nom de la métrique."}, "value": {"type": "number", "desc": "Valeur."}, "aggregate": {"type": "boolean|nil", "desc": "Transmis tel quel au GE."}}, "returns": [], "internal": false},
+    "addSchedule": {"desc": "Ajoute une fonction au planificateur (exécutée une fois tous les N frames où N = nombre de fonctions) et active updateGFX.", "params": {"fn": {"type": "function", "desc": "Fonction sans argument à exécuter périodiquement."}}, "returns": [], "internal": false},
+    "removeSchedule": {"desc": "Retire une fonction du planificateur ; désactive updateGFX s'il n'en reste plus.", "params": {"fn": {"type": "function", "desc": "Fonction précédemment ajoutée."}}, "returns": [{"type": "boolean", "desc": "true si retirée, false si introuvable."}], "internal": false},
+    "updateGFX": {"desc": "Vaut nil au repos ; quand actif, exécute une fonction du planificateur par frame.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "returns": [], "internal": true}
+  }
+}

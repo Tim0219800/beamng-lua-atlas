@@ -1,67 +1,67 @@
 # `editor_dynamicDecals_vehicleColorPalette`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/vehicleColorPalette.lua` · VM : Game Engine (GE) · 465 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/vehicleColorPalette.lua` · VM: Game Engine (GE) · 465 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_vehicleColorPalette` : `extensions.load("editor_dynamicDecals_vehicleColorPalette")`, puis la globale `editor_dynamicDecals_vehicleColorPalette`
+**Access:** extension `editor_dynamicDecals_vehicleColorPalette`: `extensions.load("editor_dynamicDecals_vehicleColorPalette")`, then the global `editor_dynamicDecals_vehicleColorPalette`
 
-Section « Vehicle Color Palette » de l'outil Dynamic Decals : permet de changer les couleurs du véhicule joueur (color, colorPalette0, colorPalette1) et ses données de peinture métallique (metallicPaintData : Metallic, Roughness, Clear Coat, Clear Coat Roughness, via getField/setField) pour voir l'effet sur un design. Enregistre aussi une préférence « palettes » avec 19 palettes de 3 couleurs prédéfinies (BeamNG, Camouflage, Chocolate, Dunes, Fast Car, France, Icy, Italy, Lilac, Midnight, Moss, Neptune, Pastelle, Retro Handheld Console, Sunset, Tape Deck, The 80's, Vintage, Watermelon). Les couleurs du véhicule sont sérialisées avec l'état de l'outil et restaurées après 5 frames.
+"Vehicle Color Palette" section of the Dynamic Decals tool: lets you change the player vehicle's colors (color, colorPalette0, colorPalette1) and its metallic paint data (metallicPaintData: Metallic, Roughness, Clear Coat, Clear Coat Roughness, via getField/setField) to see the effect on a design. Also registers a "palettes" preference with 19 predefined palettes of 3 colors (BeamNG, Camouflage, Chocolate, Dunes, Fast Car, France, Icy, Italy, Lilac, Midnight, Moss, Neptune, Pastelle, Retro Handheld Console, Sunset, Tape Deck, The 80's, Vintage, Watermelon). The vehicle colors are serialized with the tool state and restored after 5 frames.
 
-## Remarques
+## Notes
 
-- Les couleurs sont des triplets RGB 0..1 ; Point4F pour les couleurs du véhicule (le 4e composant garde la valeur existante ou stockée).
-- L'interface de gestion des palettes dans les préférences est entièrement commentée dans le code : seule la liste par défaut est enregistrée.
-- Si aucun véhicule n'existe, la section affiche « No vehicle ».
-- Restauration des couleurs : si le véhicule est absent quand le compteur tombe à 0, un avertissement est loggé et la restauration est retentée à chaque frame.
+- Colors are RGB triplets 0..1; Point4F for the vehicle colors (the 4th component keeps the existing or stored value).
+- The palette management UI in the preferences is entirely commented out in the code: only the default list is registered.
+- If no vehicle exists, the section displays "No vehicle".
+- Color restoration: if the vehicle is missing when the counter reaches 0, a warning is logged and the restoration is retried every frame.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_vehicleColorPalette.editorPreferenceValueChanged(path, value)` | Hook de préférence vide. *(interne)* | 394 |
-| `editor_dynamicDecals_vehicleColorPalette.onDeserialized(data)` | Hook de désérialisation : programme la restauration des couleurs sauvegardées dans 5 frames. *(interne)* *(hook)* | 454 |
-| `editor_dynamicDecals_vehicleColorPalette.onGui(guiId)` | Dessine le contenu de la section (couleurs et réglages métalliques du véhicule joueur). Appelé par l'outil dans la section et dans sa fenêtre dédiée. *(interne)* *(hook)* | 66 |
-| `editor_dynamicDecals_vehicleColorPalette.onSerialize()` | Hook de sérialisation : renvoie {colors = {{color}, {colorPalette0}, {colorPalette1}}} (4 composantes chacune) du véhicule joueur, ou colors = nil sans véhicule. *(interne)* *(hook)* | 438 |
-| `editor_dynamicDecals_vehicleColorPalette.registerEditorPreferences(prefsRegistry)` | Enregistre dans la sous-catégorie dynamicDecalsTool.vehicleColorPalette la préférence palettes (table de {name, values = 3 triplets RGB}). *(interne)* | 322 |
-| `editor_dynamicDecals_vehicleColorPalette.setup(tool_in)` | Initialise le module avec l'outil parent : enregistre la section (ordre 120, fermée par défaut, bouton d'aide), la fonction de mise à jour de restauration des couleurs et la page de documentation. *(interne)* | 426 |
+| `editor_dynamicDecals_vehicleColorPalette.editorPreferenceValueChanged(path, value)` | Empty preference hook. *(internal)* | 394 |
+| `editor_dynamicDecals_vehicleColorPalette.onDeserialized(data)` | Deserialization hook: schedules the restoration of the saved colors in 5 frames. *(internal)* *(hook)* | 454 |
+| `editor_dynamicDecals_vehicleColorPalette.onGui(guiId)` | Draws the section content (player vehicle colors and metallic settings). Called by the tool in the section and in its dedicated window. *(internal)* *(hook)* | 66 |
+| `editor_dynamicDecals_vehicleColorPalette.onSerialize()` | Serialization hook: returns {colors = {{color}, {colorPalette0}, {colorPalette1}}} (4 components each) of the player vehicle, or colors = nil without a vehicle. *(internal)* *(hook)* | 438 |
+| `editor_dynamicDecals_vehicleColorPalette.registerEditorPreferences(prefsRegistry)` | Registers in the subcategory dynamicDecalsTool.vehicleColorPalette the palettes preference (table of {name, values = 3 RGB triplets}). *(internal)* | 322 |
+| `editor_dynamicDecals_vehicleColorPalette.setup(tool_in)` | Initializes the module with the parent tool: registers the section (order 120, closed by default, help button), the color restoration update function and the documentation page. *(internal)* | 426 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_vehicleColorPalette.editorPreferenceValueChanged(path, value)`
 
-Hook de préférence vide.
+Empty preference hook.
 
-- `path` (*string*) : Chemin de préférence
-- `value` (*any*) : Nouvelle valeur
+- `path` (*string*) : Preference path
+- `value` (*any*) : New value
 
 #### `editor_dynamicDecals_vehicleColorPalette.onDeserialized(data)`
 
-Hook de désérialisation : programme la restauration des couleurs sauvegardées dans 5 frames.
+Deserialization hook: schedules the restoration of the saved colors in 5 frames.
 
-- `data` (*table*) : Données renvoyées par onSerialize
+- `data` (*table*) : Data returned by onSerialize
 
 #### `editor_dynamicDecals_vehicleColorPalette.onGui(guiId)`
 
-Dessine le contenu de la section (couleurs et réglages métalliques du véhicule joueur). Appelé par l'outil dans la section et dans sa fenêtre dédiée.
+Draws the section content (player vehicle colors and metallic settings). Called by the tool in the section and in its dedicated window.
 
-- `guiId` (*string*) : Suffixe d'identifiant imgui pour éviter les collisions entre section et fenêtre
+- `guiId` (*string*) : imgui identifier suffix to avoid collisions between section and window
 
 #### `editor_dynamicDecals_vehicleColorPalette.onSerialize()`
 
-Hook de sérialisation : renvoie {colors = {{color}, {colorPalette0}, {colorPalette1}}} (4 composantes chacune) du véhicule joueur, ou colors = nil sans véhicule.
+Serialization hook: returns {colors = {{color}, {colorPalette0}, {colorPalette1}}} (4 components each) of the player vehicle, or colors = nil without a vehicle.
 
-- **renvoie** : table {colors = table|nil}
+- **returns**: table {colors = table|nil}
 
 #### `editor_dynamicDecals_vehicleColorPalette.registerEditorPreferences(prefsRegistry)`
 
-Enregistre dans la sous-catégorie dynamicDecalsTool.vehicleColorPalette la préférence palettes (table de {name, values = 3 triplets RGB}).
+Registers in the subcategory dynamicDecalsTool.vehicleColorPalette the palettes preference (table of {name, values = 3 RGB triplets}).
 
-- `prefsRegistry` (*table*) : Registre de préférences
+- `prefsRegistry` (*table*) : Preferences registry
 
 #### `editor_dynamicDecals_vehicleColorPalette.setup(tool_in)`
 
-Initialise le module avec l'outil parent : enregistre la section (ordre 120, fermée par défaut, bouton d'aide), la fonction de mise à jour de restauration des couleurs et la page de documentation.
+Initializes the module with the parent tool: registers the section (order 120, closed by default, help button), the color restoration update function and the documentation page.
 
 - `tool_in` (*table*) : Module editor_dynamicDecalsTool
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/vehicleColorPalette.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/vehicleColorPalette.lua`.*

@@ -1,80 +1,80 @@
 # `editor_roadUtils`
 
-*Fichier : `lua/ge/extensions/editor/roadUtils.lua` · VM : Game Engine (GE) · 304 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadUtils.lua` · VM: Game Engine (GE) · 304 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadUtils` : `extensions.load("editor_roadUtils")`, puis la globale `editor_roadUtils`
+**Access:** extension `editor_roadUtils`: `extensions.load("editor_roadUtils")`, then the global `editor_roadUtils`
 
-Utilitaires des modèles de routes (road templates) de l'éditeur. Lit les fichiers levels/<niveau>/roadtemplates/*.road.json, mémorise matériaux et noms de matériaux des modèles, puis applique le modèle de chaque DecalRoad qui en référence un : crée des routes enfants, des décorations et des decals le long de la route. Tout est inactif tant que la préférence roadTemplates.general.loadTemplates est à false.
+Road template utilities of the editor. Reads the levels/<level>/roadtemplates/*.road.json files, stores the templates' materials and material names, then applies the template of each DecalRoad that references one: creates child roads, decorations and decals along the road. Everything is inactive as long as the roadTemplates.general.loadTemplates preference is false.
 
-## Remarques
+## Notes
 
-- Les champs dynamiques lus sur la route sont template, useTemplate, isChildRoad, childRoads, decorationIDs, decalIDs (chaînes d'ids séparés par des espaces).
-- Résolution des routes : un nœud tous les roadResolutionMetres = 2 m.
-- Piège : `local roadDecorations = extensions.editor_roadDecorations` est lu au chargement du fichier ; si cette extension n'est pas encore chargée à ce moment, roadDecorations vaut nil et updateChildRoads plante.
-- M.onEditorInitialized = nil est exporté explicitement : le champ n'existe pas, ce n'est pas un hook actif.
+- The dynamic fields read on the road are template, useTemplate, isChildRoad, childRoads, decorationIDs, decalIDs (strings of space-separated ids).
+- Road resolution: one node every roadResolutionMetres = 2 m.
+- Trap: `local roadDecorations = extensions.editor_roadDecorations` is read when the file loads; if this extension is not yet loaded at that moment, roadDecorations is nil and updateChildRoads crashes.
+- M.onEditorInitialized = nil is exported explicitly: the field does not exist, it is not an active hook.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadUtils.getMaterialNames()` | Renvoie les noms de matériaux des modèles, dans le même ordre que getMaterials. | 287 |
-| `editor_roadUtils.getMaterials()` | Renvoie la liste des textures (objets editor.texObj) des matériaux des modèles chargés par reloadTemplates. | 283 |
-| `editor_roadUtils.getRoadTemplateFiles()` | Renvoie les chemins des fichiers *.road.json trouvés par le dernier reloadTemplates. | 291 |
-| `editor_roadUtils.reloadDecals(road, template)` | Supprime les decals précédents de la route (champ decalIDs) puis recrée ceux définis par le modèle et stocke leurs ids dans le champ dynamique decalIDs. | 97 |
-| `editor_roadUtils.reloadDecorations(road)` | Supprime les anciennes décorations de la route (champ decorationIDs) puis recrée celles du modèle. Ignore les routes enfants, les routes sans modèle ou avec useTemplate différent de "true". | 43 |
-| `editor_roadUtils.reloadTemplates()` | Relit les fichiers .road.json du niveau courant, reconstruit les listes de matériaux (texture colorMap, ou warnMat.dds si le matériau est introuvable) puis ré-applique à chaque DecalRoad utilisant un modèle : routes enfants, décorations et decals. Recharge enfin les collisions (be:reloadCollision). Sort tout de suite si la préférence est off ou s'il n'y a pas de niveau. | 234 |
-| `editor_roadUtils.updateChildRoads(road)` | Supprime les routes enfants d'une route puis recrée, d'après son modèle, une route enfant par entrée supplémentaire de template.roads (largeur relative ou absolue, décalage latéral horizPosRelative). La première entrée du modèle est collée sur la route elle-même. | 172 |
+| `editor_roadUtils.getMaterialNames()` | Returns the material names of the templates, in the same order as getMaterials. | 287 |
+| `editor_roadUtils.getMaterials()` | Returns the list of textures (editor.texObj objects) of the materials of the templates loaded by reloadTemplates. | 283 |
+| `editor_roadUtils.getRoadTemplateFiles()` | Returns the paths of the *.road.json files found by the last reloadTemplates. | 291 |
+| `editor_roadUtils.reloadDecals(road, template)` | Deletes the road's previous decals (decalIDs field) then recreates those defined by the template and stores their ids in the decalIDs dynamic field. | 97 |
+| `editor_roadUtils.reloadDecorations(road)` | Deletes the road's old decorations (decorationIDs field) then recreates those of the template. Ignores child roads, roads without a template or with useTemplate different from "true". | 43 |
+| `editor_roadUtils.reloadTemplates()` | Rereads the .road.json files of the current level, rebuilds the material lists (colorMap texture, or warnMat.dds if the material is not found) then reapplies to each DecalRoad using a template: child roads, decorations and decals. Finally reloads the collisions (be:reloadCollision). Returns immediately if the preference is off or if there is no level. | 234 |
+| `editor_roadUtils.updateChildRoads(road)` | Deletes a road's child roads then recreates, according to its template, one child road per additional entry of template.roads (relative or absolute width, lateral offset horizPosRelative). The first entry of the template is pasted onto the road itself. | 172 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadUtils.getMaterialNames()`
 
-Renvoie les noms de matériaux des modèles, dans le même ordre que getMaterials.
+Returns the material names of the templates, in the same order as getMaterials.
 
-- **renvoie** : string[] Noms de matériaux.
+- **returns**: string[] Material names.
 
 #### `editor_roadUtils.getMaterials()`
 
-Renvoie la liste des textures (objets editor.texObj) des matériaux des modèles chargés par reloadTemplates.
+Returns the list of textures (editor.texObj objects) of the materials of the templates loaded by reloadTemplates.
 
-- **renvoie** : table Tableau indexé de textures ImGui.
+- **returns**: table Indexed array of ImGui textures.
 
 #### `editor_roadUtils.getRoadTemplateFiles()`
 
-Renvoie les chemins des fichiers *.road.json trouvés par le dernier reloadTemplates.
+Returns the paths of the *.road.json files found by the last reloadTemplates.
 
-- **renvoie** : string[] Chemins de fichiers.
+- **returns**: string[] File paths.
 
 #### `editor_roadUtils.reloadDecals(road, template)`
 
-Supprime les decals précédents de la route (champ decalIDs) puis recrée ceux définis par le modèle et stocke leurs ids dans le champ dynamique decalIDs.
+Deletes the road's previous decals (decalIDs field) then recreates those defined by the template and stores their ids in the decalIDs dynamic field.
 
-- `road` (*userdata*) : Objet DecalRoad.
-- `template` (*table|nil*) : Données du modèle déjà lues ; si nil, relues depuis le champ template de la route.
+- `road` (*userdata*) : DecalRoad object.
+- `template` (*table|nil*) : Template data already read; if nil, reread from the road's template field.
 
 #### `editor_roadUtils.reloadDecorations(road)`
 
-Supprime les anciennes décorations de la route (champ decorationIDs) puis recrée celles du modèle. Ignore les routes enfants, les routes sans modèle ou avec useTemplate différent de "true".
+Deletes the road's old decorations (decorationIDs field) then recreates those of the template. Ignores child roads, roads without a template or with useTemplate different from "true".
 
-- `road` (*userdata*) : Objet DecalRoad.
+- `road` (*userdata*) : DecalRoad object.
 
 #### `editor_roadUtils.updateChildRoads(road)`
 
-Supprime les routes enfants d'une route puis recrée, d'après son modèle, une route enfant par entrée supplémentaire de template.roads (largeur relative ou absolue, décalage latéral horizPosRelative). La première entrée du modèle est collée sur la route elle-même.
+Deletes a road's child roads then recreates, according to its template, one child road per additional entry of template.roads (relative or absolute width, lateral offset horizPosRelative). The first entry of the template is pasted onto the road itself.
 
-- `road` (*userdata*) : Objet DecalRoad portant les champs dynamiques template/useTemplate.
+- `road` (*userdata*) : DecalRoad object carrying the template/useTemplate dynamic fields.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `onEditorInitialized` | nil | Toujours nil : affectation explicite sans effet. |
+| `onEditorInitialized` | nil | Always nil: explicit assignment with no effect. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `be:` `reloadCollision`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadUtils.lua`.*

@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/gameplay/crashTest/crashTestCountdown.lua",
+  "module": "Compte à rebours affiché pendant le scénario de crash test. Chaque seconde entière franchie, il envoie un message à l'UI (évènement ScenarioFlashMessage) avec le chiffre restant et un son de décompte, puis « Go! » avec un son de départ quand le temps est écoulé, et appelle alors le callback donné.",
+  "usage": "gameplay_crashTest_crashTestCountdown.startNewCountdown(3, function() print('go') end)",
+  "notes": [
+    "Le temps décroît avec dtSim (temps de simulation), donc il s'arrête en pause.",
+    "Le message est de la forme {{texte, 0.95, appelLua, true}} ; le troisième élément est un appel Lua joué par l'UI (Engine.Audio.playOnce).",
+    "Le nom de la fonction interne updateCoundown contient une faute de frappe (sans effet)."
+  ],
+  "functions": {
+    "startNewCountdown": {
+      "desc": "Démarre un compte à rebours de duration secondes. Le callback est appelé quand le décompte arrive à 0 (au moment du « Go! »).",
+      "params": {
+        "duration": {"type": "number", "desc": "Durée en secondes."},
+        "callback_": {"type": "function|nil", "desc": "Fonction appelée à la fin du compte à rebours."}
+      },
+      "internal": false
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque image : fait avancer le compte à rebours s'il est en cours.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s), non utilisé."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."}
+      },
+      "internal": true
+    }
+  }
+}

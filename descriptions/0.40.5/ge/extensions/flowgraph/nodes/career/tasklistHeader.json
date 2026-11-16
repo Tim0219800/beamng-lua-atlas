@@ -1,13 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/tasklistHeader.lua",
-  "module": "Nœud flowgraph « Tasklist Header » (catégorie once_instant, tags goal/goals, couleur/icône ui). Définit l'en-tête et le sous-texte de la liste de tâches (app Tasklist) du tutoriel de carrière, via le guihook SetTasklistHeader. Entrées : label et sub (any, texte ou objet de traduction). Recopie le flux d'entrée sur la sortie.",
+  "module": "Flowgraph node \"Tasklist Header\" (category once_instant, tags goal/goals, ui color/icon). Sets the header and subtext of the task list (Tasklist app) of the career tutorial, via the SetTasklistHeader guihook. Inputs: label and sub (any, text or translation object). Copies the input flow to the output.",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Envoie guihooks.trigger('SetTasklistHeader', {label, subtext}) puis copie flow vers la sortie."}
+        "workOnce": {
+          "desc": "Sends guihooks.trigger('SetTasklistHeader', {label, subtext}) then copies flow to the output."
+        }
       }
     }
   }

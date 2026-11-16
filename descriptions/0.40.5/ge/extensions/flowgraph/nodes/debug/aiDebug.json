@@ -1,16 +1,26 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/debug/aiDebug.lua",
-  "module": "Nœud flowgraph « AI Debug Display » (catégorie dynamic_p_duration, tags target/trajectory/route/debug). Affiche ou masque les visualisations de débogage de l'IA d'un véhicule en appelant ai.setVehicleDebugMode côté véhicule. Entrées : vehId (number, 0 ou vide = véhicule du joueur) et mode (string : off, target, trajectory, speeds, route ; 'off' par défaut). En mode dynamique 'repeat' la commande est renvoyée à chaque frame.",
+  "module": "Flowgraph node \"AI Debug Display\" (category dynamic_p_duration, tags target/trajectory/route/debug). Shows or hides the AI debug visualizations of a vehicle by calling ai.setVehicleDebugMode on the vehicle side. Inputs: vehId (number, 0 or empty = player vehicle) and mode (string: off, target, trajectory, speeds, route; 'off' by default). In 'repeat' dynamic mode the command is resent every frame.",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "postInit": {"desc": "Propose la liste des modes comme modèles du pin mode dans l'éditeur.", "internal": true},
-        "workOnce": {"desc": "Applique le mode une fois."},
-        "work": {"desc": "Si dynamicMode vaut 'repeat', réapplique le mode à chaque frame."},
-        "SetAIDebugMode": {"desc": "Trouve le véhicule (vehId ou joueur) et lui envoie ai.setVehicleDebugMode({debugMode = mode}) par queueLuaCommand.", "internal": true}
+        "postInit": {
+          "desc": "Provides the list of modes as templates for the mode pin in the editor.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Applies the mode once."
+        },
+        "work": {
+          "desc": "If dynamicMode is 'repeat', reapplies the mode every frame."
+        },
+        "SetAIDebugMode": {
+          "desc": "Finds the vehicle (vehId or player) and sends it ai.setVehicleDebugMode({debugMode = mode}) via queueLuaCommand.",
+          "internal": true
+        }
       }
     }
   }

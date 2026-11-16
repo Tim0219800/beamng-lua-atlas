@@ -2,47 +2,47 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet renvoyé par le constructeur (new(rallyEditor)). Champs : rallyEditor, cache {path, snaproad, entries}.
+--- Object returned by the constructor (new(rallyEditor)). Fields: rallyEditor, cache {path, snaproad, entries}.
 ---@class editor_rallyEditor_ghostNotebook_ghostRenderer
 local editor_rallyEditor_ghostNotebook_ghostRenderer = {}
 
---- Construit la liste des entrées du carnet fantôme : pour chaque pacenote non manquant ayant un début et une fin de virage, calcule les positions de route, la position du libellé et la distance le long de la route, puis trie par distance. Stocke le résultat dans self.cache.
----Source : lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:137
----@param path table Carnet fantôme (utilise path.pacenotes.sorted).
----@param snaproad table Objet snaproad de la route (closestSnapResult, driveline).
+--- Builds the list of ghost notebook entries: for each non-missing pacenote with a corner start and end, computes the road positions, the label position and the distance along the road, then sorts by distance. Stores the result in self.cache.
+---Source: lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:137
+---@param path table Ghost notebook (uses path.pacenotes.sorted).
+---@param snaproad table Road snaproad object (closestSnapResult, driveline).
 ---@return table  Cache {path, snaproad, entries}.
 function editor_rallyEditor_ghostNotebook_ghostRenderer:buildCache(path, snaproad) end
 
---- Appelée à chaque image : localise la caméra sur la snaproad, sélectionne les entrées dans la fenêtre de distance, décide quelles étiquettes afficher (sélection et voisins précédent/suivant selon les préférences) et appelle drawEntry.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:205
----@param path table Carnet fantôme à afficher.
----@param snaproad table Snaproad de la route.
----@param globalOpacity number|nil Multiplicateur d'opacité, 1.0 par défaut.
----@param pacenoteToolsState table|nil État des outils pacenote (selected_pn_id, selected_wp_id).
----@param activePath table|nil Carnet actuellement édité, pour retrouver le pacenote sélectionné.
+--- Called every frame: locates the camera on the snaproad, selects the entries within the distance window, decides which labels to display (selection and previous/next neighbors according to the preferences) and calls drawEntry.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:205
+---@param path table Ghost notebook to display.
+---@param snaproad table Road snaproad.
+---@param globalOpacity number|nil Opacity multiplier, 1.0 by default.
+---@param pacenoteToolsState table|nil Pacenote tools state (selected_pn_id, selected_wp_id).
+---@param activePath table|nil Notebook currently being edited, to find the selected pacenote.
 function editor_rallyEditor_ghostNotebook_ghostRenderer:draw(path, snaproad, globalOpacity, pacenoteToolsState, activePath) end
 
---- Dessine le libellé d'une entrée à sa position de début de virage. Le texte vient de rallyEditor.getGhostNotebookLabelForPacenote, sinon du nom du pacenote. Ne dessine rien si drawLabel est faux ou si le texte est vide.
----Source : lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:179
----@param entry table Entrée du cache {pacenote, positions, labelPos, distanceAlongRoute}.
----@param lineColor ColorF Couleur de ligne (inutilisée tant que le tracé est désactivé).
----@param textAlpha number Opacité du texte, 0 à 1.
----@param textBgAlpha integer Opacité du fond du texte, 0 à 255.
----@param drawLabel boolean Dessiner ou non le libellé.
----@param prismWidth number Largeur du prisme (inutilisée tant que le tracé est désactivé).
+--- Draws an entry's label at its corner start position. The text comes from rallyEditor.getGhostNotebookLabelForPacenote, otherwise from the pacenote's name. Draws nothing if drawLabel is false or the text is empty.
+---Source: lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:179
+---@param entry table Cache entry {pacenote, positions, labelPos, distanceAlongRoute}.
+---@param lineColor ColorF Line color (unused while the drawing is disabled).
+---@param textAlpha number Text opacity, 0 to 1.
+---@param textBgAlpha integer Text background opacity, 0 to 255.
+---@param drawLabel boolean Whether or not to draw the label.
+---@param prismWidth number Prism width (unused while the drawing is disabled).
 function editor_rallyEditor_ghostNotebook_ghostRenderer:drawEntry(entry, lineColor, textAlpha, textBgAlpha, drawLabel, prismWidth) end
 
---- Renvoie le cache courant s'il correspond au même carnet et à la même snaproad, sinon le reconstruit.
----Source : lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:172
----@param path table Carnet fantôme.
+--- Returns the current cache if it matches the same notebook and snaproad, otherwise rebuilds it.
+---Source: lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:172
+---@param path table Ghost notebook.
 ---@param snaproad table Snaproad.
 ---@return table  Cache.
 function editor_rallyEditor_ghostNotebook_ghostRenderer:getCache(path, snaproad) end
 
---- Constructeur interne : mémorise l'éditeur et vide le cache.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:13
----@param rallyEditor table Instance de l'éditeur (fournit les préférences et getGhostNotebookLabelForPacenote).
+--- Internal constructor: stores the editor and empties the cache.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor/ghostNotebook/ghostRenderer.lua:13
+---@param rallyEditor table Editor instance (provides the preferences and getGhostNotebookLabelForPacenote).
 function editor_rallyEditor_ghostNotebook_ghostRenderer:init(rallyEditor) end
 

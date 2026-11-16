@@ -1,145 +1,145 @@
 # `editor_rallyEditor_zSnap`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/zSnap.lua` · VM : Game Engine (GE) · 89 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/zSnap.lua` · VM: Game Engine (GE) · 89 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_rallyEditor_zSnap` : `extensions.load("editor_rallyEditor_zSnap")`, puis la globale `editor_rallyEditor_zSnap`
+**Access:** extension `editor_rallyEditor_zSnap`: `extensions.load("editor_rallyEditor_zSnap")`, then the global `editor_rallyEditor_zSnap`
 
-Aide de l'éditeur de rallye pour « coller » la hauteur (z) d'un point au terrain. Trois méthodes : aucune, hauteur du terrain (core_terrain.getTerrainHeight) ou lancer de rayon vertical (editorUtil.vertRaycast). La méthode courante vient de la préférence de l'éditeur de rallye (editor_rallyEditor.getPrefWaypointSnapMethod). Sert aussi à adapter la géométrie d'une spline au terrain.
+Rally editor helper to "snap" a point's height (z) to the terrain. Three methods: none, terrain height (core_terrain.getTerrainHeight) or vertical raycast (editorUtil.vertRaycast). The current method comes from the rally editor preference (editor_rallyEditor.getPrefWaypointSnapMethod). Also used to fit a spline's geometry to the terrain.
 
-## Exemple
+## Example
 
 ```lua
 local zSnap = extensions.editor_rallyEditor_zSnap
 local p = zSnap.zSnap(vec3(100, 200, 0), zSnap.methods.vertRaycast, 10)
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions « InPlace » modifient le vec3 passé en argument (pos.z) et le renvoient ; zSnap() travaille sur une copie.
-- Une méthode inconnue dans snapInPlace retombe sur defaultMethod (getTerrainHeight).
-- snapTerrainHeightInPlace ne change rien si core_terrain.getTerrainHeight est absent ou renvoie nil.
+- The "InPlace" functions modify the vec3 passed as argument (pos.z) and return it; zSnap() works on a copy.
+- An unknown method in snapInPlace falls back to defaultMethod (getTerrainHeight).
+- snapTerrainHeightInPlace changes nothing if core_terrain.getTerrainHeight is absent or returns nil.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_rallyEditor_zSnap.conformSplineGeometry(spline, useRaycast, minNumDivisions, minSpacing, rayRaise)` | Génère la géométrie d'une spline Catmull-Rom collée au terrain, par raycast (geom.catmullRomRaycast) ou par hauteur du terrain (geom.catmullRomConformToTerrain). | 81 |
-| `editor_rallyEditor_zSnap.getCurrentMethod()` | Renvoie la méthode choisie dans les préférences de l'éditeur de rallye, ou defaultMethod si absente/invalide. | 60 |
-| `editor_rallyEditor_zSnap.isValidMethod(method)` | Indique si le libellé est une méthode connue. | 47 |
-| `editor_rallyEditor_zSnap.methodForUseRaycast(useRaycast)` | Convertit un booléen en méthode : vertRaycast si true, sinon getTerrainHeight. | 73 |
-| `editor_rallyEditor_zSnap.noSnappingInPlace(pos)` | Ne fait rien, renvoie pos tel quel. | 24 |
-| `editor_rallyEditor_zSnap.snapDrivelineInPlace(pos, useRaycast, rayRaise)` | Colle un point de driveline au terrain avec la méthode déduite de useRaycast. | 77 |
-| `editor_rallyEditor_zSnap.snapInPlace(pos, method, rayRaise)` | Applique la méthode choisie (ou la méthode par défaut si inconnue) à pos, en place. | 51 |
-| `editor_rallyEditor_zSnap.snapInPlaceWithCurrentMethod(pos, rayRaise)` | snapInPlace avec la méthode courante. | 69 |
-| `editor_rallyEditor_zSnap.snapRaycastInPlace(pos, rayRaise)` | Ajuste pos.z par un lancer de rayon vertical (editorUtil.vertRaycast). | 36 |
-| `editor_rallyEditor_zSnap.snapTerrainHeightInPlace(pos)` | Met pos.z à la hauteur du terrain en (x, y) si disponible. | 28 |
-| `editor_rallyEditor_zSnap.zSnap(pos, method, rayRaise)` | Comme snapInPlace mais sur une copie de pos. | 56 |
-| `editor_rallyEditor_zSnap.zSnapWithCurrentMethod(pos)` | zSnap avec la méthode courante, sur une copie. | 65 |
+| `editor_rallyEditor_zSnap.conformSplineGeometry(spline, useRaycast, minNumDivisions, minSpacing, rayRaise)` | Generates the geometry of a Catmull-Rom spline snapped to the terrain, by raycast (geom.catmullRomRaycast) or by terrain height (geom.catmullRomConformToTerrain). | 81 |
+| `editor_rallyEditor_zSnap.getCurrentMethod()` | Returns the method chosen in the rally editor preferences, or defaultMethod if absent/invalid. | 60 |
+| `editor_rallyEditor_zSnap.isValidMethod(method)` | Returns whether the label is a known method. | 47 |
+| `editor_rallyEditor_zSnap.methodForUseRaycast(useRaycast)` | Converts a boolean to a method: vertRaycast if true, otherwise getTerrainHeight. | 73 |
+| `editor_rallyEditor_zSnap.noSnappingInPlace(pos)` | Does nothing, returns pos as is. | 24 |
+| `editor_rallyEditor_zSnap.snapDrivelineInPlace(pos, useRaycast, rayRaise)` | Snaps a driveline point to the terrain with the method inferred from useRaycast. | 77 |
+| `editor_rallyEditor_zSnap.snapInPlace(pos, method, rayRaise)` | Applies the chosen method (or the default method if unknown) to pos, in place. | 51 |
+| `editor_rallyEditor_zSnap.snapInPlaceWithCurrentMethod(pos, rayRaise)` | snapInPlace with the current method. | 69 |
+| `editor_rallyEditor_zSnap.snapRaycastInPlace(pos, rayRaise)` | Adjusts pos.z by a vertical raycast (editorUtil.vertRaycast). | 36 |
+| `editor_rallyEditor_zSnap.snapTerrainHeightInPlace(pos)` | Sets pos.z to the terrain height at (x, y) if available. | 28 |
+| `editor_rallyEditor_zSnap.zSnap(pos, method, rayRaise)` | Like snapInPlace but on a copy of pos. | 56 |
+| `editor_rallyEditor_zSnap.zSnapWithCurrentMethod(pos)` | zSnap with the current method, on a copy. | 65 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_rallyEditor_zSnap.conformSplineGeometry(spline, useRaycast, minNumDivisions, minSpacing, rayRaise)`
 
-Génère la géométrie d'une spline Catmull-Rom collée au terrain, par raycast (geom.catmullRomRaycast) ou par hauteur du terrain (geom.catmullRomConformToTerrain).
+Generates the geometry of a Catmull-Rom spline snapped to the terrain, by raycast (geom.catmullRomRaycast) or by terrain height (geom.catmullRomConformToTerrain).
 
-- `spline` (*table*) : Spline source.
-- `useRaycast` (*boolean*) : Choix de la méthode.
-- `minNumDivisions` (*integer*) : Nombre minimal de subdivisions (transmis à geom).
-- `minSpacing` (*number*) : Espacement minimal (transmis à geom).
-- `rayRaise` (*number|nil*) : Relèvement du rayon.
-- **renvoie** : table Résultat de la fonction geom appelée.
+- `spline` (*table*) : Source spline.
+- `useRaycast` (*boolean*) : Method choice.
+- `minNumDivisions` (*integer*) : Minimum number of subdivisions (passed to geom).
+- `minSpacing` (*number*) : Minimum spacing (passed to geom).
+- `rayRaise` (*number|nil*) : Ray raise.
+- **returns**: table Result of the geom function called.
 
 #### `editor_rallyEditor_zSnap.getCurrentMethod()`
 
-Renvoie la méthode choisie dans les préférences de l'éditeur de rallye, ou defaultMethod si absente/invalide.
+Returns the method chosen in the rally editor preferences, or defaultMethod if absent/invalid.
 
-- **renvoie** : string Libellé de méthode.
+- **returns**: string Method label.
 
 #### `editor_rallyEditor_zSnap.isValidMethod(method)`
 
-Indique si le libellé est une méthode connue.
+Returns whether the label is a known method.
 
-- `method` (*string*) : Libellé de méthode.
-- **renvoie** : boolean true si valide.
+- `method` (*string*) : Method label.
+- **returns**: boolean true if valid.
 
 #### `editor_rallyEditor_zSnap.methodForUseRaycast(useRaycast)`
 
-Convertit un booléen en méthode : vertRaycast si true, sinon getTerrainHeight.
+Converts a boolean to a method: vertRaycast if true, otherwise getTerrainHeight.
 
-- `useRaycast` (*boolean*) : Utiliser le raycast.
-- **renvoie** : string Libellé de méthode.
+- `useRaycast` (*boolean*) : Use the raycast.
+- **returns**: string Method label.
 
 #### `editor_rallyEditor_zSnap.noSnappingInPlace(pos)`
 
-Ne fait rien, renvoie pos tel quel.
+Does nothing, returns pos as is.
 
 - `pos` (*vec3*) : Position.
-- **renvoie** : vec3 pos inchangé.
+- **returns**: vec3 pos unchanged.
 
 #### `editor_rallyEditor_zSnap.snapDrivelineInPlace(pos, useRaycast, rayRaise)`
 
-Colle un point de driveline au terrain avec la méthode déduite de useRaycast.
+Snaps a driveline point to the terrain with the method inferred from useRaycast.
 
-- `pos` (*vec3*) : Position modifiée en place.
-- `useRaycast` (*boolean*) : true = raycast, false = hauteur du terrain.
-- `rayRaise` (*number|nil*) : Relèvement du rayon.
-- **renvoie** : vec3 pos.
+- `pos` (*vec3*) : Position modified in place.
+- `useRaycast` (*boolean*) : true = raycast, false = terrain height.
+- `rayRaise` (*number|nil*) : Ray raise.
+- **returns**: vec3 pos.
 
 #### `editor_rallyEditor_zSnap.snapInPlace(pos, method, rayRaise)`
 
-Applique la méthode choisie (ou la méthode par défaut si inconnue) à pos, en place.
+Applies the chosen method (or the default method if unknown) to pos, in place.
 
-- `pos` (*vec3*) : Position modifiée en place.
-- `method` (*string*) : Libellé de méthode.
-- `rayRaise` (*number|nil*) : Relèvement du rayon (méthode raycast).
-- **renvoie** : vec3 pos.
+- `pos` (*vec3*) : Position modified in place.
+- `method` (*string*) : Method label.
+- `rayRaise` (*number|nil*) : Ray raise (raycast method).
+- **returns**: vec3 pos.
 
 #### `editor_rallyEditor_zSnap.snapInPlaceWithCurrentMethod(pos, rayRaise)`
 
-snapInPlace avec la méthode courante.
+snapInPlace with the current method.
 
-- `pos` (*vec3*) : Position modifiée en place.
-- `rayRaise` (*number|nil*) : Relèvement du rayon.
-- **renvoie** : vec3 pos.
+- `pos` (*vec3*) : Position modified in place.
+- `rayRaise` (*number|nil*) : Ray raise.
+- **returns**: vec3 pos.
 
 #### `editor_rallyEditor_zSnap.snapRaycastInPlace(pos, rayRaise)`
 
-Ajuste pos.z par un lancer de rayon vertical (editorUtil.vertRaycast).
+Adjusts pos.z by a vertical raycast (editorUtil.vertRaycast).
 
-- `pos` (*vec3*) : Position modifiée en place.
-- `rayRaise` (*number|nil*) : Hauteur dont le rayon est relevé avant de tirer (transmis à vertRaycast).
-- **renvoie** : vec3 pos.
+- `pos` (*vec3*) : Position modified in place.
+- `rayRaise` (*number|nil*) : Height the ray is raised by before firing (passed to vertRaycast).
+- **returns**: vec3 pos.
 
 #### `editor_rallyEditor_zSnap.snapTerrainHeightInPlace(pos)`
 
-Met pos.z à la hauteur du terrain en (x, y) si disponible.
+Sets pos.z to the terrain height at (x, y) if available.
 
-- `pos` (*vec3*) : Position modifiée en place.
-- **renvoie** : vec3 pos.
+- `pos` (*vec3*) : Position modified in place.
+- **returns**: vec3 pos.
 
 #### `editor_rallyEditor_zSnap.zSnap(pos, method, rayRaise)`
 
-Comme snapInPlace mais sur une copie de pos.
+Like snapInPlace but on a copy of pos.
 
-- `pos` (*vec3*) : Position source (non modifiée).
-- `method` (*string*) : Libellé de méthode.
-- `rayRaise` (*number|nil*) : Relèvement du rayon.
-- **renvoie** : vec3 Nouvelle position.
+- `pos` (*vec3*) : Source position (not modified).
+- `method` (*string*) : Method label.
+- `rayRaise` (*number|nil*) : Ray raise.
+- **returns**: vec3 New position.
 
 #### `editor_rallyEditor_zSnap.zSnapWithCurrentMethod(pos)`
 
-zSnap avec la méthode courante, sur une copie.
+zSnap with the current method, on a copy.
 
-- `pos` (*vec3*) : Position source.
-- **renvoie** : vec3 Nouvelle position.
+- `pos` (*vec3*) : Source position.
+- **returns**: vec3 New position.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `defaultMethod` | string | Méthode par défaut : methods.getTerrainHeight. |
-| `methodValues` | string[] | Liste ordonnée des libellés de méthodes (pour un menu déroulant). |
-| `methods` | table<string, string> | Noms des méthodes : noSnapping, getTerrainHeight, vertRaycast (valeurs = libellés affichables). |
+| `defaultMethod` | string | Default method: methods.getTerrainHeight. |
+| `methodValues` | string[] | Ordered list of method labels (for a dropdown). |
+| `methods` | table<string, string> | Method names: noSnapping, getTerrainHeight, vertRaycast (values = displayable labels). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/zSnap.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/zSnap.lua`.*

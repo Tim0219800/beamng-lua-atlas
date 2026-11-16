@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/startScreenText.lua",
+  "module": "Nœud « StartScreen Text Panel » (repeat_instant, couleur ui). Ajoute à l'écran de démarrage un panneau texte avec en-tête. Entrées : flow, header et text (string ou table), experimental (caché, obsolète), flavour (caché ; default, experimental ou info). Sortie : flow (chainFlow).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "postInit": {
+          "desc": "Définit les modèles imposés du pin flavour : default, experimental, info.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Recopie flow ; si text est non vide, ajoute un textPanel. Si l'en-tête est « missions.missions.general.rules » ou « Rules », le panneau va sur la page rules au lieu de main. experimental=true force le flavour « experimental ».",
+          "internal": true
+        }
+      }
+    }
+  }
+}

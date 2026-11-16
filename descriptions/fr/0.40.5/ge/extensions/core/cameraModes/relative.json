@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/core/cameraModes/relative.lua",
+  "module": "Caméra libre « relative au véhicule » (désactivée par défaut) : une caméra volante dont la position est exprimée dans le repère du véhicule (nœuds ref/left/back), donc qui accompagne le véhicule en mouvement. Déplacement et regard au clavier/souris (vitesse x5 loin du véhicule), zoom manuel, 10 emplacements mémorisables de position/rotation/FOV (touches de raccourci, menu radial « Relative Camera »), lumière ponctuelle attachée (0 / 500 / 2500 / 5000 lm) et préréglages de nearClip (niveau, 0.5 mm, 1 cm, 10 cm). Peut être préinitialisée par des emplacements nommés définis dans le jbeam (éléments numérotés avec .name). Renvoie un constructeur.",
+  "notes": ["Crée à la demande un objet PointLight 'relativecameralight' (canSave = false, rayon 20 m) dans scenetree.", "Si les nœuds ref/left/back manquent, utilise les nœuds 0, 1, 2 (journal de debug). Après un changement de modèle de véhicule, la caméra est recalculée une image plus tard.", "La page extraite indique hotkey(modifier) mais le code est hotkey(hotkey, modifier) ; modifier 0 = charger l'emplacement, 1 = l'enregistrer. loadSlot accepte un numéro ou un nom d'emplacement.", "La lumière est éteinte (storeLightInfo) quand la caméra perd le focus et restaurée (restoreLightInfo) quand elle le retrouve."],
+  "classes": {
+    "C": {
+      "desc": "Mode relatif. Champs : pos (vec3 repère véhicule), rot (vec3 degrés), slots, lightIntensity, nearClip (nil = niveau), manualzoom, camMaxDist.",
+      "functions": {
+        "init": {"desc": "Valeurs par défaut (resetCameraOnVehicleReset = false, disabledByDefault, canUseVehicleTriggerCrosshair) puis onVehicleCameraConfigChanged et reset.", "internal": true},
+        "onVehicleCameraConfigChanged": {"desc": "Hook : garantit refNodes (défaut 0,1,2) et planifie le recalcul de caméra.", "internal": true},
+        "_updateLight": {"desc": "Applique une intensité (>= 0) à la lumière de la caméra, la crée si besoin.", "params": {"intensity": {"type": "number|nil", "desc": "lumens ; nil = garde la valeur actuelle"}}, "internal": true},
+        "sendMenus": {"desc": "Ajoute les entrées du menu radial quickAccess (lumière, nearClip, emplacements) tant que la caméra a le focus.", "internal": true},
+        "restoreLightInfo": {"desc": "Remet la lumière mémorisée par storeLightInfo."},
+        "storeLightInfo": {"desc": "Mémorise l'intensité et éteint la lumière."},
+        "saveSlot": {"desc": "Enregistre position, rotation et FOV dans l'emplacement indiqué.", "params": {"slot": {"type": "integer", "desc": "numéro d'emplacement (1 à 10)"}}},
+        "loadSlot": {"desc": "Charge un emplacement ; message UI si vide.", "params": {"slot": {"type": "integer|string", "desc": "numéro ou nom d'emplacement"}}, "returns": [{"type": "boolean", "desc": "true si chargé"}]},
+        "hotkey": {"desc": "Raccourci clavier d'emplacement ; ignoré sans focus.", "params": {"hotkey": {"type": "integer", "desc": "numéro d'emplacement"}, "modifier": {"type": "integer", "desc": "0 = charger, 1 = enregistrer"}}},
+        "setFOV": {"desc": "Fixe le FOV du zoom manuel.", "params": {"fov": {"type": "number", "desc": "degrés"}}},
+        "setRotation": {"desc": "Fixe la rotation de la caméra.", "params": {"rot": {"type": "vec3", "desc": "x lacet, y tangage, z roulis en degrés"}}},
+        "setOffset": {"desc": "Fixe la position de la caméra dans le repère du véhicule.", "params": {"pos": {"type": "vec3", "desc": "position relative"}}},
+        "setMaxDistance": {"desc": "Limite l'éloignement par rapport au nœud ref.", "params": {"d": {"type": "number|nil", "desc": "mètres, nil = illimité"}}},
+        "serialize": {"desc": "État pour les vues flux vidéo : pos, rot, fov, light, nearClip.", "returns": [{"type": "table", "desc": "état"}]},
+        "deserialize": {"desc": "Restaure l'état de serialize.", "params": {"s": {"type": "table", "desc": "table de serialize"}}},
+        "listParams": {"desc": "Réglages UI : light, nearClip, slots, fov.", "returns": [{"type": "table[]", "desc": "descripteurs"}]},
+        "setParam": {"desc": "Modifie light, nearClip, fov ou slots (enregistre ou charge l'emplacement donné).", "params": {"key": {"type": "string", "desc": "light, nearClip, fov, slots"}, "value": {"type": "any", "desc": "nouvelle valeur"}}},
+        "onCameraChanged": {"desc": "Hook : au gain de focus, ajoute les menus et rallume la lumière ; à la perte, éteint la lumière.", "params": {"focused": {"type": "boolean", "desc": "vrai si le mode prend le focus"}}, "internal": true},
+        "reset": {"desc": "Revient à la position et rotation initiales et recrée les lisseurs."},
+        "setRefNodes": {"desc": "Définit les nœuds de référence du véhicule.", "params": {"centerNodeID": {"type": "integer", "desc": "nœud centre"}, "leftNodeID": {"type": "integer", "desc": "nœud gauche"}, "backNodeID": {"type": "integer", "desc": "nœud arrière"}}},
+        "update": {"desc": "Intègre les entrées, déplace la caméra dans le repère du véhicule et écrit data.res (pos, rot, nearClip) ; positionne la lumière.", "params": {"data": {"type": "table", "desc": "camData"}}, "returns": [{"type": "boolean", "desc": "false si les nœuds sont dégénérés, sinon true"}], "internal": true}
+      }
+    }
+  }
+}

@@ -1,25 +1,25 @@
 # `flowgraph_nodes_activity_activityAttempt`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/activityAttempt.lua` · VM : Game Engine (GE) · 71 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/activityAttempt.lua` · VM: Game Engine (GE) · 71 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/activityAttempt")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/activityAttempt")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Activity Attempt » (catégorie once_instant, tags activity/mission). Crée une tentative de mission via gameplay_missions_progress.newAttempt et la sort sur le pin table « attempt » (tableType attemptData) pour les autres nœuds d'activité. Pins fixes : entrées bool « passed » et « completed » ; sortie « attempt ». Les pins d'entrée personnalisés ajoutés par l'utilisateur (tous types sauf flow) sont copiés dans les données de la tentative. S'exécute une fois quand le flux arrive (workOnce).
+Flowgraph node "Activity Attempt" (category once_instant, tags activity/mission). Creates a mission attempt via gameplay_missions_progress.newAttempt and outputs it on the table pin "attempt" (tableType attemptData) for the other activity nodes. Fixed pins: bool inputs "passed" and "completed"; output "attempt". Custom input pins added by the user (all types except flow) are copied into the attempt data. Runs once when the flow arrives (workOnce).
 
-## Remarques
+## Notes
 
-- Le type de la tentative est toujours 'attempted' : les lignes qui le passaient à 'passed'/'completed' selon les pins sont commentées, donc les pins « passed » et « completed » sont sans effet dans ce nœud.
-- Les pins fixes (passed, completed) ne sont pas copiés dans les données ; seuls les pins non fixes le sont.
+- The attempt type is always 'attempted': the lines that set it to 'passed'/'completed' depending on the pins are commented out, so the "passed" and "completed" pins have no effect in this node.
+- The fixed pins (passed, completed) are not copied into the data; only non-fixed pins are.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Active savePins et allowCustomInPins (pins d'entrée personnalisés sauvegardés). | 37 |
-| `C:postInit()` | Vide (code commenté sur des modèles de types de tentative). | 42 |
-| `C:workOnce()` | Si le flux est actif, rassemble les pins non fixes dans une table, crée la tentative 'attempted' avec ces données et la place sur le pin de sortie attempt. | 51 |
+| `C:init()` | Enables savePins and allowCustomInPins (saved custom input pins). | 37 |
+| `C:postInit()` | Empty (code commented out on attempt type templates). | 42 |
+| `C:workOnce()` | If the flow is active, gathers the non-fixed pins into a table, creates the 'attempted' attempt with this data and puts it on the attempt output pin. | 51 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/activityAttempt.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/activityAttempt.lua`.*

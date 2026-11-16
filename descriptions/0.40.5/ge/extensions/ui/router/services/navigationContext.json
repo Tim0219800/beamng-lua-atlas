@@ -1,26 +1,48 @@
 {
   "path": "lua/ge/extensions/ui/router/services/navigationContext.lua",
-  "module": "Construit le contexte de navigation du routeur UI : un instantané de l'état du jeu (carrière, garage, mission, scénario, multijoueur, multiseat, premier trajet, tutoriel freeroam, grande carte autorisée ou non) et le mode courant. Chaque lecture est protégée par pcall, donc un module de jeu absent donne simplement false/nil. Sert aux décisions de routes (écrans, décorateurs de contexte).",
+  "module": "Builds the UI router navigation context: a snapshot of the game state (career, garage, mission, scenario, multiplayer, multiseat, first drive, freeroam tutorial, big map allowed or not) and the current mode. Each read is protected by pcall, so a missing game module simply gives false/nil. Used for route decisions (screens, context decorators).",
   "notes": [
-    "Priorité du champ `mode` : multiplayer, mission, scenario, garage, career, freeroamTutorial, multiseatGamemode, sinon freeroam.",
-    "isMultiseatActive est vrai si le multiseat, le freeroam multiseat ou plusieurs joueurs sont actifs.",
-    "L'action testée pour la grande carte est « toggleBigMap » (core_input_actionFilter)."
+    "Priority of the `mode` field: multiplayer, mission, scenario, garage, career, freeroamTutorial, multiseatGamemode, otherwise freeroam.",
+    "isMultiseatActive is true if multiseat, freeroam multiseat or several players are active.",
+    "The action tested for the big map is \"toggleBigMap\" (core_input_actionFilter)."
   ],
   "functions": {
     "getContext": {
-      "desc": "Renvoie la table de contexte : isCareerActive, isGarageActive, isMissionActive, isScenarioActive, isMultiplayerActive, foregroundMissionId, isBigMapBlocked, isBigMapAllowed, isFreeroamTutorialActive, isFirstDriveActive, isFirstDriveGuided, isMultiseatGamemodeActive, isMultiseatActive, mode.",
-      "returns": [{"type": "table", "desc": "Contexte courant."}],
+      "desc": "Returns the context table: isCareerActive, isGarageActive, isMissionActive, isScenarioActive, isMultiplayerActive, foregroundMissionId, isBigMapBlocked, isBigMapAllowed, isFreeroamTutorialActive, isFirstDriveActive, isFirstDriveGuided, isMultiseatGamemodeActive, isMultiseatActive, mode.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Current context."
+        }
+      ],
       "internal": false
     },
     "buildNavigationContext": {
-      "desc": "Complète getContext() avec le type de navigation, des extras et des résumés {name, params, meta} des routes d'arrivée et de départ.",
+      "desc": "Extends getContext() with the navigation kind, extras and {name, params, meta} summaries of the destination and source routes.",
       "params": {
-        "toRoute": {"type": "table|nil", "desc": "Route de destination."},
-        "fromRoute": {"type": "table|nil", "desc": "Route d'origine."},
-        "kind": {"type": "string", "desc": "Nature de la navigation (déduit du code : transmis tel quel dans context.kind)."},
-        "extras": {"type": "table|nil", "desc": "Données supplémentaires (défaut {})."}
+        "toRoute": {
+          "type": "table|nil",
+          "desc": "Destination route."
+        },
+        "fromRoute": {
+          "type": "table|nil",
+          "desc": "Origin route."
+        },
+        "kind": {
+          "type": "string",
+          "desc": "Kind of navigation (inferred from code: passed through as is in context.kind)."
+        },
+        "extras": {
+          "type": "table|nil",
+          "desc": "Extra data (default {})."
+        }
       },
-      "returns": [{"type": "table", "desc": "Contexte avec kind, extras, toRoute, fromRoute."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Context with kind, extras, toRoute, fromRoute."
+        }
+      ],
       "internal": false
     }
   }

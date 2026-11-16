@@ -1,105 +1,243 @@
 {
   "path": "lua/ge/extensions/editor/api/camera.lua",
-  "module": "API de caméra de l'éditeur. initialize(editorInstance) installe sur l'objet editor les constantes de type de caméra (CameraType_Game = 1, CameraType_Free = 2), les constantes de vitesse (CameraSpeed_Slowest 5, Slow 35, Slower 70, Normal 100, Faster 130, Fast 165, Fastest 200), l'état currentCameraType / previousCameraType et les fonctions de caméra libre, de repères de caméra (bookmarks stockés dans MissionGroup/CameraBookmarks) et de paramètres de caméra « lisse » (newton). Les fonctions listées sont donc des méthodes de editor, pas du module.",
-  "usage": "editor.toggleFreeCamera()\nlocal id = editor.addCameraBookmark(\"vue du pont\")\neditor.jumpToCameraBookmark(id)",
+  "module": "Editor camera API. initialize(editorInstance) installs on the editor object the camera type constants (CameraType_Game = 1, CameraType_Free = 2), the speed constants (CameraSpeed_Slowest 5, Slow 35, Slower 70, Normal 100, Faster 130, Fast 165, Fastest 200), the currentCameraType / previousCameraType state and the functions for the free camera, camera bookmarks (stored in MissionGroup/CameraBookmarks) and \"smooth\" camera parameters (newton). The functions listed are therefore methods of editor, not of the module.",
+  "usage": "editor.toggleFreeCamera()\nlocal id = editor.addCameraBookmark(\"bridge view\")\neditor.jumpToCameraBookmark(id)",
   "notes": [
-    "selectCamera ne fait rien tant que le niveau n'est pas chargé (variable globale levelLoaded).",
-    "Le zoom lisse (fitViewToSelectionSmooth) s'exécute dans un job de 21 pas de 50 ms ; le rayon de vue est borné entre 20 et 16000.",
-    "Incohérence : fitViewToSelection teste editor.selection.objects (pluriel) alors que les autres fonctions testent editor.selection.object (singulier) ; le test sur le pluriel est donc toujours vrai pour « aucun objet » et utilise le gizmo.",
-    "getCameraSpeed(speed) ignore son argument et retourne core_camera.getSpeed().",
-    "setSmoothCameraMove / Rotate n'agissent qu'en caméra libre ; les valeurs « normalisées » de drag sont converties vers la plage 5-20 (1 = 5, 0 = 20).",
-    "isFreeCamera est une fonction locale non exportée."
+    "selectCamera does nothing until the level is loaded (global variable levelLoaded).",
+    "The smooth zoom (fitViewToSelectionSmooth) runs in a job of 21 steps of 50 ms; the view radius is clamped between 20 and 16000.",
+    "Inconsistency: fitViewToSelection tests editor.selection.objects (plural) whereas the other functions test editor.selection.object (singular); the test on the plural is therefore always true for \"no object\" and uses the gizmo.",
+    "getCameraSpeed(speed) ignores its argument and returns core_camera.getSpeed().",
+    "setSmoothCameraMove / Rotate only act in free camera; the \"normalized\" drag values are converted to the 5-20 range (1 = 5, 0 = 20).",
+    "isFreeCamera is a local function that is not exported."
   ],
   "functions": {
     "initialize": {
-      "desc": "Appelé par l'éditeur : installe les constantes et fonctions de caméra sur l'instance de l'éditeur.",
-      "params": {"editorInstance": {"type": "table", "desc": "Instance de l'éditeur."}},
+      "desc": "Called by the editor: installs the camera constants and functions on the editor instance.",
+      "params": {
+        "editorInstance": {
+          "type": "table",
+          "desc": "Editor instance."
+        }
+      },
       "internal": true
     }
   },
   "classes": {
     "editor": {
-      "desc": "Méthodes ajoutées à l'instance de l'éditeur par ce module.",
+      "desc": "Methods added to the editor instance by this module.",
       "functions": {
         "selectCamera": {
-          "desc": "Choisit la caméra de la vue : jeu (commands.setGameCamera) ou libre (commands.setFreeCamera) ; mémorise le type précédent.",
-          "params": {"type": {"type": "integer", "desc": "editor.CameraType_Game ou editor.CameraType_Free."}}
+          "desc": "Chooses the view's camera: game (commands.setGameCamera) or free (commands.setFreeCamera); remembers the previous type.",
+          "params": {
+            "type": {
+              "type": "integer",
+              "desc": "editor.CameraType_Game or editor.CameraType_Free."
+            }
+          }
         },
-        "toggleFreeCamera": {"desc": "Bascule entre la caméra de jeu courante et la caméra libre de l'éditeur."},
-        "getCamera": {"desc": "Retourne la caméra libre (commands.getCamera).", "returns": [{"type": "table", "desc": "Objet caméra."}]},
+        "toggleFreeCamera": {
+          "desc": "Toggles between the current game camera and the editor's free camera."
+        },
+        "getCamera": {
+          "desc": "Returns the free camera (commands.getCamera).",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Camera object."
+            }
+          ]
+        },
         "cameraLookAtPoint": {
-          "desc": "Oriente la caméra vers un point du monde.",
-          "params": {"pt": {"type": "vec3", "desc": "Point à regarder."}}
+          "desc": "Orients the camera toward a point in the world.",
+          "params": {
+            "pt": {
+              "type": "vec3",
+              "desc": "Point to look at."
+            }
+          }
         },
-        "placeCameraAtSelection": {"desc": "Place la caméra au centroïde de la sélection d'objets (sans effet si rien n'est sélectionné)."},
-        "placeCameraAtPlayer": {"desc": "Place la caméra à la position du joueur (commands.dropCameraAtPlayer)."},
-        "placePlayerAtCamera": {"desc": "Place le véhicule du joueur à la position de la caméra (position seulement)."},
+        "placeCameraAtSelection": {
+          "desc": "Places the camera at the centroid of the object selection (no effect if nothing is selected)."
+        },
+        "placeCameraAtPlayer": {
+          "desc": "Places the camera at the player's position (commands.dropCameraAtPlayer)."
+        },
+        "placePlayerAtCamera": {
+          "desc": "Places the player's vehicle at the camera's position (position only)."
+        },
         "fitViewToSelection": {
-          "desc": "Place la caméra à 15 m en arrière du centre de la sélection (ou du gizmo) en gardant son orientation de départ puis la tourne vers le centre.",
-          "params": {"center": {"type": "vec3|nil", "desc": "Centre à viser ; par défaut le centre de la boîte de sélection."}}
+          "desc": "Places the camera 15 m behind the center of the selection (or of the gizmo) keeping its starting orientation then turns it toward the center.",
+          "params": {
+            "center": {
+              "type": "vec3|nil",
+              "desc": "Center to aim at; by default the center of the selection box."
+            }
+          }
         },
-        "fitViewToSelectionSmooth": {"desc": "Comme fitViewToSelection mais avec une approche animée et une distance adaptée à la taille de la sélection."},
+        "fitViewToSelectionSmooth": {
+          "desc": "Like fitViewToSelection but with an animated approach and a distance adapted to the selection's size."
+        },
         "setCameraSpeed": {
-          "desc": "Règle la vitesse de la caméra libre (core_camera.setSpeed).",
-          "params": {"speed": {"type": "number", "desc": "Vitesse, par exemple editor.CameraSpeed_Normal."}}
+          "desc": "Sets the free camera's speed (core_camera.setSpeed).",
+          "params": {
+            "speed": {
+              "type": "number",
+              "desc": "Speed, for example editor.CameraSpeed_Normal."
+            }
+          }
         },
-        "getCameraSpeed": {"desc": "Retourne la vitesse de la caméra libre.", "returns": [{"type": "number", "desc": "Vitesse."}]},
+        "getCameraSpeed": {
+          "desc": "Returns the free camera's speed.",
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Speed."
+            }
+          ]
+        },
         "addCameraBookmark": {
-          "desc": "Ajoute un repère de caméra nommé à la position actuelle de la caméra libre, dans MissionGroup/CameraBookmarks (groupe créé au besoin).",
-          "params": {"name": {"type": "string", "desc": "Nom interne du repère."}},
-          "returns": [{"type": "integer", "desc": "Id de l'objet repère."}]
+          "desc": "Adds a named camera bookmark at the free camera's current position, in MissionGroup/CameraBookmarks (group created if needed).",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Internal name of the bookmark."
+            }
+          },
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "Id of the bookmark object."
+            }
+          ]
         },
         "deleteCameraBookmark": {
-          "desc": "Supprime un repère de caméra.",
-          "params": {"objectId": {"type": "integer", "desc": "Id de l'objet repère."}}
+          "desc": "Deletes a camera bookmark.",
+          "params": {
+            "objectId": {
+              "type": "integer",
+              "desc": "Id of the bookmark object."
+            }
+          }
         },
-        "getCameraBookmarks": {"desc": "Retourne le groupe SimGroup contenant les repères (le crée si besoin ; nil sans MissionGroup).", "returns": [{"type": "table|nil", "desc": "SimGroup."}]},
-        "clearCameraBookmarks": {"desc": "Supprime tous les repères de caméra."},
+        "getCameraBookmarks": {
+          "desc": "Returns the SimGroup containing the bookmarks (creates it if needed; nil without MissionGroup).",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "SimGroup."
+            }
+          ]
+        },
+        "clearCameraBookmarks": {
+          "desc": "Deletes all camera bookmarks."
+        },
         "jumpToCameraBookmark": {
-          "desc": "Déplace la caméra à la position et rotation d'un repère.",
-          "params": {"objectId": {"type": "integer", "desc": "Id de l'objet repère."}}
+          "desc": "Moves the camera to a bookmark's position and rotation.",
+          "params": {
+            "objectId": {
+              "type": "integer",
+              "desc": "Id of the bookmark object."
+            }
+          }
         },
         "copyCameraBookmarkToClipboard": {
-          "desc": "Copie dans le presse-papiers la position et rotation d'un repère sous forme de texte [x, y, z, qx, qy, qz, qw].",
-          "params": {"obj": {"type": "table", "desc": "Objet repère."}}
+          "desc": "Copies to the clipboard a bookmark's position and rotation as text [x, y, z, qx, qy, qz, qw].",
+          "params": {
+            "obj": {
+              "type": "table",
+              "desc": "Bookmark object."
+            }
+          }
         },
-        "pasteCameraBookmarkFromClipboard": {"desc": "Applique à la caméra libre le texte de transformation lu dans le presse-papiers (commands.setFreeCameraTransformJson)."},
+        "pasteCameraBookmarkFromClipboard": {
+          "desc": "Applies to the free camera the transform text read from the clipboard (commands.setFreeCameraTransformJson)."
+        },
         "getObjectLocationText": {
-          "desc": "Retourne la position et rotation d'un objet en texte [x, y, z, qx, qy, qz, qw] (usage interne à l'éditeur).",
-          "params": {"obj": {"type": "table", "desc": "Objet de la scène."}},
-          "returns": [{"type": "string", "desc": "Texte formaté."}]
+          "desc": "Returns an object's position and rotation as text [x, y, z, qx, qy, qz, qw] (internal editor use).",
+          "params": {
+            "obj": {
+              "type": "table",
+              "desc": "Scene object."
+            }
+          },
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Formatted text."
+            }
+          ]
         },
         "setSmoothCameraMove": {
-          "desc": "Active ou règle la translation « newton » (inertie) de la caméra libre.",
-          "params": {"value": {"type": "boolean|number", "desc": "Valeur passée à core_camera.setNewtonTranslation."}}
+          "desc": "Enables or sets the free camera's \"newton\" translation (inertia).",
+          "params": {
+            "value": {
+              "type": "boolean|number",
+              "desc": "Value passed to core_camera.setNewtonTranslation."
+            }
+          }
         },
         "setSmoothCameraRotate": {
-          "desc": "Active ou règle la rotation « newton » de la caméra libre.",
-          "params": {"value": {"type": "boolean|number", "desc": "Valeur passée à core_camera.setNewtonRotation."}}
+          "desc": "Enables or sets the free camera's \"newton\" rotation.",
+          "params": {
+            "value": {
+              "type": "boolean|number",
+              "desc": "Value passed to core_camera.setNewtonRotation."
+            }
+          }
         },
         "setSmoothCameraDrag": {
-          "desc": "Règle la traînée de translation de la caméra libre.",
-          "params": {"drag": {"type": "number", "desc": "Traînée."}}
+          "desc": "Sets the free camera's translation drag.",
+          "params": {
+            "drag": {
+              "type": "number",
+              "desc": "Drag."
+            }
+          }
         },
         "setSmoothCameraAngularDrag": {
-          "desc": "Règle la traînée angulaire de la caméra libre.",
-          "params": {"drag": {"type": "number", "desc": "Traînée angulaire."}}
+          "desc": "Sets the free camera's angular drag.",
+          "params": {
+            "drag": {
+              "type": "number",
+              "desc": "Angular drag."
+            }
+          }
         },
         "setSmoothCameraDragNormalized": {
-          "desc": "Règle la traînée à partir d'une valeur 0-1 (1 donne 5, 0 donne 20).",
-          "params": {"value": {"type": "number", "desc": "Valeur normalisée."}}
+          "desc": "Sets the drag from a 0-1 value (1 gives 5, 0 gives 20).",
+          "params": {
+            "value": {
+              "type": "number",
+              "desc": "Normalized value."
+            }
+          }
         },
         "setSmoothCameraAngularDragNormalized": {
-          "desc": "Règle la traînée angulaire à partir d'une valeur 0-1 (même échelle).",
-          "params": {"value": {"type": "number", "desc": "Valeur normalisée."}}
+          "desc": "Sets the angular drag from a 0-1 value (same scale).",
+          "params": {
+            "value": {
+              "type": "number",
+              "desc": "Normalized value."
+            }
+          }
         },
         "getSmoothCameraParams": {
-          "desc": "Retourne les paramètres de la caméra libre lisse.",
-          "returns": [{"type": "table|nil", "desc": "{newtonMode, newtonRotation, mass, drag, force, angularDrag, angularForce}, ou nil (avertissement) si la caméra libre n'existe pas."}]
+          "desc": "Returns the smooth free camera's parameters.",
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "{newtonMode, newtonRotation, mass, drag, force, angularDrag, angularForce}, or nil (warning) if the free camera does not exist."
+            }
+          ]
         },
         "setSmoothCameraParams": {
-          "desc": "Applique des paramètres de caméra libre lisse et remet la vitesse angulaire à zéro.",
-          "params": {"params": {"type": "table", "desc": "{newtonMode, newtonRotation, drag, mass, force, angularDrag, angularForce}."}}
+          "desc": "Applies smooth free camera parameters and resets the angular velocity to zero.",
+          "params": {
+            "params": {
+              "type": "table",
+              "desc": "{newtonMode, newtonRotation, drag, mass, force, angularDrag, angularForce}."
+            }
+          }
         }
       }
     }

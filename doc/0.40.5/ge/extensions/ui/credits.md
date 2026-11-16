@@ -1,60 +1,60 @@
 # `ui_credits`
 
-*Fichier : `lua/ge/extensions/ui/credits.lua` · VM : Game Engine (GE) · 163 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/credits.lua` · VM: Game Engine (GE) · 163 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_credits` : `extensions.load("ui_credits")`, puis la globale `ui_credits`
+**Access:** extension `ui_credits`: `extensions.load("ui_credits")`, then the global `ui_credits`
 
-Joue la musique des crédits (évènement FMOD « event:>Music>credits » sur le canal AudioGui) avec des fondus de volume. Le chargement de l'extension lance la musique avec un fondu d'entrée de 0,4 s ; le déchargement supprime la source sonore.
+Plays the credits music (FMOD event "event:>Music>credits" on the AudioGui channel) with volume fades. Loading the extension starts the music with a 0.4 s fade-in; unloading deletes the sound source.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('ui_credits')
--- plus tard :
+-- later:
 ui_credits.stopWithFade(1.0, function() extensions.unload('ui_credits') end)
 ```
 
-## Remarques
+## Notes
 
-- Le fondu est progressé dans onUpdate avec dtReal (temps réel, indépendant de la pause).
-- La durée minimale d'un fondu est 0,001 s.
-- Les fonctions de volume ne font rien si l'objet son n'a pas de méthode setVolume.
+- The fade is advanced in onUpdate with dtReal (real time, independent of pause).
+- The minimum duration of a fade is 0.001 s.
+- The volume functions do nothing if the sound object has no setVolume method.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_credits.onExtensionLoaded()` | Hook appelé au chargement de l'extension : lance startWithFade avec la durée par défaut (0,4 s). *(interne)* *(hook)* | 123 |
-| `ui_credits.onExtensionUnloaded()` | Hook appelé au déchargement : arrête et supprime la source sonore et libère le groupe de paramètres. *(interne)* *(hook)* | 127 |
-| `ui_credits.onUpdate(dtReal)` | Hook appelé à chaque frame : fait avancer le fondu en cours et appelle son callback à la fin. *(interne)* *(hook)* | 132 |
-| `ui_credits.startWithFade(duration)` | Crée la source sonore des crédits si besoin, la démarre à volume 0 si elle ne joue pas encore, puis fait un fondu vers le volume 1. | 85 |
-| `ui_credits.stopWithFade(duration, onStopped)` | Fait un fondu vers 0 puis arrête et supprime la source, puis appelle onStopped. S'il n'y a pas de son, arrête immédiatement. | 105 |
+| `ui_credits.onExtensionLoaded()` | Hook called when the extension loads: starts startWithFade with the default duration (0.4 s). *(internal)* *(hook)* | 123 |
+| `ui_credits.onExtensionUnloaded()` | Hook called on unload: stops and deletes the sound source and frees the parameter group. *(internal)* *(hook)* | 127 |
+| `ui_credits.onUpdate(dtReal)` | Hook called every frame: advances the current fade and calls its callback at the end. *(internal)* *(hook)* | 132 |
+| `ui_credits.startWithFade(duration)` | Creates the credits sound source if needed, starts it at volume 0 if it is not yet playing, then fades to volume 1. | 85 |
+| `ui_credits.stopWithFade(duration, onStopped)` | Fades to 0 then stops and deletes the source, then calls onStopped. If there is no sound, stops immediately. | 105 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_credits.onUpdate(dtReal)`
 
-Hook appelé à chaque frame : fait avancer le fondu en cours et appelle son callback à la fin.
+Hook called every frame: advances the current fade and calls its callback at the end.
 
-- `dtReal` (*number*) : Temps réel écoulé depuis la dernière frame (s).
+- `dtReal` (*number*) : Real time elapsed since the last frame (s).
 
 #### `ui_credits.startWithFade(duration)`
 
-Crée la source sonore des crédits si besoin, la démarre à volume 0 si elle ne joue pas encore, puis fait un fondu vers le volume 1.
+Creates the credits sound source if needed, starts it at volume 0 if it is not yet playing, then fades to volume 1.
 
-- `duration` (*number|nil*) : Durée du fondu en secondes (défaut 0,4).
-- **renvoie** : boolean false si la source sonore n'a pas pu être créée, sinon true.
+- `duration` (*number|nil*) : Fade duration in seconds (default 0.4).
+- **returns**: boolean false if the sound source could not be created, otherwise true.
 
 #### `ui_credits.stopWithFade(duration, onStopped)`
 
-Fait un fondu vers 0 puis arrête et supprime la source, puis appelle onStopped. S'il n'y a pas de son, arrête immédiatement.
+Fades to 0 then stops and deletes the source, then calls onStopped. If there is no sound, stops immediately.
 
-- `duration` (*number|nil*) : Durée du fondu en secondes (défaut 0,4).
-- `onStopped` (*function|nil*) : Callback sans argument appelé une fois la musique arrêtée.
+- `duration` (*number|nil*) : Fade duration in seconds (default 0.4).
+- `onStopped` (*function|nil*) : Callback with no argument called once the music has stopped.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/credits.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/credits.lua`.*

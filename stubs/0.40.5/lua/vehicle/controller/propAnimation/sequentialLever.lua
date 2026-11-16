@@ -2,28 +2,28 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/propAnimation/sequentialLever.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire d'animation d'un levier séquentiel : à chaque changement de rapport du device « gearbox » (rapport monté = levier poussé, rapport descendu = levier tiré), il fait osciller une valeur lissée entre -1, 0 et 1 publiée dans electrics.values.sequentialLeverY, et joue un son de levier (montée / descente) avec l'agressivité de passage comme paramètre.
---- Accès : contrôleur `propAnimation/sequentialLever` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Auxiliary sequential lever animation controller: at each gear change of the "gearbox" device (upshift = lever pushed, downshift = lever pulled), it makes a smoothed value oscillate between -1, 0 and 1 published in electrics.values.sequentialLeverY, and plays a lever sound (up / down) with the shift aggression as a parameter.
+--- Access: controller `propAnimation/sequentialLever` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_propAnimation_sequentialLever
 ---@field type string "auxiliary".
 local controller_propAnimation_sequentialLever = {}
 
---- Récupère le device de boîte, vérifie son type et lit les sons.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/propAnimation/sequentialLever.lua:59
----@param jbeamData table Données jbeam du contrôleur.
+--- Gets the gearbox device, checks its type and reads the sounds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/propAnimation/sequentialLever.lua:59
+---@param jbeamData table Controller jbeam data.
 function controller_propAnimation_sequentialLever.init(jbeamData) end
 
---- Remet l'état du levier et le lisseur à zéro.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/propAnimation/sequentialLever.lua:52
----@param jbeamData table Données jbeam.
+--- Resets the lever state and the smoother to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/propAnimation/sequentialLever.lua:52
+---@param jbeamData table Jbeam data.
 function controller_propAnimation_sequentialLever.reset(jbeamData) end
 
---- Chaque frame : détecte le changement de rapport, lisse l'impulsion, joue le son et publie la valeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/propAnimation/sequentialLever.lua:28
----@param dt number Pas de temps en secondes.
+--- Every frame: detects the gear change, smooths the impulse, plays the sound and publishes the value.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/propAnimation/sequentialLever.lua:28
+---@param dt number Time step in seconds.
 function controller_propAnimation_sequentialLever.updateGFX(dt) end
 
 return controller_propAnimation_sequentialLever

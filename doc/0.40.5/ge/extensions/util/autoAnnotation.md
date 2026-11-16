@@ -1,46 +1,46 @@
 # `util_autoAnnotation`
 
-*Fichier : `lua/ge/extensions/util/autoAnnotation.lua` · VM : Game Engine (GE) · 143 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/autoAnnotation.lua` · VM: Game Engine (GE) · 143 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_autoAnnotation` : `extensions.load("util_autoAnnotation")`, puis la globale `util_autoAnnotation`
+**Access:** extension `util_autoAnnotation`: `extensions.load("util_autoAnnotation")`, then the global `util_autoAnnotation`
 
-Outil d'éditeur de niveau : parcourt récursivement l'arbre de scène (MissionGroup) et le jeu de données des objets de forêt (ForestItemDataSet) pour poser automatiquement un champ d'annotation (catégorie sémantique, mode 'Override') sur les objets qui n'en ont pas. Les catégories sont devinées d'après le nom du fichier de forme (TSStatic, ForestItemData) ou le nom du GroundCover.
+Level editor tool: recursively walks the scene tree (MissionGroup) and the forest item dataset (ForestItemDataSet) to automatically set an annotation field (semantic category, 'Override' mode) on objects that lack one. Categories are guessed from the shape file name (TSStatic, ForestItemData) or the GroundCover name.
 
-## Exemple
+## Example
 
 ```lua
 util_autoAnnotation.autoAnnotateLevel()
 ```
 
-## Remarques
+## Notes
 
-- Correspondances de formes (recherche par sous-chaîne, insensible à la casse) : building, fence, fencing, busstop -> BUILDINGS ; tree -> NATURE ; sidewalk -> SIDEWALK ; sign -> TRAFFIC_SIGNS ; tunnel -> STREET ; road -> ASPHALT ; excavator -> CAR. Sans correspondance : OBSTACLES (avertissement loggé).
-- GroundCover : grass et shrubs -> NATURE ; par défaut NATURE (avertissement loggé).
-- Seuls les objets dont le champ annotation est vide sont modifiés. Les SFXSpace, SFXEmitter, PointLight et SpotLight sont ignorés.
-- Les objets modifiés reçoivent setField('annotation', ...), setField('mode', 'Override') puis postApply() : le niveau doit ensuite être sauvegardé par l'éditeur.
-- autoAnnotateGroups ne vérifie pas que ForestItemDataSet existe : visitNode planterait si l'objet est absent.
+- Shape matches (substring search, case-insensitive): building, fence, fencing, busstop -> BUILDINGS; tree -> NATURE; sidewalk -> SIDEWALK; sign -> TRAFFIC_SIGNS; tunnel -> STREET; road -> ASPHALT; excavator -> CAR. No match: OBSTACLES (warning logged).
+- GroundCover: grass and shrubs -> NATURE; default NATURE (warning logged).
+- Only objects whose annotation field is empty are modified. SFXSpace, SFXEmitter, PointLight and SpotLight are ignored.
+- Modified objects receive setField('annotation', ...), setField('mode', 'Override') then postApply(): the level must then be saved by the editor.
+- autoAnnotateGroups does not check that ForestItemDataSet exists: visitNode would crash if the object is absent.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_autoAnnotation.autoAnnotateGroups()` | Annote les données d'objets de forêt (ForestItemDataSet). | 132 |
-| `util_autoAnnotation.autoAnnotateLevel()` | Annote le niveau entier : arbre de scène puis jeu de données de forêt. | 137 |
-| `util_autoAnnotation.autoAnnotateScenetree()` | Annote tout l'arbre de scène à partir de MissionGroup. Logue une erreur et s'arrête si MissionGroup est introuvable. | 121 |
-| `util_autoAnnotation.onInit()` | Hook d'initialisation sans effet (corps vide). *(interne)* *(hook)* | 118 |
+| `util_autoAnnotation.autoAnnotateGroups()` | Annotates the forest object data (ForestItemDataSet). | 132 |
+| `util_autoAnnotation.autoAnnotateLevel()` | Annotates the whole level: scene tree then forest dataset. | 137 |
+| `util_autoAnnotation.autoAnnotateScenetree()` | Annotates the whole scene tree starting from MissionGroup. Logs an error and stops if MissionGroup is not found. | 121 |
+| `util_autoAnnotation.onInit()` | Initialization hook with no effect (empty body). *(internal)* *(hook)* | 118 |
 
-## Classe `visitors`
+## Class `visitors`
 
-Table interne de visiteurs 'visit<Classe>' appelés selon la classe de chaque nœud. Les visiteurs de TSStatic et ForestItemData posent l'annotation d'après shapeName ; ceux de SFXSpace, SFXEmitter, PointLight, SpotLight ne font rien.
+Internal table of 'visit<Class>' visitors called according to each node's class. The TSStatic and ForestItemData visitors set the annotation from shapeName; those of SFXSpace, SFXEmitter, PointLight, SpotLight do nothing.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `visitors.visitForest(parent, node)` | Visite chaque élément d'une forêt (Forest) et annote les données de ses items. | 94 |
-| `visitors.visitGroundCover(parent, node)` | Annote un GroundCover sans annotation d'après son nom (NATURE par défaut). | 102 |
+| `visitors.visitForest(parent, node)` | Visits each element of a forest (Forest) and annotates the data of its items. | 94 |
+| `visitors.visitGroundCover(parent, node)` | Annotates a GroundCover without annotation from its name (NATURE by default). | 102 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `findObject`, `upcast`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/autoAnnotation.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/autoAnnotation.lua`.*

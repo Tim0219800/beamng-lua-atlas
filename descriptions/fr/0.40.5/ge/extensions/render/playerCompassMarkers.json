@@ -1,0 +1,33 @@
+{
+  "path": "lua/ge/extensions/render/playerCompassMarkers.lua",
+  "module": "Indicateurs de direction des autres joueurs pour l'écran partagé (multi-sièges en freeroam). Pour chaque vue, dessine en haut de la vue une pastille colorée par autre joueur, positionnée horizontalement selon la direction où il se trouve (comme une boussole), dans une texture ImGui transparente. Piloté par render_splitScreen (appel de update chaque frame). Dépend de ui_imgui, core_gamestate, core_camera. Global : render_playerCompassMarkers.",
+  "notes": [
+    "Actif seulement si : ui_multiseat_freeroam.isActive(), enabled vrai, TextureDrawPrimitiveRegistry disponible, au moins 2 joueurs, et pas pendant un écran de chargement (suppression tant que le chargement n'est pas terminé, levée par onLoadingScreenInactive(2)). Sinon destroy() libère textures et états.",
+    "Un marqueur apparaît pour un joueur seulement s'il est à plus de 40 m (hideDistance) ; toujours affiché au-delà de 100 m (alwaysShowDistance) ; entre les deux il n'est affiché que s'il est masqué à la vue (rayon castRayStatic de la caméra vers lui, uniquement s'il est dans le frustum). Un changement d'état doit rester stable 3 s (visibilityDelay) avant de prendre effet, avec un fondu de 0,5 s.",
+    "La marge de sécurité reproduit la variable CSS --safezone de l'UI (réglage uiLayoutSafeArea, borné à 0.8..1 par défaut 0.98, zone limitée au 16:9).",
+    "Chaque vue fournit un markerRect {x, y, largeur, hauteur} en pixels ; la couleur de chaque joueur est une chaîne hexadécimale '#RRGGBB' (playerInfo.color).",
+    "Taille du marqueur : markerScale 0.4, fond d'alpha 77, marqueur d'alpha 255 (valeurs locales)."
+  ],
+  "functions": {
+    "update": {
+      "desc": "Met à jour et dessine les marqueurs de direction pour toutes les vues d'écran partagé (collecte, texture, fenêtre ImGui sans fond ni entrées par vue).",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "Activer la fonction."},
+        "views": {"type": "table[]", "desc": "Vues : {name, player, markerRect = {x, y, w, h}}."},
+        "players": {"type": "table[]", "desc": "Joueurs : {player, color = '#RRGGBB'}."},
+        "vehicleForPlayer": {"type": "function", "desc": "function(player) -> objet véhicule ou nil."}
+      },
+      "internal": true
+    },
+    "destroy": {
+      "desc": "Libère les textures de direction enregistrées et réinitialise les états ; sans effet si déjà inactif.",
+      "params": {},
+      "internal": false
+    },
+    "onLoadingScreenInactive": {
+      "desc": "Hook de l'écran de chargement : quand state vaut 2, lève la suppression des marqueurs.",
+      "params": {"state": {"type": "integer", "desc": "État de l'écran de chargement (2 = terminé, déduit du code)."}},
+      "internal": true
+    }
+  }
+}

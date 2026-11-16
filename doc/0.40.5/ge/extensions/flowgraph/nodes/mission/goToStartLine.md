@@ -1,26 +1,26 @@
 # `flowgraph_nodes_mission_goToStartLine`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/goToStartLine.lua` · VM : Game Engine (GE) · 69 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/goToStartLine.lua` · VM: Game Engine (GE) · 69 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/goToStartLine")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/goToStartLine")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Check Players Position' (categorie repeat_instant, fichier goToStartLine). Classe la position du vehicule par rapport a la ligne de depart selon le pin 'distance' : > 0,35 = outLineForward (trop avance), < 0 = outLineBackward (trop en arriere), sinon inLine (bien positionne). Le pin impulsion 'reset' remet les sorties a false.
+Flowgraph node 'Check Players Position' (repeat_instant category, file goToStartLine). Classifies the vehicle's position relative to the start line according to the 'distance' pin: > 0.35 = outLineForward (too far ahead), < 0 = outLineBackward (too far behind), otherwise inLine (well positioned). The impulse pin 'reset' resets the outputs to false.
 
-## Remarques
+## Notes
 
-- Le pin de sortie 'flow' n'est jamais ecrit dans work.
-- Les pins 'velocity' et le vehicule recupere ne sont pas utilises.
-- Les deux sorties outLineForward et outLineBackward ont la meme description ('Outflow when the vehicle is not in position').
+- The output pin 'flow' is never written in work.
+- The 'velocity' pins and the retrieved vehicle are not used.
+- The two outputs outLineForward and outLineBackward have the same description ('Outflow when the vehicle is not in position').
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Recupere le vehicule via self.mgr.modules.vehicle:getVehicle(vehId). | 31 |
+| `C:_executionStarted()` | Gets the vehicle via self.mgr.modules.vehicle:getVehicle(vehId). | 31 |
 | `C:init()` | vehicle = nil. | 35 |
-| `C:work()` | Sur reset : tout a false. Sinon met inLine/outLineForward/outLineBackward selon distance. | 39 |
+| `C:work()` | On reset: everything false. Otherwise sets inLine/outLineForward/outLineBackward according to distance. | 39 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/goToStartLine.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/goToStartLine.lua`.*

@@ -1,28 +1,28 @@
 # `flowgraph_modules_foreachModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/foreachModule.lua` · VM : Game Engine (GE) · 30 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/foreachModule.lua` · VM: Game Engine (GE) · 30 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/foreachModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/foreachModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 1000, donc exécuté en dernier) réservé aux graphes enfants créés par une boucle foreach. Il ne contient que les champs parentGraphId, key et value, que le nœud foreach renseigne pour l'enfant. Toutes ses méthodes d'exécution sont vides.
+Flowgraph module (moduleOrder 1000, so executed last) reserved for child graphs created by a foreach loop. It contains only the fields parentGraphId, key and value, which the foreach node fills in for the child. All its execution methods are empty.
 
-## Remarques
+## Notes
 
-- afterTrigger, executionStopped et executionStarted sont vides (un log de debug est commenté).
+- afterTrigger, executionStopped and executionStarted are empty (a debug log is commented out).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_foreachModule.afterTrigger()` | Appelé après le tick du graphe (ne fait rien). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_foreachModule.clear()` | Remet parentGraphId, key et value à nil. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_foreachModule.executionStarted()` | Appelé au démarrage du projet (ne fait rien). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_foreachModule.executionStopped()` | Appelé à l'arrêt du projet (ne fait rien). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_foreachModule.init()` | Appelé à la création du module : appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
+| `flowgraph_modules_foreachModule.afterTrigger()` | Called after the graph tick (does nothing). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_foreachModule.clear()` | Resets parentGraphId, key and value to nil. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_foreachModule.executionStarted()` | Called when the project starts (does nothing). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_foreachModule.executionStopped()` | Called when the project stops (does nothing). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_foreachModule.init()` | Called when the module is created: calls clear(). (dynamically assigned) *(internal)* | dyn |
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:afterTrigger()` |  | 18 |
 | `C:clear()` |  | 11 |
@@ -31,4 +31,4 @@ Module flowgraph (moduleOrder 1000, donc exécuté en dernier) réservé aux gra
 | `C:init()` |  | 7 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/foreachModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/foreachModule.lua`.*

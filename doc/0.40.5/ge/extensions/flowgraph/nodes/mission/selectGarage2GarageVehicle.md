@@ -1,28 +1,28 @@
 # `flowgraph_nodes_mission_selectGarage2GarageVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle.lua` · VM : Game Engine (GE) · 181 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle.lua` · VM: Game Engine (GE) · 181 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Select Garage Vehicle' (categorie once_instant, auteur BeamNG) pour la mission garage-to-garage. Choisit au hasard un modele/config parmi mission.vehicleOptions (en appelant mission:generateVehicleOptions si besoin), en evitant les configs deja utilisees jusqu'a epuisement. Sorties : impulsion 'loaded', 'model', 'config', 'name' (nom affichable).
+Flowgraph node 'Select Garage Vehicle' (once_instant category, author BeamNG) for the garage-to-garage mission. Randomly picks a model/config from mission.vehicleOptions (calling mission:generateVehicleOptions if needed), avoiding configs already used until exhausted. Outputs: impulse 'loaded', 'model', 'config', 'name' (display name).
 
-## Remarques
+## Notes
 
-- La fonction locale getAllAvailableConfigs transforme les options en liste {model, config, name}.
-- Quand toutes les configs ont ete utilisees, usedConfigs est vide et math.randomseed(os.time()) est rappele.
-- En cas d'erreur (pas de mission, pas d'options), le noeud journalise une erreur et ne fait rien.
+- The local function getAllAvailableConfigs turns the options into a list {model, config, name}.
+- When all configs have been used, usedConfigs is emptied and math.randomseed(os.time()) is called again.
+- On error (no mission, no options), the node logs an error and does nothing.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet la selection et les sorties a zero. | 37 |
-| `C:init()` | Initialise la selection, state=1 et usedConfigs. | 23 |
-| `C:resetData()` | Remet la selection, state=1 et les sorties a zero (usedConfigs est conserve). | 51 |
-| `C:work()` | state 1 : choisit une config non utilisee, l'enregistre dans usedConfigs, ecrit model/config/name, loaded=true, passe a state 2. state 2 : loaded=false. | 90 |
-| `C:workOnce()` | Appelle resetData. | 65 |
+| `C:_executionStarted()` | Resets the selection and the outputs to zero. | 37 |
+| `C:init()` | Initializes the selection, state=1 and usedConfigs. | 23 |
+| `C:resetData()` | Resets the selection, state=1 and the outputs to zero (usedConfigs is kept). | 51 |
+| `C:work()` | state 1: picks an unused config, records it in usedConfigs, writes model/config/name, loaded=true, goes to state 2. state 2: loaded=false. | 90 |
+| `C:workOnce()` | Calls resetData. | 65 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/selectGarage2GarageVehicle.lua`.*

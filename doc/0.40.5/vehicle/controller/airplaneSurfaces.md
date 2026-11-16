@@ -1,53 +1,53 @@
 # `controller_airplaneSurfaces`
 
-*Fichier : `lua/vehicle/controller/airplaneSurfaces.lua` · VM : Véhicule · 130 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/airplaneSurfaces.lua` · VM: Vehicle · 130 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `airplaneSurfaces` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `airplaneSurfaces` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire pour les avions : combine les entrées du pilote (gouverne de direction, ailerons, profondeur) avec les trims, et gère les volets (flap) et becs (slat). Il écrit les résultats dans `electrics.values` (rudder, aileron, elevator, slat, flap) qu'utilisent ensuite les actionneurs jbeam, et affiche des messages UI quand une valeur change.
+Auxiliary controller for airplanes: combines the pilot's inputs (rudder, ailerons, elevator) with the trims, and handles flaps and slats. It writes the results to `electrics.values` (rudder, aileron, elevator, slat, flap), which the jbeam actuators then use, and displays UI messages when a value changes.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `flapStart`, `slatStart`, `rudderTrimmingStart`, `aileronTrimmingStart`, `elevatorTrimmingStart` (valeurs de départ, 0 par défaut), `trimSpeed` (0.05), `flapSpeed` (0.1), `slatSpeed` (0.1) ; vitesses exprimées en fraction par seconde.
-- Entrées lues dans `input` : rudder, aileron, elevator, trimChange, trimRudder, trimAileron, trimElevator, flap, slat, flapChange, slatChange. Le trim relatif (`trimChange`) agit sur l'axe choisi par toggleTrimMode (elevator, aileron, rudder, cycle dans cet ordre).
-- Sorties : rudder/aileron/elevator = entrée + trim (non limitées à [-1,1] dans ce fichier) ; trim, flap et slat sont bornés (trim -1..1, flap et slat 0..1 pour les entrées relatives).
-- Aucune fonction `reset` n'existe : controller.reset rappelle init. updateGFX suppose que init a déjà initialisé `trimming`.
+- Jbeam keys read by init: `flapStart`, `slatStart`, `rudderTrimmingStart`, `aileronTrimmingStart`, `elevatorTrimmingStart` (start values, 0 by default), `trimSpeed` (0.05), `flapSpeed` (0.1), `slatSpeed` (0.1); speeds expressed as a fraction per second.
+- Inputs read from `input`: rudder, aileron, elevator, trimChange, trimRudder, trimAileron, trimElevator, flap, slat, flapChange, slatChange. The relative trim (`trimChange`) acts on the axis chosen by toggleTrimMode (elevator, aileron, rudder, cycling in that order).
+- Outputs: rudder/aileron/elevator = input + trim (not limited to [-1,1] in this file); trim, flap and slat are clamped (trim -1..1, flap and slat 0..1 for relative inputs).
+- No `reset` function exists: controller.reset calls init again. updateGFX assumes init has already initialized `trimming`.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_airplaneSurfaces.init(jbeamData)` | Initialise les electrics, les valeurs de départ de volets/becs/trims et les vitesses depuis le jbeam. *(interne)* | 91 |
-| `controller_airplaneSurfaces.setTrimValue(input, value)` | Fixe directement la valeur de trim d'un axe (sans effet si l'axe est inconnu). | 85 |
-| `controller_airplaneSurfaces.toggleTrimMode()` | Passe à l'axe de trim suivant (elevator, aileron, rudder) et l'annonce par un message UI. | 75 |
-| `controller_airplaneSurfaces.updateGFX(dt)` | Chaque frame : applique les entrées et trims aux electrics rudder, aileron, elevator, met à jour flap et slat (valeur absolue d'entrée si elle a changé, sinon ajustement relatif), et affiche un message UI quand un trim, les volets ou les becs varient de plus de 0,005. *(interne)* | 32 |
+| `controller_airplaneSurfaces.init(jbeamData)` | Initializes the electrics, the start values of flaps/slats/trims and the speeds from the jbeam. *(internal)* | 91 |
+| `controller_airplaneSurfaces.setTrimValue(input, value)` | Directly sets the trim value of an axis (no effect if the axis is unknown). | 85 |
+| `controller_airplaneSurfaces.toggleTrimMode()` | Switches to the next trim axis (elevator, aileron, rudder) and announces it with a UI message. | 75 |
+| `controller_airplaneSurfaces.updateGFX(dt)` | Every frame: applies the inputs and trims to the electrics rudder, aileron, elevator, updates flap and slat (absolute input value if it changed, otherwise relative adjustment), and displays a UI message when a trim, the flaps or the slats vary by more than 0.005. *(internal)* | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_airplaneSurfaces.init(jbeamData)`
 
-Initialise les electrics, les valeurs de départ de volets/becs/trims et les vitesses depuis le jbeam.
+Initializes the electrics, the start values of flaps/slats/trims and the speeds from the jbeam.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_airplaneSurfaces.setTrimValue(input, value)`
 
-Fixe directement la valeur de trim d'un axe (sans effet si l'axe est inconnu).
+Directly sets the trim value of an axis (no effect if the axis is unknown).
 
-- `input` (*string*) : "rudder", "aileron" ou "elevator".
-- `value` (*number*) : Valeur de trim (normalement -1 à 1).
+- `input` (*string*) : "rudder", "aileron" or "elevator".
+- `value` (*number*) : Trim value (normally -1 to 1).
 
 #### `controller_airplaneSurfaces.updateGFX(dt)`
 
-Chaque frame : applique les entrées et trims aux electrics rudder, aileron, elevator, met à jour flap et slat (valeur absolue d'entrée si elle a changé, sinon ajustement relatif), et affiche un message UI quand un trim, les volets ou les becs varient de plus de 0,005.
+Every frame: applies the inputs and trims to the electrics rudder, aileron, elevator, updates flap and slat (absolute input value if it changed, otherwise relative adjustment), and displays a UI message when a trim, the flaps or the slats vary by more than 0.005.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `type` | string | "auxiliary" (paramètre obligatoire de contrôleur). |
+| `type` | string | "auxiliary" (mandatory controller parameter). |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/airplaneSurfaces.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/airplaneSurfaces.lua`.*

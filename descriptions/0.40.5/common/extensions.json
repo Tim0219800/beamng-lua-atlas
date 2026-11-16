@@ -1,233 +1,464 @@
 {
   "path": "lua/common/extensions.lua",
-  "module": "Gestionnaire d'extensions (global `extensions`, présent dans la VM GE et dans la VM véhicule). Il charge/décharge des modules Lua comme extensions, résout leurs dépendances (champ M.dependencies), les expose comme globales et sous extensions.<nom>, et diffuse les hooks (extensions.hook('onXxx', ...)) à tous les modules qui définissent cette fonction. Il gère aussi la sérialisation/désérialisation lors d'un rechargement de la VM Lua (Ctrl+L). Un moddeur s'en sert pour charger son extension, déclencher des hooks ou accéder à une extension par son nom.",
-  "usage": "extensions.load('myMod_main')        -- charge lua/ge/extensions/myMod/main.lua (nom avec _ = chemin avec /)\nextensions.myMod_main.doSomething() -- accès (charge automatiquement si absent)\nextensions.hook('onMyEvent', 42)    -- appelle onMyEvent(42) dans tous les modules qui la définissent\nextensions.unload('myMod_main')",
+  "module": "Extension manager (global `extensions`, present in the GE VM and in the vehicle VM). It loads/unloads Lua modules as extensions, resolves their dependencies (field M.dependencies), exposes them as globals and under extensions.<name>, and broadcasts hooks (extensions.hook('onXxx', ...)) to all modules that define that function. It also handles serialization/deserialization during a Lua VM reload (Ctrl+L). A modder uses it to load their extension, trigger hooks or access an extension by name.",
+  "usage": "extensions.load('myMod_main')        -- loads lua/ge/extensions/myMod/main.lua (name with _ = path with /)\nextensions.myMod_main.doSomething() -- access (loads automatically if absent)\nextensions.hook('onMyEvent', 42)    -- calls onMyEvent(42) in all modules that define it\nextensions.unload('myMod_main')",
   "notes": [
-    "Nommage : le nom d'extension est le chemin avec '/' remplacé par '_' et '_' doublé en '__' (luaPathToExtName) ; extNameToLuaPath fait l'inverse. Exemple : 'ui_missionInfo' <-> 'ui/missionInfo'.",
-    "Accéder à extensions.<nom> pour un module non chargé le charge automatiquement (via __index de la métatable), la recherche étant insensible à la casse pour les modules déjà résolus.",
-    "Un module doit retourner sa table M, sinon il est refusé (message d'erreur). Cycle de vie : onPreLoad avant chargement des dépendances ; onExtensionLoaded(donnéesDésérialisées) après chargement (retourner false décharge le module) ; onInit(données) ensuite, uniquement dans la VM GE (vmType == 'game') ; onExtensionUnloaded au déchargement.",
-    "Fonctions obsolètes détectées sur un module : onLoad et init (remplacer par onExtensionLoaded), onRaceWaypoint (-> onRaceWaypointReached), onScenarioRaceCountingDone (-> onCountdownEnded), activated (-> onPlayersChanged), onUnload (-> onExtensionUnloaded). Elles sont renommées automatiquement avec un avertissement dans le journal.",
-    "Champs posés sur chaque module chargé : __extensionName__, __extensionPath__, __manuallyLoaded__ (true si chargé via load/loadAtRoot), __originalExtPath__ (loadAtRoot), __virtual__ (proxy).",
-    "Les hooks sont appelés dans l'ordre de résolution des dépendances (modules triés par nom puis dépendances d'abord). Les listes de fonctions sont mises en cache par nom de hook ; le cache est vidé au chargement/déchargement.",
-    "extensions.hook est hookProfiled hors version shipping_build (avec évènements profiler), sinon hookFast. setProfiler le remplace temporairement.",
-    "Bug probable : hookExcept compare m.__extensionsModulePath__, champ jamais défini (le champ posé est __extensionPath__) ; la liste d'exceptions n'exclut donc rien.",
-    "Les champs M.onSerialize, M.onDeserialize et M.onDeserialized valent nop (fonction vide) ; l'extraction automatique les signale à tort comme nil, de même pour M.hook.",
-    "Un avertissement est journalisé si le chargement, onExtensionLoaded, onInit ou la désérialisation d'une extension dépasse 50 ms."
+    "Naming: the extension name is the path with '/' replaced by '_' and '_' doubled to '__' (luaPathToExtName); extNameToLuaPath does the reverse. Example: 'ui_missionInfo' <-> 'ui/missionInfo'.",
+    "Accessing extensions.<name> for a module that is not loaded loads it automatically (via the metatable's __index), the lookup being case-insensitive for modules already resolved.",
+    "A module must return its table M, otherwise it is rejected (error message). Lifecycle: onPreLoad before dependencies are loaded; onExtensionLoaded(deserializedData) after loading (returning false unloads the module); onInit(data) next, only in the GE VM (vmType == 'game'); onExtensionUnloaded on unload.",
+    "Deprecated functions detected on a module: onLoad and init (replace with onExtensionLoaded), onRaceWaypoint (-> onRaceWaypointReached), onScenarioRaceCountingDone (-> onCountdownEnded), activated (-> onPlayersChanged), onUnload (-> onExtensionUnloaded). They are renamed automatically with a warning in the log.",
+    "Fields set on every loaded module: __extensionName__, __extensionPath__, __manuallyLoaded__ (true if loaded via load/loadAtRoot), __originalExtPath__ (loadAtRoot), __virtual__ (proxy).",
+    "Hooks are called in dependency resolution order (modules sorted by name then dependencies first). Function lists are cached by hook name; the cache is cleared on load/unload.",
+    "extensions.hook is hookProfiled outside the shipping_build version (with profiler events), otherwise hookFast. setProfiler temporarily replaces it.",
+    "Probable bug: hookExcept compares m.__extensionsModulePath__, a field that is never defined (the field set is __extensionPath__); the exception list therefore excludes nothing.",
+    "The fields M.onSerialize, M.onDeserialize and M.onDeserialized are nop (empty function); automatic extraction wrongly reports them as nil, likewise for M.hook.",
+    "A warning is logged if the loading, onExtensionLoaded, onInit or deserialization of an extension takes longer than 50 ms."
   ],
   "fields": {
-    "hook": {"type": "function", "desc": "Fonction de diffusion de hook : hook(funcName, ...). Variante profilée (hookProfiled) hors build shipping, rapide (hookFast) sinon, ou hookSingleFrameProfiled si un profiler est fourni à setProfiler."},
-    "onSerialize": {"type": "function", "desc": "nop : l'extension `extensions` elle-même ne sérialise rien."},
-    "onDeserialize": {"type": "function", "desc": "nop."},
-    "onDeserialized": {"type": "function", "desc": "nop."}
+    "hook": {
+      "type": "function",
+      "desc": "Hook broadcast function: hook(funcName, ...). Profiled variant (hookProfiled) outside the shipping build, fast (hookFast) otherwise, or hookSingleFrameProfiled if a profiler is provided to setProfiler."
+    },
+    "onSerialize": {
+      "type": "function",
+      "desc": "nop: the `extensions` extension itself serializes nothing."
+    },
+    "onDeserialize": {
+      "type": "function",
+      "desc": "nop."
+    },
+    "onDeserialized": {
+      "type": "function",
+      "desc": "nop."
+    }
   },
   "functions": {
     "load": {
-      "desc": "Charge une ou plusieurs extensions (noms au format ext_nom ou chemins contenant '/'), les marque comme chargées manuellement, résout les dépendances puis appelle onExtensionLoaded (et onInit côté GE) des modules fraîchement chargés.",
-      "params": {"...": {"type": "string|string[]", "desc": "Noms ou chemins d'extensions, ou tableaux de ces chaînes."}},
+      "desc": "Loads one or more extensions (names in ext_name format or paths containing '/'), marks them as manually loaded, resolves dependencies, then calls onExtensionLoaded (and onInit on the GE side) of the freshly loaded modules.",
+      "params": {
+        "...": {
+          "type": "string|string[]",
+          "desc": "Extension names or paths, or arrays of these strings."
+        }
+      },
       "internal": false
     },
     "loadAtRoot": {
-      "desc": "Charge un fichier Lua comme extension en choisissant une racine de nommage : le nom devient rootName..'_'..nomDuFichier (ou le seul nom de fichier si rootName vaut '').",
+      "desc": "Loads a Lua file as an extension by choosing a naming root: the name becomes rootName..'_'..fileName (or just the file name if rootName is '').",
       "params": {
-        "extPath": {"type": "string", "desc": "Chemin du fichier sans .lua, contenant au moins un '/'."},
-        "rootName": {"type": "string", "desc": "Préfixe de nom ; ne doit pas contenir '_' ('' pour l'espace global)."}
+        "extPath": {
+          "type": "string",
+          "desc": "File path without .lua, containing at least one '/'."
+        },
+        "rootName": {
+          "type": "string",
+          "desc": "Name prefix; must not contain '_' ('' for the global space)."
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Nom de l'extension, nil en cas d'erreur."}, {"type": "table|nil", "desc": "Module chargé."}],
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Extension name, nil on error."
+        },
+        {
+          "type": "table|nil",
+          "desc": "Loaded module."
+        }
+      ],
       "internal": false
     },
     "loadModulesInDirectory": {
-      "desc": "Charge à la racine globale tous les .lua trouvés (récursivement) dans un dossier, avec le nom du fichier comme nom d'extension (compatibilité avec les anciens mods).",
+      "desc": "Loads at the global root all the .lua files found (recursively) in a folder, with the file name as the extension name (compatibility with old mods).",
       "params": {
-        "directory": {"type": "string", "desc": "Dossier à parcourir (FS:findFiles)."},
-        "excludeSubdirectories": {"type": "string[]|nil", "desc": "Motifs de sous-chemins à exclure."}
+        "directory": {
+          "type": "string",
+          "desc": "Folder to walk (FS:findFiles)."
+        },
+        "excludeSubdirectories": {
+          "type": "string[]|nil",
+          "desc": "Sub-path patterns to exclude."
+        }
       },
       "internal": false
     },
     "addModulePath": {
-      "desc": "Ajoute directory/?.lua en tête de package.path.",
-      "params": {"directory": {"type": "string", "desc": "Dossier de modules Lua."}},
+      "desc": "Prepends directory/?.lua to package.path.",
+      "params": {
+        "directory": {
+          "type": "string",
+          "desc": "Lua modules folder."
+        }
+      },
       "internal": false
     },
-    "saveModulePath": {"desc": "Mémorise package.path courant.", "params": {}, "internal": false},
-    "restoreModulePath": {"desc": "Restaure le package.path mémorisé par saveModulePath.", "params": {}, "internal": false},
+    "saveModulePath": {
+      "desc": "Remembers the current package.path.",
+      "params": {},
+      "internal": false
+    },
+    "restoreModulePath": {
+      "desc": "Restores the package.path remembered by saveModulePath.",
+      "params": {},
+      "internal": false
+    },
     "reload": {
-      "desc": "Décharge puis recharge une extension depuis le disque (vide le cache package.loaded).",
-      "params": {"extPath": {"type": "string", "desc": "Nom ou chemin d'extension."}},
+      "desc": "Unloads then reloads an extension from disk (clears the package.loaded cache).",
+      "params": {
+        "extPath": {
+          "type": "string",
+          "desc": "Extension name or path."
+        }
+      },
       "internal": false
     },
     "refresh": {
-      "desc": "Réapplique le traitement de chargement à une extension déjà chargée, sans relire le disque (dépendances, hooks obsolètes, etc.).",
-      "params": {"extName": {"type": "string", "desc": "Nom d'extension déjà chargée."}},
-      "returns": [{"type": "table|false|nil", "desc": "Module, ou false si l'extension n'est pas chargée."}],
+      "desc": "Reapplies the loading processing to an already loaded extension, without rereading the disk (dependencies, deprecated hooks, etc.).",
+      "params": {
+        "extName": {
+          "type": "string",
+          "desc": "Name of an already loaded extension."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|false|nil",
+          "desc": "Module, or false if the extension is not loaded."
+        }
+      ],
       "internal": false
     },
     "unload": {
-      "desc": "Décharge une extension et toutes celles qui en dépendent (et plus rien d'autre ne nécessite), en appelant onExtensionUnloaded. Ne fait rien si elle n'est pas chargée. Les extensions virtuelles ne sont pas déchargées sauf si enfants d'un module déchargé.",
-      "params": {"extName": {"type": "string", "desc": "Nom d'extension."}},
+      "desc": "Unloads an extension and all those that depend on it (and that nothing else requires), calling onExtensionUnloaded. Does nothing if it is not loaded. Virtual extensions are not unloaded unless they are children of an unloaded module.",
+      "params": {
+        "extName": {
+          "type": "string",
+          "desc": "Extension name."
+        }
+      },
       "internal": false
     },
     "unloadExcept": {
-      "desc": "Décharge toutes les extensions sauf celles listées et leurs dépendances. Accepte soit une liste en argument unique, soit plusieurs listes.",
-      "params": {"...": {"type": "string[]", "desc": "Liste(s) de noms d'extensions à conserver."}},
+      "desc": "Unloads all extensions except those listed and their dependencies. Accepts either a single list as argument or several lists.",
+      "params": {
+        "...": {
+          "type": "string[]",
+          "desc": "List(s) of extension names to keep."
+        }
+      },
       "internal": false
     },
     "unloadModule": {
-      "desc": "Obsolète : appelle unload avec un avertissement.",
-      "params": {"extName": {"type": "string", "desc": "Nom d'extension."}},
+      "desc": "Deprecated: calls unload with a warning.",
+      "params": {
+        "extName": {
+          "type": "string",
+          "desc": "Extension name."
+        }
+      },
       "internal": false
     },
     "loadModule": {
-      "desc": "Obsolète : appelle load avec un avertissement.",
-      "params": {"extName": {"type": "string", "desc": "Nom d'extension."}},
+      "desc": "Deprecated: calls load with a warning.",
+      "params": {
+        "extName": {
+          "type": "string",
+          "desc": "Extension name."
+        }
+      },
       "internal": false
     },
     "reloadModule": {
-      "desc": "Obsolète : appelle reload avec un avertissement.",
-      "params": {"modulePath": {"type": "string", "desc": "Nom ou chemin."}},
+      "desc": "Deprecated: calls reload with a warning.",
+      "params": {
+        "modulePath": {
+          "type": "string",
+          "desc": "Name or path."
+        }
+      },
       "internal": false
     },
     "use": {
-      "desc": "Charge l'extension puis la renvoie (ancienne syntaxe ; l'accès direct extensions.nom charge déjà automatiquement).",
-      "params": {"key": {"type": "string", "desc": "Nom d'extension."}},
-      "returns": [{"type": "table|nil", "desc": "Module chargé."}],
+      "desc": "Loads the extension then returns it (old syntax; direct access extensions.name already loads automatically).",
+      "params": {
+        "key": {
+          "type": "string",
+          "desc": "Extension name."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Loaded module."
+        }
+      ],
       "internal": false
     },
     "isExtensionLoaded": {
-      "desc": "Indique si une extension est chargée (test : _G[extName] ~= nil).",
-      "params": {"extName": {"type": "string", "desc": "Nom d'extension."}},
-      "returns": [{"type": "boolean", "desc": "true si présente comme global."}],
+      "desc": "Tells whether an extension is loaded (test: _G[extName] ~= nil).",
+      "params": {
+        "extName": {
+          "type": "string",
+          "desc": "Extension name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if present as a global."
+        }
+      ],
       "internal": false
     },
     "getLoadedExtensionsNames": {
-      "desc": "Renvoie la liste triée des noms d'extensions chargées.",
-      "params": {"excludeVirtual": {"type": "boolean|nil", "desc": "true pour omettre les extensions virtuelles (proxies)."}},
-      "returns": [{"type": "string[]", "desc": "Noms triés."}],
+      "desc": "Returns the sorted list of loaded extension names.",
+      "params": {
+        "excludeVirtual": {
+          "type": "boolean|nil",
+          "desc": "true to omit virtual extensions (proxies)."
+        }
+      },
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Sorted names."
+        }
+      ],
       "internal": false
     },
     "hookExcept": {
-      "desc": "Appelle la fonction func de tous les modules résolus sauf ceux listés. Voir notes : la comparaison utilise un champ jamais défini.",
+      "desc": "Calls the function func of all resolved modules except those listed. See notes: the comparison uses a field that is never defined.",
       "params": {
-        "exceptionList": {"type": "string[]", "desc": "Chemins de modules à exclure."},
-        "func": {"type": "string", "desc": "Nom de la fonction de hook."},
-        "...": {"type": "any", "desc": "Arguments passés à chaque module."}
+        "exceptionList": {
+          "type": "string[]",
+          "desc": "Module paths to exclude."
+        },
+        "func": {
+          "type": "string",
+          "desc": "Name of the hook function."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments passed to each module."
+        }
       },
       "internal": false
     },
     "hookNotify": {
-      "desc": "Appelle M.hook(func, ...) puis exécute et supprime les callbacks enregistrés avec setCompletedCallback pour ce hook.",
+      "desc": "Calls M.hook(func, ...) then runs and removes the callbacks registered with setCompletedCallback for this hook.",
       "params": {
-        "func": {"type": "string", "desc": "Nom du hook."},
-        "...": {"type": "any", "desc": "Arguments."}
+        "func": {
+          "type": "string",
+          "desc": "Hook name."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Arguments."
+        }
       },
       "internal": false
     },
     "setCompletedCallback": {
-      "desc": "Enregistre un callback exécuté (une seule fois) à la fin du prochain hookNotify pour ce hook.",
+      "desc": "Registers a callback run (once) at the end of the next hookNotify for this hook.",
       "params": {
-        "funcName": {"type": "string", "desc": "Nom du hook."},
-        "callback": {"type": "function", "desc": "Fonction appelée avec les arguments du hook."}
+        "funcName": {
+          "type": "string",
+          "desc": "Hook name."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Function called with the hook arguments."
+        }
       },
       "internal": false
     },
     "hookUpdate": {
-      "desc": "Invalide le cache des fonctions d'un hook pour qu'il soit reconstruit au prochain appel (à utiliser quand un module ajoute ou retire dynamiquement une fonction de hook).",
-      "params": {"funcName": {"type": "string", "desc": "Nom du hook."}},
+      "desc": "Invalidates a hook's function cache so it is rebuilt on the next call (use when a module dynamically adds or removes a hook function).",
+      "params": {
+        "funcName": {
+          "type": "string",
+          "desc": "Hook name."
+        }
+      },
       "internal": false
     },
     "printHooks": {
-      "desc": "Affiche (print) les extensions qui définissent la fonction funcName.",
-      "params": {"funcName": {"type": "string", "desc": "Nom du hook."}},
+      "desc": "Prints (print) the extensions that define the function funcName.",
+      "params": {
+        "funcName": {
+          "type": "string",
+          "desc": "Hook name."
+        }
+      },
       "internal": false
     },
     "printExtensions": {
-      "desc": "Journalise la liste des extensions chargées avec leurs dépendances.",
+      "desc": "Logs the list of loaded extensions with their dependencies.",
       "params": {},
       "internal": false
     },
     "disableSerialization": {
-      "desc": "Exclut des extensions de la sérialisation lors du rechargement de la VM Lua.",
-      "params": {"...": {"type": "string|string[]", "desc": "Noms d'extensions."}},
+      "desc": "Excludes extensions from serialization during the Lua VM reload.",
+      "params": {
+        "...": {
+          "type": "string|string[]",
+          "desc": "Extension names."
+        }
+      },
       "internal": false
     },
     "getSerializationData": {
-      "desc": "Construit la table de données à conserver lors d'un rechargement : liste des extensions chargées (chemins) et, pour chaque module ayant onSerialize/onDeserialize(d), le retour de onSerialize(reason), sinon M.state, sinon le module entier. Si reason == 'reload', décharge ensuite toutes les extensions.",
-      "params": {"reason": {"type": "string|nil", "desc": "Raison (défaut 'reload')."}},
-      "returns": [{"type": "table", "desc": "Données de sérialisation."}],
+      "desc": "Builds the data table to keep across a reload: the list of loaded extensions (paths) and, for each module with onSerialize/onDeserialize(d), the return value of onSerialize(reason), otherwise M.state, otherwise the whole module. If reason == 'reload', then unloads all extensions.",
+      "params": {
+        "reason": {
+          "type": "string|nil",
+          "desc": "Reason (default 'reload')."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Serialization data."
+        }
+      ],
       "internal": true
     },
     "deserialize": {
-      "desc": "Recharge les extensions listées dans data puis restitue leurs données via onDeserialize(data) ou fusion de M.state/M (puis onDeserialized). Les données sont aussi passées à onExtensionLoaded/onInit.",
+      "desc": "Reloads the extensions listed in data then restores their data via onDeserialize(data) or by merging M.state/M (then onDeserialized). The data is also passed to onExtensionLoaded/onInit.",
       "params": {
-        "data": {"type": "table|nil", "desc": "Données produites par getSerializationData."},
-        "filter": {"type": "string|nil", "desc": "Nom d'extension : ne restituer que celle-ci."}
+        "data": {
+          "type": "table|nil",
+          "desc": "Data produced by getSerializationData."
+        },
+        "filter": {
+          "type": "string|nil",
+          "desc": "Extension name: restore only this one."
+        }
       },
       "internal": true
     },
     "luaPathToExtName": {
-      "desc": "Convertit un chemin ('a/b_c') en nom d'extension ('a_b__c').",
-      "params": {"filepath": {"type": "string|nil", "desc": "Chemin sans .lua."}},
-      "returns": [{"type": "string|nil", "desc": "Nom d'extension."}],
+      "desc": "Converts a path ('a/b_c') to an extension name ('a_b__c').",
+      "params": {
+        "filepath": {
+          "type": "string|nil",
+          "desc": "Path without .lua."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Extension name."
+        }
+      ],
       "internal": false
     },
     "extNameToLuaPath": {
-      "desc": "Convertit un nom d'extension en chemin ('a_b__c' -> 'a/b_c').",
-      "params": {"extName": {"type": "string|nil", "desc": "Nom d'extension."}},
-      "returns": [{"type": "string|nil", "desc": "Chemin."}],
+      "desc": "Converts an extension name to a path ('a_b__c' -> 'a/b_c').",
+      "params": {
+        "extName": {
+          "type": "string|nil",
+          "desc": "Extension name."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Path."
+        }
+      ],
       "internal": false
     },
     "setProfiler": {
-      "desc": "Active un profiler (M.hook devient hookSingleFrameProfiled) ou, avec nil, revient au hook normal.",
-      "params": {"p": {"type": "table|nil", "desc": "Objet profiler avec méthodes start et add."}},
+      "desc": "Enables a profiler (M.hook becomes hookSingleFrameProfiled) or, with nil, goes back to the normal hook.",
+      "params": {
+        "p": {
+          "type": "table|nil",
+          "desc": "Profiler object with methods start and add."
+        }
+      },
       "internal": false
     },
     "wrapAllExtensionsForProfiler": {
-      "desc": "Enveloppe toutes les fonctions de toutes les extensions avec profilerPushEvent/PopEvent. Les extensions chargées ensuite sont aussi enveloppées.",
+      "desc": "Wraps all functions of all extensions with profilerPushEvent/PopEvent. Extensions loaded afterwards are also wrapped.",
       "params": {},
       "internal": false
     },
     "newExtensionProxy": {
-      "desc": "Fonction GLOBALE. Crée une extension virtuelle (ExtensionProxy) qui redirige les hooks vers des instances d'objets (OOP) ; nom 'prefixe_virtual_N'. Si parentExtension est donné, le proxy est déchargé avec lui.",
+      "desc": "GLOBAL function. Creates a virtual extension (ExtensionProxy) that redirects hooks to object instances (OOP); name 'prefix_virtual_N'. If parentExtension is given, the proxy is unloaded along with it.",
       "params": {
-        "parentExtension": {"type": "table|nil", "desc": "Extension parente (doit avoir __extensionName__)."},
-        "identifierPrefix": {"type": "string|nil", "desc": "Préfixe de nom (défaut : nom du parent ou '')."}
+        "parentExtension": {
+          "type": "table|nil",
+          "desc": "Parent extension (must have __extensionName__)."
+        },
+        "identifierPrefix": {
+          "type": "string|nil",
+          "desc": "Name prefix (default: parent's name or '')."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Objet ExtensionProxy."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "ExtensionProxy object."
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "ExtensionProxy": {
-      "desc": "Objet renvoyé par newExtensionProxy. Champs : extName, extPath, __virtual__, __manuallyLoaded__, hookProxies.",
+      "desc": "Object returned by newExtensionProxy. Fields: extName, extPath, __virtual__, __manuallyLoaded__, hookProxies.",
       "functions": {
         "submitEventSinks": {
-          "desc": "Enregistre des instances (avec leurs métatables) comme destinataires : toute fonction dont le nom commence par 'on' est exposée comme hook qui appelle m[k](m, ...) sur chaque instance. Met à jour les hooks et les dépendances du proxy.",
+          "desc": "Registers instances (with their metatables) as recipients: every function whose name starts with 'on' is exposed as a hook that calls m[k](m, ...) on each instance. Updates the proxy's hooks and dependencies.",
           "params": {
-            "hookableTablesInstances": {"type": "table", "desc": "Instances d'objets recevant les hooks."},
-            "dependencies": {"type": "string[]|nil", "desc": "Dépendances du proxy (défaut {})."}
+            "hookableTablesInstances": {
+              "type": "table",
+              "desc": "Object instances receiving the hooks."
+            },
+            "dependencies": {
+              "type": "string[]|nil",
+              "desc": "Proxy dependencies (default {})."
+            }
           }
         },
         "_updateHooks": {
-          "desc": "Réenregistre le proxy comme extension virtuelle (refreshInternal) et vide le cache de hooks.",
+          "desc": "Re-registers the proxy as a virtual extension (refreshInternal) and clears the hook cache.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Module (hookProxies)."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Module (hookProxies)."
+            }
+          ],
           "internal": true
         },
         "destroy": {
-          "desc": "Supprime les hooks du proxy et le décharge.",
+          "desc": "Removes the proxy's hooks and unloads it.",
           "params": {}
         }
       }
     },
     "MT": {
-      "desc": "Métatable du module `extensions`.",
+      "desc": "Metatable of the `extensions` module.",
       "functions": {
         "__index": {
-          "desc": "Résout extensions.<nom> : renvoie le module résolu (recherche insensible à la casse) ou le charge avec load puis renvoie _G[nom].",
+          "desc": "Resolves extensions.<name>: returns the resolved module (case-insensitive lookup) or loads it with load then returns _G[name].",
           "params": {
-            "tbl": {"type": "table", "desc": "Table extensions."},
-            "key": {"type": "string", "desc": "Nom d'extension."}
+            "tbl": {
+              "type": "table",
+              "desc": "extensions table."
+            },
+            "key": {
+              "type": "string",
+              "desc": "Extension name."
+            }
           },
-          "returns": [{"type": "table|nil", "desc": "Module."}],
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Module."
+            }
+          ],
           "internal": true
         }
       }

@@ -1,0 +1,21 @@
+{
+  "path": "lua/common/jbeam/sections/mirror.lua",
+  "module": "Traite la section jbeam « mirrors » (rétroviseurs). Pour chaque entrée ayant un champ mesh, enregistre le rétroviseur dans le moteur (addMirror avec mesh, idRef, id1, id2) et récupère l'id obtenu dans v.id, puis configure l'objet miroir : offset (refBaseTranslation ou offset), normal (déduite de baseRotationGlobal en degrés ou de normal) et offsetNormal (champs dépréciés). Les entrées sans mesh sont considérées comme de vieilles données.",
+  "notes": [
+    "baseRotationGlobal est en degrés {x, y, z} ; la normale est obtenue en tournant le vecteur (0,1,0).",
+    "Les champs offsetRotationGlobal et offsetNormal sont dépréciés : ils déclenchent un message d'erreur de migration dans le journal mais restent appliqués. Un normal fourni directement journalise aussi un message de migration.",
+    "Si addMirror renvoie un id négatif, l'entrée est ignorée."
+  ],
+  "fields": {},
+  "functions": {
+    "process": {
+      "desc": "Crée et configure les rétroviseurs déclarés dans vehicle.mirrors.",
+      "params": {
+        "objID": {"type": "integer", "desc": "Identifiant du véhicule (non utilisé)."},
+        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur (addMirror, getMirror)."},
+        "vehicle": {"type": "table", "desc": "Données jbeam (section mirrors)."}
+      },
+      "internal": true
+    }
+  }
+}

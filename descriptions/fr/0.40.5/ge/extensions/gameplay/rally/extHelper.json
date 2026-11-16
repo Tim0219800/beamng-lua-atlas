@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/extHelper.lua",
+  "module": "Extension vide : sert uniquement à forcer le chargement du namespace gameplay_rally_* via extensions.load('gameplay_rally_extHelper'). Les fonctions load et unload ne font rien.",
+  "functions": {
+    "load": {
+      "desc": "Ne fait rien (point d'entrée appelé à l'éventuel chargement).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "unload": {
+      "desc": "Ne fait rien (point d'entrée appelé au déchargement).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

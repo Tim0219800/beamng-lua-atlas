@@ -1,12 +1,12 @@
 # `vehicles_saveConfigUtils`
 
-*Fichier : `lua/ge/extensions/vehicles/saveConfigUtils.lua` · VM : Game Engine (GE) · 592 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/vehicles/saveConfigUtils.lua` · VM: Game Engine (GE) · 592 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `vehicles_saveConfigUtils` : `extensions.load("vehicles_saveConfigUtils")`, puis la globale `vehicles_saveConfigUtils`
+**Access:** extension `vehicles_saveConfigUtils`: `extensions.load("vehicles_saveConfigUtils")`, then the global `vehicles_saveConfigUtils`
 
-Utilitaires de l'éditeur de métadonnées d'une configuration de véhicule (info_<config>.json) lors de la sauvegarde. Définit la liste des champs éditables (Description, Value, Years, vehicleSelectorSubCluster, vehicleSelectorSubGroup, Country, Region, Type, Body Style, Config Type, Commercial Class, Derby Class, InsuranceClass, Population) avec leur type, limites et libellés. `getFields` prépare ces champs pour l'interface (valeurs, options, valeur de repli) et `validateMetadata` normalise et valide les métadonnées avant écriture.
+Utilities for the vehicle configuration metadata editor (info_<config>.json) when saving. Defines the list of editable fields (Description, Value, Years, vehicleSelectorSubCluster, vehicleSelectorSubGroup, Country, Region, Type, Body Style, Config Type, Commercial Class, Derby Class, InsuranceClass, Population) with their type, limits and labels. `getFields` prepares these fields for the UI (values, options, fallback value) and `validateMetadata` normalizes and validates the metadata before writing.
 
-## Exemple
+## Example
 
 ```lua
 local fields = vehicles_saveConfigUtils.getFields('pickup', '/vehicles/pickup/', 'base', 'mon_config')
@@ -14,42 +14,42 @@ local meta, err = vehicles_saveConfigUtils.validateMetadata({Description = 'Ma c
 if not meta then log('E', 'x', dumps(err)) end
 ```
 
-## Remarques
+## Notes
 
-- Les options des listes viennent du catalogue de véhicules (core_vehicles.getModelList / getModel) ou des configs du modèle ; elles sont mises en cache (clearCache les vide).
-- Les valeurs Type exclues des options : Traffic, PropTraffic, PropParked, Utility, Debug, Unknown.
-- Limites : Description 120 caractères max ; Population entier de 0 à 50000 ; Value (prix) >= 0 ; Years = {min, max} entiers avec min <= max ; InsuranceClass parmi dailyDriver, commercial, prestige.
-- Les erreurs de validateMetadata sont de la forme {field, code} avec code parmi notTable, unknownField, invalidType, empty, tooLong, invalidRange, invalidOption, invalidNumber.
-- Si deux valeurs du catalogue ont le même libellé traduit, la plus fréquente est gardée et un avertissement est journalisé une seule fois.
+- The list options come from the vehicle catalog (core_vehicles.getModelList / getModel) or from the model's configs; they are cached (clearCache empties them).
+- Type values excluded from the options: Traffic, PropTraffic, PropParked, Utility, Debug, Unknown.
+- Limits: Description 120 characters max; Population integer from 0 to 50000; Value (price) >= 0; Years = {min, max} integers with min <= max; InsuranceClass among dailyDriver, commercial, prestige.
+- The errors of validateMetadata have the form {field, code} with code among notTable, unknownField, invalidType, empty, tooLong, invalidRange, invalidOption, invalidNumber.
+- If two catalog values have the same translated label, the most frequent one is kept and a warning is logged only once.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `vehicles_saveConfigUtils.clearCache()` | Vide les caches d'options (pays et catalogue) ; à appeler quand la liste des véhicules a changé. | 581 |
-| `vehicles_saveConfigUtils.getFields(modelKey, vehicleDirectory, sourceConfigName, targetConfigName)` | Construit la liste des champs de métadonnées pour l'éditeur. Pour chaque définition, calcule la valeur de la config cible (avec repli sur la config source si useSourceFallback), la valeur de repli du modèle, l'état `included`, et les options (avec une entrée « personnalisée » pour les listes qui autorisent une valeur libre). Retourne des copies des définitions, sans les clés internes. | 452 |
-| `vehicles_saveConfigUtils.validateMetadata(metadata, modelKey)` | Valide et normalise une table de métadonnées. L'alias minuscule `description` est accepté pour `Description`. Refuse les clés inconnues et les valeurs invalides ; trim des textes, tri des multi-sélections. | 506 |
+| `vehicles_saveConfigUtils.clearCache()` | Empties the option caches (country and catalog); call when the vehicle list has changed. | 581 |
+| `vehicles_saveConfigUtils.getFields(modelKey, vehicleDirectory, sourceConfigName, targetConfigName)` | Builds the list of metadata fields for the editor. For each definition, computes the target config's value (falling back to the source config if useSourceFallback), the model's fallback value, the `included` state, and the options (with a "custom" entry for lists that allow a free value). Returns copies of the definitions, without the internal keys. | 452 |
+| `vehicles_saveConfigUtils.validateMetadata(metadata, modelKey)` | Validates and normalizes a metadata table. The lowercase alias `description` is accepted for `Description`. Rejects unknown keys and invalid values; trims texts, sorts multi-selections. | 506 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `vehicles_saveConfigUtils.getFields(modelKey, vehicleDirectory, sourceConfigName, targetConfigName)`
 
-Construit la liste des champs de métadonnées pour l'éditeur. Pour chaque définition, calcule la valeur de la config cible (avec repli sur la config source si useSourceFallback), la valeur de repli du modèle, l'état `included`, et les options (avec une entrée « personnalisée » pour les listes qui autorisent une valeur libre). Retourne des copies des définitions, sans les clés internes.
+Builds the list of metadata fields for the editor. For each definition, computes the target config's value (falling back to the source config if useSourceFallback), the model's fallback value, the `included` state, and the options (with a "custom" entry for lists that allow a free value). Returns copies of the definitions, without the internal keys.
 
-- `modelKey` (*string*) : clé du modèle de véhicule
-- `vehicleDirectory` (*string|nil*) : dossier du véhicule (terminé par /) où lire info_<config>.json ; sinon core_vehicles.getConfig est utilisé
-- `sourceConfigName` (*string|nil*) : nom de la config d'origine (valeurs de repli)
-- `targetConfigName` (*string|nil*) : nom de la config cible dont on lit les valeurs actuelles
-- **renvoie** : table[] liste ordonnée de champs : key, type, label, value, fallbackValue, included, optional, options, etc.
+- `modelKey` (*string*) : vehicle model key
+- `vehicleDirectory` (*string|nil*) : vehicle folder (ending with /) where to read info_<config>.json; otherwise core_vehicles.getConfig is used
+- `sourceConfigName` (*string|nil*) : name of the source config (fallback values)
+- `targetConfigName` (*string|nil*) : name of the target config whose current values are read
+- **returns**: table[] ordered list of fields: key, type, label, value, fallbackValue, included, optional, options, etc.
 
 #### `vehicles_saveConfigUtils.validateMetadata(metadata, modelKey)`
 
-Valide et normalise une table de métadonnées. L'alias minuscule `description` est accepté pour `Description`. Refuse les clés inconnues et les valeurs invalides ; trim des textes, tri des multi-sélections.
+Validates and normalizes a metadata table. The lowercase alias `description` is accepted for `Description`. Rejects unknown keys and invalid values; trims texts, sorts multi-selections.
 
-- `metadata` (*table|nil*) : métadonnées à valider ; nil donne une table vide
-- `modelKey` (*string|nil*) : clé du modèle, utilisée pour résoudre les options des listes dépendantes du modèle
-- **renvoie** : table|nil métadonnées normalisées, ou nil en cas d'erreur
-- **renvoie** : table|nil en cas d'erreur : {field = clé ou nil, code = chaîne}
+- `metadata` (*table|nil*) : metadata to validate; nil gives an empty table
+- `modelKey` (*string|nil*) : model key, used to resolve the options of model-dependent lists
+- **returns**: table|nil normalized metadata, or nil on error
+- **returns**: table|nil on error: {field = key or nil, code = string}
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/vehicles/saveConfigUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/vehicles/saveConfigUtils.lua`.*

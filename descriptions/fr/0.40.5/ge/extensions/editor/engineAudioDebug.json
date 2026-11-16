@@ -1,0 +1,60 @@
+{
+  "path": "lua/ge/extensions/editor/engineAudioDebug.lua",
+  "module": "Fenêtre d'éditeur « Engine Audio Debug » (menu Audio) pour régler en direct le son moteur du véhicule joueur. Elle récupère les données de sons moteur côté véhicule (sounds.getEngineSoundData via queueLuaCommand), propose une liste de moteurs/sons et des curseurs (gain principal, on/off-load, shelves bas/haut, EQ bas/haut, fréquence fondamentale par nombre de cylindres, étouffement), affiche la direction d'échappement, et permet de copier les valeurs en JSON dans le presse-papiers ou de tout remettre à 0. Les fréquences en Hz sont converties en valeurs FMOD (table 20 Hz à 22 kHz).",
+  "usage": "extensions.load('editor_engineAudioDebug'); editor_engineAudioDebug.open()",
+  "notes": [
+    "M.onUpdate vaut nop par défaut ; il n'est remplacé par la vraie fonction que lorsque la fenêtre est affichée (onEditorToolWindowShow) et remis à nop à sa fermeture, avec extensions.hookUpdate(\"onUpdate\") pour reconstruire la liste des hooks.",
+    "M.onDebugDrawActive est exporté mais la variable locale onDebugDrawActive n'est jamais définie dans le fichier : le champ vaut nil.",
+    "Les données moteur sont écrites par le véhicule dans editor_engineAudioDebug.engine (engineSoundData, engineNameStrings) via queueGameEngineLua : elles arrivent avec un léger retard."
+  ],
+  "fields": {
+    "onUpdate": {"type": "function", "desc": "nop tant que la fenêtre est fermée ; fonction de dessin/mise à jour quand elle est ouverte."},
+    "onDebugDrawActive": {"type": "nil", "desc": "Exporté mais toujours nil (variable locale non définie)."}
+  },
+  "functions": {
+    "open": {
+      "desc": "Affiche la fenêtre « Engine Audio Debug » et force un rafraîchissement des valeurs.",
+      "params": {},
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Hook appelé au chargement : lit les données de sons moteur du véhicule joueur.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Enregistre la fenêtre (500x200) et l'entrée de menu (groupe Audio).",
+      "params": {},
+      "internal": true
+    },
+    "onEditorActivated": {
+      "desc": "Hook : recharge les données moteur à l'entrée dans l'éditeur.",
+      "params": {},
+      "internal": true
+    },
+    "onEditorDeactivated": {
+      "desc": "Hook : masque l'affichage de la direction d'échappement du moteur sélectionné.",
+      "params": {},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook appelé au changement de véhicule ; recharge les données si l'éditeur est actif.",
+      "params": {
+        "oldVehicle": {"type": "any", "desc": "Ancien véhicule"},
+        "newVehicle": {"type": "any", "desc": "Nouveau véhicule"},
+        "player": {"type": "any", "desc": "Joueur concerné"}
+      },
+      "internal": true
+    },
+    "onEditorToolWindowShow": {
+      "desc": "Hook appelé à l'affichage d'une fenêtre d'outil ; si c'est la fenêtre du module, active onUpdate.",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre"}},
+      "internal": true
+    },
+    "onEditorToolWindowHide": {
+      "desc": "Hook appelé au masquage d'une fenêtre d'outil ; si c'est la fenêtre du module, remet onUpdate à nop.",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre"}},
+      "internal": true
+    }
+  }
+}

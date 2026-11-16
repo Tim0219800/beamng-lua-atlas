@@ -1,0 +1,15 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/trafficScatter.lua",
+  "module": "Nœud flowgraph « Scatter Traffic » (once_instant). Téléporte tous les véhicules de trafic loin du joueur ou de la caméra avec gameplay_traffic.scatterTraffic(nil, minDist, maxDist) ; minDist et maxDist sont optionnels.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "workOnce": {
+          "desc": "Appelle gameplay_traffic.scatterTraffic(nil, minDist, maxDist).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

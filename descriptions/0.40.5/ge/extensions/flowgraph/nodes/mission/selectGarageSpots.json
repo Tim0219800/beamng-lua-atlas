@@ -1,49 +1,49 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/mission/selectGarageSpots.lua",
-  "module": "Noeud flowgraph 'Select Garage Spots' (categorie once_p_duration, auteur BeamNG). Choisit une place de depart et une place d'arrivee parmi sitesData.parkingSpots : en mode isLocal, la place de depart doit appartenir a la zone 'zone' (zone de plus faible prio) ; la place d'arrivee est choisie au hasard entre minDist et maxDist de distance. Sorties : flow (une fois trouve), impulsion loaded, startSpot, endSpot, startLocation, endLocation. Les descriptions des pins d'entree sont vides dans le code.",
+  "module": "Flowgraph node 'Select Garage Spots' (once_p_duration category, author BeamNG). Picks a start spot and an end spot among sitesData.parkingSpots: in isLocal mode, the start spot must belong to the zone 'zone' (zone with the lowest prio); the end spot is chosen at random between minDist and maxDist distance. Outputs: flow (once found), impulse loaded, startSpot, endSpot, startLocation, endLocation. The input pin descriptions are empty in the code.",
   "notes": [
-    "Le message de journal parle de 'G2G Route' (reprise du noeud garage-to-garage).",
-    "Le reset (pin) n'est pas lu dans work ; seul resetData via workOnce/_executionStarted remet a zero.",
-    "Si possibleStartingSpots est vide (aucune place dans la zone), self.startSpot est nil et le noeud plante."
+    "The log message mentions 'G2G Route' (carried over from the garage-to-garage node).",
+    "The reset (pin) is not read in work; only resetData via workOnce/_executionStarted resets to zero.",
+    "If possibleStartingSpots is empty (no spot in the zone), self.startSpot is nil and the node crashes."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise les listes, state=1 et les sorties.",
+          "desc": "Initializes the lists, state=1 and the outputs.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Appelle resetData.",
+          "desc": "Calls resetData.",
           "internal": true
         },
         "resetData": {
-          "desc": "Vide les places utilisees et remet tout a zero.",
+          "desc": "Empties the used spots and resets everything to zero.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Appelle resetData.",
+          "desc": "Calls resetData.",
           "internal": true
         },
         "findEndSpotForStartingSpot": {
-          "desc": "Choisit une place d'arrivee a distance acceptable de la place de depart (voir Select Garage Sites), sinon le meilleur candidat.",
+          "desc": "Picks an end spot at an acceptable distance from the start spot (see Select Garage Sites), otherwise the best candidate.",
           "internal": true,
           "params": {
             "startSpot": {
               "type": "table",
-              "desc": "place de depart"
+              "desc": "start spot"
             }
           },
           "returns": [
             {
               "type": "table|nil",
-              "desc": "place d'arrivee"
+              "desc": "end spot"
             }
           ]
         },
         "work": {
-          "desc": "Si flow : state 1 selectionne depart et arrivee, ecrit les sorties, flow et loaded a true ; state 2 garde flow=true et loaded=false.",
+          "desc": "If flow: state 1 selects start and end, writes the outputs, flow and loaded to true; state 2 keeps flow=true and loaded=false.",
           "internal": true
         }
       }

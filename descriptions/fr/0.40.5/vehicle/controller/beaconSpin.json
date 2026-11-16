@@ -1,0 +1,26 @@
+{
+  "path": "lua/vehicle/controller/beaconSpin.lua",
+  "module": "Contrôleur auxiliaire minimal qui anime les éléments rotatifs d'une rampe lumineuse : tant que `electrics.values.lightbar` est supérieur à 0, il fait tourner une valeur electrics (angle en degrés, modulo 360) ; sinon il la remet à 0.",
+  "notes": [
+    "Clés jbeam lues par init : `spinSpeed` (320 degrés par seconde par défaut) et `electricsName` (\"beaconSpin\" par défaut).",
+    "Le commentaire du code précise que la valeur doit revenir à 0 quand la rampe est éteinte, sinon les projecteurs restent allumés.",
+    "updateGFX lit `electrics.values.lightbar` sans test de nil : il faut que la valeur existe (sinon erreur de comparaison)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Chaque frame : avance l'angle de dt × spinSpeed (modulo 360) si la rampe est active, sinon met la valeur à 0.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Lit `spinSpeed` et `electricsName` et initialise la valeur electrics à 1.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

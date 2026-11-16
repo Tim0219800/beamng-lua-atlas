@@ -1,24 +1,24 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupParkedCars.lua",
-  "module": "Nœud flowgraph « Setup Parking System » (once_instant). Active le système de placement sur places de parking : gameplay_parking.setState(true), option sitesData via setSites, puis traffic:activateParkedCars(vehicleIds). Au reset : deactivateParkedCars et setSites() sans argument.",
+  "module": "Flowgraph node \"Setup Parking System\" (once_instant). Enables the parking spot placement system: gameplay_parking.setState(true), optional sitesData via setSites, then traffic:activateParkedCars(vehicleIds). On reset: deactivateParkedCars and setSites() with no argument.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelle onNodeReset().",
+          "desc": "Calls onNodeReset().",
           "internal": true
         },
         "init": {
-          "desc": "Appelle onNodeReset().",
+          "desc": "Calls onNodeReset().",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Désactive les voitures garées et réinitialise les sites du système de parking.",
+          "desc": "Deactivates the parked cars and resets the parking system's sites.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Active le parking, applique les sites si fournis et active les voitures garées pour la liste d'ids.",
+          "desc": "Enables parking, applies the sites if provided and activates the parked cars for the id list.",
           "internal": true
         }
       }

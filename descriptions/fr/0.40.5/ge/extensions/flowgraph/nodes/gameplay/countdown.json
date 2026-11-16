@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/countdown.lua",
+  "module": "Nœud flowgraph « Countdown » (tag scenario). Gère un compte à rebours affiché à l'écran via le hook ScenarioFlashMessage (et Message si data.useMessages). Pins d'entrée : flow, reset (impulsion), duration (3 s par défaut), countdownMsg (caché, '%d'), finishMsg ('Go!'), finishMsgDuration (caché, 1 s). Sorties : flow (vrai une fois terminé), finished (impulsion), ongoing (en cours). Le décompte démarre quand flow est actif, et utilise mgr.dtSim.",
+  "notes": ["data.playSounds (vrai par défaut) joue UI_Countdown1 à chaque seconde et UI_CountdownGo à la fin.", "Si core_flowgraphManager.skipCountdowns est vrai, le timer démarre à 0 (fin immédiate).", "Si finishMsg est nil, le message vaut la clé de traduction « ui.scenarios.go »."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise les options data (useImgui, useMessages, playSounds, bigFinishMsg) et l'état.", "params": {"mgr": {"type": "table", "desc": "Gestionnaire du flowgraph"}}, "internal": true},
+        "onExecutionStarted": {"desc": "Remet durée, timer et message par défaut.", "internal": true},
+        "_executionStopped": {"desc": "Appelle stopTimer.", "internal": true},
+        "reset": {"desc": "Arrête le compte à rebours et remet les sorties à faux."},
+        "stopTimer": {"desc": "Arrête le timer et efface done et flags."},
+        "startTimer": {"desc": "Lit la durée, arme le timer, vide le message flash précédent et démarre."},
+        "show": {"desc": "Affiche un message flash (ScenarioFlashMessage), et un Message si data.useMessages.", "params": {"msg": {"type": "string", "desc": "Texte"}, "big": {"type": "boolean", "desc": "Grande taille"}, "duration": {"type": "number|nil", "desc": "Durée en s (1.4 grand, 0.95 petit par défaut)"}, "luaCall": {"type": "string|nil", "desc": "Code Lua exécuté par l'UI (son)"}}},
+        "countdown": {"desc": "Décrémente le timer de mgr.dtSim, affiche chaque seconde et signale la fin."},
+        "drawMiddle": {"desc": "Barre de progression et état (Running, Done, Stopped) dans l'éditeur.", "internal": true},
+        "work": {"desc": "Gère reset, démarre le timer si flow est actif, appelle countdown et remplit les sorties.", "params": {"args": {"type": "table", "desc": "Arguments du flowgraph"}}}
+      }
+    }
+  }
+}

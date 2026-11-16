@@ -1,128 +1,128 @@
 # `controller_vehicleController_shiftLogic_sequentialGearbox`
 
-*Fichier : `lua/vehicle/controller/vehicleController/shiftLogic/sequentialGearbox.lua` · VM : Véhicule · 512 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/vehicleController/shiftLogic/sequentialGearbox.lua` · VM: Vehicle · 512 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `vehicleController/shiftLogic/sequentialGearbox` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `vehicleController/shiftLogic/sequentialGearbox` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Logique de boîte séquentielle (un cran à la fois avec monter/descendre, sans levier en H) avec coupure d'allumage à la montée et embrayage automatique optionnel. Chargé par vehicleController quand le device « gearbox » est de type sequentialGearbox. En arcade la boîte choisit seule le rapport selon les points de passage ; en realistic le conducteur passe les rapports et le changement est quasi instantané (coupure d'allumage puis setGearIndex).
+Sequential gearbox logic (one step at a time with up/down, no H-shifter) with ignition cut on upshift and optional automatic clutch. Loaded by vehicleController when the "gearbox" device is of type sequentialGearbox. In arcade the gearbox chooses the gear by itself according to shift points; in realistic the driver shifts gears and the change is almost instantaneous (ignition cut then setGearIndex).
 
-## Remarques
+## Notes
 
-- Clés jbeam lues dans init : ignitionCutTime (0.15 s), clutchLaunchTargetRPM (3000), clutchLaunchStartRPM (2000).
-- Constantes locales : neutralRejectTime 0.75 s (refuse un passage en neutre juste après une demande de neutre via levier en H, utile pour les levier H -> séquentiel).
-- gearboxSafety : un rapport qui ferait dépasser engine.maxAV est refusé.
-- shiftToGearIndex limite par défaut le saut à +/-1 rapport sauf si ignoreSequentialBounds est vrai (utilisé par setState). L'index 0 est ignoré si le rapport courant a une valeur absolue > 1.
-- En arcade, shiftUp/Down affichent un avertissement (warnCannotShiftSequential) ; shiftToGearIndex bascule en realistic.
-- Coupure d'allumage (engine:cutIgnition) lors d'une montée avec gaz > 0 sur un rapport avant.
-- updateExposedData met shiftingAggression à 1 en permanence.
-- Incohérence : updateInGear lit engine.idleAVStartOffset sans test nil (contrairement à manualGearbox), erreur si le moteur n'a pas ce champ. M.running est écrit sans être déclaré ; M.isShifting est déclaré après coup (valeur initiale dans le fichier). init met M.minGearIndex = abs(...) puis updateExposedData le réécrit signé.
-- Contrat commun shiftLogic : gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues injectés par vehicleController.
+- jbeam keys read in init: ignitionCutTime (0.15 s), clutchLaunchTargetRPM (3000), clutchLaunchStartRPM (2000).
+- Local constants: neutralRejectTime 0.75 s (refuses a shift to neutral right after a neutral request via H-shifter, useful for H-shifter -> sequential).
+- gearboxSafety: a gear that would exceed engine.maxAV is refused.
+- By default shiftToGearIndex limits the jump to +/-1 gear unless ignoreSequentialBounds is true (used by setState). Index 0 is ignored if the current gear has an absolute value > 1.
+- In arcade, shiftUp/Down display a warning (warnCannotShiftSequential); shiftToGearIndex switches to realistic.
+- Ignition cut (engine:cutIgnition) on an upshift with throttle > 0 on a forward gear.
+- updateExposedData sets shiftingAggression to 1 permanently.
+- Inconsistency: updateInGear reads engine.idleAVStartOffset without a nil check (unlike manualGearbox), error if the engine does not have this field. M.running is written without being declared; M.isShifting is declared afterwards (initial value in the file). init sets M.minGearIndex = abs(...) then updateExposedData rewrites it signed.
+- Common shiftLogic contract: gearboxHandling, timer, timerConstants, inputValues, shiftPreventionData, shiftBehavior, smoothedValues injected by vehicleController.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_vehicleController_shiftLogic_sequentialGearbox.areShiftLEDsInUse()` | Vrai hors arcade. *(interne)* | 74 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.gearboxBehaviorChanged(behavior)` | Choisit la logique du mode ; passer en realistic sans autoClutch avec rapport 1/-1 remet la boîte au point mort. *(interne)* | 86 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.getGearName()` | Index de rapport numérique de la boîte. | 78 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.getGearPosition()` | Toujours 0, 0 (non utilisé). | 82 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.getState()` | État sauvegardable {grb_idx = rapport courant}. | 483 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.init(jbeamData, sharedFunctionTable)` | Récupère mainEngine et gearbox, construit les logiques arcade/realistic, lit ignitionCutTime et les paramètres de lancement d'embrayage. Appelé par vehicleController (init et reset). *(interne)* | 418 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.sendTorqueData()` | Demande au moteur d'envoyer ses courbes de couple à l'UI. *(interne)* | 412 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.setState(data)` | Restaure le rapport (saut libre). | 489 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.shiftDown()` | Rapport précédent (borné, sécurité surrégime). | 116 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.shiftToGearIndex(index, ignoreSequentialBounds)` | Demande un rapport (par défaut limité à +/-1 du courant). | 134 |
-| `controller_vehicleController_shiftLogic_sequentialGearbox.shiftUp()` | Rapport suivant (borné, sécurité surrégime) ; sera exécuté dans whileShifting. | 98 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.areShiftLEDsInUse()` | True outside arcade. *(internal)* | 74 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.gearboxBehaviorChanged(behavior)` | Chooses the mode logic; switching to realistic without autoClutch with gear 1/-1 puts the gearbox back in neutral. *(internal)* | 86 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.getGearName()` | Numeric gear index of the gearbox. | 78 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.getGearPosition()` | Always 0, 0 (unused). | 82 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.getState()` | Saveable state {grb_idx = current gear}. | 483 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.init(jbeamData, sharedFunctionTable)` | Gets mainEngine and gearbox, builds the arcade/realistic logics, reads ignitionCutTime and the clutch launch parameters. Called by vehicleController (init and reset). *(internal)* | 418 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.sendTorqueData()` | Asks the engine to send its torque curves to the UI. *(internal)* | 412 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.setState(data)` | Restores the gear (free jump). | 489 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.shiftDown()` | Previous gear (bounded, over-rev safety). | 116 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.shiftToGearIndex(index, ignoreSequentialBounds)` | Requests a gear (by default limited to +/-1 from the current one). | 134 |
+| `controller_vehicleController_shiftLogic_sequentialGearbox.shiftUp()` | Next gear (bounded, over-rev safety); will be executed in whileShifting. | 98 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.areShiftLEDsInUse()`
 
-Vrai hors arcade.
+True outside arcade.
 
-- **renvoie** : boolean LEDs utilisées ?
+- **returns**: boolean LEDs used?
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.gearboxBehaviorChanged(behavior)`
 
-Choisit la logique du mode ; passer en realistic sans autoClutch avec rapport 1/-1 remet la boîte au point mort.
+Chooses the mode logic; switching to realistic without autoClutch with gear 1/-1 puts the gearbox back in neutral.
 
-- `behavior` (*string*) : "arcade" ou "realistic".
+- `behavior` (*string*) : "arcade" or "realistic".
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.getGearName()`
 
-Index de rapport numérique de la boîte.
+Numeric gear index of the gearbox.
 
-- **renvoie** : integer gearbox.gearIndex
+- **returns**: integer gearbox.gearIndex
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.getGearPosition()`
 
-Toujours 0, 0 (non utilisé).
+Always 0, 0 (unused).
 
-- **renvoie** : number 0
-- **renvoie** : number 0
+- **returns**: number 0
+- **returns**: number 0
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.getState()`
 
-État sauvegardable {grb_idx = rapport courant}.
+Saveable state {grb_idx = current gear}.
 
-- **renvoie** : table|nil État.
+- **returns**: table|nil State.
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.init(jbeamData, sharedFunctionTable)`
 
-Récupère mainEngine et gearbox, construit les logiques arcade/realistic, lit ignitionCutTime et les paramètres de lancement d'embrayage. Appelé par vehicleController (init et reset).
+Gets mainEngine and gearbox, builds the arcade/realistic logics, reads ignitionCutTime and the clutch launch parameters. Called by vehicleController (init and reset).
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 - `sharedFunctionTable` (*table*) : sharedFunctions.
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.setState(data)`
 
-Restaure le rapport (saut libre).
+Restores the gear (free jump).
 
-- `data` (*table*) : Table produite par getState.
+- `data` (*table*) : Table produced by getState.
 
 #### `controller_vehicleController_shiftLogic_sequentialGearbox.shiftToGearIndex(index, ignoreSequentialBounds)`
 
-Demande un rapport (par défaut limité à +/-1 du courant).
+Requests a gear (by default limited to +/-1 from the current one).
 
-- `index` (*integer*) : Rapport voulu.
-- `ignoreSequentialBounds` (*boolean|nil*) : Si vrai, autorise un saut de plusieurs rapports.
+- `index` (*integer*) : Wanted gear.
+- `ignoreSequentialBounds` (*boolean|nil*) : If true, allows a jump of several gears.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `brake` | number | Frein décidé (0..1). |
-| `checkEngine` | boolean | Moteur désactivé. |
-| `clutchRatio` | number | Taux d'embrayage (1 = embrayé). |
-| `currentGearIndex` | integer | Rapport courant. |
-| `energyStorages` | table<integer, string> | Réservoirs du moteur. |
-| `engineLoad` | number | Charge moteur. |
-| `engineThrottle` | number | Gaz appliqués au moteur. |
-| `engineTorque` | number | Couple de combustion. |
-| `flywheelTorque` | number | Couple moteur. |
-| `gearboxHandling` | table|nil | Injecté par vehicleController. |
-| `gearboxTorque` | number | Couple de sortie de boîte. |
-| `idleRPM` | number | Ralenti. |
+| `brake` | number | Decided brake (0..1). |
+| `checkEngine` | boolean | Engine disabled. |
+| `clutchRatio` | number | Clutch ratio (1 = engaged). |
+| `currentGearIndex` | integer | Current gear. |
+| `energyStorages` | table<integer, string> | Engine tanks. |
+| `engineLoad` | number | Engine load. |
+| `engineThrottle` | number | Throttle applied to the engine. |
+| `engineTorque` | number | Combustion torque. |
+| `flywheelTorque` | number | Engine torque. |
+| `gearboxHandling` | table|nil | Injected by vehicleController. |
+| `gearboxTorque` | number | Gearbox output torque. |
+| `idleRPM` | number | Idle. |
 | `ignition` | boolean | ignitionLevel > 1. |
-| `inputValues` | table|nil | Injecté. |
-| `isArcadeSwitched` | boolean | Gaz/frein permutés (arcade, marche arrière). |
-| `isEngineRunning` | number | 1 si le moteur tourne. |
-| `isSportModeActive` | boolean | Toujours false. |
-| `maxGearIndex` | integer | Plus grand rapport avant. |
-| `maxRPM` | number | Régime max. |
-| `minGearIndex` | integer | Plus petit index (marche arrière). |
-| `oilTemp` | number | Température d'huile. |
-| `rpm` | number | Régime moteur (tr/min). |
-| `shiftBehavior` | table|nil | Injecté. |
-| `shiftPreventionData` | table|nil | Injecté. |
-| `shiftingAggression` | number | Toujours 1. |
-| `smoothedAvgAVInput` | number | Vitesse angulaire de sortie de boîte (rad/s). |
-| `smoothedValues` | table|nil | Injecté. |
-| `throttle` | number | Gaz décidés (0..1). |
-| `timer` | table|nil | Injecté. |
-| `timerConstants` | table|nil | Injecté. |
-| `updateGearboxGFX` | function | nop puis inGear/whileShifting du mode actif. |
-| `waterTemp` | number | Température du liquide de refroidissement. |
+| `inputValues` | table|nil | Injected. |
+| `isArcadeSwitched` | boolean | Throttle/brake swapped (arcade, reverse). |
+| `isEngineRunning` | number | 1 if the engine is running. |
+| `isSportModeActive` | boolean | Always false. |
+| `maxGearIndex` | integer | Highest forward gear. |
+| `maxRPM` | number | Max RPM. |
+| `minGearIndex` | integer | Smallest index (reverse). |
+| `oilTemp` | number | Oil temperature. |
+| `rpm` | number | Engine speed (RPM). |
+| `shiftBehavior` | table|nil | Injected. |
+| `shiftPreventionData` | table|nil | Injected. |
+| `shiftingAggression` | number | Always 1. |
+| `smoothedAvgAVInput` | number | Gearbox output angular velocity (rad/s). |
+| `smoothedValues` | table|nil | Injected. |
+| `throttle` | number | Decided throttle (0..1). |
+| `timer` | table|nil | Injected. |
+| `timerConstants` | table|nil | Injected. |
+| `updateGearboxGFX` | function | nop then inGear/whileShifting of the active mode. |
+| `waterTemp` | number | Coolant temperature. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/vehicleController/shiftLogic/sequentialGearbox.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/vehicleController/shiftLogic/sequentialGearbox.lua`.*

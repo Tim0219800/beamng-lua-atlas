@@ -1,75 +1,75 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/sevensegmentDisplay.lua",
-  "module": "Noeud flowgraph « Sevensegment Display » (repeat_instant, auteur BeamNG). Crée un afficheur sept segments composé de TSStatic (art/shapes/quarter_mile_display/display_*.dae) à la position/rotation données et y affiche le nombre du pin number. Réglages dans self.data : mode ('number', 'minutes', 'hours'), scaling, count (5 chiffres), decimals (3), decimalOffset, spacing, shapeFolder, showLeadingZeroes. Sortie : number.",
+  "module": "Flowgraph node \"Sevensegment Display\" (repeat_instant, author BeamNG). Creates a seven-segment display made of TSStatic (art/shapes/quarter_mile_display/display_*.dae) at the given position/rotation and displays the number of the number pin on it. Settings in self.data: mode ('number', 'minutes', 'hours'), scaling, count (5 digits), decimals (3), decimalOffset, spacing, shapeFolder, showLeadingZeroes. Output: number.",
   "notes": [
-    "Le pin de sortie number n'est jamais écrit.",
-    "Les modes 'hours' et 'number' n'ont pas de logique distincte : seul 'minutes' ajoute les deux points.",
-    "Si le pin number est nil, updateNumbers échoue (division de nil)."
+    "The output pin number is never written.",
+    "The 'hours' and 'number' modes have no distinct logic: only 'minutes' adds the colon.",
+    "If the number pin is nil, updateNumbers fails (division of nil)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Initialise les réglages par défaut (mode 'minutes', count 5, decimals 3, spacing 5...).",
+          "desc": "Initializes the default settings (mode 'minutes', count 5, decimals 3, spacing 5...).",
           "params": {
             "mgr": {
               "type": "any",
-              "desc": "gestionnaire flowgraph"
+              "desc": "flowgraph manager"
             }
           },
           "internal": true
         },
         "createObjects": {
-          "desc": "Crée les chiffres (shape '8'), le point décimal et, en mode minutes, les deux points.",
+          "desc": "Creates the digits (shape '8'), the decimal point and, in minutes mode, the colon.",
           "params": {
             "objectName": {
               "type": "any",
-              "desc": "non utilisé"
+              "desc": "unused"
             }
           },
           "internal": true
         },
         "makeDot": {
-          "desc": "Crée un TSStatic de point (shape 'period') décalé par rapport à la position de base.",
+          "desc": "Creates a point TSStatic (shape 'period') offset relative to the base position.",
           "params": {
             "offset": {
               "type": "any",
-              "desc": "vec3 de décalage local"
+              "desc": "local offset vec3"
             },
             "name": {
               "type": "any",
-              "desc": "suffixe de nom (decimal, m_1, m_2)"
+              "desc": "name suffix (decimal, m_1, m_2)"
             }
           },
           "internal": true
         },
         "updateNumbers": {
-          "desc": "Change la shape de chaque chiffre selon le nombre courant ; efface les zéros de tête si showLeadingZeroes est faux.",
+          "desc": "Changes the shape of each digit according to the current number; clears leading zeros if showLeadingZeroes is false.",
           "internal": true
         },
         "_executionStopped": {
-          "desc": "Supprime les objets à l'arrêt.",
+          "desc": "Deletes the objects on stop.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Oublie le dernier nombre affiché.",
+          "desc": "Forgets the last displayed number.",
           "internal": true
         },
         "clearObjects": {
-          "desc": "Supprime tous les objets créés et remet spawned à false.",
+          "desc": "Deletes all created objects and sets spawned back to false.",
           "internal": true
         },
         "work": {
-          "desc": "Sur clear, supprime l'afficheur ; sinon le crée si besoin et met à jour les chiffres si le nombre a changé.",
+          "desc": "On clear, deletes the display; otherwise creates it if needed and updates the digits if the number changed.",
           "internal": false
         },
         "onClientEndMission": {
-          "desc": "Hook de fin de mission : nettoie les objets créés par le noeud.",
+          "desc": "End-of-mission hook: cleans up the objects created by the node.",
           "internal": true
         },
         "destroy": {
-          "desc": "Appelé à la destruction du noeud : nettoie les objets créés.",
+          "desc": "Called when the node is destroyed: cleans up the created objects.",
           "internal": true
         }
       }

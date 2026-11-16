@@ -1,0 +1,19 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactVehiclePerformanceData.lua",
+  "module": "Module de gameplayInterface relayant vers l'extension véhicule `vehiclePerformanceData` : démarrer/arrêter des enregistrements de performance (jusqu'à 5 types), lire les données enregistrées et les données statiques du véhicule.",
+  "usage": "gameplayInterface.executeAction(0, 21, 'startRecording', 'acceleration')\ngameplayInterface.getSystemData(0, 22, 'getStaticData')",
+  "notes": [
+    "Actions 'startRecording' et 'stopRecording'(type1:string, type2?:string, ... type5?:string) : appellent extensions.vehiclePerformanceData.startRecording/stopRecording({les 5 types}).",
+    "Lookup 'getRecordingData'(type1:string, ... type5?:string) : renvoie directement le résultat de extensions.vehiclePerformanceData.getRecordingData.",
+    "Lookup 'getStaticData'() : renvoie extensions.vehiclePerformanceData.getStaticData().",
+    "Cette extension (vehiclePerformanceData) doit être chargée dans le VM véhicule, sinon l'appel lève une erreur. Elle n'est pas dans ce lot."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Actions : startRecording, stopRecording."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : getRecordingData, getStaticData."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

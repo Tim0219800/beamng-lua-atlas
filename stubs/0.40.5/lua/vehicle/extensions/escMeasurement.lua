@@ -2,50 +2,50 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/escMeasurement.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil interne de mesure/calibration automatique de l'ESC (contrôleur drivingDynamics/CMU), piloté depuis le GE par util_calibrateESC. Une coroutine de travail lance un test de rigidité de dérive (skew stiffness) en balayant vitesses (30 à 150 km/h, pas de 2 m/s) et angles de braquage (0,5° à 20°), puis écrit le résultat dans vehicles/<modèle>/drivingDynamics/<config>.stat.json. Un second test (STM, mesures de lacet à 200 km/h) existe mais est désactivé dans performTests.
---- Accès : extension `escMeasurement` : `extensions.load (VM véhicule)("escMeasurement")`, puis la globale `escMeasurement`
+--- Internal tool for automatic ESC measurement/calibration (drivingDynamics/CMU controller), driven from the GE by util_calibrateESC. A worker coroutine runs a skew stiffness test by sweeping speeds (30 to 150 km/h, 2 m/s steps) and steering angles (0.5° to 20°), then writes the result to vehicles/<model>/drivingDynamics/<config>.stat.json. A second test (STM, yaw measurements at 200 km/h) exists but is disabled in performTests.
+--- Access: extension `escMeasurement`: `extensions.load (vehicle VM)("escMeasurement")`, then the global `escMeasurement`
 ---@class escMeasurement
 escMeasurement = {}
 
---- Hook d'initialisation : remet état, compteurs, mesures et vitesse physique à zéro (état Idling).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/escMeasurement.lua:442
+--- Initialization hook: resets state, counters, measurements and physics speed to zero (Idling state).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/escMeasurement.lua:442
 function escMeasurement.onInit() end
 
---- Même fonction que onInit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/escMeasurement.lua:442
+--- Same function as onInit.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/escMeasurement.lua:442
 function escMeasurement.onReset() end
 
---- Lance la séquence complète de calibration dans une coroutine et mémorise modèle/config pour le nom du fichier de sortie.
----Source : lua/vehicle/extensions/escMeasurement.lua:507
----@param vehicleName string Nom du modèle (dossier vehicles/).
----@param configName string Nom de la configuration.
+--- Launches the complete calibration sequence in a coroutine and stores model/config for the output file name.
+---Source: lua/vehicle/extensions/escMeasurement.lua:507
+---@param vehicleName string Model name (vehicles/ folder).
+---@param configName string Configuration name.
 function escMeasurement.performTests(vehicleName, configName) end
 
---- Démarre le test de rigidité de dérive : récupère le CMU, enregistre le callback de pas fixe, désactive les systèmes ESC pour la calibration et passe en Initialization.
----Source : lua/vehicle/extensions/escMeasurement.lua:457
+--- Starts the skew stiffness test: gets the CMU, registers the fixed-step callback, disables the ESC systems for calibration and switches to Initialization.
+---Source: lua/vehicle/extensions/escMeasurement.lua:457
 function escMeasurement.startSkewStiffnessTest() end
 
---- Arrête le test : coupe le régulateur interne, remet la vitesse physique normale, état Finished.
----Source : lua/vehicle/extensions/escMeasurement.lua:499
+--- Stops the test: cuts the internal regulator, restores normal physics speed, Finished state.
+---Source: lua/vehicle/extensions/escMeasurement.lua:499
 function escMeasurement.stopSkewStiffnessTest() end
 
---- Callback appelé par le CMU à pas de physique fixe : exécute la logique du test de rigidité de dérive.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/escMeasurement.lua:390
----@param dt number Pas de temps en secondes.
+--- Callback called by the CMU at a fixed physics step: runs the skew stiffness test logic.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/escMeasurement.lua:390
+---@param dt number Time step in seconds.
 function escMeasurement.updateFixedStepCallback(dt) end
 
---- Appelé chaque frame : reprend la coroutine de travail, envoie le heartbeat au GE et déclenche le killswitch quand elle est terminée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/escMeasurement.lua:115
----@param dt number Pas de temps en secondes (non utilisé).
+--- Called every frame: resumes the worker coroutine, sends the heartbeat to the GE and triggers the killswitch when it is finished.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/escMeasurement.lua:115
+---@param dt number Time step in seconds (unused).
 function escMeasurement.updateGFX(dt) end
 
---- Callback GFX du CMU ; vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/escMeasurement.lua:394
----@param dt number Pas de temps en secondes.
+--- GFX callback of the CMU; empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/escMeasurement.lua:394
+---@param dt number Time step in seconds.
 function escMeasurement.updateGFXCallback(dt) end
 

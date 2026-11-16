@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/util/trackBuilder/borderWallMesh.lua",
+  "module": "Générateur des murs latéraux (gauche et droit) d'un segment de piste du Track Builder. Il définit un profil de mur en boîte (24 faces) et, selon la hauteur du mur du segment et la qualité, extrude ce profil le long des points du segment, avec des caps de début et de fin facultatifs.",
+  "notes": [
+    "Chaque mur n'est généré que si segment.meshInfo.leftWall.active (ou rightWall.active) est vrai ; sinon la liste contient nil à sa place.",
+    "Les hauteurs viennent de segment.leftWallHeight / rightWallHeight (via les champs 'leftWallHeight' et 'rightWallHeight' passés à compileMeshInfo).",
+    "Si segment.quality == 4, getMeshes renvoie une table vide.",
+    "Matériau : segment.materialInfo.leftWall / rightWall, sinon 'track_editor_A_border'. Tag : 'side -1' ou 'side 1'.",
+    "Effet de bord : incrémente segment.submeshCount et remplit segment.submeshIndexes."
+  ],
+  "functions": {
+    "getMeshes": {
+      "desc": "Renvoie les meshes des murs gauche et droit actifs du segment.",
+      "params": {"segment": {"type": "table", "desc": "Segment du Track Builder (points, quality, meshInfo.leftWall/rightWall, materialInfo, submeshCount, submeshIndexes)."}},
+      "returns": [{"type": "table[]", "desc": "Liste de tables de mesh {verts, uvs, normals, faces, material, tag} (peut contenir des nil)."}],
+      "internal": false
+    }
+  }
+}

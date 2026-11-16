@@ -1,43 +1,43 @@
 # `editor_rallyEditor_notebookInfo`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/notebookInfo.lua` · VM : Game Engine (GE) · 242 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/notebookInfo.lua` · VM: Game Engine (GE) · 242 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/rallyEditor/notebookInfo")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/rallyEditor/notebookInfo")` (file under extensions/ but not a regular extension)
 
-Onglet « Notebook » de l'éditeur de rallye. Il affiche les informations du carnet courant (id, fichier, issues de validation) et permet de modifier son nom, ses auteurs, sa description et son mode audio par défaut, chaque modification passant par l'historique d'annulation de l'éditeur. Il contient aussi la section « Calibration Metadata Fields » (définition des champs de calibration au niveau du carnet) et le sélecteur de « Ghost Notebook ». Le module renvoie un constructeur (classe C).
+"Notebook" tab of the rally editor. It displays the current notebook's information (id, file, validation issues) and lets you change its name, authors, description and default audio mode, each change going through the editor's undo history. It also contains the "Calibration Metadata Fields" section (definition of calibration fields at notebook level) and the "Ghost Notebook" selector. The module returns a constructor (class C).
 
-## Remarques
+## Notes
 
-- Les champs de calibration initialisés par le bouton « Initialize Calibration Fields » sont : cornerIntensity, cornerDescriptor, direction, cornerLength, shape (stockés dans notebook.metadata.calibrationFields).
-- Le mode audio proposé exclut 'auto' et les modes masqués (RallyEnums.pacenoteAudioModeHidden).
-- Incohérence : dans selected(), le champ description est recréé avec un tampon de 1024 caractères alors que clearState() et la déclaration initiale utilisent 2048.
-- Les variables des champs de texte sont des locales du fichier (partagées par toutes les instances).
+- The calibration fields initialized by the "Initialize Calibration Fields" button are: cornerIntensity, cornerDescriptor, direction, cornerLength, shape (stored in notebook.metadata.calibrationFields).
+- The offered audio mode excludes 'auto' and the hidden modes (RallyEnums.pacenoteAudioModeHidden).
+- Inconsistency: in selected(), the description field is recreated with a 1024-character buffer whereas clearState() and the initial declaration use 2048.
+- The text field variables are file locals (shared by all instances).
 
-## Classe `C`
+## Class `C`
 
-Objet onglet renvoyé par le constructeur (new(rallyEditor)). Champs : rallyEditor, path (carnet édité), valid, windowDescription = 'Notebook'.
+Tab object returned by the constructor (new(rallyEditor)). Fields: rallyEditor, path (edited notebook), valid, windowDescription = 'Notebook'.
 
-Le module renvoie un constructeur : `local obj = require("editor_rallyEditor_notebookInfo")(options)`.
+The module returns a constructor: `local obj = require("editor_rallyEditor_notebookInfo")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearState()` | Oublie le carnet et vide les champs de texte. | 34 |
-| `C:draw(mouseInfo)` | Dessine l'onglet (délègue à drawNotebook). | 78 |
-| `C:drawCalibrationMetadataFields()` | Affiche les champs de calibration définis dans le carnet, ou un bouton pour les initialiser s'ils n'existent pas. | 142 |
-| `C:drawGhostNotebook()` | Dessine le sélecteur du carnet fantôme (liste des choix, option « (none) », message d'erreur) en appelant les fonctions ghostNotebook de l'éditeur de rallye. | 96 |
-| `C:drawNotebook()` | Valide puis dessine les informations du carnet (erreurs éventuelles, id, fichier), les champs éditables avec annulation/rétablissement, le mode audio, puis les sections calibration et ghost. | 165 |
-| `C:init(rallyEditor)` | Constructeur interne : mémorise l'éditeur, valid = true. | 29 |
-| `C:isValid()` | Renvoie le résultat de la dernière validation. | 42 |
-| `C:selected()` | Appelée par l'éditeur quand l'onglet est sélectionné : recopie nom, auteurs et description du carnet dans les champs, puis émet onEditorEditModeChanged(nil, nil) pour redessiner la légende des raccourcis. | 60 |
-| `C:setPath(path)` | Définit le carnet édité par l'onglet. | 55 |
-| `C:unselect()` | Appelée quand l'onglet est quitté : émet onEditorEditModeChanged(nil, nil). | 72 |
-| `C:validate()` | Lance path:validate() et met à jour valid selon path:is_valid(). Les problèmes sont dans path.validation_issues. | 46 |
+| `C:clearState()` | Forgets the notebook and empties the text fields. | 34 |
+| `C:draw(mouseInfo)` | Draws the tab (delegates to drawNotebook). | 78 |
+| `C:drawCalibrationMetadataFields()` | Displays the calibration fields defined in the notebook, or a button to initialize them if they do not exist. | 142 |
+| `C:drawGhostNotebook()` | Draws the ghost notebook selector (list of choices, "(none)" option, error message) by calling the rally editor's ghostNotebook functions. | 96 |
+| `C:drawNotebook()` | Validates then draws the notebook information (any errors, id, file), the editable fields with undo/redo, the audio mode, then the calibration and ghost sections. | 165 |
+| `C:init(rallyEditor)` | Internal constructor: stores the editor, valid = true. | 29 |
+| `C:isValid()` | Returns the result of the last validation. | 42 |
+| `C:selected()` | Called by the editor when the tab is selected: copies the notebook's name, authors and description into the fields, then emits onEditorEditModeChanged(nil, nil) to redraw the shortcut legend. | 60 |
+| `C:setPath(path)` | Sets the notebook edited by the tab. | 55 |
+| `C:unselect()` | Called when the tab is left: emits onEditorEditModeChanged(nil, nil). | 72 |
+| `C:validate()` | Runs path:validate() and updates valid according to path:is_valid(). The issues are in path.validation_issues. | 46 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorEditModeChanged` — écouté par 1 module(s)
+- `onEditorEditModeChanged` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/notebookInfo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/notebookInfo.lua`.*

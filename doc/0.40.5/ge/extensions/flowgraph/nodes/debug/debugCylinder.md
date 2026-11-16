@@ -1,23 +1,23 @@
 # `flowgraph_nodes_debug_debugCylinder`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/debug/debugCylinder.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/debug/debugCylinder.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/debug/debugCylinder")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/debug/debugCylinder")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Debug Cylinder » (catégorie repeat_instant, tags util/draw). Dessine chaque frame un cylindre de débogage (debugDrawer:drawCylinder) entre posA et posB. Entrées : radius (number, 1 par défaut), posA et posB (vec3, requis), color (caché, {r,g,b,a} 0-1, rose {0.91,0.05,0.48,0.5} par défaut).
+Flowgraph node "Debug Cylinder" (category repeat_instant, tags util/draw). Draws a debug cylinder (debugDrawer:drawCylinder) between posA and posB every frame. Inputs: radius (number, 1 by default), posA and posB (vec3, required), color (hidden, {r,g,b,a} 0-1, pink {0.91,0.05,0.48,0.5} by default).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 24 |
-| `C:work()` | Si posA et posB sont définis, convertit la couleur (alpha 0.5 si absent) et dessine le cylindre. | 31 |
+| `C:init()` | Empty. | 24 |
+| `C:work()` | If posA and posB are set, converts the color (alpha 0.5 if absent) and draws the cylinder. | 31 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawCylinder`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/debug/debugCylinder.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/debug/debugCylinder.lua`.*

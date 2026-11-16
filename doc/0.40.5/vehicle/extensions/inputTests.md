@@ -1,56 +1,56 @@
 # `inputTests`
 
-*Fichier : `lua/vehicle/extensions/inputTests.lua` · VM : Véhicule · 480 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/inputTests.lua` · VM: Vehicle · 480 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `inputTests` : `extensions.load (VM véhicule)("inputTests")`, puis la globale `inputTests`
+**Access:** extension `inputTests`: `extensions.load (vehicle VM)("inputTests")`, then the global `inputTests`
 
-Banc de test de latence et de précision du retour de force (FFB) des volants : mesure la latence matérielle USB, la résolution et la fréquence de mise à jour du volant, la latence du moteur de simulation et celle du véhicule, ainsi que les oscillations de la direction. Les tests tournent dans une coroutine appelée par hydros via hydros.testHook ; les résultats (statistiques, histogrammes en 30 classes) sont envoyés au GE par le hook onInputTestStats, et la fin par onInputTestStatus.
+Test bench for latency and accuracy of steering wheel force feedback (FFB): measures USB hardware latency, wheel resolution and update frequency, simulation engine latency and vehicle latency, as well as steering oscillations. The tests run in a coroutine called by hydros via hydros.testHook; the results (statistics, 30-bucket histograms) are sent to the GE by the onInputTestStats hook, and the end by onInputTestStatus.
 
-## Exemple
+## Example
 
 ```lua
 extensions.inputTests.start('systemTest')
--- tests : systemTest, simulationTest, vehicleTest, vehicleOscillationTest
+-- tests: systemTest, simulationTest, vehicleTest, vehicleOscillationTest
 ```
 
-## Remarques
+## Notes
 
-- Tests disponibles (30 mesures chacun) : 'systemTest' (résultats systemFrequencyTest, systemResolutionTest, systemLatencyTest : mesures directes du volant via hydros.getAngleFunction / getForceFeedbackFunction), 'simulationTest' (engineLatencyTest : impulsion FFB jusqu'au mouvement du volant simulé, calcul FFB désactivé), 'vehicleTest' (vehicleLatencyTest : impulsion de torsion des nœuds de bande de roulement des roues dont le nom commence par 'F'), 'vehicleOscillationTest' (oscillationTest et vehicleFrequencyTest, avec force FFB réduite à 10 %).
-- start(testId) exige un identifiant FFB valide (hydros.getFFBID() >= 0), sinon envoie des statistiques vides avec un message d'erreur.
-- Les statistiques envoyées contiennent : testId, sampleCount, unit, value (mode par demi-échantillon, ou maximum pour systemResolutionTest), modeError / modeErrorLow / modeErrorHigh, buckets (count, min, max), bucketPeakCount et éventuellement message. Les latences sont converties en ms.
-- Les chronométrages utilisent l'horloge murale (os.clockhp), pas le temps de simulation.
-- Constantes : timeout de latence 0,5 s, volant considéré arrêté après 0,15 s (timeout 7 s), force de torsion de bande de roulement 5000 sur les 5 nœuds les plus bas.
-- Une erreur interne de la coroutine est journalisée, désactive hydros.testHook et envoie un message d'échec au GE.
+- Available tests (30 measurements each): 'systemTest' (results systemFrequencyTest, systemResolutionTest, systemLatencyTest: direct wheel measurements via hydros.getAngleFunction / getForceFeedbackFunction), 'simulationTest' (engineLatencyTest: FFB pulse until the simulated wheel moves, FFB computation disabled), 'vehicleTest' (vehicleLatencyTest: torsion pulse on the tread nodes of wheels whose name starts with 'F'), 'vehicleOscillationTest' (oscillationTest and vehicleFrequencyTest, with FFB force reduced to 10%).
+- start(testId) requires a valid FFB id (hydros.getFFBID() >= 0), otherwise it sends empty statistics with an error message.
+- The statistics sent contain: testId, sampleCount, unit, value (half-sample mode, or maximum for systemResolutionTest), modeError / modeErrorLow / modeErrorHigh, buckets (count, min, max), bucketPeakCount and optionally message. Latencies are converted to ms.
+- Timings use the wall clock (os.clockhp), not simulation time.
+- Constants: latency timeout 0.5 s, wheel considered stopped after 0.15 s (timeout 7 s), tread torsion force 5000 on the 5 lowest nodes.
+- An internal error in the coroutine is logged, disables hydros.testHook and sends a failure message to the GE.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `inputTests.onExtensionUnloaded()` | Appelé au déchargement : retire hydros.testHook. *(interne)* *(hook)* | 478 |
-| `inputTests.start(testId)` | Démarre un test : récupère l'identifiant FFB, crée la coroutine et installe M.update dans hydros.testHook. | 463 |
-| `inputTests.update(dtSim, simWheelPos, hydroPos)` | Appelé par hydros à chaque pas FFB via testHook : reprend la coroutine du test avec le dt réel (horloge murale) et les positions de volant simulé et matériel. Renvoie si le calcul FFB normal doit être exécuté et la position matérielle suivante. *(interne)* | 34 |
+| `inputTests.onExtensionUnloaded()` | Called on unload: removes hydros.testHook. *(internal)* *(hook)* | 478 |
+| `inputTests.start(testId)` | Starts a test: fetches the FFB id, creates the coroutine and installs M.update in hydros.testHook. | 463 |
+| `inputTests.update(dtSim, simWheelPos, hydroPos)` | Called by hydros at each FFB step via testHook: resumes the test coroutine with the real dt (wall clock) and the simulated and hardware wheel positions. Returns whether the normal FFB computation must run and the next hardware position. *(internal)* | 34 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `inputTests.start(testId)`
 
-Démarre un test : récupère l'identifiant FFB, crée la coroutine et installe M.update dans hydros.testHook.
+Starts a test: fetches the FFB id, creates the coroutine and installs M.update in hydros.testHook.
 
-- `testId` (*string*) : 'systemTest', 'simulationTest', 'vehicleTest' ou 'vehicleOscillationTest'.
+- `testId` (*string*) : 'systemTest', 'simulationTest', 'vehicleTest' or 'vehicleOscillationTest'.
 
 #### `inputTests.update(dtSim, simWheelPos, hydroPos)`
 
-Appelé par hydros à chaque pas FFB via testHook : reprend la coroutine du test avec le dt réel (horloge murale) et les positions de volant simulé et matériel. Renvoie si le calcul FFB normal doit être exécuté et la position matérielle suivante.
+Called by hydros at each FFB step via testHook: resumes the test coroutine with the real dt (wall clock) and the simulated and hardware wheel positions. Returns whether the normal FFB computation must run and the next hardware position.
 
-- `dtSim` (*number*) : Pas de temps de simulation (utilisé seulement au premier appel).
-- `simWheelPos` (*number*) : Position du volant simulé (normalisée, -1 à 1 déduit du code).
-- `hydroPos` (*number*) : Position cible du volant matériel.
-- **renvoie** : boolean true pour exécuter le calcul FFB du véhicule ce pas.
-- **renvoie** : number Position matérielle à appliquer ensuite.
+- `dtSim` (*number*) : Simulation time step (used only on the first call).
+- `simWheelPos` (*number*) : Simulated wheel position (normalized, -1 to 1 inferred from code).
+- `hydroPos` (*number*) : Target position of the hardware wheel.
+- **returns**: boolean true to run the vehicle FFB computation this step.
+- **returns**: number Hardware position to apply next.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `applyForceVector`, `getNodePosition`, `queueGameEngineLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/inputTests.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/inputTests.lua`.*

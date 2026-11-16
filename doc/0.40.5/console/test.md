@@ -1,27 +1,27 @@
 # `test`
 
-*Fichier : `lua/console/test.lua` · VM : Console · 57 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/console/test.lua` · VM: Console · 57 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("test")`
+**Access:** `require("test")`
 
-Fichier de test principal de la console : il charge lua/console/benchphysics et définit deux fonctions globales de test, loadOneVehicle (spawn du pickup) et benchJSON (chargement et fusion des fichiers .jbeam du pickup). Aucun appel automatique, ils sont à lancer à la main.
+Main console test file: it loads lua/console/benchphysics and defines two global test functions, loadOneVehicle (pickup spawn) and benchJSON (loading and merging the pickup's .jbeam files). No automatic call, they must be launched by hand.
 
-## Remarques
+## Notes
 
-- benchJSON utilise des globales (directory, dir) faute de local.
-- benchJSON retourne nil dès qu'un fichier jbeam n'est pas décodable ; sinon ne retourne rien.
+- benchJSON uses globals (directory, dir) for lack of local.
+- benchJSON returns nil as soon as a jbeam file cannot be decoded; otherwise returns nothing.
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `benchJSON()` | Liste les fichiers .jbeam (hors .jbeamc) de vehicles/pickup, les lit, les décode avec json.decode et fusionne les parties avec tableMerge. Journalise le nombre de parties de chaque fichier. | 18 |
-| `loadOneVehicle()` | Supprime tous les objets puis fait apparaître vehicles/pickup à l'origine. | 13 |
+| `benchJSON()` | Lists the .jbeam files (excluding .jbeamc) of vehicles/pickup, reads them, decodes them with json.decode and merges the parts with tableMerge. Logs the number of parts of each file. | 18 |
+| `loadOneVehicle()` | Deletes all objects then spawns vehicles/pickup at the origin. | 13 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `BeamEngine:` `deleteAllObjects`, `spawnObject`
 - `FS:` `closeDirectory`, `fileExists`, `openDirectory`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/console/test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/console/test.lua`.*

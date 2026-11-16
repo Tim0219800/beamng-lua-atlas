@@ -1,24 +1,24 @@
 # `flowgraph_nodes_gameplay_vehiclePool_createPool`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.lua` · VM : Game Engine (GE) · 52 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.lua` · VM: Game Engine (GE) · 52 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/createPool")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/vehiclePool/createPool")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Create Vehicle Pool » (once_instant). Crée un pool de véhicules (core_vehicleActivePooling.createPool({name})) pour gérer l'activation/désactivation des objets véhicule ; sortie vehPool. Option data.keepVehicles (« Keep Inactive Vehicles ») : à la suppression du pool, garde les véhicules inactifs (deletePool(keepVehicles)).
+Flowgraph node "Create Vehicle Pool" (once_instant). Creates a vehicle pool (core_vehicleActivePooling.createPool({name})) to manage the activation/deactivation of vehicle objects; output vehPool. Option data.keepVehicles ("Keep Inactive Vehicles"): when the pool is deleted, keeps the inactive vehicles (deletePool(keepVehicles)).
 
-**Dépendances (chargées avant) :** `core_vehicleActivePooling`
+**Dependencies (loaded first):** `core_vehicleActivePooling`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Appelle onNodeReset(). | 27 |
-| `C:drawCustomProperties()` | Affiche la case « Keep Inactive Vehicles » (data.keepVehicles). | 38 |
-| `C:init()` | Appelle onNodeReset(). | 23 |
-| `C:onNodeReset()` | Supprime le pool créé (deletePool) et l'oublie. | 31 |
-| `C:workOnce()` | Crée le pool s'il n'existe pas et le publie sur vehPool. | 45 |
+| `C:_executionStopped()` | Calls onNodeReset(). | 27 |
+| `C:drawCustomProperties()` | Displays the "Keep Inactive Vehicles" checkbox (data.keepVehicles). | 38 |
+| `C:init()` | Calls onNodeReset(). | 23 |
+| `C:onNodeReset()` | Deletes the created pool (deletePool) and forgets it. | 31 |
+| `C:workOnce()` | Creates the pool if it does not exist and publishes it on vehPool. | 45 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/vehiclePool/createPool.lua`.*

@@ -1,28 +1,28 @@
 # `gameplay_rally_cameraPathPlayer`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/cameraPathPlayer.lua` · VM : Game Engine (GE) · 174 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/cameraPathPlayer.lua` · VM: Game Engine (GE) · 174 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/cameraPathPlayer")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/cameraPathPlayer")` (file under extensions/ but not a regular extension)
 
-Lit une trajectoire de caméra qui suit la route du rallye. À partir des points d'une 'snaproad' (pointsForCameraPath), il construit un chemin de caméra (copie adaptée de core_paths.loadPath) et le joue avec core_paths.playPath. Paramètres fixes dans play : 40 m avant, 20 m après, 2 m de hauteur, FOV 70, vitesse de lecture 80 km/h. Le module renvoie un constructeur : require(...)(snaproad).
+Reads a camera path that follows the rally route. From the points of a 'snaproad' (pointsForCameraPath), it builds a camera path (an adapted copy of core_paths.loadPath) and plays it with core_paths.playPath. Fixed parameters in play: 40 m before, 20 m after, 2 m height, FOV 70, playback speed 80 km/h. The module returns a constructor: require(...)(snaproad).
 
-## Remarques
+## Notes
 
-- Le temps de chaque marqueur = distance cumulée / vitesse de lecture (m/s) : la caméra avance à vitesse constante, indépendamment de l'espacement des points.
-- Dans loadPath, 'movingStart or true' et 'movingEnd or true' valent toujours true (une valeur false serait ignorée).
-- La fonction locale loadPath renvoie une table de chemin sans l'enregistrer (addPath est commenté).
+- The time of each marker = cumulative distance / playback speed (m/s): the camera moves at constant speed, regardless of point spacing.
+- In loadPath, 'movingStart or true' and 'movingEnd or true' are always true (a false value would be ignored).
+- The local function loadPath returns a path table without registering it (addPath is commented out).
 
-## Classe `C`
+## Class `C`
 
-Lecteur de chemin caméra renvoyé par le constructeur du module.
+Camera path player returned by the module constructor.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_cameraPathPlayer")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_cameraPathPlayer")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(snaproad)` | Mémorise la snaproad utilisée pour produire les points du chemin. | 11 |
-| `C:play()` | Demande les points à la snaproad (40 m avant, 20 m après), construit le chemin caméra et le lance avec core_paths.playPath. Ne fait rien si aucun point n'est renvoyé. | 146 |
-| `C:stop()` | Arrête le chemin caméra en cours (core_paths.stopCurrentPath). | 162 |
+| `C:init(snaproad)` | Stores the snaproad used to produce the path points. | 11 |
+| `C:play()` | Requests the points from the snaproad (40 m before, 20 m after), builds the camera path and starts it with core_paths.playPath. Does nothing if no points are returned. | 146 |
+| `C:stop()` | Stops the current camera path (core_paths.stopCurrentPath). | 162 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/cameraPathPlayer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/cameraPathPlayer.lua`.*

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_career_logbookEntry`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/logbookEntry.lua` · VM : Game Engine (GE) · 32 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/logbookEntry.lua` · VM: Game Engine (GE) · 32 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/logbookEntry")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/logbookEntry")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Logbook Entry » (catégorie once_instant, couleur/icône career). Ajoute une entrée au journal de bord de la carrière (career_modules_logbook.genericInfoUnlocked) avec un titre et un texte. Entrées : title, text (string). Ne fait rien hors carrière. Recopie le flux d'entrée sur la sortie.
+Flowgraph node "Logbook Entry" (category once_instant, career color/icon). Adds an entry to the career logbook (career_modules_logbook.genericInfoUnlocked) with a title and a text. Inputs: title, text (string). Does nothing outside career. Copies the input flow to the output.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Si carrière active et module logbook présent, ajoute l'entrée ; copie flow vers la sortie. | 24 |
+| `C:workOnce()` | If career is active and the logbook module is present, adds the entry; copies flow to the output. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/logbookEntry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/logbookEntry.lua`.*

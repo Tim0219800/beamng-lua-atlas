@@ -1,0 +1,31 @@
+{
+  "path": "lua/ge/extensions/editor/textEditor.lua",
+  "module": "Extension de l'éditeur qui fournit une fenêtre « Text Editor » multiligne pour modifier le contenu texte d'un champ d'objet de la scène (ex. un champ long d'un objet). Elle s'enregistre en exposant editor.newTextEditorInstance(objIds, fieldName). Le bouton Ok applique la valeur via objectHistoryActions.changeObjectFieldWithUndo (annulable), Cancel ferme sans rien changer.",
+  "usage": "editor.newTextEditorInstance({ obj:getID() }, \"myField\")",
+  "notes": [
+    "Taille maximale du texte : 16384 caractères (textInputSize).",
+    "Si plusieurs objets sont passés, le champ de départ est vide (le texte n'est prérempli que pour un seul objet) ; la valeur saisie est ensuite appliquée à tous les ids.",
+    "Une nouvelle instance supprime toute instance existante qui partage un id d'objet.",
+    "Le logTag déclaré est 'editor_scene_tree' (copié d'un autre module, sans effet visible)."
+  ],
+  "functions": {
+    "onEditorGui": {
+      "desc": "Hook appelé à chaque frame de l'interface de l'éditeur : crée/affiche chaque fenêtre Text Editor ouverte, avec zone de saisie multiligne et boutons Cancel/Ok. Retire l'instance quand la fenêtre n'est plus visible.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : publie editor.newTextEditorInstance.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook de sérialisation (rechargement Lua) : renvoie une copie des instances ouvertes sans le tampon de texte (textInput).",
+      "returns": [{"type": "table", "desc": "Instances (objIds, fieldName) sans textInput."}],
+      "internal": true
+    },
+    "onDeserialize": {
+      "desc": "Hook appelé après rechargement : recrée une instance par entrée de l'état sauvegardé.",
+      "params": {"state": {"type": "table", "desc": "Résultat de onSerialize."}},
+      "internal": true
+    }
+  }
+}

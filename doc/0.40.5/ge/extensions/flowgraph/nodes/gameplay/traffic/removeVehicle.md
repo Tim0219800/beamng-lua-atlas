@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_traffic_removeVehicle`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/removeVehicle.lua` · VM : Game Engine (GE) · 27 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/removeVehicle.lua` · VM: Game Engine (GE) · 27 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/removeVehicle")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/removeVehicle")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Remove Vehicle (Traffic) » (once_instant). Retire le véhicule vehId de la table du trafic via self.mgr.modules.traffic:removeTraffic.
+Flowgraph node "Remove Vehicle (Traffic)" (once_instant). Removes the vehicle vehId from the traffic table via self.mgr.modules.traffic:removeTraffic.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle removeTraffic(vehId) si vehId est défini. | 21 |
+| `C:workOnce()` | Calls removeTraffic(vehId) if vehId is defined. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/removeVehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/removeVehicle.lua`.*

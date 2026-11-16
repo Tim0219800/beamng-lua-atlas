@@ -1,80 +1,80 @@
 # `career_modules_vehicleDeletionService`
 
-*Fichier : `lua/ge/extensions/career/modules/vehicleDeletionService.lua` · VM : Game Engine (GE) · 110 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/vehicleDeletionService.lua` · VM: Game Engine (GE) · 110 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_vehicleDeletionService` : `extensions.load("career_modules_vehicleDeletionService")`, puis la globale `career_modules_vehicleDeletionService`
+**Access:** extension `career_modules_vehicleDeletionService`: `extensions.load("career_modules_vehicleDeletionService")`, then the global `career_modules_vehicleDeletionService`
 
-Service de suppression différée de véhicules en carrière : un véhicule « marqué » est supprimé (avec appel d'un callback) quand il est à plus de 100 m de la caméra et derrière elle, pour qu'il disparaisse sans que le joueur le voie. Les véhicules d'inventaire sont retirés via career_modules_inventory.removeVehicleObject, les autres via obj:delete(). Le hook onUpdate n'est branché que tant qu'au moins un véhicule est marqué.
+Deferred vehicle deletion service in career: a "marked" vehicle is deleted (with a callback call) when it is more than 100 m from the camera and behind it, so that it disappears without the player seeing it. Inventory vehicles are removed via career_modules_inventory.removeVehicleObject, others via obj:delete(). The onUpdate hook is wired only while at least one vehicle is marked.
 
-## Remarques
+## Notes
 
-- Bug potentiel : onUpdate appelle obj:getPositionXYZ() sans vérifier que getObjectByID a retourné un objet ; un véhicule supprimé ailleurs sans passer par onVehicleDestroyed provoquerait une erreur.
-- onExtensionLoaded retourne false si la carrière n'est pas active, ce qui empêche le chargement du module.
-- À chaque démarrage de mission (onAnyMissionChanged, état started), tous les véhicules marqués sont supprimés immédiatement (sans callback).
+- Potential bug: onUpdate calls obj:getPositionXYZ() without checking that getObjectByID returned an object; a vehicle deleted elsewhere without going through onVehicleDestroyed would cause an error.
+- onExtensionLoaded returns false if the career is not active, which prevents the module from loading.
+- At each mission start (onAnyMissionChanged, started state), all marked vehicles are deleted immediately (without callback).
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_vehicleDeletionService.clearFlags(vehId)` | Retire le marquage d'un véhicule (et débranche onUpdate s'il ne reste rien). | 78 |
-| `career_modules_vehicleDeletionService.deleteFlaggedVehicles()` | Supprime immédiatement tous les véhicules marqués. | 65 |
-| `career_modules_vehicleDeletionService.flagForDeletion(vehId, callback)` | Marque un véhicule pour suppression différée et active la boucle onUpdate. | 71 |
-| `career_modules_vehicleDeletionService.onAnyMissionChanged(state, mission)` | Hook émis à chaque changement d'état de mission : à « started » en carrière, supprime les véhicules marqués. *(interne)* *(hook)* | 88 |
-| `career_modules_vehicleDeletionService.onClientStartMission()` | Hook de démarrage de niveau : vide la liste des véhicules marqués. *(interne)* *(hook)* | 83 |
-| `career_modules_vehicleDeletionService.onExtensionLoaded()` | Hook de chargement : retourne false si la carrière n'est pas active. *(interne)* *(hook)* | 12 |
-| `career_modules_vehicleDeletionService.onVehicleDestroyed(vehId)` | Hook émis quand un véhicule est détruit : retire son marquage. *(interne)* *(hook)* | 97 |
+| `career_modules_vehicleDeletionService.clearFlags(vehId)` | Removes a vehicle's marking (and unwires onUpdate if nothing remains). | 78 |
+| `career_modules_vehicleDeletionService.deleteFlaggedVehicles()` | Immediately deletes all marked vehicles. | 65 |
+| `career_modules_vehicleDeletionService.flagForDeletion(vehId, callback)` | Marks a vehicle for deferred deletion and activates the onUpdate loop. | 71 |
+| `career_modules_vehicleDeletionService.onAnyMissionChanged(state, mission)` | Hook emitted on each mission state change: on "started" in career, deletes the marked vehicles. *(internal)* *(hook)* | 88 |
+| `career_modules_vehicleDeletionService.onClientStartMission()` | Level start hook: clears the list of marked vehicles. *(internal)* *(hook)* | 83 |
+| `career_modules_vehicleDeletionService.onExtensionLoaded()` | Load hook: returns false if the career is not active. *(internal)* *(hook)* | 12 |
+| `career_modules_vehicleDeletionService.onVehicleDestroyed(vehId)` | Hook emitted when a vehicle is destroyed: removes its marking. *(internal)* *(hook)* | 97 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_vehicleDeletionService.clearFlags(vehId)`
 
-Retire le marquage d'un véhicule (et débranche onUpdate s'il ne reste rien).
+Removes a vehicle's marking (and unwires onUpdate if nothing remains).
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
 #### `career_modules_vehicleDeletionService.flagForDeletion(vehId, callback)`
 
-Marque un véhicule pour suppression différée et active la boucle onUpdate.
+Marks a vehicle for deferred deletion and activates the onUpdate loop.
 
-- `vehId` (*integer*) : Id du véhicule.
-- `callback` (*function|nil*) : Appelé juste avant la suppression (défaut nop).
+- `vehId` (*integer*) : Vehicle id.
+- `callback` (*function|nil*) : Called just before deletion (default nop).
 
 #### `career_modules_vehicleDeletionService.onAnyMissionChanged(state, mission)`
 
-Hook émis à chaque changement d'état de mission : à « started » en carrière, supprime les véhicules marqués.
+Hook emitted on each mission state change: on "started" in career, deletes the marked vehicles.
 
-- `state` (*string*) : État de la mission.
-- `mission` (*table|nil*) : Mission concernée.
+- `state` (*string*) : Mission state.
+- `mission` (*table|nil*) : Mission concerned.
 
 #### `career_modules_vehicleDeletionService.onExtensionLoaded()`
 
-Hook de chargement : retourne false si la carrière n'est pas active.
+Load hook: returns false if the career is not active.
 
-- **renvoie** : boolean|nil false pour refuser le chargement.
+- **returns**: boolean|nil false to refuse loading.
 
 #### `career_modules_vehicleDeletionService.onVehicleDestroyed(vehId)`
 
-Hook émis quand un véhicule est détruit : retire son marquage.
+Hook emitted when a vehicle is destroyed: removes its marking.
 
-- `vehId` (*integer*) : Id du véhicule.
+- `vehId` (*integer*) : Vehicle id.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'career_career'}. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onUpdate` — écouté par 186 module(s)
+- `onUpdate` — listened to by 186 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `delete`, `getPositionXYZ`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/vehicleDeletionService.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/vehicleDeletionService.lua`.*

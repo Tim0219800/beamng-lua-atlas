@@ -1,57 +1,57 @@
 {
   "path": "lua/ge/extensions/telemetry/performanceMetrics.lua",
-  "module": "Petit module utilitaire (chargé par require) de la télémétrie de performance : lecture sûre de variables du VariableRegistry, état de focus du programme et cause d'un plafond de FPS choisi par le joueur.",
+  "module": "Small utility module (loaded by require) of performance telemetry: safe reading of VariableRegistry variables, the program's focus state and the cause of an FPS cap chosen by the player.",
   "functions": {
     "readNumber": {
-      "desc": "Lit une variable du VariableRegistry en nombre ; renvoie -1 si elle est absente, non numérique, NaN ou infinie.",
+      "desc": "Reads a VariableRegistry variable as a number; returns -1 if it is absent, non-numeric, NaN or infinite.",
       "params": {
         "name": {
           "type": "string",
-          "desc": "Nom de la variable (ex. '$fps::avg')."
+          "desc": "Variable name (e.g. '$fps::avg')."
         }
       },
       "returns": [
         {
           "type": "number",
-          "desc": "Valeur, ou -1."
+          "desc": "Value, or -1."
         }
       ],
       "internal": false
     },
     "readAvailable": {
-      "desc": "Comme readNumber mais renvoie nil au lieu de -1 (valeur indisponible).",
+      "desc": "Like readNumber but returns nil instead of -1 (value unavailable).",
       "params": {
         "name": {
           "type": "string",
-          "desc": "Nom de la variable."
+          "desc": "Variable name."
         }
       },
       "returns": [
         {
           "type": "number|nil",
-          "desc": "Valeur >= 0, ou nil."
+          "desc": "Value >= 0, or nil."
         }
       ],
       "internal": false
     },
     "isFocused": {
-      "desc": "Indique si la fenêtre du jeu a le focus (true si Engine.isProgramFocused n'existe pas).",
+      "desc": "Indicates whether the game window has focus (true if Engine.isProgramFocused does not exist).",
       "params": {},
       "returns": [
         {
           "type": "boolean",
-          "desc": "true si le programme a le focus."
+          "desc": "true if the program has focus."
         }
       ],
       "internal": false
     },
     "getLimitedBy": {
-      "desc": "Dit quel plafond de FPS choisi par le joueur s'applique : 'background' (limite en arrière-plan sans focus), 'vr' (session OpenXR), 'limiter' (fpsLimitEnabled), 'vsync', sinon nil. Sert à ne pas confondre un FPS bloqué à 60 avec une machine incapable de faire mieux.",
+      "desc": "Says which player-chosen FPS cap applies: 'background' (limit in the background without focus), 'vr' (OpenXR session), 'limiter' (fpsLimitEnabled), 'vsync', otherwise nil. Used to avoid mistaking an FPS locked at 60 for a machine unable to do better.",
       "params": {},
       "returns": [
         {
           "type": "string|nil",
-          "desc": "'background', 'vr', 'limiter', 'vsync' ou nil."
+          "desc": "'background', 'vr', 'limiter', 'vsync' or nil."
         }
       ],
       "internal": false

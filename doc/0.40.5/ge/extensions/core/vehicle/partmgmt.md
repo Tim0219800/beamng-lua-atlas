@@ -1,505 +1,505 @@
 # `core_vehicle_partmgmt`
 
-*Fichier : `lua/ge/extensions/core/vehicle/partmgmt.lua` · VM : Game Engine (GE) · 1979 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicle/partmgmt.lua` · VM: Game Engine (GE) · 1979 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicle_partmgmt` : `extensions.load("core_vehicle_partmgmt")`, puis la globale `core_vehicle_partmgmt`
+**Access:** extension `core_vehicle_partmgmt`: `extensions.load("core_vehicle_partmgmt")`, then the global `core_vehicle_partmgmt`
 
-Extension GE `core_vehicle_partmgmt` : gestion des pièces et de la configuration d'un véhicule en cours de jeu (menu de configuration, tuning). Lit/modifie la config de `core_vehicle_manager.getVehicleData(id).config` (partsTree, vars, paints) et réapparaît le véhicule (`respawn`) pour appliquer les changements, sauvegarde/charge/supprime des configs .pc locales (format 2, avec fichier info_<nom>.json et miniature .jpg), enregistre des collections de véhicules (format 4), envoie les données du configurateur à l'UI (VehicleConfigChange) et gère la mise en surbrillance des pièces (rendu « rayons X » avec fondu). Le véhicule visé est celui de core_vehicle_configTarget (sinon le véhicule du joueur 0) ; la plupart des fonctions acceptent un id explicite.
+GE extension `core_vehicle_partmgmt`: management of parts and configuration of a vehicle during gameplay (configuration menu, tuning). Reads/modifies the config of `core_vehicle_manager.getVehicleData(id).config` (partsTree, vars, paints) and respawns the vehicle (`respawn`) to apply changes, saves/loads/deletes local .pc configs (format 2, with an info_<name>.json file and a .jpg thumbnail), saves vehicle collections (format 4), sends the configurator data to the UI (VehicleConfigChange) and handles part highlighting ("X-ray" rendering with fade). The targeted vehicle is that of core_vehicle_configTarget (otherwise player 0's vehicle); most functions accept an explicit id.
 
-## Exemple
+## Example
 
 ```lua
--- Changer des variables de tuning du véhicule du joueur sans respawn complet
+-- Change the player vehicle's tuning variables without a full respawn
 core_vehicle_partmgmt.setConfigVars({['$camber_F'] = 0.1}, true)
--- Sauvegarder une config locale
-local res = core_vehicle_partmgmt.saveNewLocalConfig('Ma config', {generateThumbnail = true, savePaints = true}, nil)
+-- Save a local config
+local res = core_vehicle_partmgmt.saveNewLocalConfig('My config', {generateThumbnail = true, savePaints = true}, nil)
 print(res.success, res.fileName)
--- Lire la config d'un véhicule
+-- Read a vehicle's config
 local cfg = core_vehicle_partmgmt.getConfigOfVehicle(be:getPlayerVehicleID(0))
 dump(cfg.partsTree.chosenPartName)
 ```
 
-## Remarques
+## Notes
 
-- Réglages de sauvegarde (saveSettings, table) : generateThumbnail (défaut true), saveLicenseplate (false), savePaints (true), overridePaints (false : écrit les peintures comme peintures explicites dans le fichier info), useThumbnailFile + thumbnailFile (miniature fournie), thumbnailCaptureId (id d'une capture temporaire de core_vehicle_thumbnail). Un booléen à la place de la table est accepté (ancien argument withThumbnail). Les métadonnées (saveMetadata) sont validées par ge/extensions/vehicles/saveConfigUtils.
-- Les fonctions saveNewLocalConfig / saveExistingLocalConfig renvoient une table {success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?, metadataError?}. Raisons : walking, noVehicle, invalidFilename, invalidMetadata, saveFailed, thumbnailCopyFailed, configNotFound, notPlayerConfig.
-- Les chemins de config sont relatifs au dossier du modèle (vehicleDirectory, ex. 'vehicles/pickup/'). Après sauvegarde, core_vehicles.clearCache() et ui_vehicleSelector_general.clearCache() sont appelés.
-- setConfig / setConfigOfVehicle fusionnent (tableMerge) les données dans la config du véhicule. Avec respawn (true par défaut quand nil), le véhicule est recréé via veh:respawn(serialize(config)) ; avec respawn=false, seules les peintures sont mises à jour en direct (liveUpdateVehicleColors) et le champ partConfig est réécrit. La première modification déclenche le succès VEHICLE_MODIFIED hors carrière.
-- setPartsConfig est obsolète : il se contente de logger une erreur et de demander d'utiliser setPartsTreeConfig. resetPartsToLoadedConfig l'appelle pourtant encore, donc ce bouton « Reset » ne change rien (incohérence du jeu).
-- BUG probable : dans buildConfigFromString, la fonction interne preprocessPartConfig ne renvoie rien à la fin du cas format 4 (elle n'a de return que pour l'échec d'un fichier lié et pour le cas non format 4) ; une config de format 4 passée directement retombe donc sur la config par défaut du modèle.
-- saveVehicle (collections) lit une variable `partsCondition` jamais définie dans sa portée : data.partsCondition vaut toujours nil.
-- M.savePartConfigFileStage2 pointe sur savePartConfigFileStage2_Format2 (signature partsCondition, filename, saveSettings, saveMetadata) et non sur la fonction du même nom (format 4) définie plus haut, qui n'est pas exportée.
-- Pas de fonction publique pour appeler isOfficialConfig/isPlayerConfig (locales) : ces valeurs sont retournées par getConfigList (champs official, player).
-- Fonctions de surbrillance : si inVehID est nil, c'est le véhicule visé par core_vehicle_configTarget (ou le joueur 0) qui est utilisé. 'highlight' = œil cliqué dans l'UI (partsHighlighted), 'select' = survol temporaire d'une pièce.
+- Save settings (saveSettings, table): generateThumbnail (default true), saveLicenseplate (false), savePaints (true), overridePaints (false: writes the paints as explicit paints in the info file), useThumbnailFile + thumbnailFile (provided thumbnail), thumbnailCaptureId (id of a temporary core_vehicle_thumbnail capture). A boolean in place of the table is accepted (legacy withThumbnail argument). The metadata (saveMetadata) is validated by ge/extensions/vehicles/saveConfigUtils.
+- The functions saveNewLocalConfig / saveExistingLocalConfig return a table {success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?, metadataError?}. Reasons: walking, noVehicle, invalidFilename, invalidMetadata, saveFailed, thumbnailCopyFailed, configNotFound, notPlayerConfig.
+- Config paths are relative to the model folder (vehicleDirectory, e.g. 'vehicles/pickup/'). After saving, core_vehicles.clearCache() and ui_vehicleSelector_general.clearCache() are called.
+- setConfig / setConfigOfVehicle merge (tableMerge) the data into the vehicle's config. With respawn (true by default when nil), the vehicle is recreated via veh:respawn(serialize(config)); with respawn=false, only the paints are updated live (liveUpdateVehicleColors) and the partConfig field is rewritten. The first modification triggers the VEHICLE_MODIFIED achievement outside career.
+- setPartsConfig is obsolete: it just logs an error and asks to use setPartsTreeConfig. resetPartsToLoadedConfig still calls it, however, so this "Reset" button does nothing (game inconsistency).
+- Probable BUG: in buildConfigFromString, the inner function preprocessPartConfig returns nothing at the end of the format 4 case (it only has a return for a linked file failure and for the non-format 4 case); a format 4 config passed directly therefore falls back to the model's default config.
+- saveVehicle (collections) reads a variable `partsCondition` that is never defined in its scope: data.partsCondition is always nil.
+- M.savePartConfigFileStage2 points to savePartConfigFileStage2_Format2 (signature partsCondition, filename, saveSettings, saveMetadata) and not to the function of the same name (format 4) defined earlier, which is not exported.
+- No public function to call isOfficialConfig/isPlayerConfig (local): these values are returned by getConfigList (fields official, player).
+- Highlight functions: if inVehID is nil, the vehicle targeted by core_vehicle_configTarget (or player 0) is used. 'highlight' = eye clicked in the UI (partsHighlighted), 'select' = temporary hover of a part.
 
-**Dépendances (chargées avant) :** `core_locales`, `core_vehicle_configTarget`, `core_vehicle_thumbnail`, `core_vehicle_partFocusCamera`, `gameplay_achievement`
+**Dependencies (loaded first):** `core_locales`, `core_vehicle_configTarget`, `core_vehicle_thumbnail`, `core_vehicle_partFocusCamera`, `gameplay_achievement`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicle_partmgmt.buildConfigFromString(vehicleDir, configData, onlyReturnChosenConfig)` | Construit la table de config d'un véhicule à partir d'une donnée de config : table de config, chaîne sérialisée commençant par '{', ou chemin de fichier .pc. Sans config valide, retombe sur default_pc du fichier info du modèle. Les fichiers de format 2 sont fusionnés dans le résultat, sinon le contenu devient `parts`. Appelée par core_vehicle_manager au spawn. | 245 |
-| `core_vehicle_partmgmt.changeHighlightedPartsVisiblity(deltaAlpha, inVehID)` | Modifie la transparence des pièces en surbrillance d'un delta (résultat borné 0..1). | 1591 |
-| `core_vehicle_partmgmt.clearVehicleHighlights(inVehID)` | Supprime immédiatement l'état rayons X (rétablit l'alpha) pour le véhicule donné ou tout. | 1369 |
-| `core_vehicle_partmgmt.compileVehicleCollection(collectionTree)` | Transforme un arbre de véhicules attelés (core_vehicles.generateAttachedVehiclesTree) en liste de configs de véhicules : calcule les décalages relatifs ('default' : x,y,z,rx,ry,rz ; 'coupledNodes' : rotations seulement), numérote les parents et sauvegarde la config de chaque véhicule (ou un linkedPCFile si issu d'un .pc). | 419 |
-| `core_vehicle_partmgmt.getConfig()` | Config courante du véhicule visé. | 981 |
-| `core_vehicle_partmgmt.getConfigList()` | Liste les fichiers .pc du dossier du modèle du véhicule visé. | 1074 |
-| `core_vehicle_partmgmt.getConfigOfVehicle(vehicleId)` | Config courante d'un véhicule (vehicleData.config). | 974 |
-| `core_vehicle_partmgmt.getConfigVehicleId(explicitVehicleId)` | Résout l'id du véhicule à configurer (alias de core_vehicle_configTarget.resolveVehicleId). | 25 |
-| `core_vehicle_partmgmt.getCurrentLicensePlate()` | Texte de plaque du véhicule visé. | 1145 |
-| `core_vehicle_partmgmt.getCurrentLocalConfigName()` | Nom de base (sans dossier ni .pc) de la config chargée dans le véhicule visé. | 1048 |
-| `core_vehicle_partmgmt.getSaveAvailability()` | Indique si une sauvegarde est possible (pas en marche à pied, véhicule présent). | 605 |
-| `core_vehicle_partmgmt.getSaveMetadataFields(targetConfigName)` | Champs de métadonnées éditables pour la sauvegarde (d'après saveConfigUtils) pour le modèle du véhicule visé. | 1061 |
-| `core_vehicle_partmgmt.getTranslation(name, prefix)` | Traduit un nom d'UI : texte avec préfixe de traduction par défaut, ou table {txt, ctx} traduite avec contexte. Une autre table donne nil. | 151 |
-| `core_vehicle_partmgmt.hasAvailablePart(partName)` | Indique si une pièce existe dans le contexte jbeam du véhicule visé. | 846 |
-| `core_vehicle_partmgmt.highlightParts(parts, inVehID)` | Définit les pièces mises en surbrillance (clic sur l'œil de l'UI) et applique la transparence correspondante. | 1613 |
-| `core_vehicle_partmgmt.loadLocal(filename, respawn)` | Remplace le véhicule visé par la config donnée (core_vehicles.replaceVehicle avec {config = filename}). | 991 |
-| `core_vehicle_partmgmt.onDeserialized(data)` | Hook : restaure les données de onSerialize. *(interne)* *(hook)* | 1902 |
-| `core_vehicle_partmgmt.onExtensionUnloaded()` | Hook : l'extension est déchargée ; rétablit l'alpha des meshes. *(interne)* *(hook)* | 1856 |
-| `core_vehicle_partmgmt.onFilesChanged(files)` | Hook : des fichiers ont changé ; vide le cache saveConfigUtils et invalide le cache des partpacks si un .partpacks.json a changé. *(interne)* *(hook)* | 1881 |
-| `core_vehicle_partmgmt.onLanguageChanged()` | Hook : la langue change ; vide les caches de traduction. *(interne)* *(hook)* | 1860 |
-| `core_vehicle_partmgmt.onReloadLocales()` | Hook : les traductions sont rechargées ; vide les caches. *(interne)* *(hook)* | 1865 |
-| `core_vehicle_partmgmt.onSerialize()` | Hook : sauvegarde les données de surbrillance avant rechargement Lua. *(interne)* *(hook)* | 1894 |
-| `core_vehicle_partmgmt.onUpdate(dt)` | Hook par frame : applique le debounce du sélecteur de pièces et anime le fondu rayons X. *(interne)* *(hook)* | 1870 |
-| `core_vehicle_partmgmt.onVehicleConfigTargetChanged(current)` | Hook (core_vehicle_configTarget) : la cible de configuration change ; efface les rayons X et envoie les données du nouveau véhicule à l'UI. *(interne)* *(hook)* | 1849 |
-| `core_vehicle_partmgmt.onVehicleDestroyed(vehID)` | Hook : un véhicule est détruit ; libère ses données de surbrillance. *(interne)* *(hook)* | 1841 |
-| `core_vehicle_partmgmt.onVehicleSpawned(vehID)` | Hook : un véhicule apparaît ; réinitialise l'état rayons X concerné et le cache d'informations de pièces. *(interne)* *(hook)* | 1826 |
-| `core_vehicle_partmgmt.onVehicleSwitched(oldID, newID, player)` | Hook : le joueur cible change de véhicule ; efface l'état rayons X. *(interne)* *(hook)* | 1834 |
-| `core_vehicle_partmgmt.openConfigFolderInExplorer()` | Ouvre dans l'explorateur de fichiers le dossier des configs du modèle (le crée s'il n'existe pas). | 1312 |
-| `core_vehicle_partmgmt.partsSelectorChanged(state)` | Appelée par l'UI quand la sélection du sélecteur de pièces change ; retarde de 0,1 s l'application (debounce) via highlightParts. | 1734 |
-| `core_vehicle_partmgmt.partsTreeToPartsMap(partsTree)` | Aplatit un arbre de pièces résolu en dictionnaire slotId -> nom de pièce choisie (format `parts` des .pc). Les slots de même id à des chemins différents sont enregistrés sous leur chemin complet. | 322 |
-| `core_vehicle_partmgmt.regenerateCurrentLicensePlate()` | Génère et applique un nouveau texte de plaque aléatoire. | 1164 |
-| `core_vehicle_partmgmt.releasePartFocusCamera()` | Rend la caméra au joueur (core_vehicle_partFocusCamera.clear). | 1517 |
-| `core_vehicle_partmgmt.removeLocal(filename)` | Supprime <dossier>/<filename>.pc et sa miniature .jpg puis prévient l'UI (VehicleconfigRemoved). | 1000 |
-| `core_vehicle_partmgmt.reset()` | Réenvoie les données à l'UI (sendDataToUI). | 901 |
-| `core_vehicle_partmgmt.resetAllToLoadedConfig()` | Recharge la config d'origine (partConfigFilename) du véhicule visé. | 1776 |
-| `core_vehicle_partmgmt.resetConfig()` | Vide parts et vars de la config du véhicule visé et recrée le véhicule. | 1772 |
-| `core_vehicle_partmgmt.resetPartsToLoadedConfig()` | Bouton Reset des pièces : relit les parts du .pc d'origine et appelle setPartsConfig (obsolète, voir notes). | 1786 |
-| `core_vehicle_partmgmt.resetVarsToLoadedConfig()` | Remet les variables de tuning à celles du .pc d'origine (vide si aucun) et recrée le véhicule. | 1806 |
-| `core_vehicle_partmgmt.resetVehicleHighlights(onlyIfVehChanged, inVehID)` | Efface les surbrillances (pièces, transparence, caméra) en refondant vers le véhicule opaque. | 1741 |
-| `core_vehicle_partmgmt.save(filename, saveSettings, saveMetadata)` | Sauvegarde la config du véhicule visé sous un chemin complet (alias de savePartConfigFile → format 2). | 713 |
-| `core_vehicle_partmgmt.saveExistingLocalConfig(fileName, configurationName, saveSettings, saveMetadata)` | Écrase une config existante du joueur (pas une config officielle). | 1277 |
-| `core_vehicle_partmgmt.saveLocal(fn, saveSettings, saveMetadata)` | Sauvegarde la config sous <dossier du modèle>/<fn>. | 726 |
-| `core_vehicle_partmgmt.saveLocalScreenshot(fn)` | Étape 1 d'une capture de miniature : passe en caméra libre, FOV 35, déclenche saveLocalScreenshot_stage1 côté UI. | 746 |
-| `core_vehicle_partmgmt.saveLocalScreenshot_stage2(fn)` | Étape 2 : prend la capture jpg dans le dossier du modèle puis déclenche saveLocalScreenshot_stage3. | 756 |
-| `core_vehicle_partmgmt.saveNewLocalConfig(configurationName, saveSettings, saveMetadata)` | Sauvegarde la config sous un nouveau nom de fichier dérivé de configurationName (en minuscules, suffixe numérique si déjà pris), génère la miniature et débloque le succès VEHICLE_CONFIG_SAVED. | 1268 |
-| `core_vehicle_partmgmt.savePartConfigFileStage2(partsCondition, filename, saveSettings, saveMetadata)` | Sauvegarde la config du véhicule visé au format 2 dans `filename` (+ fichier info_<nom>.json + peintures selon saveSettings), prévient l'UI et vide les caches de sélecteur. Voir les notes sur l'alias. | 631 |
-| `core_vehicle_partmgmt.saveVehicleCollection(collectionTree, filename)` | Écrit une collection de véhicules au format 4 dans un fichier JSON et prévient l'UI (VehicleconfigSaved, message). | 503 |
-| `core_vehicle_partmgmt.savedefault()` | Sauvegarde la config du véhicule visé comme véhicule par défaut (settings/default.pc) et affiche un message. | 767 |
-| `core_vehicle_partmgmt.selectParts(parts, inVehID, cameraParts, cameraOptions)` | Sélection temporaire (survol d'une pièce dans l'UI) : met ces pièces à pleine visibilité et recadre la caméra de pièces. | 1645 |
-| `core_vehicle_partmgmt.sendDataToUI(explicitVehicleId)` | Envoie à l'UI (guihook brut VehicleConfigChange) toutes les données du configurateur : id, modèle, arbre de pièces choisi, variables de tuning traduites, valeurs par défaut du .pc, catalogue de partpacks, pièces en surbrillance, infos enrichies des pièces. | 792 |
-| `core_vehicle_partmgmt.sendPartsSelectorStateToUI()` | Envoie à l'UI (guihook PartsSelectorUpdate) la liste triée des pièces et les indices en surbrillance. | 1711 |
-| `core_vehicle_partmgmt.setConfig(inData, respawn, explicitVehicleId)` | Comme setConfigOfVehicle pour le véhicule visé (ou explicitVehicleId). | 945 |
-| `core_vehicle_partmgmt.setConfigOfVehicle(veh, inData, respawn)` | Fusionne `inData` dans la config du véhicule donné (voir notes sur respawn). | 905 |
-| `core_vehicle_partmgmt.setConfigPaints(data, respawn, explicitVehicleId)` | Fusionne une liste de peintures dans la config ({paints = data}). | 957 |
-| `core_vehicle_partmgmt.setConfigVars(data, respawn)` | Fusionne des variables de tuning ({vars = data}) dans la config du véhicule visé. | 961 |
-| `core_vehicle_partmgmt.setCurrentConfigurationName(configurationName)` | Fixe le nom affiché (Configuration) dans la config du véhicule visé (sans sauvegarder). | 735 |
-| `core_vehicle_partmgmt.setCurrentLicensePlate(text)` | Applique un texte de plaque au véhicule visé (core_vehicles.setPlateText). | 1157 |
-| `core_vehicle_partmgmt.setHighlightedPartsVisiblity(alpha, inVehID)` | Fixe la transparence des pièces en surbrillance. | 1580 |
-| `core_vehicle_partmgmt.setNewParts(inVehID, silent)` | Met à jour les données de surbrillance après un changement de pièces : les pièces existantes gardent leur état, les nouvelles prennent celui de leur parent. | 1656 |
-| `core_vehicle_partmgmt.setPartsConfig(data, respawn)` | Obsolète : logue une erreur demandant d'utiliser setPartsTreeConfig. N'applique rien. | 965 |
-| `core_vehicle_partmgmt.setPartsTreeConfig(dataTree, respawn, part)` | Applique un nouvel arbre de pièces au véhicule visé (fusion de {partsTree = dataTree}) et émet le hook onPartsTreeConfigChanged(dataTree, respawn, part) avant. | 969 |
-| `core_vehicle_partmgmt.setSkin(skin)` | Applique un skin : choisit la pièce '<modèle>_skin_<skin>' dans le slot 'paint_design' puis remplace le véhicule. skin vide retire le skin. | 859 |
-| `core_vehicle_partmgmt.showHighlightedParts(inVehID, cameraParts, cameraOptions)` | Revient à l'affichage des pièces en surbrillance (après un survol). | 1603 |
-| `core_vehicle_partmgmt.translateTuningData(tuningData)` | Copie les variables de tuning en traduisant title, description, category et subCategory. | 167 |
-| `core_vehicle_partmgmt.validatePaints()` | Compare les peintures actuelles du véhicule visé avec celles du modèle/de la bibliothèque (core_vehiclePaints.validatePcPaints) et ajoute les réglages de sauvegarde par défaut. | 1128 |
+| `core_vehicle_partmgmt.buildConfigFromString(vehicleDir, configData, onlyReturnChosenConfig)` | Builds a vehicle's config table from config data: config table, serialized string starting with '{', or .pc file path. Without a valid config, falls back to default_pc from the model's info file. Format 2 files are merged into the result, otherwise the content becomes `parts`. Called by core_vehicle_manager on spawn. | 245 |
+| `core_vehicle_partmgmt.changeHighlightedPartsVisiblity(deltaAlpha, inVehID)` | Changes the transparency of the highlighted parts by a delta (result clamped 0..1). | 1591 |
+| `core_vehicle_partmgmt.clearVehicleHighlights(inVehID)` | Immediately removes the X-ray state (restores the alpha) for the given vehicle or all. | 1369 |
+| `core_vehicle_partmgmt.compileVehicleCollection(collectionTree)` | Turns a tree of coupled vehicles (core_vehicles.generateAttachedVehiclesTree) into a list of vehicle configs: computes the relative offsets ('default': x,y,z,rx,ry,rz; 'coupledNodes': rotations only), numbers the parents and saves each vehicle's config (or a linkedPCFile if it comes from a .pc). | 419 |
+| `core_vehicle_partmgmt.getConfig()` | Current config of the targeted vehicle. | 981 |
+| `core_vehicle_partmgmt.getConfigList()` | Lists the .pc files of the targeted vehicle's model folder. | 1074 |
+| `core_vehicle_partmgmt.getConfigOfVehicle(vehicleId)` | Current config of a vehicle (vehicleData.config). | 974 |
+| `core_vehicle_partmgmt.getConfigVehicleId(explicitVehicleId)` | Resolves the id of the vehicle to configure (alias of core_vehicle_configTarget.resolveVehicleId). | 25 |
+| `core_vehicle_partmgmt.getCurrentLicensePlate()` | License plate text of the targeted vehicle. | 1145 |
+| `core_vehicle_partmgmt.getCurrentLocalConfigName()` | Base name (without folder or .pc) of the config loaded in the targeted vehicle. | 1048 |
+| `core_vehicle_partmgmt.getSaveAvailability()` | Indicates whether saving is possible (not on foot, vehicle present). | 605 |
+| `core_vehicle_partmgmt.getSaveMetadataFields(targetConfigName)` | Editable metadata fields for saving (from saveConfigUtils) for the targeted vehicle's model. | 1061 |
+| `core_vehicle_partmgmt.getTranslation(name, prefix)` | Translates a UI name: text with a default translation prefix, or a table {txt, ctx} translated with context. Any other table gives nil. | 151 |
+| `core_vehicle_partmgmt.hasAvailablePart(partName)` | Indicates whether a part exists in the targeted vehicle's jbeam context. | 846 |
+| `core_vehicle_partmgmt.highlightParts(parts, inVehID)` | Sets the highlighted parts (click on the UI eye) and applies the corresponding transparency. | 1613 |
+| `core_vehicle_partmgmt.loadLocal(filename, respawn)` | Replaces the targeted vehicle with the given config (core_vehicles.replaceVehicle with {config = filename}). | 991 |
+| `core_vehicle_partmgmt.onDeserialized(data)` | Hook: restores the data from onSerialize. *(internal)* *(hook)* | 1902 |
+| `core_vehicle_partmgmt.onExtensionUnloaded()` | Hook: the extension is unloaded; restores the meshes' alpha. *(internal)* *(hook)* | 1856 |
+| `core_vehicle_partmgmt.onFilesChanged(files)` | Hook: files changed; empties the saveConfigUtils cache and invalidates the partpacks cache if a .partpacks.json changed. *(internal)* *(hook)* | 1881 |
+| `core_vehicle_partmgmt.onLanguageChanged()` | Hook: the language changes; empties the translation caches. *(internal)* *(hook)* | 1860 |
+| `core_vehicle_partmgmt.onReloadLocales()` | Hook: translations are reloaded; empties the caches. *(internal)* *(hook)* | 1865 |
+| `core_vehicle_partmgmt.onSerialize()` | Hook: saves the highlight data before a Lua reload. *(internal)* *(hook)* | 1894 |
+| `core_vehicle_partmgmt.onUpdate(dt)` | Per-frame hook: applies the parts selector debounce and animates the X-ray fade. *(internal)* *(hook)* | 1870 |
+| `core_vehicle_partmgmt.onVehicleConfigTargetChanged(current)` | Hook (core_vehicle_configTarget): the configuration target changes; clears the X-ray and sends the new vehicle's data to the UI. *(internal)* *(hook)* | 1849 |
+| `core_vehicle_partmgmt.onVehicleDestroyed(vehID)` | Hook: a vehicle is destroyed; frees its highlight data. *(internal)* *(hook)* | 1841 |
+| `core_vehicle_partmgmt.onVehicleSpawned(vehID)` | Hook: a vehicle spawns; resets the relevant X-ray state and the part info cache. *(internal)* *(hook)* | 1826 |
+| `core_vehicle_partmgmt.onVehicleSwitched(oldID, newID, player)` | Hook: the target player changes vehicle; clears the X-ray state. *(internal)* *(hook)* | 1834 |
+| `core_vehicle_partmgmt.openConfigFolderInExplorer()` | Opens the model's configs folder in the file explorer (creates it if it does not exist). | 1312 |
+| `core_vehicle_partmgmt.partsSelectorChanged(state)` | Called by the UI when the parts selector's selection changes; delays the application by 0.1 s (debounce) via highlightParts. | 1734 |
+| `core_vehicle_partmgmt.partsTreeToPartsMap(partsTree)` | Flattens a resolved parts tree into a slotId -> chosen part name dictionary (`parts` format of .pc files). Slots with the same id at different paths are recorded under their full path. | 322 |
+| `core_vehicle_partmgmt.regenerateCurrentLicensePlate()` | Generates and applies a new random license plate text. | 1164 |
+| `core_vehicle_partmgmt.releasePartFocusCamera()` | Gives the camera back to the player (core_vehicle_partFocusCamera.clear). | 1517 |
+| `core_vehicle_partmgmt.removeLocal(filename)` | Deletes <folder>/<filename>.pc and its .jpg thumbnail then notifies the UI (VehicleconfigRemoved). | 1000 |
+| `core_vehicle_partmgmt.reset()` | Resends the data to the UI (sendDataToUI). | 901 |
+| `core_vehicle_partmgmt.resetAllToLoadedConfig()` | Reloads the original config (partConfigFilename) of the targeted vehicle. | 1776 |
+| `core_vehicle_partmgmt.resetConfig()` | Clears parts and vars of the targeted vehicle's config and recreates the vehicle. | 1772 |
+| `core_vehicle_partmgmt.resetPartsToLoadedConfig()` | Parts Reset button: re-reads the parts of the original .pc and calls setPartsConfig (obsolete, see notes). | 1786 |
+| `core_vehicle_partmgmt.resetVarsToLoadedConfig()` | Resets the tuning variables to those of the original .pc (empty if none) and recreates the vehicle. | 1806 |
+| `core_vehicle_partmgmt.resetVehicleHighlights(onlyIfVehChanged, inVehID)` | Clears the highlights (parts, transparency, camera) by fading back to the opaque vehicle. | 1741 |
+| `core_vehicle_partmgmt.save(filename, saveSettings, saveMetadata)` | Saves the targeted vehicle's config under a full path (alias of savePartConfigFile -> format 2). | 713 |
+| `core_vehicle_partmgmt.saveExistingLocalConfig(fileName, configurationName, saveSettings, saveMetadata)` | Overwrites an existing player config (not an official config). | 1277 |
+| `core_vehicle_partmgmt.saveLocal(fn, saveSettings, saveMetadata)` | Saves the config under <model folder>/<fn>. | 726 |
+| `core_vehicle_partmgmt.saveLocalScreenshot(fn)` | Step 1 of a thumbnail capture: switches to free camera, FOV 35, triggers saveLocalScreenshot_stage1 on the UI side. | 746 |
+| `core_vehicle_partmgmt.saveLocalScreenshot_stage2(fn)` | Step 2: takes the jpg capture in the model folder then triggers saveLocalScreenshot_stage3. | 756 |
+| `core_vehicle_partmgmt.saveNewLocalConfig(configurationName, saveSettings, saveMetadata)` | Saves the config under a new file name derived from configurationName (lowercase, numeric suffix if already taken), generates the thumbnail and unlocks the VEHICLE_CONFIG_SAVED achievement. | 1268 |
+| `core_vehicle_partmgmt.savePartConfigFileStage2(partsCondition, filename, saveSettings, saveMetadata)` | Saves the targeted vehicle's config in format 2 to `filename` (+ info_<name>.json file + paints according to saveSettings), notifies the UI and empties the selector caches. See the notes on the alias. | 631 |
+| `core_vehicle_partmgmt.saveVehicleCollection(collectionTree, filename)` | Writes a vehicle collection in format 4 to a JSON file and notifies the UI (VehicleconfigSaved, message). | 503 |
+| `core_vehicle_partmgmt.savedefault()` | Saves the targeted vehicle's config as the default vehicle (settings/default.pc) and displays a message. | 767 |
+| `core_vehicle_partmgmt.selectParts(parts, inVehID, cameraParts, cameraOptions)` | Temporary selection (hover of a part in the UI): sets these parts to full visibility and reframes the part camera. | 1645 |
+| `core_vehicle_partmgmt.sendDataToUI(explicitVehicleId)` | Sends to the UI (raw guihook VehicleConfigChange) all the configurator data: id, model, chosen parts tree, translated tuning variables, .pc default values, partpacks catalog, highlighted parts, enriched part info. | 792 |
+| `core_vehicle_partmgmt.sendPartsSelectorStateToUI()` | Sends to the UI (guihook PartsSelectorUpdate) the sorted list of parts and the highlighted indexes. | 1711 |
+| `core_vehicle_partmgmt.setConfig(inData, respawn, explicitVehicleId)` | Like setConfigOfVehicle for the targeted vehicle (or explicitVehicleId). | 945 |
+| `core_vehicle_partmgmt.setConfigOfVehicle(veh, inData, respawn)` | Merges `inData` into the given vehicle's config (see notes on respawn). | 905 |
+| `core_vehicle_partmgmt.setConfigPaints(data, respawn, explicitVehicleId)` | Merges a list of paints into the config ({paints = data}). | 957 |
+| `core_vehicle_partmgmt.setConfigVars(data, respawn)` | Merges tuning variables ({vars = data}) into the targeted vehicle's config. | 961 |
+| `core_vehicle_partmgmt.setCurrentConfigurationName(configurationName)` | Sets the display name (Configuration) in the targeted vehicle's config (without saving). | 735 |
+| `core_vehicle_partmgmt.setCurrentLicensePlate(text)` | Applies a license plate text to the targeted vehicle (core_vehicles.setPlateText). | 1157 |
+| `core_vehicle_partmgmt.setHighlightedPartsVisiblity(alpha, inVehID)` | Sets the transparency of the highlighted parts. | 1580 |
+| `core_vehicle_partmgmt.setNewParts(inVehID, silent)` | Updates the highlight data after a parts change: existing parts keep their state, new ones take that of their parent. | 1656 |
+| `core_vehicle_partmgmt.setPartsConfig(data, respawn)` | Obsolete: logs an error asking to use setPartsTreeConfig. Applies nothing. | 965 |
+| `core_vehicle_partmgmt.setPartsTreeConfig(dataTree, respawn, part)` | Applies a new parts tree to the targeted vehicle (merge of {partsTree = dataTree}) and emits the onPartsTreeConfigChanged(dataTree, respawn, part) hook beforehand. | 969 |
+| `core_vehicle_partmgmt.setSkin(skin)` | Applies a skin: chooses the part '<model>_skin_<skin>' in the 'paint_design' slot then replaces the vehicle. An empty skin removes the skin. | 859 |
+| `core_vehicle_partmgmt.showHighlightedParts(inVehID, cameraParts, cameraOptions)` | Goes back to displaying the highlighted parts (after a hover). | 1603 |
+| `core_vehicle_partmgmt.translateTuningData(tuningData)` | Copies the tuning variables while translating title, description, category and subCategory. | 167 |
+| `core_vehicle_partmgmt.validatePaints()` | Compares the targeted vehicle's current paints with those of the model/library (core_vehiclePaints.validatePcPaints) and adds the default save settings. | 1128 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicle_partmgmt.buildConfigFromString(vehicleDir, configData, onlyReturnChosenConfig)`
 
-Construit la table de config d'un véhicule à partir d'une donnée de config : table de config, chaîne sérialisée commençant par '{', ou chemin de fichier .pc. Sans config valide, retombe sur default_pc du fichier info du modèle. Les fichiers de format 2 sont fusionnés dans le résultat, sinon le contenu devient `parts`. Appelée par core_vehicle_manager au spawn.
+Builds a vehicle's config table from config data: config table, serialized string starting with '{', or .pc file path. Without a valid config, falls back to default_pc from the model's info file. Format 2 files are merged into the result, otherwise the content becomes `parts`. Called by core_vehicle_manager on spawn.
 
-- `vehicleDir` (*string*) : dossier du modèle (ex. 'vehicles/pickup/')
-- `configData` (*table|string|nil*) : config, chaîne sérialisée ou chemin .pc
-- `onlyReturnChosenConfig` (*boolean|nil*) : si true, renvoie (nil, false) plutôt que de se rabattre sur la config par défaut
-- **renvoie** : table|nil config {partConfigFilename, parts|…, vars, paints…}
-- **renvoie** : boolean true si la config demandée a bien été utilisée (pas le repli par défaut)
+- `vehicleDir` (*string*) : model folder (e.g. 'vehicles/pickup/')
+- `configData` (*table|string|nil*) : config, serialized string or .pc path
+- `onlyReturnChosenConfig` (*boolean|nil*) : if true, returns (nil, false) instead of falling back to the default config
+- **returns**: table|nil config {partConfigFilename, parts|..., vars, paints...}
+- **returns**: boolean true if the requested config was actually used (not the default fallback)
 
 #### `core_vehicle_partmgmt.changeHighlightedPartsVisiblity(deltaAlpha, inVehID)`
 
-Modifie la transparence des pièces en surbrillance d'un delta (résultat borné 0..1).
+Changes the transparency of the highlighted parts by a delta (result clamped 0..1).
 
-- `deltaAlpha` (*number*) : variation
-- `inVehID` (*integer|nil*) : véhicule
+- `deltaAlpha` (*number*) : change
+- `inVehID` (*integer|nil*) : vehicle
 
 #### `core_vehicle_partmgmt.clearVehicleHighlights(inVehID)`
 
-Supprime immédiatement l'état rayons X (rétablit l'alpha) pour le véhicule donné ou tout.
+Immediately removes the X-ray state (restores the alpha) for the given vehicle or all.
 
-- `inVehID` (*integer|nil*) : véhicule ; nil = tous
+- `inVehID` (*integer|nil*) : vehicle; nil = all
 
 #### `core_vehicle_partmgmt.compileVehicleCollection(collectionTree)`
 
-Transforme un arbre de véhicules attelés (core_vehicles.generateAttachedVehiclesTree) en liste de configs de véhicules : calcule les décalages relatifs ('default' : x,y,z,rx,ry,rz ; 'coupledNodes' : rotations seulement), numérote les parents et sauvegarde la config de chaque véhicule (ou un linkedPCFile si issu d'un .pc).
+Turns a tree of coupled vehicles (core_vehicles.generateAttachedVehiclesTree) into a list of vehicle configs: computes the relative offsets ('default': x,y,z,rx,ry,rz; 'coupledNodes': rotations only), numbers the parents and saves each vehicle's config (or a linkedPCFile if it comes from a .pc).
 
-- `collectionTree` (*table*) : arbre de véhicules {vehId, offsetData, children}
-- **renvoie** : table[] liste de configs de véhicules (format 4)
+- `collectionTree` (*table*) : vehicle tree {vehId, offsetData, children}
+- **returns**: table[] list of vehicle configs (format 4)
 
 #### `core_vehicle_partmgmt.getConfig()`
 
-Config courante du véhicule visé.
+Current config of the targeted vehicle.
 
-- **renvoie** : table|nil config ; nil sans véhicule
+- **returns**: table|nil config; nil without a vehicle
 
 #### `core_vehicle_partmgmt.getConfigList()`
 
-Liste les fichiers .pc du dossier du modèle du véhicule visé.
+Lists the .pc files of the targeted vehicle's model folder.
 
-- **renvoie** : table[]|nil entrées {fileName, name, displayName?, official, player, thumbnailPath?} ; nil sans véhicule
+- **returns**: table[]|nil entries {fileName, name, displayName?, official, player, thumbnailPath?}; nil without a vehicle
 
 #### `core_vehicle_partmgmt.getConfigOfVehicle(vehicleId)`
 
-Config courante d'un véhicule (vehicleData.config).
+Current config of a vehicle (vehicleData.config).
 
-- `vehicleId` (*integer*) : id du véhicule
-- **renvoie** : table|nil config (pas une copie) ; nil si inconnu
+- `vehicleId` (*integer*) : vehicle id
+- **returns**: table|nil config (not a copy); nil if unknown
 
 #### `core_vehicle_partmgmt.getConfigVehicleId(explicitVehicleId)`
 
-Résout l'id du véhicule à configurer (alias de core_vehicle_configTarget.resolveVehicleId).
+Resolves the id of the vehicle to configure (alias of core_vehicle_configTarget.resolveVehicleId).
 
-- `explicitVehicleId` (*integer|nil*) : id demandé ; nil = cible de configuration, sinon joueur 0
-- **renvoie** : integer|nil id valide, nil sinon
+- `explicitVehicleId` (*integer|nil*) : requested id; nil = configuration target, otherwise player 0
+- **returns**: integer|nil valid id, nil otherwise
 
 #### `core_vehicle_partmgmt.getCurrentLicensePlate()`
 
-Texte de plaque du véhicule visé.
+License plate text of the targeted vehicle.
 
-- **renvoie** : string texte ou ''
+- **returns**: string text or ''
 
 #### `core_vehicle_partmgmt.getCurrentLocalConfigName()`
 
-Nom de base (sans dossier ni .pc) de la config chargée dans le véhicule visé.
+Base name (without folder or .pc) of the config loaded in the targeted vehicle.
 
-- **renvoie** : string|nil nom de base
+- **returns**: string|nil base name
 
 #### `core_vehicle_partmgmt.getSaveAvailability()`
 
-Indique si une sauvegarde est possible (pas en marche à pied, véhicule présent).
+Indicates whether saving is possible (not on foot, vehicle present).
 
-- **renvoie** : table {canSave = boolean, reason = 'walking'|'noVehicle'|nil}
+- **returns**: table {canSave = boolean, reason = 'walking'|'noVehicle'|nil}
 
 #### `core_vehicle_partmgmt.getSaveMetadataFields(targetConfigName)`
 
-Champs de métadonnées éditables pour la sauvegarde (d'après saveConfigUtils) pour le modèle du véhicule visé.
+Editable metadata fields for saving (from saveConfigUtils) for the targeted vehicle's model.
 
-- `targetConfigName` (*string|nil*) : config cible (basename)
-- **renvoie** : table champs ; {} si pas de véhicule
+- `targetConfigName` (*string|nil*) : target config (basename)
+- **returns**: table fields; {} if no vehicle
 
 #### `core_vehicle_partmgmt.getTranslation(name, prefix)`
 
-Traduit un nom d'UI : texte avec préfixe de traduction par défaut, ou table {txt, ctx} traduite avec contexte. Une autre table donne nil.
+Translates a UI name: text with a default translation prefix, or a table {txt, ctx} translated with context. Any other table gives nil.
 
-- `name` (*string|table*) : clé de traduction ou {txt, ctx}
-- `prefix` (*string|nil*) : préfixe de repli, défaut 'ui.vehicleconfig.title.'
-- **renvoie** : string|nil texte traduit
+- `name` (*string|table*) : translation key or {txt, ctx}
+- `prefix` (*string|nil*) : fallback prefix, default 'ui.vehicleconfig.title.'
+- **returns**: string|nil translated text
 
 #### `core_vehicle_partmgmt.hasAvailablePart(partName)`
 
-Indique si une pièce existe dans le contexte jbeam du véhicule visé.
+Indicates whether a part exists in the targeted vehicle's jbeam context.
 
-- `partName` (*string*) : nom de pièce
-- **renvoie** : boolean|nil nil si partName est vide
+- `partName` (*string*) : part name
+- **returns**: boolean|nil nil if partName is empty
 
 #### `core_vehicle_partmgmt.highlightParts(parts, inVehID)`
 
-Définit les pièces mises en surbrillance (clic sur l'œil de l'UI) et applique la transparence correspondante.
+Sets the highlighted parts (click on the UI eye) and applies the corresponding transparency.
 
-- `parts` (*table<string, boolean>*) : [chemin de pièce] = true pour les pièces visibles
-- `inVehID` (*integer|nil*) : véhicule ; nil = joueur
+- `parts` (*table<string, boolean>*) : [part path] = true for the visible parts
+- `inVehID` (*integer|nil*) : vehicle; nil = player
 
 #### `core_vehicle_partmgmt.loadLocal(filename, respawn)`
 
-Remplace le véhicule visé par la config donnée (core_vehicles.replaceVehicle avec {config = filename}).
+Replaces the targeted vehicle with the given config (core_vehicles.replaceVehicle with {config = filename}).
 
-- `filename` (*string*) : chemin ou nom de config .pc
-- `respawn` (*boolean|nil*) : non utilisé dans le code
+- `filename` (*string*) : .pc config path or name
+- `respawn` (*boolean|nil*) : not used in the code
 
 #### `core_vehicle_partmgmt.onDeserialized(data)`
 
-Hook : restaure les données de onSerialize.
+Hook: restores the data from onSerialize.
 
-- `data` (*table*) : données
+- `data` (*table*) : data
 
 #### `core_vehicle_partmgmt.onFilesChanged(files)`
 
-Hook : des fichiers ont changé ; vide le cache saveConfigUtils et invalide le cache des partpacks si un .partpacks.json a changé.
+Hook: files changed; empties the saveConfigUtils cache and invalidates the partpacks cache if a .partpacks.json changed.
 
-- `files` (*table[]*) : liste {filename, …}
+- `files` (*table[]*) : list {filename, ...}
 
 #### `core_vehicle_partmgmt.onSerialize()`
 
-Hook : sauvegarde les données de surbrillance avant rechargement Lua.
+Hook: saves the highlight data before a Lua reload.
 
-- **renvoie** : table {vehsPartsData, vehsRichPartInfo}
+- **returns**: table {vehsPartsData, vehsRichPartInfo}
 
 #### `core_vehicle_partmgmt.onUpdate(dt)`
 
-Hook par frame : applique le debounce du sélecteur de pièces et anime le fondu rayons X.
+Per-frame hook: applies the parts selector debounce and animates the X-ray fade.
 
-- `dt` (*number*) : temps écoulé (s)
+- `dt` (*number*) : elapsed time (s)
 
 #### `core_vehicle_partmgmt.onVehicleConfigTargetChanged(current)`
 
-Hook (core_vehicle_configTarget) : la cible de configuration change ; efface les rayons X et envoie les données du nouveau véhicule à l'UI.
+Hook (core_vehicle_configTarget): the configuration target changes; clears the X-ray and sends the new vehicle's data to the UI.
 
-- `current` (*table|nil*) : nouvelle cible {vehId, playerId, returnRoute}
+- `current` (*table|nil*) : new target {vehId, playerId, returnRoute}
 
 #### `core_vehicle_partmgmt.onVehicleDestroyed(vehID)`
 
-Hook : un véhicule est détruit ; libère ses données de surbrillance.
+Hook: a vehicle is destroyed; frees its highlight data.
 
-- `vehID` (*integer*) : véhicule
+- `vehID` (*integer*) : vehicle
 
 #### `core_vehicle_partmgmt.onVehicleSpawned(vehID)`
 
-Hook : un véhicule apparaît ; réinitialise l'état rayons X concerné et le cache d'informations de pièces.
+Hook: a vehicle spawns; resets the relevant X-ray state and the part info cache.
 
-- `vehID` (*integer*) : véhicule
+- `vehID` (*integer*) : vehicle
 
 #### `core_vehicle_partmgmt.onVehicleSwitched(oldID, newID, player)`
 
-Hook : le joueur cible change de véhicule ; efface l'état rayons X.
+Hook: the target player changes vehicle; clears the X-ray state.
 
-- `oldID` (*integer*) : ancien véhicule
-- `newID` (*integer*) : nouveau véhicule
-- `player` (*integer*) : joueur
+- `oldID` (*integer*) : old vehicle
+- `newID` (*integer*) : new vehicle
+- `player` (*integer*) : player
 
 #### `core_vehicle_partmgmt.partsSelectorChanged(state)`
 
-Appelée par l'UI quand la sélection du sélecteur de pièces change ; retarde de 0,1 s l'application (debounce) via highlightParts.
+Called by the UI when the parts selector's selection changes; delays the application by 0.1 s (debounce) via highlightParts.
 
 - `state` (*table*) : {vehID, partsSorted, partsHighlightedIdxs}
 
 #### `core_vehicle_partmgmt.partsTreeToPartsMap(partsTree)`
 
-Aplatit un arbre de pièces résolu en dictionnaire slotId -> nom de pièce choisie (format `parts` des .pc). Les slots de même id à des chemins différents sont enregistrés sous leur chemin complet.
+Flattens a resolved parts tree into a slotId -> chosen part name dictionary (`parts` format of .pc files). Slots with the same id at different paths are recorded under their full path.
 
 - `partsTree` (*table*) : config.partsTree
-- **renvoie** : table<string, string> [slotId ou chemin] = chosenPartName
+- **returns**: table<string, string> [slotId or path] = chosenPartName
 
 #### `core_vehicle_partmgmt.regenerateCurrentLicensePlate()`
 
-Génère et applique un nouveau texte de plaque aléatoire.
+Generates and applies a new random license plate text.
 
-- **renvoie** : string texte généré
+- **returns**: string generated text
 
 #### `core_vehicle_partmgmt.removeLocal(filename)`
 
-Supprime <dossier>/<filename>.pc et sa miniature .jpg puis prévient l'UI (VehicleconfigRemoved).
+Deletes <folder>/<filename>.pc and its .jpg thumbnail then notifies the UI (VehicleconfigRemoved).
 
-- `filename` (*string*) : nom de config sans extension
+- `filename` (*string*) : config name without extension
 
 #### `core_vehicle_partmgmt.resetVehicleHighlights(onlyIfVehChanged, inVehID)`
 
-Efface les surbrillances (pièces, transparence, caméra) en refondant vers le véhicule opaque.
+Clears the highlights (parts, transparency, camera) by fading back to the opaque vehicle.
 
-- `onlyIfVehChanged` (*boolean|nil*) : true : n'efface que si le modèle du véhicule a changé
-- `inVehID` (*integer|nil*) : véhicule
+- `onlyIfVehChanged` (*boolean|nil*) : true: only clears if the vehicle's model changed
+- `inVehID` (*integer|nil*) : vehicle
 
 #### `core_vehicle_partmgmt.save(filename, saveSettings, saveMetadata)`
 
-Sauvegarde la config du véhicule visé sous un chemin complet (alias de savePartConfigFile → format 2).
+Saves the targeted vehicle's config under a full path (alias of savePartConfigFile -> format 2).
 
-- `filename` (*string*) : chemin du .pc
-- `saveSettings` (*table|boolean|nil*) : voir notes
-- `saveMetadata` (*table|nil*) : métadonnées pour le fichier info
-- **renvoie** : boolean true si sauvegardé
+- `filename` (*string*) : .pc path
+- `saveSettings` (*table|boolean|nil*) : see notes
+- `saveMetadata` (*table|nil*) : metadata for the info file
+- **returns**: boolean true if saved
 
 #### `core_vehicle_partmgmt.saveExistingLocalConfig(fileName, configurationName, saveSettings, saveMetadata)`
 
-Écrase une config existante du joueur (pas une config officielle).
+Overwrites an existing player config (not an official config).
 
-- `fileName` (*string*) : nom de fichier (avec ou sans .pc)
-- `configurationName` (*string|nil*) : nom affiché ; vide = nom existant
-- `saveSettings` (*table|boolean|nil*) : voir notes
-- `saveMetadata` (*table|nil*) : métadonnées
-- **renvoie** : table {success, reason?, …} (reasons possibles : configNotFound, notPlayerConfig, …)
+- `fileName` (*string*) : file name (with or without .pc)
+- `configurationName` (*string|nil*) : display name; empty = existing name
+- `saveSettings` (*table|boolean|nil*) : see notes
+- `saveMetadata` (*table|nil*) : metadata
+- **returns**: table {success, reason?, ...} (possible reasons: configNotFound, notPlayerConfig, ...)
 
 #### `core_vehicle_partmgmt.saveLocal(fn, saveSettings, saveMetadata)`
 
-Sauvegarde la config sous <dossier du modèle>/<fn>.
+Saves the config under <model folder>/<fn>.
 
-- `fn` (*string*) : nom de fichier relatif, avec extension .pc
-- `saveSettings` (*table|boolean|nil*) : voir notes
-- `saveMetadata` (*table|nil*) : métadonnées
-- **renvoie** : boolean true si sauvegardé ; false sans véhicule
+- `fn` (*string*) : relative file name, with the .pc extension
+- `saveSettings` (*table|boolean|nil*) : see notes
+- `saveMetadata` (*table|nil*) : metadata
+- **returns**: boolean true if saved; false without a vehicle
 
 #### `core_vehicle_partmgmt.saveLocalScreenshot(fn)`
 
-Étape 1 d'une capture de miniature : passe en caméra libre, FOV 35, déclenche saveLocalScreenshot_stage1 côté UI.
+Step 1 of a thumbnail capture: switches to free camera, FOV 35, triggers saveLocalScreenshot_stage1 on the UI side.
 
-- `fn` (*string*) : nom de fichier (non utilisé à cette étape)
+- `fn` (*string*) : file name (not used at this step)
 
 #### `core_vehicle_partmgmt.saveLocalScreenshot_stage2(fn)`
 
-Étape 2 : prend la capture jpg dans le dossier du modèle puis déclenche saveLocalScreenshot_stage3.
+Step 2: takes the jpg capture in the model folder then triggers saveLocalScreenshot_stage3.
 
-- `fn` (*string*) : nom de fichier de la capture
-- **renvoie** : boolean|nil false sans véhicule
+- `fn` (*string*) : capture file name
+- **returns**: boolean|nil false without a vehicle
 
 #### `core_vehicle_partmgmt.saveNewLocalConfig(configurationName, saveSettings, saveMetadata)`
 
-Sauvegarde la config sous un nouveau nom de fichier dérivé de configurationName (en minuscules, suffixe numérique si déjà pris), génère la miniature et débloque le succès VEHICLE_CONFIG_SAVED.
+Saves the config under a new file name derived from configurationName (lowercase, numeric suffix if already taken), generates the thumbnail and unlocks the VEHICLE_CONFIG_SAVED achievement.
 
-- `configurationName` (*string*) : nom affiché de la configuration
-- `saveSettings` (*table|boolean|nil*) : voir notes
-- `saveMetadata` (*table|nil*) : métadonnées
-- **renvoie** : table {success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?}
+- `configurationName` (*string*) : display name of the configuration
+- `saveSettings` (*table|boolean|nil*) : see notes
+- `saveMetadata` (*table|nil*) : metadata
+- **returns**: table {success, reason?, fileName?, displayName?, configSaved?, thumbnailCopied?}
 
 #### `core_vehicle_partmgmt.savePartConfigFileStage2(partsCondition, filename, saveSettings, saveMetadata)`
 
-Sauvegarde la config du véhicule visé au format 2 dans `filename` (+ fichier info_<nom>.json + peintures selon saveSettings), prévient l'UI et vide les caches de sélecteur. Voir les notes sur l'alias.
+Saves the targeted vehicle's config in format 2 to `filename` (+ info_<name>.json file + paints according to saveSettings), notifies the UI and empties the selector caches. See the notes on the alias.
 
-- `partsCondition` (*any*) : conditions de pièces (nil dans les appels actuels)
-- `filename` (*string*) : chemin du .pc (ex. 'vehicles/pickup/ma_config.pc')
-- `saveSettings` (*table|boolean|nil*) : voir notes
-- `saveMetadata` (*table|nil*) : métadonnées à écrire dans le fichier info
-- **renvoie** : boolean true si le .pc a été écrit
+- `partsCondition` (*any*) : parts conditions (nil in current calls)
+- `filename` (*string*) : .pc path (e.g. 'vehicles/pickup/my_config.pc')
+- `saveSettings` (*table|boolean|nil*) : see notes
+- `saveMetadata` (*table|nil*) : metadata to write in the info file
+- **returns**: boolean true if the .pc was written
 
 #### `core_vehicle_partmgmt.saveVehicleCollection(collectionTree, filename)`
 
-Écrit une collection de véhicules au format 4 dans un fichier JSON et prévient l'UI (VehicleconfigSaved, message).
+Writes a vehicle collection in format 4 to a JSON file and notifies the UI (VehicleconfigSaved, message).
 
-- `collectionTree` (*table*) : arbre de véhicules
-- `filename` (*string*) : fichier .pc de sortie
+- `collectionTree` (*table*) : vehicle tree
+- `filename` (*string*) : output .pc file
 
 #### `core_vehicle_partmgmt.selectParts(parts, inVehID, cameraParts, cameraOptions)`
 
-Sélection temporaire (survol d'une pièce dans l'UI) : met ces pièces à pleine visibilité et recadre la caméra de pièces.
+Temporary selection (hover of a part in the UI): sets these parts to full visibility and reframes the part camera.
 
-- `parts` (*table<string, boolean>*) : pièces survolées
-- `inVehID` (*integer|nil*) : véhicule
-- `cameraParts` (*table|nil*) : pièces à cadrer ; défaut = parts
-- `cameraOptions` (*table|nil*) : options de partFocusCamera.focusOnParts (ex. immediate)
+- `parts` (*table<string, boolean>*) : hovered parts
+- `inVehID` (*integer|nil*) : vehicle
+- `cameraParts` (*table|nil*) : parts to frame; default = parts
+- `cameraOptions` (*table|nil*) : partFocusCamera.focusOnParts options (e.g. immediate)
 
 #### `core_vehicle_partmgmt.sendDataToUI(explicitVehicleId)`
 
-Envoie à l'UI (guihook brut VehicleConfigChange) toutes les données du configurateur : id, modèle, arbre de pièces choisi, variables de tuning traduites, valeurs par défaut du .pc, catalogue de partpacks, pièces en surbrillance, infos enrichies des pièces.
+Sends to the UI (raw guihook VehicleConfigChange) all the configurator data: id, model, chosen parts tree, translated tuning variables, .pc default values, partpacks catalog, highlighted parts, enriched part info.
 
-- `explicitVehicleId` (*integer|nil*) : véhicule ; nil = cible
+- `explicitVehicleId` (*integer|nil*) : vehicle; nil = target
 
 #### `core_vehicle_partmgmt.setConfig(inData, respawn, explicitVehicleId)`
 
-Comme setConfigOfVehicle pour le véhicule visé (ou explicitVehicleId).
+Like setConfigOfVehicle for the targeted vehicle (or explicitVehicleId).
 
-- `inData` (*table*) : données à fusionner
-- `respawn` (*boolean|nil*) : voir setConfigOfVehicle
-- `explicitVehicleId` (*integer|nil*) : véhicule ; nil = cible
+- `inData` (*table*) : data to merge
+- `respawn` (*boolean|nil*) : see setConfigOfVehicle
+- `explicitVehicleId` (*integer|nil*) : vehicle; nil = target
 
 #### `core_vehicle_partmgmt.setConfigOfVehicle(veh, inData, respawn)`
 
-Fusionne `inData` dans la config du véhicule donné (voir notes sur respawn).
+Merges `inData` into the given vehicle's config (see notes on respawn).
 
-- `veh` (*userdata*) : objet véhicule
-- `inData` (*table*) : ex. {paints = …}, {vars = …}, {partsTree = …}, {parts = …}
-- `respawn` (*boolean|nil*) : true (défaut) : recrée le véhicule ; false : mise à jour en direct des peintures
+- `veh` (*userdata*) : vehicle object
+- `inData` (*table*) : e.g. {paints = ...}, {vars = ...}, {partsTree = ...}, {parts = ...}
+- `respawn` (*boolean|nil*) : true (default): recreates the vehicle; false: live paint update
 
 #### `core_vehicle_partmgmt.setConfigPaints(data, respawn, explicitVehicleId)`
 
-Fusionne une liste de peintures dans la config ({paints = data}).
+Merges a list of paints into the config ({paints = data}).
 
-- `data` (*table[]*) : peintures (1..3)
-- `respawn` (*boolean|nil*) : true = recréer le véhicule
-- `explicitVehicleId` (*integer|nil*) : véhicule ; nil = cible
+- `data` (*table[]*) : paints (1..3)
+- `respawn` (*boolean|nil*) : true = recreate the vehicle
+- `explicitVehicleId` (*integer|nil*) : vehicle; nil = target
 
 #### `core_vehicle_partmgmt.setConfigVars(data, respawn)`
 
-Fusionne des variables de tuning ({vars = data}) dans la config du véhicule visé.
+Merges tuning variables ({vars = data}) into the targeted vehicle's config.
 
-- `data` (*table<string, number>*) : [nom de variable] = valeur
-- `respawn` (*boolean|nil*) : true = recréer le véhicule
+- `data` (*table<string, number>*) : [variable name] = value
+- `respawn` (*boolean|nil*) : true = recreate the vehicle
 
 #### `core_vehicle_partmgmt.setCurrentConfigurationName(configurationName)`
 
-Fixe le nom affiché (Configuration) dans la config du véhicule visé (sans sauvegarder).
+Sets the display name (Configuration) in the targeted vehicle's config (without saving).
 
-- `configurationName` (*string*) : nom
-- **renvoie** : boolean false sans véhicule
+- `configurationName` (*string*) : name
+- **returns**: boolean false without a vehicle
 
 #### `core_vehicle_partmgmt.setCurrentLicensePlate(text)`
 
-Applique un texte de plaque au véhicule visé (core_vehicles.setPlateText).
+Applies a license plate text to the targeted vehicle (core_vehicles.setPlateText).
 
-- `text` (*string*) : texte de plaque
-- **renvoie** : boolean false sans véhicule
+- `text` (*string*) : license plate text
+- **returns**: boolean false without a vehicle
 
 #### `core_vehicle_partmgmt.setHighlightedPartsVisiblity(alpha, inVehID)`
 
-Fixe la transparence des pièces en surbrillance.
+Sets the transparency of the highlighted parts.
 
-- `alpha` (*number*) : 0 (invisible) à 1 (opaque)
-- `inVehID` (*integer|nil*) : véhicule
+- `alpha` (*number*) : 0 (invisible) to 1 (opaque)
+- `inVehID` (*integer|nil*) : vehicle
 
 #### `core_vehicle_partmgmt.setNewParts(inVehID, silent)`
 
-Met à jour les données de surbrillance après un changement de pièces : les pièces existantes gardent leur état, les nouvelles prennent celui de leur parent.
+Updates the highlight data after a parts change: existing parts keep their state, new ones take that of their parent.
 
-- `inVehID` (*integer|nil*) : véhicule
-- `silent` (*boolean|nil*) : true : ne pas notifier l'UI
+- `inVehID` (*integer|nil*) : vehicle
+- `silent` (*boolean|nil*) : true: do not notify the UI
 
 #### `core_vehicle_partmgmt.setPartsConfig(data, respawn)`
 
-Obsolète : logue une erreur demandant d'utiliser setPartsTreeConfig. N'applique rien.
+Obsolete: logs an error asking to use setPartsTreeConfig. Applies nothing.
 
-- `data` (*table*) : ignoré
-- `respawn` (*boolean|nil*) : ignoré
+- `data` (*table*) : ignored
+- `respawn` (*boolean|nil*) : ignored
 
 #### `core_vehicle_partmgmt.setPartsTreeConfig(dataTree, respawn, part)`
 
-Applique un nouvel arbre de pièces au véhicule visé (fusion de {partsTree = dataTree}) et émet le hook onPartsTreeConfigChanged(dataTree, respawn, part) avant.
+Applies a new parts tree to the targeted vehicle (merge of {partsTree = dataTree}) and emits the onPartsTreeConfigChanged(dataTree, respawn, part) hook beforehand.
 
-- `dataTree` (*table*) : arbre de pièces (chosenPartName, children…)
-- `respawn` (*boolean|nil*) : true = recréer le véhicule
-- `part` (*any*) : pièce à l'origine du changement (transmise au hook seulement)
+- `dataTree` (*table*) : parts tree (chosenPartName, children...)
+- `respawn` (*boolean|nil*) : true = recreate the vehicle
+- `part` (*any*) : part that caused the change (passed to the hook only)
 
 #### `core_vehicle_partmgmt.setSkin(skin)`
 
-Applique un skin : choisit la pièce '<modèle>_skin_<skin>' dans le slot 'paint_design' puis remplace le véhicule. skin vide retire le skin.
+Applies a skin: chooses the part '<model>_skin_<skin>' in the 'paint_design' slot then replaces the vehicle. An empty skin removes the skin.
 
-- `skin` (*string|nil*) : nom du skin
+- `skin` (*string|nil*) : skin name
 
 #### `core_vehicle_partmgmt.showHighlightedParts(inVehID, cameraParts, cameraOptions)`
 
-Revient à l'affichage des pièces en surbrillance (après un survol).
+Goes back to displaying the highlighted parts (after a hover).
 
-- `inVehID` (*integer|nil*) : véhicule
-- `cameraParts` (*table|nil*) : pièces que la caméra garde cadrées
-- `cameraOptions` (*table|nil*) : options caméra
+- `inVehID` (*integer|nil*) : vehicle
+- `cameraParts` (*table|nil*) : parts the camera keeps framed
+- `cameraOptions` (*table|nil*) : camera options
 
 #### `core_vehicle_partmgmt.translateTuningData(tuningData)`
 
-Copie les variables de tuning en traduisant title, description, category et subCategory.
+Copies the tuning variables while translating title, description, category and subCategory.
 
 - `tuningData` (*table|nil*) : vdata.variables
-- **renvoie** : table copie traduite
+- **returns**: table translated copy
 
 #### `core_vehicle_partmgmt.validatePaints()`
 
-Compare les peintures actuelles du véhicule visé avec celles du modèle/de la bibliothèque (core_vehiclePaints.validatePcPaints) et ajoute les réglages de sauvegarde par défaut.
+Compares the targeted vehicle's current paints with those of the model/library (core_vehiclePaints.validatePcPaints) and adds the default save settings.
 
-- **renvoie** : table résultat de validatePcPaints + defaults ; {} sans véhicule
+- **returns**: table result of validatePcPaints + defaults; {} without a vehicle
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | core_locales, core_vehicle_configTarget, core_vehicle_thumbnail, core_vehicle_partFocusCamera, gameplay_achievement. |
-| `xrayFadeRate` | number | Vitesse du fondu des meshes pour la surbrillance rayons X, en alpha par seconde (5 par défaut). Modifiable depuis la console : core_vehicle_partmgmt.xrayFadeRate = 5. |
+| `xrayFadeRate` | number | Mesh fade speed for the X-ray highlight, in alpha per second (5 by default). Editable from the console: core_vehicle_partmgmt.xrayFadeRate = 5. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onPartsTreeConfigChanged`
 
-**Évènements UI (guihooks.trigger) :** `Message`, `PartsSelectorUpdate`, `VehicleconfigRemoved`, `VehicleconfigSaved`, `saveLocalScreenshot_stage1`, `saveLocalScreenshot_stage3`
+**UI events (guihooks.trigger):** `Message`, `PartsSelectorUpdate`, `VehicleconfigRemoved`, `VehicleconfigSaved`, `saveLocalScreenshot_stage1`, `saveLocalScreenshot_stage3`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `fileExists`, `findFiles`, `removeFile`
 - `be:` `getObjectCount`, `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicle/partmgmt.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicle/partmgmt.lua`.*

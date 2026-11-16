@@ -1,28 +1,28 @@
 # `flowgraph_nodes_events_controlsAction`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua` · VM : Game Engine (GE) · 67 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua` · VM: Game Engine (GE) · 67 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/events/controlsAction")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/events/controlsAction")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Controls Action » (catégorie logic, événement). Laisse passer le flux quand l'action (Ctrl + Space) est pressée. Pousse automatiquement l'action map « FlowgraphActions » au démarrage du graphe et la retire à l'arrêt. Pins : flow (entrée), flow (sortie impulsion une fois à l'appui) et value (bool caché, vrai à l'appui).
+Flowgraph node "Controls Action" (category logic, event). Lets flow through when the action (Ctrl + Space) is pressed. Automatically pushes the "FlowgraphActions" action map when the graph starts and removes it on stop. Pins: flow (input), flow (output, pulse once on press) and value (hidden bool, true on press).
 
-## Remarques
+## Notes
 
-- L'événement est valide s'il date de moins de 2 frames du manager (mgr.frameCount).
-- todo du code : interaction incertaine si plusieurs flowgraphs utilisent ce nœud.
+- The event is valid if it is less than 2 manager frames old (mgr.frameCount).
+- Code todo: uncertain interaction if several flowgraphs use this node.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Réinitialise l'état et appelle pushActionMap("FlowgraphActions"). | 36 |
-| `C:_executionStopped()` | Réinitialise l'état et appelle popActionMap("FlowgraphActions"). | 30 |
-| `C:drawMiddle(builder, style)` | Dessin du nœud dans l'éditeur. | 47 |
-| `C:init(mgr, ...)` | Initialise self.reset = false. | 26 |
-| `C:onControlsAction()` | Hook appelé quand l'action est déclenchée : mémorise le numéro de frame. | 42 |
-| `C:work(args)` | Met flow et value à vrai pendant la frame qui suit l'appui, sinon à faux. | 53 |
+| `C:_executionStarted()` | Resets the state and calls pushActionMap("FlowgraphActions"). | 36 |
+| `C:_executionStopped()` | Resets the state and calls popActionMap("FlowgraphActions"). | 30 |
+| `C:drawMiddle(builder, style)` | Node drawing in the editor. | 47 |
+| `C:init(mgr, ...)` | Initializes self.reset = false. | 26 |
+| `C:onControlsAction()` | Hook called when the action is triggered: stores the frame number. | 42 |
+| `C:work(args)` | Sets flow and value to true during the frame following the press, otherwise to false. | 53 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/events/controlsAction.lua`.*

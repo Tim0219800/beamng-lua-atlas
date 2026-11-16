@@ -1,0 +1,137 @@
+{
+  "path": "lua/ge/extensions/editor/crawlEditor/paths.lua",
+  "module": "Sous-outil « Paths » de l'éditeur de crawl : édite les chemins (table {name, description, nodes}) formés de nœuds (pathnodes) {name, pos, rotation, radius, flags}. Le module renvoie un constructeur : require('editor_crawlEditor_paths')(crawlEditor) crée une instance C. L'outil liste les chemins, affiche le détail (nom, nom de fichier, description, nombre de nœuds, longueur, dénivelé cumulé), permet d'ajouter, insérer, déplacer (gizmo) ou supprimer des nœuds, de les orienter, renuméroter, caler au terrain, d'inverser le chemin, de fixer un rayon commun et de valider le chemin. Dessine aussi les nœuds dans le monde (sphères, flèches de direction, étiquettes, distances cumulées).",
+  "usage": "local paths = require('editor_crawlEditor_paths')(crawlEditorInstance)\npaths:setPath(monChemin)\n-- à chaque frame :\npaths:draw(mouseInfo)\npaths:drawPathnodeSelectionIndicators(mouseInfo)",
+  "notes": [
+    "Commandes souris : Shift + clic = ajoute un nœud à l'endroit cliqué (calé au terrain si snapToTerrain) ; Alt + clic sur le milieu d'un segment = insère un nœud entre ses deux extrémités (le dernier segment relie le dernier nœud au premier dans la détection) ; clic = sélectionne un nœud ; clic dans le vide = désélectionne.",
+    "Nouveau nœud (getNewPathnode) : nom « Node N », pos (0,0,0), rotation identité, rayon 4.0, flags vide.",
+    "Flags de nœud utilisés par l'outil : isRecoveryCheckpoint (sphère verte) et isBonusCheckpoint (sphère dorée) ; les autres flags sont éditables en JSON.",
+    "Dans dragging(), le décalage de translation du gizmo est divisé par 2 (posOffset = delta / 2), comportement du code ; en mode rotation, la rotation du nœud est celle du gizmo.",
+    "dropToTerrain renvoie (pos, true) dès que core_terrain existe, même si la hauteur est nil (z conservé) ; sinon (pos, false).",
+    "validatePath signale : moins de 2 nœuds, rayon nul ou négatif, nœud en (0,0,0), absence de rotation, segment de moins de 0,5 m.",
+    "Tout changement marque le chemin comme modifié (path._dirty = true). Les déplacements au gizmo passent par editor.history (« Manipulate Pathnode ») ; les autres opérations (ajout, renumérotation, inversion…) ne sont pas annulables.",
+    "Dans drawPathsList, la mise à zéro de selection.index quand on reclique le même chemin est immédiatement écrasée (selection.index = i ensuite)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de l'outil chemins. Champs principaux : crawlEditor, path (chemin édité), selectedPathnodeIndex (-1 = aucun), currentPathnode, snapToTerrain (true par défaut), _isDragging.",
+      "functions": {
+        "init": {
+          "desc": "Initialise l'instance (appelé par le constructeur).",
+          "params": {"crawlEditorParam": {"type": "table", "desc": "Instance/module crawlEditor parent"}},
+          "internal": true
+        },
+        "setFields": {
+          "desc": "Recopie nom, nom de fichier et description du chemin dans les tampons de saisie imgui.",
+          "params": {"path": {"type": "table", "desc": "Chemin"}}
+        },
+        "setPath": {
+          "desc": "Définit le chemin édité.",
+          "params": {"pathParam": {"type": "table|nil", "desc": "Chemin à éditer"}}
+        },
+        "selectPathnode": {
+          "desc": "Sélectionne le nœud d'indice donné (à partir de 1) ; un indice invalide, nil ou <= 0 désélectionne.",
+          "params": {"index": {"type": "integer|nil", "desc": "Indice du nœud"}}
+        },
+        "getSelectedPathnodeIndex": {
+          "desc": "Renvoie l'indice du nœud sélectionné.",
+          "returns": [{"type": "integer", "desc": "Indice, -1 si aucun"}]
+        },
+        "setSelectedPathnodeIndex": {
+          "desc": "Alias de selectPathnode.",
+          "params": {"index": {"type": "integer|nil", "desc": "Indice du nœud"}}
+        },
+        "drawPathsList": {
+          "desc": "Dessine la liste des chemins avec « Add Path » et un menu contextuel « Delete ». Remplit selection.index et selection.clicked.",
+          "params": {
+            "allPaths": {"type": "table", "desc": "Liste des chemins, modifiée en place"},
+            "selection": {"type": "table", "desc": "Table avec index et clicked"}
+          }
+        },
+        "drawPathDetail": {
+          "desc": "Dessine le détail d'un chemin : Goto, nom, nom de fichier (Rename), description, statistiques (nœuds, longueur, dénivelé), boutons d'outils (Add Node, Add Node At Camera, Reverse Order, Auto-Orient Nodes, Renumber, Snap All To Terrain, Set All Radii, Validate Path), liste des nœuds avec Delete et éditeur du nœud sélectionné (nom, position, rotation, rayon, drapeaux de récupération/bonus, flags JSON).",
+          "params": {"path": {"type": "table", "desc": "Chemin à afficher"}}
+        },
+        "getNewPath": {
+          "desc": "Crée une table de chemin vide : name « New Path », description « A new path », nodes vide.",
+          "returns": [{"type": "table", "desc": "Nouveau chemin"}]
+        },
+        "getNewPathnode": {
+          "desc": "Crée un nœud par défaut et l'ajoute à la fin du chemin courant (crée un chemin si aucun).",
+          "returns": [{"type": "table", "desc": "Le nouveau nœud"}]
+        },
+        "findPathnode": {
+          "desc": "Dessine des sphères sur les éléments (orange si sélectionné) et renvoie le plus proche de la caméra dont le rayon de souris traverse la sphère.",
+          "params": {
+            "mouseInfo": {"type": "table", "desc": "Table de crawlEditor/input"},
+            "objects": {"type": "table", "desc": "Liste d'éléments {pos, index|orig, radius}"}
+          },
+          "returns": [{"type": "table|nil", "desc": "Élément touché ou nil"}]
+        },
+        "tryInsert": {
+          "desc": "Détecte un clic sur le milieu d'un segment et y insère un nouveau nœud, qu'il sélectionne.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Table de souris"}}
+        },
+        "input": {
+          "desc": "Traite l'entrée souris : Shift = ajout, Alt = insertion, sinon sélection de nœud.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Table de souris"}}
+        },
+        "updateTransform": {
+          "desc": "Place le gizmo d'axes sur la position et la rotation du nœud sélectionné."
+        },
+        "beginDrag": {
+          "desc": "Début de manipulation du gizmo : mémorise position et rotation du nœud.",
+          "internal": true
+        },
+        "dragging": {
+          "desc": "Pendant la manipulation : translate (avec snap terrain) ou fait tourner le nœud selon le gizmo.",
+          "internal": true
+        },
+        "dropToTerrain": {
+          "desc": "Pose un point sur la hauteur du terrain.",
+          "params": {"pos": {"type": "vec3", "desc": "Position"}},
+          "returns": [
+            {"type": "vec3", "desc": "Copie avec z du terrain"},
+            {"type": "boolean", "desc": "true si core_terrain est disponible"}
+          ]
+        },
+        "addNodeAtCamera": {
+          "desc": "Ajoute un nœud 15 m devant la caméra, posé sur le terrain (si snapToTerrain), et le sélectionne.",
+          "returns": []
+        },
+        "reversePathOrder": {
+          "desc": "Inverse l'ordre des nœuds et désélectionne."
+        },
+        "autoOrientNodes": {
+          "desc": "Oriente chaque nœud (quatFromDir, haut +Z) vers le suivant ; le dernier garde la direction entrante. Ignore les segments de longueur <= 0,001. Sans effet avec moins de 2 nœuds."
+        },
+        "setAllRadii": {
+          "desc": "Applique le même rayon à tous les nœuds.",
+          "params": {"radius": {"type": "number", "desc": "Rayon en mètres ; doit être > 0"}}
+        },
+        "renumberNodes": {
+          "desc": "Renomme tous les nœuds « Node N » dans l'ordre."
+        },
+        "snapAllToTerrain": {
+          "desc": "Pose tous les nœuds sur le terrain."
+        },
+        "validatePath": {
+          "desc": "Analyse le chemin et renvoie la liste des problèmes trouvés (voir notes).",
+          "returns": [{"type": "table<integer, string>", "desc": "Messages ; « No problems found. » si tout est correct"}]
+        },
+        "endDragging": {
+          "desc": "Fin de manipulation : re-snap au terrain en translation, enregistre « Manipulate Pathnode » dans l'historique, marque le chemin modifié.",
+          "internal": true
+        },
+        "draw": {
+          "desc": "Appelée à chaque frame : gère le gizmo d'axes si un nœud est sélectionné, traite l'entrée souris et met à jour le gizmo hors manipulation.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Table de souris"}}
+        },
+        "drawPathnodeSelectionIndicators": {
+          "desc": "Dessine dans le monde les nœuds (sphère de leur rayon : orange sélectionné, vert recovery, doré bonus, blanc sinon), flèches de direction, étiquettes « nom (indice) [RECOVERY/BONUS] », prismes entre nœuds et distance cumulée.",
+          "params": {"mouseInfo": {"type": "table", "desc": "Table de souris (camPos requis)"}}
+        }
+      }
+    }
+  }
+}

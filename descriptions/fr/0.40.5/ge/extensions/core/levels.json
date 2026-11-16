@@ -1,0 +1,138 @@
+{
+  "path": "lua/ge/extensions/core/levels.lua",
+  "module": "Extension GE `core_levels` : catalogue des niveaux (dossiers de /levels/), lecture de leur info.json, et lancement d'un niveau (startLevel). Un moddeur s'en sert pour lister les cartes disponibles (y compris celles venant de mods), retrouver le titre ou l'aperçu d'une carte, ou charger une carte par script. La liste est calculée une fois (lecture disque lente) puis mise en cache ; le cache est invalidé quand un fichier sous /levels/ change.",
+  "usage": "local lvl = core_levels.getLevelByName('west_coast_usa')\nif lvl then log('I','', lvl.title .. ' ' .. tostring(lvl.supportsTraffic)) end\n-- charger une carte (le dossier ou le fichier .level.json)\ncore_levels.startLevel('/levels/gridmap_v2/')",
+  "notes": [
+    "getList() parcourt /levels/ : les entrées de la liste sont les tables de info.json enrichies (levelName, dir, misFilePath, fullfilename, modID, modName, modTitle, official, previews, spawnPoints, minimap, multiseat.maxPlayers, supportsTraffic, supportsTimeOfDay). Les clés de info.json non listées sont conservées telles quelles.",
+    "Un niveau sans point d'entrée (dossier main/, ancien fichier principal, ou un .mis) est ignoré avec une erreur dans le log. Si un niveau existe en .level.json et en .mis, seule la version json est gardée.",
+    "Le dossier /levels/mod_info est ignoré. Le flag obsolète `hidden` de info.json est converti en `isAuxiliary` avec un avertissement.",
+    "Les chemins d'aperçu (`previews`, `spawnPoints[].previews`, `minimap[].file`) sont préfixés par le dossier du niveau. Les niveaux sans `previews` voient leur `title` écrasé par le nom du dossier (levelName), même si info.json avait un title.",
+    "Bug probable dans getList : l'appel `imageExistsDefault(l.dirEntry..'.png', imageExistsDefault(l.dirEntry..'_preview.png'))` imbrique le 2e appel comme valeur par défaut du premier au lieu de lui passer deux arguments distincts (déduit du code).",
+    "getLevelPreview écrit une ligne `print` à chaque appel non mis en cache, ce qui pollue le log.",
+    "Les caches de titre, d'aperçu et d'options d'heure sont indexés par nom de niveau en minuscules ; la recherche par nom est insensible à la casse.",
+    "startLevel ne fait rien si un chargement 'levels' est déjà en cours. Si un niveau est déjà chargé (scenetree.MissionCleanup existe), on se déconnecte d'abord, puis on charge. Le paramètre spawnVehicle est mémorisé dans une variable locale et consommé par maybeSpawnDefaultVehicle.",
+    "onGetRawPoiListForLevel ne vérifie pas que levelInfo soit non nil : un niveau inconnu provoquerait une erreur (levelInfo.spawnPoints)."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant celle-ci : { \"freeroam_levelStats\" }."},
+    "levelsDir": {"type": "string", "desc": "Toujours '/levels/', conservé pour compatibilité avec d'anciens scripts."}
+  },
+  "functions": {
+    "getList": {
+      "desc": "Renvoie le tableau de tous les niveaux valides, triés par nom sans tenir compte de la casse. Construit au premier appel (lent, accès disque) puis mis en cache. Renvoie {} si /levels/ n'existe pas.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste des infos de niveau (info.json enrichi, voir notes)."}],
+      "internal": false
+    },
+    "isListLoaded": {
+      "desc": "Indique si le cache de la liste des niveaux est déjà construit.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "true si getList a déjà été calculée et pas invalidée depuis."}],
+      "internal": false
+    },
+    "getListWithStats": {
+      "desc": "Renvoie la liste des niveaux avec les statistiques d'interface fournies par freeroam_levelStats.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{ levels = getList(), uiStats = freeroam_levelStats.getUiStats() }"}],
+      "internal": false
+    },
+    "getLevelNames": {
+      "desc": "Renvoie seulement les noms (levelName) des niveaux, dans l'ordre de getList.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms de dossiers des niveaux."}],
+      "internal": false
+    },
+    "getSimpleList": {
+      "desc": "Alias de getLevelNames, gardé pour compatibilité.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Noms de dossiers des niveaux."}],
+      "internal": false
+    },
+    "getLevelPaths": {
+      "desc": "Renvoie les dossiers des niveaux, chacun terminé par '/'.",
+      "params": {},
+      "returns": [{"type": "string[]", "desc": "Chemins du type '/levels/gridmap_v2/'."}],
+      "internal": false
+    },
+    "getLevelByName": {
+      "desc": "Cherche un niveau par son nom de dossier, sans tenir compte de la casse.",
+      "params": {"levelName": {"type": "string", "desc": "Nom du niveau (ex. 'west_coast_usa')."}},
+      "returns": [{"type": "table|nil", "desc": "L'entrée de getList, ou nil si introuvable."}],
+      "internal": false
+    },
+    "getLevelTitle": {
+      "desc": "Renvoie le titre affichable du niveau (champ title, sinon levelName). Résultat mis en cache.",
+      "params": {"levelName": {"type": "string|nil", "desc": "Nom du niveau ; nil renvoie nil."}},
+      "returns": [{"type": "string|nil", "desc": "Titre, ou nil si le niveau est inconnu."}],
+      "internal": false
+    },
+    "getLevelPreview": {
+      "desc": "Renvoie le premier chemin d'image d'aperçu du niveau. Résultat mis en cache ; écrit une ligne dans le log à chaque calcul.",
+      "params": {"levelName": {"type": "string|nil", "desc": "Nom du niveau."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin de l'image, ou nil."}],
+      "internal": false
+    },
+    "getTimeOfDayOptions": {
+      "desc": "Renvoie les choix d'heure de la journée proposés pour le niveau (pris dans core_environment.getDefaultTimeOfDayOptions), uniquement si le niveau a supportsTimeOfDay. Triés : valeurs > 0.5 en premier (croissantes), puis valeurs <= 0.5 (croissantes).",
+      "params": {"levelName": {"type": "string|nil", "desc": "Nom du niveau ; nil renvoie {}."}},
+      "returns": [{"type": "table[]", "desc": "Éléments { key, value, label }. Vide si non supporté ou niveau inconnu."}],
+      "internal": false
+    },
+    "requestData": {
+      "desc": "Alias de notifyUI : envoie à l'interface la liste avec statistiques via guihooks.trigger('onLevelsChanged', levels, uiStats).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "getLevelName": {
+      "desc": "Extrait le nom du niveau d'un chemin de la forme '/levels/<nom>/...'.",
+      "params": {"path": {"type": "string", "desc": "Chemin virtuel contenant levels/<nom>/."}},
+      "returns": [{"type": "string|nil", "desc": "Nom du niveau, ou nil si le motif ne correspond pas."}],
+      "internal": false
+    },
+    "expandMissionFileName": {
+      "desc": "Résout un nom de fichier de niveau : renvoie tel quel un dossier existant, sinon le fichier développé s'il existe, sinon essaie les variantes .level.json et .mis.",
+      "params": {"missionFileName": {"type": "string", "desc": "Chemin du niveau (dossier, .mis, .level.json ou sans extension)."}},
+      "returns": [{"type": "string|nil", "desc": "Chemin existant trouvé, ou nil (aucun return explicite)."}],
+      "internal": false
+    },
+    "startLevel": {
+      "desc": "Charge un niveau avec écran de chargement 'levels'. Se déconnecte d'abord si un niveau est déjà chargé. Ignoré si un chargement est déjà en cours.",
+      "params": {
+        "levelPath": {"type": "string", "desc": "Dossier du niveau ou fichier main.level.json (converti en dossier si le fichier n'existe pas)."},
+        "delayedStart": {"type": "boolean|nil", "desc": "Si vrai, termine d'abord le mode de jeu actif (endActiveGameMode) puis charge."},
+        "customLoadingFunction": {"type": "function|nil", "desc": "Transmise à server.createGame pour remplacer le chargement standard (déduit du code)."},
+        "spawnVehicle": {"type": "table|false|nil", "desc": "Véhicule à faire apparaître au chargement : { modèle, options } ; false = aucun ; nil = véhicule par défaut."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de la déconnexion ou du chargement ; false si le chemin est invalide ; nil sinon."}],
+      "internal": false
+    },
+    "maybeSpawnDefaultVehicle": {
+      "desc": "Fait apparaître le véhicule joueur ('thePlayer') choisi via startLevel (ou le véhicule par défaut) au point d'apparition 'player', l'ajoute à MissionCleanup et MissionGroup et le marque canSave = false. Appelé par le flux de chargement de niveau.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onFilesChanged": {
+      "desc": "Hook appelé quand des fichiers changent. Si un chemin commence par '/levels/', vide tous les caches et renvoie la liste à l'interface (onLevelsChanged).",
+      "params": {"files": {"type": "table[]", "desc": "Éléments avec un champ filename."}},
+      "returns": [],
+      "internal": true
+    },
+    "onClientPostStartMission": {
+      "desc": "Hook appelé après le démarrage d'un niveau côté client : régénère tous les DecalRoad de la scène.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onGetRawPoiListForLevel": {
+      "desc": "Hook de collecte des points d'intérêt d'un niveau : ajoute à `elements` un POI de type spawnPoint (marqueur de grande carte, voyage rapide) pour chaque spawnPoint qui a un objectname trouvé dans la scène. En mode carrière, seuls les points découverts sont ajoutés.",
+      "params": {
+        "levelIdentifier": {"type": "string", "desc": "Nom du niveau."},
+        "elements": {"type": "table[]", "desc": "Liste de POI à compléter (modifiée en place)."}
+      },
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,139 +1,139 @@
 # `career_modules_testDrive`
 
-*Fichier : `lua/ge/extensions/career/modules/testDrive.lua` · VM : Game Engine (GE) · 364 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/testDrive.lua` · VM: Game Engine (GE) · 364 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_testDrive` : `extensions.load("career_modules_testDrive")`, puis la globale `career_modules_testDrive`
+**Access:** extension `career_modules_testDrive`: `extensions.load("career_modules_testDrive")`, then the global `career_modules_testDrive`
 
-Essai routier d'un véhicule chez un concessionnaire en carrière. start() fait monter le joueur dans le véhicule, crée un instantané des conditions de pièces (clé "beforeTestDrive"), désactive l'autosauvegarde et active l'essai. À chaque frame, onUpdate décompte le temps limite (timeLimit), vérifie que le joueur reste à moins de 10 m du véhicule (sinon abandon avec frais) et détecte les dégâts toutes les 2 s. stop() ramène le véhicule au point de départ avec un fondu et remet le joueur à pied.
+Test drive of a vehicle at a dealership in career. start() puts the player in the vehicle, creates a snapshot of the part conditions (key "beforeTestDrive"), disables autosave and activates the test drive. Each frame, onUpdate counts down the time limit (timeLimit), checks that the player stays within 10 m of the vehicle (otherwise abandon with fees) and detects damage every 2 s. stop() brings the vehicle back to the starting point with a fade and puts the player back on foot.
 
-## Exemple
+## Example
 
 ```lua
 career_modules_testDrive.start(vehId, {timeLimit = 120, abandonFees = 50, dealershipName = "x", route = "y"})
 if career_modules_testDrive.isActive() then print(career_modules_testDrive.getTimeLeft()) end
 ```
 
-## Remarques
+## Notes
 
-- Champs de testDriveInfo utilisés dans le code : timeLimit (s), abandonFees, endParkingSpot, endParkingSpotCreated, dealershipName, route, dealershipPreview.
-- Le temps limite est décompté en temps de simulation (dtSim). Quand il est écoulé, stop(false) est appelé (sans le hook onGameplayActivityAborted).
-- abandonTestDrive : si abandonFees > 0, paie les frais (canBeNegative = true) ; les ventes privées n'ont pas de frais. Appelle ensuite career_modules_inspectVehicle.onTestDriveAbandoned().
-- stop(userAborted) émet onGameplayActivityAborted sauf si userAborted == false ; il relance l'autosauvegarde et lance le job de fin (téléportation au point de départ, vitesse du temps 0.5 puis 1, navigation vers l'écran play, hook onTestDriveEndedAfterFade).
-- Hooks émis : onTestDriveStarted (au démarrage), onTestDriveEndedAfterFade (fin).
-- Le POI de fin d'essai (type testDriveEnd) est ajouté à la liste des POI bruts et une action « stopTestDrive » est ajoutée au menu radial (niveau /root/sandbox/career/) à la première ouverture.
+- testDriveInfo fields used in the code: timeLimit (s), abandonFees, endParkingSpot, endParkingSpotCreated, dealershipName, route, dealershipPreview.
+- The time limit is counted down in simulation time (dtSim). When it runs out, stop(false) is called (without the onGameplayActivityAborted hook).
+- abandonTestDrive: if abandonFees > 0, pays the fees (canBeNegative = true); private sales have no fees. Then calls career_modules_inspectVehicle.onTestDriveAbandoned().
+- stop(userAborted) emits onGameplayActivityAborted unless userAborted == false; it re-enables autosave and launches the end job (teleport to the starting point, time speed 0.5 then 1, navigation to the play screen, onTestDriveEndedAfterFade hook).
+- Emitted hooks: onTestDriveStarted (at start), onTestDriveEndedAfterFade (at end).
+- The test drive end POI (type testDriveEnd) is added to the raw POI list and a "stopTestDrive" action is added to the radial menu (level /root/sandbox/career/) on first opening.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_testDrive.abandonTestDrive()` | Abandonne l'essai (sans effet si inactif) : désactive l'essai, réactive l'autosauvegarde, puis après 0,2 s affiche et paie les frais d'abandon éventuels, réinitialise les données et prévient inspectVehicle. | 217 |
-| `career_modules_testDrive.formatTestDriveToRawPoi(elements)` | Ajoute à elements le POI de fin d'essai (id testDrive-<concession>-<route>-parkingEnd, marqueur de parking et marqueur de grande carte) si un emplacement de fin existe et a été créé. | 279 |
-| `career_modules_testDrive.getTimeLeft()` | Temps restant de l'essai en secondes (nil s'il n'y a pas d'essai ou pas de limite). | 266 |
-| `career_modules_testDrive.isActive()` | Indique si un essai est en cours. | 270 |
-| `career_modules_testDrive.isDamageDetected()` | Indique si des dégâts ont été détectés sur le véhicule pendant l'essai (détection par career_modules_insurance_insurance.genericVehNeedsRepair). | 274 |
-| `career_modules_testDrive.onBeforeRadialOpened()` | Hook avant l'ouverture du menu radial : une seule fois, ajoute une entrée « arrêter l'essai » (visible seulement pendant un essai) au menu rapide. *(interne)* *(hook)* | 322 |
-| `career_modules_testDrive.onCareerActive(active)` | Hook : réinitialise les données de l'essai à l'activation de la carrière. *(interne)* *(hook)* | 316 |
-| `career_modules_testDrive.onGetRawPoiListForLevel(levelIdentifier, elements)` | Hook de la liste de POI : ajoute le POI de fin d'essai via formatTestDriveToRawPoi. *(interne)* *(hook)* | 294 |
-| `career_modules_testDrive.onPoiDetailPromptOpening(elemData, promptData)` | Hook d'ouverture du détail d'un POI : si c'est le POI testDriveEnd, ajoute un bouton « arrêter l'essai » appelant stop(false). *(interne)* *(hook)* | 298 |
-| `career_modules_testDrive.onUpdate(dtReal, dtSim, dtRaw)` | Hook de frame : si un essai est actif, gère le temps limite, l'éloignement du joueur et la détection de dégâts. *(interne)* *(hook)* | 252 |
-| `career_modules_testDrive.onVehicleRepairedByInsurance(amount)` | Hook appelé après une réparation par l'assurance : affiche après 1,8 s le coût de la réparation (message temps réel et son d'achat). *(interne)* *(hook)* | 203 |
-| `career_modules_testDrive.resetData()` | Désactive l'essai et vide les POI bruts. | 55 |
-| `career_modules_testDrive.start(_vehicleId, testDriveInfo)` | Démarre l'essai : copie testDriveInfo, fait monter le joueur dans le véhicule, mémorise sa position/rotation de départ, crée et sélectionne l'instantané de pièces beforeTestDrive, dégèle le véhicule, émet onTestDriveStarted, vide les POI bruts et désactive l'autosauvegarde. | 111 |
-| `career_modules_testDrive.stop(userAborted)` | Termine l'essai normalement (sans effet si inactif) : réactive l'autosauvegarde et lance le job de fin qui téléporte le véhicule au départ avec fondu. | 207 |
+| `career_modules_testDrive.abandonTestDrive()` | Abandons the test drive (no effect if inactive): deactivates the test drive, re-enables autosave, then after 0.2 s displays and pays any abandon fees, resets the data and notifies inspectVehicle. | 217 |
+| `career_modules_testDrive.formatTestDriveToRawPoi(elements)` | Adds to elements the test drive end POI (id testDrive-<dealership>-<route>-parkingEnd, parking marker and big map marker) if an end spot exists and was created. | 279 |
+| `career_modules_testDrive.getTimeLeft()` | Remaining test drive time in seconds (nil if there is no test drive or no limit). | 266 |
+| `career_modules_testDrive.isActive()` | Indicates whether a test drive is in progress. | 270 |
+| `career_modules_testDrive.isDamageDetected()` | Indicates whether damage was detected on the vehicle during the test drive (detection by career_modules_insurance_insurance.genericVehNeedsRepair). | 274 |
+| `career_modules_testDrive.onBeforeRadialOpened()` | Hook before the radial menu opens: once only, adds a "stop the test drive" entry (visible only during a test drive) to the quick menu. *(internal)* *(hook)* | 322 |
+| `career_modules_testDrive.onCareerActive(active)` | Hook: resets the test drive data when the career is activated. *(internal)* *(hook)* | 316 |
+| `career_modules_testDrive.onGetRawPoiListForLevel(levelIdentifier, elements)` | POI list hook: adds the test drive end POI via formatTestDriveToRawPoi. *(internal)* *(hook)* | 294 |
+| `career_modules_testDrive.onPoiDetailPromptOpening(elemData, promptData)` | POI detail open hook: if it is the testDriveEnd POI, adds a "stop the test drive" button calling stop(false). *(internal)* *(hook)* | 298 |
+| `career_modules_testDrive.onUpdate(dtReal, dtSim, dtRaw)` | Frame hook: if a test drive is active, handles the time limit, the player moving away and damage detection. *(internal)* *(hook)* | 252 |
+| `career_modules_testDrive.onVehicleRepairedByInsurance(amount)` | Hook called after an insurance repair: displays the repair cost after 1.8 s (real-time message and purchase sound). *(internal)* *(hook)* | 203 |
+| `career_modules_testDrive.resetData()` | Deactivates the test drive and clears the raw POIs. | 55 |
+| `career_modules_testDrive.start(_vehicleId, testDriveInfo)` | Starts the test drive: copies testDriveInfo, puts the player in the vehicle, remembers its starting position/rotation, creates and selects the beforeTestDrive parts snapshot, unfreezes the vehicle, emits onTestDriveStarted, clears the raw POIs and disables autosave. | 111 |
+| `career_modules_testDrive.stop(userAborted)` | Ends the test drive normally (no effect if inactive): re-enables autosave and launches the end job that teleports the vehicle to the start with a fade. | 207 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_testDrive.formatTestDriveToRawPoi(elements)`
 
-Ajoute à elements le POI de fin d'essai (id testDrive-<concession>-<route>-parkingEnd, marqueur de parking et marqueur de grande carte) si un emplacement de fin existe et a été créé.
+Adds to elements the test drive end POI (id testDrive-<dealership>-<route>-parkingEnd, parking marker and big map marker) if an end spot exists and was created.
 
-- `elements` (*table[]*) : Liste de POI bruts à compléter.
+- `elements` (*table[]*) : List of raw POIs to fill.
 
 #### `career_modules_testDrive.getTimeLeft()`
 
-Temps restant de l'essai en secondes (nil s'il n'y a pas d'essai ou pas de limite).
+Remaining test drive time in seconds (nil if there is no test drive or no limit).
 
-- **renvoie** : number|nil Secondes restantes.
+- **returns**: number|nil Remaining seconds.
 
 #### `career_modules_testDrive.isActive()`
 
-Indique si un essai est en cours.
+Indicates whether a test drive is in progress.
 
-- **renvoie** : boolean|nil true si actif.
+- **returns**: boolean|nil true if active.
 
 #### `career_modules_testDrive.isDamageDetected()`
 
-Indique si des dégâts ont été détectés sur le véhicule pendant l'essai (détection par career_modules_insurance_insurance.genericVehNeedsRepair).
+Indicates whether damage was detected on the vehicle during the test drive (detection by career_modules_insurance_insurance.genericVehNeedsRepair).
 
-- **renvoie** : boolean true si dégâts détectés.
+- **returns**: boolean true if damage detected.
 
 #### `career_modules_testDrive.onCareerActive(active)`
 
-Hook : réinitialise les données de l'essai à l'activation de la carrière.
+Hook: resets the test drive data when the career is activated.
 
-- `active` (*boolean*) : Rien si false.
+- `active` (*boolean*) : Nothing if false.
 
 #### `career_modules_testDrive.onGetRawPoiListForLevel(levelIdentifier, elements)`
 
-Hook de la liste de POI : ajoute le POI de fin d'essai via formatTestDriveToRawPoi.
+POI list hook: adds the test drive end POI via formatTestDriveToRawPoi.
 
-- `levelIdentifier` (*string*) : Niveau (non utilisé).
-- `elements` (*table[]*) : Liste de POI à compléter.
+- `levelIdentifier` (*string*) : Level (unused).
+- `elements` (*table[]*) : POI list to complete.
 
 #### `career_modules_testDrive.onPoiDetailPromptOpening(elemData, promptData)`
 
-Hook d'ouverture du détail d'un POI : si c'est le POI testDriveEnd, ajoute un bouton « arrêter l'essai » appelant stop(false).
+POI detail open hook: if it is the testDriveEnd POI, adds a "stop the test drive" button calling stop(false).
 
-- `elemData` (*table[]*) : Éléments du POI.
-- `promptData` (*table[]*) : Boutons à compléter.
+- `elemData` (*table[]*) : POI elements.
+- `promptData` (*table[]*) : Buttons to fill.
 
 #### `career_modules_testDrive.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de frame : si un essai est actif, gère le temps limite, l'éloignement du joueur et la détection de dégâts.
+Frame hook: if a test drive is active, handles the time limit, the player moving away and damage detection.
 
-- `dtReal` (*number*) : Temps réel (s).
-- `dtSim` (*number*) : Temps de simulation (s).
-- `dtRaw` (*number*) : Temps brut (s).
+- `dtReal` (*number*) : Real time (s).
+- `dtSim` (*number*) : Simulation time (s).
+- `dtRaw` (*number*) : Raw time (s).
 
 #### `career_modules_testDrive.onVehicleRepairedByInsurance(amount)`
 
-Hook appelé après une réparation par l'assurance : affiche après 1,8 s le coût de la réparation (message temps réel et son d'achat).
+Hook called after an insurance repair: displays the repair cost after 1.8 s (real-time message and purchase sound).
 
-- `amount` (*number*) : Montant de la réparation.
+- `amount` (*number*) : Repair amount.
 
 #### `career_modules_testDrive.start(_vehicleId, testDriveInfo)`
 
-Démarre l'essai : copie testDriveInfo, fait monter le joueur dans le véhicule, mémorise sa position/rotation de départ, crée et sélectionne l'instantané de pièces beforeTestDrive, dégèle le véhicule, émet onTestDriveStarted, vide les POI bruts et désactive l'autosauvegarde.
+Starts the test drive: copies testDriveInfo, puts the player in the vehicle, remembers its starting position/rotation, creates and selects the beforeTestDrive parts snapshot, unfreezes the vehicle, emits onTestDriveStarted, clears the raw POIs and disables autosave.
 
-- `_vehicleId` (*integer*) : Id d'objet du véhicule d'essai.
-- `testDriveInfo` (*table*) : Paramètres de l'essai (timeLimit, abandonFees, endParkingSpot, dealershipName, route...).
+- `_vehicleId` (*integer*) : Object id of the test drive vehicle.
+- `testDriveInfo` (*table*) : Test drive parameters (timeLimit, abandonFees, endParkingSpot, dealershipName, route...).
 
 #### `career_modules_testDrive.stop(userAborted)`
 
-Termine l'essai normalement (sans effet si inactif) : réactive l'autosauvegarde et lance le job de fin qui téléporte le véhicule au départ avec fondu.
+Ends the test drive normally (no effect if inactive): re-enables autosave and launches the end job that teleports the vehicle to the start with a fade.
 
-- `userAborted` (*boolean|nil*) : Émet onGameplayActivityAborted sauf si false.
+- `userAborted` (*boolean|nil*) : Emits onGameplayActivityAborted unless false.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table | Table vide : aucune dépendance. |
+| `dependencies` | table | Empty table: no dependency. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onGameplayActivityAborted`
-- `onTestDriveEndedAfterFade` — écouté par 1 module(s)
-- `onTestDriveStarted` — écouté par 1 module(s)
+- `onTestDriveEndedAfterFade` — listened to by 1 module(s)
+- `onTestDriveStarted` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `Message`, `ScenarioRealtimeDisplay`
+**UI events (guihooks.trigger):** `Message`, `ScenarioRealtimeDisplay`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/testDrive.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/testDrive.lua`.*

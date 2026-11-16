@@ -1,79 +1,79 @@
 # `editor_toolUtilities_groundBounds`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/groundBounds.lua` · VM : Game Engine (GE) · 200 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/groundBounds.lua` · VM: Game Engine (GE) · 200 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_groundBounds` : `extensions.load("editor_toolUtilities_groundBounds")`, puis la globale `editor_toolUtilities_groundBounds`
+**Access:** extension `editor_toolUtilities_groundBounds`: `extensions.load("editor_toolUtilities_groundBounds")`, then the global `editor_toolUtilities_groundBounds`
 
-Répond aux questions que tout outil de l'éditeur posant une surface sur un contour dessiné au sol doit se poser : qu'est-ce qui est déjà là (routes, jonctions, bâtiments, terrains d'autres outils), que reste-t-il du contour une fois ces obstacles soustraits, et quels côtés sont coupés ou affleurants. Fait aussi l'inverse : publier ce que l'outil occupe. S'appuie sur groundClaims, networkState, polyBool et geom.
+Answers the questions that any editor tool laying a surface on an outline drawn on the ground must ask: what is already there (roads, junctions, buildings, terrains of other tools), what remains of the outline once these obstacles are subtracted, and which sides are cut or flush. Also does the reverse: publishing what the tool occupies. Relies on groundClaims, networkState, polyBool and geom.
 
-## Remarques
+## Notes
 
-- Constantes : marge de route 0.10 m, retrait de route pour les éléments posés (standoff) 0.6 m, tolérance de côté dessiné 0.05 m, tolérance de joint affleurant 0.20 m.
-- Les obstacles sont rognés à la boîte du contour (+1 m) et soustraits un par un par polyBool.difference, car deux obstacles partageant le bord de la boîte s'annuleraient en une seule soustraction.
-- 'owner' est le nom sous lequel l'outil publie ses propres revendications : elles ne lui sont pas renvoyées comme obstacles.
+- Constants: road margin 0.10 m, road setback for placed elements (standoff) 0.6 m, drawn side tolerance 0.05 m, flush joint tolerance 0.20 m.
+- Obstacles are cropped to the outline's box (+1 m) and subtracted one by one by polyBool.difference, because two obstacles sharing the box edge would cancel out in a single subtraction.
+- 'owner' is the name under which the tool publishes its own claims: they are not returned to it as obstacles.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_groundBounds.clip(ring, obs, owner, site)` | Soustrait les obstacles du contour et renvoie les morceaux restants à traiter un par un. Chaque morceau est { ring, holes, cut, flush } : cut[i] vrai si le côté i vient d'une soustraction (route ou bâtiment de l'autre côté), flush[i] vrai s'il touche un terrain déjà posé par un autre outil (jonction ouverte). | 122 |
-| `editor_toolUtilities_groundBounds.largest(areas)` | Renvoie le plus grand morceau (par aire absolue), pour un outil qui ne pose qu'UNE chose sur son contour. | 157 |
-| `editor_toolUtilities_groundBounds.obstacles(ring, owner, site, roadMargin)` | Liste ce que owner ne doit pas paver près de ce contour : surfaces de route et jonctions (networkState.surfaces, avec au moins 0.10 m de marge) et revendications des autres outils. Renvoie aussi une seconde liste où les routes sont agrandies de 0.6 m, pour y placer des éléments en retrait. | 40 |
-| `editor_toolUtilities_groundBounds.pieceAt(areas, x, y)` | Indique sur quel morceau tombe un point (dans l'anneau et hors de ses trous), ou nil s'il n'est sur aucun. | 169 |
-| `editor_toolUtilities_groundBounds.publish(owner, rings)` | Annonce aux autres outils de terrain ce que celui-ci occupe, sans marge (groundClaims.publish avec marge 0), pour que deux surfaces contiguës se lisent comme une seule. | 184 |
-| `editor_toolUtilities_groundBounds.sig()` | Empreinte de tout ce qui, hors du contour, détermine sa forme (réseau routier et revendications), pour reconstruire quand une route ou un bâtiment bouge. Calculée à chaque frame sans construire d'anneau. | 189 |
+| `editor_toolUtilities_groundBounds.clip(ring, obs, owner, site)` | Subtracts the obstacles from the outline and returns the remaining pieces to process one by one. Each piece is { ring, holes, cut, flush }: cut[i] true if side i comes from a subtraction (road or building on the other side), flush[i] true if it touches a terrain already laid by another tool (open junction). | 122 |
+| `editor_toolUtilities_groundBounds.largest(areas)` | Returns the largest piece (by absolute area), for a tool that lays only ONE thing on its outline. | 157 |
+| `editor_toolUtilities_groundBounds.obstacles(ring, owner, site, roadMargin)` | Lists what owner must not pave near this outline: road and junction surfaces (networkState.surfaces, with at least 0.10 m margin) and the claims of the other tools. Also returns a second list where roads are enlarged by 0.6 m, to place set-back elements there. | 40 |
+| `editor_toolUtilities_groundBounds.pieceAt(areas, x, y)` | Indicates which piece a point falls on (inside the ring and outside its holes), or nil if it is on none. | 169 |
+| `editor_toolUtilities_groundBounds.publish(owner, rings)` | Announces to the other terrain tools what this one occupies, without margin (groundClaims.publish with margin 0), so that two adjacent surfaces read as a single one. | 184 |
+| `editor_toolUtilities_groundBounds.sig()` | Fingerprint of everything that, outside the outline, determines its shape (road network and claims), to rebuild when a road or building moves. Computed every frame without building a ring. | 189 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_groundBounds.clip(ring, obs, owner, site)`
 
-Soustrait les obstacles du contour et renvoie les morceaux restants à traiter un par un. Chaque morceau est { ring, holes, cut, flush } : cut[i] vrai si le côté i vient d'une soustraction (route ou bâtiment de l'autre côté), flush[i] vrai s'il touche un terrain déjà posé par un autre outil (jonction ouverte).
+Subtracts the obstacles from the outline and returns the remaining pieces to process one by one. Each piece is { ring, holes, cut, flush }: cut[i] true if side i comes from a subtraction (road or building on the other side), flush[i] true if it touches a terrain already laid by another tool (open junction).
 
-- `ring` (*table*) : Contour (au moins 3 points) ; sinon renvoie {}.
-- `obs` (*table[]|nil*) : Obstacles (résultat de obstacles) ; sans obstacle, un seul morceau égal au contour.
-- `owner` (*any*) : Propriétaire à exclure.
-- `site` (*any|nil*) : Étiquette de site ignorée.
-- **renvoie** : table[] Liste de morceaux { ring, holes, cut, flush }.
+- `ring` (*table*) : Outline (at least 3 points); otherwise returns {}.
+- `obs` (*table[]|nil*) : Obstacles (result of obstacles); without an obstacle, a single piece equal to the outline.
+- `owner` (*any*) : Owner to exclude.
+- `site` (*any|nil*) : Ignored site label.
+- **returns**: table[] List of pieces { ring, holes, cut, flush }.
 
 #### `editor_toolUtilities_groundBounds.largest(areas)`
 
-Renvoie le plus grand morceau (par aire absolue), pour un outil qui ne pose qu'UNE chose sur son contour.
+Returns the largest piece (by absolute area), for a tool that lays only ONE thing on its outline.
 
-- `areas` (*table[]|nil*) : Morceaux issus de clip.
-- **renvoie** : table|nil Le plus grand morceau, ou nil.
+- `areas` (*table[]|nil*) : Pieces from clip.
+- **returns**: table|nil The largest piece, or nil.
 
 #### `editor_toolUtilities_groundBounds.obstacles(ring, owner, site, roadMargin)`
 
-Liste ce que owner ne doit pas paver près de ce contour : surfaces de route et jonctions (networkState.surfaces, avec au moins 0.10 m de marge) et revendications des autres outils. Renvoie aussi une seconde liste où les routes sont agrandies de 0.6 m, pour y placer des éléments en retrait.
+Lists what owner must not pave near this outline: road and junction surfaces (networkState.surfaces, with at least 0.10 m margin) and the claims of the other tools. Also returns a second list where roads are enlarged by 0.6 m, to place set-back elements there.
 
-- `ring` (*table*) : Contour du site (points {x, y}).
-- `owner` (*any*) : Nom du propriétaire à exclure.
-- `site` (*any|nil*) : Dossier (étiquette) du site en édition : là où une copie existe déjà, elle est le contour et non un obstacle.
-- `roadMargin` (*number|nil*) : Marge de route supérieure au défaut.
-- **renvoie** : table[] Anneaux obstacles.
-- **renvoie** : table[] Mêmes obstacles, routes agrandies de 0.6 m.
+- `ring` (*table*) : Site outline (points {x, y}).
+- `owner` (*any*) : Name of the owner to exclude.
+- `site` (*any|nil*) : Folder (label) of the site being edited: where a copy already exists, it is the outline and not an obstacle.
+- `roadMargin` (*number|nil*) : Road margin greater than the default.
+- **returns**: table[] Obstacle rings.
+- **returns**: table[] Same obstacles, roads enlarged by 0.6 m.
 
 #### `editor_toolUtilities_groundBounds.pieceAt(areas, x, y)`
 
-Indique sur quel morceau tombe un point (dans l'anneau et hors de ses trous), ou nil s'il n'est sur aucun.
+Indicates which piece a point falls on (inside the ring and outside its holes), or nil if it is on none.
 
-- `areas` (*table[]|nil*) : Morceaux issus de clip.
-- `x` (*number*) : X monde.
-- `y` (*number*) : Y monde.
-- **renvoie** : integer|nil Indice du morceau dans areas, ou nil.
+- `areas` (*table[]|nil*) : Pieces from clip.
+- `x` (*number*) : World X.
+- `y` (*number*) : World Y.
+- **returns**: integer|nil Index of the piece in areas, or nil.
 
 #### `editor_toolUtilities_groundBounds.publish(owner, rings)`
 
-Annonce aux autres outils de terrain ce que celui-ci occupe, sans marge (groundClaims.publish avec marge 0), pour que deux surfaces contiguës se lisent comme une seule.
+Announces to the other terrain tools what this one occupies, without margin (groundClaims.publish with margin 0), so that two adjacent surfaces read as a single one.
 
-- `owner` (*any*) : Nom du propriétaire.
-- `rings` (*table[]*) : Anneaux occupés.
+- `owner` (*any*) : Owner name.
+- `rings` (*table[]*) : Occupied rings.
 
 #### `editor_toolUtilities_groundBounds.sig()`
 
-Empreinte de tout ce qui, hors du contour, détermine sa forme (réseau routier et revendications), pour reconstruire quand une route ou un bâtiment bouge. Calculée à chaque frame sans construire d'anneau.
+Fingerprint of everything that, outside the outline, determines its shape (road network and claims), to rebuild when a road or building moves. Computed every frame without building a ring.
 
-- **renvoie** : number networkState.sig() + groundClaims.sig() * 104729.
+- **returns**: number networkState.sig() + groundClaims.sig() * 104729.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/groundBounds.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/groundBounds.lua`.*

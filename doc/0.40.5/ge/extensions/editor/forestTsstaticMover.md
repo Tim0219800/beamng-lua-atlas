@@ -1,38 +1,38 @@
 # `editor_forestTsstaticMover`
 
-*Fichier : `lua/ge/extensions/editor/forestTsstaticMover.lua` · VM : Game Engine (GE) · 565 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/forestTsstaticMover.lua` · VM: Game Engine (GE) · 565 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_forestTsstaticMover` : `extensions.load("editor_forestTsstaticMover")`, puis la globale `editor_forestTsstaticMover`
+**Access:** extension `editor_forestTsstaticMover`: `extensions.load("editor_forestTsstaticMover")`, then the global `editor_forestTsstaticMover`
 
-Outil d'éditeur « Forest TSStatic Mover » (menu Window > Terrain) qui convertit des instances entre la forêt (ForestItem) et des objets TSStatic. Deux boutons : « Move selected ForestItems -> TSStatic » (mode Forest Tools requis) et « Move selected TSStatic -> ForestItems » (mode Object Select requis). Options : sélectionner les objets créés, déplacer toutes les instances du même mesh, ranger les TSStatic créés dans un nouveau SimGroup. L'action est enregistrée dans l'historique (annuler/rétablir).
+Editor tool "Forest TSStatic Mover" (Window > Terrain menu) that converts instances between the forest (ForestItem) and TSStatic objects. Two buttons: "Move selected ForestItems -> TSStatic" (Forest Tools mode required) and "Move selected TSStatic -> ForestItems" (Object Select mode required). Options: select the created objects, move all instances of the same mesh, put the created TSStatics in a new SimGroup. The action is recorded in the history (undo/redo).
 
-## Remarques
+## Notes
 
-- L'option de dossier (SimGroup) ne s'applique qu'au sens ForestItems vers TSStatic : les items de forêt n'utilisent pas de SimGroup.
-- L'outil affiche « Forest data is missing in the level » si le niveau n'a pas d'objet forêt (core_forest.getForestObject()).
+- The folder (SimGroup) option only applies in the ForestItems to TSStatic direction: forest items do not use a SimGroup.
+- The tool displays "Forest data is missing in the level" if the level has no forest object (core_forest.getForestObject()).
 
-**Dépendances (chargées avant) :** `core_forest`
+**Dependencies (loaded first):** `core_forest`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_forestTsstaticMover.onEditorGui()` | Hook appelé chaque frame par l'éditeur : dessine la fenêtre « Forest TSStatic Mover » (mode d'édition courant, forme sélectionnée, cases à cocher, boutons de conversion grisés selon le mode, dernière erreur). *(interne)* *(hook)* | 492 |
-| `editor_forestTsstaticMover.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : ajoute l'entrée de menu « Forest TSStatic Mover » (groupe Terrain) et enregistre la fenêtre (560x260). *(interne)* *(hook)* | 556 |
+| `editor_forestTsstaticMover.onEditorGui()` | Hook called every frame by the editor: draws the "Forest TSStatic Mover" window (current edit mode, selected shape, checkboxes, conversion buttons grayed out depending on the mode, last error). *(internal)* *(hook)* | 492 |
+| `editor_forestTsstaticMover.onEditorInitialized()` | Hook called at editor initialization: adds the "Forest TSStatic Mover" menu entry (Terrain group) and registers the window (560x260). *(internal)* *(hook)* | 556 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant ce module : {"core_forest"}. |
+| `dependencies` | string[] | Extensions loaded before this module: {"core_forest"}. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorObjectSelectionChanged` — écouté par 8 module(s)
+- `onEditorObjectSelectionChanged` — listened to by 8 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getUniqueName`
 - `obj:` `getId`, `registerObject`, `setField`, `setInternalName`, `setName`, `setScale`, `setTransform`
@@ -40,4 +40,4 @@ Outil d'éditeur « Forest TSStatic Mover » (menu Window > Terrain) qui convert
 - `worldEditorCppApi.` `rebuildForestManagerInstanceData`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/forestTsstaticMover.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/forestTsstaticMover.lua`.*

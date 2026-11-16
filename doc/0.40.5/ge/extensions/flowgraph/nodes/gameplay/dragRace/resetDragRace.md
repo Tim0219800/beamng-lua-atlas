@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_dragRace_resetDragRace`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace.lua` · VM : Game Engine (GE) · 41 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace.lua` · VM: Game Engine (GE) · 41 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Reset Drag Race » (catégorie once_instant). Réinitialise la course de dragster (dragBridge.reset) et peut aussi vider les pilotes (pin clearRacers) pour un nouvel essai avec d'autres adversaires. Sorties : flow (impulsion) et success.
+Flowgraph node "Reset Drag Race" (category once_instant). Resets the drag race (dragBridge.reset) and can also clear the drivers (clearRacers pin) for a new attempt with other opponents. Outputs: flow (pulse) and success.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle dragBridge.reset() si des données existent, puis clearRacers() si demandé. | 23 |
+| `C:workOnce()` | Calls dragBridge.reset() if data exists, then clearRacers() if requested. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/resetDragRace.lua`.*

@@ -1,0 +1,70 @@
+{
+  "path": "lua/ge/extensions/editor/api/terrain.lua",
+  "module": "Squelette d'API de l'éditeur pour le terrain (sculpture, peinture de matériaux, feuillage). initialize(editor) ajoute 46 fonctions à l'objet editor, mais toutes ont un corps vide (commentaire TODO) : elles ne font rien et renvoient nil. Les hooks prévus sont cités en commentaire : onEditorTerrainCreated, onEditorTerrainDelete, onEditorTerrainHeightBrushChanged, onEditorTerrainHeightChanged, onEditorTerrainCleared, onEditorTerrainRestored.",
+  "notes": [
+    "Toutes les fonctions sont des stubs (TODO) : ne pas s'attendre à un effet. Les noms indiquent l'intention prévue ; les types des paramètres sont déduits des noms.",
+    "Les hooks onEditorTerrain* ne sont que des commentaires, rien ne les appelle ici."
+  ],
+  "functions": {
+    "initialize": {
+      "desc": "Ajoute à l'objet editor toutes les fonctions terrain/feuillage listées dans la classe editor. Appelé par le chargeur de l'API de l'éditeur.",
+      "params": {"editorInstance": {"type": "table", "desc": "Objet editor global."}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à editor. Toutes sont des stubs vides (TODO).",
+      "functions": {
+        "createTerrain": {"desc": "Prévu : créer un terrain. Stub vide.", "params": {"terrainInfo": {"type": "table", "desc": "Infos de création (déduit du nom)."}}},
+        "deleteTerrain": {"desc": "Prévu : supprimer un terrain. Stub vide.", "params": {"terrainObjectId": {"type": "integer", "desc": "Id du terrain (déduit du nom)."}}},
+        "importTerrainHeightmap": {"desc": "Prévu : importer une heightmap. Stub vide.", "params": {"importInfo": {"type": "table", "desc": "Infos d'import (déduit du nom)."}}},
+        "exportTerrainHeightmap": {"desc": "Prévu : exporter la heightmap d'un terrain. Stub vide.", "params": {"terrainObjectId": {"type": "integer", "desc": "Id du terrain."}, "filename": {"type": "string", "desc": "Fichier de sortie."}}},
+        "setTerrainHeightBrush": {"desc": "Prévu : définir la brosse de hauteur. Stub vide.", "params": {"brush": {"type": "table", "desc": "Brosse (déduit du nom)."}}},
+        "saveTerrainHeightBrushPreset": {"desc": "Prévu : sauvegarder un preset de brosse de hauteur. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du preset."}}},
+        "applyTerrainHeightBrushPreset": {"desc": "Prévu : appliquer un preset de brosse de hauteur. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du preset."}}},
+        "deleteTerrainHeightBrushPreset": {"desc": "Prévu : supprimer un preset de brosse de hauteur. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du preset."}}},
+        "getTerrainHeightBrushPresets": {"desc": "Prévu : lister les presets de brosse de hauteur. Stub vide.", "params": {}},
+        "grabTerrain": {"desc": "Prévu : outil « saisir » le terrain en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "raiseTerrain": {"desc": "Prévu : lever le terrain en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "lowerTerrain": {"desc": "Prévu : abaisser le terrain en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "smoothTerrain": {"desc": "Prévu : lisser le terrain. Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "smoothSlopeTerrain": {"desc": "Prévu : lisser la pente. Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "averageSmoothTerrain": {"desc": "Prévu : lissage par moyenne. Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "noiseTerrain": {"desc": "Prévu : ajouter du bruit au terrain. Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "flattenTerrain": {"desc": "Prévu : aplatir le terrain. Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "setTerrainHeight": {"desc": "Prévu : fixer la hauteur du terrain. Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "amount": {"type": "number", "desc": "Hauteur (déduit du nom)."}}},
+        "clearTerrain": {"desc": "Prévu : effacer le terrain en (x, y) (hook onEditorTerrainCleared). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}},
+        "restoreTerrain": {"desc": "Prévu : restaurer le terrain en (x, y) (hook onEditorTerrainRestored). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}},
+        "alignTerrainWithMesh": {"desc": "Prévu : aligner le terrain sur un maillage (haut ou bas). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}, "topOrBottom": {"type": "any", "desc": "Choix haut/bas (déduit du nom)."}, "amount": {"type": "number", "desc": "Intensité."}}},
+        "subtractMeshFromTerrain": {"desc": "Prévu : soustraire un maillage du terrain. Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}},
+        "selectTerrainPaintMaterial": {"desc": "Prévu : choisir le matériau de peinture. Stub vide.", "params": {"mtl": {"type": "any", "desc": "Matériau (déduit du nom)."}}},
+        "createTerrainPaintMaterial": {"desc": "Prévu : créer un matériau de peinture. Stub vide.", "params": {"mtl": {"type": "any", "desc": "Matériau (déduit du nom)."}}},
+        "paintTerrain": {"desc": "Prévu : peindre le terrain en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}},
+        "setTerrainPaintBrush": {"desc": "Prévu : définir la brosse de peinture. Stub vide.", "params": {"brush": {"type": "table", "desc": "Brosse (déduit du nom)."}}},
+        "saveTerrainPaintBrushPreset": {"desc": "Prévu : sauvegarder un preset de brosse de peinture. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du preset."}}},
+        "loadTerrainPaintBrushPreset": {"desc": "Prévu : charger un preset de brosse de peinture. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du preset."}}},
+        "deleteTerrainPaintBrushPreset": {"desc": "Prévu : supprimer un preset de brosse de peinture. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du preset."}}},
+        "getTerrainPaintBrushPresets": {"desc": "Prévu : lister les presets de brosse de peinture. Stub vide.", "params": {}},
+        "createFoliageGroup": {"desc": "Prévu : créer un groupe de feuillage. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du groupe."}}},
+        "deleteFoliageGroup": {"desc": "Prévu : supprimer un groupe de feuillage. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du groupe."}}},
+        "createFoliageMesh": {"desc": "Prévu : créer un maillage de feuillage. Stub vide.", "params": {"foliageMesh": {"type": "any", "desc": "Définition du maillage (déduit du nom)."}}},
+        "deleteFoliageMesh": {"desc": "Prévu : supprimer un maillage de feuillage. Stub vide.", "params": {"foliageMeshName": {"type": "string", "desc": "Nom du maillage."}}},
+        "getFoliageMeshes": {"desc": "Prévu : lister les maillages de feuillage. Stub vide.", "params": {}},
+        "addFoliageBrushToGroup": {"desc": "Prévu : ajouter une brosse de feuillage à un groupe. Stub vide.", "params": {"groupName": {"type": "string", "desc": "Nom du groupe."}, "foliageBrush": {"type": "any", "desc": "Brosse (déduit du nom)."}}},
+        "deleteFoliageBrush": {"desc": "Prévu : supprimer une brosse de feuillage. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom de la brosse."}}},
+        "setFoliageBrushGroup": {"desc": "Prévu : choisir le groupe de brosses actif. Stub vide.", "params": {"name": {"type": "string", "desc": "Nom du groupe."}}},
+        "setFoliageBrush": {"desc": "Prévu : choisir la brosse de feuillage active. Stub vide.", "params": {"brushName": {"type": "string", "desc": "Nom de la brosse."}}},
+        "setFoliagePaintBrushSettings": {"desc": "Prévu : régler la brosse de peinture de feuillage. Stub vide.", "params": {"brush": {"type": "table", "desc": "Réglages (déduit du nom)."}}},
+        "paintFoliage": {"desc": "Prévu : peindre du feuillage en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}},
+        "eraseFoliage": {"desc": "Prévu : effacer du feuillage en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}},
+        "eraseSetFoliageBrushOrGroup": {"desc": "Prévu : effacer les éléments de la brosse/groupe actif en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}},
+        "translateFoliageSelection": {"desc": "Prévu : translater la sélection de feuillage. Stub vide.", "params": {"delta": {"type": "any", "desc": "Décalage (déduit du nom)."}}},
+        "rotateFoliageSelection": {"desc": "Prévu : tourner la sélection de feuillage. Stub vide.", "params": {"delta": {"type": "any", "desc": "Rotation (déduit du nom)."}}},
+        "scaleFoliageSelection": {"desc": "Prévu : mettre à l'échelle la sélection de feuillage. Stub vide.", "params": {"delta": {"type": "any", "desc": "Facteur (déduit du nom)."}}},
+        "selectFoliage": {"desc": "Prévu : sélectionner du feuillage en (x, y). Stub vide.", "params": {"x": {"type": "number", "desc": "Coordonnée X."}, "y": {"type": "number", "desc": "Coordonnée Y."}}}
+      }
+    }
+  }
+}

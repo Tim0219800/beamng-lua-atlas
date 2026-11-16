@@ -1,94 +1,94 @@
 # `gameplay_rally_driveline_drivelineRoute`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/driveline/drivelineRoute.lua` · VM : Game Engine (GE) · 2122 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/driveline/drivelineRoute.lua` · VM: Game Engine (GE) · 2122 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/driveline/drivelineRoute")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/driveline/drivelineRoute")` (file under extensions/ but not a regular extension)
 
-Deuxième version de la driveline de rallye, fondée sur gameplay/route/raceRoute. À partir d'un RacePath (race.json), d'un carnet de notes (NotebookPath) et d'une liste de points enregistrés (PointList), construit deux routes : une route dynamique (recalculée depuis la position du véhicule) et une route statique immuable (avec RallyRouteTracker pour suivre le véhicule et gérer la sortie de route). Les points de départ, de zone d'arrêt, les pathnodes de course et les waypoints de début/fin de virage (Cs/Ce) des notes sont insérés dans la polyligne. Ensuite, à chaque frame, onUpdate évalue la fenêtre de notes : quand le temps restant avant le début du virage passe sous (délai du copilote + durée parlée de la note), l'audio de la note est déclenché via les callbacks onPacenote*Hit. Fournit aussi des distances (course, fraction parcourue, splits), le replacement du véhicule (notes, récupération) et des dessins de débogage. Le module renvoie un constructeur : require(...)().
+Second version of the rally driveline, based on gameplay/route/raceRoute. From a RacePath (race.json), a notebook (NotebookPath) and a list of recorded points (PointList), it builds two routes: a dynamic route (recomputed from the vehicle's position) and an immutable static route (with RallyRouteTracker to follow the vehicle and handle going off the road). The start points, stop zone points, race pathnodes and the corner start/end waypoints (Cs/Ce) of the notes are inserted into the polyline. Then, every frame, onUpdate evaluates the note window: when the time remaining before the corner start drops below (co-driver delay + spoken duration of the note), the note's audio is triggered via the onPacenote*Hit callbacks. Also provides distances (course, fraction covered, splits), vehicle repositioning (notes, recovery) and debug drawings. The module returns a constructor: require(...)().
 
-## Exemple
+## Example
 
 ```lua
 local dl = require('/lua/ge/extensions/gameplay/rally/driveline/drivelineRoute')()
 dl.onPacenoteCsDynamicHit = function(pacenote, shouldTriggerAudio) end
 dl:setVehicleTracker(vehicleTracker)
 if dl:loadRouteFromRecordedDriveline(racePath, notebookPath, pointList) then
-  -- chaque frame : dl:onUpdate(dtReal, dtSim, dtRaw)
+  -- every frame: dl:onUpdate(dtReal, dtSim, dtRaw)
 end
 ```
 
-## Remarques
+## Notes
 
-- Les distances sont des 'distToTarget' (distance restante jusqu'à la fin de la route) : elles décroissent le long de la route ; distance depuis le départ = distToTarget du premier point - distToTarget du point.
-- Pour charger, racePath doit avoir une position de départ par défaut et une position 'STOP_ZONE', 'SS_stop_control' ou 'TC_out' ; sinon loadRouteFromRecordedDriveline échoue (false) et remet l'objet à zéro.
-- Seuls les types de déclenchement dynamic (1) et csImmediate (15) existent dans RallyEnums.triggerType ; les comparaisons avec csStatic, csHalf, csMinus5, ceMinus5, ceStatic valent donc nil et ne déclenchent jamais l'audio (les évènements sont tout de même enregistrés et leurs callbacks appelés sans audio).
-- Seuil dynamique : timeToCs < codriverDelayForSpeed(vitesse mph) + durée effective de la note ; timeToCs = (distance restante du véhicule - distance originale du waypoint Cs) / vitesse en m/s.
-- Paramètres : staticDistanceThresholdMeters 0,1 ; minEvalSpeedMph 1,0 ; minWaitTimeSinceRecalc 2,0 s ; lissage de la vitesse de déclenchement 0,25 s ; pacenoteLookbehindWindow 5 notes.
-- Les callbacks onPacenoteXxxHit (Dynamic, CsImmediate, CsStatic, CeStatic, CsOffset, CeOffset, CornerPercent) sont à renseigner par l'appelant ; ils ne sont pas appelés tant que recalcNeeded est vrai.
-- onUpdate n'évalue les notes qu'au moins minWaitTimeSinceRecalc après un recalcul. dtSimSumSinceRecalc reste nil jusqu'au premier recalcul : la comparaison dtSimSumSinceRecalc > minWaitTimeSinceRecalc provoquerait une erreur si la vitesse dépasse minEvalSpeedMph avant tout recalcul (déduit du code).
-- evaluatePacenoteEvents sort plusieurs fois avant profilerPopEvent sans l'appeler (déséquilibre du profileur, déduit du code).
-- Étiquettes des splits : un chiffre décimal (km) sauf doublons ou '0.0', auquel cas deux chiffres.
+- Distances are 'distToTarget' values (remaining distance to the end of the route): they decrease along the route; distance from the start = distToTarget of the first point - distToTarget of the point.
+- To load, racePath must have a default start position and a 'STOP_ZONE', 'SS_stop_control' or 'TC_out' position; otherwise loadRouteFromRecordedDriveline fails (false) and resets the object.
+- Only the dynamic (1) and csImmediate (15) trigger types exist in RallyEnums.triggerType; comparisons with csStatic, csHalf, csMinus5, ceMinus5, ceStatic are therefore nil and never trigger audio (the events are still recorded and their callbacks called without audio).
+- Dynamic threshold: timeToCs < codriverDelayForSpeed(speed in mph) + effective note duration; timeToCs = (vehicle remaining distance - original distance of the Cs waypoint) / speed in m/s.
+- Parameters: staticDistanceThresholdMeters 0.1; minEvalSpeedMph 1.0; minWaitTimeSinceRecalc 2.0 s; trigger speed smoothing 0.25 s; pacenoteLookbehindWindow 5 notes.
+- The onPacenoteXxxHit callbacks (Dynamic, CsImmediate, CsStatic, CeStatic, CsOffset, CeOffset, CornerPercent) must be set by the caller; they are not called while recalcNeeded is true.
+- onUpdate only evaluates notes at least minWaitTimeSinceRecalc after a recalculation. dtSimSumSinceRecalc stays nil until the first recalculation: the comparison dtSimSumSinceRecalc > minWaitTimeSinceRecalc would raise an error if the speed exceeds minEvalSpeedMph before any recalculation (inferred from code).
+- evaluatePacenoteEvents returns several times before profilerPopEvent without calling it (profiler imbalance, inferred from code).
+- Split labels: one decimal digit (km) except for duplicates or '0.0', in which case two digits.
 
-## Classe `C`
+## Class `C`
 
-Driveline V2 renvoyée par le constructeur. Attributs principaux : racePath, notebookPath, route, routeStatic, staticTracker, vehicleTracker, events, eventLog, loaded, nextPacenoteIdxForEval, splitDataList, pathnodeObservationList, raceCompletionData, callbacks onPacenote*Hit.
+Driveline V2 returned by the constructor. Main attributes: racePath, notebookPath, route, routeStatic, staticTracker, vehicleTracker, events, eventLog, loaded, nextPacenoteIdxForEval, splitDataList, pathnodeObservationList, raceCompletionData, onPacenote*Hit callbacks.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_driveline_drivelineRoute")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_driveline_drivelineRoute")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_abortLoadRoute()` | Abandonne un chargement en cours (appelle _reset). | 403 |
-| `C:_reset()` | Remet à zéro l'état de chargement et de suivi : routes, trackers, évènements, seuils de déclenchement (0,1 m, 1 mph, 2 s, lissage 0,25 s) et suivi souris. | 72 |
-| `C:buildElevationProfile()` | Construit le profil d'altitude : un élément {x, y, z, distFromStart, splitLabel, isRacePathnode} par point de la route statique jusqu'à la ligne d'arrivée incluse. | 2085 |
-| `C:callPacenoteEventCallback(callbackFn, ...)` | Appelle un callback d'évènement de note, sauf s'il est nil ou si un recalcul est en attente. | 1331 |
-| `C:codriverDelayForSpeed(speedMph)` | Délai du copilote pour une vitesse donnée, avec les réglages du pack vocal actif (mise à l'échelle par la vitesse, décalage) via gameplay_rally_codriverTiming.delayForSpeed. | 123 |
-| `C:drawDebugDrivelineRoute(drawRoute, drawPacenotes, drawLimit, monochrome, static, drawHiddenPathnodes, drawRoutePathnodes, drawPointI, drawPointMetadata, drawPacenoteText)` | Dessine la route (dynamique ou statique) : sphères arc-en-ciel et prismes, indices de points, métadonnées, pathnodes de course et étiquettes de notes (drawLimit étiquettes au plus). | 1814 |
-| `C:drawDebugDrivelineRouteShort(dist)` | Dessine en vert la route statique devant le véhicule sur une distance donnée. | 2044 |
-| `C:drawDebugTriggerPoint()` | Dessine une sphère orange à l'endroit où la prochaine note se déclenchera à la vitesse actuelle. | 1787 |
-| `C:effectiveAudioLen(pacenote)` | Durée parlée effective d'une note, avec les écarts de recouvrement structurés (AudioManager:pacenoteEffectiveAudioLen) ; sinon la durée totale brute pacenote:audioLenTotal(). | 114 |
-| `C:enableTrackMouseLikeVehicleMovement(val)` | Autorise le déplacement de la position-souris (Maj + clic) en mode débogage. | 1501 |
-| `C:enableTriggerLogging()` | Indique si le journal détaillé des déclenchements est actif (gameplay_rally.getDebugLogging()). | 60 |
-| `C:evaluatePacenoteEvents(pacenote, speedMs)` | Évalue les déclenchements d'une note : dynamique (temps avant Cs < délai copilote + durée parlée), immédiat, statique Cs, décalage -40 m et 50 % entre Cs et Ce, décalage -5 m et statique Ce. Appelle les callbacks correspondants avec shouldTriggerAudio (vrai une seule fois, pour le type de déclenchement de la note). Renvoie true si l'audio de la note vient d'être déclenché. | 1095 |
-| `C:evaluatePacenotesWindow(speedMs)` | Évalue les notes de la fenêtre [prochaine - 5, prochaine] ; avance nextPacenoteIdxForEval à chaque audio déclenché. | 1389 |
-| `C:getAheadRoutePointPos()` | Position du deuxième point de la route dynamique (point en avant du véhicule). | 147 |
-| `C:getDistanceKmString()` | Longueur de la course formatée '%.2f km', ou 'N/A'. | 1586 |
-| `C:getDistanceMeters()` | Longueur de la course (du départ à la ligne d'arrivée) en mètres ; -1 si la ligne d'arrivée est inconnue ; nil sans route ou racePath. | 1573 |
-| `C:getFinishLineDistOffset()` | distToTarget du point de route statique du dernier pathnode (ligne d'arrivée) ; nil si indisponible. | 1546 |
-| `C:getNearestRoutePoint(pos)` | Position projetée sur la route statique du segment le plus proche (via kd-tree), si la projection est en avant du début du segment (xnorm > 0). | 831 |
-| `C:getNextPacenote()` | Prochaine note à évaluer. | 143 |
-| `C:getPacenoteEvent(pacenote)` | Renvoie l'évènement mémorisé d'une note ou en crée un : disabledByRecalc, csDynamicHit, csImmediateHit, csStaticHit, csMeterOffsetHit[-40], cornerPercentHit[0.5], ceStaticHit, ceMeterOffsetHit[-5], audioTriggerComplete. | 1033 |
-| `C:getPacenotes()` | Liste triée des notes du carnet chargé ({} si aucun carnet). | 135 |
-| `C:getPointDistanceFromStartKm(point)` | Distance du départ à un point de la route, en kilomètres. | 1671 |
-| `C:getPointDistanceFromStartMeters(point)` | Distance du départ à un point de la route, en mètres (0 sans route). | 1660 |
-| `C:getPosition()` | Position du véhicule (ou de la souris en mode débogage). | 1366 |
-| `C:getRaceCompletionData()` | Progression de la course : renvoie une table partagée {distM, distPct, distKm, totalDistM} (distance parcourue, fraction, texte '%.2fkm', longueur totale). Valeurs à 0 si la ligne d'arrivée est inconnue. | 1595 |
-| `C:getRecoveryDistToTarget(backoffDistance)` | Distance restante où replacer le véhicule après une sortie de route (suiveur statique ; sinon distance suivie). | 892 |
-| `C:getRouteCorridorWidth()` | Demi-largeur actuelle du corridor. | 875 |
-| `C:getSpeed()` | Vitesse du véhicule en m/s (ou celle de la souris en mode débogage). 0 sans suiveur de véhicule, nil sans véhicule. | 1337 |
-| `C:getStaticTrackerState()` | État du suiveur statique (voir RallyRouteTracker:getState). | 859 |
-| `C:getTrackedDistToTarget()` | Distance restante jusqu'à la fin de la route : celle du suiveur statique ; à défaut celle du premier point de la route dynamique. | 882 |
-| `C:init()` | Initialise les callbacks (nil), les options de débogage souris, les listes de splits et l'état interne (_reset). | 28 |
-| `C:isLoaded()` | Indique si une route a été chargée avec succès. | 68 |
-| `C:loadRouteFromRecordedDriveline(racePath, notebookPath, pointsList)` | Charge la route à partir d'une driveline enregistrée : construit la liste de points (driveline, position de départ, zone d'arrêt, pathnodes, waypoints Cs/Ce des notes), supprime ceux avant le départ et après l'arrêt, crée route dynamique et route statique, le suiveur statique, les longueurs de notes et les données de splits/pathnodes. Retourne false (et se remet à zéro) si les prérequis manquent. | 412 |
-| `C:onUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame : met à jour la souris en mode débogage, la vitesse, le suiveur statique et la vitesse de déclenchement lissée ; exécute un recalcul si demandé, sinon évalue les notes si la vitesse dépasse 1 mph et que 2 s se sont écoulées depuis le dernier recalcul. Ignore les vitesses > 1000 mph. | 1427 |
-| `C:positionAtDistToTarget(targetDist)` | Position sur la route statique pour une distance restante donnée (interpolation linéaire entre points). | 1699 |
-| `C:projectStaticRoute(pos, options)` | Projette une position sur la route statique sans modifier l'état. | 848 |
-| `C:recalculate(options)` | Recalcule la route depuis la position courante : retrouve le prochain waypoint de début de virage (Cs) et le prochain pathnode, désactive les évènements des notes déjà passées (disabledByRecalc), fixe nextPacenoteIdxForEval, appelle route:recalculateRouteWithOriginalPositions et réinitialise le suiveur statique (sauf preserveStaticTracker). | 900 |
-| `C:resetStaticTracker(pos)` | Réinitialise le suiveur statique, éventuellement à une position. | 853 |
-| `C:setRecalcNeeded(options)` | Demande un recalcul de la route au prochain onUpdate. | 1482 |
-| `C:setRouteCorridorWidth(width)` | Règle la demi-largeur du corridor de route du suiveur statique. | 869 |
-| `C:setStaticTrackerDebugCapture(enabled)` | Active la capture de diagnostic du suiveur statique. | 863 |
-| `C:setTrackMouseLikeVehicle(val)` | Active/désactive le suivi de la souris comme s'il s'agissait du véhicule (débogage). La désactivation efface les données de souris. | 1490 |
-| `C:setVehicleTracker(vehicleTracker)` | Définit l'objet qui fournit la position et la vitesse du véhicule (méthodes getVehicle, speedMs, pos). | 131 |
-| `C:updateDynamicTriggerSpeed(speedMs, dtSim)` | Lisse la vitesse utilisée pour les déclenchements (filtre exponentiel de constante 0,25 s) ; l'initialise à la vitesse courante si elle est nil ou si dtSim est invalide. | 1014 |
-| `C:updateMouseLikeVehicle(dtSim)` | Met à jour la position et la vitesse simulées de la souris (raycast caméra, lissage 0,02) en mode débogage. | 1505 |
-| `C:updateStaticTracker(pos, options)` | Met à jour le suiveur de route statique avec la position (RallyRouteTracker:update). | 843 |
-| `C:vehiclePlacementPosAndRotForPacenote(pacenote, distBefore, tangentLookAhead)` | Position et orientation pour replacer le véhicule distBefore mètres avant le début du virage (Cs) d'une note, cap pris vers un point tangentLookAhead mètres plus loin sur la route. | 1713 |
-| `C:vehiclePlacementPosAndRotForRecovery(backoffDistance, tangentLookAhead)` | Position et orientation pour récupérer le véhicule après une sortie de route (distance de récupération du suiveur, bornée au début de la route). | 1754 |
+| `C:_abortLoadRoute()` | Aborts a load in progress (calls _reset). | 403 |
+| `C:_reset()` | Resets the loading and tracking state: routes, trackers, events, trigger thresholds (0.1 m, 1 mph, 2 s, smoothing 0.25 s) and mouse tracking. | 72 |
+| `C:buildElevationProfile()` | Builds the elevation profile: one element {x, y, z, distFromStart, splitLabel, isRacePathnode} per static route point up to and including the finish line. | 2085 |
+| `C:callPacenoteEventCallback(callbackFn, ...)` | Calls a note event callback, unless it is nil or a recalculation is pending. | 1331 |
+| `C:codriverDelayForSpeed(speedMph)` | Co-driver delay for a given speed, with the settings of the active voice pack (speed scaling, offset) via gameplay_rally_codriverTiming.delayForSpeed. | 123 |
+| `C:drawDebugDrivelineRoute(drawRoute, drawPacenotes, drawLimit, monochrome, static, drawHiddenPathnodes, drawRoutePathnodes, drawPointI, drawPointMetadata, drawPacenoteText)` | Draws the route (dynamic or static): rainbow spheres and prisms, point indices, metadata, race pathnodes and note labels (at most drawLimit labels). | 1814 |
+| `C:drawDebugDrivelineRouteShort(dist)` | Draws the static route ahead of the vehicle in green over a given distance. | 2044 |
+| `C:drawDebugTriggerPoint()` | Draws an orange sphere where the next note will trigger at the current speed. | 1787 |
+| `C:effectiveAudioLen(pacenote)` | Effective spoken duration of a note, with the structured overlap gaps (AudioManager:pacenoteEffectiveAudioLen); otherwise the raw total duration pacenote:audioLenTotal(). | 114 |
+| `C:enableTrackMouseLikeVehicleMovement(val)` | Allows moving the mouse position (Shift + click) in debug mode. | 1501 |
+| `C:enableTriggerLogging()` | Indicates whether the detailed trigger log is active (gameplay_rally.getDebugLogging()). | 60 |
+| `C:evaluatePacenoteEvents(pacenote, speedMs)` | Evaluates a note's triggers: dynamic (time before Cs < co-driver delay + spoken duration), immediate, static Cs, -40 m offset and 50% between Cs and Ce, -5 m offset and static Ce. Calls the matching callbacks with shouldTriggerAudio (true only once, for the note's trigger type). Returns true if the note's audio was just triggered. | 1095 |
+| `C:evaluatePacenotesWindow(speedMs)` | Evaluates the notes in the window [next - 5, next]; advances nextPacenoteIdxForEval each time audio is triggered. | 1389 |
+| `C:getAheadRoutePointPos()` | Position of the second point of the dynamic route (point ahead of the vehicle). | 147 |
+| `C:getDistanceKmString()` | Race length formatted as '%.2f km', or 'N/A'. | 1586 |
+| `C:getDistanceMeters()` | Length of the race (from start to finish line) in meters; -1 if the finish line is unknown; nil without a route or racePath. | 1573 |
+| `C:getFinishLineDistOffset()` | distToTarget of the static route point of the last pathnode (finish line); nil if unavailable. | 1546 |
+| `C:getNearestRoutePoint(pos)` | Position projected on the static route of the closest segment (via kd-tree), if the projection is ahead of the segment start (xnorm > 0). | 831 |
+| `C:getNextPacenote()` | Next note to evaluate. | 143 |
+| `C:getPacenoteEvent(pacenote)` | Returns a note's stored event or creates one: disabledByRecalc, csDynamicHit, csImmediateHit, csStaticHit, csMeterOffsetHit[-40], cornerPercentHit[0.5], ceStaticHit, ceMeterOffsetHit[-5], audioTriggerComplete. | 1033 |
+| `C:getPacenotes()` | Sorted list of the loaded notebook's notes ({} if no notebook). | 135 |
+| `C:getPointDistanceFromStartKm(point)` | Distance from the start to a route point, in kilometers. | 1671 |
+| `C:getPointDistanceFromStartMeters(point)` | Distance from the start to a route point, in meters (0 without a route). | 1660 |
+| `C:getPosition()` | Vehicle position (or the mouse's in debug mode). | 1366 |
+| `C:getRaceCompletionData()` | Race progress: returns a shared table {distM, distPct, distKm, totalDistM} (distance covered, fraction, text '%.2fkm', total length). Values are 0 if the finish line is unknown. | 1595 |
+| `C:getRecoveryDistToTarget(backoffDistance)` | Remaining distance at which to reposition the vehicle after going off the road (static tracker; otherwise tracked distance). | 892 |
+| `C:getRouteCorridorWidth()` | Current half-width of the corridor. | 875 |
+| `C:getSpeed()` | Vehicle speed in m/s (or the mouse's in debug mode). 0 without a vehicle tracker, nil without a vehicle. | 1337 |
+| `C:getStaticTrackerState()` | State of the static tracker (see RallyRouteTracker:getState). | 859 |
+| `C:getTrackedDistToTarget()` | Remaining distance to the end of the route: that of the static tracker; otherwise that of the first point of the dynamic route. | 882 |
+| `C:init()` | Initializes the callbacks (nil), the mouse debug options, the split lists and the internal state (_reset). | 28 |
+| `C:isLoaded()` | Indicates whether a route was loaded successfully. | 68 |
+| `C:loadRouteFromRecordedDriveline(racePath, notebookPath, pointsList)` | Loads the route from a recorded driveline: builds the list of points (driveline, start position, stop zone, pathnodes, Cs/Ce waypoints of the notes), removes those before the start and after the stop, creates the dynamic route and the static route, the static tracker, the note lengths and the splits/pathnodes data. Returns false (and resets itself) if prerequisites are missing. | 412 |
+| `C:onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: updates the mouse in debug mode, the speed, the static tracker and the smoothed trigger speed; runs a recalculation if requested, otherwise evaluates the notes if the speed exceeds 1 mph and 2 s have elapsed since the last recalculation. Ignores speeds > 1000 mph. | 1427 |
+| `C:positionAtDistToTarget(targetDist)` | Position on the static route for a given remaining distance (linear interpolation between points). | 1699 |
+| `C:projectStaticRoute(pos, options)` | Projects a position onto the static route without changing state. | 848 |
+| `C:recalculate(options)` | Recomputes the route from the current position: finds the next corner start waypoint (Cs) and the next pathnode, disables the events of notes already passed (disabledByRecalc), sets nextPacenoteIdxForEval, calls route:recalculateRouteWithOriginalPositions and resets the static tracker (unless preserveStaticTracker). | 900 |
+| `C:resetStaticTracker(pos)` | Resets the static tracker, optionally at a position. | 853 |
+| `C:setRecalcNeeded(options)` | Requests a route recalculation at the next onUpdate. | 1482 |
+| `C:setRouteCorridorWidth(width)` | Sets the half-width of the static tracker's route corridor. | 869 |
+| `C:setStaticTrackerDebugCapture(enabled)` | Enables diagnostic capture on the static tracker. | 863 |
+| `C:setTrackMouseLikeVehicle(val)` | Enables/disables mouse tracking as if it were the vehicle (debug). Disabling clears the mouse data. | 1490 |
+| `C:setVehicleTracker(vehicleTracker)` | Sets the object that provides the vehicle's position and speed (methods getVehicle, speedMs, pos). | 131 |
+| `C:updateDynamicTriggerSpeed(speedMs, dtSim)` | Smooths the speed used for triggers (exponential filter with 0.25 s constant); initializes it to the current speed if it is nil or if dtSim is invalid. | 1014 |
+| `C:updateMouseLikeVehicle(dtSim)` | Updates the mouse's simulated position and speed (camera raycast, smoothing 0.02) in debug mode. | 1505 |
+| `C:updateStaticTracker(pos, options)` | Updates the static route tracker with the position (RallyRouteTracker:update). | 843 |
+| `C:vehiclePlacementPosAndRotForPacenote(pacenote, distBefore, tangentLookAhead)` | Position and orientation to reposition the vehicle distBefore meters before a note's corner start (Cs), heading taken toward a point tangentLookAhead meters further along the route. | 1713 |
+| `C:vehiclePlacementPosAndRotForRecovery(backoffDistance, tangentLookAhead)` | Position and orientation to recover the vehicle after going off the road (the tracker's recovery distance, clamped to the start of the route). | 1754 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/driveline/drivelineRoute.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/driveline/drivelineRoute.lua`.*

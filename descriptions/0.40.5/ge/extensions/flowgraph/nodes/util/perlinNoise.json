@@ -1,98 +1,98 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/util/perlinNoise.lua",
-  "module": "Nœud « Perlin Noise » (repeat_instant). Produit un nombre pseudo-aléatoire cohérent (bruit de Perlin à octaves) en fonction d'une valeur d'entrée, par exemple le temps. Entrées : flow, value (graine/abscisse), octaves (6), amplitude (128), frequency (4), normalize (false), randomStartSeed (true, décale l'abscisse aléatoirement à chaque démarrage). Sorties : flow, value. Boutons de préréglage « Smooth » et « Natural » dans l'inspecteur ; un graphe de débogage est dessiné dans le nœud (data.debug). Implémentation adaptée d'un gist de kymckay.",
+  "module": "Node \"Perlin Noise\" (repeat_instant). Produces a coherent pseudo-random number (octave Perlin noise) as a function of an input value, for example time. Inputs: flow, value (seed/abscissa), octaves (6), amplitude (128), frequency (4), normalize (false), randomStartSeed (true, randomly offsets the abscissa at each start). Outputs: flow, value. \"Smooth\" and \"Natural\" preset buttons in the inspector; a debug graph is drawn in the node (data.debug). Implementation adapted from a gist by kymckay.",
   "notes": [
-    "La boucle d'OctavePerlin va de 0 à octaves inclus : il y a octaves+1 passes.",
-    "Dans _executionStarted, amplitude.value est lu pour l'échelle du graphe ; sans valeur la ligne échouerait."
+    "The OctavePerlin loop goes from 0 to octaves inclusive: there are octaves+1 passes.",
+    "In _executionStarted, amplitude.value is read for the graph scale; without a value the line would fail."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "init": {
-          "desc": "Initialise le tampon du graphe, la graine, data.debug=true et data.graphDataCount=1000.",
+          "desc": "Initializes the graph buffer, the seed, data.debug=true and data.graphDataCount=1000.",
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Dessine les boutons « Smooth preset » et « Natural preset » qui règlent frequency/amplitude/octaves.",
+          "desc": "Draws the \"Smooth preset\" and \"Natural preset\" buttons that set frequency/amplitude/octaves.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Dessine la courbe des dernières valeurs si data.debug.",
+          "desc": "Draws the curve of the latest values if data.debug.",
           "params": {
             "builder": {
               "type": "table",
-              "desc": "Constructeur de nœud."
+              "desc": "Node constructor."
             },
             "style": {
               "type": "table",
-              "desc": "Style du nœud."
+              "desc": "Node style."
             }
           },
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Vide le graphe, règle l'échelle, remplit la table de permutation (doublée) et tire la graine aléatoire si randomStartSeed.",
+          "desc": "Clears the graph, sets the scale, fills the permutation table (doubled) and draws the random seed if randomStartSeed.",
           "internal": true
         },
         "work": {
-          "desc": "Si flow est actif, calcule OctavePerlin(randomStartSeed + value, 0, 0, ...), alimente le graphe et écrit value et flow.",
+          "desc": "If flow is active, computes OctavePerlin(randomStartSeed + value, 0, 0, ...), feeds the graph and writes value and flow.",
           "internal": true
         },
         "OctavePerlin": {
-          "desc": "Somme le bruit sur plusieurs octaves (fréquence ×2 et amplitude ÷2 à chaque octave) ; divise par la somme des amplitudes si normalize.",
+          "desc": "Sums the noise over several octaves (frequency ×2 and amplitude ÷2 at each octave); divides by the sum of the amplitudes if normalize.",
           "params": {
             "x": {
               "type": "number",
-              "desc": "Abscisse."
+              "desc": "X coordinate."
             },
             "y": {
               "type": "number",
-              "desc": "Ordonnée."
+              "desc": "Y coordinate."
             },
             "z": {
               "type": "number",
-              "desc": "Cote."
+              "desc": "Z coordinate."
             },
             "octaves": {
               "type": "integer",
-              "desc": "Nombre d'octaves."
+              "desc": "Number of octaves."
             },
             "amplitude": {
               "type": "number",
-              "desc": "Amplitude initiale."
+              "desc": "Initial amplitude."
             },
             "frequency": {
               "type": "number",
-              "desc": "Fréquence initiale."
+              "desc": "Initial frequency."
             }
           },
           "internal": false
         },
         "noise": {
-          "desc": "Bruit de Perlin 3D de base (interpolation des 8 coins du cube unité).",
+          "desc": "Basic 3D Perlin noise (interpolation of the 8 corners of the unit cube).",
           "params": {
             "x": {
               "type": "number",
-              "desc": "Abscisse."
+              "desc": "X coordinate."
             },
             "y": {
               "type": "number|nil",
-              "desc": "Ordonnée (0 par défaut)."
+              "desc": "Y coordinate (0 by default)."
             },
             "z": {
               "type": "number|nil",
-              "desc": "Cote (0 par défaut)."
+              "desc": "Z coordinate (0 by default)."
             }
           },
           "internal": false
         },
         "grad": {
-          "desc": "Gradient pseudo-aléatoire choisi selon les 4 bits bas du hash.",
+          "desc": "Pseudo-random gradient chosen according to the 4 low bits of the hash.",
           "params": {
             "hash": {
               "type": "integer",
-              "desc": "Valeur de hachage."
+              "desc": "Hash value."
             },
             "x": {
               "type": "number",
@@ -110,17 +110,17 @@
           "internal": false
         },
         "fade": {
-          "desc": "Courbe de lissage 6t^5 - 15t^4 + 10t^3 (appelée sans self).",
+          "desc": "Smoothing curve 6t^5 - 15t^4 + 10t^3 (called without self).",
           "params": {
             "t": {
               "type": "number",
-              "desc": "Valeur dans [0,1]."
+              "desc": "Value in [0,1]."
             }
           },
           "internal": false
         },
         "lerp": {
-          "desc": "Interpolation linéaire a + t(b-a) (appelée sans self).",
+          "desc": "Linear interpolation a + t(b-a) (called without self).",
           "params": {
             "t": {
               "type": "number",
@@ -128,11 +128,11 @@
             },
             "a": {
               "type": "number",
-              "desc": "Début."
+              "desc": "Start."
             },
             "b": {
               "type": "number",
-              "desc": "Fin."
+              "desc": "End."
             }
           },
           "internal": false

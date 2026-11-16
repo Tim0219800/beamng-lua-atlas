@@ -1,248 +1,248 @@
 # `ui_router`
 
-*Fichier : `lua/ge/extensions/ui/router.lua` · VM : Game Engine (GE) · 1176 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router.lua` · VM: Game Engine (GE) · 1176 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router` : `extensions.load("ui_router")`, puis la globale `ui_router`
+**Access:** extension `ui_router`: `extensions.load("ui_router")`, then the global `ui_router`
 
-Routeur de navigation de l'interface côté Lua (ui_router). Il orchestre un « handshake » avec les frameworks UI (Vue, Angular/legacy) : résolution de la route, gardes de sortie/entrée, hooks de cycle de vie (onLeave, onEnter, onMount), envoi du changement de route au framework, puis réception des accusés (reçu, navigation démarrée, route validée, montée). Il délègue l'état aux modules ui/router/* (navigationState, transitionManager, frameworkManager, guardManager, scopeManager, breadcrumbManager…). Un moddeur s'en sert surtout pour appeler navigate/back/reload et pour écouter les hooks onUiChangedState et onUiActiveScopeChanged.
+UI navigation router on the Lua side (ui_router). It orchestrates a "handshake" with the UI frameworks (Vue, Angular/legacy): route resolution, exit/entry guards, lifecycle hooks (onLeave, onEnter, onMount), sending the route change to the framework, then receiving the acknowledgments (received, navigation started, route committed, mounted). It delegates state to the ui/router/* modules (navigationState, transitionManager, frameworkManager, guardManager, scopeManager, breadcrumbManager...). A modder mostly uses it to call navigate/back/reload and to listen to the onUiChangedState and onUiActiveScopeChanged hooks.
 
-## Exemple
+## Example
 
 ```lua
--- naviguer vers une route avec des paramètres
+-- navigate to a route with parameters
 local res = ui_router.navigate("mainmenu", {})
-if not res.success then log("W", "mod", "échec : " .. tostring(res.reason)) end
--- navigation non annulable (verrou de protection)
+if not res.success then log("W", "mod", "failed: " .. tostring(res.reason)) end
+-- non-cancellable navigation (protection lock)
 ui_router.navigate("photomode", nil, {cancellable = false})
 ```
 
-## Remarques
+## Notes
 
-- Séquence d'une navigation : 1) navigate émet le changement de route (FrameworkManager.sendRouteChange) ; 2) routeChangeReceived ; 3) routeNavigationStarted ; 4) routeChangeComplete promeut l'entrée en attente et termine la transition, sauf pour les routes Vue qui attendent un accusé de montage ; 5) routeMounted exécute onMount et termine la transition.
-- Pour les routes Vue, les accusés doivent renvoyer un identifiant de transition non vide (sinon reason="missing_transition_id"). Angular/legacy peuvent s'en passer et sont validés par nom de route.
-- Un navigate avec options.cancellable == false acquiert un verrou identifié par un jeton unique ("navProtect_N") qui bloque tout navigate/back/reload suivant (reason="active_navigation_not_cancellable") jusqu'à l'état terminal de cette navigation (fin, annulation, échec, timeout, reset, désérialisation). Sinon la dernière navigation l'emporte et annule la transition en cours (annulation « navigation_replaced »).
-- Les échecs de navigate renvoient {result=false, success=false, reason=...} : active_navigation_not_cancellable, route_not_found, guard_blocked_exit, guard_blocked_enter, lifecycle_hook_error, navigation_preempted, ou l'erreur de résolution de la référence de route.
-- Le nom de route accepte une référence enrichie : route relative résolue contre la route courante, requête inline (?a=1) et portée (:scope). Les paramètres explicites l'emportent sur ceux de la requête.
-- Hooks émis : extensions.hook(BEFORE_ROUTE_CHANGE, entry), AFTER_ROUTE_CHANGE, ROUTE_CHANGE_CANCELLED (toRoute, fromRoute, reason, transitionId, plus timeoutClassification/phase/... pour un timeout), ROUTE_TIMING (routeName, {total, enter, ready, mountAcked} en ms), onUiChangedState(nomRoute, routeOrigine) et onUiActiveScopeChanged(payload). Évènement UI : guihooks ui_router_routeData (namespace, route, fromRoute, scopeTree, scopeParentMap, targetScope, breadcrumbs, data, status, error) avec status = enter-ready, mounted-ready ou error.
-- NavigationObserver (diagnostic) n'est chargé que si shipping_build ~= true.
-- back() ne renvoie rien (nil) si la route courante n'a ni backTarget ni gestionnaire de retour valide.
-- L'extension se met en déchargement manuel à son chargement (setExtensionUnloadMode manual) et recharge les gardes (GuardManager.reloadGuards).
-- Fonctions dépréciées : push, replace (journalisent un avertissement puis appellent navigate) et forward (renvoie {result=false, reason="deprecated_method"}). Les fonctions __test_* sont des points d'accès réservés aux tests.
+- Sequence of a navigation: 1) navigate emits the route change (FrameworkManager.sendRouteChange); 2) routeChangeReceived; 3) routeNavigationStarted; 4) routeChangeComplete promotes the pending entry and ends the transition, except for Vue routes which wait for a mount acknowledgment; 5) routeMounted runs onMount and ends the transition.
+- For Vue routes, the acknowledgments must return a non-empty transition identifier (otherwise reason="missing_transition_id"). Angular/legacy can do without it and are validated by route name.
+- A navigate with options.cancellable == false acquires a lock identified by a unique token ("navProtect_N") that blocks any following navigate/back/reload (reason="active_navigation_not_cancellable") until the terminal state of this navigation (end, cancellation, failure, timeout, reset, deserialization). Otherwise the last navigation wins and cancels the transition in progress (cancellation "navigation_replaced").
+- navigate failures return {result=false, success=false, reason=...}: active_navigation_not_cancellable, route_not_found, guard_blocked_exit, guard_blocked_enter, lifecycle_hook_error, navigation_preempted, or the route reference resolution error.
+- The route name accepts an enriched reference: relative route resolved against the current route, inline query (?a=1) and scope (:scope). Explicit parameters take precedence over those of the query.
+- Emitted hooks: extensions.hook(BEFORE_ROUTE_CHANGE, entry), AFTER_ROUTE_CHANGE, ROUTE_CHANGE_CANCELLED (toRoute, fromRoute, reason, transitionId, plus timeoutClassification/phase/... for a timeout), ROUTE_TIMING (routeName, {total, enter, ready, mountAcked} in ms), onUiChangedState(routeName, originRoute) and onUiActiveScopeChanged(payload). UI event: guihooks ui_router_routeData (namespace, route, fromRoute, scopeTree, scopeParentMap, targetScope, breadcrumbs, data, status, error) with status = enter-ready, mounted-ready or error.
+- NavigationObserver (diagnostic) is loaded only if shipping_build ~= true.
+- back() returns nothing (nil) if the current route has neither a backTarget nor a valid back handler.
+- The extension sets itself to manual unload on load (setExtensionUnloadMode manual) and reloads the guards (GuardManager.reloadGuards).
+- Deprecated functions: push, replace (log a warning then call navigate) and forward (returns {result=false, reason="deprecated_method"}). The __test_* functions are access points reserved for tests.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router.__test_getProtectionToken()` | Point d'accès réservé aux tests : renvoie le jeton du verrou de navigation protégée. *(interne)* | 1148 |
-| `ui_router.__test_setProtectionToken(token)` | Point d'accès réservé aux tests : impose le jeton du verrou de navigation protégée. *(interne)* | 1152 |
-| `ui_router.back(options)` | Retour : navigue vers le backTarget de la route courante (avec les paramètres de l'entrée précédente si elle correspond, sinon ceux de la route courante, et restoreLastScope = true) ; sinon exécute le gestionnaire de retour déclaré (RouteHandlers) si le mode est « handler ». | 715 |
-| `ui_router.cancel(options)` | Annule la transition en cours (raison « cancelled ») : notifie le framework et émet le hook ROUTE_CHANGE_CANCELLED. | 751 |
-| `ui_router.forward(options)` | Déprécié et non implémenté : renvoie toujours un échec. | 1167 |
-| `ui_router.getBreadcrumbs()` | Renvoie le fil d'Ariane de la route courante (NavigationState.getBreadcrumbs). | 1049 |
-| `ui_router.getCurrent()` | Renvoie l'entrée de navigation courante (validée) de NavigationState. | 768 |
-| `ui_router.getState()` | Renvoie l'état du routeur : la route courante et l'état de portée active. | 1122 |
-| `ui_router.isNavigationProtected()` | Indique si une navigation protégée (cancellable = false) est active. | 1129 |
-| `ui_router.navigate(routename, params, options)` | Navigue vers une route : résout la cible, exécute les gardes de sortie de la route courante, annule toute transition en cours, exécute onLeave, les gardes d'entrée, onEnter, émet les données de route (status enter-ready) puis lance la transition vers le framework UI. | 624 |
-| `ui_router.onDeserialize(data)` | Hook appelé après un rechargement : efface le verrou de protection (périmé) et restaure NavigationState à partir de data.navigation. *(interne)* *(hook)* | 1072 |
-| `ui_router.onExtensionLoaded()` | Hook appelé au chargement de l'extension : passe en déchargement manuel et recharge les gardes de route. *(interne)* *(hook)* | 1083 |
-| `ui_router.onGuiUpdate(dtReal, dtSim, dtRaw)` | Hook appelé à chaque mise à jour GUI (arguments de temps de la boucle principale) : fait avancer le TransitionManager, renvoie le message de changement de route au framework si besoin (resends de démarrage) ou traite un timeout de transition (émet les données de route en erreur puis annule). *(interne)* *(hook)* | 1053 |
-| `ui_router.onSerialize()` | Hook appelé avant un rechargement des extensions Lua : renvoie {navigation = NavigationState.serialize()}. *(interne)* *(hook)* | 1065 |
-| `ui_router.push(routename, params, options)` | Déprécié : journalise un avertissement et appelle navigate. | 1157 |
-| `ui_router.reload(routeName, params, options)` | Rejoue la navigation : réutilise le nom, les paramètres et les options de l'entrée courante pour les arguments absents, puis appelle navigate. | 772 |
-| `ui_router.replace(routename, params, options)` | Déprécié : journalise un avertissement et appelle navigate. | 1162 |
-| `ui_router.reportActiveScope(payload)` | Appelé par l'interface pour signaler la portée (scope) active. Ignore les rapports d'une route périmée, mémorise la dernière portée active de la route (hors popup, et si la portée est déclarée dans l'arbre) puis émet le hook onUiActiveScopeChanged. | 1089 |
-| `ui_router.resetStates()` | Réinitialise tout l'état du routeur : navigation, transition, observateur (non shipping), verrou de protection, données de route et portée active. | 1133 |
-| `ui_router.routeChangeComplete(frameworkId, routeName, transitionId)` | Accusé du framework : la route est validée côté UI. Promeut l'entrée en attente en entrée courante, notifie le framework, émet les hooks AFTER_ROUTE_CHANGE et onUiChangedState, et termine la transition sauf si un accusé de montage Vue est attendu (et onEnter n'a pas échoué). | 853 |
-| `ui_router.routeChangeFailed(frameworkId, routeName, transitionId)` | Échec de navigation signalé par le framework (par exemple chargement d'un composant Vue impossible). Annule la navigation en cours sans toucher à la route validée : valide route et identifiant, refuse si la route est déjà validée, exécute le onLeave de la destination en attente pour annuler les effets de son onEnter, puis annule la transition. | 934 |
-| `ui_router.routeChangeReceived(frameworkId, routeName, transitionId)` | Accusé du framework : le changement de route a été reçu. Marque la progression routeChangeReceived de la transition. | 802 |
-| `ui_router.routeChangeRejected(frameworkId, routeName, transitionId, reason)` | Rejet définitif par l'UI d'un changement de route impossible ou mal formé (les routes simplement absentes ne sont pas rejetées car elles peuvent s'enregistrer plus tard). Annule la transition active si l'identifiant correspond. | 830 |
-| `ui_router.routeMounted(routeName, transitionId)` | Accusé Vue : le composant de la route est monté. Exige un identifiant de transition, une route validée (sinon reason="not_committed"), exécute onMount, émet les données de route (status mounted-ready ou error) et termine la transition. Un accusé tardif/dupliqué pour la route déjà validée renvoie {success=true, stale=true}. | 977 |
-| `ui_router.routeNavigationStarted(frameworkId, routeName, transitionId)` | Accusé du framework : la navigation côté UI a démarré. Exige un identifiant de transition pour Vue pendant une transition. | 807 |
+| `ui_router.__test_getProtectionToken()` | Access point reserved for tests: returns the token of the protected navigation lock. *(internal)* | 1148 |
+| `ui_router.__test_setProtectionToken(token)` | Access point reserved for tests: forces the token of the protected navigation lock. *(internal)* | 1152 |
+| `ui_router.back(options)` | Back: navigates to the current route's backTarget (with the parameters of the previous entry if it matches, otherwise those of the current route, and restoreLastScope = true); otherwise runs the declared back handler (RouteHandlers) if the mode is "handler". | 715 |
+| `ui_router.cancel(options)` | Cancels the transition in progress (reason "cancelled"): notifies the framework and emits the ROUTE_CHANGE_CANCELLED hook. | 751 |
+| `ui_router.forward(options)` | Deprecated and not implemented: always returns a failure. | 1167 |
+| `ui_router.getBreadcrumbs()` | Returns the breadcrumb of the current route (NavigationState.getBreadcrumbs). | 1049 |
+| `ui_router.getCurrent()` | Returns the current (committed) navigation entry from NavigationState. | 768 |
+| `ui_router.getState()` | Returns the router state: the current route and the active scope state. | 1122 |
+| `ui_router.isNavigationProtected()` | Indicates whether a protected navigation (cancellable = false) is active. | 1129 |
+| `ui_router.navigate(routename, params, options)` | Navigates to a route: resolves the target, runs the exit guards of the current route, cancels any transition in progress, runs onLeave, the entry guards, onEnter, emits the route data (status enter-ready) then starts the transition to the UI framework. | 624 |
+| `ui_router.onDeserialize(data)` | Hook called after a reload: clears the (stale) protection lock and restores NavigationState from data.navigation. *(internal)* *(hook)* | 1072 |
+| `ui_router.onExtensionLoaded()` | Hook called when the extension is loaded: switches to manual unload and reloads the route guards. *(internal)* *(hook)* | 1083 |
+| `ui_router.onGuiUpdate(dtReal, dtSim, dtRaw)` | Hook called on every GUI update (time arguments of the main loop): advances the TransitionManager, resends the route change message to the framework if needed (startup resends) or handles a transition timeout (emits the route data in error then cancels). *(internal)* *(hook)* | 1053 |
+| `ui_router.onSerialize()` | Hook called before a Lua extensions reload: returns {navigation = NavigationState.serialize()}. *(internal)* *(hook)* | 1065 |
+| `ui_router.push(routename, params, options)` | Deprecated: logs a warning and calls navigate. | 1157 |
+| `ui_router.reload(routeName, params, options)` | Replays the navigation: reuses the name, parameters and options of the current entry for missing arguments, then calls navigate. | 772 |
+| `ui_router.replace(routename, params, options)` | Deprecated: logs a warning and calls navigate. | 1162 |
+| `ui_router.reportActiveScope(payload)` | Called by the UI to report the active scope. Ignores reports from a stale route, stores the route's last active scope (excluding popups, and if the scope is declared in the tree) then emits the onUiActiveScopeChanged hook. | 1089 |
+| `ui_router.resetStates()` | Resets the whole router state: navigation, transition, observer (non-shipping), protection lock, route data and active scope. | 1133 |
+| `ui_router.routeChangeComplete(frameworkId, routeName, transitionId)` | Framework acknowledgment: the route is committed on the UI side. Promotes the pending entry to current entry, notifies the framework, emits the AFTER_ROUTE_CHANGE and onUiChangedState hooks, and ends the transition unless a Vue mount acknowledgment is expected (and onEnter did not fail). | 853 |
+| `ui_router.routeChangeFailed(frameworkId, routeName, transitionId)` | Navigation failure reported by the framework (for example a Vue component that cannot be loaded). Cancels the navigation in progress without touching the committed route: validates route and identifier, refuses if the route is already committed, runs the pending destination's onLeave to cancel the effects of its onEnter, then cancels the transition. | 934 |
+| `ui_router.routeChangeReceived(frameworkId, routeName, transitionId)` | Framework acknowledgment: the route change was received. Marks the routeChangeReceived progress of the transition. | 802 |
+| `ui_router.routeChangeRejected(frameworkId, routeName, transitionId, reason)` | Definitive rejection by the UI of an impossible or malformed route change (routes that are merely absent are not rejected because they may register later). Cancels the active transition if the identifier matches. | 830 |
+| `ui_router.routeMounted(routeName, transitionId)` | Vue acknowledgment: the route's component is mounted. Requires a transition identifier, a committed route (otherwise reason="not_committed"), runs onMount, emits the route data (status mounted-ready or error) and ends the transition. A late/duplicate acknowledgment for the already committed route returns {success=true, stale=true}. | 977 |
+| `ui_router.routeNavigationStarted(frameworkId, routeName, transitionId)` | Framework acknowledgment: navigation on the UI side has started. Requires a transition identifier for Vue during a transition. | 807 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router.__test_getProtectionToken()`
 
-Point d'accès réservé aux tests : renvoie le jeton du verrou de navigation protégée.
+Access point reserved for tests: returns the token of the protected navigation lock.
 
-- **renvoie** : string|nil Jeton actif ou nil.
+- **returns**: string|nil Active token or nil.
 
 #### `ui_router.__test_setProtectionToken(token)`
 
-Point d'accès réservé aux tests : impose le jeton du verrou de navigation protégée.
+Access point reserved for tests: forces the token of the protected navigation lock.
 
-- `token` (*string|nil*) : Jeton à imposer.
+- `token` (*string|nil*) : Token to force.
 
 #### `ui_router.back(options)`
 
-Retour : navigue vers le backTarget de la route courante (avec les paramètres de l'entrée précédente si elle correspond, sinon ceux de la route courante, et restoreLastScope = true) ; sinon exécute le gestionnaire de retour déclaré (RouteHandlers) si le mode est « handler ».
+Back: navigates to the current route's backTarget (with the parameters of the previous entry if it matches, otherwise those of the current route, and restoreLastScope = true); otherwise runs the declared back handler (RouteHandlers) if the mode is "handler".
 
-- `options` (*table|nil*) : Options de navigation copiées dans la navigation de retour.
-- **renvoie** : table|any Résultat de navigate ou du gestionnaire ; {result=false, reason="no_current_route"} sans route courante ; nil si rien à faire.
+- `options` (*table|nil*) : Navigation options copied into the back navigation.
+- **returns**: table|any Result of navigate or of the handler; {result=false, reason="no_current_route"} without a current route; nil if nothing to do.
 
 #### `ui_router.cancel(options)`
 
-Annule la transition en cours (raison « cancelled ») : notifie le framework et émet le hook ROUTE_CHANGE_CANCELLED.
+Cancels the transition in progress (reason "cancelled"): notifies the framework and emits the ROUTE_CHANGE_CANCELLED hook.
 
-- `options` (*table|nil*) : Inutilisé.
-- **renvoie** : table {success=true}, ou {success=false, message} s'il n'y a aucune transition.
+- `options` (*table|nil*) : Unused.
+- **returns**: table {success=true}, or {success=false, message} if there is no transition.
 
 #### `ui_router.forward(options)`
 
-Déprécié et non implémenté : renvoie toujours un échec.
+Deprecated and not implemented: always returns a failure.
 
-- `options` (*table|nil*) : Inutilisé.
-- **renvoie** : table {result=false, reason="deprecated_method"}.
+- `options` (*table|nil*) : Unused.
+- **returns**: table {result=false, reason="deprecated_method"}.
 
 #### `ui_router.getBreadcrumbs()`
 
-Renvoie le fil d'Ariane de la route courante (NavigationState.getBreadcrumbs).
+Returns the breadcrumb of the current route (NavigationState.getBreadcrumbs).
 
-- **renvoie** : table Liste des miettes de pain.
+- **returns**: table List of breadcrumbs.
 
 #### `ui_router.getCurrent()`
 
-Renvoie l'entrée de navigation courante (validée) de NavigationState.
+Returns the current (committed) navigation entry from NavigationState.
 
-- **renvoie** : table|nil Entrée courante {request, resolved, routeNode, …} ou nil.
+- **returns**: table|nil Current entry {request, resolved, routeNode, ...} or nil.
 
 #### `ui_router.getState()`
 
-Renvoie l'état du routeur : la route courante et l'état de portée active.
+Returns the router state: the current route and the active scope state.
 
-- **renvoie** : table {currentRoute=entry|nil, activeScope={activeScopeId, previousActiveScopeId, routeName}}.
+- **returns**: table {currentRoute=entry|nil, activeScope={activeScopeId, previousActiveScopeId, routeName}}.
 
 #### `ui_router.isNavigationProtected()`
 
-Indique si une navigation protégée (cancellable = false) est active.
+Indicates whether a protected navigation (cancellable = false) is active.
 
-- **renvoie** : boolean true si le verrou de protection est détenu.
+- **returns**: boolean true if the protection lock is held.
 
 #### `ui_router.navigate(routename, params, options)`
 
-Navigue vers une route : résout la cible, exécute les gardes de sortie de la route courante, annule toute transition en cours, exécute onLeave, les gardes d'entrée, onEnter, émet les données de route (status enter-ready) puis lance la transition vers le framework UI.
+Navigates to a route: resolves the target, runs the exit guards of the current route, cancels any transition in progress, runs onLeave, the entry guards, onEnter, emits the route data (status enter-ready) then starts the transition to the UI framework.
 
-- `routename` (*string*) : Nom de la route, éventuellement relatif, avec requête inline (?a=1) et portée (:scope).
-- `params` (*table|nil*) : Paramètres de route (prioritaires sur les paramètres de la requête inline).
-- `options` (*table|nil*) : Options : cancellable (false = navigation protégée), decorator, showDecorator, restoreLastScope, routeScopeId (ajouté automatiquement)… transmises à la requête de route.
-- **renvoie** : table {result=true, success=true, data=entry} ou {result=false, success=false, reason=string, failedGuard?}.
+- `routename` (*string*) : Route name, possibly relative, with inline query (?a=1) and scope (:scope).
+- `params` (*table|nil*) : Route parameters (take precedence over the inline query parameters).
+- `options` (*table|nil*) : Options: cancellable (false = protected navigation), decorator, showDecorator, restoreLastScope, routeScopeId (added automatically)... passed to the route request.
+- **returns**: table {result=true, success=true, data=entry} or {result=false, success=false, reason=string, failedGuard?}.
 
 #### `ui_router.onDeserialize(data)`
 
-Hook appelé après un rechargement : efface le verrou de protection (périmé) et restaure NavigationState à partir de data.navigation.
+Hook called after a reload: clears the (stale) protection lock and restores NavigationState from data.navigation.
 
-- `data` (*table|nil*) : Données produites par onSerialize.
+- `data` (*table|nil*) : Data produced by onSerialize.
 
 #### `ui_router.onGuiUpdate(dtReal, dtSim, dtRaw)`
 
-Hook appelé à chaque mise à jour GUI (arguments de temps de la boucle principale) : fait avancer le TransitionManager, renvoie le message de changement de route au framework si besoin (resends de démarrage) ou traite un timeout de transition (émet les données de route en erreur puis annule).
+Hook called on every GUI update (time arguments of the main loop): advances the TransitionManager, resends the route change message to the framework if needed (startup resends) or handles a transition timeout (emits the route data in error then cancels).
 
-- `dtReal` (*number*) : Delta de temps réel (secondes).
-- `dtSim` (*number*) : Delta de temps simulé (inutilisé).
-- `dtRaw` (*number*) : Delta de temps brut (inutilisé).
+- `dtReal` (*number*) : Real time delta (seconds).
+- `dtSim` (*number*) : Simulated time delta (unused).
+- `dtRaw` (*number*) : Raw time delta (unused).
 
 #### `ui_router.onSerialize()`
 
-Hook appelé avant un rechargement des extensions Lua : renvoie {navigation = NavigationState.serialize()}.
+Hook called before a Lua extensions reload: returns {navigation = NavigationState.serialize()}.
 
-- **renvoie** : table Données à restaurer par onDeserialize.
+- **returns**: table Data to restore by onDeserialize.
 
 #### `ui_router.push(routename, params, options)`
 
-Déprécié : journalise un avertissement et appelle navigate.
+Deprecated: logs a warning and calls navigate.
 
-- `routename` (*string*) : Route cible.
-- `params` (*table|nil*) : Paramètres.
+- `routename` (*string*) : Target route.
+- `params` (*table|nil*) : Parameters.
 - `options` (*table|nil*) : Options.
-- **renvoie** : table Résultat de navigate.
+- **returns**: table Result of navigate.
 
 #### `ui_router.reload(routeName, params, options)`
 
-Rejoue la navigation : réutilise le nom, les paramètres et les options de l'entrée courante pour les arguments absents, puis appelle navigate.
+Replays the navigation: reuses the name, parameters and options of the current entry for missing arguments, then calls navigate.
 
-- `routeName` (*string|nil*) : Route cible (défaut : route courante).
-- `params` (*table|nil*) : Paramètres (défaut : ceux de la requête courante).
-- `options` (*table|nil*) : Options (défaut : celles de la requête courante).
-- **renvoie** : table Résultat de navigate, ou {success=false, message} s'il n'y a aucune route à recharger.
+- `routeName` (*string|nil*) : Target route (default: current route).
+- `params` (*table|nil*) : Parameters (default: those of the current request).
+- `options` (*table|nil*) : Options (default: those of the current request).
+- **returns**: table Result of navigate, or {success=false, message} if there is no route to reload.
 
 #### `ui_router.replace(routename, params, options)`
 
-Déprécié : journalise un avertissement et appelle navigate.
+Deprecated: logs a warning and calls navigate.
 
-- `routename` (*string*) : Route cible.
-- `params` (*table|nil*) : Paramètres.
+- `routename` (*string*) : Target route.
+- `params` (*table|nil*) : Parameters.
 - `options` (*table|nil*) : Options.
-- **renvoie** : table Résultat de navigate.
+- **returns**: table Result of navigate.
 
 #### `ui_router.reportActiveScope(payload)`
 
-Appelé par l'interface pour signaler la portée (scope) active. Ignore les rapports d'une route périmée, mémorise la dernière portée active de la route (hors popup, et si la portée est déclarée dans l'arbre) puis émet le hook onUiActiveScopeChanged.
+Called by the UI to report the active scope. Ignores reports from a stale route, stores the route's last active scope (excluding popups, and if the scope is declared in the tree) then emits the onUiActiveScopeChanged hook.
 
 - `payload` (*table*) : {routeName?, activeScopeId?, isPopup?}.
-- **renvoie** : table {success=true}, ou {success=false, reason="invalid_payload"|"stale_route", stale?}.
+- **returns**: table {success=true}, or {success=false, reason="invalid_payload"|"stale_route", stale?}.
 
 #### `ui_router.routeChangeComplete(frameworkId, routeName, transitionId)`
 
-Accusé du framework : la route est validée côté UI. Promeut l'entrée en attente en entrée courante, notifie le framework, émet les hooks AFTER_ROUTE_CHANGE et onUiChangedState, et termine la transition sauf si un accusé de montage Vue est attendu (et onEnter n'a pas échoué).
+Framework acknowledgment: the route is committed on the UI side. Promotes the pending entry to current entry, notifies the framework, emits the AFTER_ROUTE_CHANGE and onUiChangedState hooks, and ends the transition unless a Vue mount acknowledgment is expected (and onEnter did not fail).
 
-- `frameworkId` (*string*) : Framework émetteur.
-- `routeName` (*string*) : Route validée (doit correspondre à l'entrée en attente).
-- `transitionId` (*string|nil*) : Identifiant de transition (obligatoire pour Vue).
-- **renvoie** : table {success=true, alreadyCommitted?} ou {success=false, reason=no_active_transition|missing_transition_id|missing_transition_meta|missing_pending_entry|route_mismatch|transition_id_mismatch|missing_current_entry}.
+- `frameworkId` (*string*) : Emitting framework.
+- `routeName` (*string*) : Committed route (must match the pending entry).
+- `transitionId` (*string|nil*) : Transition identifier (required for Vue).
+- **returns**: table {success=true, alreadyCommitted?} or {success=false, reason=no_active_transition|missing_transition_id|missing_transition_meta|missing_pending_entry|route_mismatch|transition_id_mismatch|missing_current_entry}.
 
 #### `ui_router.routeChangeFailed(frameworkId, routeName, transitionId)`
 
-Échec de navigation signalé par le framework (par exemple chargement d'un composant Vue impossible). Annule la navigation en cours sans toucher à la route validée : valide route et identifiant, refuse si la route est déjà validée, exécute le onLeave de la destination en attente pour annuler les effets de son onEnter, puis annule la transition.
+Navigation failure reported by the framework (for example a Vue component that cannot be loaded). Cancels the navigation in progress without touching the committed route: validates route and identifier, refuses if the route is already committed, runs the pending destination's onLeave to cancel the effects of its onEnter, then cancels the transition.
 
-- `frameworkId` (*string*) : Framework émetteur (exigé avec identifiant pour Vue).
-- `routeName` (*string*) : Route en échec.
-- `transitionId` (*string|nil*) : Identifiant de transition.
-- **renvoie** : table {success=true} ou {success=false, reason=no_active_transition|missing_transition_id|already_committed|<raison de validation>}.
+- `frameworkId` (*string*) : Emitting framework (required with identifier for Vue).
+- `routeName` (*string*) : Failing route.
+- `transitionId` (*string|nil*) : Transition identifier.
+- **returns**: table {success=true} or {success=false, reason=no_active_transition|missing_transition_id|already_committed|<validation reason>}.
 
 #### `ui_router.routeChangeReceived(frameworkId, routeName, transitionId)`
 
-Accusé du framework : le changement de route a été reçu. Marque la progression routeChangeReceived de la transition.
+Framework acknowledgment: the route change was received. Marks the routeChangeReceived progress of the transition.
 
-- `frameworkId` (*string*) : Framework (« vue », …) ; inutilisé ici.
-- `routeName` (*string*) : Route accusée.
-- `transitionId` (*string|nil*) : Identifiant de transition renvoyé par l'UI.
-- **renvoie** : table Résultat de TransitionManager.markProgress.
+- `frameworkId` (*string*) : Framework ("vue", ...); unused here.
+- `routeName` (*string*) : Acknowledged route.
+- `transitionId` (*string|nil*) : Transition identifier returned by the UI.
+- **returns**: table Result of TransitionManager.markProgress.
 
 #### `ui_router.routeChangeRejected(frameworkId, routeName, transitionId, reason)`
 
-Rejet définitif par l'UI d'un changement de route impossible ou mal formé (les routes simplement absentes ne sont pas rejetées car elles peuvent s'enregistrer plus tard). Annule la transition active si l'identifiant correspond.
+Definitive rejection by the UI of an impossible or malformed route change (routes that are merely absent are not rejected because they may register later). Cancels the active transition if the identifier matches.
 
-- `frameworkId` (*string*) : Framework émetteur.
-- `routeName` (*string*) : Route rejetée.
-- `transitionId` (*string|nil*) : Identifiant de transition (validé s'il est fourni).
-- `reason` (*string|nil*) : Raison du rejet (diagnostic, transmise au hook).
-- **renvoie** : table {success=true} ou {success=false, reason="no_active_transition"|"transition_id_mismatch"}.
+- `frameworkId` (*string*) : Emitting framework.
+- `routeName` (*string*) : Rejected route.
+- `transitionId` (*string|nil*) : Transition identifier (validated if provided).
+- `reason` (*string|nil*) : Rejection reason (diagnostic, passed to the hook).
+- **returns**: table {success=true} or {success=false, reason="no_active_transition"|"transition_id_mismatch"}.
 
 #### `ui_router.routeMounted(routeName, transitionId)`
 
-Accusé Vue : le composant de la route est monté. Exige un identifiant de transition, une route validée (sinon reason="not_committed"), exécute onMount, émet les données de route (status mounted-ready ou error) et termine la transition. Un accusé tardif/dupliqué pour la route déjà validée renvoie {success=true, stale=true}.
+Vue acknowledgment: the route's component is mounted. Requires a transition identifier, a committed route (otherwise reason="not_committed"), runs onMount, emits the route data (status mounted-ready or error) and ends the transition. A late/duplicate acknowledgment for the already committed route returns {success=true, stale=true}.
 
-- `routeName` (*string*) : Route montée.
-- `transitionId` (*string*) : Identifiant de transition de l'UI (obligatoire).
-- **renvoie** : table {success=true, stale?|skipped?|alreadyMounted?} ou {success=false, reason=no_active_transition|missing_transition_id|missing_transition_context|route_mismatch|transition_id_mismatch|missing_transition_meta|not_committed|lifecycle_hook_error}.
+- `routeName` (*string*) : Mounted route.
+- `transitionId` (*string*) : UI transition identifier (required).
+- **returns**: table {success=true, stale?|skipped?|alreadyMounted?} or {success=false, reason=no_active_transition|missing_transition_id|missing_transition_context|route_mismatch|transition_id_mismatch|missing_transition_meta|not_committed|lifecycle_hook_error}.
 
 #### `ui_router.routeNavigationStarted(frameworkId, routeName, transitionId)`
 
-Accusé du framework : la navigation côté UI a démarré. Exige un identifiant de transition pour Vue pendant une transition.
+Framework acknowledgment: navigation on the UI side has started. Requires a transition identifier for Vue during a transition.
 
-- `frameworkId` (*string*) : Framework émetteur.
-- `routeName` (*string*) : Route accusée.
-- `transitionId` (*string|nil*) : Identifiant de transition.
-- **renvoie** : table {success=false, reason="missing_transition_id"} ou résultat de markProgress.
+- `frameworkId` (*string*) : Emitting framework.
+- `routeName` (*string*) : Acknowledged route.
+- `transitionId` (*string|nil*) : Transition identifier.
+- **returns**: table {success=false, reason="missing_transition_id"} or result of markProgress.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onUiActiveScopeChanged`
-- `onUiChangedState` — écouté par 7 module(s)
+- `onUiChangedState` — listened to by 7 module(s)
 
-**Évènements UI (guihooks.trigger) :** `ui_router_routeData`
+**UI events (guihooks.trigger):** `ui_router_routeData`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router.lua`.*

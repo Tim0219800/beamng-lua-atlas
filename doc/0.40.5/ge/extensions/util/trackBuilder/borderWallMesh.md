@@ -1,33 +1,33 @@
 # `util_trackBuilder_borderWallMesh`
 
-*Fichier : `lua/ge/extensions/util/trackBuilder/borderWallMesh.lua` · VM : Game Engine (GE) · 248 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/trackBuilder/borderWallMesh.lua` · VM: Game Engine (GE) · 248 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_trackBuilder_borderWallMesh` : `extensions.load("util_trackBuilder_borderWallMesh")`, puis la globale `util_trackBuilder_borderWallMesh`
+**Access:** extension `util_trackBuilder_borderWallMesh`: `extensions.load("util_trackBuilder_borderWallMesh")`, then the global `util_trackBuilder_borderWallMesh`
 
-Générateur des murs latéraux (gauche et droit) d'un segment de piste du Track Builder. Il définit un profil de mur en boîte (24 faces) et, selon la hauteur du mur du segment et la qualité, extrude ce profil le long des points du segment, avec des caps de début et de fin facultatifs.
+Generator for the side walls (left and right) of a Track Builder track segment. It defines a box-shaped wall profile (24 faces) and, depending on the segment's wall height and quality, extrudes this profile along the segment's points, with optional start and end caps.
 
-## Remarques
+## Notes
 
-- Chaque mur n'est généré que si segment.meshInfo.leftWall.active (ou rightWall.active) est vrai ; sinon la liste contient nil à sa place.
-- Les hauteurs viennent de segment.leftWallHeight / rightWallHeight (via les champs 'leftWallHeight' et 'rightWallHeight' passés à compileMeshInfo).
-- Si segment.quality == 4, getMeshes renvoie une table vide.
-- Matériau : segment.materialInfo.leftWall / rightWall, sinon 'track_editor_A_border'. Tag : 'side -1' ou 'side 1'.
-- Effet de bord : incrémente segment.submeshCount et remplit segment.submeshIndexes.
+- Each wall is generated only if segment.meshInfo.leftWall.active (or rightWall.active) is true; otherwise the list contains nil in its place.
+- Heights come from segment.leftWallHeight / rightWallHeight (via the 'leftWallHeight' and 'rightWallHeight' fields passed to compileMeshInfo).
+- If segment.quality == 4, getMeshes returns an empty table.
+- Material: segment.materialInfo.leftWall / rightWall, otherwise 'track_editor_A_border'. Tag: 'side -1' or 'side 1'.
+- Side effect: increments segment.submeshCount and fills segment.submeshIndexes.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_trackBuilder_borderWallMesh.getMeshes(segment)` | Renvoie les meshes des murs gauche et droit actifs du segment. | 239 |
+| `util_trackBuilder_borderWallMesh.getMeshes(segment)` | Returns the meshes of the segment's active left and right walls. | 239 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_trackBuilder_borderWallMesh.getMeshes(segment)`
 
-Renvoie les meshes des murs gauche et droit actifs du segment.
+Returns the meshes of the segment's active left and right walls.
 
-- `segment` (*table*) : Segment du Track Builder (points, quality, meshInfo.leftWall/rightWall, materialInfo, submeshCount, submeshIndexes).
-- **renvoie** : table[] Liste de tables de mesh {verts, uvs, normals, faces, material, tag} (peut contenir des nil).
+- `segment` (*table*) : Track Builder segment (points, quality, meshInfo.leftWall/rightWall, materialInfo, submeshCount, submeshIndexes).
+- **returns**: table[] List of mesh tables {verts, uvs, normals, faces, material, tag} (may contain nil).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/trackBuilder/borderWallMesh.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/trackBuilder/borderWallMesh.lua`.*

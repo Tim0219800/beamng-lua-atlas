@@ -2,128 +2,128 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/bindingsLegend.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Alimente l'app « légende des commandes » (bindings legend) de l'interface. Elle regroupe des jeux d'actions (nommés par un label et classés par priorité) et les envoie à l'UI via `setActionsForLegend` : actions liées aux modificateurs maintenus (Shift, Ctrl, Alt, modifier1 à 6), actions propres au véhicule, commandes de conduite de base et actions constantes. Un moddeur ou un autre module s'en sert pour afficher ses propres actions à l'écran avec addActions. Dépend de `core_input_actions` et `core_input_bindings`.
---- Accès : extension `ui_bindingsLegend` : `extensions.load("ui_bindingsLegend")`, puis la globale `ui_bindingsLegend`
+--- Feeds the interface's "controls legend" app (bindings legend). It groups sets of actions (named by a label and ranked by priority) and sends them to the UI via `setActionsForLegend`: actions tied to held modifiers (Shift, Ctrl, Alt, modifier1 to 6), vehicle-specific actions, basic driving controls and constant actions. A modder or another module uses it to display its own actions on screen with addActions. Depends on `core_input_actions` and `core_input_bindings`.
+--- Access: extension `ui_bindingsLegend`: `extensions.load("ui_bindingsLegend")`, then the global `ui_bindingsLegend`
 ---@class ui_bindingsLegend
----@field dependencies table<integer, string> Extensions chargées avant : core_input_actions et core_input_bindings.
+---@field dependencies table<integer, string> Extensions loaded before: core_input_actions and core_input_bindings.
 ui_bindingsLegend = {}
 
---- Ajoute (ou remplace) un jeu d'actions affiché dans la légende, puis envoie les données à l'UI. Un jeu vide supprime simplement l'ancien jeu de même label.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:754
----@param label string Nom du jeu d'actions (clé de remplacement).
----@param actions table<integer, table> Actions ; chaque entrée a au moins `action` (nom de l'action d'entrée) et éventuellement `label`, `inputActionOnClick`.
----@param additionalData table|nil Options : priority, ttl, removeIfOverwrittenWithHigherPriority, resetFade, modifiersActive…
+--- Adds (or replaces) an action set shown in the legend, then sends the data to the UI. An empty set simply removes the old set with the same label.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:754
+---@param label string Name of the action set (replacement key).
+---@param actions table<integer, table> Actions; each entry has at least `action` (input action name) and optionally `label`, `inputActionOnClick`.
+---@param additionalData table|nil Options: priority, ttl, removeIfOverwrittenWithHigherPriority, resetFade, modifiersActive…
 function ui_bindingsLegend.addActions(label, actions, additionalData) end
 
---- Active ou désactive l'affichage des actions propres au véhicule (priorité 10). Sans effet si l'app est masquée dans les réglages, si l'état demandé est déjà actif, ou si le véhicule n'a pas de telles actions.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:925
----@param enable boolean true pour afficher.
+--- Enables or disables the display of vehicle-specific actions (priority 10). No effect if the app is hidden in the settings, if the requested state is already active, or if the vehicle has no such actions.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:925
+---@param enable boolean true to show.
 function ui_bindingsLegend.enableShowVehicleSpecificActions(enable) end
 
---- Hook appelé quand le filtre d'actions change. Invalide les caches et renvoie les données à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:979
+--- Hook called when the action filter changes. Invalidates the caches and sends the data back to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:979
 function ui_bindingsLegend.onActionFilterUpdated() end
 
---- Hook appelé à la fin d'une mission/niveau. Vide les jeux d'actions et les caches, et désenregistre les modes de boîte de vitesses.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:951
+--- Hook called at the end of a mission/level. Empties the action sets and caches, and unregisters the gearbox modes.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:951
 function ui_bindingsLegend.onClientEndMission() end
 
---- Hook appelé au début d'une mission/niveau. Ne fait rien.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:948
+--- Hook called at the start of a mission/level. Does nothing.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:948
 function ui_bindingsLegend.onClientStartMission() end
 
---- Hook appelé après un rechargement Lua. Lance un job qui invalide le cache des actions de modificateurs.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:1069
----@param data any Données désérialisées (non utilisées).
+--- Hook called after a Lua reload. Starts a job that invalidates the modifier actions cache.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:1069
+---@param data any Deserialized data (not used).
 function ui_bindingsLegend.onDeserialized(data) end
 
---- Hook appelé quand le périphérique d'entrée change. Invalide les caches et renvoie les données à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:1063
+--- Hook called when the input device changes. Invalidates the caches and sends the data back to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:1063
 function ui_bindingsLegend.onDeviceChanged() end
 
---- Hook appelé au chargement de l'extension. Lit `ui/bindingAppActions.json` et calcule les actions disponibles du véhicule.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:1050
+--- Hook called when the extension loads. Reads `ui/bindingAppActions.json` and computes the vehicle's available actions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:1050
 function ui_bindingsLegend.onExtensionLoaded() end
 
---- Hook appelé quand les touches modificatrices maintenues changent. Cherche, parmi les bindings des périphériques récents, les actions dont les modificateurs correspondent exactement et les affiche comme jeu `modified` (priorité 9).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:791
----@param newModifiers integer Masque de bits : 1 Shift G, 2 Shift D, 4 Ctrl G, 8 Ctrl D, 16 Alt G, 32 Alt D, 64 à 2048 modifier1 à modifier6.
+--- Hook called when the held modifier keys change. Searches, among the bindings of recent devices, for the actions whose modifiers match exactly and shows them as the `modified` set (priority 9).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:791
+---@param newModifiers integer Bit mask: 1 Left Shift, 2 Right Shift, 4 Left Ctrl, 8 Right Ctrl, 16 Left Alt, 32 Right Alt, 64 to 2048 modifier1 to modifier6.
 function ui_bindingsLegend.onModifierChanged(newModifiers) end
 
---- Hook appelé quand les réglages changent. Réinitialise la signature des commandes de base et renvoie les données à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:996
+--- Hook called when the settings change. Resets the signature of the basic controls and sends the data back to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:996
 function ui_bindingsLegend.onSettingsChanged() end
 
---- Hook appelé à chaque frame. Avance le minuteur de fade, rafraîchit les commandes de conduite de base (changement de mode de boîte), décompte le `ttl` des jeux d'actions et affiche la fenêtre de debug. Sort tôt s'il n'y a pas de véhicule joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:869
----@param dtReal number Delta de temps réel en secondes.
----@param dtSim number Delta de temps de simulation en secondes (non utilisé).
----@param dtRaw number Delta brut en secondes (non utilisé).
+--- Hook called every frame. Advances the fade timer, refreshes the basic driving controls (gearbox mode change), counts down the `ttl` of the action sets and shows the debug window. Exits early if there is no player vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:869
+---@param dtReal number Real time delta in seconds.
+---@param dtSim number Simulation time delta in seconds (not used).
+---@param dtRaw number Raw delta in seconds (not used).
 function ui_bindingsLegend.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook appelé quand un véhicule est réinitialisé. Même fonction que onVehicleSpawned : si c'est le véhicule du joueur 0 (ou sans id), invalide les caches et renvoie les données à l'UI.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:969
----@param vehId integer Id du véhicule.
+--- Hook called when a vehicle is reset. Same function as onVehicleSpawned: if it is player 0's vehicle (or without an id), invalidates the caches and sends the data back to the UI.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:969
+---@param vehId integer Vehicle id.
 function ui_bindingsLegend.onVehicleResetted(vehId) end
 
---- Hook appelé quand un véhicule est créé. Voir onVehicleResetted.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:969
----@param vehId integer Id du véhicule.
+--- Hook called when a vehicle is spawned. See onVehicleResetted.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:969
+---@param vehId integer Vehicle id.
 function ui_bindingsLegend.onVehicleSpawned(vehId) end
 
---- Hook appelé quand le véhicule contrôlé change. Recalcule les actions du véhicule et, s'il en a, les affiche brièvement (jeu `vehicleSpecific`, ttl 10 s) avec un message d'aide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/bindingsLegend.lua:1027
----@param oldId integer Ancien véhicule.
----@param newId integer Nouveau véhicule.
----@param player integer Joueur concerné (non utilisé).
+--- Hook called when the controlled vehicle changes. Recomputes the vehicle's actions and, if it has any, briefly shows them (`vehicleSpecific` set, ttl 10 s) with a help message.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:1027
+---@param oldId integer Old vehicle.
+---@param newId integer New vehicle.
+---@param player integer Player concerned (unused).
 function ui_bindingsLegend.onVehicleSwitched(oldId, newId, player) end
 
---- Remet à zéro le minuteur de masquage de la légende.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:107
+--- Resets the legend's hiding timer.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:107
 function ui_bindingsLegend.resetFade() end
 
---- Fusionne les jeux d'actions (en gardant ceux de plus haute priorité), ajoute infos de modificateurs et état `showApp`, puis envoie le tout à l'UI par le hook `setActionsForLegend`.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:630
----@param forceResetFade boolean|nil Force la remise à zéro du délai de masquage.
+--- Merges the action sets (keeping those of highest priority), adds modifier info and the `showApp` state, then sends everything to the UI via the `setActionsForLegend` hook.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:630
+---@param forceResetFade boolean|nil Forces the hiding delay to reset.
 function ui_bindingsLegend.sendDataToUI(forceResetFade) end
 
---- Active ou désactive la fenêtre ImGui « BindingsLegend Debug » (délai de masquage, état de fade).
----Source : lua/ge/extensions/ui/bindingsLegend.lua:82
----@param enabled boolean true pour afficher la fenêtre.
+--- Enables or disables the "BindingsLegend Debug" ImGui window (hiding delay, fade state).
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:82
+---@param enabled boolean true to display the window.
 function ui_bindingsLegend.setDebug(enabled) end
 
---- Active ou désactive l'affichage des commandes de conduite de base (jeu `basicDriving`), mis à jour selon le mode de boîte de vitesses.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:901
----@param enable boolean true pour activer.
+--- Enables or disables the display of basic driving controls (`basicDriving` set), updated according to the gearbox mode.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:901
+---@param enable boolean true to enable.
 function ui_bindingsLegend.setShowBasicDrivingControls(enable) end
 
---- Affiche deux messages UI (`Message`, 10 s) indiquant comment afficher les actions du véhicule, un pour manette et un pour clavier. Ignoré pendant l'expérience de première conduite ou si l'app est masquée.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:1007
+--- Shows two UI messages (`Message`, 10 s) indicating how to display the vehicle's actions, one for gamepad and one for keyboard. Ignored during the first-drive experience or if the app is hidden.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:1007
 function ui_bindingsLegend.showToggleVehicleSpecificActionsMessage() end
 
---- Bascule le réglage `bindingsLegendShowApp`, masque les actions du véhicule, remet le minuteur à zéro et renvoie les données à l'UI.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:1075
+--- Toggles the `bindingsLegendShowApp` setting, hides the vehicle actions, resets the timer and sends the data back to the UI.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:1075
 function ui_bindingsLegend.toggleShowApp() end
 
---- Affiche ou masque les actions propres au véhicule du joueur.
----Source : lua/ge/extensions/ui/bindingsLegend.lua:944
+--- Shows or hides the actions specific to the player's vehicle.
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:944
 function ui_bindingsLegend.toggleShowVehicleSpecificActions() end
 
---- Exécute une action d'entrée comme si elle était déclenchée, sur le véhicule du joueur 0 (appelée depuis l'UI quand on clique une action).
----Source : lua/ge/extensions/ui/bindingsLegend.lua:1058
----@param action string Nom de l'action d'entrée.
----@param value number|nil Valeur transmise à `core_input_actions.executeCommand`.
+--- Executes an input action as if it were triggered, on player 0's vehicle (called from the UI when an action is clicked).
+---Source: lua/ge/extensions/ui/bindingsLegend.lua:1058
+---@param action string Input action name.
+---@param value number|nil Value passed to `core_input_actions.executeCommand`.
 function ui_bindingsLegend.triggerInputAction(action, value) end
 

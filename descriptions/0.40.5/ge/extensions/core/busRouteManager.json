@@ -1,51 +1,80 @@
 {
   "path": "lua/ge/extensions/core/busRouteManager.lua",
-  "module": "Extension GE (core_busRouteManager) qui gère les lignes de bus d'un niveau. Au chargement de l'extension et au démarrage d'un niveau (init), elle lit les fichiers *.buslines.json du dossier du niveau (/buslines/), vérifie que les arrêts cités existent comme triggers BeamNGTrigger de type 'busstop' dans le groupe 'busstops', et remplace les noms d'arrêts par leurs données de position. Elle relaie ensuite les évènements des triggers vers le contrôleur du bus (côté véhicule) et vers le scénario scenario_busdriver.",
-  "usage": "local route = core_busRouteManager.setLine(vehId, 42, 'a') -- envoie la ligne 42 variante 'a' au bus",
+  "module": "GE extension (core_busRouteManager) that manages the bus lines of a level. When the extension loads and when a level starts (init), it reads the *.buslines.json files from the level folder (/buslines/), checks that the referenced stops exist as BeamNGTrigger triggers of type 'busstop' in the 'busstops' group, and replaces stop names with their position data. It then relays trigger events to the bus controller (vehicle side) and to the scenario_busdriver scenario.",
+  "usage": "local route = core_busRouteManager.setLine(vehId, 42, 'a') -- sends line 42 variant 'a' to the bus",
   "notes": [
-    "Seuls les fichiers de version 1 sont chargés (data.version == 1). Les routes s'ajoutent à busLines.routes.",
-    "Chaque tâche de route (route.tasklist) est remplacée par {nom, stopName, position{x,y,z}, rotation{x,y,z,w}, échelle{x,y,z}} ; les arrêts introuvables sont loggués en erreur et supprimés de la liste.",
-    "Les commandes vers le bus passent par veh:queueLuaCommand(\"controller.onGameplayEvent('<cmd>', <données sérialisées>)\") : commandes bus_setLineInfo, bus_onAtStop, bus_onDepartedStop, bus_onTriggerTick.",
-    "init est exposé à la fois sous onClientStartMission et onExtensionLoaded : la liste des lignes est donc rechargée aux deux moments.",
-    "Incohérence : init appelle path.split(missionFile, '(.-)([^/]-([^%.]*))$') avec un 2e argument (motif) qui est en réalité le paramètre compositeExtension : il est truthy, ce qui force l'extension 'composite' (tout après le premier point). Sans conséquence ici car seul levelDir est utilisé (déduit du code).",
-    "Incohérence : le commentaire de setLine dit 'GE core_busLine.getLine' alors que la fonction exportée s'appelle setLine ; les logs d'erreur de setLine utilisent la balise 'getLine'."
+    "Only version 1 files are loaded (data.version == 1). Routes are appended to busLines.routes.",
+    "Each route task (route.tasklist) is replaced by {name, stopName, position{x,y,z}, rotation{x,y,z,w}, scale{x,y,z}}; stops that are not found are logged as errors and removed from the list.",
+    "Commands to the bus go through veh:queueLuaCommand(\"controller.onGameplayEvent('<cmd>', <serialized data>)\"): commands bus_setLineInfo, bus_onAtStop, bus_onDepartedStop, bus_onTriggerTick.",
+    "init is exposed both as onClientStartMission and onExtensionLoaded: the list of lines is therefore reloaded at both times.",
+    "Inconsistency: init calls path.split(missionFile, '(.-)([^/]-([^%.]*))$') with a 2nd argument (pattern) that is actually the compositeExtension parameter: it is truthy, which forces the 'composite' extension (everything after the first dot). No consequence here since only levelDir is used (inferred from code).",
+    "Inconsistency: the comment of setLine says 'GE core_busLine.getLine' while the exported function is named setLine; setLine's error logs use the tag 'getLine'."
   ],
   "fields": {},
   "functions": {
     "setLine": {
-      "desc": "Cherche la route dont routeID et variance correspondent. Si vehId est donné, envoie les infos de la ligne au véhicule (commande bus_setLineInfo). Renvoie la route trouvée ou nil (avec log d'erreur).",
+      "desc": "Looks for the route whose routeID and variance match. If vehId is given, sends the line info to the vehicle (command bus_setLineInfo). Returns the route found or nil (with an error log).",
       "params": {
-        "vehId": {"type": "integer|nil", "desc": "ID du véhicule bus à configurer (getObjectByID), nil pour seulement chercher"},
-        "routeID": {"type": "any", "desc": "Identifiant de la ligne (comparé avec ==)"},
-        "variance": {"type": "any", "desc": "Variante de la ligne (ex. 'a')"}
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "ID of the bus vehicle to configure (getObjectByID), nil to only search"
+        },
+        "routeID": {
+          "type": "any",
+          "desc": "Line identifier (compared with ==)"
+        },
+        "variance": {
+          "type": "any",
+          "desc": "Line variant (e.g. 'a')"
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Table de la route (avec tasklist transformée), nil si non trouvée"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Route table (with transformed tasklist), nil if not found"
+        }
+      ]
     },
     "onAtStop": {
-      "desc": "Appelée à l'entrée d'un bus dans un arrêt : envoie bus_onAtStop au véhicule data.subjectID.",
-      "params": {"data": {"type": "table", "desc": "Données du trigger (subjectID, type, event…)"}},
+      "desc": "Called when a bus enters a stop: sends bus_onAtStop to vehicle data.subjectID.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Trigger data (subjectID, type, event...)"
+        }
+      },
       "returns": []
     },
     "onBeamNGTrigger": {
-      "desc": "Hook appelé par le moteur pour chaque évènement de trigger. Ne traite que type == 'busstop' : 'enter' -> onAtStop, 'exit' -> bus_onDepartedStop, 'tick' -> bus_onTriggerTick envoyés au véhicule.",
-      "params": {"data": {"type": "table", "desc": "{type, event ('enter'|'exit'|'tick'), subjectID, …}"}},
+      "desc": "Hook called by the engine for each trigger event. Only handles type == 'busstop': 'enter' -> onAtStop, 'exit' -> bus_onDepartedStop, 'tick' -> bus_onTriggerTick sent to the vehicle.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{type, event ('enter'|'exit'|'tick'), subjectID, ...}"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onBusUpdate": {
-      "desc": "Hook de mise à jour du bus : transmet l'état à scenario_busdriver.onBusUpdate si ce scénario est chargé.",
-      "params": {"state": {"type": "table", "desc": "État du bus (déduit du code : contient notamment pos)"}},
+      "desc": "Bus update hook: forwards the state to scenario_busdriver.onBusUpdate if that scenario is loaded.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "Bus state (inferred from code: notably contains pos)"
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onClientStartMission": {
-      "desc": "Hook appelé au démarrage d'un niveau : (ré)initialise busLines et recharge les fichiers de lignes du niveau.",
+      "desc": "Hook called when a level starts: (re)initializes busLines and reloads the level's line files.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement de l'extension : même fonction init que onClientStartMission.",
+      "desc": "Hook called when the extension loads: same init function as onClientStartMission.",
       "params": {},
       "returns": [],
       "internal": true

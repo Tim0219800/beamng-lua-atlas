@@ -1,81 +1,81 @@
 # `editor_createObjectTool`
 
-*Fichier : `lua/ge/extensions/editor/createObjectTool.lua` · VM : Game Engine (GE) · 1147 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/createObjectTool.lua` · VM: Game Engine (GE) · 1147 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_createObjectTool` : `extensions.load("editor_createObjectTool")`, puis la globale `editor_createObjectTool`
+**Access:** extension `editor_createObjectTool`: `extensions.load("editor_createObjectTool")`, then the global `editor_createObjectTool`
 
-Outil « Create Object(s) » du World Editor : barre d'outils de création d'objets de niveau (SimObjects). Il définit les groupes de boutons (Environment, Level, BeamNG, Other Classes), le mode d'édition editor.editModes.createObject (placement au clic dans la vue 3D, prévisualisation par raycast, rotation autour de l'axe vertical avec Ctrl+molette, magnétisme à la grille), un sélecteur de toutes les classes SimObject avec filtre et fréquence d'usage, et l'historique d'annulation de chaque création. Un moddeur d'éditeur s'en sert pour ajouter ses propres groupes de création ou créer un objet par script via les fonctions injectées dans editor.
+World Editor "Create Object(s)" tool: toolbar for creating level objects (SimObjects). It defines the button groups (Environment, Level, BeamNG, Other Classes), the editor.editModes.createObject edit mode (placement on click in the 3D view, preview by raycast, rotation around the vertical axis with Ctrl+wheel, grid snapping), a selector of all SimObject classes with filter and usage frequency, and the undo history of each creation. An editor modder uses it to add their own creation groups or create an object by script via the functions injected into editor.
 
-## Exemple
+## Example
 
 ```lua
 local items = {
-  editor.makeCreateObjectItem(editor.icons.add_circle, "BeamNGTrigger", "Mon trigger", function(obj) obj:setField("triggerType", 0, "Box") end)
+  editor.makeCreateObjectItem(editor.icons.add_circle, "BeamNGTrigger", "My trigger", function(obj) obj:setField("triggerType", 0, "Box") end)
 }
-editor.addObjectCreateGroup("Mon groupe", editor.icons.folder, items)
+editor.addObjectCreateGroup("My group", editor.icons.folder, items)
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions editor.addObjectCreateGroup, getObjectCreateGroup, getAllObjectCreateGroups, makeCreateObjectItem, getObjectCreateItem, createObjectInstance, getCurrentSelectedParent et createCustomClassObject ne sont attachées à editor qu'après un appel à initGroups() (fait par onEditorInitialized).
-- initGroups() réinitialise la table des groupes : les groupes ajoutés auparavant par addObjectCreateGroup sont perdus.
-- Les classes MeshRoad, DecalRoad et River sont masquées du sélecteur « Other Classes » (elles ont leur éditeur dédié).
-- Le parent de création par défaut est le groupe verrouillé en focus, sinon le SimSet ou le groupe de l'objet sélectionné (sauf MissionCleanup), sinon scenetree.MissionGroup.
-- Les noms d'objets créés sont <Classe>_<n> avec le plus petit n libre.
-- Un TSStatic créé sans mesh reçoit la forme de substitution /core/art/shapes/no_mesh.dae pour éviter l'erreur « No shape set » à l'enregistrement.
-- La création d'un BeamNGVehicle est commentée dans le code (« crashes »).
-- Préférences enregistrées dans la catégorie createObjectTool.general : infiniteCreateByClick (true), verticalToolbar (false), classFrecency (cachée).
+- The functions editor.addObjectCreateGroup, getObjectCreateGroup, getAllObjectCreateGroups, makeCreateObjectItem, getObjectCreateItem, createObjectInstance, getCurrentSelectedParent and createCustomClassObject are only attached to editor after a call to initGroups() (done by onEditorInitialized).
+- initGroups() resets the groups table: groups previously added by addObjectCreateGroup are lost.
+- The MeshRoad, DecalRoad and River classes are hidden from the "Other Classes" selector (they have their own dedicated editor).
+- The default creation parent is the group locked in focus, otherwise the SimSet or group of the selected object (except MissionCleanup), otherwise scenetree.MissionGroup.
+- Created object names are <Class>_<n> with the smallest free n.
+- A TSStatic created without a mesh receives the placeholder shape /core/art/shapes/no_mesh.dae to avoid the "No shape set" error on save.
+- The creation of a BeamNGVehicle is commented out in the code ("crashes").
+- Preferences registered in the createObjectTool.general category: infiniteCreateByClick (true), verticalToolbar (false), classFrecency (hidden).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_createObjectTool.initGroups()` | Recrée les quatre groupes standard (Environment, Level, BeamNG, Other Classes) avec leurs boutons et attache à editor les fonctions de création (addObjectCreateGroup, makeCreateObjectItem, createObjectInstance…). Peut être appelée même si l'éditeur n'est pas actif. | 1001 |
-| `editor_createObjectTool.navigateList(up)` | Déplace la sélection dans la liste de recherche de classes (vers le haut si up est vrai, sinon vers le bas), bornée à la liste. | 350 |
-| `editor_createObjectTool.onEditorDeactivated()` | Hook appelé quand le World Editor se ferme ; retire l'action map « CreateObjectTool ». *(interne)* *(hook)* | 1129 |
-| `editor_createObjectTool.onEditorGui()` | Hook appelé à chaque frame de l'éditeur ; retire l'action map « CreateObjectTool » tant qu'aucun popup de sélection de classe n'est ouvert. *(interne)* *(hook)* | 1133 |
-| `editor_createObjectTool.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : déclare le mode d'édition « Create Object(s) », les raccourcis auxiliaires (Ctrl+molette pour tourner, Alt pour le magnétisme), editor.stopCreatingObjects, editor.togglePlaceNewObjectAtCamera, appelle initGroups() et charge la liste des classes SimObject (Sim.getSimObjectDerivedClassNames). *(interne)* *(hook)* | 1073 |
-| `editor_createObjectTool.onEditorRegisterPreferences(prefsRegistry)` | Hook appelé pour enregistrer les préférences de la catégorie createObjectTool. *(interne)* *(hook)* | 1118 |
-| `editor_createObjectTool.selectClass()` | Valide la classe actuellement surlignée dans le sélecteur de classes (équivalent à Entrée, déclenché par l'action map). | 345 |
+| `editor_createObjectTool.initGroups()` | Recreates the four standard groups (Environment, Level, BeamNG, Other Classes) with their buttons and attaches the creation functions to editor (addObjectCreateGroup, makeCreateObjectItem, createObjectInstance...). Can be called even if the editor is not active. | 1001 |
+| `editor_createObjectTool.navigateList(up)` | Moves the selection in the class search list (up if up is true, otherwise down), clamped to the list. | 350 |
+| `editor_createObjectTool.onEditorDeactivated()` | Hook called when the World Editor closes; removes the "CreateObjectTool" action map. *(internal)* *(hook)* | 1129 |
+| `editor_createObjectTool.onEditorGui()` | Hook called every editor frame; removes the "CreateObjectTool" action map as long as no class selection popup is open. *(internal)* *(hook)* | 1133 |
+| `editor_createObjectTool.onEditorInitialized()` | Hook called at editor initialization: declares the "Create Object(s)" edit mode, the auxiliary shortcuts (Ctrl+wheel to rotate, Alt for snapping), editor.stopCreatingObjects, editor.togglePlaceNewObjectAtCamera, calls initGroups() and loads the list of SimObject classes (Sim.getSimObjectDerivedClassNames). *(internal)* *(hook)* | 1073 |
+| `editor_createObjectTool.onEditorRegisterPreferences(prefsRegistry)` | Hook called to register the preferences of the createObjectTool category. *(internal)* *(hook)* | 1118 |
+| `editor_createObjectTool.selectClass()` | Validates the class currently highlighted in the class selector (equivalent to Enter, triggered by the action map). | 345 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_createObjectTool.navigateList(up)`
 
-Déplace la sélection dans la liste de recherche de classes (vers le haut si up est vrai, sinon vers le bas), bornée à la liste.
+Moves the selection in the class search list (up if up is true, otherwise down), clamped to the list.
 
-- `up` (*boolean*) : true pour monter, false pour descendre
+- `up` (*boolean*) : true to go up, false to go down
 
 #### `editor_createObjectTool.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook appelé pour enregistrer les préférences de la catégorie createObjectTool.
+Hook called to register the preferences of the createObjectTool category.
 
-- `prefsRegistry` (*table*) : registre de préférences de l'éditeur
+- `prefsRegistry` (*table*) : editor preferences registry
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à la table globale editor par initGroups().
+Functions added to the global editor table by initGroups().
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.addObjectCreateGroup(name, icon, objectClasses)` | Ajoute un bouton de groupe de création à la barre d'outils. | 979 |
-| `editor.createCustomClassObject(clsName, parentNode)` | Crée un objet de la classe donnée sous un nœud de l'arbre de scène. Émet le hook onEditorCustomClassBuildFunc(obj) avant l'enregistrement, donne un shapeName de substitution aux TSStatic sans forme, enregistre l'objet avec un nom numéroté et l'ajoute au parent. | 288 |
-| `editor.createObjectInstance(classname, createObjectItem)` | Crée une instance via worldEditorCppApi.createObject, la nomme (<Classe>_<n>), exécute le buildFunc de l'item, puis l'enregistre (déclenche onAdd). Ne l'ajoute pas à un groupe. | 113 |
-| `editor.getAllObjectCreateGroups()` | Renvoie la table complète des groupes de création. | 996 |
-| `editor.getCurrentSelectedParent()` | Renvoie le parent par défaut pour les nouveaux objets (groupe en focus, groupe de la sélection, ou MissionGroup). | 61 |
-| `editor.getObjectCreateGroup(name)` | Renvoie un groupe de création par son nom. | 988 |
-| `editor.getObjectCreateItem(classname)` | Cherche dans tous les groupes l'item dont le classname correspond (le premier trouvé). | 103 |
-| `editor.makeCreateObjectItem(icon, classname, title, buildFunc, singleInstance)` | Construit un item de création {icon, classname, title, buildFunc, singleInstance}. title vaut classname par défaut. | 965 |
+| `editor.addObjectCreateGroup(name, icon, objectClasses)` | Adds a creation group button to the toolbar. | 979 |
+| `editor.createCustomClassObject(clsName, parentNode)` | Creates an object of the given class under a scene tree node. Emits the hook onEditorCustomClassBuildFunc(obj) before registration, gives a placeholder shapeName to TSStatics without a shape, registers the object with a numbered name and adds it to the parent. | 288 |
+| `editor.createObjectInstance(classname, createObjectItem)` | Creates an instance via worldEditorCppApi.createObject, names it (<Class>_<n>), runs the item's buildFunc, then registers it (triggers onAdd). Does not add it to a group. | 113 |
+| `editor.getAllObjectCreateGroups()` | Returns the complete table of creation groups. | 996 |
+| `editor.getCurrentSelectedParent()` | Returns the default parent for new objects (focused group, selection's group, or MissionGroup). | 61 |
+| `editor.getObjectCreateGroup(name)` | Returns a creation group by its name. | 988 |
+| `editor.getObjectCreateItem(classname)` | Searches all groups for the item whose classname matches (the first found). | 103 |
+| `editor.makeCreateObjectItem(icon, classname, title, buildFunc, singleInstance)` | Builds a creation item {icon, classname, title, buildFunc, singleInstance}. title defaults to classname. | 965 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEditorCustomClassBuildFunc`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getSimObjectDerivedClassNames`, `upcast`
 - `debugDrawer:` `drawLineInstance`, `drawTextAdvanced`
@@ -84,4 +84,4 @@ Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes 
 - `worldEditorCppApi.` `createObject`, `setAxisGizmoSelectedElement`, `snapPositionToGrid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/createObjectTool.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/createObjectTool.lua`.*

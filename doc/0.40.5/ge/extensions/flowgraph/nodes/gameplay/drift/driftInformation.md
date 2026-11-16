@@ -1,25 +1,25 @@
 # `flowgraph_nodes_gameplay_drift_driftInformation`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftInformation.lua` · VM : Game Engine (GE) · 86 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftInformation.lua` · VM: Game Engine (GE) · 86 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/drift/driftInformation")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/drift/driftInformation")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Drift Information » (catégorie repeat_instant, drift). Donne l'état du drift du véhicule : drifting/notDrifting, impulsions spinout, tapped, crashed, donutDetected, tightDriftDetected, driftCompleted (avec driftCompletedAddedScore, driftCompletedCachedScore, driftCompletedCombo), et les mesures closestWallDistance, driftAngle, driftVelocity, totalDriftDeg, totalDriftDistance, totalDriftTime, driftUniformity. Source : gameplay_drift_drift.getDriftActiveData et callbacks du module drift du flowgraph.
+Flowgraph node "Drift Information" (category repeat_instant, drift). Gives the vehicle's drift state: drifting/notDrifting, pulses spinout, tapped, crashed, donutDetected, tightDriftDetected, driftCompleted (with driftCompletedAddedScore, driftCompletedCachedScore, driftCompletedCombo), and the measurements closestWallDistance, driftAngle, driftVelocity, totalDriftDeg, totalDriftDistance, totalDriftTime, driftUniformity. Source: gameplay_drift_drift.getDriftActiveData and callbacks of the flowgraph drift module.
 
-## Remarques
+## Notes
 
-- Hors drift, les mesures valent -1.
-- driftUniformity est déclaré mais jamais renseigné dans work.
-- Aucune sortie « flow » générale n'est écrite en dehors de drifting/notDrifting.
-- todo du code : régler driftCleanliness, nettoyer le raycast.
+- Outside of drift, the measurements are -1.
+- driftUniformity is declared but never filled in work.
+- No general "flow" output is written apart from drifting/notDrifting.
+- Code todo: tune driftCleanliness, clean up the raycast.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Copie les callbacks (ttl > 0) et les données actives de drift vers les pins de sortie. | 46 |
+| `C:work()` | Copies the callbacks (ttl > 0) and the active drift data to the output pins. | 46 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftInformation.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/drift/driftInformation.lua`.*

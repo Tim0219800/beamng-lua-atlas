@@ -1,73 +1,125 @@
 {
   "path": "lua/ge/extensions/campaign/dealer.lua",
-  "module": "Concessionnaire de la campagne : tient un stock (M.state.stock) indexé par type d'objet en majuscules. Un stock est soit une liste de tables (véhicules {model, config}), soit un nombre cumulé. Sauvegardé et restauré avec la campagne (onSaveCampaign / onResumeCampaign). La fonction buy est vide (non implémentée).",
+  "module": "Campaign dealer: holds a stock (M.state.stock) keyed by uppercase item type. A stock is either a list of tables (vehicles {model, config}) or an accumulated number. Saved and restored with the campaign (onSaveCampaign / onResumeCampaign). The buy function is empty (not implemented).",
   "usage": "campaign_dealer.addToStock('$$$_vehicles', {model='pickup', config='base'})\nlocal stock = campaign_dealer.getStock('$$$_VEHICLES')",
   "notes": [
-    "addToStock et removeFromStock passent itemType en majuscules ; getStock ne le fait pas : il faut donc lui donner le type déjà en majuscules.",
-    "Bug probable : existItem considère un doublon dès qu'un seul champ de l'entrée existante est égal à celui de valueObj (pas tous les champs) ; deux véhicules du même modèle avec une config différente sont donc vus comme identiques.",
-    "removeFromStock compare model et config des entrées et laisse des print de débogage ; pour un stock numérique il soustrait la valeur.",
-    "onDeserialized ne fait que journaliser ; onResumeCampaign remplace M.state par les données reçues (sans copie)."
+    "addToStock and removeFromStock uppercase itemType; getStock does not: it must therefore be given the type already in uppercase.",
+    "Probable bug: existItem considers an entry a duplicate as soon as a single field of the existing entry equals that of valueObj (not all fields); two vehicles of the same model with a different config are therefore seen as identical.",
+    "removeFromStock compares the model and config of the entries and leaves debug prints; for a numeric stock it subtracts the value.",
+    "onDeserialized only logs; onResumeCampaign replaces M.state with the received data (without copying)."
   ],
   "fields": {
-    "state": {"type": "table", "desc": "État sauvegardé : {stock = table<string, table|number>}."}
+    "state": {
+      "type": "table",
+      "desc": "Saved state: {stock = table<string, table|number>}."
+    }
   },
   "functions": {
     "addToStock": {
-      "desc": "Ajoute un objet (table, sans doublon selon existItem) ou une quantité (nombre) au stock du type donné. Crée l'entrée si besoin.",
+      "desc": "Adds an object (table, no duplicates according to existItem) or a quantity (number) to the stock of the given type. Creates the entry if needed.",
       "params": {
-        "itemType": {"type": "string", "desc": "Type du stock (converti en majuscules)."},
-        "valueObj": {"type": "table|number", "desc": "Objet à ajouter ou quantité."}
+        "itemType": {
+          "type": "string",
+          "desc": "Stock type (converted to uppercase)."
+        },
+        "valueObj": {
+          "type": "table|number",
+          "desc": "Object to add or quantity."
+        }
       },
       "returns": [],
       "internal": false
     },
     "getStock": {
-      "desc": "Retourne une copie profonde du stock d'un type (crée une liste vide si absent).",
-      "params": {"itemType": {"type": "string", "desc": "Type de stock, tel qu'enregistré (majuscules)."}},
-      "returns": [{"type": "table|number", "desc": "Copie du stock."}],
+      "desc": "Returns a deep copy of the stock of a type (creates an empty list if absent).",
+      "params": {
+        "itemType": {
+          "type": "string",
+          "desc": "Stock type, as registered (uppercase)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|number",
+          "desc": "Copy of the stock."
+        }
+      ],
       "internal": false
     },
     "removeFromStock": {
-      "desc": "Retire du stock la première entrée dont model et config correspondent (valeur table) ou soustrait la quantité (valeur nombre).",
+      "desc": "Removes from the stock the first entry whose model and config match (table value) or subtracts the quantity (number value).",
       "params": {
-        "itemType": {"type": "string", "desc": "Type du stock (converti en majuscules)."},
-        "valueObj": {"type": "table|number", "desc": "Objet {model, config} à retirer ou quantité."}
+        "itemType": {
+          "type": "string",
+          "desc": "Stock type (converted to uppercase)."
+        },
+        "valueObj": {
+          "type": "table|number",
+          "desc": "Object {model, config} to remove or quantity."
+        }
       },
       "returns": [],
       "internal": false
     },
     "buy": {
-      "desc": "Prévue pour acheter un objet du stock ; le corps est vide dans cette version.",
+      "desc": "Intended to buy an object from the stock; the body is empty in this version.",
       "params": {
-        "itemType": {"type": "string", "desc": "Type de stock."},
-        "index": {"type": "integer", "desc": "Position de l'objet (déduit du nom)."}
+        "itemType": {
+          "type": "string",
+          "desc": "Stock type."
+        },
+        "index": {
+          "type": "integer",
+          "desc": "Position of the object (inferred from the name)."
+        }
       },
       "returns": [],
       "internal": false
     },
     "onSerialize": {
-      "desc": "Hook de sérialisation : retourne une copie profonde de M.state.",
+      "desc": "Serialization hook: returns a deep copy of M.state.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Copie de l'état."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Copy of the state."
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook appelé après désérialisation ; ne fait que journaliser.",
-      "params": {"data": {"type": "table", "desc": "Données désérialisées (non utilisées)."}},
+      "desc": "Hook called after deserialization; only logs.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Deserialized data (not used)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onSaveCampaign": {
-      "desc": "Hook de sauvegarde de la campagne : appelle saveCallback(M.__globalAlias__, copie de l'état).",
-      "params": {"saveCallback": {"type": "function", "desc": "Reçoit (alias global du module, données)."}},
+      "desc": "Campaign save hook: calls saveCallback(M.__globalAlias__, copy of the state).",
+      "params": {
+        "saveCallback": {
+          "type": "function",
+          "desc": "Receives (module global alias, data)."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "onResumeCampaign": {
-      "desc": "Hook de reprise de campagne : remplace M.state par data.",
+      "desc": "Campaign resume hook: replaces M.state with data.",
       "params": {
-        "campaignInProgress": {"type": "any", "desc": "Campagne en cours (non utilisé)."},
-        "data": {"type": "table", "desc": "État sauvegardé."}
+        "campaignInProgress": {
+          "type": "any",
+          "desc": "Current campaign (not used)."
+        },
+        "data": {
+          "type": "table",
+          "desc": "Saved state."
+        }
       },
       "returns": [],
       "internal": true

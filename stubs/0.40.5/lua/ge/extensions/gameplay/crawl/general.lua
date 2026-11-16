@@ -2,120 +2,120 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/crawl/general.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Cœur du mode crawl (franchissement lent de parcours) côté freeroam/carrière : garde le parcours actif (activeTrail : trail, zone, chemin copié, départ, prefabs) et la liste des données de crawlers, prépare un parcours (setupCrawl, avec inversion éventuelle du chemin), démarre le crawl en freeroam ou depuis un flowgraph, et appelle gameplay_crawl_utils.updateCrawl à chaque image. Il fournit aussi les points d'intérêt (marqueurs de départ, carte), les fenêtres d'activité, le dessin de la zone sur la minimap et enregistre les scores à la fin. Il gère le cas multi-joueur local (multiseat).
---- Accès : extension `gameplay_crawl_general` : `extensions.load("gameplay_crawl_general")`, puis la globale `gameplay_crawl_general`
+--- Core of the crawl mode (slow trail traversal) on the freeroam/career side: keeps the active trail (activeTrail: trail, zone, copied path, start, prefabs) and the list of crawler data, prepares a trail (setupCrawl, with optional path reversal), starts the crawl in freeroam or from a flowgraph, and calls gameplay_crawl_utils.updateCrawl every frame. It also provides the points of interest (start markers, map), the activity windows, the drawing of the zone on the minimap, and records the scores at the end. It handles the local multiplayer case (multiseat).
+--- Access: extension `gameplay_crawl_general`: `extensions.load("gameplay_crawl_general")`, then the global `gameplay_crawl_general`
 ---@class gameplay_crawl_general
----@field activeTrail table|nil Parcours actif : {trail, boundary, path, startingPosition, prefabs, isFromMission} ; nil si aucun.
----@field crawlersData table<integer, table> Liste des données de crawler (créées par gameplay_crawl_utils.setupCrawlerData) du parcours actif.
----@field dependencies table<integer, string> Extensions chargées avant : gameplay_crawl_saveSystem, utils, boundary, display.
+---@field activeTrail table|nil Active trail: {trail, boundary, path, startingPosition, prefabs, isFromMission}; nil if none.
+---@field crawlersData table<integer, table> List of crawler data (created by gameplay_crawl_utils.setupCrawlerData) of the active trail.
+---@field dependencies table<integer, string> Extensions loaded beforehand: gameplay_crawl_saveSystem, utils, boundary, display.
 gameplay_crawl_general = {}
 
---- Décharge les prefabs du parcours actif, oublie le parcours, nettoie gameplay_crawl_utils et vide crawlersData.
----Source : lua/ge/extensions/gameplay/crawl/general.lua:38
----@param force boolean|nil Transmis à gameplay_crawl_utils.clear.
+--- Unloads the prefabs of the active trail, forgets the trail, cleans up gameplay_crawl_utils and empties crawlersData.
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:38
+---@param force boolean|nil Passed to gameplay_crawl_utils.clear.
 function gameplay_crawl_general.clear(force) end
 
---- Hook de la fenêtre d'activité : pour un POI 'crawl', ajoute une fiche (distance, dénivelé positif/négatif, meilleurs points, meilleur temps, tentatives) et un bouton « Jouer » qui lance startCrawlFreeroam sur le véhicule du joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:302
----@param elemData table Données des éléments sélectionnés.
----@param activityData table Liste de fiches à compléter.
+--- Activity window hook: for a 'crawl' POI, adds a card (distance, positive/negative elevation change, best points, best time, attempts) and a "Play" button that runs startCrawlFreeroam on the player's vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:302
+---@param elemData table Data of the selected items.
+---@param activityData table List of cards to complete.
 function gameplay_crawl_general.onActivityAcceptGatherData(elemData, activityData) end
 
---- Hook appelé quand une activité est visible/masquée dans l'index : prépare le parcours et ses marqueurs de chemin pour un POI crawl, ou nettoie si data est nil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:385
----@param data table|nil Données du POI (type, trailId) ; nil quand l'index se ferme.
+--- Hook called when an activity is shown/hidden in the index: prepares the trail and its path markers for a crawl POI, or cleans up if data is nil.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:385
+---@param data table|nil POI data (type, trailId); nil when the index closes.
 function gameplay_crawl_general.onActivityIndexVisible(data) end
 
---- Hook appelé au changement d'état d'une mission : nettoie tout si elle passe à 'stopped'.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:464
----@param status string État de la mission.
----@param id any Mission concernée.
+--- Hook called when a mission's state changes: cleans everything up if it goes to 'stopped'.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:464
+---@param status string Mission state.
+---@param id any Mission concerned.
 function gameplay_crawl_general.onAnyMissionChanged(status, id) end
 
---- Hook émis par utils.clear() à chaque fin de crawl : vide crawlersData et efface les POI bruts pour réafficher le marqueur de départ.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:470
+--- Hook emitted by utils.clear() at the end of each crawl: empties crawlersData and clears the raw POIs to show the start marker again.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:470
 function gameplay_crawl_general.onCrawlCleared() end
 
---- Hook appelé à l'affichage des résultats : enregistre le temps et les points du joueur pour le parcours actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:480
+--- Hook called when the results are shown: records the player's time and points for the active trail.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:480
 ---@param eventData table {time, points}.
 function gameplay_crawl_general.onCrawlResultsShown(eventData) end
 
---- Hook appelé pour dessiner sur la minimap : dessine la zone du parcours actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:424
----@param td table Objet de dessin de la minimap.
+--- Hook called to draw on the minimap: draws the zone of the active trail.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:424
+---@param td table Minimap drawing object.
 function gameplay_crawl_general.onDrawOnMinimap(td) end
 
---- Hook appelé au chargement : nettoie l'état et crée les dossiers de sauvegarde du joueur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:433
+--- Hook called on load: cleans up the state and creates the player's save folders.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:433
 function gameplay_crawl_general.onExtensionLoaded() end
 
---- Hook de collecte des points d'intérêt d'un niveau : ajoute pour chaque parcours (dossier /levels/<niveau>/crawls/) un POI de type 'crawl' avec déclencheur invisible, marqueur de départ et marqueur de carte (nom, miniature, meilleurs points) tant qu'aucun parcours n'est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:229
----@param levelIdentifier string Nom du niveau.
----@param elements table Liste de POI à compléter.
+--- Hook collecting the points of interest of a level: for each trail (folder /levels/<level>/crawls/) adds a 'crawl' type POI with an invisible trigger, a start marker and a map marker (name, thumbnail, best points) as long as no trail is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:229
+---@param levelIdentifier string Level name.
+---@param elements table POI list to complete.
 function gameplay_crawl_general.onGetRawPoiListForLevel(levelIdentifier, elements) end
 
---- Hook appelé au changement de session multijoueur : charge gameplay_crawl_freeroamMultiplayer au début de session et le décharge à la fin.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:492
----@param old any Ancienne session (nil/false si aucune).
----@param new any Nouvelle session.
+--- Hook called on multiplayer session change: loads gameplay_crawl_freeroamMultiplayer at session start and unloads it at the end.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:492
+---@param old any Old session (nil/false if none).
+---@param new any New session.
 function gameplay_crawl_general.onMPSessionChanged(old, new) end
 
---- Hook appelé avant rechargement des extensions : nettoie l'état.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:438
+--- Hook called before extensions reload: cleans up the state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:438
 function gameplay_crawl_general.onSerialize() end
 
---- Hook appelé à chaque image : fait avancer le crawl actif (gameplay_crawl_utils.updateCrawl).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:209
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulation (s).
----@param dtRaw number Delta temps brut (s).
+--- Hook called every frame: advances the active crawl (gameplay_crawl_utils.updateCrawl).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:209
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulation time delta (s).
+---@param dtRaw number Raw time delta (s).
 function gameplay_crawl_general.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook appelé quand un véhicule est détruit : retire son crawler (parcours hors mission).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:453
----@param vehId integer Id du véhicule.
+--- Hook called when a vehicle is destroyed: removes its crawler (non-mission trail).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:453
+---@param vehId integer Vehicle id.
 function gameplay_crawl_general.onVehicleDestroyed(vehId) end
 
---- Hook appelé au changement de véhicule contrôlé : retire le crawler de l'ancien véhicule (parcours hors mission) et nettoie s'il n'en reste aucun.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/crawl/general.lua:442
----@param oldId integer Id de l'ancien véhicule.
----@param newId integer Id du nouveau véhicule.
----@param player integer Index du joueur.
+--- Hook called when the controlled vehicle changes: removes the crawler from the old vehicle (non-mission trail) and cleans up if none remain.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:442
+---@param oldId integer Id of the old vehicle.
+---@param newId integer Id of the new vehicle.
+---@param player integer Player index.
 function gameplay_crawl_general.onVehicleSwitched(oldId, newId, player) end
 
---- Prépare un parcours : arrête le crawl précédent, résout zone, chemin et départ depuis saveSystem, gère l'inversion, crée les données du crawler, charge les prefabs et, si isFromMission, téléporte le véhicule à la position de départ.
----Source : lua/ge/extensions/gameplay/crawl/general.lua:49
----@param trail table Parcours (boundaryId, pathId, startingPositionId, pathReversed, prefabs, name).
----@param veh userdata Objet véhicule.
----@param isFromMission boolean|nil Vrai si lancé par une mission/flowgraph.
----@return boolean  false si zone ou chemin manquent ou si trail/veh est nil.
+--- Prepares a trail: stops the previous crawl, resolves zone, path and start from saveSystem, handles reversal, creates the crawler data, loads the prefabs and, if isFromMission, teleports the vehicle to the starting position.
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:49
+---@param trail table Trail (boundaryId, pathId, startingPositionId, pathReversed, prefabs, name).
+---@param veh userdata Vehicle object.
+---@param isFromMission boolean|nil True if started by a mission/flowgraph.
+---@return boolean  false if zone or path are missing or if trail/veh is nil.
 function gameplay_crawl_general.setupCrawl(trail, veh, isFromMission) end
 
---- Démarre un crawl depuis un flowgraph. Si le même parcours (même nom) est déjà préparé, le réutilise ; sinon appelle setupCrawl(trail, veh, true). Émet onCrawlStarted.
----Source : lua/ge/extensions/gameplay/crawl/general.lua:169
----@param trail table Parcours à lancer.
----@param veh userdata Objet véhicule.
----@return boolean  true si le crawl a démarré.
+--- Starts a crawl from a flowgraph. If the same trail (same name) is already prepared, reuses it; otherwise calls setupCrawl(trail, veh, true). Emits onCrawlStarted.
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:169
+---@param trail table Trail to start.
+---@param veh userdata Vehicle object.
+---@return boolean  true if the crawl started.
 function gameplay_crawl_general.startCrawlFlowgraph(trail, veh) end
 
---- Démarre un crawl en freeroam. En multiseat avec le même parcours déjà actif, ajoute simplement le véhicule au crawl ; sinon prépare le parcours puis lance gameplay_crawl_utils.startCrawl, émet onCrawlStarted et efface les POI bruts.
----Source : lua/ge/extensions/gameplay/crawl/general.lua:131
----@param trail table Parcours à lancer.
----@param veh userdata Objet véhicule.
+--- Starts a crawl in freeroam. In multiseat with the same trail already active, simply adds the vehicle to the crawl; otherwise prepares the trail then calls gameplay_crawl_utils.startCrawl, emits onCrawlStarted and clears the raw POIs.
+---Source: lua/ge/extensions/gameplay/crawl/general.lua:131
+---@param trail table Trail to start.
+---@param veh userdata Vehicle object.
 function gameplay_crawl_general.startCrawlFreeroam(trail, veh) end
 

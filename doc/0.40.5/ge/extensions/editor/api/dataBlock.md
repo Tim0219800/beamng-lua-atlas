@@ -1,52 +1,52 @@
 # `editor_api_dataBlock`
 
-*Fichier : `lua/ge/extensions/editor/api/dataBlock.lua` · VM : Game Engine (GE) · 120 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/dataBlock.lua` · VM: Game Engine (GE) · 120 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_dataBlock` : `extensions.load("editor_api_dataBlock")`, puis la globale `editor_api_dataBlock`
+**Access:** extension `editor_api_dataBlock`: `extensions.load("editor_api_dataBlock")`, then the global `editor_api_dataBlock`
 
-API de l'éditeur pour gérer les datablocks du moteur (objets de données partagés : sons, particules, matériaux physiques…). initialize(editor) ajoute les fonctions de création, recherche, sauvegarde et suppression sur l'objet editor ; la persistance passe par un PersistenceManager nommé dataBlockPersistMan. Fichier par défaut : art/datablocks/managedDatablocks.json.
+Editor API for managing engine datablocks (shared data objects: sounds, particles, physical materials, etc.). initialize(editor) adds the creation, lookup, save and delete functions to the editor object; persistence goes through a PersistenceManager named dataBlockPersistMan. Default file: art/datablocks/managedDatablocks.json.
 
-## Remarques
+## Notes
 
-- Bug : initialize assigne editor.addDataBlockToFile = addDataBlockToFile, mais la fonction locale s'appelle addDatablockToFile (casse différente). editor.addDataBlockToFile vaut donc nil.
-- createDataBlock renvoie l'ID de l'objet (getID()), pas l'objet.
+- Bug: initialize assigns editor.addDataBlockToFile = addDataBlockToFile, but the local function is named addDatablockToFile (different casing). editor.addDataBlockToFile is therefore nil.
+- createDataBlock returns the object ID (getID()), not the object.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_dataBlock.initialize(editorInstance)` | Crée le PersistenceManager dataBlockPersistMan s'il n'existe pas et installe les fonctions sur l'objet editor. *(interne)* | 99 |
+| `editor_api_dataBlock.initialize(editorInstance)` | Creates the dataBlockPersistMan PersistenceManager if it does not exist and installs the functions on the editor object. *(internal)* | 99 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_dataBlock.initialize(editorInstance)`
 
-Crée le PersistenceManager dataBlockPersistMan s'il n'existe pas et installe les fonctions sur l'objet editor.
+Creates the dataBlockPersistMan PersistenceManager if it does not exist and installs the functions on the editor object.
 
-- `editorInstance` (*table*) : Objet editor
+- `editorInstance` (*table*) : editor object
 
-## Classe `editor`
+## Class `editor`
 
-Fonctions ajoutées à l'objet editor par initialize.
+Functions added to the editor object by initialize.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.createDataBlock(name, type, copyFrom, filename)` | Crée un datablock du type donné, copie éventuellement les champs d'un existant, l'enregistre, le nomme, l'ajoute au groupe dataBlockGroup et au set de datablocks, puis le marque modifié pour le fichier. | 13 |
-| `editor.findDataBlock(name)` | Cherche un datablock par son nom en parcourant le set. | 92 |
-| `editor.getDataBlocks()` | Renvoie le set de tous les datablocks (Sim.getDataBlockSet()). | 86 |
-| `editor.isDataBlockDirty(dataBlock)` | Indique si le datablock a été modifié. | 75 |
-| `editor.removeDataBlockFromFile(dataBlock)` | Retire le datablock du set et, s'il a un nom de fichier, le supprime de son fichier. | 51 |
-| `editor.saveDataBlockToFile(dataBlock, filename)` | Associe le datablock à un fichier (par défaut son fichier actuel) puis le sauvegarde immédiatement. | 69 |
-| `editor.saveDirtyDataBlock(dataBlock)` | Sauvegarde le datablock s'il est modifié. | 45 |
-| `editor.setDataBlockDirty(dataBlock)` | Marque le datablock comme modifié (fichier = son fichier, sinon le fichier par défaut). | 81 |
+| `editor.createDataBlock(name, type, copyFrom, filename)` | Creates a datablock of the given type, optionally copies the fields of an existing one, registers it, names it, adds it to the dataBlockGroup group and to the datablock set, then marks it as modified for the file. | 13 |
+| `editor.findDataBlock(name)` | Looks up a datablock by name by iterating over the set. | 92 |
+| `editor.getDataBlocks()` | Returns the set of all datablocks (Sim.getDataBlockSet()). | 86 |
+| `editor.isDataBlockDirty(dataBlock)` | Returns whether the datablock has been modified. | 75 |
+| `editor.removeDataBlockFromFile(dataBlock)` | Removes the datablock from the set and, if it has a file name, deletes it from its file. | 51 |
+| `editor.saveDataBlockToFile(dataBlock, filename)` | Associates the datablock with a file (by default its current file) then saves it immediately. | 69 |
+| `editor.saveDirtyDataBlock(dataBlock)` | Saves the datablock if it is modified. | 45 |
+| `editor.setDataBlockDirty(dataBlock)` | Marks the datablock as modified (file = its file, otherwise the default file). | 81 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `getDataBlockSet`
 - `scenetree.` `findObject`
 - `worldEditorCppApi.` `createObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/dataBlock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/dataBlock.lua`.*

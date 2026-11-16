@@ -1,18 +1,29 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/matCombo.lua",
-  "module": "Sélecteur imgui de couche de matériau de terrain (liste déroulante) pour les outils de l'éditeur. Les couches sont indexées à partir de 0, comme l'index de peinture ; -1 signifie « auto », résolu via util.findMaterialIdx. Un bouton remet la valeur par défaut.",
+  "module": "ImGui terrain material layer selector (dropdown) for editor tools. Layers are 0-based, like the paint index; -1 means \"auto\", resolved via util.findMaterialIdx. A button resets to the default value.",
   "notes": [
-    "Le noms viennent de util.getMaterialNames() (indices 0..#names).",
-    "La fonction ne modifie rien : elle renvoie la nouvelle valeur choisie, c'est à l'appelant de la stocker."
+    "The names come from util.getMaterialNames() (indices 0..#names).",
+    "The function changes nothing: it returns the newly chosen value, and it is up to the caller to store it."
   ],
   "functions": {
     "draw": {
-      "desc": "Dessine une ligne de sélecteur (bouton de remise à zéro, puis liste déroulante). Renvoie la nouvelle valeur si l'utilisateur a changé la sélection ou remis le défaut, sinon nil.",
+      "desc": "Draws a selector row (reset button, then dropdown). Returns the new value if the user changed the selection or reset the default, otherwise nil.",
       "params": {
-        "cur": {"type": "integer|string|nil", "desc": "Valeur courante (index de couche, -1 = auto) ; convertie par tonumber, sinon opts.default."},
-        "opts": {"type": "table", "desc": "id (obligatoire, id imgui), label, default (valeur par défaut), allowAuto (propose l'entrée Auto), autoNames (noms à chercher pour l'auto), tooltip."}
+        "cur": {
+          "type": "integer|string|nil",
+          "desc": "Current value (layer index, -1 = auto); converted by tonumber, otherwise opts.default."
+        },
+        "opts": {
+          "type": "table",
+          "desc": "id (required, imgui id), label, default (default value), allowAuto (offers the Auto entry), autoNames (names to look up for auto), tooltip."
+        }
       },
-      "returns": [{"type": "integer|nil", "desc": "Nouvel index choisi, ou nil si rien n'a changé."}],
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "New chosen index, or nil if nothing changed."
+        }
+      ],
       "internal": false
     }
   }

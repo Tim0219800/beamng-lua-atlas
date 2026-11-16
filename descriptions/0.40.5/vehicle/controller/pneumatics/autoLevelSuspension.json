@@ -1,37 +1,235 @@
 {
   "path": "lua/vehicle/controller/pneumatics/autoLevelSuspension.lua",
-  "module": "Contrôleur auxiliaire de suspension pneumatique à mise à niveau automatique (defaultOrder 80). Pour chaque « groupe de contrôle » (une poutre de mesure + un ou plusieurs groupes de poutres d'airbags), il compare la longueur mesurée de la poutre à une longueur cible et ouvre/ferme les vannes de l'actuateur (contrôleur « airbags » par défaut) en proportion de l'écart. Un moddeur l'utilise pour régler la hauteur de caisse (setTargetLength), la monter/descendre manuellement (setAdjustmentRate) ou suspendre temporairement la régulation.",
-  "usage": "local als = controller.getController(\"autoLevelSuspension\")\nals.setAdjustmentRate(\"front\", 1) -- monte\nals.stopAdjusting(\"front\", true) -- fige la nouvelle hauteur comme cible",
+  "module": "Auxiliary pneumatic suspension controller with automatic leveling (defaultOrder 80). For each \"control group\" (one measurement beam + one or more airbag beam groups), it compares the measured length of the beam to a target length and opens/closes the actuator's valves (by default the \"airbags\" controller) in proportion to the difference. A modder uses it to set the ride height (setTargetLength), raise/lower it manually (setAdjustmentRate) or temporarily suspend the regulation.",
+  "usage": "local als = controller.getController(\"autoLevelSuspension\")\nals.setAdjustmentRate(\"front\", 1) -- raise\nals.stopAdjusting(\"front\", true) -- freezes the new height as the target",
   "notes": [
-    "Clés jbeam lues dans init : actuatorGroups (nom d'une section jbeam, liste de lignes {controlBeamName, controlGroupName (défaut = controlBeamName), beamGroup, defaultTargetLength, debug}), actuationStartDistance (0.01 m), actuationEndDistance (0.06 m), actuationDelay (0 s), minValveOpenAmount (0.15). initSecondStage lit actuatorName (\"airbags\").",
-    "Longueurs en mètres. L'actuation interpole linéairement entre minValveOpenAmount (écart = actuationStartDistance) et 1 (écart = actuationEndDistance) ; sous actuationStartDistance, la vanne est fermée.",
-    "Sans defaultTargetLength, le groupe passe 1.5 s en calibration après le reset/init puis prend la longueur courante comme cible.",
-    "Les paramètres groupNames des fonctions acceptent un nom de groupe ou une liste de noms ; un nom inconnu logue un avertissement (W) et est ignoré.",
-    "Si le contrôleur actuateur est introuvable, updateFixedStep est remplacé par nop (log E « suspension.init »).",
-    "L'état (getState/setState) utilise des clés <nom du contrôleur>_<groupe>_targetLength et ..._adjustmentRate.",
-    "Bug probable : reset met commitNewHeight à 0 (nombre) alors que partout ailleurs c'est un booléen. En Lua 0 est vrai, donc au premier pas après un reset (hors calibration, sans ajustement manuel) `if controlGroup.commitNewHeight` est vrai et la cible est écrasée par la longueur courante (même avec defaultTargetLength)."
+    "jbeam keys read in init: actuatorGroups (name of a jbeam section, list of rows {controlBeamName, controlGroupName (default = controlBeamName), beamGroup, defaultTargetLength, debug}), actuationStartDistance (0.01 m), actuationEndDistance (0.06 m), actuationDelay (0 s), minValveOpenAmount (0.15). initSecondStage reads actuatorName (\"airbags\").",
+    "Lengths in meters. The actuation interpolates linearly between minValveOpenAmount (difference = actuationStartDistance) and 1 (difference = actuationEndDistance); below actuationStartDistance, the valve is closed.",
+    "Without defaultTargetLength, the group spends 1.5 s in calibration after reset/init then takes the current length as the target.",
+    "The groupNames parameters of the functions accept a group name or a list of names; an unknown name logs a warning (W) and is ignored.",
+    "If the actuator controller is not found, updateFixedStep is replaced by nop (log E \"suspension.init\").",
+    "The state (getState/setState) uses keys <controller name>_<group>_targetLength and ..._adjustmentRate.",
+    "Probable bug: reset sets commitNewHeight to 0 (number) whereas everywhere else it is a boolean. In Lua 0 is true, so at the first step after a reset (outside calibration, without manual adjustment) `if controlGroup.commitNewHeight` is true and the target is overwritten by the current length (even with defaultTargetLength)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution (80)."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Execution order (80)."
+    }
   },
   "functions": {
-    "init": {"desc": "Construit les groupes de contrôle à partir de la section jbeam actuatorGroups et lit les paramètres d'actuation.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
-    "initSecondStage": {"desc": "Récupère le contrôleur d'actuateur (jbeam actuatorName, « airbags » par défaut). Appelé après l'init de tous les contrôleurs.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "reset": {"desc": "Remet cibles, longueurs, timers et vitesses d'ajustement à zéro ; relance la calibration des groupes sans defaultTargetLength.", "internal": true},
-    "updateFixedStep": {"desc": "Pas physique : pour chaque groupe, calibre, applique un ajustement manuel ou régule vers la longueur cible via actuator.setBeamGroupsValveState.", "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}}, "internal": true},
-    "setTemporarilyDisabled": {"desc": "Suspend (true) ou reprend (false) la régulation automatique des groupes ; vannes fermées pendant la suspension.", "params": {"groupNames": {"type": "string|table<integer, string>", "desc": "Groupe(s) de contrôle."}, "disabled": {"type": "boolean", "desc": "Suspendre ?"}}},
-    "setAdjustmentRate": {"desc": "Force un ajustement manuel de la hauteur : l'état de vanne est imposé à rate (-1 descend, 1 monte).", "params": {"groupNames": {"type": "string|table<integer, string>", "desc": "Groupe(s) de contrôle."}, "rate": {"type": "number", "desc": "Taux -1..1 (borné)."}}},
-    "stopAdjusting": {"desc": "Arrête l'ajustement manuel ; avec commitNewHeight vrai la longueur courante devient la nouvelle cible.", "params": {"groupNames": {"type": "string|table<integer, string>", "desc": "Groupe(s) de contrôle."}, "commitNewHeight": {"type": "boolean|nil", "desc": "Mémoriser la hauteur atteinte comme cible."}}},
-    "setMomentaryIncrease": {"desc": "Obsolète (log W) : équivaut à setAdjustmentRate(groupes, 1) puis stopAdjusting(groupes, true).", "params": {"groupNames": {"type": "string|table<integer, string>", "desc": "Groupe(s)."}, "increase": {"type": "boolean", "desc": "Monter (true) ou arrêter (false)."}}},
-    "setMomentaryDecrease": {"desc": "Obsolète (log W) : équivaut à setAdjustmentRate(groupes, -1) puis stopAdjusting(groupes, true).", "params": {"groupNames": {"type": "string|table<integer, string>", "desc": "Groupe(s)."}, "decrease": {"type": "boolean", "desc": "Descendre (true) ou arrêter (false)."}}},
-    "setTargetLength": {"desc": "Fixe la longueur cible (m) des groupes ; avec immediate vrai, la régulation démarre sans attendre actuationDelay.", "params": {"groupNames": {"type": "string|table<integer, string>", "desc": "Groupe(s) de contrôle."}, "targetLength": {"type": "number", "desc": "Longueur cible de la poutre de mesure en m."}, "immediate": {"type": "boolean|nil", "desc": "Contourner le délai d'actuation."}}},
-    "getTargetLength": {"desc": "Renvoie la longueur cible d'un groupe (0 et log E si inconnu).", "params": {"groupName": {"type": "string", "desc": "Nom du groupe."}}, "returns": [{"type": "number", "desc": "Longueur cible en m."}]},
-    "getCurrentLength": {"desc": "Renvoie la dernière longueur mesurée de la poutre de contrôle (0 et log E si inconnu).", "params": {"groupName": {"type": "string", "desc": "Nom du groupe."}}, "returns": [{"type": "number", "desc": "Longueur en m."}]},
-    "getAverageFlowRate": {"desc": "Débit moyen d'air dans les groupes de poutres de l'actuateur pour ce groupe.", "params": {"groupName": {"type": "string", "desc": "Nom du groupe."}}, "returns": [{"type": "number", "desc": "Débit moyen (unité de l'actuateur)."}]},
-    "isMoving": {"desc": "Vrai si la valeur absolue du débit moyen dépasse 1e-4.", "params": {"groupName": {"type": "string", "desc": "Nom du groupe."}}, "returns": [{"type": "boolean", "desc": "Le groupe bouge ?"}]},
-    "isCalibrating": {"desc": "Vrai tant que le groupe est en calibration initiale (1.5 s).", "params": {"groupName": {"type": "string", "desc": "Nom du groupe."}}, "returns": [{"type": "boolean", "desc": "En calibration ?"}]},
-    "getState": {"desc": "État sauvegardable : longueur cible et taux d'ajustement de chaque groupe (clés préfixées par le nom du contrôleur).", "returns": [{"type": "table", "desc": "Table d'état (réutilisée entre appels)."}]},
-    "setState": {"desc": "Restaure cibles et taux d'ajustement (valeurs NaN ou non numériques ignorées).", "params": {"data": {"type": "table|nil", "desc": "Table produite par getState."}}}
+    "init": {
+      "desc": "Builds the control groups from the jbeam section actuatorGroups and reads the actuation parameters.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Gets the actuator controller (jbeam actuatorName, \"airbags\" by default). Called after the init of all controllers.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets targets, lengths, timers and adjustment speeds to zero; restarts the calibration of groups without defaultTargetLength.",
+      "internal": true
+    },
+    "updateFixedStep": {
+      "desc": "Physics step: for each group, calibrates, applies a manual adjustment or regulates toward the target length via actuator.setBeamGroupsValveState.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Physics step in seconds."
+        }
+      },
+      "internal": true
+    },
+    "setTemporarilyDisabled": {
+      "desc": "Suspends (true) or resumes (false) the automatic regulation of the groups; valves closed during suspension.",
+      "params": {
+        "groupNames": {
+          "type": "string|table<integer, string>",
+          "desc": "Control group(s)."
+        },
+        "disabled": {
+          "type": "boolean",
+          "desc": "Suspend?"
+        }
+      }
+    },
+    "setAdjustmentRate": {
+      "desc": "Forces a manual height adjustment: the valve state is imposed at rate (-1 lowers, 1 raises).",
+      "params": {
+        "groupNames": {
+          "type": "string|table<integer, string>",
+          "desc": "Control group(s)."
+        },
+        "rate": {
+          "type": "number",
+          "desc": "Rate -1..1 (bounded)."
+        }
+      }
+    },
+    "stopAdjusting": {
+      "desc": "Stops the manual adjustment; with commitNewHeight true the current length becomes the new target.",
+      "params": {
+        "groupNames": {
+          "type": "string|table<integer, string>",
+          "desc": "Control group(s)."
+        },
+        "commitNewHeight": {
+          "type": "boolean|nil",
+          "desc": "Store the reached height as the target."
+        }
+      }
+    },
+    "setMomentaryIncrease": {
+      "desc": "Deprecated (log W): equivalent to setAdjustmentRate(groups, 1) then stopAdjusting(groups, true).",
+      "params": {
+        "groupNames": {
+          "type": "string|table<integer, string>",
+          "desc": "Group(s)."
+        },
+        "increase": {
+          "type": "boolean",
+          "desc": "Raise (true) or stop (false)."
+        }
+      }
+    },
+    "setMomentaryDecrease": {
+      "desc": "Deprecated (log W): equivalent to setAdjustmentRate(groups, -1) then stopAdjusting(groups, true).",
+      "params": {
+        "groupNames": {
+          "type": "string|table<integer, string>",
+          "desc": "Group(s)."
+        },
+        "decrease": {
+          "type": "boolean",
+          "desc": "Lower (true) or stop (false)."
+        }
+      }
+    },
+    "setTargetLength": {
+      "desc": "Sets the target length (m) of the groups; with immediate true, the regulation starts without waiting for actuationDelay.",
+      "params": {
+        "groupNames": {
+          "type": "string|table<integer, string>",
+          "desc": "Control group(s)."
+        },
+        "targetLength": {
+          "type": "number",
+          "desc": "Target length of the measurement beam in m."
+        },
+        "immediate": {
+          "type": "boolean|nil",
+          "desc": "Bypass the actuation delay."
+        }
+      }
+    },
+    "getTargetLength": {
+      "desc": "Returns the target length of a group (0 and log E if unknown).",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Group name."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Target length in m."
+        }
+      ]
+    },
+    "getCurrentLength": {
+      "desc": "Returns the last measured length of the control beam (0 and log E if unknown).",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Group name."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Length in m."
+        }
+      ]
+    },
+    "getAverageFlowRate": {
+      "desc": "Average air flow in the actuator's beam groups for this group.",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Group name."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Average flow (actuator unit)."
+        }
+      ]
+    },
+    "isMoving": {
+      "desc": "True if the absolute value of the average flow exceeds 1e-4.",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Group name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Is the group moving?"
+        }
+      ]
+    },
+    "isCalibrating": {
+      "desc": "True while the group is in initial calibration (1.5 s).",
+      "params": {
+        "groupName": {
+          "type": "string",
+          "desc": "Group name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "In calibration?"
+        }
+      ]
+    },
+    "getState": {
+      "desc": "Saveable state: target length and adjustment rate of each group (keys prefixed by the controller name).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State table (reused between calls)."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restores targets and adjustment rates (NaN or non-numeric values ignored).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table produced by getState."
+        }
+      }
+    }
   }
 }

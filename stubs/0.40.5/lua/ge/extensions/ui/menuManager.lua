@@ -2,59 +2,59 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/menuManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Décide quelle route de l'interface (ui_router) afficher quand le joueur ouvre, ferme ou bascule le menu : menu principal, menu pause v2, garage, écrans de mission ou de scénario, ou retour au jeu. Il émet les hooks onBeforeMenuOpened et onMenuToggled. Un moddeur l'utilise pour ouvrir/fermer le menu par script ou pour définir la route de jeu (setGameplayRoute) ou de pause (setPauseRoute) actives.
---- Accès : extension `ui_menuManager` : `extensions.load("ui_menuManager")`, puis la globale `ui_menuManager`
+--- Decides which UI route (ui_router) to display when the player opens, closes or toggles the menu: main menu, pause menu v2, garage, mission or scenario screens, or return to the game. It emits the hooks onBeforeMenuOpened and onMenuToggled. A modder uses it to open/close the menu by script or to set the active game route (setGameplayRoute) or pause route (setPauseRoute).
+--- Access: extension `ui_menuManager`: `extensions.load("ui_menuManager")`, then the global `ui_menuManager`
 ---@class ui_menuManager
 ui_menuManager = {}
 
---- Navigue vers une route : soit une chaîne (nom de route, alias, ou « options » qui devient « pause.options » en niveau), soit une table {state, params}. Ne renvoie rien.
----Source : lua/ge/extensions/ui/menuManager.lua:318
----@param data string|table Nom de route ou {state = route, params = table}.
+--- Navigates to a route: either a string (route name, alias, or "options" which becomes "pause.options" in a level), or a table {state, params}. Returns nothing.
+---Source: lua/ge/extensions/ui/menuManager.lua:318
+---@param data string|table Route name or {state = route, params = table}.
 function ui_menuManager.MenuOpenModule(data) end
 
---- Revient à la route de jeu active (émet onMenuToggled(false)), sauf si on est déjà sur une route de jeu ou sur « garage » ou s'il n'y a pas de route courante.
----Source : lua/ge/extensions/ui/menuManager.lua:309
+--- Returns to the active game route (emits onMenuToggled(false)), unless already on a game route or on "garage" or there is no current route.
+---Source: lua/ge/extensions/ui/menuManager.lua:309
 ---@return table  {handled = true, ...}.
 function ui_menuManager.closeMenu() end
 
---- Navigue directement vers la route « menu » (menu principal), sans émettre onMenuToggled.
----Source : lua/ge/extensions/ui/menuManager.lua:305
+--- Navigates directly to the "menu" route (main menu), without emitting onMenuToggled.
+---Source: lua/ge/extensions/ui/menuManager.lua:305
 ---@return table  {handled = true, targetRoute = "menu", navigation}.
 function ui_menuManager.closeToMenu() end
 
---- Renvoie la route de jeu active.
----Source : lua/ge/extensions/ui/menuManager.lua:21
----@return string  « play » par défaut.
+--- Returns the active game route.
+---Source: lua/ge/extensions/ui/menuManager.lua:21
+---@return string  "play" by default.
 function ui_menuManager.getGameplayRoute() end
 
---- Indique si le menu pause v2 est actif (toujours true dans cette version, voir notes).
----Source : lua/ge/extensions/ui/menuManager.lua:339
+--- Returns whether pause menu v2 is active (always true in this version, see notes).
+---Source: lua/ge/extensions/ui/menuManager.lua:339
 ---@return boolean  true.
 function ui_menuManager.isPauseV2Enabled() end
 
---- Affiche le menu (route de menu/pause) si showMenu est vrai, sinon la route de jeu.
----Source : lua/ge/extensions/ui/menuManager.lua:327
----@param showMenu boolean true pour afficher le menu.
+--- Displays the menu (menu/pause route) if showMenu is true, otherwise the game route.
+---Source: lua/ge/extensions/ui/menuManager.lua:327
+---@param showMenu boolean true to display the menu.
 ---@return table  {handled = true, targetRoute, navigation}.
 function ui_menuManager.menuHide(showMenu) end
 
---- Ouvre le menu (route de pause ou menu principal) sauf si on y est déjà. Émet onBeforeMenuOpened puis onMenuToggled(true).
----Source : lua/ge/extensions/ui/menuManager.lua:296
+--- Opens the menu (pause route or main menu) unless already there. Emits onBeforeMenuOpened then onMenuToggled(true).
+---Source: lua/ge/extensions/ui/menuManager.lua:296
 ---@return table  {handled = true, ...}.
 function ui_menuManager.openMenu() end
 
---- Définit la route considérée comme « jeu » (« play » si nil).
----Source : lua/ge/extensions/ui/menuManager.lua:13
----@param route string|nil Nom de route.
+--- Sets the route considered as "game" ("play" if nil).
+---Source: lua/ge/extensions/ui/menuManager.lua:13
+---@param route string|nil Road name.
 function ui_menuManager.setGameplayRoute(route) end
 
---- Définit une route de pause spécifique, prioritaire sur « pause » quand un niveau est chargé (nil pour revenir au comportement par défaut).
----Source : lua/ge/extensions/ui/menuManager.lua:17
----@param route string|nil Nom de route.
+--- Sets a specific pause route, taking priority over "pause" when a level is loaded (nil to return to the default behavior).
+---Source: lua/ge/extensions/ui/menuManager.lua:17
+---@param route string|nil Road name.
 function ui_menuManager.setPauseRoute(route) end
 
---- Bascule entre le jeu et le menu (touche Échap). Gère les cas sans niveau, garage, écrans de mission (mission.control), scénarios, jeu vers menu, menu vers jeu, sinon navigue en arrière.
----Source : lua/ge/extensions/ui/menuManager.lua:201
----@return table  {handled = boolean, ...} avec targetRoute et navigation selon le cas.
+--- Toggles between the game and the menu (Escape key). Handles the cases of no level, garage, mission screens (mission.control), scenarios, game to menu, menu to game, otherwise navigates back.
+---Source: lua/ge/extensions/ui/menuManager.lua:201
+---@return table  {handled = boolean, ...} with targetRoute and navigation depending on the case.
 function ui_menuManager.toggleMenu() end
 

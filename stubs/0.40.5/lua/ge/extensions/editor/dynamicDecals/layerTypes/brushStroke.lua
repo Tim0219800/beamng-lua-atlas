@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Type de calque « Brush Stroke » de l'outil Dynamic Decals : un coup de pinceau virtuel qui pose un decal à chaque frame pendant le déplacement et interpole des decals entre les frames. Il partage les propriétés d'un calque decal. Ce module fournit la section « Brush Stroke Properties » (nombre d'étapes d'interpolation, ordre 1070), la GUI d'inspecteur du type brushStroke (uid, nom, enabled, couleur, échelle, rotation, masque alpha, SDF, textures, dataPoints, etc.) et les pages de documentation (Brush Stroke Layers, Properties).
---- Accès : extension `editor_dynamicDecals_layerTypes_brushStroke` : `extensions.load("editor_dynamicDecals_layerTypes_brushStroke")`, puis la globale `editor_dynamicDecals_layerTypes_brushStroke`
+--- "Brush Stroke" layer type of the Dynamic Decals tool: a virtual brush stroke that places a decal every frame during movement and interpolates decals between frames. It shares the properties of a decal layer. This module provides the "Brush Stroke Properties" section (number of interpolation steps, order 1070), the inspector GUI of the brushStroke type (uid, name, enabled, color, scale, rotation, alpha mask, SDF, textures, dataPoints, etc.) and the documentation pages (Brush Stroke Layers, Properties).
+--- Access: extension `editor_dynamicDecals_layerTypes_brushStroke`: `extensions.load("editor_dynamicDecals_layerTypes_brushStroke")`, then the global `editor_dynamicDecals_layerTypes_brushStroke`
 ---@class editor_dynamicDecals_layerTypes_brushStroke
 editor_dynamicDecals_layerTypes_brushStroke = {}
 
---- Hook appelé quand une préférence change. Ne fait rien ici.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua:544
----@param path string Chemin de la préférence.
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes. Does nothing here.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua:544
+---@param path string Preference path.
+---@param value any New value.
 function editor_dynamicDecals_layerTypes_brushStroke.editorPreferenceValueChanged(path, value) end
 
---- Ne déclare aucune préférence (corps commenté).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua:538
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Declares no preference (body commented out).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua:538
+---@param prefsRegistry table Editor preferences registry.
 function editor_dynamicDecals_layerTypes_brushStroke.registerEditorPreferences(prefsRegistry) end
 
---- Appelé par l'outil : récupère les modules liés, enregistre la section « Brush Stroke Properties », la GUI d'inspecteur du type brushStroke et les pages de documentation.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua:589
----@param tool_in table Référence à l'outil editor_dynamicDecalsTool.
+--- Called by the tool: gets the related modules, registers the "Brush Stroke Properties" section, the inspector GUI of the brushStroke type and the documentation pages.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/dynamicDecals/layerTypes/brushStroke.lua:589
+---@param tool_in table Reference to the editor_dynamicDecalsTool tool.
 function editor_dynamicDecals_layerTypes_brushStroke.setup(tool_in) end
 

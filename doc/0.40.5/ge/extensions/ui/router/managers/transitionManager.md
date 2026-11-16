@@ -1,196 +1,196 @@
 # `ui_router_managers_transitionManager`
 
-*Fichier : `lua/ge/extensions/ui/router/managers/transitionManager.lua` · VM : Game Engine (GE) · 552 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/managers/transitionManager.lua` · VM: Game Engine (GE) · 552 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_managers_transitionManager` : `extensions.load("ui_router_managers_transitionManager")`, puis la globale `ui_router_managers_transitionManager`
+**Access:** extension `ui_router_managers_transitionManager`: `extensions.load("ui_router_managers_transitionManager")`, then the global `ui_router_managers_transitionManager`
 
-Gère le cycle de vie des transitions de route du routeur d'interface : une seule transition à la fois, session de transition (jalons de progression, phase, temps écoulé par phase et total, renvois du changement de route), validation des accusés des frameworks et classification des timeouts. Le module n'a aucun effet de bord sur le routeur : update() renvoie des évènements (resendRouteChange ou timeout) que router.lua traite. Le temps est accumulé à partir de dtReal fourni par onGuiUpdate (pas os.clock).
+Manages the lifecycle of the UI router's route transitions: a single transition at a time, transition session (progress milestones, phase, elapsed time per phase and total, route change resends), validation of the frameworks' acknowledgments and classification of timeouts. The module has no side effects on the router: update() returns events (resendRouteChange or timeout) that router.lua handles. Time is accumulated from dtReal provided by onGuiUpdate (not os.clock).
 
-## Remarques
+## Notes
 
-- Deux régimes de timeout. Plat (Angular/legacy, session.phase == nil) : un seul délai Config.Timeout (3 s) sur elapsedTime ; à l'expiration, le hook TRANSITION_TIMEOUT est émis une fois ({type="hard", context}) et update renvoie {type="timeout", reason="timeout_reached"}. Phasé (Vue) : phases startup, routeCommit, mountReady, done.
-- Phase startup : renvoie {type="resendRouteChange", entry=pendingEntry} toutes les Config.PhaseTimeouts.startupResendInterval secondes, sans jamais expirer ; la phase se termine quand routeNavigationStarted est reçu (alors totalElapsed est remis à 0). Phases suivantes : budgets routeCommit et mountReady, puis plafond total ; classifications : route_change_not_completed, route_mounted_not_acknowledged, transition_total_timeout.
-- Un accusé est valide si une transition est active, si transitionId (quand fourni) correspond, et si routeName (quand fourni) correspond au nom attendu (entrée en attente, sinon nom de la session, sinon route cible). Raisons d'échec : no_active_transition, transition_id_mismatch, route_mismatch (complete renvoie route_name_mismatch).
-- L'identifiant de transition est généré sous la forme « transition_<compteur>_<UUID> » (Engine.generateUUID).
-- Incohérence mineure : le commentaire de start() annonce « @return transitionId, success » alors que la fonction renvoie (success, transitionId) ; router.lua utilise bien l'ordre (success, id).
-- isTimeoutReached ne concerne que le régime plat (elapsedTime >= Config.Timeout) ; en régime phasé elapsedTime n'est pas incrémenté.
+- Two timeout regimes. Flat (Angular/legacy, session.phase == nil): a single Config.Timeout delay (3 s) on elapsedTime; on expiry, the TRANSITION_TIMEOUT hook is emitted once ({type="hard", context}) and update returns {type="timeout", reason="timeout_reached"}. Phased (Vue): phases startup, routeCommit, mountReady, done.
+- Startup phase: returns {type="resendRouteChange", entry=pendingEntry} every Config.PhaseTimeouts.startupResendInterval seconds, never expiring; the phase ends when routeNavigationStarted is received (totalElapsed is then reset to 0). Following phases: routeCommit and mountReady budgets, then total cap; classifications: route_change_not_completed, route_mounted_not_acknowledged, transition_total_timeout.
+- An acknowledgment is valid if a transition is active, if transitionId (when provided) matches, and if routeName (when provided) matches the expected name (pending entry, otherwise session name, otherwise target route). Failure reasons: no_active_transition, transition_id_mismatch, route_mismatch (complete returns route_name_mismatch).
+- The transition identifier is generated in the form "transition_<counter>_<UUID>" (Engine.generateUUID).
+- Minor inconsistency: the comment of start() announces "@return transitionId, success" whereas the function returns (success, transitionId); router.lua does use the order (success, id).
+- isTimeoutReached only concerns the flat regime (elapsedTime >= Config.Timeout); in the phased regime elapsedTime is not incremented.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_managers_transitionManager.canStartTransition()` | Indique si une nouvelle transition peut démarrer (aucune en cours). | 426 |
-| `ui_router_managers_transitionManager.cancel(reason)` | Annule la transition active, efface l'état et revient à idle. | 508 |
-| `ui_router_managers_transitionManager.complete(routeName, transitionId)` | Termine la transition avec succès après validation de l'identifiant et du nom de route, puis remet tout l'état à zéro. | 468 |
-| `ui_router_managers_transitionManager.getDebugInfo()` | Renvoie des informations de debug. | 543 |
-| `ui_router_managers_transitionManager.getElapsedTime()` | Temps écoulé (secondes) depuis le début de la transition plate, accumulé depuis dtReal. | 107 |
-| `ui_router_managers_transitionManager.getFromRoute()` | Renvoie la route d'origine de la transition active. | 124 |
-| `ui_router_managers_transitionManager.getKind()` | Renvoie le type de la transition (context.kind, "navigate" par défaut). | 116 |
-| `ui_router_managers_transitionManager.getSession()` | Renvoie la session de transition active créée par router.lua (routeName, routeData, navigationContext, pendingEntry, skipOnMount, mounted, routeChangeCommitted, expectsMountAck, phase, phaseElapsed, totalElapsed, timeSinceLastEmit, handoffAttempts, progress, milestoneAt, protectionToken…). | 170 |
-| `ui_router_managers_transitionManager.getStatus()` | Renvoie l'état courant : "idle", "transitioning" ou "cancelled" (transitoire). | 92 |
-| `ui_router_managers_transitionManager.getTimeoutInfo(classification)` | Instantané de chronométrage pour le gestionnaire de timeout du routeur ; la classification est déduite des jalons de progression si elle n'est pas fournie. | 299 |
-| `ui_router_managers_transitionManager.getToRoute()` | Renvoie la route de destination de la transition active. | 120 |
-| `ui_router_managers_transitionManager.getTransitionContext()` | Renvoie un instantané du contexte de transition. | 128 |
-| `ui_router_managers_transitionManager.getTransitionId()` | Renvoie l'identifiant de la transition active. | 102 |
-| `ui_router_managers_transitionManager.isTimeoutReached()` | Indique si le délai du régime plat (Config.Timeout) est atteint. | 112 |
-| `ui_router_managers_transitionManager.isTransitioning()` | Indique si une transition est en cours. | 97 |
-| `ui_router_managers_transitionManager.markCommitted(routeName, transitionId)` | Marque la session comme validée (routeChangeComplete a promu l'entrée). La validation et la promotion sont faites par le routeur. | 206 |
-| `ui_router_managers_transitionManager.markMounted(routeName, transitionId)` | Marque la session comme montée (accusé routeMounted traité). | 232 |
-| `ui_router_managers_transitionManager.markProgress(routeName, milestone, transitionId)` | Enregistre un jalon de progression rapporté par le framework après validation de l'accusé. | 183 |
-| `ui_router_managers_transitionManager.reset()` | Réinitialise l'état (tests ou récupération) : statut idle, identifiant, temps, session. Ne remet pas à nil kind, toRoute ni fromRoute. | 533 |
-| `ui_router_managers_transitionManager.start(context)` | Démarre une transition : génère l'identifiant, enregistre route cible/origine et session, passe en transitioning. Échoue si une transition est déjà en cours ou sans route cible. | 435 |
-| `ui_router_managers_transitionManager.update(dtReal)` | Fait avancer le chronométrage de la transition active ; appelée par router.onGuiUpdate. Renvoie nil si rien à signaler. *(interne)* | 413 |
-| `ui_router_managers_transitionManager.validateAcknowledgement(routeName, transitionId)` | Valide un accusé d'un framework contre la transition active (voir notes). | 150 |
+| `ui_router_managers_transitionManager.canStartTransition()` | Indicates whether a new transition can start (none in progress). | 426 |
+| `ui_router_managers_transitionManager.cancel(reason)` | Cancels the active transition, clears the state and returns to idle. | 508 |
+| `ui_router_managers_transitionManager.complete(routeName, transitionId)` | Ends the transition successfully after validating the identifier and route name, then resets all state. | 468 |
+| `ui_router_managers_transitionManager.getDebugInfo()` | Returns debug information. | 543 |
+| `ui_router_managers_transitionManager.getElapsedTime()` | Elapsed time (seconds) since the start of the flat transition, accumulated from dtReal. | 107 |
+| `ui_router_managers_transitionManager.getFromRoute()` | Returns the origin route of the active transition. | 124 |
+| `ui_router_managers_transitionManager.getKind()` | Returns the transition type (context.kind, "navigate" by default). | 116 |
+| `ui_router_managers_transitionManager.getSession()` | Returns the active transition session created by router.lua (routeName, routeData, navigationContext, pendingEntry, skipOnMount, mounted, routeChangeCommitted, expectsMountAck, phase, phaseElapsed, totalElapsed, timeSinceLastEmit, handoffAttempts, progress, milestoneAt, protectionToken...). | 170 |
+| `ui_router_managers_transitionManager.getStatus()` | Returns the current state: "idle", "transitioning" or "cancelled" (transient). | 92 |
+| `ui_router_managers_transitionManager.getTimeoutInfo(classification)` | Timing snapshot for the router's timeout handler; the classification is inferred from the progress milestones if not provided. | 299 |
+| `ui_router_managers_transitionManager.getToRoute()` | Returns the destination route of the active transition. | 120 |
+| `ui_router_managers_transitionManager.getTransitionContext()` | Returns a snapshot of the transition context. | 128 |
+| `ui_router_managers_transitionManager.getTransitionId()` | Returns the identifier of the active transition. | 102 |
+| `ui_router_managers_transitionManager.isTimeoutReached()` | Indicates whether the flat regime delay (Config.Timeout) is reached. | 112 |
+| `ui_router_managers_transitionManager.isTransitioning()` | Indicates whether a transition is in progress. | 97 |
+| `ui_router_managers_transitionManager.markCommitted(routeName, transitionId)` | Marks the session as committed (routeChangeComplete promoted the entry). Validation and promotion are done by the router. | 206 |
+| `ui_router_managers_transitionManager.markMounted(routeName, transitionId)` | Marks the session as mounted (routeMounted acknowledgment handled). | 232 |
+| `ui_router_managers_transitionManager.markProgress(routeName, milestone, transitionId)` | Records a progress milestone reported by the framework after validation of the acknowledgment. | 183 |
+| `ui_router_managers_transitionManager.reset()` | Resets the state (tests or recovery): idle status, identifier, time, session. Does not reset kind, toRoute or fromRoute to nil. | 533 |
+| `ui_router_managers_transitionManager.start(context)` | Starts a transition: generates the identifier, records target/origin route and session, switches to transitioning. Fails if a transition is already in progress or without a target route. | 435 |
+| `ui_router_managers_transitionManager.update(dtReal)` | Advances the timing of the active transition; called by router.onGuiUpdate. Returns nil if there is nothing to report. *(internal)* | 413 |
+| `ui_router_managers_transitionManager.validateAcknowledgement(routeName, transitionId)` | Validates a framework acknowledgment against the active transition (see notes). | 150 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_managers_transitionManager.canStartTransition()`
 
-Indique si une nouvelle transition peut démarrer (aucune en cours).
+Indicates whether a new transition can start (none in progress).
 
-- **renvoie** : boolean true si status ~= transitioning.
+- **returns**: boolean true if status ~= transitioning.
 
 #### `ui_router_managers_transitionManager.cancel(reason)`
 
-Annule la transition active, efface l'état et revient à idle.
+Cancels the active transition, clears the state and returns to idle.
 
-- `reason` (*string|nil*) : Raison ("cancelled" par défaut), journalisée.
-- **renvoie** : boolean true s'il y avait une transition.
-- **renvoie** : string|nil Identifiant de la transition annulée.
+- `reason` (*string|nil*) : Reason ("cancelled" by default), logged.
+- **returns**: boolean true if there was a transition.
+- **returns**: string|nil Identifier of the cancelled transition.
 
 #### `ui_router_managers_transitionManager.complete(routeName, transitionId)`
 
-Termine la transition avec succès après validation de l'identifiant et du nom de route, puis remet tout l'état à zéro.
+Ends the transition successfully after validating the identifier and route name, then resets all state.
 
-- `routeName` (*string|nil*) : Route terminée (validée contre le nom attendu).
-- `transitionId` (*string|nil*) : Identifiant de transition (validé si fourni).
-- **renvoie** : boolean true si terminée.
-- **renvoie** : string "completed" ou raison d'échec (no_active_transition, transition_id_mismatch, route_name_mismatch).
+- `routeName` (*string|nil*) : Finished route (validated against the expected name).
+- `transitionId` (*string|nil*) : Transition identifier (validated if provided).
+- **returns**: boolean true if finished.
+- **returns**: string "completed" or failure reason (no_active_transition, transition_id_mismatch, route_name_mismatch).
 
 #### `ui_router_managers_transitionManager.getDebugInfo()`
 
-Renvoie des informations de debug.
+Returns debug information.
 
-- **renvoie** : table {status, transitionId, elapsedTime}.
+- **returns**: table {status, transitionId, elapsedTime}.
 
 #### `ui_router_managers_transitionManager.getElapsedTime()`
 
-Temps écoulé (secondes) depuis le début de la transition plate, accumulé depuis dtReal.
+Elapsed time (seconds) since the start of the flat transition, accumulated from dtReal.
 
-- **renvoie** : number Secondes.
+- **returns**: number Seconds.
 
 #### `ui_router_managers_transitionManager.getFromRoute()`
 
-Renvoie la route d'origine de la transition active.
+Returns the origin route of the active transition.
 
-- **renvoie** : table|nil Route d'origine (vue compat).
+- **returns**: table|nil Origin route (compat view).
 
 #### `ui_router_managers_transitionManager.getKind()`
 
-Renvoie le type de la transition (context.kind, "navigate" par défaut).
+Returns the transition type (context.kind, "navigate" by default).
 
-- **renvoie** : string|nil Type ou nil.
+- **returns**: string|nil Type or nil.
 
 #### `ui_router_managers_transitionManager.getSession()`
 
-Renvoie la session de transition active créée par router.lua (routeName, routeData, navigationContext, pendingEntry, skipOnMount, mounted, routeChangeCommitted, expectsMountAck, phase, phaseElapsed, totalElapsed, timeSinceLastEmit, handoffAttempts, progress, milestoneAt, protectionToken…).
+Returns the active transition session created by router.lua (routeName, routeData, navigationContext, pendingEntry, skipOnMount, mounted, routeChangeCommitted, expectsMountAck, phase, phaseElapsed, totalElapsed, timeSinceLastEmit, handoffAttempts, progress, milestoneAt, protectionToken...).
 
-- **renvoie** : table|nil Session ou nil si inactif.
+- **returns**: table|nil Session or nil if inactive.
 
 #### `ui_router_managers_transitionManager.getStatus()`
 
-Renvoie l'état courant : "idle", "transitioning" ou "cancelled" (transitoire).
+Returns the current state: "idle", "transitioning" or "cancelled" (transient).
 
-- **renvoie** : string Constants.TransitionStatus.
+- **returns**: string Constants.TransitionStatus.
 
 #### `ui_router_managers_transitionManager.getTimeoutInfo(classification)`
 
-Instantané de chronométrage pour le gestionnaire de timeout du routeur ; la classification est déduite des jalons de progression si elle n'est pas fournie.
+Timing snapshot for the router's timeout handler; the classification is inferred from the progress milestones if not provided.
 
-- `classification` (*string|nil*) : Classification déjà calculée (chemin phasé).
-- **renvoie** : table {transitionId, classification, phase, phaseElapsed, totalElapsed, handoffAttempts}.
+- `classification` (*string|nil*) : Already computed classification (phased path).
+- **returns**: table {transitionId, classification, phase, phaseElapsed, totalElapsed, handoffAttempts}.
 
 #### `ui_router_managers_transitionManager.getToRoute()`
 
-Renvoie la route de destination de la transition active.
+Returns the destination route of the active transition.
 
-- **renvoie** : table|nil Route résolue.
+- **returns**: table|nil Resolved route.
 
 #### `ui_router_managers_transitionManager.getTransitionContext()`
 
-Renvoie un instantané du contexte de transition.
+Returns a snapshot of the transition context.
 
-- **renvoie** : table {transitionId, kind, toRoute, fromRoute}.
+- **returns**: table {transitionId, kind, toRoute, fromRoute}.
 
 #### `ui_router_managers_transitionManager.getTransitionId()`
 
-Renvoie l'identifiant de la transition active.
+Returns the identifier of the active transition.
 
-- **renvoie** : string|nil Identifiant ou nil si aucune transition.
+- **returns**: string|nil Identifier or nil if no transition.
 
 #### `ui_router_managers_transitionManager.isTimeoutReached()`
 
-Indique si le délai du régime plat (Config.Timeout) est atteint.
+Indicates whether the flat regime delay (Config.Timeout) is reached.
 
-- **renvoie** : boolean true si elapsedTime >= Config.Timeout.
+- **returns**: boolean true if elapsedTime >= Config.Timeout.
 
 #### `ui_router_managers_transitionManager.isTransitioning()`
 
-Indique si une transition est en cours.
+Indicates whether a transition is in progress.
 
-- **renvoie** : boolean true si status == transitioning.
+- **returns**: boolean true if status == transitioning.
 
 #### `ui_router_managers_transitionManager.markCommitted(routeName, transitionId)`
 
-Marque la session comme validée (routeChangeComplete a promu l'entrée). La validation et la promotion sont faites par le routeur.
+Marks the session as committed (routeChangeComplete promoted the entry). Validation and promotion are done by the router.
 
-- `routeName` (*string*) : Route validée (non utilisée, pour symétrie).
-- `transitionId` (*string|nil*) : Identifiant de transition.
-- **renvoie** : table {success=true} ou {success=false, reason=no_active_transition|transition_id_mismatch}.
+- `routeName` (*string*) : Committed route (unused, for symmetry).
+- `transitionId` (*string|nil*) : Transition identifier.
+- **returns**: table {success=true} or {success=false, reason=no_active_transition|transition_id_mismatch}.
 
 #### `ui_router_managers_transitionManager.markMounted(routeName, transitionId)`
 
-Marque la session comme montée (accusé routeMounted traité).
+Marks the session as mounted (routeMounted acknowledgment handled).
 
-- `routeName` (*string*) : Route montée (non utilisée).
-- `transitionId` (*string|nil*) : Identifiant de transition.
-- **renvoie** : table {success=true} ou {success=false, reason}.
+- `routeName` (*string*) : Mounted route (unused).
+- `transitionId` (*string|nil*) : Transition identifier.
+- **returns**: table {success=true} or {success=false, reason}.
 
 #### `ui_router_managers_transitionManager.markProgress(routeName, milestone, transitionId)`
 
-Enregistre un jalon de progression rapporté par le framework après validation de l'accusé.
+Records a progress milestone reported by the framework after validation of the acknowledgment.
 
-- `routeName` (*string*) : Route accusée.
-- `milestone` (*string*) : routeChangeReceived ou routeNavigationStarted.
-- `transitionId` (*string|nil*) : Identifiant de transition.
-- **renvoie** : table {success=true} ou {success=false, reason}.
+- `routeName` (*string*) : Acknowledged route.
+- `milestone` (*string*) : routeChangeReceived or routeNavigationStarted.
+- `transitionId` (*string|nil*) : Transition identifier.
+- **returns**: table {success=true} or {success=false, reason}.
 
 #### `ui_router_managers_transitionManager.start(context)`
 
-Démarre une transition : génère l'identifiant, enregistre route cible/origine et session, passe en transitioning. Échoue si une transition est déjà en cours ou sans route cible.
+Starts a transition: generates the identifier, records target/origin route and session, switches to transitioning. Fails if a transition is already in progress or without a target route.
 
-- `context` (*table*) : {toRoute (ou resolved), fromRoute?, kind?, session?}.
-- **renvoie** : boolean true si démarrée ; false sinon.
-- **renvoie** : string Identifiant de transition, ou raison (transition_already_in_progress, no_target_route) en cas d'échec.
+- `context` (*table*) : {toRoute (or resolved), fromRoute?, kind?, session?}.
+- **returns**: boolean true if started; false otherwise.
+- **returns**: string Transition identifier, or reason (transition_already_in_progress, no_target_route) on failure.
 
 #### `ui_router_managers_transitionManager.update(dtReal)`
 
-Fait avancer le chronométrage de la transition active ; appelée par router.onGuiUpdate. Renvoie nil si rien à signaler.
+Advances the timing of the active transition; called by router.onGuiUpdate. Returns nil if there is nothing to report.
 
-- `dtReal` (*number*) : Delta de temps réel en secondes.
-- **renvoie** : table|nil {type="resendRouteChange", entry} ou {type="timeout", reason, classification?}.
+- `dtReal` (*number*) : Real time delta in seconds.
+- **returns**: table|nil {type="resendRouteChange", entry} or {type="timeout", reason, classification?}.
 
 #### `ui_router_managers_transitionManager.validateAcknowledgement(routeName, transitionId)`
 
-Valide un accusé d'un framework contre la transition active (voir notes).
+Validates a framework acknowledgment against the active transition (see notes).
 
-- `routeName` (*string|nil*) : Route accusée (optionnel).
-- `transitionId` (*string|nil*) : Identifiant de transition renvoyé par l'UI (optionnel).
-- **renvoie** : table {success=true} ou {success=false, reason}.
+- `routeName` (*string|nil*) : Acknowledged route (optional).
+- `transitionId` (*string|nil*) : Transition identifier returned by the UI (optional).
+- **returns**: table {success=true} or {success=false, reason}.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/managers/transitionManager.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/managers/transitionManager.lua`.*

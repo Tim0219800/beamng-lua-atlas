@@ -1,49 +1,49 @@
 # `scenario_raceMarkers_crawlMarker`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/crawlMarker.lua` · VM : Game Engine (GE) · 541 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/crawlMarker.lua` · VM: Game Engine (GE) · 541 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/crawlMarker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/crawlMarker")` (file under extensions/ but not a regular extension)
 
-Marqueur de checkpoint pour les parcours de franchissement (crawl) : une flèche flottante qui regarde la caméra, deux drapeaux orange plantés de part et d'autre du passage (posés sur le terrain), et une grande colonne visible de loin. Il a ses propres modes (inactive, current, recovery, bonus, skipped, final, finished). La flèche monte jusqu'à une hauteur d'où elle reste visible de la caméra (lancers de rayon statiques). Compatible avec l'écran partagé (setRenderViewPlayer). Le module renvoie un constructeur : require('scenario/raceMarkers/crawlMarker')(id) donne un objet de la classe C.
+Checkpoint marker for crawl courses: a floating arrow that looks at the camera, two orange flags planted on either side of the passage (placed on the terrain), and a tall column visible from afar. It has its own modes (inactive, current, recovery, bonus, skipped, final, finished). The arrow rises to a height from which it stays visible to the camera (static raycasts). Compatible with split screen (setRenderViewPlayer). The module returns a constructor: require('scenario/raceMarkers/crawlMarker')(id) gives an object of class C.
 
-## Remarques
+## Notes
 
-- Couleurs par mode : default blanc, inactive gris (0.5), current orange (1, 0.5, 0), recovery jaune (1, 0.85, 0), bonus violet (0.8, 0.2, 1), skipped rouge (1, 0.07, 0), final bleu (0.1, 0.3, 1), finished vert (0.4, 1, 0.2), hidden noir. Le mode 'finished' masque la base.
-- Les modes actifs (current, recovery, bonus, final) ont une colonne visible dès 40 m au lieu de 200 m et la flèche cherche un point dégagé jusqu'à 100 m de hauteur.
-- setToCheckpoint(wp) lit wp.pos (le point est replaqué au sol : core_terrain.getTerrainHeight ou be:getSurfaceHeightBelow), wp.radius, wp.fadeNear (5 par défaut), wp.fadeFar (25), wp.delay (secondes avant que la flèche monte), wp.dir (direction du passage) ou wp.nextPos (le sens se déduit alors du checkpoint suivant).
-- Les drapeaux sont décalés de 2.5 m de chaque côté de la direction de passage et alignés sur la normale du terrain.
-- drawOnMinimap(td) dessine un cercle coloré avec ui_apps_minimap_utils.simpleCircle (si le mode n'est pas 'hidden') ; il est appelé par scenario_race_marker.drawOnMinimap.
-- Le premier paramètre de update est dt (durée réelle), le second dtSim (durée simulée, utilisée pour le délai et les ressorts de hauteur et d'échelle).
-- La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim).
+- Colors per mode: default white, inactive gray (0.5), current orange (1, 0.5, 0), recovery yellow (1, 0.85, 0), bonus purple (0.8, 0.2, 1), skipped red (1, 0.07, 0), final blue (0.1, 0.3, 1), finished green (0.4, 1, 0.2), hidden black. The 'finished' mode hides the base.
+- The active modes (current, recovery, bonus, final) have a column visible from 40 m instead of 200 m, and the arrow looks for a clear spot up to 100 m high.
+- setToCheckpoint(wp) reads wp.pos (the point is snapped back to the ground: core_terrain.getTerrainHeight or be:getSurfaceHeightBelow), wp.radius, wp.fadeNear (5 by default), wp.fadeFar (25), wp.delay (seconds before the arrow rises), wp.dir (passage direction) or wp.nextPos (the direction is then inferred from the next checkpoint).
+- The flags are offset by 2.5 m on each side of the passage direction and aligned to the terrain normal.
+- drawOnMinimap(td) draws a colored circle with ui_apps_minimap_utils.simpleCircle (if the mode is not 'hidden'); it is called by scenario_race_marker.drawOnMinimap.
+- The first parameter of update is dt (real duration), the second dtSim (simulated duration, used for the delay and the height and scale springs).
+- The extracted page shows update(dtSim); the actual signature is update(dt, dtSim).
 
-## Classe `C`
+## Class `C`
 
-Marqueur crawl avec flèche, drapeaux et colonne.
+Crawl marker with arrow, flags and column.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_crawlMarker")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_crawlMarker")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:applyRenderViewMask()` | Cache les objets du marqueur dans les vues d'écran partagé des autres joueurs que renderViewPlayer. | 454 |
-| `C:clearMarkers()` | Supprime les objets créés (en effaçant leur masque de vue). | 518 |
-| `C:createMarkers()` | Supprime les anciens objets puis crée flèche, deux drapeaux et colonne. | 488 |
-| `C:createObject(shapeName, objectName)` | Crée un TSStatic caché enregistré sous objectName. | 466 |
-| `C:drawOnMinimap(td)` | Dessine un cercle sur la minicarte à la position du marqueur, avec la couleur du mode. | 394 |
-| `C:hide()` | Appelle setVisibility(false). | 436 |
-| `C:init(id)` | Constructeur : initialise l'état, les lisseurs et les couleurs. | 91 |
-| `C:placeFlags()` | Place les deux drapeaux de part et d'autre de la position selon pathDirection, au sol. | 163 |
-| `C:setMode(mode)` | Change de mode : affiche (sauf 'hidden'), mémorise l'ancien mode et relance le fondu ; ne fait rien de plus si le mode est inchangé. | 401 |
-| `C:setRenderViewPlayer(player)` | Réserve ce marqueur à la vue d'un joueur (nil pour tous) et applique le masque. | 461 |
-| `C:setToCheckpoint(wp)` | Place le marqueur sur un checkpoint et réinitialise les caches de hauteur. | 346 |
-| `C:setVisibility(v)` | Affiche ou cache flèche, drapeaux et colonne. | 419 |
-| `C:show()` | Appelle setVisibility(true). | 437 |
-| `C:update(dt, dtSim)` | Appel par image : couleur, alpha selon la distance, orientation et hauteur de la flèche, échelle, colonne. | 185 |
+| `C:applyRenderViewMask()` | Hides the marker's objects in the split-screen views of players other than renderViewPlayer. | 454 |
+| `C:clearMarkers()` | Removes the created objects (clearing their view mask). | 518 |
+| `C:createMarkers()` | Removes the old objects then creates the arrow, two flags and column. | 488 |
+| `C:createObject(shapeName, objectName)` | Creates a hidden TSStatic registered under objectName. | 466 |
+| `C:drawOnMinimap(td)` | Draws a circle on the minimap at the marker's position, with the mode's color. | 394 |
+| `C:hide()` | Calls setVisibility(false). | 436 |
+| `C:init(id)` | Constructor: initializes the state, the smoothers and the colors. | 91 |
+| `C:placeFlags()` | Places the two flags on either side of the position according to pathDirection, on the ground. | 163 |
+| `C:setMode(mode)` | Changes mode: shows (except 'hidden'), remembers the old mode and restarts the fade; does nothing more if the mode is unchanged. | 401 |
+| `C:setRenderViewPlayer(player)` | Reserves this marker for one player's view (nil for all) and applies the mask. | 461 |
+| `C:setToCheckpoint(wp)` | Places the marker on a checkpoint and resets the height caches. | 346 |
+| `C:setVisibility(v)` | Shows or hides arrow, flags and column. | 419 |
+| `C:show()` | Calls setVisibility(true). | 437 |
+| `C:update(dt, dtSim)` | Per-frame call: color, alpha depending on distance, arrow orientation and height, scale, column. | 185 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getSurfaceHeightBelow`
 - `obj:` `delete`, `renderViewMaskClear`, `setField`, `setPosition`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/crawlMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/crawlMarker.lua`.*

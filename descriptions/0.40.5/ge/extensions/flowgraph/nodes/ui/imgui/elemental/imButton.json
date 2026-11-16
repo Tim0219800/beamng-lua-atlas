@@ -1,21 +1,21 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imButton.lua",
-  "module": "Nœud flowgraph « im Button » (catégorie repeat_instant, tag imgui) : bouton imgui pleine largeur dans la fenêtre courante. Entrée « text ». Sorties : « down » (impulsion au clic), « hold » (maintenu, caché), « up » (relâché, caché).",
+  "module": "Flowgraph node \"im Button\" (category repeat_instant, tag imgui): full-width imgui button in the current window. Input \"text\". Outputs: \"down\" (pulse on click), \"hold\" (held, hidden), \"up\" (released, hidden).",
   "notes": [
-    "Les états ne sont détectés que lorsque la souris survole le bouton."
+    "States are detected only while the mouse hovers over the button."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_executionStarted": {
-          "desc": "Sorties à false.",
+          "desc": "Outputs to false.",
           "internal": true
         },
         "work": {
-          "desc": "Dessine le bouton et met à jour down/hold/up selon la souris.",
+          "desc": "Draws the button and updates down/hold/up according to the mouse.",
           "internal": true
         }
       }

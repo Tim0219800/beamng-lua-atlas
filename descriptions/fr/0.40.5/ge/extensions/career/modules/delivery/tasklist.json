@@ -1,0 +1,50 @@
+{
+  "path": "lua/ge/extensions/career/modules/delivery/tasklist.lua",
+  "module": "Alimente la liste de tâches affichée à l'écran (tasklist) pendant la livraison en carrière. Il regroupe les cargaisons chargées par destination, les cargaisons à récupérer par lieu de ramassage, les tâches de remorque/véhicule, et un en-tête « livraisons actives ». Chaque élément est marqué à mettre à jour ou à effacer, puis envoyé à l'UI à chaque image via guihooks (SetTasklistTask, SetTasklistHeader, DiscardTasklistItem).",
+  "notes": [
+    "Types d'éléments : parcels, pickup, header, et le type de l'offre de véhicule (trailer ou vehicle).",
+    "Les groupes 'parcels' sont regroupés par libellé de destination ; sans modificateur la clé est 'noMods', sinon elle inclut groupId et l'heure de chargement.",
+    "Pour les colis timed, le sous-texte affiche le temps restant avant retard, puis avant « très en retard », puis « late ».",
+    "offerIdToTasklistElementId n'est jamais vidé (seul cargoIdToTasklistElementId est réinitialisé à chaque sendCargoToTasklist).",
+    "À l'effacement, seuls les éléments parcels, pickup, header, trailer et vehicle envoient un message de suppression à l'UI."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : core_vehicleBridge."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook appelé à l'activation de la carrière : mémorise les extensions de livraison.",
+      "internal": true
+    },
+    "sendCargoToTasklist": {
+      "desc": "Reconstruit les éléments de tasklist à partir des conteneurs de cargaison des véhicules proches (asynchrone) : marque tous les anciens éléments à effacer, recrée les groupes parcels et pickup, les tâches de véhicules (dVehicleTasks.getVehicleTasks) et l'en-tête avec le nombre de tâches ou d'objets chargés."
+    },
+    "updateTasklistForCargoId": {
+      "desc": "Marque à rafraîchir l'élément de tasklist qui contient cette cargaison (utile pour le compte à rebours des colis timed).",
+      "params": {"cargoId": {"type": "integer", "desc": "Identifiant de la cargaison."}}
+    },
+    "updateTasklistForOfferId": {
+      "desc": "Marque à rafraîchir l'élément lié à une offre de véhicule/remorque.",
+      "params": {"offerId": {"type": "integer", "desc": "Identifiant de l'offre."}}
+    },
+    "clearTasklistForOfferId": {
+      "desc": "Marque à effacer l'élément lié à une offre de véhicule/remorque.",
+      "params": {"offerId": {"type": "integer", "desc": "Identifiant de l'offre."}}
+    },
+    "clearAll": {
+      "desc": "Marque tous les éléments à effacer ; ils sont retirés à la prochaine mise à jour."
+    },
+    "updateCargoTasklistElements": {
+      "desc": "Parcourt les éléments : envoie à l'UI les suppressions (DiscardTasklistItem / SetTasklistHeader nil) et les mises à jour (SetTasklistTask avec label, subtext, active, type='message'), puis supprime les éléments effacés. Les libellés dépendent de l'étape en cours des tâches de véhicule (coupleTrailer, enterVehicle, bringToDestination/confirmDropOff, putIntoParkingSpot)."
+    },
+    "onUpdate": {
+      "desc": "Hook par image : appelle updateCargoTasklistElements.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s), inutilisé."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s), inutilisé."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s), inutilisé."}
+      },
+      "internal": true
+    }
+  }
+}

@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/customLuaCommand.lua",
-  "module": "Noeud flowgraph « Custom Lua Command » (once_instant). Compile avec loadstring le code Lua recu dans le pin func puis l'execute avec pcall. Sorties : flow (true si l'appel a reussi), return (any) valeur renvoyee par la fonction. Utile pour appeler du code arbitraire depuis un graphe.",
+  "module": "Flowgraph node \"Custom Lua Command\" (once_instant). Compiles with loadstring the Lua code received in the func pin then runs it with pcall. Outputs: flow (true if the call succeeded), return (any) value returned by the function. Useful for calling arbitrary code from a graph.",
   "notes": [
-    "Si le texte ne compile pas, loadstring renvoie nil et pcall(nil) echoue : flow sera false, return contiendra le message d'erreur.",
-    "Seule la premiere valeur de retour est conservee."
+    "If the text does not compile, loadstring returns nil and pcall(nil) fails: flow will be false, return will contain the error message.",
+    "Only the first return value is kept."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Desactive le vidage des pins de sortie au demarrage (clearOutPinsOnStart = false).",
+          "desc": "Disables clearing the output pins at start (clearOutPinsOnStart = false).",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet le pin return a nil au demarrage du graphe.",
+          "desc": "Resets the return pin to nil when the graph starts.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Compile et execute le texte du pin func ; ecrit flow = succes du pcall et return = valeur retournee.",
+          "desc": "Compiles and runs the text of the func pin; writes flow = pcall success and return = returned value.",
           "internal": false
         },
         "_onDeserialized": {
-          "desc": "Compatibilite : convertit l'ancien data.func en pin code en dur 'func' de type string.",
+          "desc": "Compatibility: converts the old data.func into the hard-coded string pin 'func'.",
           "params": {
             "data": {
               "type": "any",
-              "desc": "donnees sauvegardees du noeud"
+              "desc": "saved node data"
             }
           },
           "internal": true

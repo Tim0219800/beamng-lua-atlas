@@ -1,0 +1,209 @@
+{
+  "path": "lua/ge/extensions/ui/router/routeReference.test.lua",
+  "module": "Tests unitaires de routeReference (analyse « route?clé=valeur:portée », décodage URL, fusion des paramètres explicites et inline) et de la propagation des paramètres effectifs aux hooks onEnter/onMount via ResolvedRoute et navigationContext. Lancement : extensions.testFramework_TestManager:runTestFiles(\"routeReference\").",
+  "notes": [
+    "Les fonctions testXxx(ctx) sont exécutées par testFramework_TestManager ; le jeu ne les appelle pas en usage normal."
+  ],
+  "functions": {
+    "testPlainRouteHasNoDecoration": {
+      "desc": "Une route simple n'a ni portée ni paramètres.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testScopeOnlyReference": {
+      "desc": "« route:portée » : portée extraite, aucun paramètre.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testQueryOnlyReference": {
+      "desc": "« route?a=1 » : paramètres extraits, pas de portée.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testQueryAndScopeReference": {
+      "desc": "« route?a=1:portée » : paramètres et portée extraits.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRelativeRoutePreservedThroughParse": {
+      "desc": "La partie route reste relative (« ./options ») après parse.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testUrlDecodingOfQueryValues": {
+      "desc": "Décodage de '+' (espace) et des séquences %XX dans les valeurs.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testUrlDecodingOfEncodedKeyAndDelimiters": {
+      "desc": "Les clés encodées et les délimiteurs encodés sont décodés correctement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRepeatedInlineKeyKeepsLastValue": {
+      "desc": "Une clé répétée garde la dernière valeur.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testBareKeyResolvesToEmptyString": {
+      "desc": "Une clé sans '=' vaut une chaîne vide.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testMalformedEmptyScopeTreatedAsPlain": {
+      "desc": "Une portée vide est ignorée (scope = nil).",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testMalformedEmptyRouteTreatedAsWhole": {
+      "desc": "Une route vide : la référence entière est traitée comme le nom de route.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testMalformedLeadingQueryTreatedAsWhole": {
+      "desc": "Une référence qui commence par '?' est traitée comme un nom de route entier.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testEmptyQuerySegmentsIgnored": {
+      "desc": "Les segments vides de la requête (« a=1&&b=2 ») sont ignorés.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testNonStringReferencePassesThrough": {
+      "desc": "Une référence non-chaîne est renvoyée telle quelle avec des params vides.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testExplicitParamsOverrideInline": {
+      "desc": "mergeParams : les paramètres explicites l'emportent sur les inline.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testMergeWithoutExplicitKeepsInline": {
+      "desc": "mergeParams sans explicites conserve les inline.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testMergeWithoutInlineKeepsExplicit": {
+      "desc": "mergeParams sans inline conserve les explicites.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testCanonicalReferenceReparsesWithoutQuery": {
+      "desc": "La référence canonique (sans requête) se ré-analyse sans dérive au rechargement.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testOnEnterAndOnMountShareEffectiveParams": {
+      "desc": "Reproduit la construction du routeur (parse, merge, requête, entrée) et vérifie que onEnter et onMount reçoivent les mêmes paramètres effectifs.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    },
+    "testRequestPersistsEffectiveParamsWithoutQueryInFullRoute": {
+      "desc": "La requête mémorise les paramètres effectifs et `fullRoute` ne contient plus la requête inline.",
+      "params": {
+        "ctx": {
+          "type": "table",
+          "desc": "Contexte de test du testFramework (setDescription, assert, assertEqual)."
+        }
+      },
+      "internal": true
+    }
+  }
+}

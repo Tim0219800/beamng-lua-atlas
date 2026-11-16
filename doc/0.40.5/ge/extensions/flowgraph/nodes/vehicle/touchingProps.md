@@ -1,19 +1,19 @@
 # `flowgraph_nodes_vehicle_touchingProps`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/touchingProps.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/touchingProps.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/touchingProps")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/touchingProps")` (file under extensions/ but not a regular extension)
 
-Nœud « Props Touch » (catégorie `repeat_instant`, tags collision/collide/hit). Indique si un véhicule touche un objet (prop) d'une liste d'ids, via `map.objects[vehId].objectCollisions`. Pins d'entrée : `flow`, `vehId`, `propsIds` (table d'ids). Sorties : `flow` (true), `touching` (flux), `isTouching` (bool, caché).
+"Props Touch" node (category `repeat_instant`, tags collision/collide/hit). Tells whether a vehicle touches an object (prop) from a list of ids, via `map.objects[vehId].objectCollisions`. Input pins: `flow`, `vehId`, `propsIds` (table of ids). Outputs: `flow` (true), `touching` (flow), `isTouching` (bool, hidden).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Constructeur vide. | 26 |
-| `C:work()` | Parcourt `propsIds` et active `touching` / `isTouching` au premier objet en collision. | 30 |
+| `C:init(mgr, ...)` | Empty constructor. | 26 |
+| `C:work()` | Iterates over `propsIds` and sets `touching` / `isTouching` on the first colliding object. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/touchingProps.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/touchingProps.lua`.*

@@ -1,30 +1,92 @@
 {
   "path": "lua/ge/extensions/scenario/raceMarkers/parkingraceSpotMarker.lua",
-  "module": "Marqueur d'une place de parking pour les courses de parking : trois contours empilés (park_outline_marker.dae, hauteur 1.2 m) et un décalque rayé au sol (parkDecalStripes.png, via Engine.Render.DynamicDecalMgr), dont la couleur est lissée dans le temps. Ce n'est pas un marqueur de checkpoint classique : il n'a pas de setToCheckpoint ni de setMode, on le règle avec setSpot et setColor. Le module renvoie un constructeur : require('scenario/raceMarkers/parkingraceSpotMarker')(id) donne un objet de la classe C.",
-  "usage": "local m = require('scenario/raceMarkers/parkingraceSpotMarker')('spot1')\nm:createMarkers()\nm:setSpot(vec3(100, 50, 10), quat(0, 0, 0, 1), vec3(2.5, 5, 0.5))\nm:setColor({0, 1, 0, 1})\nm:show()\n-- à chaque image :\nm:update(dt)",
+  "module": "Parking spot marker for parking races: three stacked outlines (park_outline_marker.dae, height 1.2 m) and a striped ground decal (parkDecalStripes.png, via Engine.Render.DynamicDecalMgr), whose color is smoothed over time. It is not a classic checkpoint marker: it has no setToCheckpoint or setMode, it is set with setSpot and setColor. The module returns a constructor: require('scenario/raceMarkers/parkingraceSpotMarker')(id) gives an object of class C.",
+  "usage": "local m = require('scenario/raceMarkers/parkingraceSpotMarker')('spot1')\nm:createMarkers()\nm:setSpot(vec3(100, 50, 10), quat(0, 0, 0, 1), vec3(2.5, 5, 0.5))\nm:setColor({0, 1, 0, 1})\nm:show()\n-- every frame:\nm:update(dt)",
   "notes": [
-    "setSpot(pos, rot, scl) : pos est le centre, scl la taille COMPLÈTE de la place sur chaque axe. L'échelle XY des contours suit la convention parkingMarker.lua (scl.y / 2.05).",
-    "setColor accepte {r, g, b, a} (indices 1 à 4) ou une table avec champs r/g/b/a ; les composantes sont lissées avec un taux de 8. Les contours sont toujours opaques (alpha 1), le décalque a un alpha multiplié par 0.9 et un fondu entre 3.5 et 6 m.",
-    "Les décalques doivent être renvoyés à chaque image : update appelle Engine.Render.DynamicDecalMgr.addDecals à chaque appel (alors que visible est vrai).",
-    "Ce marqueur ne possède pas de méthode setMode ni setToCheckpoint : l'utiliser via scenario_race_marker.setModes ou setToCheckpoints échouerait.",
-    "update ne prend que dt (le lisseur de couleur en dépend). Les contours ne sont pas ajoutés à ScenarioObjectsGroup.",
-    "La page extraite affiche setSpot(rot, scl) ; la signature réelle est setSpot(pos, rot, scl)."
+    "setSpot(pos, rot, scl): pos is the center, scl is the FULL size of the spot on each axis. The XY scale of the outlines follows the parkingMarker.lua convention (scl.y / 2.05).",
+    "setColor accepts {r, g, b, a} (indices 1 to 4) or a table with r/g/b/a fields; the components are smoothed at a rate of 8. The outlines are always opaque (alpha 1), the decal has its alpha multiplied by 0.9 and a fade between 3.5 and 6 m.",
+    "The decals must be resubmitted every frame: update calls Engine.Render.DynamicDecalMgr.addDecals on each call (while visible is true).",
+    "This marker has no setMode or setToCheckpoint method: using it via scenario_race_marker.setModes or setToCheckpoints would fail.",
+    "update only takes dt (the color smoother depends on it). The outlines are not added to ScenarioObjectsGroup.",
+    "The extracted page shows setSpot(rot, scl); the actual signature is setSpot(pos, rot, scl)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Marqueur de place de parking avec contours et décalque.",
+      "desc": "Parking spot marker with outlines and decal.",
       "functions": {
-        "init": {"desc": "Constructeur : initialise position, rotation, taille (2.5 x 5 x 0.5), couleurs et lisseurs.", "params": {"id": {"type": "string|integer|nil", "desc": "Identifiant, converti en chaîne (défaut 'parkingraceSpotMarker'), utilisé dans le nom des objets."}}, "internal": true},
-        "createMarkers": {"desc": "Supprime les anciens objets puis crée trois contours TSStatic (collision et décalque désactivés) et prépare les données du décalque au sol.", "params": {}},
-        "clearMarkers": {"desc": "Supprime les contours (après vérification qu'ils existent encore) et les données de décalque.", "params": {}},
-        "setSpot": {"desc": "Configure la place : position, rotation et taille, appliquées aux contours et au décalque.", "params": {"pos": {"type": "vec3|nil", "desc": "Centre de la place."}, "rot": {"type": "quat|nil", "desc": "Orientation."}, "scl": {"type": "vec3|nil", "desc": "Taille complète de la place (m)."}}},
-        "setColor": {"desc": "Fixe la couleur cible (lissée ensuite).", "params": {"color": {"type": "table", "desc": "{r, g, b, a} indexé de 1 à 4 ou avec champs r/g/b/a."}}},
-        "setVisibility": {"desc": "Affiche ou cache les contours.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
-        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
-        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
-        "update": {"desc": "Appel par image quand visible : avance les lisseurs de couleur, colore les contours et renvoie le décalque au gestionnaire de décalques dynamiques.", "params": {"dt": {"type": "number", "desc": "Durée de l'image (s)."}}, "internal": true}
+        "init": {
+          "desc": "Constructor: initializes position, rotation, size (2.5 x 5 x 0.5), colors and smoothers.",
+          "params": {
+            "id": {
+              "type": "string|integer|nil",
+              "desc": "Identifier, converted to a string (default 'parkingraceSpotMarker'), used in the object names."
+            }
+          },
+          "internal": true
+        },
+        "createMarkers": {
+          "desc": "Removes the old objects then creates three TSStatic outlines (collision and decal disabled) and prepares the ground decal data.",
+          "params": {}
+        },
+        "clearMarkers": {
+          "desc": "Removes the outlines (after checking they still exist) and the decal data.",
+          "params": {}
+        },
+        "setSpot": {
+          "desc": "Configures the spot: position, rotation and size, applied to the outlines and the decal.",
+          "params": {
+            "pos": {
+              "type": "vec3|nil",
+              "desc": "Center of the spot."
+            },
+            "rot": {
+              "type": "quat|nil",
+              "desc": "Orientation."
+            },
+            "scl": {
+              "type": "vec3|nil",
+              "desc": "Full size of the spot (m)."
+            }
+          }
+        },
+        "setColor": {
+          "desc": "Sets the target color (smoothed afterwards).",
+          "params": {
+            "color": {
+              "type": "table",
+              "desc": "{r, g, b, a} indexed 1 to 4 or with r/g/b/a fields."
+            }
+          }
+        },
+        "setVisibility": {
+          "desc": "Shows or hides the outlines.",
+          "params": {
+            "v": {
+              "type": "boolean",
+              "desc": "Visibility."
+            }
+          }
+        },
+        "show": {
+          "desc": "Calls setVisibility(true).",
+          "params": {}
+        },
+        "hide": {
+          "desc": "Calls setVisibility(false).",
+          "params": {}
+        },
+        "update": {
+          "desc": "Per-frame call when visible: advances the color smoothers, colors the outlines and resubmits the decal to the dynamic decal manager.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration (s)."
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

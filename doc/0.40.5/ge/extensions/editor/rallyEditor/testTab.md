@@ -1,39 +1,39 @@
 # `editor_rallyEditor_testTab`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/testTab.lua` · VM : Game Engine (GE) · 83 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/testTab.lua` · VM: Game Engine (GE) · 83 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/rallyEditor/testTab")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/rallyEditor/testTab")` (file under extensions/ but not a regular extension)
 
-Onglet « Test » de l'éditeur de rallye (outil de debug). Le module renvoie un constructeur de classe C. Il propose un bouton « Test 1 » (affiche un pacenote système aléatoire « precountdown » dans le log), « Load Recce Mission » (recharge l'extension gameplay_rally_recceApp et charge la mission) et « Unload Recce Mission ».
+"Test" tab of the rally editor (debug tool). The module returns a class C constructor. It offers a "Test 1" button (prints a random "precountdown" system pacenote to the log), "Load Recce Mission" (reloads the gameplay_rally_recceApp extension and loads the mission) and "Unload Recce Mission".
 
-## Remarques
+## Notes
 
-- Aucune fonction exportée : on obtient une instance avec require(...)(rallyEditor).
-- self.driveline est initialisé à nil et n'est plus utilisé (le chargement de driveline a été retiré).
+- No exported function: you get an instance with require(...)(rallyEditor).
+- self.driveline is initialized to nil and is no longer used (driveline loading was removed).
 
-## Classe `C`
+## Class `C`
 
-Instance de l'onglet Test, créée par le constructeur renvoyé par le module (appelle init). Possède windowDescription = 'Test'.
+Test tab instance, created by the constructor returned by the module (calls init). Has windowDescription = 'Test'.
 
-Le module renvoie un constructeur : `local obj = require("editor_rallyEditor_testTab")(options)`.
+The module returns a constructor: `local obj = require("editor_rallyEditor_testTab")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:draw()` | Dessine les trois boutons de test (imgui). Ne fait rien sans notebook. | 42 |
-| `C:drawDebugEntrypoint()` | Point d'entrée de dessin debug en vue 3D ; vide ici. | 71 |
-| `C:init(rallyEditor)` | Constructeur : mémorise rallyEditor, path = nil. | 13 |
-| `C:selected()` | Appelé par l'éditeur de rallye quand l'onglet est sélectionné ; relance le hook onEditorEditModeChanged(nil, nil) pour redessiner la légende des raccourcis. | 25 |
-| `C:setPath(path)` | Définit le notebook courant. | 20 |
-| `C:test1()` | Affiche dans la console le nom d'un pacenote système aléatoire de type 'precountdown' (path:getRandomSystemPacenote). | 64 |
-| `C:unselect()` | Appelé quand l'onglet est quitté ; émet aussi onEditorEditModeChanged(nil, nil). | 36 |
+| `C:draw()` | Draws the three test buttons (imgui). Does nothing without a notebook. | 42 |
+| `C:drawDebugEntrypoint()` | 3D view debug drawing entry point; empty here. | 71 |
+| `C:init(rallyEditor)` | Constructor: stores rallyEditor, path = nil. | 13 |
+| `C:selected()` | Called by the rally editor when the tab is selected; re-emits the onEditorEditModeChanged(nil, nil) hook to redraw the shortcut legend. | 25 |
+| `C:setPath(path)` | Sets the current notebook. | 20 |
+| `C:test1()` | Prints to the console the name of a random system pacenote of type 'precountdown' (path:getRandomSystemPacenote). | 64 |
+| `C:unselect()` | Called when the tab is left; also emits onEditorEditModeChanged(nil, nil). | 36 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onEditorEditModeChanged` — écouté par 1 module(s)
+- `onEditorEditModeChanged` — listened to by 1 module(s)
 
-**Charge les extensions :** `gameplay_rally_recceApp`
+**Loads extensions:** `gameplay_rally_recceApp`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/testTab.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/testTab.lua`.*

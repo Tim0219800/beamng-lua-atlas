@@ -1,405 +1,758 @@
 {
   "path": "lua/vehicle/beamstate.lua",
-  "module": "Etat physique du vehicule cote Lua (VM vehicule, globale `beamstate`). Suit les poutres cassees ou deformees, les groupes de casse (breakGroup) et de deformation (deformGroup), le score de degats par piece et par zone de carrosserie, les pneus crevés, les planetes (attracteurs de gravite locaux) et tous les coupleurs (attelages, remorques). Un moddeur s'en sert pour casser des groupes, crever des pneus, ajouter des degats, lire les degats, attacher ou detacher les coupleurs, sauvegarder ou charger l'etat des noeuds et poutres. Les hooks beamBroken, onBeamDeformed, onCouplerAttached et onCouplerDetached sont appeles par le moteur C++ ; updateGFX et init/reset par la boucle principale du vehicule.",
-  "usage": "-- casser un groupe, crever un pneu, lire les degats\nbeamstate.breakBreakGroup(\"doorFL_break\")\nbeamstate.deflateTire(0)\nlocal zones = beamstate.getBodyZoneDamage() -- {FL=0..1, FR=..., ML, MR, RL, RR}\nprint(beamstate.damage)\n-- toggle des attelages\nbeamstate.toggleCouplers()",
+  "module": "Physical state of the vehicle on the Lua side (vehicle VM, global `beamstate`). Tracks broken or deformed beams, break groups (breakGroup) and deform groups (deformGroup), the damage score per part and per body zone, flat tires, planets (local gravity attractors) and all couplers (hitches, trailers). A modder uses it to break groups, puncture tires, add damage, read damage, attach or detach couplers, save or load the state of nodes and beams. The hooks beamBroken, onBeamDeformed, onCouplerAttached and onCouplerDetached are called by the C++ engine; updateGFX and init/reset by the vehicle's main loop.",
+  "usage": "-- break a group, puncture a tire, read the damage\nbeamstate.breakBreakGroup(\"doorFL_break\")\nbeamstate.deflateTire(0)\nlocal zones = beamstate.getBodyZoneDamage() -- {FL=0..1, FR=..., ML, MR, RL, RR}\nprint(beamstate.damage)\n-- toggle couplers\nbeamstate.toggleCouplers()",
   "notes": [
-    "`beamstate.damage` = energie dissipee du moteur (`obj:getDissipatedEnergy()`) + `damageExt`, recalcule a chaque updateGFX. `damageExt` est incremente par addDamage et de 1000 a chaque pneu qui se degonfle.",
-    "Les ids de poutres, noeuds, roues et triangles sont des `cid` (index 0 base du moteur).",
-    "Zones de carrosserie : lettre 1 = avant/milieu/arriere (F, M, R selon y en tiers), lettre 2 = L/R selon x (moitie). Les poutres de roue (wheelID) ne comptent pas. Valeurs de degats de 0 a 1 environ.",
-    "breakGroupType d'une poutre : 0 ou nil = casser cette poutre casse tout le groupe ; 1 = la poutre est cassee par le groupe mais ne le declenche pas.",
-    "Une poutre ayant `beamPrecompressionTime` (ou une barre de torsion avec `precompressionTime`) active `M.update` pendant le temps de precompression progressive ; ensuite `M.update` revient a `nop`.",
-    "M.update, M.updateRemoteElectrics et M.debugDraw valent `nop` (fonction vide du jeu) et non nil ; les champs listes comme references `nop` sont donc des fonctions vides. `update` n'est actif que pendant la precompression ; `updateRemoteElectrics` est installe a la premiere exportation de donnees de coupleur ; `debugDraw` est actif tant que la visibilite des coupleurs est demandee.",
-    "Bug potentiel : dans init, `for _, tag in b.tag do` (et la variante linkTag) itere sans `pairs`, donc une poutre dont `tag` ou `linkTag` est une table provoque une erreur Lua. La branche linkTag teste aussi `type(b.tag)` au lieu de `type(b.linkTag)`.",
-    "Bug potentiel : onCouplerAttached lit `n.breakGroup` sans verifier que `n` (noeud) est non nil, alors que le test precedent le verifie.",
-    "`beamstate.getVehicleState` contient un faux delai volontaire d'1 seconde (boucle d'attente active) et un log d'avertissement : a ne pas appeler dans une boucle de jeu.",
-    "`brokenBreakGroups` est remplace par une nouvelle table a chaque init/reset : ne pas conserver une reference ancienne. En revanche `deformedBeams`, `couplerCache`, `attachedCouplers`, `nodeNameMap`, `tagBeamMap` sont vides puis remplis en place.",
-    "Champs exportes mais jamais ecrits dans ce fichier : `lowpressure` est mis a true des qu'un pneu est degonfle et remis a false seulement par reset()."
+    "`beamstate.damage` = dissipated energy of the engine (`obj:getDissipatedEnergy()`) + `damageExt`, recomputed on every updateGFX. `damageExt` is incremented by addDamage and by 1000 each time a tire deflates.",
+    "Beam, node, wheel and triangle ids are `cid` (0-based engine index).",
+    "Body zones: letter 1 = front/middle/rear (F, M, R according to y in thirds), letter 2 = L/R according to x (half). Wheel beams (wheelID) do not count. Damage values from 0 to about 1.",
+    "breakGroupType of a beam: 0 or nil = breaking this beam breaks the whole group; 1 = the beam is broken by the group but does not trigger it.",
+    "A beam with `beamPrecompressionTime` (or a torsion bar with `precompressionTime`) activates `M.update` during the progressive precompression time; afterwards `M.update` goes back to `nop`.",
+    "M.update, M.updateRemoteElectrics and M.debugDraw are `nop` (the game's empty function) and not nil; the fields listed as `nop` references are therefore empty functions. `update` is active only during precompression; `updateRemoteElectrics` is installed at the first coupler data export; `debugDraw` is active as long as coupler visibility is requested.",
+    "Potential bug: in init, `for _, tag in b.tag do` (and the linkTag variant) iterates without `pairs`, so a beam whose `tag` or `linkTag` is a table causes a Lua error. The linkTag branch also tests `type(b.tag)` instead of `type(b.linkTag)`.",
+    "Potential bug: onCouplerAttached reads `n.breakGroup` without checking that `n` (node) is non-nil, whereas the previous test checks it.",
+    "`beamstate.getVehicleState` contains a deliberate fake 1-second delay (busy-wait loop) and a warning log: do not call it in a game loop.",
+    "`brokenBreakGroups` is replaced by a new table on every init/reset: do not keep an old reference. On the other hand `deformedBeams`, `couplerCache`, `attachedCouplers`, `nodeNameMap`, `tagBeamMap` are emptied then filled in place.",
+    "Fields exported but never written in this file: `lowpressure` is set to true as soon as a tire is deflated and reset to false only by reset()."
   ],
   "fields": {
-    "damage": {"type": "number", "desc": "Degats cumules du vehicule (energie dissipee + damageExt), mis a jour dans updateGFX."},
-    "damageExt": {"type": "number", "desc": "Degats ajoutes artificiellement (addDamage, pneus crevés +1000). Remis a 0 par init."},
-    "lowpressure": {"type": "boolean", "desc": "true des qu'au moins un pneu a ete degonfle. Remis a false par reset()."},
-    "brokenBreakGroups": {"type": "table<string, boolean>", "desc": "Noms des breakGroups deja casses (valeur true). Table recreee a chaque init."},
-    "deformGroupDamage": {"type": "table<string, table>", "desc": "Par deformGroup : {eventCount, damage, maxEvents, invMaxEvents}. `damage` = eventCount / maxEvents, de 0 a 1 environ."},
-    "deformGroupsTriggerBeam": {"type": "table<string, integer>", "desc": "Par deformGroup, cid de la premiere poutre qui l'a declenche (deformation ou casse)."},
-    "activeParts": {"type": "string[]", "desc": "Noms des parties actives du vehicule, collectees depuis `v.data.slotMap`."},
-    "monetaryDamage": {"type": "number", "desc": "Remis a 0 par init, non modifie ailleurs dans ce fichier."},
-    "nodeNameMap": {"type": "table<string, integer>", "desc": "Nom jbeam d'un noeud -> cid."},
-    "tagBeamMap": {"type": "table<string, integer[]>", "desc": "Tag de poutre -> liste d'ids de poutres portant ce tag."},
-    "linkTagBeamMap": {"type": "table<string, integer[]>", "desc": "linkTag de poutre -> liste d'ids de poutres."},
-    "deformedBeams": {"type": "table<integer, number>", "desc": "Alias de beamDamageTracker : par cid de poutre, ratio de deformation (onBeamDeformed) ou 1 si cassee."},
-    "couplerCache": {"type": "table<integer, table>", "desc": "Copie des noeuds jbeam qui ont un couplerTag ou un tag, indexee par cid de noeud (champs couplerTag, couplerWeld, couplerLock, couplerStrength, couplerRadius, couplerLockRadius, couplerLatchSpeed, couplerTargets, couplerStartRadius, breakGroup, importElectrics, importInputs)."},
-    "attachedCouplers": {"type": "table<integer, table>", "desc": "Coupleurs actuellement attaches, par cid de noeud local : {obj2id, obj2nodeId, exportElectrics?, exportInputs?}."},
-    "update": {"type": "function", "desc": "nop sauf pendant la precompression progressive des poutres/barres de torsion ; appele par la boucle physique."},
-    "updateRemoteElectrics": {"type": "function", "desc": "nop par defaut ; devient la vraie fonction apres sendExportCouplerData. Appelee deux fois par electrics.lua : fusionne dans electrics.values les valeurs recues d'un vehicule attele. Parametre retainReceivedElectrics : si faux/nil, vide la liste recue."},
-    "debugDraw": {"type": "function", "desc": "nop par defaut ; dessine des spheres sur les noeuds de coupleurs libres dont le tag est visible (setCouplerVisiblityExternal)."}
+    "damage": {
+      "type": "number",
+      "desc": "Cumulative vehicle damage (dissipated energy + damageExt), updated in updateGFX."
+    },
+    "damageExt": {
+      "type": "number",
+      "desc": "Artificially added damage (addDamage, punctured tires +1000). Reset to 0 by init."
+    },
+    "lowpressure": {
+      "type": "boolean",
+      "desc": "true as soon as at least one tire has been deflated. Reset to false by reset()."
+    },
+    "brokenBreakGroups": {
+      "type": "table<string, boolean>",
+      "desc": "Names of the breakGroups already broken (value true). Table recreated on every init."
+    },
+    "deformGroupDamage": {
+      "type": "table<string, table>",
+      "desc": "Per deformGroup: {eventCount, damage, maxEvents, invMaxEvents}. `damage` = eventCount / maxEvents, from 0 to about 1."
+    },
+    "deformGroupsTriggerBeam": {
+      "type": "table<string, integer>",
+      "desc": "Per deformGroup, cid of the first beam that triggered it (deformation or break)."
+    },
+    "activeParts": {
+      "type": "string[]",
+      "desc": "Names of the active parts of the vehicle, collected from `v.data.slotMap`."
+    },
+    "monetaryDamage": {
+      "type": "number",
+      "desc": "Reset to 0 by init, not modified elsewhere in this file."
+    },
+    "nodeNameMap": {
+      "type": "table<string, integer>",
+      "desc": "Jbeam name of a node -> cid."
+    },
+    "tagBeamMap": {
+      "type": "table<string, integer[]>",
+      "desc": "Beam tag -> list of ids of beams carrying this tag."
+    },
+    "linkTagBeamMap": {
+      "type": "table<string, integer[]>",
+      "desc": "Beam linkTag -> list of beam ids."
+    },
+    "deformedBeams": {
+      "type": "table<integer, number>",
+      "desc": "Alias of beamDamageTracker: per beam cid, deformation ratio (onBeamDeformed) or 1 if broken."
+    },
+    "couplerCache": {
+      "type": "table<integer, table>",
+      "desc": "Copy of the jbeam nodes that have a couplerTag or a tag, keyed by node cid (fields couplerTag, couplerWeld, couplerLock, couplerStrength, couplerRadius, couplerLockRadius, couplerLatchSpeed, couplerTargets, couplerStartRadius, breakGroup, importElectrics, importInputs)."
+    },
+    "attachedCouplers": {
+      "type": "table<integer, table>",
+      "desc": "Couplers currently attached, by local node cid: {obj2id, obj2nodeId, exportElectrics?, exportInputs?}."
+    },
+    "update": {
+      "type": "function",
+      "desc": "nop except during the progressive precompression of beams/torsion bars; called by the physics loop."
+    },
+    "updateRemoteElectrics": {
+      "type": "function",
+      "desc": "nop by default; becomes the real function after sendExportCouplerData. Called twice by electrics.lua: merges into electrics.values the values received from a coupled vehicle. Parameter retainReceivedElectrics: if false/nil, empties the received list."
+    },
+    "debugDraw": {
+      "type": "function",
+      "desc": "nop by default; draws spheres on the free coupler nodes whose tag is visible (setCouplerVisiblityExternal)."
+    }
   },
   "functions": {
     "setPartCondition": {
-      "desc": "Appliquerait un etat d'integrite/visuel a une piece. Dans cette version le corps est quasi vide (le code utile est commente) : ne fait rien d'utile.",
+      "desc": "Would apply an integrity/visual state to a part. In this version the body is almost empty (the useful code is commented out): does nothing useful.",
       "params": {
-        "partId": {"type": "string", "desc": "Identifiant de la piece."},
-        "partTypeData": {"type": "string[]", "desc": "Liste de types de piece (ex. \"jbeam:breakGroup:nom\")."},
-        "odometer": {"type": "any", "desc": "Non utilise."},
-        "integrity": {"type": "number|table", "desc": "Valeur ou table d'integrite."},
-        "visual": {"type": "number|table", "desc": "Valeur ou table d'etat visuel."}
+        "partId": {
+          "type": "string",
+          "desc": "Part identifier."
+        },
+        "partTypeData": {
+          "type": "string[]",
+          "desc": "List of part types (e.g. \"jbeam:breakGroup:name\")."
+        },
+        "odometer": {
+          "type": "any",
+          "desc": "Unused."
+        },
+        "integrity": {
+          "type": "number|table",
+          "desc": "Integrity value or table."
+        },
+        "visual": {
+          "type": "number|table",
+          "desc": "Visual state value or table."
+        }
       },
       "returns": [],
       "internal": true
     },
     "getPartCondition": {
-      "desc": "Estime l'etat d'une piece a partir de ses breakGroups casses et des poutres deformees (`beamDamage`). La piece (qui doit avoir un flexbody) est dite a remplacer si trop de groupes sont casses (>1, ou tous), plus de 1 % de poutres deformees (>= 0.01) ou plus de 2 poutres cassees (>= 0.9).",
+      "desc": "Estimates the state of a part from its broken breakGroups and deformed beams (`beamDamage`). The part (which must have a flexbody) is said to need replacement if too many groups are broken (>1, or all), more than 1% of beams are deformed (>= 0.01) or more than 2 beams are broken (>= 0.9).",
       "params": {
-        "partId": {"type": "string", "desc": "Identifiant de la piece (pour debug)."},
-        "partTypeData": {"type": "string[]|nil", "desc": "Tags de la piece de forme \"jbeam:breakGroup:nom\", \"jbeam:flexbody\", \"jbeam:beamDamage:<cid>\"."}
+        "partId": {
+          "type": "string",
+          "desc": "Part identifier (for debug)."
+        },
+        "partTypeData": {
+          "type": "string[]|nil",
+          "desc": "Part tags of the form \"jbeam:breakGroup:name\", \"jbeam:flexbody\", \"jbeam:beamDamage:<cid>\"."
+        }
       },
       "returns": [
-        {"type": "table", "desc": "{integrityValue, integrityState, visualValue, visualState} ; visualState.needsReplacement = true et integrityValue = 0 si la piece est trop abimee."},
-        {"type": "boolean", "desc": "true si un etat a pu etre fourni."}
+        {
+          "type": "table",
+          "desc": "{integrityValue, integrityState, visualValue, visualState}; visualState.needsReplacement = true and integrityValue = 0 if the part is too damaged."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if a state could be provided."
+        }
       ],
       "internal": false
     },
     "breakBreakGroup": {
-      "desc": "Casse un groupe : le marque dans brokenBreakGroups, cache les props du groupe, casse toutes ses poutres, detache ses coupleurs et casse les triangles de collision du meme groupe. Previent aussi la camera si c'est un groupe d'occupant (ocpAttach...).",
-      "params": {"g": {"type": "string|nil", "desc": "Nom du breakGroup. nil : ne fait rien."}},
+      "desc": "Breaks a group: marks it in brokenBreakGroups, hides the group's props, breaks all its beams, detaches its couplers and breaks the collision triangles of the same group. Also notifies the camera if it is an occupant group (ocpAttach...).",
+      "params": {
+        "g": {
+          "type": "string|nil",
+          "desc": "Name of the breakGroup. nil: does nothing."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "setCouplerVisiblityExternal": {
-      "desc": "Appelee par un autre vehicule (via BeamEngine:queueAllObjectLua) pour activer/desactiver la surbrillance des coupleurs dont le tag est dans la liste. (Le nom contient la faute \"Visiblity\".)",
+      "desc": "Called by another vehicle (via BeamEngine:queueAllObjectLua) to enable/disable the highlighting of couplers whose tag is in the list. (The name contains the typo \"Visiblity\".)",
       "params": {
-        "sourceObjectID": {"type": "integer", "desc": "Id du vehicule qui diffuse (non utilise)."},
-        "visibleTags": {"type": "table<string, boolean>|false|nil", "desc": "Tags visibles ; faux/nil desactive l'affichage."}
+        "sourceObjectID": {
+          "type": "integer",
+          "desc": "Id of the broadcasting vehicle (unused)."
+        },
+        "visibleTags": {
+          "type": "table<string, boolean>|false|nil",
+          "desc": "Visible tags; false/nil disables the display."
+        }
       },
       "returns": [],
       "internal": true
     },
     "activateAutoCoupling": {
-      "desc": "Active l'attelage automatique : pendant 60 s max, toutes les 0,5 s les coupleurs (tous, ou ceux des tags donnes) sont rearmes via attachCouplers. Diffuse la visibilite des tags aux autres vehicules. Sans argument, prevoit aussi l'extension `couplings`. Ne fait rien si le vehicule n'a aucun coupleur a tag.",
-      "params": {"_nodetag": {"type": "string|string[]|nil", "desc": "Tag(s) de coupleur a viser ; nil = tous les coupleurs libres (ni welded ni locked)."}},
+      "desc": "Enables automatic coupling: for 60 s max, every 0.5 s the couplers (all, or those of the given tags) are rearmed via attachCouplers. Broadcasts tag visibility to other vehicles. Without argument, also arms the `couplings` extension. Does nothing if the vehicle has no tagged coupler.",
+      "params": {
+        "_nodetag": {
+          "type": "string|string[]|nil",
+          "desc": "Coupler tag(s) to target; nil = all free couplers (neither welded nor locked)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "disableAutoCoupling": {
-      "desc": "Arrete l'attelage automatique, efface les tags visibles et previent l'extension couplings.",
+      "desc": "Stops automatic coupling, clears the visible tags and notifies the couplings extension.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "attachCouplers": {
-      "desc": "Arme (obj:attachCoupler) les coupleurs non welded portant un couplerTag, avec leurs parametres jbeam (couplerStrength defaut 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0).",
-      "params": {"_nodetag": {"type": "string|nil", "desc": "Ne traite que ce couplerTag ; nil = tous."}},
+      "desc": "Arms (obj:attachCoupler) the non-welded couplers carrying a couplerTag, with their jbeam parameters (couplerStrength default 1000000, couplerRadius 0.2, couplerLockRadius 0.025, couplerLatchSpeed 0.3, couplerTargets 0).",
+      "params": {
+        "_nodetag": {
+          "type": "string|nil",
+          "desc": "Processes only this couplerTag; nil = all."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "couplerExists": {
-      "desc": "Indique si un tag de coupleur (couplerTag ou tag) existe sur ce vehicule.",
-      "params": {"_nodetag": {"type": "string", "desc": "Tag recherche."}},
-      "returns": [{"type": "boolean|nil", "desc": "true si existe, sinon nil."}],
+      "desc": "Indicates whether a coupler tag (couplerTag or tag) exists on this vehicle.",
+      "params": {
+        "_nodetag": {
+          "type": "string",
+          "desc": "Tag searched."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "true if it exists, otherwise nil."
+        }
+      ],
       "internal": false
     },
     "detachCouplers": {
-      "desc": "Detache (obj:detachCoupler) les coupleurs d'un tag ou tous. Les coupleurs locked ou welded sont ignores sauf si on force. Notifie le jeu (onCouplerDetach) et l'extension couplings.",
+      "desc": "Detaches (obj:detachCoupler) the couplers of a tag or all of them. Locked or welded couplers are ignored unless forced. Notifies the game (onCouplerDetach) and the couplings extension.",
       "params": {
-        "_nodetag": {"type": "string|nil", "desc": "Tag a detacher ; nil = tous."},
-        "forceLocked": {"type": "boolean|nil", "desc": "Detache aussi les coupleurs couplerLock."},
-        "forceWelded": {"type": "boolean|nil", "desc": "Detache aussi les coupleurs couplerWeld."}
+        "_nodetag": {
+          "type": "string|nil",
+          "desc": "Tag to detach; nil = all."
+        },
+        "forceLocked": {
+          "type": "boolean|nil",
+          "desc": "Also detaches couplerLock couplers."
+        },
+        "forceWelded": {
+          "type": "boolean|nil",
+          "desc": "Also detaches couplerWeld couplers."
+        }
       },
       "returns": [],
       "internal": false
     },
     "toggleCouplers": {
-      "desc": "Bascule les attelages ; appelee a l'appui sur la touche L. Sans tag : coupe l'attelage auto s'il est actif, detache tout si un coupleur est attache, sinon lance l'attelage auto. Avec un tag : detache s'il est attache, sinon l'attache (sauf forceAutoCoupling).",
+      "desc": "Toggles couplers; called when the L key is pressed. Without tag: stops auto coupling if active, detaches everything if a coupler is attached, otherwise starts auto coupling. With a tag: detaches if attached, otherwise attaches it (unless forceAutoCoupling).",
       "params": {
-        "_nodetag": {"type": "string|nil", "desc": "Tag cible."},
-        "forceLocked": {"type": "boolean|nil", "desc": "Transmis a detachCouplers."},
-        "forceWelded": {"type": "boolean|nil", "desc": "Transmis a detachCouplers."},
-        "forceAutoCoupling": {"type": "boolean|nil", "desc": "Avec un tag, force la logique de l'attelage automatique."}
+        "_nodetag": {
+          "type": "string|nil",
+          "desc": "Target tag."
+        },
+        "forceLocked": {
+          "type": "boolean|nil",
+          "desc": "Passed to detachCouplers."
+        },
+        "forceWelded": {
+          "type": "boolean|nil",
+          "desc": "Passed to detachCouplers."
+        },
+        "forceAutoCoupling": {
+          "type": "boolean|nil",
+          "desc": "With a tag, forces the automatic coupling logic."
+        }
       },
       "returns": [],
       "internal": false
     },
     "couplerFound": {
-      "desc": "Hook C++ appele quand un coupleur proche est trouve. Corps vide dans cette version (seulement un print commente).",
+      "desc": "C++ hook called when a nearby coupler is found. Empty body in this version (only a commented-out print).",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id de l'autre vehicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre vehicule."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's node."
+        }
       },
       "returns": [],
       "internal": true
     },
     "sendExportCouplerData": {
-      "desc": "Demande a l'autre vehicule (queueObjectLuaCommand -> exportCouplerData) d'exporter vers nous certaines valeurs electrics/inputs, et active updateRemoteElectrics.",
+      "desc": "Asks the other vehicle (queueObjectLuaCommand -> exportCouplerData) to export certain electrics/inputs values to us, and activates updateRemoteElectrics.",
       "params": {
-        "obj2Id": {"type": "integer", "desc": "Id de l'autre vehicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de coupleur de l'autre vehicule."},
-        "data": {"type": "table", "desc": "{electrics = string[], inputs = string[]}."}
+        "obj2Id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's coupler node."
+        },
+        "data": {
+          "type": "table",
+          "desc": "{electrics = string[], inputs = string[]}."
+        }
       },
       "returns": [],
       "internal": false
     },
     "onCouplerAttached": {
-      "desc": "Hook C++ appele quand un coupleur s'attache. Enregistre l'attelage dans attachedCouplers, copie les flags lock/weld entre coupleurs du meme vehicule, coupe l'attelage auto si c'etait ce tag, demande l'import d'electrics/inputs si le noeud a importElectrics/importInputs, restaure ses breakGroups de coupleur, puis previent le jeu (onCouplerAttached cote GE, une seule fois : par le vehicule d'id le plus petit).",
+      "desc": "C++ hook called when a coupler attaches. Records the coupling in attachedCouplers, copies the lock/weld flags between couplers of the same vehicle, stops auto coupling if it was for this tag, requests the import of electrics/inputs if the node has importElectrics/importInputs, restores its coupler breakGroups, then notifies the game (onCouplerAttached on the GE side, only once: by the vehicle with the lowest id).",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id de l'autre vehicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre vehicule."},
-        "attachSpeed": {"type": "number", "desc": "Vitesse d'attache (non utilisee ici)."},
-        "attachEnergy": {"type": "number", "desc": "Energie d'attache (non utilisee ici)."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's node."
+        },
+        "attachSpeed": {
+          "type": "number",
+          "desc": "Attach speed (not used here)."
+        },
+        "attachEnergy": {
+          "type": "number",
+          "desc": "Attach energy (not used here)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerDetached": {
-      "desc": "Hook C++ appele quand un coupleur se detache. Retire l'attelage, casse les breakGroups du noeud si breakGroupType vaut 0 ou nil, puis previent le jeu (onCouplerDetached cote GE, une seule fois par paire).",
+      "desc": "C++ hook called when a coupler detaches. Removes the coupling, breaks the node's breakGroups if breakGroupType is 0 or nil, then notifies the game (onCouplerDetached on the GE side, only once per pair).",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "obj2id": {"type": "integer", "desc": "Id de l'autre vehicule."},
-        "obj2nodeId": {"type": "integer", "desc": "cid du noeud de l'autre vehicule."},
-        "breakForce": {"type": "number", "desc": "Force de rupture transmise au jeu."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "obj2id": {
+          "type": "integer",
+          "desc": "Id of the other vehicle."
+        },
+        "obj2nodeId": {
+          "type": "integer",
+          "desc": "cid of the other vehicle's node."
+        },
+        "breakForce": {
+          "type": "number",
+          "desc": "Break force passed to the game."
+        }
       },
       "returns": [],
       "internal": true
     },
     "getCouplerOffset": {
-      "desc": "Renvoie la position de chaque coupleur relative au noeud de reference du vehicule (refNodes[0].ref).",
-      "params": {"couplerTag": {"type": "string|nil", "desc": "Filtre sur couplerTag ou tag ; nil ou \"\" = tous."}},
-      "returns": [{"type": "table<integer, table>", "desc": "Par cid : {x, y, z, couplerTag, tag}. Table vide si pas de noeuds."}],
+      "desc": "Returns the position of each coupler relative to the vehicle's reference node (refNodes[0].ref).",
+      "params": {
+        "couplerTag": {
+          "type": "string|nil",
+          "desc": "Filter on couplerTag or tag; nil or \"\" = all."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, table>",
+          "desc": "Per cid: {x, y, z, couplerTag, tag}. Empty table if there are no nodes."
+        }
+      ],
       "internal": false
     },
     "exportCouplerData": {
-      "desc": "Appelee depuis le vehicule qui veut importer des electrics. Chez le fournisseur, ajoute les electrics/inputs demandes a la liste transmise chaque frame (dans updateGFX) vers l'autre vehicule.",
+      "desc": "Called from the vehicle that wants to import electrics. On the provider, adds the requested electrics/inputs to the list sent every frame (in updateGFX) to the other vehicle.",
       "params": {
-        "nodeid": {"type": "integer", "desc": "cid du noeud local de coupleur."},
-        "dataList": {"type": "table", "desc": "{electrics = string[], inputs = string[]}."}
+        "nodeid": {
+          "type": "integer",
+          "desc": "cid of the local coupler node."
+        },
+        "dataList": {
+          "type": "table",
+          "desc": "{electrics = string[], inputs = string[]}."
+        }
       },
       "returns": [],
       "internal": true
     },
     "importCouplerData": {
-      "desc": "Appelee par l'hote fournisseur. Stocke les electrics recus (fusionnes ensuite dans electrics.values par updateRemoteElectrics) et rejoue les inputs via input.event(nom, valeur, 2). Ignore les donnees si le coupleur n'est plus attache.",
+      "desc": "Called by the provider host. Stores the received electrics (then merged into electrics.values by updateRemoteElectrics) and replays the inputs via input.event(name, value, 2). Ignores the data if the coupler is no longer attached.",
       "params": {
-        "nodeId": {"type": "integer", "desc": "cid du noeud local."},
-        "data": {"type": "table", "desc": "{electrics = table<string, any>, inputs = table<string, number>}."}
+        "nodeId": {
+          "type": "integer",
+          "desc": "cid of the local node."
+        },
+        "data": {
+          "type": "table",
+          "desc": "{electrics = table<string, any>, inputs = table<string, number>}."
+        }
       },
       "returns": [],
       "internal": true
     },
     "requestSkeletonState": {
-      "desc": "Envoie a l'UI l'etat des poutres (`beamDamageTracker`) via guihooks \"VehicleSkeletonState\" si un joueur est assis dans ce vehicule. Appelee aussi toutes les 0,25 s quand des degats ont change.",
+      "desc": "Sends the beam state (`beamDamageTracker`) to the UI via guihooks \"VehicleSkeletonState\" if a player is seated in this vehicle. Also called every 0.25 s when damage has changed.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "deflateTire": {
-      "desc": "Degonfle un pneu. Au premier appel pour la roue : marque isTireDeflated, affiche le message, joue le son d'eclatement, enregistre le degat, appelle le hook `onTireDeflated(wheelid)` via extensions.hook, ajoute 1000 a damageExt et ramollit les poutres de la bande de roulement, des flancs et de la pression. Les appels suivants font monter le compteur ; au-dela de 4 le groupe de pression est vide.",
-      "params": {"wheelid": {"type": "integer", "desc": "Index de roue (v.data.wheels / wheels.wheels)."}},
+      "desc": "Deflates a tire. On the first call for the wheel: marks isTireDeflated, displays the message, plays the burst sound, records the damage, calls the hook `onTireDeflated(wheelid)` via extensions.hook, adds 1000 to damageExt and softens the beams of the tread, sidewalls and pressure. Subsequent calls increment the counter; beyond 4 the pressure group is emptied.",
+      "params": {
+        "wheelid": {
+          "type": "integer",
+          "desc": "Wheel index (v.data.wheels / wheels.wheels)."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "delPlanet": {
-      "desc": "Supprime une planete (attracteur de gravite) identifiee par centre, rayon et masse exacts, puis met a jour le moteur.",
+      "desc": "Removes a planet (gravity attractor) identified by exact center, radius and mass, then updates the engine.",
       "params": {
-        "center": {"type": "vec3", "desc": "Centre."},
-        "radius": {"type": "number", "desc": "Rayon."},
-        "mass": {"type": "number", "desc": "Masse."}
+        "center": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "radius": {
+          "type": "number",
+          "desc": "Radius."
+        },
+        "mass": {
+          "type": "number",
+          "desc": "Mass."
+        }
       },
       "returns": [],
       "internal": false
     },
     "addPlanet": {
-      "desc": "Ajoute une planete (attracteur) via obj:setPlanets. Avec dt, la planete est temporaire : si elle existe deja avec dt > 0 on prolonge sa duree, avec dt = 0 on la supprime.",
+      "desc": "Adds a planet (attractor) via obj:setPlanets. With dt, the planet is temporary: if it already exists with dt > 0 its duration is extended, with dt = 0 it is removed.",
       "params": {
-        "center": {"type": "vec3", "desc": "Centre."},
-        "radius": {"type": "number", "desc": "Rayon."},
-        "mass": {"type": "number", "desc": "Masse."},
-        "dt": {"type": "number|nil", "desc": "Duree de vie en secondes ; nil = permanente."}
+        "center": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "radius": {
+          "type": "number",
+          "desc": "Radius."
+        },
+        "mass": {
+          "type": "number",
+          "desc": "Mass."
+        },
+        "dt": {
+          "type": "number|nil",
+          "desc": "Lifetime in seconds; nil = permanent."
+        }
       },
       "returns": [],
       "internal": false
     },
     "setPlanets": {
-      "desc": "Remplace toutes les planetes. Le tableau est lu par triplets (centre, rayon, masse).",
-      "params": {"p": {"type": "table", "desc": "{vec3, rayon, masse, vec3, rayon, masse, ...}."}},
+      "desc": "Replaces all planets. The array is read in triplets (center, radius, mass).",
+      "params": {
+        "p": {
+          "type": "table",
+          "desc": "{vec3, radius, mass, vec3, radius, mass, ...}."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "updateGFX": {
-      "desc": "Appelee chaque frame graphique. Gere les minuteurs des planetes temporaires, recalcule `damage`, le score de degats par piece, envoie l'etat du squelette a l'UI (au plus toutes les 0,25 s), pilote l'attelage automatique (timeout 60 s) et transmet aux vehicules attelés les electrics/inputs demandes.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Called every graphics frame. Handles the timers of temporary planets, recomputes `damage`, the damage score per part, sends the skeleton state to the UI (at most every 0.25 s), drives automatic coupling (60 s timeout) and passes the requested electrics/inputs to coupled vehicles.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "registerExternalCouplerBreakGroup": {
-      "desc": "Enregistre un cid de noeud-coupleur dans un breakGroup, pour qu'un breakBreakGroup ulterieur le detache. Utilisee par des extensions de couplage.",
+      "desc": "Registers a coupler node cid in a breakGroup, so that a later breakBreakGroup detaches it. Used by coupling extensions.",
       "params": {
-        "breakGroup": {"type": "string", "desc": "Nom du groupe."},
-        "cid": {"type": "integer", "desc": "cid du noeud de coupleur."}
+        "breakGroup": {
+          "type": "string",
+          "desc": "Group name."
+        },
+        "cid": {
+          "type": "integer",
+          "desc": "cid of the coupler node."
+        }
       },
       "returns": [],
       "internal": false
     },
     "torsionBarBroken": {
-      "desc": "Hook C++ appele quand une barre de torsion casse. Si elle a un breakGroup, cache les props et casse le groupe (breakGroupType 0 ou nil), comme beamBroken le fait pour les poutres.",
+      "desc": "C++ hook called when a torsion bar breaks. If it has a breakGroup, hides the props and breaks the group (breakGroupType 0 or nil), as beamBroken does for beams.",
       "params": {
-        "id": {"type": "integer", "desc": "Index de la barre de torsion dans v.data.torsionbars."},
-        "energy": {"type": "number", "desc": "Energie de rupture (non utilisee)."}
+        "id": {
+          "type": "integer",
+          "desc": "Index of the torsion bar in v.data.torsionbars."
+        },
+        "energy": {
+          "type": "number",
+          "desc": "Break energy (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "beamBroken": {
-      "desc": "Hook C++ appele quand une poutre casse. Met a jour le suivi de degats (zone de carrosserie, piece), degonfle le pneu ou le groupe de pression concerne, casse les triangles de collision et les meshes, les rails, propage au breakGroup (breakGroupType 0/nil), change le materiau (deformSwitches) et lance des particules (plastique, verre, bois).",
+      "desc": "C++ hook called when a beam breaks. Updates the damage tracking (body zone, part), deflates the relevant tire or pressure group, breaks collision triangles and meshes, rails, propagates to the breakGroup (breakGroupType 0/nil), changes the material (deformSwitches) and spawns particles (plastic, glass, wood).",
       "params": {
-        "id": {"type": "integer", "desc": "cid de la poutre."},
-        "energy": {"type": "number", "desc": "Energie de rupture (non utilisee)."}
+        "id": {
+          "type": "integer",
+          "desc": "cid of the beam."
+        },
+        "energy": {
+          "type": "number",
+          "desc": "Break energy (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "isTriangleBroken": {
-      "desc": "Indique si un triangle de collision est casse (absent du suivi interne).",
-      "params": {"triId": {"type": "integer", "desc": "cid du triangle."}},
-      "returns": [{"type": "boolean", "desc": "true si casse ou inconnu."}],
+      "desc": "Indicates whether a collision triangle is broken (absent from the internal tracking).",
+      "params": {
+        "triId": {
+          "type": "integer",
+          "desc": "cid of the triangle."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if broken or unknown."
+        }
+      ],
       "internal": false
     },
     "init": {
-      "desc": "Reconstruit tout l'etat a partir de `v.data` : remet les degats a zero, vide les caches, reindexe triangles, breakGroups, deformGroups, coupleurs, tags de poutres, zones de carrosserie, donnees de pieces ; prepare la precompression retardee, la liste des signaux de pieces, et enregistre le menu radial des coupleurs. Appelee au chargement du vehicule.",
+      "desc": "Rebuilds the whole state from `v.data`: resets damage to zero, empties caches, reindexes triangles, breakGroups, deformGroups, couplers, beam tags, body zones, part data; prepares the delayed precompression, the part signal list, and registers the couplers radial menu. Called when the vehicle loads.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "onBeamDeformed": {
-      "desc": "Hook C++ appele seulement pour les poutres qui ont un seuil de deformation. Met a jour `deformedBeams`, les degats de zone et de piece, change de materiau (deformSwitches) et compte les evenements du ou des deformGroup.",
+      "desc": "C++ hook called only for beams that have a deformation threshold. Updates `deformedBeams`, zone and part damage, changes material (deformSwitches) and counts the events of the deformGroup(s).",
       "params": {
-        "id": {"type": "integer", "desc": "cid de la poutre."},
-        "ratio": {"type": "number", "desc": "Ratio de deformation de la poutre."}
+        "id": {
+          "type": "integer",
+          "desc": "cid of the beam."
+        },
+        "ratio": {
+          "type": "number",
+          "desc": "Deformation ratio of the beam."
+        }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Reinitialise l'etat (appelle init) et remet `lowpressure` a false. Appelee au reset du vehicule.",
+      "desc": "Reinitializes the state (calls init) and resets `lowpressure` to false. Called on vehicle reset.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "breakAllBreakgroups": {
-      "desc": "Casse toutes les poutres qui ont un breakGroup (obj:breakBeam) et casse aussi les groupes qui ne contiennent que des coupleurs.",
+      "desc": "Breaks all beams that have a breakGroup (obj:breakBeam) and also breaks the groups that contain only couplers.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "breakHinges": {
-      "desc": "Casse les poutres dont un breakGroup contient \"hinge\" ou \"latch\" (charnieres, loquets), ainsi que les groupes de coupleurs de ce type.",
+      "desc": "Breaks the beams with a breakGroup containing \"hinge\" or \"latch\" (hinges, latches), as well as coupler groups of this type.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "deflateTires": {
-      "desc": "Appelle deflateTire pour toutes les roues.",
+      "desc": "Calls deflateTire for all wheels.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "deflateRandomTire": {
-      "desc": "Degonfle un pneu pris au hasard parmi ceux qui ne sont pas deja degonfles.",
+      "desc": "Deflates a randomly chosen tire among those not already deflated.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "triggerDeformGroup": {
-      "desc": "Declenche le changement de materiau du premier deformSwitches correspondant au groupe de deformation donne.",
-      "params": {"group": {"type": "string|nil", "desc": "Nom du deformGroup ; nil ne fait rien."}},
+      "desc": "Triggers the material change of the first deformSwitches matching the given deform group.",
+      "params": {
+        "group": {
+          "type": "string|nil",
+          "desc": "Name of the deformGroup; nil does nothing."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "addDamage": {
-      "desc": "Ajoute des degats artificiels a `damageExt` (donc a `damage`).",
-      "params": {"damage": {"type": "number", "desc": "Montant a ajouter."}},
+      "desc": "Adds artificial damage to `damageExt` (and therefore to `damage`).",
+      "params": {
+        "damage": {
+          "type": "number",
+          "desc": "Amount to add."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "requestSkeleton": {
-      "desc": "Pour l'UI : envoie la geometrie des poutres (paires de positions de noeuds) via guihooks \"VehicleSkeleton\", puis l'etat du squelette. Ne fait rien d'affichable si aucun joueur n'est assis.",
+      "desc": "For the UI: sends the beam geometry (pairs of node positions) via guihooks \"VehicleSkeleton\", then the skeleton state. Does nothing displayable if no player is seated.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "hasCouplers": {
-      "desc": "Indique si le vehicule a au moins un coupleur non welded portant un couplerTag.",
-      "params": {"couplerTag": {"type": "string|nil", "desc": "Filtre sur couplerTag ou tag ; nil = tous."}},
-      "returns": [{"type": "boolean", "desc": "true si un coupleur correspond."}],
+      "desc": "Indicates whether the vehicle has at least one non-welded coupler carrying a couplerTag.",
+      "params": {
+        "couplerTag": {
+          "type": "string|nil",
+          "desc": "Filter on couplerTag or tag; nil = all."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a coupler matches."
+        }
+      ],
       "internal": false
     },
     "save": {
-      "desc": "Ecrit un JSON (format \"v2\") de l'etat : positions et masses des noeuds, longueur au repos, cassure et deformation des poutres, etat des hydros et paquets Lua serialises.",
-      "params": {"filename": {"type": "string|nil", "desc": "Chemin ; par defaut `<vehicleDirectory>/vehicle.save.json`."}},
+      "desc": "Writes a JSON (\"v2\" format) of the state: node positions and masses, rest length, beam breakage and deformation, hydro state and serialized Lua packets.",
+      "params": {
+        "filename": {
+          "type": "string|nil",
+          "desc": "Path; by default `<vehicleDirectory>/vehicle.save.json`."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "load": {
-      "desc": "Recharge un fichier ecrit par save. Verifie que le nombre de noeuds/poutres, le dossier du vehicule et le format correspondent, sinon log d'erreur et abandon. Restaure noeuds, masses, longueurs, poutres cassees/deformees puis appelle obj:commitLoad().",
-      "params": {"filename": {"type": "string|nil", "desc": "Chemin ; par defaut `<vehicleDirectory>/vehicle.save.json`."}},
+      "desc": "Reloads a file written by save. Checks that the number of nodes/beams, the vehicle folder and the format match, otherwise logs an error and aborts. Restores nodes, masses, lengths, broken/deformed beams then calls obj:commitLoad().",
+      "params": {
+        "filename": {
+          "type": "string|nil",
+          "desc": "Path; by default `<vehicleDirectory>/vehicle.save.json`."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getVehicleState": {
-      "desc": "Renvoie une photo du vehicule (id, conditions de pieces, itemId de config, position, vecteurs avant et haut). Contient un faux delai de 1 s volontaire (voir notes).",
-      "params": {"...": {"type": "any", "desc": "Valeurs renvoyees telles quelles apres l'etat."}},
+      "desc": "Returns a snapshot of the vehicle (id, parts conditions, config itemId, position, front and up vectors). Contains a deliberate fake 1 s delay (see notes).",
+      "params": {
+        "...": {
+          "type": "any",
+          "desc": "Values returned as is after the state."
+        }
+      },
       "returns": [
-        {"type": "table", "desc": "{objId, partsCondition, itemId, pos, front, up}."},
-        {"type": "any", "desc": "Les arguments supplementaires passes en entree."}
+        {
+          "type": "table",
+          "desc": "{objId, partsCondition, itemId, pos, front, up}."
+        },
+        {
+          "type": "any",
+          "desc": "The extra arguments passed as input."
+        }
       ],
       "internal": false
     },
     "getPartDamageData": {
-      "desc": "Renvoie les pieces ayant un degat strictement positif.",
+      "desc": "Returns the parts with strictly positive damage.",
       "params": {},
-      "returns": [{"type": "table<string, table>", "desc": "partPath -> {name, damage} ; damage = max(poutres cassees / seuil, poutres deformees / seuil), entre 0 et 1."}],
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "partPath -> {name, damage}; damage = max(broken beams / threshold, deformed beams / threshold), between 0 and 1."
+        }
+      ],
       "internal": false
     },
     "getPartDamageScores": {
-      "desc": "Table plate nom-de-signal -> score de degat pour toutes les pieces, y compris celles a 0.",
+      "desc": "Flat table signal-name -> damage score for all parts, including those at 0.",
       "params": {},
-      "returns": [{"type": "table<string, number>", "desc": "Nom court de piece (ou chemin avec \"_\" en cas de doublon) -> score 0 a 1."}],
+      "returns": [
+        {
+          "type": "table<string, number>",
+          "desc": "Short part name (or path with \"_\" in case of duplicates) -> score 0 to 1."
+        }
+      ],
       "internal": false
     },
     "getPartDamageBySignalName": {
-      "desc": "Score de degat d'une piece a partir de son nom de signal.",
-      "params": {"name": {"type": "string", "desc": "Nom de signal (cf. getPartDamageSignalList)."}},
-      "returns": [{"type": "number|nil", "desc": "Score 0 a 1, nil si le nom est inconnu."}],
+      "desc": "Damage score of a part from its signal name.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Signal name (see getPartDamageSignalList)."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Score 0 to 1, nil if the name is unknown."
+        }
+      ],
       "internal": false
     },
     "getPartDamageSignalList": {
-      "desc": "Liste triee des noms de signaux de pieces disponibles.",
+      "desc": "Sorted list of available part signal names.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "{{name = string, type = \"number\"}, ...}."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "{{name = string, type = \"number\"}, ...}."
+        }
+      ],
       "internal": false
     },
     "getBodyZoneDamageValue": {
-      "desc": "Degat d'une zone de carrosserie (somme des poutres cassees + ratios de deformation, divisee par le nombre de poutres de la zone).",
-      "params": {"zone": {"type": "string", "desc": "\"FL\", \"FR\", \"ML\", \"MR\", \"RL\" ou \"RR\"."}},
-      "returns": [{"type": "number", "desc": "Valeur de degat, 0 si zone inconnue ou vide."}],
+      "desc": "Damage of a body zone (sum of broken beams + deformation ratios, divided by the number of beams in the zone).",
+      "params": {
+        "zone": {
+          "type": "string",
+          "desc": "\"FL\", \"FR\", \"ML\", \"MR\", \"RL\" or \"RR\"."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Damage value, 0 if the zone is unknown or empty."
+        }
+      ],
       "internal": false
     },
     "getBodyZoneDamage": {
-      "desc": "Degat des six zones de carrosserie.",
+      "desc": "Damage of the six body zones.",
       "params": {},
-      "returns": [{"type": "table<string, number>", "desc": "{FL=, FR=, ML=, MR=, RL=, RR=}."}],
+      "returns": [
+        {
+          "type": "table<string, number>",
+          "desc": "{FL=, FR=, ML=, MR=, RL=, RR=}."
+        }
+      ],
       "internal": false
     },
     "exportPartDamageData": {
-      "desc": "Ecrit les degats par piece dans le fichier `partDamage.json` (dumpToFile). Outil de debug.",
+      "desc": "Writes the damage per part to the file `partDamage.json` (dumpToFile). Debug tool.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "isPhysicsStepUsed": {
-      "desc": "Indique si beamstate a besoin de la boucle physique (true seulement tant que la precompression retardee est en cours).",
+      "desc": "Indicates whether beamstate needs the physics loop (true only while the delayed precompression is in progress).",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si M.update est actif."}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if M.update is active."
+        }
+      ],
       "internal": true
     }
   }

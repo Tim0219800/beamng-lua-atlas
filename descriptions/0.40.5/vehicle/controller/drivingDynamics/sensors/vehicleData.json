@@ -1,36 +1,140 @@
 {
   "path": "lua/vehicle/controller/drivingDynamics/sensors/vehicleData.lua",
-  "module": "Capteur « données véhicule » du système drivingDynamics (type \"auxiliary\", defaultOrder 54). Il identifie les quatre roues d'angle (avant/arrière, gauche/droite) par leur position, calcule une fois la géométrie du véhicule (empattement, distances centre de gravité-essieux, voie, masse, vitesse caractéristique, inertie en lacet) puis, à chaque pas, les angles de braquage réels des roues et les rapports de vitesse de roue dus au rayon de virage. Les autres modules drivingDynamics (yawControl, STMEstimate, virtualSensors, composants) lisent ces valeurs via cmu.vehicleData.",
+  "module": "\"Vehicle data\" sensor of the drivingDynamics system (type \"auxiliary\", defaultOrder 54). It identifies the four corner wheels (front/rear, left/right) by their position, computes the vehicle geometry once (wheelbase, center-of-gravity-to-axle distances, track width, mass, characteristic speed, yaw inertia) then, at each step, the actual steering angles of the wheels and the wheel speed ratios due to the turning radius. The other drivingDynamics modules (yawControl, STMEstimate, virtualSensors, components) read these values via cmu.vehicleData.",
   "notes": [
-    "Clés jbeam lues dans initSecondStage : skewStiffnessFront, skewStiffnessRear (rigidités de dérive, défaut 0), cornerWheels (liste de noms de roues, défaut {\"FR\",\"FL\",\"RR\",\"RL\"}). Si v.config.partConfigFilename existe, le fichier <vehiclePath>drivingDynamics/<nomConfig>.stat.json est lu et sa section vehicleData (skewStiffnessFront, skewStiffnessRear, cornerWheelData) prend le dessus.",
-    "Si exactement 4 roues d'angle ne sont pas trouvées, une erreur est journalisée et isActive reste false (les statistiques ne sont pas calculées).",
-    "Angles de roue en rad : les angles avant sont multipliés par le signe de sensorHub.steeringInput (positif = braquage à gauche d'après la convention de l'ESC) ; les angles arrière ne reçoivent pas de signe. turningCircleSpeedRatios[nomRoue] = rapport de vitesse attendu dû au virage (1 pour les roues intérieures, outer/inner pour les roues extérieures) ; sous 3 m/s le rayon de virage vient de la géométrie des roues (obj:wheelTurnRadius), au-dessus de 5 m/s de l'accélération latérale, avec transition linéaire entre les deux.",
-    "vehicleStats contient wheelBase, invWheelBase, distanceCOGFrontAxle, distanceCOGRearAxle, trackWidth, trackWidthRefLeft/Right, mass, characteristicSpeed, invSquaredCharacteristicSpeed, skewStiffnessFront/Rear, inertiaZ, ainsi que cogWithoutWheels, cogWithWheels et refNodePos remplis à l'init (non listés dans la table initiale). Les distances en m, la masse en kg, characteristicSpeed en m/s.",
-    "Bug/incohérence : setDebugMode affecte M.update = isDebugEnabled and update or updateDebug (inversé par rapport au sens attendu) ; sans conséquence car update et updateDebug font la même chose.",
-    "updateGFX est vide en mode normal ; en debug il envoie un paquet avec angles et rayons de virage via CMU.sendDebugPacket."
+    "jbeam keys read in initSecondStage: skewStiffnessFront, skewStiffnessRear (cornering stiffnesses, default 0), cornerWheels (list of wheel names, default {\"FR\",\"FL\",\"RR\",\"RL\"}). If v.config.partConfigFilename exists, the file <vehiclePath>drivingDynamics/<configName>.stat.json is read and its vehicleData section (skewStiffnessFront, skewStiffnessRear, cornerWheelData) takes precedence.",
+    "If exactly 4 corner wheels are not found, an error is logged and isActive stays false (the statistics are not computed).",
+    "Wheel angles in rad: the front angles are multiplied by the sign of sensorHub.steeringInput (positive = steering left according to the ESC convention); the rear angles are not signed. turningCircleSpeedRatios[wheelName] = expected speed ratio due to cornering (1 for inner wheels, outer/inner for outer wheels); below 3 m/s the turning radius comes from the wheel geometry (obj:wheelTurnRadius), above 5 m/s from the lateral acceleration, with a linear transition between the two.",
+    "vehicleStats contains wheelBase, invWheelBase, distanceCOGFrontAxle, distanceCOGRearAxle, trackWidth, trackWidthRefLeft/Right, mass, characteristicSpeed, invSquaredCharacteristicSpeed, skewStiffnessFront/Rear, inertiaZ, as well as cogWithoutWheels, cogWithWheels and refNodePos filled at init (not listed in the initial table). Distances in m, mass in kg, characteristicSpeed in m/s.",
+    "Bug/inconsistency: setDebugMode assigns M.update = isDebugEnabled and update or updateDebug (inverted from the expected meaning); harmless because update and updateDebug do the same thing.",
+    "updateGFX is empty in normal mode; in debug it sends a packet with angles and turning radii via CMU.sendDebugPacket."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "defaultOrder": {"type": "number", "desc": "Ordre d'exécution par défaut (54)."},
-    "isActive": {"type": "boolean", "desc": "Vrai quand les quatre roues d'angle ont été trouvées et la géométrie calculée."},
-    "frontLeftWheelAngle": {"type": "number", "desc": "Angle de la roue avant gauche (rad), signé par la direction de braquage."},
-    "frontRightWheelAngle": {"type": "number", "desc": "Angle de la roue avant droite (rad), signé par la direction de braquage."},
-    "frontWheelAngle": {"type": "number", "desc": "Moyenne des deux angles avant (rad)."},
-    "rearLeftWheelAngle": {"type": "number", "desc": "Angle de la roue arrière gauche (rad), non signé."},
-    "rearRightWheelAngle": {"type": "number", "desc": "Angle de la roue arrière droite (rad), non signé."},
-    "rearWheelAngle": {"type": "number", "desc": "Moyenne des deux angles arrière (rad)."},
-    "turningCircleSpeedRatios": {"type": "table<string, number>", "desc": "Rapport de vitesse attendu par nom de roue d'angle, dû au virage (1 = pas de correction)."},
-    "vehicleStats": {"type": "table", "desc": "Géométrie et paramètres dynamiques calculés (voir notes)."},
-    "wheelAccess": {"type": "table", "desc": "Accès aux données des roues d'angle : frontRight, frontLeft, rearRight, rearLeft (entrées de wheels.wheels, nil tant que non trouvées)."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "defaultOrder": {
+      "type": "number",
+      "desc": "Default execution order (54)."
+    },
+    "isActive": {
+      "type": "boolean",
+      "desc": "True when the four corner wheels were found and the geometry computed."
+    },
+    "frontLeftWheelAngle": {
+      "type": "number",
+      "desc": "Front-left wheel angle (rad), signed by the steering direction."
+    },
+    "frontRightWheelAngle": {
+      "type": "number",
+      "desc": "Front-right wheel angle (rad), signed by the steering direction."
+    },
+    "frontWheelAngle": {
+      "type": "number",
+      "desc": "Average of the two front angles (rad)."
+    },
+    "rearLeftWheelAngle": {
+      "type": "number",
+      "desc": "Rear-left wheel angle (rad), unsigned."
+    },
+    "rearRightWheelAngle": {
+      "type": "number",
+      "desc": "Rear-right wheel angle (rad), unsigned."
+    },
+    "rearWheelAngle": {
+      "type": "number",
+      "desc": "Average of the two rear angles (rad)."
+    },
+    "turningCircleSpeedRatios": {
+      "type": "table<string, number>",
+      "desc": "Expected speed ratio per corner wheel name, due to cornering (1 = no correction)."
+    },
+    "vehicleStats": {
+      "type": "table",
+      "desc": "Computed geometry and dynamic parameters (see notes)."
+    },
+    "wheelAccess": {
+      "type": "table",
+      "desc": "Access to the corner wheel data: frontRight, frontLeft, rearRight, rearLeft (entries of wheels.wheels, nil until found)."
+    }
   },
   "functions": {
-    "init": {"desc": "Ne fait rien.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "returns": [], "internal": true},
-    "initSecondStage": {"desc": "Lit la configuration, identifie les roues d'angle, calcule la géométrie, la vitesse caractéristique et l'inertie en lacet, puis passe isActive à true.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (voir notes)."}}, "returns": [], "internal": true},
-    "reset": {"desc": "Réinitialise le lisseur de l'accélération latérale utilisé pour le rayon de virage.", "params": {}, "returns": [], "internal": true},
-    "update": {"desc": "Pas physique : met à jour angles de roue, rayons de virage et turningCircleSpeedRatios.", "params": {"dt": {"type": "number", "desc": "Pas de temps (s)."}}, "returns": [], "internal": true},
-    "updateGFX": {"desc": "Vide en mode normal ; remplacé par une version qui envoie un paquet de debug en mode debug.", "params": {"dt": {"type": "number", "desc": "Pas de temps graphique (s)."}}, "returns": [], "internal": true},
-    "setDebugMode": {"desc": "Active/désactive les journaux et paquets de debug.", "params": {"debugEnabled": {"type": "boolean", "desc": "Vrai pour activer."}}, "returns": []},
-    "registerCMU": {"desc": "Mémorise la référence au CMU (sensorHub, virtualSensors, sendDebugPacket).", "params": {"cmu": {"type": "table", "desc": "Contrôleur CMU."}}, "returns": [], "internal": true},
-    "shutdown": {"desc": "Désactive le capteur (isActive=false, updateGFX et update à nil).", "params": {}, "returns": []}
+    "init": {
+      "desc": "Does nothing.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "initSecondStage": {
+      "desc": "Reads the configuration, identifies the corner wheels, computes the geometry, the characteristic speed and the yaw inertia, then sets isActive to true.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data (see notes)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the lateral acceleration smoother used for the turning radius.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "update": {
+      "desc": "Physics step: updates wheel angles, turning radii and turningCircleSpeedRatios.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Empty in normal mode; replaced by a version that sends a debug packet in debug mode.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Graphics time step (s)."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "setDebugMode": {
+      "desc": "Enables/disables debug logs and packets.",
+      "params": {
+        "debugEnabled": {
+          "type": "boolean",
+          "desc": "True to enable."
+        }
+      },
+      "returns": []
+    },
+    "registerCMU": {
+      "desc": "Stores the reference to the CMU (sensorHub, virtualSensors, sendDebugPacket).",
+      "params": {
+        "cmu": {
+          "type": "table",
+          "desc": "CMU controller."
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "shutdown": {
+      "desc": "Disables the sensor (isActive=false, updateGFX and update set to nil).",
+      "params": {},
+      "returns": []
+    }
   }
 }

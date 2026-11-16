@@ -1,185 +1,185 @@
 # `main`
 
-*Fichier : `lua/ge/main.lua` · VM : Game Engine (GE) · 1814 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/main.lua` · VM: Game Engine (GE) · 1814 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("main")`
+**Access:** `require("main")`
 
-Point d'entrée de la VM Lua « Game Engine » (GE, vmType = 'game'). Le moteur C++ charge ce fichier au démarrage puis appelle ses fonctions globales (onGameEngineStartup, init, update, luaPreRender, clientPreStartMission, vehicleSpawned, onExit…). Chacune relaie en général l'évènement aux extensions via extensions.hook('onXxx', ...). Un moddeur n'appelle presque jamais ces fonctions : il écoute les hooks correspondants dans son extension (onUpdate, onPreRender, onClientStartMission, onVehicleSpawned…). Il utilise en revanche setExtensionUnloadMode, loadPresetExtensions, unloadAutoExtensions, returnToMainMenu et endActiveGameMode.
+Entry point of the "Game Engine" Lua VM (GE, vmType = 'game'). The C++ engine loads this file at startup then calls its global functions (onGameEngineStartup, init, update, luaPreRender, clientPreStartMission, vehicleSpawned, onExit…). Each one generally relays the event to the extensions via extensions.hook('onXxx', ...). A modder almost never calls these functions: they listen to the corresponding hooks in their extension (onUpdate, onPreRender, onClientStartMission, onVehicleSpawned…). They do use setExtensionUnloadMode, loadPresetExtensions, unloadAutoExtensions, returnToMainMenu and endActiveGameMode, however.
 
-## Exemple
+## Example
 
 ```lua
--- extension GE (lua/ge/extensions/monmod.lua)
+-- GE extension (lua/ge/extensions/monmod.lua)
 local M = {}
-local function onInit() setExtensionUnloadMode(M, 'manual') end -- survit aux changements de niveau
-local function onUpdate(dtReal, dtSim, dtRaw) end -- appelé depuis update() de main.lua
-local function onPreRender(dtReal, dtSim, dtRaw) end -- appelé depuis luaPreRender()
+local function onInit() setExtensionUnloadMode(M, 'manual') end -- survives level changes
+local function onUpdate(dtReal, dtSim, dtRaw) end -- called from update() in main.lua
+local function onPreRender(dtReal, dtSim, dtRaw) end -- called from luaPreRender()
 local function onVehicleSpawned(vid, veh) end
 M.onInit, M.onUpdate, M.onPreRender, M.onVehicleSpawned = onInit, onUpdate, onPreRender, onVehicleSpawned
 return M
 ```
 
-## Remarques
+## Notes
 
-- Ordre de chargement du fichier (top-level) : vmType='game', package.path, require luaCore et common/cdefs, définition de log/print (log -> Lua:log, print -> log('A','print',...)), puis mathlib, utils, devUtils, ge_utils, luaProfiler, StackTracePlus (remplace debug.traceback), puis les modules globaux ci-dessous.
-- Modules chargés et exposés en globales par main.lua : Point3F (= vec3), json, guihooks, screenshot, simTimeAuthority (alias rétrocompatible bullettime), WinInput (= Input), extensions (chemins lua/ge/extensions/ et lua/common/extensions/), map, settings (= extensions.core_settings_settings), perf (utils/perf), spawn, setSpawnpoint, serverConnection, server (server/server), commands (server/commands), editor (table vide ; si PlatformSwitches.useEditor est faux : editor.isEditorActive renvoie false et editor.toggleActive ne fait rien), parseArgs (client/parseArgs), MoveManager (table vide), sailingTheHighSeas, photoModeOpen=false, levelLoaded=nil, worldReadyState=-1, logAlways (= print), doStartupProfiling. gameConnection=nil (rétrocompatibilité, getGame() la renvoie).
-- Ordre de démarrage : (1) chargement du fichier ; (2) C++ appelle onPreStart() (vide) puis onGameEngineStartup() qui crée les dossiers settings/ et screenshots/, l'EventManager 'MainEventManager', parseArgs.defaultParseArgs(), client/core initializeCore, client/init initClient, PhysicsPlugin.init, poste l'évènement 'onStart', puis charge un niveau passé en ligne de commande ($levelToLoad) via core_loadMapCmd ; (3) init(reason) charge les extensions de démarrage (startupExtensions) ; (4) à la première frame updateFirstFrame() ; (5) l'UI appelle uiReady(). Dans le code lu, l'appelant exact de init n'est pas dans ce fichier : le commentaire dit qu'elle est aussi appelée au rechargement (Ctrl+L), reason valant 'startup' ou 'reload'.
-- Boucle d'update : update(dtReal, dtSim, dtRaw) est appelée à chaque frame après les entrées et avant la physique. Elle fait : fondu de la musique du menu, settings.settingsTick, core_input_bindings.updateGFX(dtRaw), simTimeAuthority.update(dtReal), hook onUpdate, gestion des véhicules instables, puis (seulement si be:getUpdateUIflag()) hook onGuiUpdate et envoi des streams UI (guihooks.sendStreams), perf.update(), tryCompleteLuaReload. luaPreRender(dtReal, dtSim, dtRaw) est appelée juste avant le rendu et après la physique : map.updateGFX(dtReal, dtSim), hook onPreRender, hook onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw), puis la détection de fin de chargement (worldReadyState).
-- Ordre au chargement d'un niveau : clientPreStartMission (worldReadyState=0, hook onClientPreStartMission, UI 'PreStartMission') -> clientPostStartMission (état de jeu 'freeroam' par défaut, hook onClientPostStartMission) -> clientStartMission (hook onClientStartMission, puis map.assureLoad()). worldReadyState passe à 1 (valeur posée par du code hors de ce fichier, non vue ici) ; dans luaPreRender, quand le véhicule joueur 0 a ses matériaux prêts (ou après 5 s de dtRaw cumulé), l'écran de chargement est quitté, worldReadyState=2 et le hook onWorldReadyState(2) est émis. À la fin : clientEndMission émet onClientPreEndMission, arrête la simulation physique, retire la pause puis émet onClientEndMission.
-- Unités : dtReal, dtSim, dtRaw en secondes (dtSim est le temps simulé, tient compte du ralenti/pause ; dtRaw est le temps brut).
-- Extensions : les startupExtensions sont toutes en unloadMode 'manual' (jamais déchargées au changement de niveau). Les presetExtensions (core_environment, core_weather, gameplay_traffic, gameplay_parking, core_groundMarkers…) sont chargées par loadPresetExtensions() lors de la mise en place d'un mode de jeu. Les autres sont en mode 'auto' et déchargées par unloadAutoExtensions().
-- Instabilité physique : onInstabilityDetected active le mode fantôme du véhicule et le téléporte sur place pendant 1 s (instabilityDetectionTime) ; une deuxième instabilité pendant ce délai supprime le véhicule. Un hook onInstabilityDetected(vid, returnData) permet à une extension de gérer le cas elle-même en mettant returnData.instabilityHandled = true.
-- Bug/incohérence : physicsEngineEvent(...) fait « local args = unpack({...}) » : seule la première valeur est conservée et transmise au hook onPhysicsEngineEvent.
-- Bug/incohérence : onInstabilityDetected appelle v:getJBeamFilename() avant de tester « if v » ; si le véhicule n'existe plus, la fonction plante (la garde plus bas est inutile).
-- Bug/incohérence : validatePrefabJson calcule newPath sans l'utiliser ; loadModScriptsRec est local, jamais appelée dans ce fichier ; handleCommandLineFirstFrame et loadRequiredExtension sont locales (inaccessibles aux extensions).
-- Fonctions obsolètes : loadGameModeModules et registerCoreModule loguent « OUTDATED MOD CODE » et sont prévues pour disparaître ; utiliser unloadAutoExtensions()+loadPresetExtensions()+extensions.load(...) et setExtensionUnloadMode(M,'manual').
-- Fonctions de test/debug (test_prefabv2, load_test_prefabv1/2, test_spawn_prefabv2, test_spawn_prefabv2_massive, test_unload_prefabv2, load_spawn_prefabv2_indirect, runMimalloc_test, convert*/validate* prefab) : outils de développement appelables depuis la console.
+- File load order (top-level): vmType='game', package.path, require luaCore and common/cdefs, definition of log/print (log -> Lua:log, print -> log('A','print',...)), then mathlib, utils, devUtils, ge_utils, luaProfiler, StackTracePlus (replaces debug.traceback), then the global modules below.
+- Modules loaded and exposed as globals by main.lua: Point3F (= vec3), json, guihooks, screenshot, simTimeAuthority (backward-compatible alias bullettime), WinInput (= Input), extensions (paths lua/ge/extensions/ and lua/common/extensions/), map, settings (= extensions.core_settings_settings), perf (utils/perf), spawn, setSpawnpoint, serverConnection, server (server/server), commands (server/commands), editor (empty table; if PlatformSwitches.useEditor is false: editor.isEditorActive returns false and editor.toggleActive does nothing), parseArgs (client/parseArgs), MoveManager (empty table), sailingTheHighSeas, photoModeOpen=false, levelLoaded=nil, worldReadyState=-1, logAlways (= print), doStartupProfiling. gameConnection=nil (backward compatibility, getGame() returns it).
+- Startup order: (1) file load; (2) C++ calls onPreStart() (empty) then onGameEngineStartup() which creates the settings/ and screenshots/ folders, the 'MainEventManager' EventManager, parseArgs.defaultParseArgs(), client/core initializeCore, client/init initClient, PhysicsPlugin.init, posts the 'onStart' event, then loads a level passed on the command line ($levelToLoad) via core_loadMapCmd; (3) init(reason) loads the startup extensions (startupExtensions); (4) on the first frame updateFirstFrame(); (5) the UI calls uiReady(). In the code read, the exact caller of init is not in this file: the comment says it is also called on reload (Ctrl+L), reason being 'startup' or 'reload'.
+- Update loop: update(dtReal, dtSim, dtRaw) is called every frame after the inputs and before the physics. It does: menu music fade, settings.settingsTick, core_input_bindings.updateGFX(dtRaw), simTimeAuthority.update(dtReal), onUpdate hook, handling of unstable vehicles, then (only if be:getUpdateUIflag()) onGuiUpdate hook and sending of the UI streams (guihooks.sendStreams), perf.update(), tryCompleteLuaReload. luaPreRender(dtReal, dtSim, dtRaw) is called just before rendering and after the physics: map.updateGFX(dtReal, dtSim), onPreRender hook, onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw) hook, then the end-of-loading detection (worldReadyState).
+- Order when loading a level: clientPreStartMission (worldReadyState=0, onClientPreStartMission hook, UI 'PreStartMission') -> clientPostStartMission ('freeroam' game state by default, onClientPostStartMission hook) -> clientStartMission (onClientStartMission hook, then map.assureLoad()). worldReadyState goes to 1 (value set by code outside this file, not seen here); in luaPreRender, when player vehicle 0 has its materials ready (or after 5 s of cumulative dtRaw), the loading screen is dismissed, worldReadyState=2 and the onWorldReadyState(2) hook is emitted. At the end: clientEndMission emits onClientPreEndMission, stops the physics simulation, removes the pause then emits onClientEndMission.
+- Units: dtReal, dtSim, dtRaw in seconds (dtSim is the simulated time, accounts for slow motion/pause; dtRaw is the raw time).
+- Extensions: the startupExtensions are all in unloadMode 'manual' (never unloaded on level change). The presetExtensions (core_environment, core_weather, gameplay_traffic, gameplay_parking, core_groundMarkers…) are loaded by loadPresetExtensions() when setting up a game mode. The others are in 'auto' mode and unloaded by unloadAutoExtensions().
+- Physics instability: onInstabilityDetected enables the vehicle's ghost mode and teleports it in place for 1 s (instabilityDetectionTime); a second instability during this delay deletes the vehicle. A hook onInstabilityDetected(vid, returnData) lets an extension handle the case itself by setting returnData.instabilityHandled = true.
+- Bug/inconsistency: physicsEngineEvent(...) does "local args = unpack({...})": only the first value is kept and passed to the onPhysicsEngineEvent hook.
+- Bug/inconsistency: onInstabilityDetected calls v:getJBeamFilename() before testing "if v"; if the vehicle no longer exists, the function crashes (the guard further down is useless).
+- Bug/inconsistency: validatePrefabJson computes newPath without using it; loadModScriptsRec is local, never called in this file; handleCommandLineFirstFrame and loadRequiredExtension are local (inaccessible to extensions).
+- Obsolete functions: loadGameModeModules and registerCoreModule log "OUTDATED MOD CODE" and are due to disappear; use unloadAutoExtensions()+loadPresetExtensions()+extensions.load(...) and setExtensionUnloadMode(M,'manual').
+- Test/debug functions (test_prefabv2, load_test_prefabv1/2, test_spawn_prefabv2, test_spawn_prefabv2_massive, test_unload_prefabv2, load_spawn_prefabv2_indirect, runMimalloc_test, convert*/validate* prefab): development tools callable from the console.
 
-## Fonctions globales définies ici
+## Global functions defined here
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `CEFTypingLostFocus()` | Appelée par le C++ quand le champ de saisie CEF perd le focus ; relaye l'évènement UI 'CEFTypingLostFocus'. | 1264 |
-| `ConsoleInputCallback()` | Callback global vide pour la console imgui ; une extension peut le redéfinir pour recevoir la saisie. | 80 |
-| `checkFSErrors()` | Une seule fois par session : lit Engine.Platform.getFSInfo() ; si une erreur est signalée, affiche un toast d'erreur dans l'UI et logue un message de corruption d'installation. | 923 |
-| `clientEndMission(levelPath)` | Appelée à la fin/déchargement du niveau. Émet onClientPreEndMission, arrête la simulation physique (be:physicsStopSimulation), retire la pause temporelle, puis émet onClientEndMission(levelPath). | 839 |
-| `clientPostStartMission(levelPath)` | Appelée quand le niveau et les véhicules sont chargés (après clientPreStartMission). Met l'état de jeu 'freeroam' par défaut (core_gamestate) puis émet onClientPostStartMission(levelPath). | 819 |
-| `clientPreStartMission(levelPath)` | Appelée par le moteur avant le chargement des ressources du niveau. Met worldReadyState=0, enregistre l'action, émet onClientPreStartMission(levelPath) et l'évènement UI 'PreStartMission'. | 809 |
-| `clientStartMission(levelPath)` | Appelée quand les objets du niveau sont chargés (après clientPostStartMission). Coupe la musique du menu (sauf keepAlive), émet onClientStartMission(levelPath) via hookNotify, puis map.assureLoad() et vide le cache Sim. | 826 |
-| `convertCStoJson(filenames, newExtSuffix)` | Outil de dev : exécute des scripts TorqueScript (.cs), détecte les objets créés et les sauvegarde au nouveau format JSON via un PersistenceManager, puis supprime les objets (sauf SimSet/SimGroup). | 176 |
-| `convertLevelPrefabs(levelPath)` | Outil de dev : cherche tous les *.prefab / *.prefab.json sous levelPath et appelle convertPrefabtoJson sur chacun. | 145 |
-| `convertPrefabtoJson(filepath)` | Outil de dev : charge un prefab .prefab (TorqueScript) à l'origine, le sauvegarde en .prefab.json puis le décharge et le supprime. | 130 |
-| `editorEnabled(enabled)` | Appelée par le moteur quand l'éditeur est activé/désactivé (et à la première frame). Émet onEditorEnabled(enabled) et informe map via map.setEditorState. | 863 |
-| `enableCommunityTranslations()` | Active le réglage communityTranslations puis lance updateTranslations(). | 1319 |
-| `endActiveGameMode(callback)` | Se déconnecte du serveur local (serverConnection.disconnect, machine à états asynchrone) puis, dans le callback, décharge toutes les extensions non manuelles et appelle callback. | 456 |
-| `exportPersistentData()` | Avant un rechargement Lua : sérialise les paquets des extensions (serializePackages), levelLoaded et l'id de la source musicale dans be.persistenceLuaData. | 1268 |
-| `getGame()` | Rétrocompatibilité : renvoie la globale gameConnection, qui vaut nil (n'est plus un objet de scène). | 83 |
-| `importPersistentData()` | Inverse d'exportPersistentData, appelée à la fin de init(). En cas d'erreur de désérialisation, journalise et écrit persistentDataError.txt. | 1278 |
-| `init(reason)` | Initialise la VM GE au démarrage et au rechargement (Ctrl+L) : initSettings, réserve _tr, active detectGlobalWrites, charge les extensions de démarrage (+ util_materialHotReload sous Windows), ouvre la session en ligne, importPersistentData, demande l'état de l'UI (guihooks 'isUIReady'), appelle core_modmanager.onUiReady(), map.assureLoad(), crée les dossiers mods et trackEditor, puis luaReady=true. | 1044 |
-| `isLuaReady()` | Permet à l'UI de savoir si init() est terminée. | 1039 |
-| `isSafeMode()` | Indique si le jeu a été lancé avec l'argument de ligne de commande -safemode. | 126 |
-| `loadDirRec(dir)` | Charge récursivement les matériaux d'un dossier : d'abord *materials.cs (TorqueScript), puis *materials.json, puis *datablocks.json. | 1393 |
-| `loadGameModeModules(...)` | OBSOLÈTE : unloadAutoExtensions() + loadPresetExtensions() + extensions.load(...) avec journal d'erreur. | 1627 |
-| `loadManualUnloadExtensions()` | Charge toutes les extensions en unloadMode 'manual'. | 405 |
-| `loadPresetExtensions()` | Charge la liste presetExtensions (+ celles demandées en ligne de commande via queueCmdlineLevelLoadExtension), puis vide cette liste de ligne de commande (usage unique). | 415 |
-| `load_spawn_prefabv2_indirect()` | Test de dev : spawnPrefab de test_v2.prefab.json via spawnPrefab. | 1808 |
-| `load_test_prefabv1()` | Test de dev : spawn du prefab /levels/smallgrid/test_v1.prefab.json. | 1717 |
-| `load_test_prefabv2()` | Test de dev : charge /levels/smallgrid/test_v2.prefab.json comme PrefabV2 'test_v2'. | 1724 |
-| `log(...)` | Remplacement global de log : transmet tous les arguments à Lua:log (niveau 'D','I','W','E','A', origine, message). | 30 |
-| `luaPreRender(dtReal, dtSim, dtRaw)` | Appelée à chaque frame par le moteur, juste avant le rendu et après la physique. Ordre : map.updateGFX, hook onPreRender(dtReal, dtSim, dtRaw), hook onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw), puis, si worldReadyState==1, attend que les matériaux du véhicule joueur soient prêts (max 5 s) pour quitter l'écran de chargement, passer worldReadyState à 2 et émettre onWorldReadyState(2). | 878 |
-| `onAiModeChange(vehicleID, newAiMode)` | Le mode de l'IA d'un véhicule a changé ; émet onAiModeChange. | 1221 |
-| `onAiRouteDone(vehicleID)` | L'IA a terminé sa route ; émet onAiRouteDone(vehicleID). | 1225 |
-| `onBeamNGTrigger(data)` | Nom de fonction par défaut du callback des BeamNGTrigger côté C++ ; émet le hook onBeamNGTrigger(data). | 1122 |
-| `onBeamNGWaypoint(args)` | Appelée par le moteur quand un véhicule franchit un waypoint BeamNG (objet de scène). Appelle map.onWaypoint puis émet onBeamNGWaypoint(args). | 1116 |
-| `onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | Un attelage s'est accroché ; émet onCouplerAttached. | 1208 |
-| `onCouplerDetach(objId, nodeId)` | Déclenchée quand l'utilisateur détache volontairement l'attelage d'une remorque ; émet onCouplerDetach(objId, nodeId). | 1217 |
-| `onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)` | Un attelage s'est détaché ; émet onCouplerDetached. | 1212 |
-| `onExit()` | Appelée directement par le C++ à la sortie : émet onExit, déconnecte le serveur, détruit PhysicsPlugin, poste l'évènement 'onExit' du MainEventManager, puis settings.exit(). | 1456 |
-| `onFileChanged(files)` | Appelée par le moteur quand des fichiers surveillés changent. Appelle settings.onFilesChanged et map.onFilesChanged, émet onFilesChanged(files), puis pour chaque fichier onFileChanged(filename, type), enfin onFileChangedEnd. | 1126 |
-| `onGameEngineStartup()` | Appelée une fois par le moteur au démarrage de la VM : crée les dossiers settings/ et screenshots/, l'EventManager 'MainEventManager', parse la ligne de commande, initialise le core et le client (client/core, client/init), PhysicsPlugin, puis charge le niveau $levelToLoad éventuel via core_loadMapCmd (différé jusqu'à ce que le mod manager soit prêt). | 1493 |
-| `onInstabilityDetected(vid)` | Appelée par le moteur physique quand un véhicule est instable : journalise les véhicules proches (< 1 m), affiche un message UI, émet onInstabilityDetected(vid, returnData), puis, si non géré, met le véhicule en mode fantôme et le téléporte sur place ; une 2e instabilité dans la seconde supprime le véhicule. | 1328 |
-| `onLuaReloadCompleted()` | Logue la durée totale du rechargement et efface luaReloadStartTime. Appelée par tryCompleteLuaReload quand jobs, settings, UI, mod manager (et MCP) sont prêts. | 1589 |
-| `onLuaReloadModManagerCompleted()` | Signale que le mod manager a fini après un rechargement Lua. | 1585 |
-| `onLuaReloaded(reloadStartTime)` | Appelée après un rechargement Lua (Ctrl+L) : client/core reloadCore, client/init reloadClient, mesure la durée et arme le suivi de fin de rechargement. | 1573 |
-| `onMouseLocked(locked)` | Appelée quand le curseur est verrouillé/déverrouillé ; émet onMouseLocked(locked). | 1196 |
-| `onPreExit()` | Appelée avant la sortie du jeu ; émet onPreExit (profilée). | 1448 |
-| `onPreStart()` | Point d'entrée appelé par le moteur avant onGameEngineStartup ; corps vide. | 1440 |
-| `onPreWindowClose()` | Appelée avant la fermeture de la fenêtre ; émet onPreWindowClose. | 1444 |
-| `onScreenKeyboardClosed(applied, text)` | Le clavier virtuel est fermé ; émet onScreenKeyboardClosed(applied, text). | 1324 |
-| `onSetClusterPosRelRot(vehicleID, cNodeId)` | Callback asynchrone quand un cluster de nœuds d'un véhicule est téléporté ; émet onSetClusterPosRelRot(vehicleID, cNodeId). | 1181 |
-| `onSpawnError(status, jbeamFilename)` | Erreur de création d'un véhicule : journalise et affiche un toast d'erreur dans l'UI. | 1374 |
-| `onTexDrawPrimCompressDone(textureName)` | Une texture dessinée est compressée ; émet onTexDrawPrimCompressDone(textureName). | 1594 |
-| `openXRErrorDetected(...)` | Transmet à render_openxr.errorDetected si ce module existe. | 1238 |
-| `openXRStateChanged(state)` | Transmet à render_openxr.stateChanged si ce module existe. | 1233 |
-| `physicsEngineEvent(...)` | Relaie un évènement du moteur physique : hook onPhysicsEngineEvent. Seul le premier argument est transmis (voir notes). | 1139 |
-| `physicsStateChanged(val)` | La simulation physique est mise en pause/reprise. Relaye l'évènement UI 'physicsStateChanged' puis émet onPhysicsUnpaused (val vrai) ou onPhysicsPaused. | 1296 |
-| `prepareStartupExtensionsList()` | Si PlatformSwitches.useEditor est vrai, ajoute editor_main et editor_veMain à la liste des extensions de démarrage ; recalcule la liste des extensions en déchargement manuel. Appelée par init(). | 393 |
-| `print(...)` | Remplacement global de print : écrit via log('A','print', tostring(...)). Seul le premier argument est converti et journalisé. | 34 |
-| `queueCmdlineLevelLoadExtension(extension)` | Ajoute une extension à charger au prochain loadPresetExtensions (utilisé pour les extensions demandées en ligne de commande). | 469 |
-| `refreshMainMenuMusicRouteState()` | Lit la route courante dans ui_router.getCurrent() et appelle setMainMenuMusicRouteState. | 801 |
-| `registerCoreModule(extensionName)` | OBSOLÈTE : équivaut à setExtensionUnloadMode(nom, 'manual'). | 1639 |
-| `replaySpawnVehicle(jbeamFilename, partConfigData)` | Appelée par le moteur de replay pour recréer un véhicule en (0,0,0) ; le joueur n'y est installé que s'il n'a pas encore de véhicule. S'il n'y a qu'un véhicule enterable, passe en caméra de jeu. | 1244 |
-| `replayStartLevel(levelPath)` | Appelée par le replay : core_replay.startLevel(levelPath). | 1256 |
-| `replayStateChanged(...)` | Transmet à core_replay.stateChanged(...). | 1229 |
-| `requestGeluaProfile()` | Appelée par le C++ quand un journal de performance est voulu : crée un LuaProfiler pour la prochaine frame (update + luaPreRender), activé dans les extensions. | 873 |
-| `resetGameplay(playerID)` | Émet onResetGameplay(playerID). | 1379 |
-| `returnToMainMenu(callback)` | Quitte le mode de jeu actif (endActiveGameMode) et demande l'état de jeu par défaut (menu principal). Le callback est appelé quand le niveau est déchargé et qu'un nouveau peut être chargé. | 848 |
-| `runMimalloc_test()` | Debug : appelle Engine.Debug.mimalloc_test(). | 859 |
-| `sendUIModules()` | Envoie à l'UI (évènement 'onUIBootstrap') la liste des dossiers de /ui/modModules/ ; liste vide en cas d'erreur. | 1383 |
-| `setExtensionUnloadMode(extension, unloadMode)` | Définit si une extension survit aux changements de niveau ('manual') ou peut être déchargée automatiquement ('auto', défaut). Logue une erreur si l'extension ou le mode est inconnu. | 425 |
-| `setMainMenuMusicKeepAlive(active)` | Force la musique du menu principal à continuer (true) ou rend la main à la logique par route UI (false). Ne fait rien si l'état ne change pas. | 704 |
-| `setMainMenuMusicPauseRequest(requestId, active)` | Enregistre ou retire une demande de pause de la musique du menu identifiée par requestId, puis rafraîchit l'état. | 715 |
-| `setMainMenuMusicRouteState(routeName)` | Applique la logique de musique selon la route UI : pause demandée > keepAlive > route 'menu' (reprise) > niveau chargé (arrêt avec fondu 0,6 s) > route 'menu.credits' (extension ui_credits) > route 'menu.uiSounds' (pause) > reprise. | 757 |
-| `test_prefabv2()` | Test de dev : construit des SimGroup et TSStatic dans MissionGroup puis supprime thePlayer, spawn_default, ParticleEmitter. | 1649 |
-| `test_spawn_prefabv2()` | Test de dev : instancie 'test_v2' à (6,3,2), échelle 1,5, rotation 45° en Z. | 1743 |
-| `test_spawn_prefabv2_massive(count)` | Test de dev : instancie count copies aléatoires de 'test_v2' dans MissionGroup. | 1770 |
-| `test_unload_prefabv2()` | Test de dev : supprime l'objet 'test_v2'. | 1800 |
-| `uiReady()` | Appelée quand l'UI est prête. Émet onUiReady et marque l'UI prête pour la finalisation d'un rechargement Lua. | 1032 |
-| `unloadAutoExtensions()` | Décharge toutes les extensions sauf celles en mode 'manual' (extensions.unloadExcept). À appeler lors du changement de mode de jeu/niveau. | 410 |
-| `update(dtReal, dtSim, dtRaw)` | Appelée à chaque frame par le moteur, après les entrées et avant la physique. Voir notes : settingsTick, core_input_bindings.updateGFX, simTimeAuthority.update, hook onUpdate(dtReal, dtSim, dtRaw), gestion des véhicules instables, et si l'UI doit être rafraîchie hook onGuiUpdate + envoi des streams guihooks. | 991 |
-| `updateFirstFrame()` | Appelée par le moteur à la première frame. Émet onFirstUpdate, settings.finalizeInit(), synchronise l'état de l'éditeur, traite les arguments de ligne de commande de première frame (-flowgraph, -compilemeshes, -convertCSMaterials, -deps, -disableDynamicCollision, -enablemcp, etc.) et appelle uiReady() directement avec -noui ou en mode headless. | 973 |
-| `updateLoadingProgress(val, txt)` | Met à jour la barre de chargement UI (évènement 'UpdateProgress') et force un repaint du Canvas pendant le chargement d'un niveau ; stocke $lastProgress et $$lastProgressTxt. | 1598 |
-| `updateTSShapeLoadProgressDynamic(progress, msg)` | Utilise updateTSShapeLoadProgress si défini (éditeur chargé), sinon updateLoadingProgress. | 1615 |
-| `updateTranslations()` | Démonte mods/translations.zip s'il est monté, télécharge locales_v2.zip via core_repository.installMod, puis recharge les réglages. | 1305 |
-| `validateLevelPrefabs(levelPath)` | Outil de dev : appelle validatePrefabJson sur chaque *.prefab.json de levelPath. | 168 |
-| `validatePrefabJson(filepath)` | Outil de dev : recharge un .prefab.json et le resauvegarde au même endroit (normalisation du format). | 153 |
-| `vehicleActiveChanged(vehicleID, active, setActiveCount)` | Appelée quand un véhicule est activé/désactivé (ex. pooling du trafic). Sans rapport avec le changement de véhicule du joueur. Émet onVehicleActiveChanged. | 1192 |
-| `vehicleDestroyed(vid)` | Appelée quand un véhicule est supprimé : oublie ses minuteries d'instabilité, émet onVehicleDestroyed(vid), invalide les caches de véhicules. | 1200 |
-| `vehicleReset(vehicleID)` | Callback asynchrone après la réinitialisation d'un véhicule ; émet onVehicleResetted(vehicleID). | 1186 |
-| `vehicleSpawned(vid)` | Appelée par le moteur quand un véhicule apparaît. Invalide les caches de véhicules, règle la gravité du véhicule (core_environment.getGravity), puis émet onPreVehicleSpawned(vid, veh) puis onVehicleSpawned(vid, veh). Ne fait rien si l'objet n'existe pas. | 1144 |
-| `vehicleSwitched(oldVehicle, newVehicle, player)` | Appelée quand le joueur change de véhicule. Émet onVehicleSwitched(oldId, newId, player) (id -1 si absent) et l'évènement UI 'VehicleFocusChanged'. | 1166 |
+| `CEFTypingLostFocus()` | Called by the C++ when the CEF input field loses focus; relays the UI event 'CEFTypingLostFocus'. | 1264 |
+| `ConsoleInputCallback()` | Empty global callback for the imgui console; an extension can redefine it to receive the input. | 80 |
+| `checkFSErrors()` | Once per session: reads Engine.Platform.getFSInfo(); if an error is reported, displays an error toast in the UI and logs an installation corruption message. | 923 |
+| `clientEndMission(levelPath)` | Called at the end/unloading of the level. Emits onClientPreEndMission, stops the physics simulation (be:physicsStopSimulation), removes the time pause, then emits onClientEndMission(levelPath). | 839 |
+| `clientPostStartMission(levelPath)` | Called when the level and the vehicles are loaded (after clientPreStartMission). Sets the default 'freeroam' game state (core_gamestate) then emits onClientPostStartMission(levelPath). | 819 |
+| `clientPreStartMission(levelPath)` | Called by the engine before the level resources are loaded. Sets worldReadyState=0, records the action, emits onClientPreStartMission(levelPath) and the UI event 'PreStartMission'. | 809 |
+| `clientStartMission(levelPath)` | Called when the level objects are loaded (after clientPostStartMission). Stops the menu music (except keepAlive), emits onClientStartMission(levelPath) via hookNotify, then map.assureLoad() and empties the Sim cache. | 826 |
+| `convertCStoJson(filenames, newExtSuffix)` | Dev tool: runs TorqueScript scripts (.cs), detects the created objects and saves them in the new JSON format via a PersistenceManager, then deletes the objects (except SimSet/SimGroup). | 176 |
+| `convertLevelPrefabs(levelPath)` | Dev tool: finds all *.prefab / *.prefab.json under levelPath and calls convertPrefabtoJson on each. | 145 |
+| `convertPrefabtoJson(filepath)` | Dev tool: loads a .prefab (TorqueScript) prefab at the origin, saves it as .prefab.json then unloads and deletes it. | 130 |
+| `editorEnabled(enabled)` | Called by the engine when the editor is enabled/disabled (and on the first frame). Emits onEditorEnabled(enabled) and informs map via map.setEditorState. | 863 |
+| `enableCommunityTranslations()` | Enables the communityTranslations setting then launches updateTranslations(). | 1319 |
+| `endActiveGameMode(callback)` | Disconnects from the local server (serverConnection.disconnect, asynchronous state machine) then, in the callback, unloads all non-manual extensions and calls callback. | 456 |
+| `exportPersistentData()` | Before a Lua reload: serializes the extensions' packages (serializePackages), levelLoaded and the music source id into be.persistenceLuaData. | 1268 |
+| `getGame()` | Backward compatibility: returns the global gameConnection, which is nil (no longer a scene object). | 83 |
+| `importPersistentData()` | Inverse of exportPersistentData, called at the end of init(). On a deserialization error, logs and writes persistentDataError.txt. | 1278 |
+| `init(reason)` | Initializes the GE VM at startup and on reload (Ctrl+L): initSettings, reserves _tr, enables detectGlobalWrites, loads the startup extensions (+ util_materialHotReload on Windows), opens the online session, importPersistentData, requests the UI state (guihooks 'isUIReady'), calls core_modmanager.onUiReady(), map.assureLoad(), creates the mods and trackEditor folders, then luaReady=true. | 1044 |
+| `isLuaReady()` | Lets the UI know whether init() has finished. | 1039 |
+| `isSafeMode()` | Indicates whether the game was launched with the command-line argument -safemode. | 126 |
+| `loadDirRec(dir)` | Recursively loads the materials of a folder: first *materials.cs (TorqueScript), then *materials.json, then *datablocks.json. | 1393 |
+| `loadGameModeModules(...)` | OBSOLETE: unloadAutoExtensions() + loadPresetExtensions() + extensions.load(...) with error logging. | 1627 |
+| `loadManualUnloadExtensions()` | Loads all extensions in unloadMode 'manual'. | 405 |
+| `loadPresetExtensions()` | Loads the presetExtensions list (+ those requested on the command line via queueCmdlineLevelLoadExtension), then empties this command-line list (single use). | 415 |
+| `load_spawn_prefabv2_indirect()` | Dev test: spawnPrefab of test_v2.prefab.json via spawnPrefab. | 1808 |
+| `load_test_prefabv1()` | Dev test: spawns the prefab /levels/smallgrid/test_v1.prefab.json. | 1717 |
+| `load_test_prefabv2()` | Dev test: loads /levels/smallgrid/test_v2.prefab.json as PrefabV2 'test_v2'. | 1724 |
+| `log(...)` | Global replacement of log: forwards all arguments to Lua:log (level 'D','I','W','E','A', origin, message). | 30 |
+| `luaPreRender(dtReal, dtSim, dtRaw)` | Called every frame by the engine, just before rendering and after the physics. Order: map.updateGFX, onPreRender(dtReal, dtSim, dtRaw) hook, onDrawDebug(Lua.lastDebugFocusPos, dtReal, dtSim, dtRaw) hook, then, if worldReadyState==1, waits for the player vehicle's materials to be ready (max 5 s) to dismiss the loading screen, set worldReadyState to 2 and emit onWorldReadyState(2). | 878 |
+| `onAiModeChange(vehicleID, newAiMode)` | A vehicle's AI mode has changed; emits onAiModeChange. | 1221 |
+| `onAiRouteDone(vehicleID)` | The AI has finished its route; emits onAiRouteDone(vehicleID). | 1225 |
+| `onBeamNGTrigger(data)` | Default callback function name of the BeamNGTrigger on the C++ side; emits the onBeamNGTrigger(data) hook. | 1122 |
+| `onBeamNGWaypoint(args)` | Called by the engine when a vehicle crosses a BeamNG waypoint (scene object). Calls map.onWaypoint then emits onBeamNGWaypoint(args). | 1116 |
+| `onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | A coupler attached; emits onCouplerAttached. | 1208 |
+| `onCouplerDetach(objId, nodeId)` | Triggered when the user deliberately detaches a trailer's coupler; emits onCouplerDetach(objId, nodeId). | 1217 |
+| `onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)` | A coupler detached; emits onCouplerDetached. | 1212 |
+| `onExit()` | Called directly by the C++ on exit: emits onExit, disconnects the server, destroys PhysicsPlugin, posts the 'onExit' event of the MainEventManager, then settings.exit(). | 1456 |
+| `onFileChanged(files)` | Called by the engine when watched files change. Calls settings.onFilesChanged and map.onFilesChanged, emits onFilesChanged(files), then for each file onFileChanged(filename, type), finally onFileChangedEnd. | 1126 |
+| `onGameEngineStartup()` | Called once by the engine at VM startup: creates the settings/ and screenshots/ folders, the 'MainEventManager' EventManager, parses the command line, initializes the core and the client (client/core, client/init), PhysicsPlugin, then loads the $levelToLoad level if any via core_loadMapCmd (deferred until the mod manager is ready). | 1493 |
+| `onInstabilityDetected(vid)` | Called by the physics engine when a vehicle is unstable: logs the nearby vehicles (< 1 m), displays a UI message, emits onInstabilityDetected(vid, returnData), then, if not handled, puts the vehicle in ghost mode and teleports it in place; a 2nd instability within the second deletes the vehicle. | 1328 |
+| `onLuaReloadCompleted()` | Logs the total reload duration and clears luaReloadStartTime. Called by tryCompleteLuaReload when jobs, settings, UI, mod manager (and MCP) are ready. | 1589 |
+| `onLuaReloadModManagerCompleted()` | Signals that the mod manager has finished after a Lua reload. | 1585 |
+| `onLuaReloaded(reloadStartTime)` | Called after a Lua reload (Ctrl+L): client/core reloadCore, client/init reloadClient, measures the duration and arms the reload-completion tracking. | 1573 |
+| `onMouseLocked(locked)` | Called when the cursor is locked/unlocked; emits onMouseLocked(locked). | 1196 |
+| `onPreExit()` | Called before the game exits; emits onPreExit (profiled). | 1448 |
+| `onPreStart()` | Entry point called by the engine before onGameEngineStartup; empty body. | 1440 |
+| `onPreWindowClose()` | Called before the window closes; emits onPreWindowClose. | 1444 |
+| `onScreenKeyboardClosed(applied, text)` | The virtual keyboard is closed; emits onScreenKeyboardClosed(applied, text). | 1324 |
+| `onSetClusterPosRelRot(vehicleID, cNodeId)` | Asynchronous callback when a vehicle's node cluster is teleported; emits onSetClusterPosRelRot(vehicleID, cNodeId). | 1181 |
+| `onSpawnError(status, jbeamFilename)` | Vehicle creation error: logs and displays an error toast in the UI. | 1374 |
+| `onTexDrawPrimCompressDone(textureName)` | A drawn texture is compressed; emits onTexDrawPrimCompressDone(textureName). | 1594 |
+| `openXRErrorDetected(...)` | Forwards to render_openxr.errorDetected if this module exists. | 1238 |
+| `openXRStateChanged(state)` | Forwards to render_openxr.stateChanged if this module exists. | 1233 |
+| `physicsEngineEvent(...)` | Relays a physics engine event: onPhysicsEngineEvent hook. Only the first argument is passed on (see notes). | 1139 |
+| `physicsStateChanged(val)` | The physics simulation is paused/resumed. Relays the UI event 'physicsStateChanged' then emits onPhysicsUnpaused (val true) or onPhysicsPaused. | 1296 |
+| `prepareStartupExtensionsList()` | If PlatformSwitches.useEditor is true, adds editor_main and editor_veMain to the startup extension list; recomputes the list of manual-unload extensions. Called by init(). | 393 |
+| `print(...)` | Global replacement of print: writes via log('A','print', tostring(...)). Only the first argument is converted and logged. | 34 |
+| `queueCmdlineLevelLoadExtension(extension)` | Adds an extension to load at the next loadPresetExtensions (used for extensions requested on the command line). | 469 |
+| `refreshMainMenuMusicRouteState()` | Reads the current route from ui_router.getCurrent() and calls setMainMenuMusicRouteState. | 801 |
+| `registerCoreModule(extensionName)` | OBSOLETE: equivalent to setExtensionUnloadMode(name, 'manual'). | 1639 |
+| `replaySpawnVehicle(jbeamFilename, partConfigData)` | Called by the replay engine to recreate a vehicle at (0,0,0); the player is installed in it only if they do not have a vehicle yet. If there is only one enterable vehicle, switches to the game camera. | 1244 |
+| `replayStartLevel(levelPath)` | Called by the replay: core_replay.startLevel(levelPath). | 1256 |
+| `replayStateChanged(...)` | Forwards to core_replay.stateChanged(...). | 1229 |
+| `requestGeluaProfile()` | Called by the C++ when a performance log is wanted: creates a LuaProfiler for the next frame (update + luaPreRender), enabled in the extensions. | 873 |
+| `resetGameplay(playerID)` | Emits onResetGameplay(playerID). | 1379 |
+| `returnToMainMenu(callback)` | Leaves the active game mode (endActiveGameMode) and requests the default game state (main menu). The callback is called when the level is unloaded and a new one can be loaded. | 848 |
+| `runMimalloc_test()` | Debug: calls Engine.Debug.mimalloc_test(). | 859 |
+| `sendUIModules()` | Sends to the UI ('onUIBootstrap' event) the list of the folders in /ui/modModules/; empty list on error. | 1383 |
+| `setExtensionUnloadMode(extension, unloadMode)` | Defines whether an extension survives level changes ('manual') or can be unloaded automatically ('auto', default). Logs an error if the extension or the mode is unknown. | 425 |
+| `setMainMenuMusicKeepAlive(active)` | Forces the main menu music to continue (true) or hands control back to the per-UI-route logic (false). Does nothing if the state does not change. | 704 |
+| `setMainMenuMusicPauseRequest(requestId, active)` | Registers or removes a menu music pause request identified by requestId, then refreshes the state. | 715 |
+| `setMainMenuMusicRouteState(routeName)` | Applies the music logic according to the UI route: requested pause > keepAlive > 'menu' route (resume) > level loaded (stop with 0.6 s fade) > 'menu.credits' route (ui_credits extension) > 'menu.uiSounds' route (pause) > resume. | 757 |
+| `test_prefabv2()` | Dev test: builds SimGroup and TSStatic objects in MissionGroup then deletes thePlayer, spawn_default, ParticleEmitter. | 1649 |
+| `test_spawn_prefabv2()` | Dev test: instantiates 'test_v2' at (6,3,2), scale 1.5, 45° rotation around Z. | 1743 |
+| `test_spawn_prefabv2_massive(count)` | Dev test: instantiates count random copies of 'test_v2' in MissionGroup. | 1770 |
+| `test_unload_prefabv2()` | Dev test: deletes the object 'test_v2'. | 1800 |
+| `uiReady()` | Called when the UI is ready. Emits onUiReady and marks the UI as ready for the finalization of a Lua reload. | 1032 |
+| `unloadAutoExtensions()` | Unloads all extensions except those in 'manual' mode (extensions.unloadExcept). Call when changing game mode/level. | 410 |
+| `update(dtReal, dtSim, dtRaw)` | Called every frame by the engine, after the inputs and before the physics. See notes: settingsTick, core_input_bindings.updateGFX, simTimeAuthority.update, onUpdate(dtReal, dtSim, dtRaw) hook, handling of unstable vehicles, and if the UI must be refreshed onGuiUpdate hook + sending of the guihooks streams. | 991 |
+| `updateFirstFrame()` | Called by the engine on the first frame. Emits onFirstUpdate, settings.finalizeInit(), synchronizes the editor state, processes the first-frame command-line arguments (-flowgraph, -compilemeshes, -convertCSMaterials, -deps, -disableDynamicCollision, -enablemcp, etc.) and calls uiReady() directly with -noui or in headless mode. | 973 |
+| `updateLoadingProgress(val, txt)` | Updates the UI loading bar ('UpdateProgress' event) and forces a Canvas repaint while a level is loading; stores $lastProgress and $$lastProgressTxt. | 1598 |
+| `updateTSShapeLoadProgressDynamic(progress, msg)` | Uses updateTSShapeLoadProgress if defined (editor loaded), otherwise updateLoadingProgress. | 1615 |
+| `updateTranslations()` | Unmounts mods/translations.zip if mounted, downloads locales_v2.zip via core_repository.installMod, then reloads the settings. | 1305 |
+| `validateLevelPrefabs(levelPath)` | Dev tool: calls validatePrefabJson on each *.prefab.json of levelPath. | 168 |
+| `validatePrefabJson(filepath)` | Dev tool: reloads a .prefab.json and saves it again in the same place (format normalization). | 153 |
+| `vehicleActiveChanged(vehicleID, active, setActiveCount)` | Called when a vehicle is activated/deactivated (e.g. traffic pooling). Unrelated to the player's vehicle switch. Emits onVehicleActiveChanged. | 1192 |
+| `vehicleDestroyed(vid)` | Called when a vehicle is deleted: forgets its instability timers, emits onVehicleDestroyed(vid), invalidates the vehicle caches. | 1200 |
+| `vehicleReset(vehicleID)` | Asynchronous callback after a vehicle reset; emits onVehicleResetted(vehicleID). | 1186 |
+| `vehicleSpawned(vid)` | Called by the engine when a vehicle appears. Invalidates the vehicle caches, sets the vehicle's gravity (core_environment.getGravity), then emits onPreVehicleSpawned(vid, veh) then onVehicleSpawned(vid, veh). Does nothing if the object does not exist. | 1144 |
+| `vehicleSwitched(oldVehicle, newVehicle, player)` | Called when the player switches vehicle. Emits onVehicleSwitched(oldId, newId, player) (id -1 if absent) and the UI event 'VehicleFocusChanged'. | 1166 |
 
-**Globales affectées :** `MoveManager`, `Point3F`, `WinInput`, `bullettime`, `commands`, `doStartupProfiling`, `editor`, `extensions`, `guihooks`, `json`, `logAlways`, `map`, `parseArgs`, `perf`, `photoModeOpen`, `sailingTheHighSeas`, `screenshot`, `server`, `serverConnection`, `setSpawnpoint`, `settings`, `simTimeAuthority`, `spawn`, `vmType`, `worldReadyState`
+**Globals assigned:** `MoveManager`, `Point3F`, `WinInput`, `bullettime`, `commands`, `doStartupProfiling`, `editor`, `extensions`, `guihooks`, `json`, `logAlways`, `map`, `parseArgs`, `perf`, `photoModeOpen`, `sailingTheHighSeas`, `screenshot`, `server`, `serverConnection`, `setSpawnpoint`, `settings`, `simTimeAuthority`, `spawn`, `vmType`, `worldReadyState`
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onAiModeChange`
-- `onAiRouteDone` — écouté par 1 module(s)
-- `onBeamNGTrigger` — écouté par 8 module(s)
+- `onAiRouteDone` — listened to by 1 module(s)
+- `onBeamNGTrigger` — listened to by 8 module(s)
 - `onBeamNGWaypoint`
-- `onClientEndMission` — écouté par 83 module(s)
-- `onClientPostStartMission` — écouté par 15 module(s)
+- `onClientEndMission` — listened to by 83 module(s)
+- `onClientPostStartMission` — listened to by 15 module(s)
 - `onClientPreEndMission`
-- `onClientPreStartMission` — écouté par 6 module(s)
-- `onClientStartMission` — écouté par 40 module(s)
-- `onCouplerAttached` — écouté par 4 module(s)
+- `onClientPreStartMission` — listened to by 6 module(s)
+- `onClientStartMission` — listened to by 40 module(s)
+- `onCouplerAttached` — listened to by 4 module(s)
 - `onCouplerDetach`
-- `onCouplerDetached` — écouté par 4 module(s)
-- `onDrawDebug` — écouté par 3 module(s)
+- `onCouplerDetached` — listened to by 4 module(s)
+- `onDrawDebug` — listened to by 3 module(s)
 - `onEditorEnabled`
-- `onExit` — écouté par 16 module(s)
-- `onFileChanged` — écouté par 13 module(s)
-- `onFileChangedEnd` — écouté par 1 module(s)
-- `onFilesChanged` — écouté par 12 module(s)
-- `onFirstUpdate` — écouté par 10 module(s)
-- `onGuiUpdate` — écouté par 6 module(s)
-- `onInstabilityDetected` — écouté par 4 module(s)
-- `onMouseLocked` — écouté par 2 module(s)
+- `onExit` — listened to by 16 module(s)
+- `onFileChanged` — listened to by 13 module(s)
+- `onFileChangedEnd` — listened to by 1 module(s)
+- `onFilesChanged` — listened to by 12 module(s)
+- `onFirstUpdate` — listened to by 10 module(s)
+- `onGuiUpdate` — listened to by 6 module(s)
+- `onInstabilityDetected` — listened to by 4 module(s)
+- `onMouseLocked` — listened to by 2 module(s)
 - `onPhysicsEngineEvent`
-- `onPhysicsPaused` — écouté par 3 module(s)
-- `onPhysicsUnpaused` — écouté par 3 module(s)
-- `onPreExit` — écouté par 1 module(s)
-- `onPreRender` — écouté par 53 module(s)
-- `onPreVehicleSpawned` — écouté par 1 module(s)
-- `onPreWindowClose` — écouté par 1 module(s)
-- `onResetGameplay` — écouté par 5 module(s)
-- `onScreenKeyboardClosed` — écouté par 1 module(s)
+- `onPhysicsPaused` — listened to by 3 module(s)
+- `onPhysicsUnpaused` — listened to by 3 module(s)
+- `onPreExit` — listened to by 1 module(s)
+- `onPreRender` — listened to by 53 module(s)
+- `onPreVehicleSpawned` — listened to by 1 module(s)
+- `onPreWindowClose` — listened to by 1 module(s)
+- `onResetGameplay` — listened to by 5 module(s)
+- `onScreenKeyboardClosed` — listened to by 1 module(s)
 - `onSetClusterPosRelRot`
 - `onTexDrawPrimCompressDone`
-- `onUiReady` — écouté par 6 module(s)
-- `onUpdate` — écouté par 186 module(s)
-- `onVehicleActiveChanged` — écouté par 8 module(s)
-- `onVehicleDestroyed` — écouté par 39 module(s)
-- `onVehicleResetted` — écouté par 29 module(s)
-- `onVehicleSpawned` — écouté par 34 module(s)
-- `onVehicleSwitched` — écouté par 57 module(s)
-- `onWorldReadyState` — écouté par 4 module(s)
+- `onUiReady` — listened to by 6 module(s)
+- `onUpdate` — listened to by 186 module(s)
+- `onVehicleActiveChanged` — listened to by 8 module(s)
+- `onVehicleDestroyed` — listened to by 39 module(s)
+- `onVehicleResetted` — listened to by 29 module(s)
+- `onVehicleSpawned` — listened to by 34 module(s)
+- `onVehicleSwitched` — listened to by 57 module(s)
+- `onWorldReadyState` — listened to by 4 module(s)
 
-**Évènements UI (guihooks.trigger) :** `CEFTypingLostFocus`, `PreStartMission`, `UpdateProgress`, `VehicleFocusChanged`, `isUIReady`, `onUIBootstrap`, `physicsStateChanged`, `toastrMsg`
+**UI events (guihooks.trigger):** `CEFTypingLostFocus`, `PreStartMission`, `UpdateProgress`, `VehicleFocusChanged`, `isUIReady`, `onUIBootstrap`, `physicsStateChanged`, `toastrMsg`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `getEditorEnabled`, `getStartingArgs`
 - `FS:` `directoryCreate`, `directoryExists`, `directoryList`, `fileExists`, `findFiles`, `getFileRealPath`, `getUserPath`, `isMounted`, `unmount`
@@ -191,7 +191,7 @@ return M
 - `obj:` `delete`, `getClassName`, `getName`, `registerObject`, `setField`, `setPosition`
 - `scenetree.` `findObject`, `findObjectById`, `getAllObjects`
 
-**Charge les extensions :** `core_loadMapCmd`, `editor_flowgraphEditor`, `util_materialHotReload`
+**Loads extensions:** `core_loadMapCmd`, `editor_flowgraphEditor`, `util_materialHotReload`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/main.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/main.lua`.*

@@ -1,148 +1,148 @@
 # `editor_toolUtilities_siteBake`
 
-*Fichier : `lua/ge/extensions/editor/toolUtilities/siteBake.lua` · VM : Game Engine (GE) · 289 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/toolUtilities/siteBake.lua` · VM: Game Engine (GE) · 289 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_toolUtilities_siteBake` : `extensions.load("editor_toolUtilities_siteBake")`, puis la globale `editor_toolUtilities_siteBake`
+**Access:** extension `editor_toolUtilities_siteBake`: `extensions.load("editor_toolUtilities_siteBake")`, then the global `editor_toolUtilities_siteBake`
 
-Transforme ce qu'un éditeur vient de construire dans le monde en ce que porte un manifeste de site. Un site est conçu à un endroit de la carte et placé ailleurs : toutes les cuissons soustraient donc leur origine (ox, oy, oz) à tout avant d'écrire (géométrie, transformations du kit, lampes, plantations, plan du sol). L'origine choisie importe peu au placeur (il se recale sur les bornes lues) mais doit être la MÊME pour toutes les listes d'un manifeste. Les coordonnées de plan sont arrondies au millimètre.
+Transforms what an editor has just built in the world into what a site manifest carries. A site is designed at one place on the map and placed elsewhere: all bakes therefore subtract their origin (ox, oy, oz) from everything before writing (geometry, kit transforms, lamps, plantings, ground plan). The chosen origin matters little to the placer (it realigns on the bounds read) but must be the SAME for all lists of a manifest. Plan coordinates are rounded to the millimeter.
 
-## Remarques
+## Notes
 
-- Un « plan » de sol est composé de polygones ou de polylignes {x,y} ; une « feature » de terraform est soit un QUAD gradué (4 coins avec leurs hauteurs), soit des RINGS à hauteur commune ; mode par défaut 'carve'.
-- Les anneaux de feature sortent plats (un seul z par feature) ; le lecteur doit les refaire en vec3.
-- groupInstances regroupe par forme + couleur (glow) + indicateur street (pièce posée sur le trottoir) + stand (poteau sur la ligne de sol, hauteur étirée par le placeur). Chaque instance occupe 12 nombres dans xf : position (3), axe avant (3), axe haut (3), échelle (3).
-- Les lampes sortent { x, y, z, r (rayon), b (luminosité), col, street } et, pour un projecteur, dir et cone.
-- localPaint exige que extensions.editor_terrainEditor.getTerrainBlock() existe, et nomme les couches de peinture par nom (un indice n'est valable que pour un seul terrain).
-- Les plantes voyagent en ancres (items déjà dispersés, ou points + espèces + graine déjà calculée) car la forêt appartient au niveau et non au site.
+- A ground "plan" is made of {x,y} polygons or polylines; a terraform "feature" is either a graded QUAD (4 corners with their heights), or RINGS at a common height; default mode 'carve'.
+- The feature rings come out flat (a single z per feature); the reader must rebuild them as vec3.
+- groupInstances groups by shape + color (glow) + street flag (piece placed on the sidewalk) + stand (post on the ground line, height stretched by the placer). Each instance takes 12 numbers in xf: position (3), forward axis (3), up axis (3), scale (3).
+- Lamps come out { x, y, z, r (radius), b (brightness), col, street } and, for a spotlight, dir and cone.
+- localPaint requires extensions.editor_terrainEditor.getTerrainBlock() to exist, and names the paint layers by name (an index is only valid for a single terrain).
+- Plants travel as anchors (items already scattered, or points + species + an already computed seed) because the forest belongs to the level and not to the site.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_toolUtilities_siteBake.bounds(parts, instances, ox, oy, oz)` | L'étendue de tout ce que la cuisson place (sommets des parts et positions des instances, relatifs à l'origine), pour que le placeur cadre un site, le choisisse sous le curseur et sache la place qu'il lui faut avant de charger un maillage. Renvoie deux coins nuls si rien. | 253 |
-| `editor_toolUtilities_siteBake.groupInstances(instances, ox, oy, oz)` | Regroupe les placements du kit par forme. Un groupe par maillage distinct devient un seul dessin instancié à l'arrivée : une place avec deux cents bornes identiques coûte une forme et deux cents transformations. | 109 |
-| `editor_toolUtilities_siteBake.harvestKit(list, out)` | Relit les repères de pièces du kit déjà posées dans la scène et les ajoute à out comme des enregistrements d'instance acceptés par groupInstances. Accepte indifféremment des entrées de kit (champ obj) ou les objets eux-mêmes ; les objets disparus ou sans shapeName sont ignorés ; la lueur nocturne (nightEmissive) est relue. | 153 |
-| `editor_toolUtilities_siteBake.instanceCount(groups)` | Nombre de pièces que dresse une liste de groupes (taille de xf divisée par 12), pour un affichage avant écriture. | 183 |
-| `editor_toolUtilities_siteBake.localFeatures(features, ox, oy, oz)` | Les formes auxquelles le site demande que le sol soit taillé, dans son repère. Chaque feature devient { quad = 4 coins {x,y,z locaux}, mode, band } ou { rings, z, mode, band }. Ignore tout ce à quoi sert la feature (palier, rampe, mur de soutènement). | 59 |
-| `editor_toolUtilities_siteBake.localLamps(lights, ox, oy, oz)` | Les lampes qui accompagnent les pièces, dans le repère du site. La couleur vient de glow ou de col (blanc par défaut). Un projecteur (dx présent) sort avec dir et cone ; une ampoule non. | 190 |
-| `editor_toolUtilities_siteBake.localPaint(coats, ox, oy)` | La peinture de terrain qu'un site pose, dans son repère. Chaque couche { m, ring } ou { m, xs, ys } (cellule par cellule) sort nommée par couche de matériau du terrain. | 87 |
-| `editor_toolUtilities_siteBake.localPlants(anchors, ox, oy, oz)` | Plantation sous forme d'ancres : { items } pour des plantes déjà dispersées (x, y, sp, s, a), ou { points, species, speciesWeights, size, vary, seed, drape, street } pour une dispersion à refaire (la graine est déjà calculée, pour obtenir les mêmes plantes aux mêmes endroits). | 211 |
-| `editor_toolUtilities_siteBake.localPts(pts, ox, oy)` | Une polyligne de la même façon (sans minimum de points). Sert aussi pour des normales unitaires avec une origine nulle. | 34 |
-| `editor_toolUtilities_siteBake.localRing(ring, ox, oy)` | Un polygone de plan, local à l'origine de cuisson, arrondi au millimètre. Renvoie nil si moins de 3 points, pour qu'un appelant puisse collecter le retour directement dans une liste. | 26 |
-| `editor_toolUtilities_siteBake.localRings(rings, ox, oy)` | Une liste d'anneaux locaux ; nil si aucun n'était un polygone (une clé absente du manifeste signifie « ce site n'en a pas »). | 42 |
-| `editor_toolUtilities_siteBake.plantCount(anchors)` | Nombre de plantes qu'une cuisson porterait, sur toutes les ancres (items ou points). Uniquement pour un affichage. | 242 |
+| `editor_toolUtilities_siteBake.bounds(parts, instances, ox, oy, oz)` | The extent of everything the bake places (part vertices and instance positions, relative to the origin), so that the placer can frame a site, pick it under the cursor and know the room it needs before loading a mesh. Returns two null corners if nothing. | 253 |
+| `editor_toolUtilities_siteBake.groupInstances(instances, ox, oy, oz)` | Groups the kit's placements by shape. One group per distinct mesh becomes a single instanced draw on arrival: a square with two hundred identical bollards costs one shape and two hundred transforms. | 109 |
+| `editor_toolUtilities_siteBake.harvestKit(list, out)` | Rereads the frames of kit pieces already placed in the scene and adds them to out as instance records accepted by groupInstances. Accepts either kit entries (obj field) or the objects themselves; vanished objects or those without shapeName are skipped; the night glow (nightEmissive) is reread. | 153 |
+| `editor_toolUtilities_siteBake.instanceCount(groups)` | Number of pieces that a list of groups stands up (size of xf divided by 12), for display before writing. | 183 |
+| `editor_toolUtilities_siteBake.localFeatures(features, ox, oy, oz)` | The shapes the site asks the ground to be carved to, in its frame. Each feature becomes { quad = 4 corners {local x,y,z}, mode, band } or { rings, z, mode, band }. Ignores what the feature is used for (landing, ramp, retaining wall). | 59 |
+| `editor_toolUtilities_siteBake.localLamps(lights, ox, oy, oz)` | The lamps that accompany the pieces, in the site's frame. The color comes from glow or col (white by default). A spotlight (dx present) comes out with dir and cone; a bulb does not. | 190 |
+| `editor_toolUtilities_siteBake.localPaint(coats, ox, oy)` | The terrain paint a site lays, in its frame. Each layer { m, ring } or { m, xs, ys } (cell by cell) comes out named by terrain material layer. | 87 |
+| `editor_toolUtilities_siteBake.localPlants(anchors, ox, oy, oz)` | Planting as anchors: { items } for already scattered plants (x, y, sp, s, a), or { points, species, speciesWeights, size, vary, seed, drape, street } for a scatter to redo (the seed is already computed, to obtain the same plants at the same places). | 211 |
+| `editor_toolUtilities_siteBake.localPts(pts, ox, oy)` | A polyline in the same way (no minimum number of points). Also used for unit normals with a null origin. | 34 |
+| `editor_toolUtilities_siteBake.localRing(ring, ox, oy)` | A plan polygon, local to the bake origin, rounded to the millimeter. Returns nil if fewer than 3 points, so that a caller can collect the return directly into a list. | 26 |
+| `editor_toolUtilities_siteBake.localRings(rings, ox, oy)` | A list of local rings; nil if none was a polygon (a key absent from the manifest means "this site has none"). | 42 |
+| `editor_toolUtilities_siteBake.plantCount(anchors)` | Number of plants that a bake would carry, over all anchors (items or points). For display only. | 242 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_toolUtilities_siteBake.bounds(parts, instances, ox, oy, oz)`
 
-L'étendue de tout ce que la cuisson place (sommets des parts et positions des instances, relatifs à l'origine), pour que le placeur cadre un site, le choisisse sous le curseur et sache la place qu'il lui faut avant de charger un maillage. Renvoie deux coins nuls si rien.
+The extent of everything the bake places (part vertices and instance positions, relative to the origin), so that the placer can frame a site, pick it under the cursor and know the room it needs before loading a mesh. Returns two null corners if nothing.
 
-- `parts` (*table|nil*) : Parts de maillage avec verts.
-- `instances` (*table|nil*) : Instances avec px, py, pz.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- `oz` (*number*) : z de l'origine.
-- **renvoie** : table Coin minimal {x,y,z}.
-- **renvoie** : table Coin maximal {x,y,z}.
+- `parts` (*table|nil*) : Mesh parts with verts.
+- `instances` (*table|nil*) : Instances with px, py, pz.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- `oz` (*number*) : z of the origin.
+- **returns**: table Minimum corner {x,y,z}.
+- **returns**: table Maximum corner {x,y,z}.
 
 #### `editor_toolUtilities_siteBake.groupInstances(instances, ox, oy, oz)`
 
-Regroupe les placements du kit par forme. Un groupe par maillage distinct devient un seul dessin instancié à l'arrivée : une place avec deux cents bornes identiques coûte une forme et deux cents transformations.
+Groups the kit's placements by shape. One group per distinct mesh becomes a single instanced draw on arrival: a square with two hundred identical bollards costs one shape and two hundred transforms.
 
-- `instances` (*table|nil*) : Liste d'instances { shape, px, py, pz, ax, ay, az, ux, uy, uz, scl, glow, street, stand }.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- `oz` (*number*) : z de l'origine.
-- **renvoie** : table Liste de groupes { shape, xf (12 nombres par instance), glow, street, stand }.
+- `instances` (*table|nil*) : List of instances { shape, px, py, pz, ax, ay, az, ux, uy, uz, scl, glow, street, stand }.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- `oz` (*number*) : z of the origin.
+- **returns**: table List of groups { shape, xf (12 numbers per instance), glow, street, stand }.
 
 #### `editor_toolUtilities_siteBake.harvestKit(list, out)`
 
-Relit les repères de pièces du kit déjà posées dans la scène et les ajoute à out comme des enregistrements d'instance acceptés par groupInstances. Accepte indifféremment des entrées de kit (champ obj) ou les objets eux-mêmes ; les objets disparus ou sans shapeName sont ignorés ; la lueur nocturne (nightEmissive) est relue.
+Rereads the frames of kit pieces already placed in the scene and adds them to out as instance records accepted by groupInstances. Accepts either kit entries (obj field) or the objects themselves; vanished objects or those without shapeName are skipped; the night glow (nightEmissive) is reread.
 
-- `list` (*table|nil*) : Liste d'entrées { obj } ou d'objets de scène.
-- `out` (*table|nil*) : Liste à compléter (créée si nil).
-- **renvoie** : table Enregistrements { shape, glow, px, py, pz, ax.., ux.., scl = {x,y,z} }.
+- `list` (*table|nil*) : List of { obj } entries or scene objects.
+- `out` (*table|nil*) : List to complete (created if nil).
+- **returns**: table Records { shape, glow, px, py, pz, ax.., ux.., scl = {x,y,z} }.
 
 #### `editor_toolUtilities_siteBake.instanceCount(groups)`
 
-Nombre de pièces que dresse une liste de groupes (taille de xf divisée par 12), pour un affichage avant écriture.
+Number of pieces that a list of groups stands up (size of xf divided by 12), for display before writing.
 
-- `groups` (*table|nil*) : Groupes renvoyés par groupInstances.
-- **renvoie** : number Nombre de pièces.
+- `groups` (*table|nil*) : Groups returned by groupInstances.
+- **returns**: number Number of pieces.
 
 #### `editor_toolUtilities_siteBake.localFeatures(features, ox, oy, oz)`
 
-Les formes auxquelles le site demande que le sol soit taillé, dans son repère. Chaque feature devient { quad = 4 coins {x,y,z locaux}, mode, band } ou { rings, z, mode, band }. Ignore tout ce à quoi sert la feature (palier, rampe, mur de soutènement).
+The shapes the site asks the ground to be carved to, in its frame. Each feature becomes { quad = 4 corners {local x,y,z}, mode, band } or { rings, z, mode, band }. Ignores what the feature is used for (landing, ramp, retaining wall).
 
-- `features` (*table|nil*) : Liste de features { quad } ou { rings, z }, avec mode ('carve' par défaut) et band.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- `oz` (*number*) : z de l'origine.
-- **renvoie** : table|nil Liste de features locales, nil s'il n'y en a pas.
+- `features` (*table|nil*) : List of features { quad } or { rings, z }, with mode ('carve' by default) and band.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- `oz` (*number*) : z of the origin.
+- **returns**: table|nil List of local features, nil if there are none.
 
 #### `editor_toolUtilities_siteBake.localLamps(lights, ox, oy, oz)`
 
-Les lampes qui accompagnent les pièces, dans le repère du site. La couleur vient de glow ou de col (blanc par défaut). Un projecteur (dx présent) sort avec dir et cone ; une ampoule non.
+The lamps that accompany the pieces, in the site's frame. The color comes from glow or col (white by default). A spotlight (dx present) comes out with dir and cone; a bulb does not.
 
-- `lights` (*table|nil*) : Liste d'enregistrements de lumière { px, py, pz, radius, brightness, glow|col, street, dx, dy, dz, cone }.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- `oz` (*number*) : z de l'origine.
-- **renvoie** : table|nil Liste de lampes locales, nil si vide.
+- `lights` (*table|nil*) : List of light records { px, py, pz, radius, brightness, glow|col, street, dx, dy, dz, cone }.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- `oz` (*number*) : z of the origin.
+- **returns**: table|nil List of local lamps, nil if empty.
 
 #### `editor_toolUtilities_siteBake.localPaint(coats, ox, oy)`
 
-La peinture de terrain qu'un site pose, dans son repère. Chaque couche { m, ring } ou { m, xs, ys } (cellule par cellule) sort nommée par couche de matériau du terrain.
+The terrain paint a site lays, in its frame. Each layer { m, ring } or { m, xs, ys } (cell by cell) comes out named by terrain material layer.
 
-- `coats` (*table|nil*) : Liste de couches : m = indice de matériau, ring ou xs/ys.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- **renvoie** : table|nil Liste { layer, ring } ou { layer, cells = {x1,y1,x2,y2,...} } ; nil si aucun bloc de terrain ou rien à peindre.
+- `coats` (*table|nil*) : List of layers: m = material index, ring or xs/ys.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- **returns**: table|nil List { layer, ring } or { layer, cells = {x1,y1,x2,y2,...} }; nil if no terrain block or nothing to paint.
 
 #### `editor_toolUtilities_siteBake.localPlants(anchors, ox, oy, oz)`
 
-Plantation sous forme d'ancres : { items } pour des plantes déjà dispersées (x, y, sp, s, a), ou { points, species, speciesWeights, size, vary, seed, drape, street } pour une dispersion à refaire (la graine est déjà calculée, pour obtenir les mêmes plantes aux mêmes endroits).
+Planting as anchors: { items } for already scattered plants (x, y, sp, s, a), or { points, species, speciesWeights, size, vary, seed, drape, street } for a scatter to redo (the seed is already computed, to obtain the same plants at the same places).
 
-- `anchors` (*table|nil*) : Ancres de l'éditeur.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- `oz` (*number*) : z de l'origine.
-- **renvoie** : table|nil Liste d'ancres locales, nil si vide.
+- `anchors` (*table|nil*) : Editor anchors.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- `oz` (*number*) : z of the origin.
+- **returns**: table|nil List of local anchors, nil if empty.
 
 #### `editor_toolUtilities_siteBake.localPts(pts, ox, oy)`
 
-Une polyligne de la même façon (sans minimum de points). Sert aussi pour des normales unitaires avec une origine nulle.
+A polyline in the same way (no minimum number of points). Also used for unit normals with a null origin.
 
-- `pts` (*table|nil*) : Liste de points {x,y}.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- **renvoie** : table Polyligne locale.
+- `pts` (*table|nil*) : List of {x,y} points.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- **returns**: table Local polyline.
 
 #### `editor_toolUtilities_siteBake.localRing(ring, ox, oy)`
 
-Un polygone de plan, local à l'origine de cuisson, arrondi au millimètre. Renvoie nil si moins de 3 points, pour qu'un appelant puisse collecter le retour directement dans une liste.
+A plan polygon, local to the bake origin, rounded to the millimeter. Returns nil if fewer than 3 points, so that a caller can collect the return directly into a list.
 
-- `ring` (*table|nil*) : Liste de points {x,y}.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- **renvoie** : table|nil Anneau local.
+- `ring` (*table|nil*) : List of {x,y} points.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- **returns**: table|nil Local ring.
 
 #### `editor_toolUtilities_siteBake.localRings(rings, ox, oy)`
 
-Une liste d'anneaux locaux ; nil si aucun n'était un polygone (une clé absente du manifeste signifie « ce site n'en a pas »).
+A list of local rings; nil if none was a polygon (a key absent from the manifest means "this site has none").
 
-- `rings` (*table|nil*) : Liste d'anneaux.
-- `ox` (*number*) : x de l'origine.
-- `oy` (*number*) : y de l'origine.
-- **renvoie** : table|nil Liste d'anneaux locaux.
+- `rings` (*table|nil*) : List of rings.
+- `ox` (*number*) : x of the origin.
+- `oy` (*number*) : y of the origin.
+- **returns**: table|nil List of local rings.
 
 #### `editor_toolUtilities_siteBake.plantCount(anchors)`
 
-Nombre de plantes qu'une cuisson porterait, sur toutes les ancres (items ou points). Uniquement pour un affichage.
+Number of plants that a bake would carry, over all anchors (items or points). For display only.
 
-- `anchors` (*table|nil*) : Ancres de plantation.
-- **renvoie** : integer Nombre de plantes.
+- `anchors` (*table|nil*) : Planting anchors.
+- **returns**: integer Number of plants.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/toolUtilities/siteBake.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/toolUtilities/siteBake.lua`.*

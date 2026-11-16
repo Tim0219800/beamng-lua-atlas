@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/scene/raycast.lua",
+  "module": "Noeud flowgraph « Raycast » (repeat_instant, tags util/draw). Lance un rayon depuis pos dans la direction dir et touche le premier objet de collision statique (TSStatic, terrain) via castRayStatic. Entrées : pos, dir (vec3), dist (cachée, 1000 par défaut ; sinon longueur de dir). Sorties : hit/miss (flow), pos (point d'impact) et dist (distance parcourue). data.debug dessine sphères, ligne et texte.",
+  "notes": [
+    "En cas d'absence d'impact, castRayStatic renvoie une distance >= dist et pos vaut alors le bout du rayon."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Désactive le debug (self.data.debug = false).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Appelle castRayStatic(pos, dir, dist), calcule le point d'impact et écrit hit, miss, pos et dist.",
+          "internal": false
+        }
+      }
+    }
+  }
+}

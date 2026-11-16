@@ -1,22 +1,22 @@
 # `flowgraph_nodes_vehicle_onVehicleSpawned`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.lua` · VM : Game Engine (GE) · 57 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.lua` · VM: Game Engine (GE) · 57 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/onVehicleSpawned")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/onVehicleSpawned")` (file under extensions/ but not a regular extension)
 
-Nœud événement « On Vehicle Spawned » (catégorie `logic`). Émet une impulsion sur `flow` et l'id `vehId` quand un véhicule est créé (hook `onVehicleSpawned`).
+Event node "On Vehicle Spawned" (category `logic`). Emits a pulse on `flow` and the id `vehId` when a vehicle is created (hook `onVehicleSpawned`).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false. | 52 |
-| `C:_executionStarted()` | Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro. | 32 |
-| `C:init(mgr, ...)` | Constructeur vide. | 28 |
-| `C:onVehicleSpawned(id)` | Hook appelé à la création d'un véhicule ; mémorise `id` et lève le drapeau. | 37 |
-| `C:work(args)` | Si le drapeau est levé, remplit `vehId` et met `flow` à true une frame, sinon false. | 42 |
+| `C:_afterTrigger()` | Called by the manager after the node is triggered; resets the event flag to false. | 52 |
+| `C:_executionStarted()` | Called by the manager when the flowgraph project execution starts; resets the internal state to zero. | 32 |
+| `C:init(mgr, ...)` | Empty constructor. | 28 |
+| `C:onVehicleSpawned(id)` | Hook called when a vehicle is created; stores `id` and raises the flag. | 37 |
+| `C:work(args)` | If the flag is raised, fills `vehId` and sets `flow` to true for one frame, otherwise false. | 42 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.lua`.*

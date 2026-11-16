@@ -1,21 +1,21 @@
 # `flowgraph_nodes_gameplay_crawl_getCrawlData`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlData.lua` · VM : Game Engine (GE) · 112 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlData.lua` · VM: Game Engine (GE) · 112 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crawl/getCrawlData")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crawl/getCrawlData")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Crawl Data » (catégorie repeat_instant, crawl). Lit les données d'exécution du crawl actif via le bridge. Sorties : onCompleted, onDisqualified, onCheckpointReached (flux sur front), isCompleted, disqualified, crawlerPosition (vec3), crawlerDirection (quat, lacet seul), vehicleId, hasRecoveryCheckpoint, recoveryPosition, recoveryRotation. Sans crawl actif : erreur de nœud et valeurs nulles par défaut ({0,0,0}, {0,0,0,1}).
+Flowgraph node "Get Crawl Data" (category repeat_instant, crawl). Reads the runtime data of the active crawl via the bridge. Outputs: onCompleted, onDisqualified, onCheckpointReached (flow on edge), isCompleted, disqualified, crawlerPosition (vec3), crawlerDirection (quat, yaw only), vehicleId, hasRecoveryCheckpoint, recoveryPosition, recoveryRotation. Without an active crawl: node error and null default values ({0,0,0}, {0,0,0,1}).
 
-**Dépendances (chargées avant) :** `gameplay_crawl_flowgraphBridge`
+**Dependencies (loaded first):** `gameplay_crawl_flowgraphBridge`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr)` | Charge le bridge et initialise les derniers états (complété, disqualifié, index de checkpoint). | 31 |
-| `C:work()` | Appelle bridge.getCrawlRuntimeData et getLastRecoveryCheckpoint, détecte les changements d'état et renseigne les pins. | 38 |
+| `C:init(mgr)` | Loads the bridge and initializes the last states (completed, disqualified, checkpoint index). | 31 |
+| `C:work()` | Calls bridge.getCrawlRuntimeData and getLastRecoveryCheckpoint, detects state changes and fills the pins. | 38 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crawl/getCrawlData.lua`.*

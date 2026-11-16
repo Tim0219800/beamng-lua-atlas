@@ -1,0 +1,22 @@
+{
+  "path": "lua/ge/extensions/core/settings/lightingQuality.lua",
+  "module": "Préréglages de qualité d'éclairage, consommés par graphicsQualityGroup. Chaque niveau fixe le gestionnaire de lumière, le filtrage des ombres, le spéculaire, le normal mapping, le parallax, les vrais reflets d'eau et le groupe de qualité des shaders, via des clés $pref::*. Le hook onApply change le gestionnaire de lumière actif.",
+  "notes": [
+    "Il n'y a pas de niveau Normal dans ce module (Lowest, Low, High, Ultra seulement).",
+    "Seul Lowest utilise Basic Lighting ; Low utilise Advanced Lighting ; High et Ultra utilisent Advanced Lighting 1.5 avec exactement les mêmes valeurs (Ultra est identique à High)."
+  ],
+  "fields": {
+    "qualityLevels": {
+      "type": "table<string, table<string, any>>",
+      "desc": "Niveaux Lowest, Low, High, Ultra. Clés : $pref::lightManager, $pref::Shadows::filterMode, $pref::Video::disablePixSpecular, $pref::Video::disableNormalmapping, $pref::Video::disableParallaxMapping, $pref::Water::disableTrueReflections, $pref::Video::ShaderQualityGroup."
+    }
+  },
+  "functions": {
+    "onApply": {
+      "desc": "Appelé par graphicsQualityGroup quand une valeur a changé. Lit $pref::lightManager ; si getActiveLightManager() est déjà égal, ne fait rien, sinon appelle setLightManager.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

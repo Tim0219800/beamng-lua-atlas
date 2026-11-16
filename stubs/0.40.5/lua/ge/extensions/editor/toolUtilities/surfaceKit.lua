@@ -2,85 +2,85 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/surfaceKit.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Kit partagé pour peindre des groundmodels (physique) sur des routes en mesh (mode groundmodel du Hero Road Editor). Le groundmodel est déduit du nom du matériau d'un triangle : les variantes de grip ont le même aspect que la base et ne diffèrent que par groundType. Les variantes sont le matériau de chaussée de la route plus un suffixe (_wet, _snow ou _snowy, _ice) ; Dry est le matériau de base et sert de gomme. Un état n'est peignable que si son matériau existe dans le niveau. La peinture est stockée en tampons monde { x, y, r, m } (m = indice de palette à partir de 1).
---- Accès : extension `editor_toolUtilities_surfaceKit` : `extensions.load("editor_toolUtilities_surfaceKit")`, puis la globale `editor_toolUtilities_surfaceKit`
+--- Shared kit for painting groundmodels (physics) on mesh roads (groundmodel mode of the Hero Road Editor). The groundmodel is inferred from the name of a triangle's material: grip variants look the same as the base and differ only by groundType. The variants are the road's pavement material plus a suffix (_wet, _snow or _snowy, _ice); Dry is the base material and serves as an eraser. A state can only be painted if its material exists in the level. The paint is stored in world stamps { x, y, r, m } (m = palette index starting at 1).
+--- Access: extension `editor_toolUtilities_surfaceKit`: `extensions.load("editor_toolUtilities_surfaceKit")`, then the global `editor_toolUtilities_surfaceKit`
 ---@class editor_toolUtilities_surfaceKit
 editor_toolUtilities_surfaceKit = {}
 
---- Construit un hachage spatial uniforme sur les tampons pour que la recherche par quad soit environ O(1). Renvoie nil s'il n'y a rien de peint.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:84
----@param stamps table|nil Liste de tampons { x, y, r, m }.
----@return table|nil  { cell, map } ou nil.
+--- Builds a uniform spatial hash over the stamps so the per-quad lookup is roughly O(1). Returns nil if nothing is painted.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:84
+---@param stamps table|nil List of stamps { x, y, r, m }.
+---@return table|nil  { cell, map } or nil.
 function editor_toolUtilities_surfaceKit.buildGrid(stamps) end
 
---- Couleur de surcouche { r, g, b } (0-255) ; celle de Dry si l'indice est inconnu.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:41
----@param i integer Indice.
+--- Overlay color { r, g, b } (0-255); that of Dry if the index is unknown.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:41
+---@param i integer Index.
 ---@return table  { r, g, b }.
 function editor_toolUtilities_surfaceKit.colOf(i) end
 
---- Nombre d'entrées de la palette.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:37
+--- Number of palette entries.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:37
 ---@return integer  4
 function editor_toolUtilities_surfaceKit.count() end
 
---- Entrée de palette (id, label, groundmodel, col, suffixes).
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:38
----@param i integer Indice à partir de 1.
----@return table|nil  Entrée.
+--- Palette entry (id, label, groundmodel, col, suffixes).
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:38
+---@param i integer Index starting at 1.
+---@return table|nil  Entry.
 function editor_toolUtilities_surfaceKit.get(i) end
 
---- Vrai si la surface `i` est peignable : Dry toujours, les autres seulement si une variante existe.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:62
----@param i integer Indice de palette.
----@param baseMat string Matériau de base.
----@return boolean  Disponible.
+--- True if surface `i` is paintable: Dry always, the others only if a variant exists.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:62
+---@param i integer Palette index.
+---@param baseMat string Base material.
+---@return boolean  Available.
 function editor_toolUtilities_surfaceKit.isAvailable(i, baseMat) end
 
---- Vrai si l'indice est celui de la surface de base (Dry) ; nil est traité comme la base.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:39
----@param i integer|nil Indice de palette.
----@return boolean  Est la base.
+--- True if the index is that of the base surface (Dry); nil is treated as the base.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:39
+---@param i integer|nil Palette index.
+---@return boolean  Is the base.
 function editor_toolUtilities_surfaceKit.isBase(i) end
 
---- Libellé de l'entrée, '?' si inconnue.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:40
----@param i integer Indice.
----@return string  Libellé.
+--- Label of the entry, '?' if unknown.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:40
+---@param i integer Index.
+---@return string  Label.
 function editor_toolUtilities_surfaceKit.labelOf(i) end
 
---- Indice de palette de la surface peinte au point monde (px, py) : le tampon d'indice le plus élevé couvrant le point gagne. Renvoie l'indice de base si rien ne le couvre.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:101
----@param grid table|nil Résultat de buildGrid.
----@param stamps table Les mêmes tampons.
----@param px number X monde (m).
----@param py number Y monde (m).
----@return integer  Indice de palette.
+--- Palette index of the painted surface at world point (px, py): the highest-index stamp covering the point wins. Returns the base index if nothing covers it.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:101
+---@param grid table|nil Result of buildGrid.
+---@param stamps table The same stamps.
+---@param px number World X (m).
+---@param py number World Y (m).
+---@return integer  Palette index.
 function editor_toolUtilities_surfaceKit.materialAt(grid, stamps, px, py) end
 
---- Vrai si un matériau de ce nom est présent dans le niveau (scenetree.findObject).
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:44
----@param name string|nil Nom du matériau.
----@return boolean  Existe.
+--- True if a material of this name is present in the level (scenetree.findObject).
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:44
+---@param name string|nil Material name.
+---@return boolean  Exists.
 function editor_toolUtilities_surfaceKit.materialExists(name) end
 
---- Matériau réellement appliqué à un quad peint de la surface `i` : la variante si elle existe, sinon la base.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:69
----@param i integer Indice.
----@param baseMat string Matériau de base.
----@return string  Nom du matériau.
+--- Material actually applied to a painted quad of surface `i`: the variant if it exists, otherwise the base.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:69
+---@param i integer Index.
+---@param baseMat string Base material.
+---@return string  Material name.
 function editor_toolUtilities_surfaceKit.materialOf(i, baseMat) end
 
---- Résout le matériau de chaque surface pour une base donnée, en un passage (appelé une fois par construction de mesh).
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:75
----@param baseMat string Matériau de base.
----@return table<integer, string>  Indice de palette -> nom de matériau.
+--- Resolves the material of each surface for a given base, in one pass (called once per mesh build).
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:75
+---@param baseMat string Base material.
+---@return table<integer, string>  Palette index -> material name.
 function editor_toolUtilities_surfaceKit.resolveMaterials(baseMat) end
 
---- Nom du matériau variante de la surface `i` pour la chaussée `baseMat`, ou nil si aucune variante n'existe (non peignable). Dry renvoie le matériau de base.
----Source : lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:50
----@param i integer Indice de palette.
----@param baseMat string Matériau de base de la chaussée.
----@return string|nil  Nom du matériau.
+--- Name of the variant material of surface `i` for the pavement `baseMat`, or nil if no variant exists (not paintable). Dry returns the base material.
+---Source: lua/ge/extensions/editor/toolUtilities/surfaceKit.lua:50
+---@param i integer Palette index.
+---@param baseMat string Base material of the pavement.
+---@return string|nil  Material name.
 function editor_toolUtilities_surfaceKit.variantMaterial(i, baseMat) end
 

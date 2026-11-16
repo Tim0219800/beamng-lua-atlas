@@ -1,155 +1,155 @@
 # `core_input_actions`
 
-*Fichier : `lua/ge/extensions/core/input/actions.lua` · VM : Game Engine (GE) · 374 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/input/actions.lua` · VM: Game Engine (GE) · 374 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_input_actions` : `extensions.load("core_input_actions")`, puis la globale `core_input_actions`
+**Access:** extension `core_input_actions`: `extensions.load("core_input_actions")`, then the global `core_input_actions`
 
-Extension GE `core_input_actions` : registre des actions d'entrée (ce que les touches/manettes peuvent déclencher). Il lit les fichiers lua/ge/extensions/core/input/actions/*.json (actions communes) et vehicles/<véhicule>/input_actions*.json plus les inputActions des fichiers jbeam (actions spécifiques à un véhicule), les met en cache, crée côté C++ les ActionMap nécessaires et traduit une action en paramètres de commande pour le moteur. Un moddeur s'en sert pour déclencher une action par son nom ou lister les actions disponibles.
+GE extension `core_input_actions`: registry of input actions (what keys/controllers can trigger). It reads the files lua/ge/extensions/core/input/actions/*.json (common actions) and vehicles/<vehicle>/input_actions*.json plus the inputActions of jbeam files (vehicle-specific actions), caches them, creates the required ActionMaps on the C++ side and translates an action into command parameters for the engine. A modder uses it to trigger an action by name or list the available actions.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('core_input_actions')
-local actions = core_input_actions.getActiveActions()   -- table uniqueName -> définition
-core_input_actions.triggerDownUp('toggleMenues')       -- simule appui + relâchement
+local actions = core_input_actions.getActiveActions()   -- table uniqueName -> definition
+core_input_actions.triggerDownUp('toggleMenues')       -- simulates press + release
 ```
 
-## Remarques
+## Notes
 
-- Nom unique : une action de véhicule est renommée '<véhicule>__<action>' (nameToUniqueName) pour éviter les collisions entre véhicules ; les actions communes gardent leur nom.
-- Champs d'une définition d'action (lus dans le code) : cat (catégorie, voir core_input_categories), ctx ('vlua' défaut pour véhicule, 'tlua', 'elua', 'bvlua' ; 'slua' remplacé par 'elua', 'ts' et 'ui' dépréciés), actionMap, onDown / onUp / onChange / onRelative (chaînes de code Lua), isCentered, vehicle, namespace ('common' = non spécifique), source (ajouté = chemin du fichier).
-- Jetons remplacés dans les chaînes de commande par executeCommand : VALUE, VEHICLEID, FILTERTYPE (-1), PLAYER (0 par défaut), TRIGGERID, ANGLE (900), LOCKTYPE (0). Remplacement par simple gsub de sous-chaîne : éviter ces mots dans le code d'une action.
-- Actif/inactif : une action est inactive si license.isAllowedActionsPath refuse son fichier, ou si le chemin contient '_nonshipping' dans une version shipping.
-- Les caches sont vidés au premier update, au changement de véhicule et à la modification d'un fichier de actions/*.json.
-- Incohérences : le commentaire de executeCommand annonce 'returns the executed action count' mais pour le contexte vlua il renvoie le retour de queueCmd, qui ne retourne rien (nil) ; les messages de doublon d'action utilisent `vid`, hors de portée dans la boucle des actions normales (affiche nil).
+- Unique name: a vehicle action is renamed '<vehicle>__<action>' (nameToUniqueName) to avoid collisions between vehicles; common actions keep their name.
+- Fields of an action definition (read in the code): cat (category, see core_input_categories), ctx ('vlua' default for vehicle, 'tlua', 'elua', 'bvlua'; 'slua' replaced by 'elua', 'ts' and 'ui' deprecated), actionMap, onDown / onUp / onChange / onRelative (Lua code strings), isCentered, vehicle, namespace ('common' = not specific), source (added = file path).
+- Tokens replaced in the command strings by executeCommand: VALUE, VEHICLEID, FILTERTYPE (-1), PLAYER (0 by default), TRIGGERID, ANGLE (900), LOCKTYPE (0). Replacement by simple substring gsub: avoid these words in an action's code.
+- Active/inactive: an action is inactive if license.isAllowedActionsPath refuses its file, or if the path contains '_nonshipping' in a shipping build.
+- The caches are cleared at the first update, on vehicle change and when an actions/*.json file is modified.
+- Inconsistencies: the comment of executeCommand announces 'returns the executed action count' but for the vlua context it returns the return value of queueCmd, which returns nothing (nil); the duplicate action messages use `vid`, out of scope in the normal actions loop (prints nil).
 
-**Dépendances (chargées avant) :** `core_input_categories`, `core_input_deprecatedActions`, `license`
+**Dependencies (loaded first):** `core_input_categories`, `core_input_deprecatedActions`, `license`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_input_actions.actionToCommands(actionName, actionCache)` | Convertit une action en paramètres utilisés par le moteur lors d'un déclenchement. Détermine l'ActionMap (Normal, Menu, VehicleCommon, VehicleSpecific, ou celle de l'action), les callbacks onChange/onDown/onUp, le contexte de commande et isCentered. Loggue les catégories invalides et les contextes dépréciés. | 203 |
-| `core_input_actions.executeCommand(evt, actionValue, vehicleId, player, triggerId)` | Exécute le code d'une action : vlua -> envoyé au véhicule vehicleId ; elua/tlua -> Lua:queueLuaCommand (GE) ; bvlua -> à tous les objets. onDown est utilisé si actionValue == 1, onUp si actionValue == 0, sinon onChange. Les jetons VALUE, VEHICLEID, PLAYER, TRIGGERID… sont remplacés dans le code. | 307 |
-| `core_input_actions.getActiveActions()` | Actions actuellement actives : actions des véhicules existants (marquées cat 'vehicle_specific' si utilisables, sinon 'vehicle_specific_unusable') plus les actions communes. Crée au passage les ActionMap C++ manquantes. | 360 |
-| `core_input_actions.getInactiveActions()` | Actions désactivées (licence ou fichiers _nonshipping en version shipping). | 361 |
-| `core_input_actions.nameToUniqueName(actionName, vehicleName)` | Préfixe le nom d'action par le nom du véhicule : '<véhicule>__<action>'. | 16 |
-| `core_input_actions.onFileChanged(filename)` | Hook de modification de fichier : si un JSON sous /lua/ge/extensions/core/input/actions change, vide les caches. *(interne)* *(hook)* | 265 |
-| `core_input_actions.onFirstUpdate()` | Hook au premier update : vide le cache des actions. *(interne)* *(hook)* | 257 |
-| `core_input_actions.onVehicleSwitched(oldId, newId, player)` | Hook au changement de véhicule joueur : vide le cache des actions (les actions spécifiques changent). *(interne)* *(hook)* | 261 |
-| `core_input_actions.triggerDown(actionName)` | Simule l'appui d'une action nommée (ActionMap.triggerBindingByNameDigital(name, true)). | 273 |
-| `core_input_actions.triggerDownUp(actionName)` | Simule un appui puis un relâchement immédiats. | 279 |
-| `core_input_actions.triggerUp(actionName)` | Simule le relâchement d'une action nommée. | 276 |
-| `core_input_actions.uniqueNameToName(uniqueActionName, vehicleName)` | Opération inverse : retire le préfixe '<véhicule>__'. Loggue une erreur et renvoie le nom inchangé si le préfixe manque. | 20 |
-| `core_input_actions.upgradeAction(action)` | Résout un nom d'action : renvoie le nom s'il est actif ; suit récursivement les remplacements de core_input_deprecatedActions ; renvoie nil (avec log) si l'action est inactive, obsolète ou inconnue. | 171 |
+| `core_input_actions.actionToCommands(actionName, actionCache)` | Converts an action into parameters used by the engine on triggering. Determines the ActionMap (Normal, Menu, VehicleCommon, VehicleSpecific, or the action's own), the onChange/onDown/onUp callbacks, the command context and isCentered. Logs invalid categories and deprecated contexts. | 203 |
+| `core_input_actions.executeCommand(evt, actionValue, vehicleId, player, triggerId)` | Executes an action's code: vlua -> sent to vehicle vehicleId; elua/tlua -> Lua:queueLuaCommand (GE); bvlua -> to all objects. onDown is used if actionValue == 1, onUp if actionValue == 0, otherwise onChange. The tokens VALUE, VEHICLEID, PLAYER, TRIGGERID… are replaced in the code. | 307 |
+| `core_input_actions.getActiveActions()` | Currently active actions: actions of existing vehicles (marked cat 'vehicle_specific' if usable, otherwise 'vehicle_specific_unusable') plus the common actions. Creates the missing C++ ActionMaps along the way. | 360 |
+| `core_input_actions.getInactiveActions()` | Disabled actions (license or _nonshipping files in a shipping build). | 361 |
+| `core_input_actions.nameToUniqueName(actionName, vehicleName)` | Prefixes the action name with the vehicle name: '<vehicle>__<action>'. | 16 |
+| `core_input_actions.onFileChanged(filename)` | File modification hook: if a JSON under /lua/ge/extensions/core/input/actions changes, clears the caches. *(internal)* *(hook)* | 265 |
+| `core_input_actions.onFirstUpdate()` | Hook at first update: clears the actions cache. *(internal)* *(hook)* | 257 |
+| `core_input_actions.onVehicleSwitched(oldId, newId, player)` | Hook on player vehicle change: clears the actions cache (the specific actions change). *(internal)* *(hook)* | 261 |
+| `core_input_actions.triggerDown(actionName)` | Simulates the press of a named action (ActionMap.triggerBindingByNameDigital(name, true)). | 273 |
+| `core_input_actions.triggerDownUp(actionName)` | Simulates an immediate press then release. | 279 |
+| `core_input_actions.triggerUp(actionName)` | Simulates the release of a named action. | 276 |
+| `core_input_actions.uniqueNameToName(uniqueActionName, vehicleName)` | Inverse operation: removes the '<vehicle>__' prefix. Logs an error and returns the name unchanged if the prefix is missing. | 20 |
+| `core_input_actions.upgradeAction(action)` | Resolves an action name: returns the name if it is active; recursively follows the replacements of core_input_deprecatedActions; returns nil (with a log) if the action is inactive, obsolete or unknown. | 171 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_input_actions.actionToCommands(actionName, actionCache)`
 
-Convertit une action en paramètres utilisés par le moteur lors d'un déclenchement. Détermine l'ActionMap (Normal, Menu, VehicleCommon, VehicleSpecific, ou celle de l'action), les callbacks onChange/onDown/onUp, le contexte de commande et isCentered. Loggue les catégories invalides et les contextes dépréciés.
+Converts an action into parameters used by the engine on triggering. Determines the ActionMap (Normal, Menu, VehicleCommon, VehicleSpecific, or the action's own), the onChange/onDown/onUp callbacks, the command context and isCentered. Logs invalid categories and deprecated contexts.
 
-- `actionName` (*string*) : Nom unique de l'action.
-- `actionCache` (*table|nil*) : Définition déjà connue de l'action ; nécessaire uniquement quand l'appel vient de getActions (évite une récursion infinie).
-- **renvoie** : boolean true.
-- **renvoie** : string Nom de l'actionmap.
-- **renvoie** : boolean actsOnChange.
-- **renvoie** : string Code onChange (ou onRelative).
-- **renvoie** : boolean actsOnDown.
-- **renvoie** : string Code onDown.
-- **renvoie** : boolean actsOnUp.
-- **renvoie** : string Code onUp.
-- **renvoie** : boolean isRelative (onRelative utilisé).
-- **renvoie** : userdata ActionMapCommandContext (type VLUA/ELUA/TLUA/BVLUA/TS).
-- **renvoie** : boolean isCentered.
+- `actionName` (*string*) : Unique name of the action.
+- `actionCache` (*table|nil*) : Already known definition of the action; only needed when the call comes from getActions (avoids infinite recursion).
+- **returns**: boolean true.
+- **returns**: string Name of the actionmap.
+- **returns**: boolean actsOnChange.
+- **returns**: string onChange (or onRelative) code.
+- **returns**: boolean actsOnDown.
+- **returns**: string onDown code.
+- **returns**: boolean actsOnUp.
+- **returns**: string onUp code.
+- **returns**: boolean isRelative (onRelative used).
+- **returns**: userdata ActionMapCommandContext (type VLUA/ELUA/TLUA/BVLUA/TS).
+- **returns**: boolean isCentered.
 
 #### `core_input_actions.executeCommand(evt, actionValue, vehicleId, player, triggerId)`
 
-Exécute le code d'une action : vlua -> envoyé au véhicule vehicleId ; elua/tlua -> Lua:queueLuaCommand (GE) ; bvlua -> à tous les objets. onDown est utilisé si actionValue == 1, onUp si actionValue == 0, sinon onChange. Les jetons VALUE, VEHICLEID, PLAYER, TRIGGERID… sont remplacés dans le code.
+Executes an action's code: vlua -> sent to vehicle vehicleId; elua/tlua -> Lua:queueLuaCommand (GE); bvlua -> to all objects. onDown is used if actionValue == 1, onUp if actionValue == 0, otherwise onChange. The tokens VALUE, VEHICLEID, PLAYER, TRIGGERID… are replaced in the code.
 
-- `evt` (*table*) : Définition d'action avec ctx (nil = vlua), onDown, onUp, onChange.
-- `actionValue` (*number*) : Valeur de l'action (1 = appui, 0 = relâché, ou valeur analogique pour onChange).
-- `vehicleId` (*integer*) : Id du véhicule cible (contexte vlua).
-- `player` (*integer|nil*) : Indice du joueur ; défaut 0.
-- `triggerId` (*any*) : Valeur pour TRIGGERID (chaîne vide si nil).
-- **renvoie** : integer|nil 1 pour GE/bvlua si une commande a été envoyée, 0 sinon ; pour vlua le retour de queueCmd, donc nil (voir notes).
+- `evt` (*table*) : Action definition with ctx (nil = vlua), onDown, onUp, onChange.
+- `actionValue` (*number*) : Action value (1 = press, 0 = release, or analog value for onChange).
+- `vehicleId` (*integer*) : Id of the target vehicle (vlua context).
+- `player` (*integer|nil*) : Player index; default 0.
+- `triggerId` (*any*) : Value for TRIGGERID (empty string if nil).
+- **returns**: integer|nil 1 for GE/bvlua if a command was sent, 0 otherwise; for vlua the return value of queueCmd, hence nil (see notes).
 
 #### `core_input_actions.getActiveActions()`
 
-Actions actuellement actives : actions des véhicules existants (marquées cat 'vehicle_specific' si utilisables, sinon 'vehicle_specific_unusable') plus les actions communes. Crée au passage les ActionMap C++ manquantes.
+Currently active actions: actions of existing vehicles (marked cat 'vehicle_specific' if usable, otherwise 'vehicle_specific_unusable') plus the common actions. Creates the missing C++ ActionMaps along the way.
 
-- **renvoie** : table<string, table> Nom unique de l'action -> définition.
+- **returns**: table<string, table> Unique action name -> definition.
 
 #### `core_input_actions.getInactiveActions()`
 
-Actions désactivées (licence ou fichiers _nonshipping en version shipping).
+Disabled actions (license or _nonshipping files in a shipping build).
 
-- **renvoie** : table<string, table> Nom unique -> définition.
+- **returns**: table<string, table> Unique name -> definition.
 
 #### `core_input_actions.nameToUniqueName(actionName, vehicleName)`
 
-Préfixe le nom d'action par le nom du véhicule : '<véhicule>__<action>'.
+Prefixes the action name with the vehicle name: '<vehicle>__<action>'.
 
-- `actionName` (*string*) : Nom court.
-- `vehicleName` (*string|nil*) : Nom du véhicule ; nil = nom inchangé.
-- **renvoie** : string Nom unique.
+- `actionName` (*string*) : Short name.
+- `vehicleName` (*string|nil*) : Vehicle name; nil = name unchanged.
+- **returns**: string Unique name.
 
 #### `core_input_actions.onFileChanged(filename)`
 
-Hook de modification de fichier : si un JSON sous /lua/ge/extensions/core/input/actions change, vide les caches.
+File modification hook: if a JSON under /lua/ge/extensions/core/input/actions changes, clears the caches.
 
-- `filename` (*string*) : Chemin du fichier modifié.
+- `filename` (*string*) : Path of the modified file.
 
 #### `core_input_actions.onVehicleSwitched(oldId, newId, player)`
 
-Hook au changement de véhicule joueur : vide le cache des actions (les actions spécifiques changent).
+Hook on player vehicle change: clears the actions cache (the specific actions change).
 
-- `oldId` (*integer*) : Ancien véhicule.
-- `newId` (*integer*) : Nouveau véhicule.
-- `player` (*integer*) : Indice du joueur.
+- `oldId` (*integer*) : Old vehicle.
+- `newId` (*integer*) : New vehicle.
+- `player` (*integer*) : Player index.
 
 #### `core_input_actions.triggerDown(actionName)`
 
-Simule l'appui d'une action nommée (ActionMap.triggerBindingByNameDigital(name, true)).
+Simulates the press of a named action (ActionMap.triggerBindingByNameDigital(name, true)).
 
-- `actionName` (*string*) : Nom de l'action.
+- `actionName` (*string*) : Name of the action.
 
 #### `core_input_actions.triggerDownUp(actionName)`
 
-Simule un appui puis un relâchement immédiats.
+Simulates an immediate press then release.
 
-- `actionName` (*string*) : Nom de l'action.
+- `actionName` (*string*) : Name of the action.
 
 #### `core_input_actions.triggerUp(actionName)`
 
-Simule le relâchement d'une action nommée.
+Simulates the release of a named action.
 
-- `actionName` (*string*) : Nom de l'action.
+- `actionName` (*string*) : Name of the action.
 
 #### `core_input_actions.uniqueNameToName(uniqueActionName, vehicleName)`
 
-Opération inverse : retire le préfixe '<véhicule>__'. Loggue une erreur et renvoie le nom inchangé si le préfixe manque.
+Inverse operation: removes the '<vehicle>__' prefix. Logs an error and returns the name unchanged if the prefix is missing.
 
-- `uniqueActionName` (*string*) : Nom unique.
-- `vehicleName` (*string|nil*) : Nom du véhicule.
-- **renvoie** : string Nom court.
+- `uniqueActionName` (*string*) : Unique name.
+- `vehicleName` (*string|nil*) : Vehicle name.
+- **returns**: string Short name.
 
 #### `core_input_actions.upgradeAction(action)`
 
-Résout un nom d'action : renvoie le nom s'il est actif ; suit récursivement les remplacements de core_input_deprecatedActions ; renvoie nil (avec log) si l'action est inactive, obsolète ou inconnue.
+Resolves an action name: returns the name if it is active; recursively follows the replacements of core_input_deprecatedActions; returns nil (with a log) if the action is inactive, obsolete or unknown.
 
-- `action` (*string*) : Nom unique de l'action.
-- **renvoie** : string|nil Nom valide ou nil.
+- `action` (*string*) : Unique name of the action.
+- **returns**: string|nil Valid name or nil.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {'core_input_categories', 'core_input_deprecatedActions', 'license'}. |
-| `menuActionMapNames` | table<string, boolean> | Ensemble des noms d'ActionMap 'menu indépendants' (poussés/pushés dès leur création). Vidé et reconstruit à chaque lecture des actions actives. |
-| `menuIndependentPrefix` | string | 'MenuIndependent_' : préfixe des ActionMap dont l'action déclare actionMap = 'MenuIndependent'. |
+| `menuActionMapNames` | table<string, boolean> | Set of 'menu independent' ActionMap names (pushed as soon as they are created). Cleared and rebuilt on every read of the active actions. |
+| `menuIndependentPrefix` | string | 'MenuIndependent_': prefix of the ActionMaps whose action declares actionMap = 'MenuIndependent'. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `Lua:` `queueLuaCommand`
@@ -157,4 +157,4 @@ Résout un nom d'action : renvoie le nom s'il est actif ; suit récursivement le
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/input/actions.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/input/actions.lua`.*

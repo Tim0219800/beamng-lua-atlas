@@ -1,34 +1,52 @@
 {
   "path": "lua/ge/extensions/career/modules/milestones/generalMilestones/branches.lua",
-  "module": "Jalons de niveaux de branches et de compétences de la carrière. Pour chaque branche non « isInDevelopment » de career_branches.getSortedBranches(), crée un jalon branch_<id> dont les paliers sont les niveaux (requiredValue). Les branches donnent une récompense majorLinear et apparaissent aussi dans le filtre general ; les compétences (isSkill) une récompense minorLinear. Notifie le joueur quand le seuil du niveau suivant est atteint.",
+  "module": "Career branch level and skill milestones. For each non-\"isInDevelopment\" branch of career_branches.getSortedBranches(), creates a branch_<id> milestone whose tiers are the levels (requiredValue). Branches give a majorLinear reward and also appear in the general filter; skills (isSkill) give a minorLinear reward. Notifies the player when the next level's threshold is reached.",
   "notes": [
-    "Dans onPlayerAttributesChanged, `return` est utilisé quand l'attribut modifié n'a pas de jalon : les attributs suivants de la table change ne sont alors pas traités (probablement `goto continue` voulu).",
-    "Déclenche le hook onBranchTierReached(branchKey, step+1) à l'atteinte d'un palier.",
-    "Icônes par branche parente : motorsport raceFlag, labourer deliveryTruckArrows, specialized carChase01, adventurer jump.",
-    "Si la branche n'a pas de color, elle prend celle de sa branche parente."
+    "In onPlayerAttributesChanged, `return` is used when the changed attribute has no milestone: the following attributes of the change table are then not processed (probably `goto continue` was intended).",
+    "Triggers the onBranchTierReached(branchKey, step+1) hook when a tier is reached.",
+    "Icons per parent branch: motorsport raceFlag, labourer deliveryTruckArrows, specialized carChase01, adventurer jump.",
+    "If the branch has no color, it takes that of its parent branch."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_branches."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: career_branches."
+    }
   },
   "functions": {
     "onGeneralMilestonesCollect": {
-      "desc": "Hook : ajoute à milestonesList un jalon par branche/compétence et crée sa sauvegarde si absente.",
-      "params": {"milestonesList": {"type": "table[]", "desc": "Liste à compléter."}},
+      "desc": "Hook: adds to milestonesList one milestone per branch/skill and creates its save data if absent.",
+      "params": {
+        "milestonesList": {
+          "type": "table[]",
+          "desc": "List to fill."
+        }
+      },
       "internal": true
     },
     "onGeneralMilestonesSetupCallbacks": {
-      "desc": "Hook : fixe la prochaine cible de notification de chaque jalon de branche.",
+      "desc": "Hook: sets the next notification target of each branch milestone.",
       "params": {},
       "internal": true
     },
     "setNotificationTarget": {
-      "desc": "Calcule la cible du palier suivant à notifier (notificationStep + 1) et la stocke dans milestoneConfig._target ; ne fait rien si tous les paliers sont notifiés.",
-      "params": {"attKey": {"type": "string", "desc": "Clé d'attribut de la branche."}},
+      "desc": "Computes the target of the next tier to notify (notificationStep + 1) and stores it in milestoneConfig._target; does nothing if all tiers are notified.",
+      "params": {
+        "attKey": {
+          "type": "string",
+          "desc": "Branch attribute key."
+        }
+      },
       "internal": false
     },
     "onPlayerAttributesChanged": {
-      "desc": "Hook : quand un attribut de branche augmente et dépasse la cible, déclenche onBranchTierReached, affiche le toast de jalon, avance notificationStep et recalcule la cible.",
-      "params": {"change": {"type": "table<string, number>", "desc": "Variation par attribut."}},
+      "desc": "Hook: when a branch attribute increases and exceeds the target, triggers onBranchTierReached, shows the milestone toast, advances notificationStep and recomputes the target.",
+      "params": {
+        "change": {
+          "type": "table<string, number>",
+          "desc": "Change per attribute."
+        }
+      },
       "internal": true
     }
   }

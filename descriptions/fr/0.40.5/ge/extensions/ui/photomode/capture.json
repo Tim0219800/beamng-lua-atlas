@@ -1,0 +1,377 @@
+{
+  "path": "lua/ge/extensions/ui/photomode/capture.lua",
+  "module": "Capture d'images du mode photo : réglages (supersampling, niveau de réduction, HDR, capture avec flou de mouvement, passes supplémentaires scène/véhicule et normales/profondeur), présets de résolution de fenêtre, échelle de rendu des upscalers temporels, et les demandes de capture elles-mêmes (basique, publication/upload, Steam, flou de mouvement). Le module s'appuie sur le module « screenshot » (takeScreenShot, takeCustomScreenShot, takeMotionBlurScreenShot, publish, doSteamScreenshot) et sur ui_photomode_flash pour le flash. Il est piloté par l'UI du mode photo et par ui_photomode_shared.",
+  "usage": "local r = ui_photomode_capture.setCaptureState({superSampling = 4, downscaleLevel = 4})\nlocal res = ui_photomode_capture.requestScreenshot({motion = false})\nif not res.ok then log('W', 'x', res.reason) end",
+  "notes": [
+    "Les fonctions de capture renvoient {ok, reason?, mode, captureUiHoldFrames?}. Raisons possibles : session_inactive, capture_busy, screenshot_unavailable, screenshot_method_missing, hdr_unavailable, screenshot_request_failed, upload_unavailable, steam_unavailable, motion_blur_disabled, shipping_build_required, resolution_preset_invalid, resolution_apply_failed, capture_state_invalid.",
+    "Limites : supersampling 1 à 8 (plafonné par getMaxSafeScreenshotSuperSampling selon la VRAM), niveau de réduction 1 à 8, valeurs par défaut 2 et 2. Avec un upscaler temporel (DLSS, FSR3, FSR4, XeSS, fsrCustom, PSSR) actif, les deux sont forcés à 1.",
+    "rescaleFactor = 1 / sqrt(downscaleLevel) ; la résolution de rendu est fenêtre x sqrt(superSampling) (ou x resolutionScale avec un upscaler temporel), la sortie est ensuite multipliée par rescaleFactor.",
+    "Les présets de résolution (current, 1280x720, 1600x900, 1920x1080, 2560x1440, 3840x2160) ne sont disponibles que hors build shipping (isResolutionPresetFeatureEnabled = shipping_build ~= true). Incohérence : en build shipping, setResolutionPreset renvoie la raison « shipping_build_required », alors que c'est l'inverse qui est exigé (un build non shipping).",
+    "Comportement de mouvement : motionBehavior vaut static, followVehicle (défaut) ou followVehicleWithRotation ; hors static, util/photomodeAttach attache la caméra au véhicule pendant la capture. La simulation est temporairement dépausée pendant une capture avec flou de mouvement, puis remise en pause. Il faut que PostFxMotionBlur soit activé.",
+    "requestBasicScreenshot contient un TODO du jeu : takeScreenShot() ne gère pas bien la capture des normales ; lorsque des passes supplémentaires sont demandées avec les valeurs par défaut (2, 2), la capture passe par takeCustomScreenShot avec 2 et 2.",
+    "Le basculement HDR attend jusqu'à 10 images pour se stabiliser (timeout avec warning dans les logs) ; l'état HDR d'origine est restauré par finishPendingBasicCapture.",
+    "Le module utilise ui_photomode_shared, gameplay_achievement (succès SCREENSHOT_TAKEN) et core_locales sans les déclarer tous dans M.dependencies (seul ui_photomode_flash l'est).",
+    "handlePreRender fait avancer les captures en attente (HDR, flou de mouvement) et doit être appelé à chaque image par le module principal du mode photo ; onScreenshotAllDone est le hook de fin de capture émis par le module screenshot."
+  ],
+  "fields": {
+    "DEFAULTS": {
+      "type": "table",
+      "desc": "Valeurs par défaut statiques : superSampling = 2, downscaleLevel = 2, motionEnabled = false, motionBehavior = \"followVehicle\", splitSceneVehicle = false, saveNormalDepth = false, hdrScreenshot = false. Pour les valeurs réellement appliquées (upscaler temporel, HDR), utiliser buildDefaultSettings()."
+    },
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{\"ui_photomode_flash\"}"
+    }
+  },
+  "functions": {
+    "buildDefaultSettings": {
+      "desc": "Renvoie les réglages de capture par défaut en tenant compte du contexte : supersampling et réduction à 1 si un upscaler temporel est actif (sinon 2), HDR activé par défaut seulement si le HDR est pris en charge et actif.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{superSampling, downscaleLevel, motionEnabled, motionBehavior, splitSceneVehicle, saveNormalDepth, hdrScreenshot}"
+        }
+      ],
+      "internal": false
+    },
+    "isResolutionPresetFeatureEnabled": {
+      "desc": "Indique si les présets de résolution sont disponibles : true quand le jeu n'est pas un build shipping.",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "fonction active"
+        }
+      ],
+      "internal": false
+    },
+    "findResolutionPreset": {
+      "desc": "Cherche un préset de résolution par identifiant ; un identifiant vide vaut « current ».",
+      "params": {
+        "presetId": {
+          "type": "string|nil",
+          "desc": "Identifiant du préset"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Préset {id, labelKey, width?, height?} ou nil"
+        }
+      ],
+      "internal": false
+    },
+    "applyResolutionPreset": {
+      "desc": "Applique un préset de résolution en fenêtré via util_resolution.setWindowedResolution (charge l'extension util/resolution). Le préset « current » ne fait rien.",
+      "params": {
+        "preset": {
+          "type": "table",
+          "desc": "Préset renvoyé par findResolutionPreset"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "succès"
+        },
+        {
+          "type": "string|nil",
+          "desc": "resolution_api_unavailable ou resolution_apply_failed"
+        }
+      ],
+      "internal": false
+    },
+    "applySelectedResolutionPresetBeforeCapture": {
+      "desc": "Cherche puis applique le préset dont l'identifiant est donné (applyResolutionPreset(findResolutionPreset(id))). Si l'identifiant est inconnu, findResolutionPreset renvoie nil et applyResolutionPreset renvoie true sans rien faire.",
+      "params": {
+        "selectedResolutionPresetId": {
+          "type": "string|nil",
+          "desc": "Identifiant du préset choisi"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "succès"
+        },
+        {
+          "type": "string|nil",
+          "desc": "raison de l'échec"
+        }
+      ],
+      "internal": false
+    },
+    "setResolutionPreset": {
+      "desc": "Sélectionne et applique immédiatement un préset de résolution, et le mémorise comme sélection courante.",
+      "params": {
+        "presetId": {
+          "type": "string",
+          "desc": "Identifiant du préset"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ok, reason?, state}"
+        }
+      ],
+      "internal": false
+    },
+    "buildResolutionPresetState": {
+      "desc": "Construit l'état de l'interface des présets de résolution : visible, enabled, selectedId, libellés, applyOnCapture (toujours false) et la liste items {value, label}.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "État des présets"
+        }
+      ],
+      "internal": false
+    },
+    "getResolutionPresetState": {
+      "desc": "Renvoie {ok = fonction active, state = buildResolutionPresetState()}.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ok, state}"
+        }
+      ],
+      "internal": false
+    },
+    "normalizeCaptureSuperSampling": {
+      "desc": "Arrondit la valeur de supersampling à l'entier le plus proche puis la borne entre 1 et safeMax (maximum 8).",
+      "params": {
+        "value": {
+          "type": "number",
+          "desc": "Valeur demandée (défaut 2 si non numérique)"
+        },
+        "safeMax": {
+          "type": "number|nil",
+          "desc": "Maximum sûr (8 par défaut)"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Supersampling normalisé"
+        }
+      ],
+      "internal": false
+    },
+    "buildCaptureRescaleFactor": {
+      "desc": "Calcule le facteur de réduction final de l'image : 1 / racine carrée du niveau de réduction normalisé.",
+      "params": {
+        "downscaleLevel": {
+          "type": "number",
+          "desc": "Niveau de réduction (1 à 8)"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Facteur d'échelle entre 0.35 et 1"
+        }
+      ],
+      "internal": false
+    },
+    "buildNormalizedCaptureSettings": {
+      "desc": "Normalise un jeu de réglages de capture : bornes de supersampling et de réduction (selon la VRAM), booléens, mode de mouvement, HDR désactivé si non pris en charge, supersampling et réduction forcés à 1 avec un upscaler temporel. Ajoute safeSuperSamplingMax et temporalUpscalersEnabled.",
+      "params": {
+        "captureSettings": {
+          "type": "table|nil",
+          "desc": "Réglages bruts"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Réglages normalisés"
+        }
+      ],
+      "internal": false
+    },
+    "buildCaptureState": {
+      "desc": "Construit l'état complet d'affichage de la capture pour l'UI : réglages, facteur de réduction, limites, libellés de résolutions (fenêtre, cible de rendu, sortie), format, rapport d'aspect, taille de fichier estimée, avertissement VRAM / supersampling élevé (seuil 6), mouvement, artefacts, HDR et état du flash.",
+      "params": {
+        "captureSettings": {
+          "type": "table|nil",
+          "desc": "Réglages à décrire"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "État d'affichage"
+        }
+      ],
+      "internal": false
+    },
+    "applyCaptureStatePatch": {
+      "desc": "Applique un patch partiel sur des réglages donnés sans toucher à l'état du module : superSampling, downscaleLevel, motion {enabled, behavior}, artifacts {splitSceneVehicle, saveNormalDepth}, hdr {enabled}, flash (transmis à ui_photomode_flash.applyStatePatch) et resolutionScale (appliqué tout de suite aux réglages graphiques GraphicUpscalingQuality, entre 0.33 et 1).",
+      "params": {
+        "currentCaptureSettings": {
+          "type": "table",
+          "desc": "Réglages de départ"
+        },
+        "partialState": {
+          "type": "table",
+          "desc": "Patch partiel"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Nouveaux réglages normalisés, ou nil"
+        },
+        {
+          "type": "string|nil",
+          "desc": "capture_state_invalid ou capture_resolution_scale_set_failed"
+        }
+      ],
+      "internal": false
+    },
+    "buildState": {
+      "desc": "État d'affichage de la capture avec les réglages courants du module.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Voir buildCaptureState"
+        }
+      ],
+      "internal": false
+    },
+    "buildMetadataState": {
+      "desc": "Sous-ensemble des réglages à écrire dans les métadonnées d'une photo : superSampling, downscaleLevel, rescaleFactor, motion, artifacts, hdr, flash, resolutionScale.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Réglages de capture"
+        }
+      ],
+      "internal": false
+    },
+    "getCaptureState": {
+      "desc": "Renvoie buildState() avec ok = session de mode photo active, et reason = session_inactive sinon.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "État de capture"
+        }
+      ],
+      "internal": false
+    },
+    "setCaptureState": {
+      "desc": "Applique un patch partiel aux réglages de capture du module (voir applyCaptureStatePatch), puis réapplique les réglages du flash. Exige une session active.",
+      "params": {
+        "partialState": {
+          "type": "table",
+          "desc": "Patch partiel"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ok, reason?, state}"
+        }
+      ],
+      "internal": false
+    },
+    "requestScreenshot": {
+      "desc": "Demande une capture. options.motion = capture avec flou de mouvement ; options.upload = publication en ligne ; options.steam = capture Steam ; ils se combinent (upload + steam). Sans option : capture basique (chemin par défaut si supersampling et réduction valent 1 sans passe supplémentaire, sinon capture personnalisée). Gère le flash, le changement HDR (différé de quelques images) et déclenche le succès SCREENSHOT_TAKEN.",
+      "params": {
+        "options": {
+          "type": "table|nil",
+          "desc": "{motion?, upload?, steam?}"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ok, reason?, mode, captureUiHoldFrames?}"
+        }
+      ],
+      "internal": false
+    },
+    "isCaptureInProgress": {
+      "desc": "Indique si une capture est en cours (basique en attente, mouvement en attente, ou compteur d'images de capture non nul), pour que l'UI reste masquée.",
+      "params": {},
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "capture en cours"
+        }
+      ],
+      "internal": false
+    },
+    "markCaptureInProgress": {
+      "desc": "Prolonge le compteur d'images pendant lesquelles la capture est considérée en cours (prend le maximum de la valeur actuelle et de frames).",
+      "params": {
+        "frames": {
+          "type": "integer",
+          "desc": "Nombre d'images ; ignoré si <= 0"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "finishPendingMotionCapture": {
+      "desc": "Termine une capture avec flou de mouvement : restaure la demande de pause du mode photo ou remet la simulation en pause, puis détache la caméra du véhicule (immédiatement ou après quelques images).",
+      "params": {
+        "immediateAttachRelease": {
+          "type": "boolean|nil",
+          "desc": "true pour détacher sans délai"
+        }
+      },
+      "returns": [],
+      "internal": false
+    },
+    "resetSettings": {
+      "desc": "Annule toute capture basique en attente, remet les réglages de capture par défaut et réinitialise le flash.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "restoreCaptureRuntimeState": {
+      "desc": "Termine la capture basique en attente (restaure le HDR), coupe le flash et restaure l'échelle de résolution d'avant la session.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "refreshSessionDefaults": {
+      "desc": "Mémorise l'échelle de résolution de départ, remet supersampling, réduction et HDR à leurs valeurs par défaut du moment, puis réapplique le flash. Appelée au début d'une session du mode photo.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "handlePreRender": {
+      "desc": "À appeler à chaque image avant le rendu : décrémente le compteur de capture en cours, fait avancer la capture basique en attente (attente du HDR, envoi de la capture) et la capture avec flou de mouvement (images de préchauffage, envoi, nettoyage).",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Temps réel de l'image (s)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Temps de simulation (s)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Temps brut (s)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onScreenshotAllDone": {
+      "desc": "Hook appelé quand le module screenshot a fini toutes les captures : termine la capture basique en attente et restaure le HDR.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

@@ -1,27 +1,27 @@
 # `flowgraph_nodes_gameplay_decalPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/decalPath.lua` · VM : Game Engine (GE) · 103 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/decalPath.lua` · VM: Game Engine (GE) · 103 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/decalPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/decalPath")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Decal Path » (catégorie repeat_instant, util/draw/route). Dessine des décalques animés (flèches de groundmarker) le long d'un itinéraire de posA à posB. Pins d'entrée : posA, posB, speed (10), spacing (15), decalColor (caché). L'itinéraire est calculé par gameplay/route/route.
+Flowgraph node "Decal Path" (category repeat_instant, util/draw/route). Draws animated decals (groundmarker arrows) along a route from posA to posB. Input pins: posA, posB, speed (10), spacing (15), decalColor (hidden). The route is computed by gameplay/route/route.
 
-## Remarques
+## Notes
 
-- L'animation dépend de os.clock() * speed % spacing.
-- Le premier et le dernier marqueur ont un alpha dégradé pour les fondus.
+- The animation depends on os.clock() * speed % spacing.
+- The first and last markers have a gradient alpha for fades.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Réinitialise le pool de décalques. | 44 |
-| `C:getNewDecal()` | Crée un décalque (texture arrow_groundmarkers_1, échelle 8x12x4, fade 400 à 500). | 30 |
-| `C:increaseDecalPool(max)` | Agrandit le pool de décalques jusqu'à max. | 49 |
-| `C:init()` | Vide. | 27 |
-| `C:work()` | Calcule la route, positionne les marqueurs espacés le long du chemin et les soumet à Engine.Render.DynamicDecalMgr.addDecals. | 58 |
+| `C:_executionStarted()` | Resets the decal pool. | 44 |
+| `C:getNewDecal()` | Creates a decal (texture arrow_groundmarkers_1, scale 8x12x4, fade 400 to 500). | 30 |
+| `C:increaseDecalPool(max)` | Grows the decal pool up to max. | 49 |
+| `C:init()` | Empty. | 27 |
+| `C:work()` | Computes the route, positions the spaced markers along the path and submits them to Engine.Render.DynamicDecalMgr.addDecals. | 58 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/decalPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/decalPath.lua`.*

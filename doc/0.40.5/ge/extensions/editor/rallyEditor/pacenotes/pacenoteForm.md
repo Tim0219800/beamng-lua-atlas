@@ -1,32 +1,32 @@
 # `editor_rallyEditor_pacenotes_pacenoteForm`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.lua` · VM : Game Engine (GE) · 457 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.lua` · VM: Game Engine (GE) · 457 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/rallyEditor/pacenotes/pacenoteForm")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/rallyEditor/pacenotes/pacenoteForm")` (file under extensions/ but not a regular extension)
 
-Formulaire principal d'édition d'un pacenote dans l'éditeur de rallye. Il affiche le nom, les actions (Place Vehicle, TODO, Done, Delete..., fusion avec le précédent/suivant), le statut, puis le sous-formulaire selon le mode audio (structuré via structuredForm, personnalisé via customForm, ou freeform avec champ texte, lecture audio et « Generate from Structured »), les métadonnées de calibration, les mesures, et les options (override du mode audio, type de déclencheur). Une confirmation modale précède la suppression. Le module renvoie un constructeur de classe C.
+Main pacenote editing form in the rally editor. It displays the name, the actions (Place Vehicle, TODO, Done, Delete..., merge with previous/next), the status, then the sub-form depending on the audio mode (structured via structuredForm, custom via customForm, or freeform with a text field, audio playback and "Generate from Structured"), the calibration metadata, the measurements, and the options (audio mode override, trigger type). A modal confirmation precedes deletion. The module returns a class C constructor.
 
-## Remarques
+## Notes
 
-- Aucune fonction exportée : on obtient une instance avec require(...)(pacenoteToolsWindow).
-- Une aide « Playback Rules » est définie (variables currLap et maxLap, code Lua libre évalué) ; le champ de saisie correspondant est commenté dans ce fichier.
+- No exported function: you get an instance with require(...)(pacenoteToolsWindow).
+- A "Playback Rules" help is defined (variables currLap and maxLap, free evaluated Lua code); the corresponding input field is commented out in this file.
 
-## Classe `C`
+## Class `C`
 
-Instance du formulaire de pacenote.
+Pacenote form instance.
 
-Le module renvoie un constructeur : `local obj = require("editor_rallyEditor_pacenotes_pacenoteForm")(options)`.
+The module returns a constructor: `local obj = require("editor_rallyEditor_pacenotes_pacenoteForm")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearState()` | Remet à zéro l'état d'édition (édition en cours, confirmation de suppression) et retire le pacenote. | 50 |
-| `C:draw()` | Dessine le formulaire dans une zone enfant imgui, ou « No pacenote selected ». | 440 |
-| `C:init(pacenoteToolsWindow)` | Constructeur : mémorise la fenêtre d'outils et son état, sans pacenote. | 37 |
-| `C:setPacenote(pacenote)` | Définit le pacenote édité et réinitialise StructuredForm, CustomForm et MeasurementsForm. | 43 |
+| `C:clearState()` | Resets the editing state (ongoing edit, deletion confirmation) and removes the pacenote. | 50 |
+| `C:draw()` | Draws the form in an imgui child area, or "No pacenote selected". | 440 |
+| `C:init(pacenoteToolsWindow)` | Constructor: stores the tools window and its state, with no pacenote. | 37 |
+| `C:setPacenote(pacenote)` | Sets the edited pacenote and resets StructuredForm, CustomForm and MeasurementsForm. | 43 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.lua`.*

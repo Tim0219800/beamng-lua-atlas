@@ -1,30 +1,190 @@
 {
   "path": "lua/ge/extensions/flowgraph/modules/cameraModule.lua",
-  "module": "Module flowgraph (moduleOrder -500, donc l'un des premiers) qui gère les trajectoires de caméra (camPath) pendant un projet. Il charge un fichier <nom>/<nom>.camPath.json relatif au projet via core_paths.loadPath, ou stocke un chemin fourni en mémoire, puis le joue avec core_paths.playPath. Il suit le chemin actif, le nombre de fins de parcours (completions) et le mode boucle.",
+  "module": "Flowgraph module (moduleOrder -500, so one of the first) that manages camera paths (camPath) during a project. It loads a <name>/<name>.camPath.json file relative to the project via core_paths.loadPath, or stores a path provided in memory, then plays it with core_paths.playPath. It tracks the active path, the number of path completions and the loop mode.",
   "notes": [
-    "Les chemins sont identifiés par un id entier local au module (getFreeId) et indexés par nom dans pathIds.",
-    "Bug (copier-coller) : getCmd renvoie une commande qui appelle le module 'button' (buttonClicked) ; inutilisable pour la caméra.",
-    "afterTrigger contient un bloc scheduleAction vide.",
-    "isPathComplete provoque une erreur si activePathId == id mais completions est nil (ne devrait pas arriver après startPath).",
-    "getPathDuration lit le temps du dernier marqueur ; erreur si le chemin n'a aucun marqueur."
+    "Paths are identified by an integer id local to the module (getFreeId) and indexed by name in pathIds.",
+    "Bug (copy-paste): getCmd returns a command that calls the 'button' module (buttonClicked); unusable for the camera.",
+    "afterTrigger contains an empty scheduleAction block.",
+    "isPathComplete raises an error if activePathId == id but completions is nil (should not happen after startPath).",
+    "getPathDuration reads the time of the last marker; error if the path has no marker."
   ],
   "functions": {
-    "getFreeId": {"desc": "Incrémente et renvoie un id.", "returns": [{"type": "integer", "desc": "id"}]},
-    "getUniqueName": {"desc": "Renvoie prefix..'-'..id unique.", "params": {"prefix": {"type": "string", "desc": "préfixe"}}, "returns": [{"type": "string", "desc": "nom unique"}]},
-    "init": {"desc": "Crée le variableStorage et appelle clear().", "internal": true},
-    "clear": {"desc": "Réinitialise le chemin actif, les complétions et les tables de chemins stockés.", "internal": true},
-    "findPath": {"desc": "Renvoie l'id du chemin de ce nom, en le chargeant si besoin depuis <nom>/<nom>.camPath.json (résolu par mgr:getRelativeAbsolutePath). Journalise une erreur si le fichier est introuvable.", "params": {"name": {"type": "string", "desc": "nom du chemin / dossier"}}, "returns": [{"type": "integer", "desc": "id du chemin"}]},
-    "addCustomPath": {"desc": "Enregistre un chemin déjà construit sous un nom. Sans force, renvoie l'id existant si le nom est déjà connu.", "params": {"name": {"type": "string", "desc": "nom"}, "path": {"type": "table", "desc": "chemin de caméra (avec markers)"}, "force": {"type": "boolean|nil", "desc": "remplacer le nom existant"}}, "returns": [{"type": "integer", "desc": "id du chemin"}]},
-    "getPath": {"desc": "Renvoie la table du chemin stocké.", "params": {"id": {"type": "integer", "desc": "id du chemin"}}, "returns": [{"type": "table|nil", "desc": "chemin"}]},
-    "getPathDuration": {"desc": "Durée du chemin = temps du dernier marqueur, 0 si le chemin est inconnu.", "params": {"id": {"type": "integer", "desc": "id du chemin"}}, "returns": [{"type": "number", "desc": "durée (s)"}]},
-    "isPathComplete": {"desc": "Vrai si ce chemin est le chemin actif et a été terminé au moins une fois.", "params": {"id": {"type": "integer", "desc": "id du chemin"}}, "returns": [{"type": "boolean", "desc": "terminé"}]},
-    "startPath": {"desc": "Passe en caméra de jeu si la caméra libre est active, puis joue le chemin avec core_paths.playPath (useDtReal = true) et mémorise l'id, la boucle et complétions = 0. Ne fait rien si l'id est inconnu.", "params": {"id": {"type": "integer", "desc": "id du chemin"}, "loop": {"type": "boolean|nil", "desc": "rejouer en boucle"}}},
-    "cancelPathCam": {"desc": "Arrête le chemin de caméra en cours (core_paths.stopCurrentPath).", "params": {}},
-    "finishedPath": {"desc": "Callback appelé par core_paths en fin de parcours : sans boucle, arrête la caméra ; dans tous les cas incrémente completions.", "internal": true},
-    "endActivePath": {"desc": "Arrête le chemin actif (si id est nil ou égal à l'actif) et efface l'état.", "params": {"id": {"type": "integer|nil", "desc": "id attendu"}}},
-    "restartActivePath": {"desc": "Relance le chemin actif avec le même réglage de boucle (si id est nil ou égal à l'actif).", "params": {"id": {"type": "integer|nil", "desc": "id attendu"}}},
-    "getCmd": {"desc": "Construit une commande Lua pour le module 'button' (voir notes : copier-coller probable).", "params": {"id": {"type": "integer", "desc": "id"}}, "returns": [{"type": "string", "desc": "code Lua"}]},
-    "afterTrigger": {"desc": "Appelé après le tick du graphe : finalise les variables.", "internal": true},
-    "executionStopped": {"desc": "Appelé à l'arrêt du projet : arrête la caméra de chemin si active puis appelle clear().", "internal": true}
+    "getFreeId": {
+      "desc": "Increments and returns an id.",
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "id"
+        }
+      ]
+    },
+    "getUniqueName": {
+      "desc": "Returns a unique prefix..'-'..id.",
+      "params": {
+        "prefix": {
+          "type": "string",
+          "desc": "prefix"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "unique name"
+        }
+      ]
+    },
+    "init": {
+      "desc": "Creates the variableStorage and calls clear().",
+      "internal": true
+    },
+    "clear": {
+      "desc": "Resets the active path, the completions and the stored path tables.",
+      "internal": true
+    },
+    "findPath": {
+      "desc": "Returns the id of the path with this name, loading it if needed from <name>/<name>.camPath.json (resolved by mgr:getRelativeAbsolutePath). Logs an error if the file is not found.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "path / folder name"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "path id"
+        }
+      ]
+    },
+    "addCustomPath": {
+      "desc": "Registers an already built path under a name. Without force, returns the existing id if the name is already known.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "name"
+        },
+        "path": {
+          "type": "table",
+          "desc": "camera path (with markers)"
+        },
+        "force": {
+          "type": "boolean|nil",
+          "desc": "replace the existing name"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "path id"
+        }
+      ]
+    },
+    "getPath": {
+      "desc": "Returns the stored path's table.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "path id"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "path"
+        }
+      ]
+    },
+    "getPathDuration": {
+      "desc": "Path duration = time of the last marker, 0 if the path is unknown.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "path id"
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "duration (s)"
+        }
+      ]
+    },
+    "isPathComplete": {
+      "desc": "True if this path is the active path and has been completed at least once.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "path id"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "completed"
+        }
+      ]
+    },
+    "startPath": {
+      "desc": "Switches to the game camera if the free camera is active, then plays the path with core_paths.playPath (useDtReal = true) and stores the id, the loop and completions = 0. Does nothing if the id is unknown.",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "path id"
+        },
+        "loop": {
+          "type": "boolean|nil",
+          "desc": "replay in a loop"
+        }
+      }
+    },
+    "cancelPathCam": {
+      "desc": "Stops the current camera path (core_paths.stopCurrentPath).",
+      "params": {}
+    },
+    "finishedPath": {
+      "desc": "Callback called by core_paths at the end of a path: without loop, stops the camera; in all cases increments completions.",
+      "internal": true
+    },
+    "endActivePath": {
+      "desc": "Stops the active path (if id is nil or equal to the active one) and clears the state.",
+      "params": {
+        "id": {
+          "type": "integer|nil",
+          "desc": "expected id"
+        }
+      }
+    },
+    "restartActivePath": {
+      "desc": "Restarts the active path with the same loop setting (if id is nil or equal to the active one).",
+      "params": {
+        "id": {
+          "type": "integer|nil",
+          "desc": "expected id"
+        }
+      }
+    },
+    "getCmd": {
+      "desc": "Builds a Lua command for the 'button' module (see notes: probable copy-paste).",
+      "params": {
+        "id": {
+          "type": "integer",
+          "desc": "id"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Lua code"
+        }
+      ]
+    },
+    "afterTrigger": {
+      "desc": "Called after the graph tick: finalizes the variables.",
+      "internal": true
+    },
+    "executionStopped": {
+      "desc": "Called when the project stops: stops the path camera if active then calls clear().",
+      "internal": true
+    }
   }
 }

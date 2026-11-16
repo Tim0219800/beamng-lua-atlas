@@ -1,162 +1,162 @@
 # `render_splitScreen`
 
-*Fichier : `lua/ge/extensions/render/splitScreen.lua` · VM : Game Engine (GE) · 623 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/render/splitScreen.lua` · VM: Game Engine (GE) · 623 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `render_splitScreen` : `extensions.load("render_splitScreen")`, puis la globale `render_splitScreen`
+**Access:** extension `render_splitScreen`: `extensions.load("render_splitScreen")`, then the global `render_splitScreen`
 
-Écran partagé (multiseat) : crée une vue de rendu par joueur (RenderViewManagerInstance, vues nommées 'splitscreen0', 'splitscreen1'...), calcule la disposition à l'écran avec render_splitScreenLayouts selon le nombre de joueurs et le réglage multiseatLayout<N>, gère les contextes caméra par joueur, les étiquettes de joueurs et le HUD Vue 'multiseat'. L'extension s'active dès son chargement (onExtensionLoaded appelle enable) et se désactive au déchargement. Un moddeur ou une mission peut imposer la liste des joueurs avec setCustomPlayers.
+Split screen (multiseat): creates a render view per player (RenderViewManagerInstance, views named 'splitscreen0', 'splitscreen1'...), computes the on-screen layout with render_splitScreenLayouts according to the number of players and the multiseatLayout<N> setting, manages per-player camera contexts, player labels and the 'multiseat' Vue HUD. The extension activates as soon as it is loaded (onExtensionLoaded calls enable) and deactivates on unload. A modder or a mission can force the player list with setCustomPlayers.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('render_splitScreen')
-render_splitScreen.setCustomPlayers({0, 1})  -- deux vues, joueurs 0 et 1
+render_splitScreen.setCustomPlayers({0, 1})  -- two views, players 0 and 1
 -- ...
 render_splitScreen.clearCustomPlayers()
 extensions.unload('render_splitScreen')
 ```
 
-## Remarques
+## Notes
 
-- Dépend de core_playerPersonas, render_playerTags et render_playerCompassMarkers (chargés avant).
-- Maximum 64 vues (une par joueur). Liste de joueurs vide : renvoie {0}.
-- Pour économiser le rendu, chaque vue reçoit un facteur de qualité (meshDetailAdjust et groundCoverScale multipliés) : 1.0 pour 1 vue, 0.75 pour 2, 0.6 pour 3, 0.5 pour 4 et au-delà. Les miroirs et réflexions dynamiques des véhicules sont coupés sauf pour la vue en solo. Les réglages graphiques de l'utilisateur ne sont pas modifiés.
-- En activant l'extension : les actions 'vehicleMenues' et 'nodegrabber' sont bloquées, le réglage 'multiseat' est mis à true et la route de jeu 'multiseat' est installée.
-- Mode 'shared' (disposition partagée) : une seule vue principale est rendue ; mode 'split' : une vue par joueur.
-- La fonction 'performance preset' (setPerformancePreset) existe mais son appel est commenté : inutilisée.
-- Hooks émis : onSplitScreenChanged(enabled, playerCount, layoutId, mode) à l'activation et quand les joueurs ou la disposition changent (false seul à la désactivation), et onSplitScreenLayoutChanged() à chaque nouveau calcul de disposition. Évènement UI : MultiseatHudData(count, layout, players, mode) ou MultiseatHudData(0).
+- Depends on core_playerPersonas, render_playerTags and render_playerCompassMarkers (loaded first).
+- Maximum 64 views (one per player). Empty player list: returns {0}.
+- To save rendering cost, each view receives a quality factor (meshDetailAdjust and groundCoverScale multiplied): 1.0 for 1 view, 0.75 for 2, 0.6 for 3, 0.5 for 4 and beyond. Vehicle mirrors and dynamic reflections are turned off except for the solo view. The user's graphics settings are not modified.
+- When enabling the extension: the actions 'vehicleMenues' and 'nodegrabber' are blocked, the 'multiseat' setting is set to true and the 'multiseat' game route is installed.
+- 'shared' mode (shared layout): a single main view is rendered; 'split' mode: one view per player.
+- The 'performance preset' function (setPerformancePreset) exists but its call is commented out: unused.
+- Emitted hooks: onSplitScreenChanged(enabled, playerCount, layoutId, mode) on activation and when players or layout change (false alone on deactivation), and onSplitScreenLayoutChanged() on every new layout computation. UI event: MultiseatHudData(count, layout, players, mode) or MultiseatHudData(0).
 
-**Dépendances (chargées avant) :** `core_playerPersonas`, `render_playerTags`, `render_playerCompassMarkers`
+**Dependencies (loaded first):** `core_playerPersonas`, `render_playerTags`, `render_playerCompassMarkers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `render_splitScreen.beginSoloView(player, options)` | Affiche temporairement un seul joueur en plein écran sans changer la liste des participants ni l'état du HUD. Avec options.mainView = true, utilise la vue principale ; sinon agrandit la vue du joueur avec une caméra 'orbit'. Les étiquettes de joueurs sont supprimées pendant la vue solo. | 482 |
-| `render_splitScreen.clearCustomPlayers()` | Raccourci pour setCustomPlayers(nil). | 377 |
-| `render_splitScreen.endSoloView()` | Termine la vue solo et restaure la caméra du contexte et la disposition. | 458 |
-| `render_splitScreen.getCurrentConfiguration()` | Renvoie la configuration d'affichage courante. | 562 |
-| `render_splitScreen.getPlayers(result)` | Renvoie la liste ordonnée des indices de joueurs qui ont une vue : la liste personnalisée de setCustomPlayers si elle existe, sinon core_multiseat.getPlayers. Limitée à 64 ; contient {0} si vide. | 82 |
-| `render_splitScreen.isSharedView()` | Vrai si l'écran partagé est actif, rendu en vue partagée et sans vue solo. | 567 |
-| `render_splitScreen.onAfterRouteChange(context)` | Hook de changement de route de l'UI : renvoie l'état du HUD à chaque entrée dans la route 'multiseat', car la vue Vue est remontée avec sa route. *(interne)* *(hook)* | 433 |
-| `render_splitScreen.onClientEndMission()` | Hook de fin de mission : termine la vue solo (endSoloView). *(interne)* *(hook)* | 458 |
-| `render_splitScreen.onDeserialized(data)` | Hook appelé après un rechargement Lua GE : restaure la liste de joueurs sauvegardée et réactive l'écran partagé. *(interne)* *(hook)* | 583 |
-| `render_splitScreen.onExtensionLoaded(data)` | Hook de chargement de l'extension : restaure customPlayers si des données sont fournies et active l'écran partagé. *(interne)* *(hook)* | 593 |
-| `render_splitScreen.onExtensionUnloaded(preserveRoute)` | Hook de déchargement : alias de disable(preserveRoute). Détruit les vues, rend le monde sur la vue principale, remet l'exposition à zéro et rétablit la route de jeu 'play' sauf si preserveRoute. *(interne)* *(hook)* | 396 |
-| `render_splitScreen.onSerialize(reason)` | Hook appelé avant un rechargement Lua GE : renvoie {customPlayers} et désactive l'écran partagé en conservant la route, pour détruire les vues C++. *(interne)* *(hook)* | 571 |
-| `render_splitScreen.onSettingsChanged()` | Hook appelé quand les réglages changent : reconstruit les surcharges de qualité des vues, qui sont un instantané des réglages globaux. *(interne)* *(hook)* | 448 |
-| `render_splitScreen.onUpdate(dtReal, dtSim)` | Hook appelé à chaque image : recalcule la configuration (joueurs, taille de fenêtre, disposition) et met à jour les marqueurs de boussole des joueurs. *(interne)* *(hook)* | 440 |
-| `render_splitScreen.refreshLayout()` | Force le recalcul de la disposition au prochain passage (réinitialise la taille mémorisée) et le fait tout de suite si actif. | 556 |
-| `render_splitScreen.setCustomPlayers(players)` | Impose la liste des joueurs qui doivent avoir une vue (par exemple pour une mission), ou la supprime avec nil. Une liste vide équivaut à nil. Si l'écran partagé est actif, recalcule tout de suite. | 360 |
-| `render_splitScreen.toggleFreeCam(player)` | Passe la vue propre à ce joueur au groupe de caméras suivant (core_camera.cycleCameraGroup). | 549 |
+| `render_splitScreen.beginSoloView(player, options)` | Temporarily shows a single player in full screen without changing the participant list or the HUD state. With options.mainView = true, uses the main view; otherwise enlarges the player's view with an 'orbit' camera. Player labels are removed during the solo view. | 482 |
+| `render_splitScreen.clearCustomPlayers()` | Shortcut for setCustomPlayers(nil). | 377 |
+| `render_splitScreen.endSoloView()` | Ends the solo view and restores the context camera and the layout. | 458 |
+| `render_splitScreen.getCurrentConfiguration()` | Returns the current display configuration. | 562 |
+| `render_splitScreen.getPlayers(result)` | Returns the ordered list of player indices that have a view: the custom list from setCustomPlayers if it exists, otherwise core_multiseat.getPlayers. Limited to 64; contains {0} if empty. | 82 |
+| `render_splitScreen.isSharedView()` | True if split screen is active, rendered in shared view and without a solo view. | 567 |
+| `render_splitScreen.onAfterRouteChange(context)` | UI route change hook: sends the HUD state back on each entry into the 'multiseat' route, since the Vue view is remounted with its route. *(internal)* *(hook)* | 433 |
+| `render_splitScreen.onClientEndMission()` | End-of-mission hook: ends the solo view (endSoloView). *(internal)* *(hook)* | 458 |
+| `render_splitScreen.onDeserialized(data)` | Hook called after a GE Lua reload: restores the saved player list and re-enables split screen. *(internal)* *(hook)* | 583 |
+| `render_splitScreen.onExtensionLoaded(data)` | Extension load hook: restores customPlayers if data is provided and enables split screen. *(internal)* *(hook)* | 593 |
+| `render_splitScreen.onExtensionUnloaded(preserveRoute)` | Unload hook: alias of disable(preserveRoute). Destroys the views, renders the world on the main view, resets exposure to zero and restores the 'play' game route unless preserveRoute. *(internal)* *(hook)* | 396 |
+| `render_splitScreen.onSerialize(reason)` | Hook called before a GE Lua reload: returns {customPlayers} and disables split screen while keeping the route, to destroy the C++ views. *(internal)* *(hook)* | 571 |
+| `render_splitScreen.onSettingsChanged()` | Hook called when settings change: rebuilds the view quality overrides, which are a snapshot of the global settings. *(internal)* *(hook)* | 448 |
+| `render_splitScreen.onUpdate(dtReal, dtSim)` | Hook called every frame: recomputes the configuration (players, window size, layout) and updates the players' compass markers. *(internal)* *(hook)* | 440 |
+| `render_splitScreen.refreshLayout()` | Forces the layout to be recomputed on the next pass (resets the remembered size) and does it right away if active. | 556 |
+| `render_splitScreen.setCustomPlayers(players)` | Forces the list of players that must have a view (e.g. for a mission), or removes it with nil. An empty list is equivalent to nil. If split screen is active, recomputes right away. | 360 |
+| `render_splitScreen.toggleFreeCam(player)` | Switches this player's own view to the next camera group (core_camera.cycleCameraGroup). | 549 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `render_splitScreen.beginSoloView(player, options)`
 
-Affiche temporairement un seul joueur en plein écran sans changer la liste des participants ni l'état du HUD. Avec options.mainView = true, utilise la vue principale ; sinon agrandit la vue du joueur avec une caméra 'orbit'. Les étiquettes de joueurs sont supprimées pendant la vue solo.
+Temporarily shows a single player in full screen without changing the participant list or the HUD state. With options.mainView = true, uses the main view; otherwise enlarges the player's view with an 'orbit' camera. Player labels are removed during the solo view.
 
-- `player` (*integer*) : Indice du joueur (converti par tonumber).
+- `player` (*integer*) : Player index (converted by tonumber).
 - `options` (*table|nil*) : {mainView = boolean}.
-- **renvoie** : boolean false si player n'est pas numérique ou n'est pas dans la liste des joueurs configurés (ou sans vue) ; true sinon.
+- **returns**: boolean false if player is not numeric or is not in the configured player list (or has no view); true otherwise.
 
 #### `render_splitScreen.endSoloView()`
 
-Termine la vue solo et restaure la caméra du contexte et la disposition.
+Ends the solo view and restores the context camera and the layout.
 
-- **renvoie** : boolean true si une vue solo était active.
+- **returns**: boolean true if a solo view was active.
 
 #### `render_splitScreen.getCurrentConfiguration()`
 
-Renvoie la configuration d'affichage courante.
+Returns the current display configuration.
 
-- **renvoie** : boolean false si l'écran partagé est inactif.
-- **renvoie** : integer|nil Nombre de joueurs.
-- **renvoie** : string|nil Identifiant de disposition.
-- **renvoie** : string|nil Mode : 'shared' ou 'split'.
+- **returns**: boolean false if split screen is inactive.
+- **returns**: integer|nil Number of players.
+- **returns**: string|nil Layout identifier.
+- **returns**: string|nil Mode: 'shared' or 'split'.
 
 #### `render_splitScreen.getPlayers(result)`
 
-Renvoie la liste ordonnée des indices de joueurs qui ont une vue : la liste personnalisée de setCustomPlayers si elle existe, sinon core_multiseat.getPlayers. Limitée à 64 ; contient {0} si vide.
+Returns the ordered list of player indices that have a view: the custom list from setCustomPlayers if it exists, otherwise core_multiseat.getPlayers. Limited to 64; contains {0} if empty.
 
-- `result` (*integer[]|nil*) : Table à remplir et renvoyer (réutilisable pour éviter une allocation) ; créée si nil.
-- **renvoie** : integer[] Indices de joueurs.
+- `result` (*integer[]|nil*) : Table to fill and return (reusable to avoid an allocation); created if nil.
+- **returns**: integer[] Player indices.
 
 #### `render_splitScreen.isSharedView()`
 
-Vrai si l'écran partagé est actif, rendu en vue partagée et sans vue solo.
+True if split screen is active, rendered in shared view and without a solo view.
 
-- **renvoie** : boolean État.
+- **returns**: boolean State.
 
 #### `render_splitScreen.onAfterRouteChange(context)`
 
-Hook de changement de route de l'UI : renvoie l'état du HUD à chaque entrée dans la route 'multiseat', car la vue Vue est remontée avec sa route.
+UI route change hook: sends the HUD state back on each entry into the 'multiseat' route, since the Vue view is remounted with its route.
 
-- `context` (*table*) : Contexte de navigation (context.toRoute.name).
+- `context` (*table*) : Navigation context (context.toRoute.name).
 
 #### `render_splitScreen.onDeserialized(data)`
 
-Hook appelé après un rechargement Lua GE : restaure la liste de joueurs sauvegardée et réactive l'écran partagé.
+Hook called after a GE Lua reload: restores the saved player list and re-enables split screen.
 
-- `data` (*table*) : Données de onSerialize (customPlayers).
+- `data` (*table*) : onSerialize data (customPlayers).
 
 #### `render_splitScreen.onExtensionLoaded(data)`
 
-Hook de chargement de l'extension : restaure customPlayers si des données sont fournies et active l'écran partagé.
+Extension load hook: restores customPlayers if data is provided and enables split screen.
 
-- `data` (*table|nil*) : Données sérialisées éventuelles.
+- `data` (*table|nil*) : Possible serialized data.
 
 #### `render_splitScreen.onExtensionUnloaded(preserveRoute)`
 
-Hook de déchargement : alias de disable(preserveRoute). Détruit les vues, rend le monde sur la vue principale, remet l'exposition à zéro et rétablit la route de jeu 'play' sauf si preserveRoute.
+Unload hook: alias of disable(preserveRoute). Destroys the views, renders the world on the main view, resets exposure to zero and restores the 'play' game route unless preserveRoute.
 
-- `preserveRoute` (*boolean|nil*) : Si vrai, ne change pas la route de jeu.
+- `preserveRoute` (*boolean|nil*) : If true, does not change the game route.
 
 #### `render_splitScreen.onSerialize(reason)`
 
-Hook appelé avant un rechargement Lua GE : renvoie {customPlayers} et désactive l'écran partagé en conservant la route, pour détruire les vues C++.
+Hook called before a GE Lua reload: returns {customPlayers} and disables split screen while keeping the route, to destroy the C++ views.
 
-- `reason` (*string*) : Raison de la sérialisation (utilisée dans le log).
-- **renvoie** : table {customPlayers = ...}.
+- `reason` (*string*) : Reason for serialization (used in the log).
+- **returns**: table {customPlayers = ...}.
 
 #### `render_splitScreen.onUpdate(dtReal, dtSim)`
 
-Hook appelé à chaque image : recalcule la configuration (joueurs, taille de fenêtre, disposition) et met à jour les marqueurs de boussole des joueurs.
+Hook called every frame: recomputes the configuration (players, window size, layout) and updates the players' compass markers.
 
-- `dtReal` (*number*) : Durée réelle de l'image (s).
-- `dtSim` (*number*) : Durée simulée (s), non utilisée.
+- `dtReal` (*number*) : Real frame duration (s).
+- `dtSim` (*number*) : Simulated duration (s), unused.
 
 #### `render_splitScreen.setCustomPlayers(players)`
 
-Impose la liste des joueurs qui doivent avoir une vue (par exemple pour une mission), ou la supprime avec nil. Une liste vide équivaut à nil. Si l'écran partagé est actif, recalcule tout de suite.
+Forces the list of players that must have a view (e.g. for a mission), or removes it with nil. An empty list is equivalent to nil. If split screen is active, recomputes right away.
 
-- `players` (*integer[]|nil*) : Indices de joueurs ordonnés, ou nil pour effacer la surcharge.
+- `players` (*integer[]|nil*) : Ordered player indices, or nil to clear the override.
 
 #### `render_splitScreen.toggleFreeCam(player)`
 
-Passe la vue propre à ce joueur au groupe de caméras suivant (core_camera.cycleCameraGroup).
+Switches this player's own view to the next camera group (core_camera.cycleCameraGroup).
 
-- `player` (*integer*) : Indice du joueur.
-- **renvoie** : boolean false si le joueur n'a pas de vue d'écran partagé (l'appelant peut alors utiliser le basculement de caméra principale).
+- `player` (*integer*) : Player index.
+- **returns**: boolean false if the player has no split screen view (the caller can then use the main camera toggle).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : core_playerPersonas, render_playerTags, render_playerCompassMarkers. |
+| `dependencies` | string[] | Extensions loaded first: core_playerPersonas, render_playerTags, render_playerCompassMarkers. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onSplitScreenChanged` — écouté par 5 module(s)
-- `onSplitScreenLayoutChanged` — écouté par 1 module(s)
+- `onSplitScreenChanged` — listened to by 5 module(s)
+- `onSplitScreenLayoutChanged` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `MultiseatHudData`
+**UI events (guihooks.trigger):** `MultiseatHudData`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/render/splitScreen.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/render/splitScreen.lua`.*

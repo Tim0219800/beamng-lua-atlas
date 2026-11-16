@@ -1,0 +1,14 @@
+{
+  "path": "lua/ge/extensions/editor/vehicleEditor/liveEditor/veRawData.lua",
+  "module": "Fenêtre 'Raw Vehicle Data' du Vehicle Editor live : affiche sous forme d'arbre imgui récursif toute la table vEditor.vehData (données du véhicule courant, dont vdata jbeam) via imguiUtils.addRecursiveTreeTable. Utile à un moddeur pour inspecter la structure jbeam résolue.",
+  "notes": ["Rien n'est dessiné tant que la fenêtre n'est pas ouverte ou que vEditor.vehicle/vehData sont absents."],
+  "fields": {
+    "menuEntry": {"type": "string", "desc": "'Raw Vehicle Data' : libellé du menu lu par editor_veMain."}
+  },
+  "functions": {
+    "onUpdate": {"desc": "Appelé chaque frame : dessine la fenêtre et l'arbre des données si elle est ouverte.", "internal": true},
+    "open": {"desc": "Ouvre la fenêtre (utilisé par le menu du Vehicle Editor).", "internal": false},
+    "onSerialize": {"desc": "Renvoie {windowOpen} pour restaurer l'état après rechargement Lua.", "returns": [{"type": "table", "desc": "{windowOpen = boolean}"}], "internal": true},
+    "onDeserialized": {"desc": "Restaure l'état d'ouverture de la fenêtre.", "params": {"data": {"type": "table", "desc": "Table de onSerialize."}}, "internal": true}
+  }
+}

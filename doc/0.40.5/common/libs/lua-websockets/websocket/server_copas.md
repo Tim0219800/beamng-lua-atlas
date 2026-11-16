@@ -1,12 +1,12 @@
 # `libs_lua_websockets_websocket_server_copas`
 
-*Fichier : `lua/common/libs/lua-websockets/websocket/server_copas.lua` · VM : Commun (GE + véhicule) · 149 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lua-websockets/websocket/server_copas.lua` · VM: Common (GE + vehicle) · 149 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("libs/lua-websockets/websocket/server_copas")`
+**Access:** `require("libs/lua-websockets/websocket/server_copas")`
 
-Backend serveur WebSocket de lua-websockets pour la bibliothèque coopérative 'copas'. listen ouvre un socket serveur luasocket, réalise la poignée de main pour chaque connexion entrante et appelle le gestionnaire du sous-protocole négocié (ou le gestionnaire par défaut) avec un objet client.
+WebSocket server backend of lua-websockets for the cooperative 'copas' library. listen opens a luasocket server socket, performs the handshake for each incoming connection and calls the handler of the negotiated subprotocol (or the default handler) with a client object.
 
-## Exemple
+## Example
 
 ```lua
 local srv = require('libs/lua-websockets/websocket/server_copas').listen({
@@ -18,37 +18,37 @@ local srv = require('libs/lua-websockets/websocket/server_copas').listen({
 })
 ```
 
-## Remarques
+## Notes
 
-- Nécessite libs/copas/copas ; il faut faire tourner la boucle copas pour traiter les connexions.
-- Le gestionnaire par défaut est indexé par la clé magique true dans la table interne des clients.
+- Requires libs/copas/copas; the copas loop must be run to process the connections.
+- The default handler is indexed by the magic key true in the internal clients table.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `libs_lua_websockets_websocket_server_copas.listen(opts)` | Démarre un serveur WebSocket. Lève une erreur si le socket ne peut pas être ouvert. Chaque client accepté est enregistré, passé au gestionnaire, puis la coroutine reste en vie tant que client.state n'est pas 'CLOSED'. | 52 |
+| `libs_lua_websockets_websocket_server_copas.listen(opts)` | Starts a WebSocket server. Raises an error if the socket cannot be opened. Each accepted client is registered and passed to the handler, then the coroutine stays alive as long as client.state is not 'CLOSED'. | 52 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `libs_lua_websockets_websocket_server_copas.listen(opts)`
 
-Démarre un serveur WebSocket. Lève une erreur si le socket ne peut pas être ouvert. Chaque client accepté est enregistré, passé au gestionnaire, puis la coroutine reste en vie tant que client.state n'est pas 'CLOSED'.
+Starts a WebSocket server. Raises an error if the socket cannot be opened. Each accepted client is registered and passed to the handler, then the coroutine stays alive as long as client.state is not 'CLOSED'.
 
-- `opts` (*table*) : port (défaut 80), interface (défaut '*'), protocols (table sous-protocole -> fonction(client)), default (fonction(client) pour les autres cas), on_error (fonction(message), défaut print). protocols ou default est obligatoire.
-- **renvoie** : table Objet avec la méthode close(_, keep_clients) qui retire le serveur de copas et, sauf keep_clients, ferme les clients.
+- `opts` (*table*) : port (default 80), interface (default '*'), protocols (table subprotocol -> function(client)), default (function(client) for the other cases), on_error (function(message), default print). protocols or default is required.
+- **returns**: table Object with the method close(_, keep_clients) that removes the server from copas and, unless keep_clients, closes the clients.
 
-## Classe `client`
+## Class `client`
 
-Objet client passé au gestionnaire (état 'OPEN', is_server = true). Hérite de websocket/sync (send, receive, close).
+Client object passed to the handler (state 'OPEN', is_server = true). Inherits from websocket/sync (send, receive, close).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `client:broadcast(...)` | Envoie le message à tous les clients du même sous-protocole, puis à lui-même. | dyn |
-| `client:on_close()` | Appelé à la fermeture : retire le client de la liste du sous-protocole. | dyn |
-| `client:sock_close()` | Shutdown puis fermeture du socket. | dyn |
-| `client:sock_receive()` | Lecture via copas.receive. | dyn |
-| `client:sock_send()` | Envoi via copas.send. | dyn |
+| `client:broadcast(...)` | Sends the message to all the clients of the same subprotocol, then to itself. | dyn |
+| `client:on_close()` | Called on close: removes the client from the subprotocol's list. | dyn |
+| `client:sock_close()` | Shutdown then closing the socket. | dyn |
+| `client:sock_receive()` | Read via copas.receive. | dyn |
+| `client:sock_send()` | Send via copas.send. | dyn |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lua-websockets/websocket/server_copas.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lua-websockets/websocket/server_copas.lua`.*

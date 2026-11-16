@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/registerRace.lua",
-  "module": "Nœud flowgraph « Rally Mode Register Race » (catégorie once_instant, tag rally). Transmet les données de course au mode rally en déclenchant extensions.hook('onRallyRegisterRace', raceData). Entrée : raceData (table).",
+  "module": "Flowgraph node \"Rally Mode Register Race\" (category once_instant, tag rally). Passes the race data to rally mode by triggering extensions.hook('onRallyRegisterRace', raceData). Input: raceData (table).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Émet le hook onRallyRegisterRace avec raceData.", "internal": true}
+        "workOnce": {
+          "desc": "Emits the onRallyRegisterRace hook with raceData.",
+          "internal": true
+        }
       }
     }
   }

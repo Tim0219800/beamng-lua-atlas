@@ -1,0 +1,49 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/logic/and.lua",
+  "module": "Noeud flowgraph 'And' (categorie logic). Ne laisse passer le flux que si toutes les entrees flow_1..flow_N ont du flux. Par defaut 2 entrees, le nombre est reglable dans les proprietes du noeud (pins flow_i crees/supprimes dynamiquement). Sortie : pin flow. S'execute a chaque frame ou le graphe est actif.",
+  "notes": [
+    "legacyPins : anciennes entrees a et b renommees flow_1 et flow_2.",
+    "Le champ C.todo du code prevoit un nombre d'entrees arbitraire, deja fait via la propriete Count."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "Initialise le compteur d'entrees a 2.",
+          "internal": true
+        },
+        "drawCustomProperties": {
+          "desc": "Panneau de proprietes de l'editeur : champ entier 'Count' qui change le nombre de pins d'entree (minimum 1). Renvoie la raison du changement.",
+          "internal": true
+        },
+        "updatePins": {
+          "desc": "Ajoute ou supprime les pins d'entree flow_i pour passer de old a new ; supprime aussi les liens qui pointaient vers les pins retirees.",
+          "internal": true,
+          "params": {
+            "old": {
+              "type": "integer",
+              "desc": "ancien nombre d'entrees"
+            },
+            "new": {
+              "type": "integer",
+              "desc": "nouveau nombre d'entrees"
+            }
+          }
+        },
+        "work": {
+          "desc": "Met la sortie flow a true seulement si toutes les entrees flow_1..flow_count sont vraies, sinon false.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde count dans les donnees serialisees.",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit count (2 par defaut) et recree les pins correspondants.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

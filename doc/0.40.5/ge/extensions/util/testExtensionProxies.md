@@ -1,30 +1,30 @@
 # `util_testExtensionProxies`
 
-*Fichier : `lua/ge/extensions/util/testExtensionProxies.lua` · VM : Game Engine (GE) · 47 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/testExtensionProxies.lua` · VM: Game Engine (GE) · 47 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_testExtensionProxies` : `extensions.load("util_testExtensionProxies")`, puis la globale `util_testExtensionProxies`
+**Access:** extension `util_testExtensionProxies`: `extensions.load("util_testExtensionProxies")`, then the global `util_testExtensionProxies`
 
-Extension de test du système d'ExtensionProxy. Au chargement, elle crée 11 objets ExtensionProxyTester (id 0 à 10) et les soumet comme « event sinks » à un proxy créé par newExtensionProxy(M), de sorte que les hooks de l'extension (comme onUpdate) soient redistribués à chaque instance. Utile seulement pour comprendre ce mécanisme ou le déboguer.
+Test extension of the ExtensionProxy system. On load, it creates 11 ExtensionProxyTester objects (id 0 to 10) and submits them as "event sinks" to a proxy created by newExtensionProxy(M), so that the extension's hooks (such as onUpdate) are redistributed to each instance. Only useful to understand or debug this mechanism.
 
-## Remarques
+## Notes
 
-- onExtensionUnloaded appelle extProxy:destroy() ; le commentaire précise que le système d'extensions nettoie de toute façon.
-- Dans onExtensionLoaded, newExtensionProxyTester(id) reçoit une variable globale id (nil) que la fonction ignore : l'id est ensuite fixé à la main (e.id = i).
+- onExtensionUnloaded calls extProxy:destroy(); the comment states that the extension system cleans up anyway.
+- In onExtensionLoaded, newExtensionProxyTester(id) receives a global variable id (nil) that the function ignores: the id is then set by hand (e.id = i).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_testExtensionProxies.onExtensionLoaded()` | Appelé au chargement de l'extension. Crée 11 testeurs, un proxy d'extension, et lui soumet les testeurs avec submitEventSinks. *(interne)* *(hook)* | 27 |
-| `util_testExtensionProxies.onExtensionUnloaded()` | Appelé au déchargement de l'extension. Détruit le proxy d'extension. *(interne)* *(hook)* | 22 |
+| `util_testExtensionProxies.onExtensionLoaded()` | Called on extension load. Creates 11 testers, an extension proxy, and submits the testers to it with submitEventSinks. *(internal)* *(hook)* | 27 |
+| `util_testExtensionProxies.onExtensionUnloaded()` | Called on extension unload. Destroys the extension proxy. *(internal)* *(hook)* | 22 |
 
-## Classe `ExtensionProxyTester`
+## Class `ExtensionProxyTester`
 
-Objet de test avec un champ id ; reçoit les hooks redistribués par le proxy.
+Test object with an id field; receives the hooks redistributed by the proxy.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `ExtensionProxyTester:onUpdate(dtReal, dtSim, dtRaw)` | Hook de mise à jour : affiche dans la console l'id du testeur et dtReal. | 16 |
+| `ExtensionProxyTester:onUpdate(dtReal, dtSim, dtRaw)` | Update hook: prints the tester's id and dtReal to the console. | 16 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/testExtensionProxies.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/testExtensionProxies.lua`.*

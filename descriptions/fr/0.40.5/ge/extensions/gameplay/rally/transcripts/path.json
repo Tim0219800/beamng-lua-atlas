@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/transcripts/path.lua",
+  "module": "Conteneur des transcriptions (texte reconnu de la voix du copilote lors de la reconnaissance) d'un rallye. Il charge et sauvegarde un fichier JSON, et gère une `sortedList` d'entrées (transcripts/entry.lua). Il fournit aussi les identifiants uniques et le dessin de debug des transcriptions. Le module renvoie un constructeur : `require(...)(fname)`.",
+  "notes": [
+    "Le gros commentaire au-dessus de drawDebugTranscripts est du code de test mis en commentaire (rotation de quaternion) : il n'est pas exécuté.",
+    "_draw_debug_hover_tsc_id n'est jamais modifié dans ce fichier ; seule la valeur nil est utilisée."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Chemin de transcriptions. Champs : fname, selection_sphere_r (4), _draw_debug_hover_tsc_id, transcripts (sortedList d'entrées).",
+      "functions": {
+        "getNextUniqueIdentifier": {
+          "desc": "Renvoie un entier croissant (1, 2, 3…) servant d'id aux entrées.",
+          "returns": [{"type": "integer", "desc": "Nouvel identifiant."}]
+        },
+        "init": {
+          "desc": "Constructeur : mémorise le nom du fichier et crée la sortedList `transcripts`.",
+          "params": {"fname": {"type": "string|nil", "desc": "Fichier JSON des transcriptions."}},
+          "internal": true
+        },
+        "load": {
+          "desc": "Charge le fichier JSON (jsonReadFile) et désérialise. Journalise un avertissement et renvoie false si fname est nil ou le fichier absent, une erreur si la lecture échoue.",
+          "returns": [{"type": "boolean", "desc": "true si le chargement a réussi."}]
+        },
+        "save": {
+          "desc": "Sérialise et écrit le fichier JSON (jsonWriteFile avec le paramètre compact à false)."
+        },
+        "onSerialize": {
+          "desc": "Renvoie {transcripts = <liste sérialisée>}.",
+          "returns": [{"type": "table", "desc": "Données sérialisables."}]
+        },
+        "onDeserialized": {
+          "desc": "Vide la liste et la recharge depuis data.transcripts. Ne fait rien si data est nil.",
+          "params": {"data": {"type": "table|nil", "desc": "Données lues du fichier."}}
+        },
+        "drawDebug": {
+          "desc": "Point d'entrée du dessin de debug ; appelle drawDebugTranscripts.",
+          "params": {"selected_id": {"type": "integer|nil", "desc": "Id de l'entrée sélectionnée."}}
+        },
+        "drawDebugTranscripts": {
+          "desc": "Appelle drawDebug(is_hovered, is_selected) sur chaque entrée de la liste triée.",
+          "params": {"selected_id": {"type": "integer|nil", "desc": "Id de l'entrée sélectionnée."}}
+        }
+      }
+    }
+  }
+}

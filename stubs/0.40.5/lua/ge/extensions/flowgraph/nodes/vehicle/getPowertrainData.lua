@@ -2,32 +2,32 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+--- Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 ---@class flowgraph_nodes_vehicle_getPowertrainData_C
 local flowgraph_nodes_vehicle_getPowertrainData_C = {}
 
---- Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:29
+--- Called by the manager when the flowgraph project execution starts; resets the internal state to zero.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:29
 function flowgraph_nodes_vehicle_getPowertrainData_C:_executionStarted() end
 
---- Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:26
+--- Node constructor, called at its creation by the flowgraph editor/manager; initializes the internal state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:26
 function flowgraph_nodes_vehicle_getPowertrainData_C:init() end
 
---- Efface la réponse reçue et passe en durée `inactive`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:33
+--- Clears the received response and goes to `inactive` duration.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:33
 function flowgraph_nodes_vehicle_getPowertrainData_C:onNodeReset() end
 
---- Quand la réponse est arrivée, la copie sur `value` et passe en `finished`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:51
+--- When the response has arrived, copies it to `value` and goes to `finished`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:51
 function flowgraph_nodes_vehicle_getPowertrainData_C:work() end
 
---- Envoie la requête powertrain au véhicule et passe en `started`.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:38
+--- Sends the powertrain request to the vehicle and goes to `started`.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/getPowertrainData.lua:38
 function flowgraph_nodes_vehicle_getPowertrainData_C:workOnce() end
 

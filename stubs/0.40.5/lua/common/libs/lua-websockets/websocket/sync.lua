@@ -2,54 +2,54 @@
 -- tim19Atlas stub generated from lua/common/libs/lua-websockets/websocket/sync.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Cœur synchrone de lua-websockets : extend(obj) ajoute à un objet disposant de sock_send, sock_receive, sock_close (et sock_connect côté client) les méthodes connect, send, receive et close. Gère la poignée de main, le réassemblage de messages fragmentés, la réponse automatique aux PING (client) et la fermeture propre. Utilisé par client_sync, client_copas et server_copas.
---- Accès : `require("libs/lua-websockets/websocket/sync")`
+--- Synchronous core of lua-websockets: extend(obj) adds to an object having sock_send, sock_receive, sock_close (and sock_connect on the client side) the methods connect, send, receive and close. Handles the handshake, reassembly of fragmented messages, automatic reply to PINGs (client) and clean closing. Used by client_sync, client_copas and server_copas.
+--- Access: `require("libs/lua-websockets/websocket/sync")`
 ---@class libs_lua_websockets_websocket_sync
 local libs_lua_websockets_websocket_sync = {}
 
---- Ajoute les méthodes WebSocket à obj et initialise obj.state à 'CLOSED' s'il est absent.
----Source : lua/common/libs/lua-websockets/websocket/sync.lua:186
----@param obj table Objet avec sock_send, sock_receive, sock_close (et sock_connect s'il n'est pas serveur).
----@return table  Le même objet, étendu.
+--- Adds the WebSocket methods to obj and initializes obj.state to 'CLOSED' if absent.
+---Source: lua/common/libs/lua-websockets/websocket/sync.lua:186
+---@param obj table Object with sock_send, sock_receive, sock_close (and sock_connect if it is not a server).
+---@return table  The same object, extended.
 function libs_lua_websockets_websocket_sync.extend(obj) end
 
---- Objet étendu par extend. Champs : state ('CLOSED', 'OPEN'), is_server, is_closing, callback facultatif on_close.
+--- Object extended by extend. Fields: state ('CLOSED', 'OPEN'), is_server, is_closing, optional on_close callback.
 ---@class libs_lua_websockets_websocket_sync_obj
 local libs_lua_websockets_websocket_sync_obj = {}
 
---- Envoie une trame CLOSE, attend la réponse, ferme le socket, appelle on_close s'il existe et passe state à 'CLOSED'. Renvoie false si l'état n'est pas 'OPEN'.
----Source : lua/common/libs/lua-websockets/websocket/sync.lua:95
----@param code integer Code (défaut 1000).
----@param reason string Raison.
+--- Sends a CLOSE frame, waits for the reply, closes the socket, calls on_close if it exists and sets state to 'CLOSED'. Returns false if the state is not 'OPEN'.
+---Source: lua/common/libs/lua-websockets/websocket/sync.lua:95
+---@param code integer Code (default 1000).
+---@param reason string Reason.
 ---@return boolean  was_clean.
 ---@return integer  Code.
----@return string  Raison.
+---@return string  Reason.
 function libs_lua_websockets_websocket_sync_obj:close(code, reason) end
 
---- Connexion client : analyse l'URL, connecte le socket, fait la poignée de main HTTP et vérifie Sec-WebSocket-Accept. Passe state à 'OPEN' en cas de succès.
----Source : lua/common/libs/lua-websockets/websocket/sync.lua:126
----@param ws_url string URL ws:// ou wss://.
----@param ws_protocol string|string[]|nil Sous-protocole(s) demandé(s).
----@param options table|nil ssl_params et extra_http_headers.
----@return boolean|nil  true si ouvert, nil sinon.
----@return string|nil  Sous-protocole accepté, ou message d'erreur.
----@return table|nil  En-têtes de la réponse.
+--- Client connection: parses the URL, connects the socket, performs the HTTP handshake and checks Sec-WebSocket-Accept. Sets state to 'OPEN' on success.
+---Source: lua/common/libs/lua-websockets/websocket/sync.lua:126
+---@param ws_url string ws:// or wss:// URL.
+---@param ws_protocol string|string[]|nil Requested subprotocol(s).
+---@param options table|nil ssl_params and extra_http_headers.
+---@return boolean|nil  true if open, nil otherwise.
+---@return string|nil  Accepted subprotocol, or error message.
+---@return table|nil  Response headers.
 function libs_lua_websockets_websocket_sync_obj:connect(ws_url, ws_protocol, options) end
 
---- Bloque jusqu'à réception d'un message complet. Réassemble les fragments, répond aux PING côté client, répond à CLOSE par un écho.
----Source : lua/common/libs/lua-websockets/websocket/sync.lua:8
+--- Blocks until a complete message is received. Reassembles fragments, replies to PINGs on the client side, replies to CLOSE with an echo.
+---Source: lua/common/libs/lua-websockets/websocket/sync.lua:8
 ---@return string|nil  Message.
 ---@return integer|nil  Opcode.
----@return boolean  was_clean (en cas de fermeture).
----@return integer  Code de fermeture.
----@return string  Raison.
+---@return boolean  was_clean (on close).
+---@return integer  Close code.
+---@return string  Reason.
 function libs_lua_websockets_websocket_sync_obj:receive() end
 
---- Envoie un message (masqué si l'objet n'est pas un serveur). Ferme la connexion si l'envoi échoue.
----Source : lua/common/libs/lua-websockets/websocket/sync.lua:83
----@param data string Données.
----@param opcode integer Opcode (TEXT par défaut).
----@return boolean|nil  true si envoyé ; nil, was_clean, code, reason sinon.
+--- Sends a message (masked if the object is not a server). Closes the connection if the send fails.
+---Source: lua/common/libs/lua-websockets/websocket/sync.lua:83
+---@param data string Data.
+---@param opcode integer Opcode (TEXT by default).
+---@return boolean|nil  true if sent; nil, was_clean, code, reason otherwise.
 function libs_lua_websockets_websocket_sync_obj:send(data, opcode) end
 
 return libs_lua_websockets_websocket_sync

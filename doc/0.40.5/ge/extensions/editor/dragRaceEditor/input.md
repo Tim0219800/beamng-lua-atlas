@@ -1,32 +1,32 @@
 # `editor_dragRaceEditor_input`
 
-*Fichier : `lua/ge/extensions/editor/dragRaceEditor/input.lua` · VM : Game Engine (GE) · 51 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dragRaceEditor/input.lua` · VM: Game Engine (GE) · 51 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dragRaceEditor_input` : `extensions.load("editor_dragRaceEditor_input")`, puis la globale `editor_dragRaceEditor_input`
+**Access:** extension `editor_dragRaceEditor_input`: `extensions.load("editor_dragRaceEditor_input")`, then the global `editor_dragRaceEditor_input`
 
-Gère l'entrée souris de l'éditeur de drag race pour l'édition de zones : à chaque mise à jour, calcule le rayon caméra-souris, le raycast sur la scène et les états clic/maintien/relâchement du bouton gauche. Le résultat est lu par l'éditeur de zone via getMouseInfo.
+Handles mouse input of the drag race editor for zone editing: on each update, computes the camera-mouse ray, the scene raycast and the left button click/hold/release states. The result is read by the zone editor via getMouseInfo.
 
-## Remarques
+## Notes
 
-- Pendant le raycast, la collision de la forêt est désactivée puis réactivée.
-- Un clic est pris en compte si ImGui ne capture pas la souris, ou si le mode d'édition courant est « Edit Drag Zone ».
-- Quand rien n'est touché, la position du clic est à 100 m devant la caméra, normale (0,0,1).
-- Au frame du clic (down), hold est forcé à false.
+- During the raycast, forest collision is disabled and then re-enabled.
+- A click is taken into account if ImGui does not capture the mouse, or if the current edit mode is "Edit Drag Zone".
+- When nothing is hit, the click position is 100 m in front of the camera, with normal (0,0,1).
+- On the click frame (down), hold is forced to false.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dragRaceEditor_input.getMouseInfo()` | Renvoie la table mouseInfo courante. | 44 |
-| `editor_dragRaceEditor_input.updateMouseInfo()` | Recalcule la table mouseInfo : camPos, ray, rayDir, rayCast, valid, down, hold, up et les positions/normales _downPos, _holdPos, _upPos, _downNormal, _holdNormal, _upNormal. | 6 |
+| `editor_dragRaceEditor_input.getMouseInfo()` | Returns the current mouseInfo table. | 44 |
+| `editor_dragRaceEditor_input.updateMouseInfo()` | Recomputes the mouseInfo table: camPos, ray, rayDir, rayCast, valid, down, hold, up and the positions/normals _downPos, _holdPos, _upPos, _downNormal, _holdNormal, _upNormal. | 6 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dragRaceEditor_input.getMouseInfo()`
 
-Renvoie la table mouseInfo courante.
+Returns the current mouseInfo table.
 
-- **renvoie** : table|nil nil tant que updateMouseInfo n'a jamais été appelé.
+- **returns**: table|nil nil until updateMouseInfo has been called at least once.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dragRaceEditor/input.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dragRaceEditor/input.lua`.*

@@ -1,45 +1,45 @@
 # `editor_vehicleEditor_liveEditor_veGeneralData`
 
-*Fichier : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.lua` · VM : Game Engine (GE) · 112 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.lua` · VM: Game Engine (GE) · 112 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_vehicleEditor_liveEditor_veGeneralData` : `extensions.load("editor_vehicleEditor_liveEditor_veGeneralData")`, puis la globale `editor_vehicleEditor_liveEditor_veGeneralData`
+**Access:** extension `editor_vehicleEditor_liveEditor_veGeneralData`: `extensions.load("editor_vehicleEditor_liveEditor_veGeneralData")`, then the global `editor_vehicleEditor_liveEditor_veGeneralData`
 
-Fenêtre 'General Data' du Vehicle Editor live. Chaque frame, elle envoie au VM du véhicule une commande qui renvoie (via obj:queueGameEngineLua) une table dans vEditor.generalData : position, rotation, direction, roll/pitch/yaw, vitesse, accélérations (sensors.gx2/gy2/gz2), vitesse air/sol, température, pression, densité de l'air et dégâts. Elle les affiche avec des unités lisibles.
+'General Data' window of the live Vehicle Editor. Every frame, it sends the vehicle VM a command that returns (via obj:queueGameEngineLua) a table in vEditor.generalData: position, rotation, direction, roll/pitch/yaw, speed, accelerations (sensors.gx2/gy2/gz2), air/ground speed, temperature, pressure, air density and damage. It displays them with readable units.
 
-## Remarques
+## Notes
 
-- Unités affichées : position m, vitesse m/s, accélération m/s², température convertie de K en °C (-273.15), pression convertie de Pa en kPa (*0.001), densité kg/m³, dégâts en $.
-- Les données arrivent avec un frame de retard (commande asynchrone queueLuaCommand).
-- La commande est envoyée à chaque frame où la fenêtre est ouverte (im.Begin vrai).
+- Displayed units: position m, speed m/s, acceleration m/s², temperature converted from K to °C (-273.15), pressure converted from Pa to kPa (*0.001), density kg/m³, damage in $.
+- The data arrives one frame late (asynchronous queueLuaCommand command).
+- The command is sent every frame the window is open (im.Begin true).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_vehicleEditor_liveEditor_veGeneralData.onDeserialized(data)` | Restaure l'état d'ouverture. *(interne)* *(hook)* | 101 |
-| `editor_vehicleEditor_liveEditor_veGeneralData.onSerialize()` | Renvoie {windowOpen}. *(interne)* *(hook)* | 95 |
-| `editor_vehicleEditor_liveEditor_veGeneralData.onUpdate()` | Appelé chaque frame : demande les données au véhicule et dessine le tableau à deux colonnes. *(interne)* *(hook)* | 20 |
-| `editor_vehicleEditor_liveEditor_veGeneralData.open()` | Ouvre la fenêtre. | 91 |
+| `editor_vehicleEditor_liveEditor_veGeneralData.onDeserialized(data)` | Restores the open state. *(internal)* *(hook)* | 101 |
+| `editor_vehicleEditor_liveEditor_veGeneralData.onSerialize()` | Returns {windowOpen}. *(internal)* *(hook)* | 95 |
+| `editor_vehicleEditor_liveEditor_veGeneralData.onUpdate()` | Called every frame: requests the data from the vehicle and draws the two-column table. *(internal)* *(hook)* | 20 |
+| `editor_vehicleEditor_liveEditor_veGeneralData.open()` | Opens the window. | 91 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_vehicleEditor_liveEditor_veGeneralData.onDeserialized(data)`
 
-Restaure l'état d'ouverture.
+Restores the open state.
 
-- `data` (*table*) : Table de onSerialize.
+- `data` (*table*) : onSerialize table.
 
 #### `editor_vehicleEditor_liveEditor_veGeneralData.onSerialize()`
 
-Renvoie {windowOpen}.
+Returns {windowOpen}.
 
-- **renvoie** : table {windowOpen = boolean}
+- **returns**: table {windowOpen = boolean}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `menuEntry` | string | 'General Data'. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/vehicleEditor/liveEditor/veGeneralData.lua`.*

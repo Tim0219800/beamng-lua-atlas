@@ -1,44 +1,80 @@
 {
   "path": "lua/common/jbeam/sections/occupantFaces.lua",
-  "module": "Gère les visages des occupants (têtes de personnages). Charge, une fois, les pièces du slot 'skin_character_face' du véhicule /vehicles/unicycle/ pour construire la liste de visages disponibles et le matériau associé à chacun (base 'character_display'). Fournit des utilitaires pour l'interface et le tirage aléatoire, et une étape process qui enregistre tous les matériaux de visage sur chaque prop 'character_head' d'un véhicule dont le système d'occupants est activé.",
+  "module": "Handles occupant faces (character heads). Loads, once, the parts of the 'skin_character_face' slot of the /vehicles/unicycle/ vehicle to build the list of available faces and the material associated with each (base 'character_display'). Provides utilities for the UI and random picking, and a process step that registers all the face materials on each 'character_head' prop of a vehicle whose occupant system is enabled.",
   "notes": [
-    "Le matériau d'un visage est 'character_display.skin_character_face.<skinName>' si la pièce a skinName, sinon 'character_display'.",
-    "getFaceOptions renvoie une table partagée (triée par label) : ne pas la modifier.",
-    "getRandomFacePart plante si aucun visage n'est disponible (indice aléatoire sur une liste vide).",
-    "process ne fait rien si vehicle.occupantSystem n'existe pas ou n'est pas enabled (voir jbeam/sections/occupantSlots) ; il pose prop.faceMaterialSwitch sur chaque tête.",
-    "Les instances de matériau n'existent que pour les matériaux connus à la fin du chargement du véhicule, d'où l'enregistrement de tous les visages sur chaque tête."
+    "A face's material is 'character_display.skin_character_face.<skinName>' if the part has skinName, otherwise 'character_display'.",
+    "getFaceOptions returns a shared table (sorted by label): do not modify it.",
+    "getRandomFacePart crashes if no face is available (random index on an empty list).",
+    "process does nothing if vehicle.occupantSystem does not exist or is not enabled (see jbeam/sections/occupantSlots); it sets prop.faceMaterialSwitch on each head.",
+    "Material instances only exist for materials known at the end of vehicle loading, hence all faces are registered on each head."
   ],
   "fields": {},
   "functions": {
     "isFacePart": {
-      "desc": "Indique si le nom de pièce est un visage connu.",
-      "params": {"partName": {"type": "string", "desc": "Nom de pièce."}},
-      "returns": [{"type": "boolean", "desc": "true si c'est un visage."}],
+      "desc": "Tells whether the part name is a known face.",
+      "params": {
+        "partName": {
+          "type": "string",
+          "desc": "Part name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if it is a face."
+        }
+      ],
       "internal": false
     },
     "getFaceOptions": {
-      "desc": "Liste des visages {value = nom de pièce, label = nom affiché}, triés par label. Table partagée à ne pas modifier.",
+      "desc": "List of faces {value = part name, label = display name}, sorted by label. Shared table, do not modify.",
       "params": {},
-      "returns": [{"type": "table[]", "desc": "Options de visages."}],
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "Face options."
+        }
+      ],
       "internal": false
     },
     "getRandomFacePart": {
-      "desc": "Nom d'une pièce de visage tirée au hasard.",
+      "desc": "Name of a randomly picked face part.",
       "params": {},
-      "returns": [{"type": "string", "desc": "Nom de pièce."}],
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Part name."
+        }
+      ],
       "internal": false
     },
     "getFaceMaterial": {
-      "desc": "Matériau à utiliser pour un visage (matériau de base si la pièce est inconnue).",
-      "params": {"partName": {"type": "string", "desc": "Nom de pièce de visage."}},
-      "returns": [{"type": "string", "desc": "Nom de matériau."}],
+      "desc": "Material to use for a face (base material if the part is unknown).",
+      "params": {
+        "partName": {
+          "type": "string",
+          "desc": "Face part name."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Material name."
+        }
+      ],
       "internal": false
     },
     "process": {
-      "desc": "Enregistre tous les matériaux de visage sur les têtes d'occupants du véhicule.",
+      "desc": "Registers all face materials on the vehicle's occupant heads.",
       "params": {
-        "vehicleObj": {"type": "userdata", "desc": "Objet véhicule moteur."},
-        "vehicle": {"type": "table", "desc": "Données jbeam (occupantSystem, props)."}
+        "vehicleObj": {
+          "type": "userdata",
+          "desc": "Engine vehicle object."
+        },
+        "vehicle": {
+          "type": "table",
+          "desc": "jbeam data (occupantSystem, props)."
+        }
       },
       "internal": true
     }

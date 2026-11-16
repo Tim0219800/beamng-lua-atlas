@@ -1,33 +1,69 @@
 {
   "path": "lua/ge/extensions/ui/liveries.lua",
-  "module": "Orchestrateur de l'éditeur de livrées (peinture/décalcomanies) de l'UI. Il s'appuie sur l'API d'éditeur `editor_api_dynamicDecals` : à l'ouverture il mémorise le skin actuel du véhicule joueur, active le skin `dynamicTextures`, prépare la pile de calques (livrée vierge à la couleur du véhicule ou sauvegarde existante) et démarre la caméra. À la fermeture il restaure le skin d'origine.",
-  "usage": "ui_liveries.setup()          -- livrée vierge\nui_liveries.setup('maSauvegarde') -- charge une sauvegarde\n-- ...\nui_liveries.teardown()",
+  "module": "UI livery editor (paint/decals) orchestrator. It relies on the editor API `editor_api_dynamicDecals`: on opening it stores the player vehicle's current skin, enables the `dynamicTextures` skin, prepares the layer stack (blank livery in the vehicle's color or existing save) and starts the camera. On closing it restores the original skin.",
+  "usage": "ui_liveries.setup()          -- blank livery\nui_liveries.setup('maSauvegarde') -- loads a save\n-- ...\nui_liveries.teardown()",
   "notes": [
-    "setup renvoie true sans rien refaire si l'éditeur tourne déjà ; renvoie false si l'API de décalcomanies est absente.",
-    "La valeur renvoyée par setup est le succès du chargement de la pile de calques (false si la sauvegarde n'a pas pu être chargée : une livrée vierge est alors créée quand même).",
-    "Le curseur de décalcomanie live n'est affiché que lorsque l'écran de transformation le demande (setProjectDynamicDecalsState(false) au démarrage)."
+    "setup returns true without doing anything if the editor is already running; returns false if the decals API is missing.",
+    "The value returned by setup is the success of loading the layer stack (false if the save could not be loaded: a blank livery is then created anyway).",
+    "The live decal cursor is only displayed when the transform screen requests it (setProjectDynamicDecalsState(false) at startup)."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "editor_api_dynamicDecals, ui_liveries_camera, ui_liveries_fill, ui_liveries_saves."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "editor_api_dynamicDecals, ui_liveries_camera, ui_liveries_fill, ui_liveries_saves."
+    }
   },
   "functions": {
     "setup": {
-      "desc": "Démarre l'éditeur de livrées sur le véhicule joueur (skin dynamicTextures, calques, historique vidé, caméra).",
-      "params": {"saveName": {"type": "string|nil", "desc": "Nom d'une sauvegarde à charger ; nil = livrée vierge à la couleur du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "true si la pile de calques a été initialisée correctement."}]
+      "desc": "Starts the livery editor on the player vehicle (dynamicTextures skin, layers, history cleared, camera).",
+      "params": {
+        "saveName": {
+          "type": "string|nil",
+          "desc": "Name of a save to load; nil = blank livery in the vehicle's color."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the layer stack was initialized correctly."
+        }
+      ]
     },
     "teardown": {
-      "desc": "Arrête l'éditeur : caméra, désactivation de l'API, restauration du skin précédent et nettoyage du fill. Sans effet si non démarré.",
-      "returns": [{"type": "nil", "desc": ""}]
+      "desc": "Stops the editor: camera, API deactivation, restoring the previous skin and cleaning up the fill. No effect if not started.",
+      "returns": [
+        {
+          "type": "nil",
+          "desc": ""
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Hook appelé à chaque image par le système d'extensions ; appelle api.onUpdate_() tant que l'éditeur tourne.",
-      "params": {"dtReal": {"type": "number", "desc": "Delta temps réel (s)."}, "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}, "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}},
+      "desc": "Hook called every frame by the extension system; calls api.onUpdate_() while the editor is running.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulated time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
+      },
       "internal": true
     },
     "isRunning": {
-      "desc": "Indique si l'éditeur de livrées est actif.",
-      "returns": [{"type": "boolean", "desc": "true entre setup et teardown."}]
+      "desc": "Returns whether the livery editor is active.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true between setup and teardown."
+        }
+      ]
     }
   }
 }

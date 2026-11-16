@@ -1,60 +1,60 @@
 # `mcp_tools_telemetry`
 
-*Fichier : `lua/ge/extensions/mcp/tools/telemetry.lua` · VM : Game Engine (GE) · 88 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/telemetry.lua` · VM: Game Engine (GE) · 88 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_telemetry` : `extensions.load("mcp_tools_telemetry")`, puis la globale `mcp_tools_telemetry`
+**Access:** extension `mcp_tools_telemetry`: `extensions.load("mcp_tools_telemetry")`, then the global `mcp_tools_telemetry`
 
-Outils MCP de télémétrie véhicule : valeurs électriques (régime, vitesse, rapport, carburant…), résumé de dommages, et instantané d'état global côté GE.
+MCP vehicle telemetry tools: electrics values (RPM, speed, gear, fuel…), damage summary, and a global GE-side state snapshot.
 
-## Remarques
+## Notes
 
-- get_electrics est asynchrone (VM véhicule -> callback `_cb.electrics` -> shared.asyncResults.electrics) : l'appel renvoie le résultat de la demande précédente.
-- Sans `keys`, seules les valeurs scalaires (number, string, boolean) de electrics.values sont renvoyées.
-- get_status n'inclut pas rpm/gear/IA (VM véhicule) : utiliser get_electrics et get_ai.
+- get_electrics is asynchronous (vehicle VM -> `_cb.electrics` callback -> shared.asyncResults.electrics): the call returns the result of the previous request.
+- Without `keys`, only the scalar values (number, string, boolean) of electrics.values are returned.
+- get_status does not include rpm/gear/AI (vehicle VM): use get_electrics and get_ai.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_telemetry.get_electrics(args)` | Récupère electrics.values d'un véhicule (asynchrone). | 15 |
-| `mcp_tools_telemetry.get_status()` | Instantané : sim {physicsRunning, timeScale}, vehicleCount, level, camera {mode, pos}, vehicle joueur {id, jbeam, configKey, pos, speed (m/s), damage}. | 43 |
-| `mcp_tools_telemetry.get_vehicle_damage(args)` | Résumé de dommages : id et damageSum (veh:getSectionDamageSum()). | 32 |
+| `mcp_tools_telemetry.get_electrics(args)` | Fetches a vehicle's electrics.values (asynchronous). | 15 |
+| `mcp_tools_telemetry.get_status()` | Snapshot: sim {physicsRunning, timeScale}, vehicleCount, level, camera {mode, pos}, player vehicle {id, jbeam, configKey, pos, speed (m/s), damage}. | 43 |
+| `mcp_tools_telemetry.get_vehicle_damage(args)` | Damage summary: id and damageSum (veh:getSectionDamageSum()). | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_telemetry.get_electrics(args)`
 
-Récupère electrics.values d'un véhicule (asynchrone).
+Fetches a vehicle's electrics.values (asynchronous).
 
 - `args` (*table|nil*) : {keys?: string[], id?: integer}
-- **renvoie** : string JSON précédent ou message « requested (async) ».
-- **renvoie** : boolean true si le véhicule n'existe pas.
+- **returns**: string Previous JSON or "requested (async)" message.
+- **returns**: boolean true if the vehicle does not exist.
 
 #### `mcp_tools_telemetry.get_status()`
 
-Instantané : sim {physicsRunning, timeScale}, vehicleCount, level, camera {mode, pos}, vehicle joueur {id, jbeam, configKey, pos, speed (m/s), damage}.
+Snapshot: sim {physicsRunning, timeScale}, vehicleCount, level, camera {mode, pos}, player vehicle {id, jbeam, configKey, pos, speed (m/s), damage}.
 
-- **renvoie** : string JSON.
-- **renvoie** : boolean false.
+- **returns**: string JSON.
+- **returns**: boolean false.
 
 #### `mcp_tools_telemetry.get_vehicle_damage(args)`
 
-Résumé de dommages : id et damageSum (veh:getSectionDamageSum()).
+Damage summary: id and damageSum (veh:getSectionDamageSum()).
 
 - `args` (*table|nil*) : {id?: integer}
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si le véhicule n'existe pas.
+- **returns**: string JSON.
+- **returns**: boolean true if the vehicle does not exist.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `cb` | table<string, function> | Callback `electrics(vid, json)` : stocke le JSON dans shared.asyncResults.electrics. |
-| `schemas` | table<string, table> | Schémas des outils de télémétrie. |
+| `cb` | table<string, function> | Callback `electrics(vid, json)`: stores the JSON in shared.asyncResults.electrics. |
+| `schemas` | table<string, table> | Schemas of the telemetry tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPhysicsRunning`, `getPlayerVehicle`, `getSimulationTimeScale`, `queueObjectLua`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/telemetry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/telemetry.lua`.*

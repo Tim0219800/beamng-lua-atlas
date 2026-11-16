@@ -2,76 +2,76 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère le calibrage par mission des seuils d'un style de compositeur de notes de rallye (diamètres d'intensité des virages, longueurs d'arc par intensité). Les réglages sont stockés dans <missionDir>/rally/compositorCalibration.json sous la forme {version=1, styles={<style>={intensity={diameter={...}}, lengthsByIntensity={<intensité>={arcMeters={...}}}}}} et réappliqués à la configuration d'un style au chargement. Une liste de 'boundaries' est un tableau croissant de bornes basses commençant par 0 ; la dernière plage est ouverte (pas de max).
---- Accès : extension `gameplay_rally_compositors_helpers_calibrationOverrides` : `extensions.load("gameplay_rally_compositors_helpers_calibrationOverrides")`, puis la globale `gameplay_rally_compositors_helpers_calibrationOverrides`
+--- Manages the per-mission calibration of the thresholds of a rally note compositor style (corner intensity diameters, arc lengths per intensity). Settings are stored in <missionDir>/rally/compositorCalibration.json as {version=1, styles={<style>={intensity={diameter={...}}, lengthsByIntensity={<intensity>={arcMeters={...}}}}}} and reapplied to a style's configuration at load time. A list of 'boundaries' is an ascending array of lower bounds starting at 0; the last range is open-ended (no max).
+--- Access: extension `gameplay_rally_compositors_helpers_calibrationOverrides`: `extensions.load("gameplay_rally_compositors_helpers_calibrationOverrides")`, then the global `gameplay_rally_compositors_helpers_calibrationOverrides`
 ---@class gameplay_rally_compositors_helpers_calibrationOverrides
 gameplay_rally_compositors_helpers_calibrationOverrides = {}
 
---- Réécrit la clé 'key' de chaque entrée de la liste avec la plage {min, max} issue des bornes (la dernière : {min} seul). Ne modifie rien si les bornes sont invalides ou de mauvaise longueur.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:75
----@param list table[] Liste d'entrées modifiée sur place.
----@param key string Clé à écrire.
----@param boundaries number[] Bornes basses.
----@return boolean  true si appliqué.
+--- Rewrites the 'key' key of each entry in the list with the range {min, max} derived from the bounds (the last one: {min} only). Changes nothing if the bounds are invalid or of the wrong length.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:75
+---@param list table[] List of entries, modified in place.
+---@param key string Key to write.
+---@param boundaries number[] Lower bounds.
+---@return boolean  true if applied.
 function gameplay_rally_compositors_helpers_calibrationOverrides.applyBoundariesToList(list, key, boundaries) end
 
---- Applique les calibrages sauvegardés à la configuration d'un style (corner.numbering.intensity et lengthsByIntensity). Appelé par textCompositor:load.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:143
----@param config table Configuration du style (modifiée sur place).
----@param compositorName string Nom du style.
----@param missionDir string Dossier de la mission.
----@return boolean  true si au moins une liste a été modifiée.
+--- Applies the saved calibrations to a style's configuration (corner.numbering.intensity and lengthsByIntensity). Called by textCompositor:load.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:143
+---@param config table Style configuration (modified in place).
+---@param compositorName string Style name.
+---@param missionDir string Mission folder.
+---@return boolean  true if at least one list was modified.
 function gameplay_rally_compositors_helpers_calibrationOverrides.applyToConfig(config, compositorName, missionDir) end
 
---- Extrait les bornes basses d'une liste d'entrées dont la clé 'key' est une plage {min, max}. Renvoie nil si la liste est vide, ne commence pas à 0, n'est pas contiguë (max précédent = min suivant) ou si un max manque hors dernière entrée.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:39
----@param list table[]|nil Liste ordonnée d'entrées.
----@param key string Clé contenant la plage (ex. 'diameter', 'arcMeters').
----@return number[]|nil  Bornes basses, ou nil si la liste n'est pas valide.
+--- Extracts the lower bounds from a list of entries whose 'key' key is a range {min, max}. Returns nil if the list is empty, does not start at 0, is not contiguous (previous max = next min) or if a max is missing outside the last entry.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:39
+---@param list table[]|nil Ordered list of entries.
+---@param key string Key containing the range (e.g. 'diameter', 'arcMeters').
+---@return number[]|nil  Lower bounds, or nil if the list is not valid.
 function gameplay_rally_compositors_helpers_calibrationOverrides.boundariesFromList(list, key) end
 
---- Chemin du fichier de calibrage d'une mission : <missionDir>/rally/compositorCalibration.json.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:17
----@param missionDir string|nil Dossier de la mission.
----@return string|nil  Chemin, ou nil si missionDir est nil.
+--- Path of a mission's calibration file: <missionDir>/rally/compositorCalibration.json.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:17
+---@param missionDir string|nil Mission folder.
+---@return string|nil  Path, or nil if missionDir is nil.
 function gameplay_rally_compositors_helpers_calibrationOverrides.calibrationFile(missionDir) end
 
---- Lit le fichier de calibrage de la mission. Renvoie une structure vierge {version=1, styles={}} si le fichier est absent ou illisible (erreur journalisée dans ce dernier cas).
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:87
----@param missionDir string|nil Dossier de la mission.
----@return table  Données {version, styles}.
+--- Reads the mission's calibration file. Returns a blank structure {version=1, styles={}} if the file is missing or unreadable (error logged in the latter case).
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:87
+---@param missionDir string|nil Mission folder.
+---@return table  Data {version, styles}.
 function gameplay_rally_compositors_helpers_calibrationOverrides.load(missionDir) end
 
---- Écrit les données de calibrage (indentées) dans le fichier de la mission, en créant le dossier au besoin.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:101
----@param missionDir string|nil Dossier de la mission.
----@param data table|nil Données ; vierges si nil.
----@return boolean  Résultat de jsonWriteFile (false si missionDir est nil).
+--- Writes the calibration data (indented) to the mission's file, creating the folder if needed.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:101
+---@param missionDir string|nil Mission folder.
+---@param data table|nil Data; blank if nil.
+---@return boolean  Result of jsonWriteFile (false if missionDir is nil).
 function gameplay_rally_compositors_helpers_calibrationOverrides.save(missionDir, data) end
 
---- Enregistre une liste de bornes sous styles[compositorName][groupName][key] puis sauvegarde le fichier.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:126
----@param missionDir string Dossier de la mission.
----@param compositorName string Nom du style.
----@param groupName string Groupe (ex. 'intensity').
----@param key string Clé (ex. 'diameter').
----@param boundaries number[] Bornes (copiées ; nil si une valeur n'est pas numérique).
----@return boolean  Succès de l'écriture.
+--- Stores a list of bounds under styles[compositorName][groupName][key] then saves the file.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:126
+---@param missionDir string Mission folder.
+---@param compositorName string Style name.
+---@param groupName string Group (e.g. 'intensity').
+---@param key string Key (e.g. 'diameter').
+---@param boundaries number[] Bounds (copied; nil if a value is not numeric).
+---@return boolean  Write success.
 function gameplay_rally_compositors_helpers_calibrationOverrides.setBoundaries(missionDir, compositorName, groupName, key, boundaries) end
 
---- Enregistre les bornes de longueur d'arc d'une intensité sous styles[compositorName].lengthsByIntensity[intensityName].arcMeters puis sauvegarde.
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:134
----@param missionDir string Dossier de la mission.
----@param compositorName string Nom du style.
----@param intensityName string Identifiant de l'intensité.
----@param boundaries number[] Bornes d'arc en mètres.
----@return boolean  Succès de l'écriture.
+--- Stores the arc length bounds of an intensity under styles[compositorName].lengthsByIntensity[intensityName].arcMeters then saves.
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:134
+---@param missionDir string Mission folder.
+---@param compositorName string Style name.
+---@param intensityName string Intensity identifier.
+---@param boundaries number[] Arc bounds in meters.
+---@return boolean  Write success.
 function gameplay_rally_compositors_helpers_calibrationOverrides.setLengthBoundaries(missionDir, compositorName, intensityName, boundaries) end
 
---- Vérifie qu'une liste de bornes est valable (numérique, commence à 0, strictement croissante, bonne longueur).
----Source : lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:59
----@param boundaries table Tableau de nombres.
----@param expectedCount integer|nil Longueur attendue.
----@return boolean  true si valide.
+--- Checks that a list of bounds is valid (numeric, starts at 0, strictly increasing, right length).
+---Source: lua/ge/extensions/gameplay/rally/compositors/helpers/calibrationOverrides.lua:59
+---@param boundaries table Array of numbers.
+---@param expectedCount integer|nil Expected length.
+---@return boolean  true if valid.
 function gameplay_rally_compositors_helpers_calibrationOverrides.validateBoundaries(boundaries, expectedCount) end
 

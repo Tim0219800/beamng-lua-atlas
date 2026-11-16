@@ -1,41 +1,64 @@
 {
   "path": "lua/ge/extensions/scenario/driftGoal.lua",
-  "module": "Objectif de scénario « drift » (goals.vehicles avec id = 'drift'). Il calcule un score de dérive à partir de l'écart entre la direction du véhicule (dirVec) et celle de sa vitesse (vel), avec combos et messages d'encouragement affichés via scenariohelper.realTimeUiDisplay. Le scénario se termine quand le temps imparti (timeAllowance) est dépassé ou à l'état 'onRaceResult'.",
-  "usage": "-- JSON du scénario :\n-- {\"id\":\"drift\", \"value\":{\"minDrift\":2000, \"maxDrift\":10000, \"timeAllowance\":60, \"msg\":\"Bravo\", \"failMsg\":\"Raté\"}}",
+  "module": "\"drift\" scenario goal (goals.vehicles with id = 'drift'). It computes a drift score from the difference between the vehicle's direction (dirVec) and that of its velocity (vel), with combos and encouragement messages shown via scenariohelper.realTimeUiDisplay. The scenario ends when the allotted time (timeAllowance) is exceeded or on the 'onRaceResult' state.",
+  "usage": "-- scenario JSON:\n-- {\"id\":\"drift\", \"value\":{\"minDrift\":2000, \"maxDrift\":10000, \"timeAllowance\":60, \"msg\":\"Bravo\", \"failMsg\":\"Raté\"}}",
   "notes": [
-    "Options de instance.value : minDrift (score minimal pour réussir), maxDrift (plafond de la progression enregistrée), timeAllowance (secondes de scenario.timer), msg et failMsg (textes finaux, reçoivent context.score).",
-    "Le score instantané = floor(angleBonus) * speedBonus ; angleBonus = floor(10 * écart des vecteurs), ignoré s'il vaut 1 ou moins (dérive trop faible) ou 11 et plus (tête-à-queue) ; speedBonus = vitesse * 0.15, ignoré s'il vaut 1 ou moins. Un combo multiplie le score par (combo + 1) tant que le délai de grâce n'est pas écoulé.",
-    "Les compteurs de dérive (driftState, driftCombo...) sont des variables locales du module, partagées entre toutes les instances : le goal ne gère correctement qu'un seul véhicule.",
-    "Les compteurs de cooldown décroissent par appel de processState (0.25 par appel, message 0.1), pas en secondes réelles.",
-    "Si la vitesse est nulle, fobjData.vel:length() vaut 0 et la division donne des valeurs non finies (nan) dans le calcul d'angle.",
-    "updateFinalStatus plante si value.minDrift est nil ; sessionEnd aussi (comparaison avec nil).",
-    "Le message de réussite par défaut utilise instance.value.driftPoints, qui n'est jamais défini ailleurs dans ce fichier."
+    "instance.value options: minDrift (minimum score to succeed), maxDrift (cap of the recorded progress), timeAllowance (seconds of scenario.timer), msg and failMsg (final texts, receive context.score).",
+    "The instantaneous score = floor(angleBonus) * speedBonus; angleBonus = floor(10 * vector difference), ignored if it is 1 or less (drift too small) or 11 and more (spin-out); speedBonus = speed * 0.15, ignored if it is 1 or less. A combo multiplies the score by (combo + 1) as long as the grace period has not elapsed.",
+    "The drift counters (driftState, driftCombo...) are local variables of the module, shared among all instances: the goal only correctly handles a single vehicle.",
+    "The cooldown counters decrease per processState call (0.25 per call, message 0.1), not in real seconds.",
+    "If the speed is zero, fobjData.vel:length() is 0 and the division gives non-finite values (nan) in the angle computation.",
+    "updateFinalStatus crashes if value.minDrift is nil; sessionEnd too (comparison with nil).",
+    "The default success message uses instance.value.driftPoints, which is never defined elsewhere in this file."
   ],
   "fields": {
-    "instances": {"type": "table", "desc": "Liste des goals 'drift' valides, remplie par init()."}
+    "instances": {
+      "type": "table",
+      "desc": "List of valid 'drift' goals, filled by init()."
+    }
   },
   "functions": {
     "init": {
-      "desc": "Réinitialise instances et l'état de dérive ; ajoute chaque goal id='drift' (minDrift et maxDrift doivent être numériques) avec driftScore = 0 et status.completed = false.",
-      "params": {"scenario": {"type": "table", "desc": "Scénario courant."}},
+      "desc": "Resets instances and the drift state; adds each goal id='drift' (minDrift and maxDrift must be numeric) with driftScore = 0 and status.completed = false.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "processState": {
-      "desc": "Appelé à chaque état du scénario : met à jour le score de dérive du véhicule d'après map.objects, affiche le message temps réel, et termine le scénario (sessionEnd) sur 'onRaceResult' ou si timeAllowance est dépassé. Réactive le suivi mapmgr si le véhicule n'est pas encore dans map.objects.",
+      "desc": "Called on every scenario state: updates the vehicle's drift score from map.objects, shows the real-time message, and ends the scenario (sessionEnd) on 'onRaceResult' or if timeAllowance is exceeded. Re-enables mapmgr tracking if the vehicle is not yet in map.objects.",
       "params": {
-        "scenario": {"type": "table", "desc": "Scénario courant (scenario.timer)."},
-        "state": {"type": "string", "desc": "Nom de l'état ; 'onRaceResult' termine la session."},
-        "stateData": {"type": "table", "desc": "Données de l'état (non utilisées)."}
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario (scenario.timer)."
+        },
+        "state": {
+          "type": "string",
+          "desc": "State name; 'onRaceResult' ends the session."
+        },
+        "stateData": {
+          "type": "table",
+          "desc": "State data (unused)."
+        }
       },
       "returns": [],
       "internal": true
     },
     "updateFinalStatus": {
-      "desc": "Fixe passed ou failed selon driftScore >= minDrift et envoie points (driftScore) et maxPoints (maxDrift) à statistics_statistics.setGoalProgress.",
+      "desc": "Sets passed or failed depending on driftScore >= minDrift and sends points (driftScore) and maxPoints (maxDrift) to statistics_statistics.setGoalProgress.",
       "params": {
-        "scenario": {"type": "table", "desc": "Scénario courant."},
-        "instance": {"type": "table|nil", "desc": "Non utilisé."}
+        "scenario": {
+          "type": "table",
+          "desc": "Current scenario."
+        },
+        "instance": {
+          "type": "table|nil",
+          "desc": "Not used."
+        }
       },
       "returns": [],
       "internal": true

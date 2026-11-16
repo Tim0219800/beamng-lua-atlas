@@ -1,42 +1,42 @@
 # `gameplay_rally_loop_speedingDetector`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/loop/speedingDetector.lua` · VM : Game Engine (GE) · 262 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/loop/speedingDetector.lua` · VM: Game Engine (GE) · 262 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/loop/speedingDetector")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/loop/speedingDetector")` (file under extensions/ but not a regular extension)
 
-Détecte les excès de vitesse du joueur sur les sections de liaison d'une boucle de rallye. Toutes les secondes, la vitesse du véhicule joueur est échantillonnée dans un tampon circulaire de 5 valeurs ; si la moyenne dépasse la limite, une pénalité est tirée au hasard avec une probabilité proportionnelle au dépassement. Les pénalités sont espacées d'au moins 60 s et transmises au gestionnaire via recordSpeedingPenalty.
+Detects player speeding on the road sections of a rally loop. Every second, the player vehicle's speed is sampled into a circular buffer of 5 values; if the average exceeds the limit, a penalty is drawn at random with a probability proportional to the excess. Penalties are spaced at least 60 s apart and passed to the manager via recordSpeedingPenalty.
 
-## Exemple
+## Example
 
 ```lua
 local det = require('gameplay_rally_loop_speedingDetector')(manager)
--- à chaque frame :
+-- every frame:
 det:update(dtSim, 70, false)
 ```
 
-## Remarques
+## Notes
 
-- Mode normal : probabilité = min(dépassement / 60 * 0.05, 0.05), soit 5 % au maximum à 60 km/h de dépassement. Mode strict : min(dépassement / 5 * 0.2, 0.2), soit 20 % au maximum à 5 km/h de dépassement.
-- Le tirage utilise math.random() sur la moyenne des 5 dernières secondes, pas la vitesse instantanée.
-- Le test commence avec le délai de pénalité déjà écoulé (timeSinceLastPenalty = 60), donc la première pénalité est possible immédiatement.
-- drawDebug (non appelé : l'appel est commenté dans update) affiche en mode strict une probabilité basée sur la vitesse instantanée, ce qui diffère du calcul réel de update (moyenne).
-- Le module renvoie un constructeur : require('gameplay_rally_loop_speedingDetector')(manager). Vitesses en km/h (vitesse m/s du véhicule * 3.6).
+- Normal mode: probability = min(excess / 60 * 0.05, 0.05), i.e. 5% at most at 60 km/h over. Strict mode: min(excess / 5 * 0.2, 0.2), i.e. 20% at most at 5 km/h over.
+- The draw uses math.random() on the average of the last 5 seconds, not the instantaneous speed.
+- The test starts with the penalty delay already elapsed (timeSinceLastPenalty = 60), so the first penalty is possible immediately.
+- drawDebug (not called: the call is commented out in update) shows, in strict mode, a probability based on the instantaneous speed, which differs from the actual computation in update (average).
+- The module returns a constructor: require('gameplay_rally_loop_speedingDetector')(manager). Speeds in km/h (vehicle speed in m/s * 3.6).
 
-## Classe `C`
+## Class `C`
 
-Détecteur de vitesse. Champs d'instance : manager, currentLimitKph, bufferSize (5), data (tampon circulaire), writeIndex, count, sampleRate (1 s), penaltyRateLimit (60 s), penalties (liste des pénalités déclenchées), maxSpeedOver/maxProbability (60 / 0.05), strictMaxSpeedOver/strictMaxProbability (5 / 0.2), strictMode.
+Speed detector. Instance fields: manager, currentLimitKph, bufferSize (5), data (circular buffer), writeIndex, count, sampleRate (1 s), penaltyRateLimit (60 s), penalties (list of triggered penalties), maxSpeedOver/maxProbability (60 / 0.05), strictMaxSpeedOver/strictMaxProbability (5 / 0.2), strictMode.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_loop_speedingDetector")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_loop_speedingDetector")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addSample(sample)` | Ajoute une vitesse au tampon circulaire en écrasant la plus ancienne si besoin. | 42 |
-| `C:drawDebug()` | Fenêtre ImGui « Speeding Detector Debug » : limite, vitesses courante et moyenne, probabilité, pénalités et échantillons. Actuellement jamais appelée par update. | 155 |
-| `C:getAverageSpeed()` | Moyenne des échantillons valides du tampon. | 49 |
-| `C:getCurrentSpeedKph()` | Vitesse du véhicule joueur 0 en km/h (norme de la vitesse * 3.6). | 35 |
-| `C:init(manager)` | Initialise le tampon et les paramètres. Appelé par le constructeur. | 9 |
-| `C:stochasticPenalty(maxSpeedOver, maxProbability)` | Décide au hasard si une pénalité est déclenchée selon la moyenne par rapport à la limite : probabilité linéaire de 0 (à la limite) à maxProbability (à maxSpeedOver au-dessus). | 60 |
-| `C:update(dtSim, limitKph, strictMode)` | À appeler à chaque frame. Cumule le temps, prend un échantillon toutes les secondes et, si le délai de 60 s est écoulé, tire une pénalité ; en cas de pénalité, stocke {averageSpeed, instantSpeed, speedLimit, speedOver, probability, strictMode} et appelle manager:recordSpeedingPenalty. | 86 |
+| `C:addSample(sample)` | Adds a speed to the circular buffer, overwriting the oldest if needed. | 42 |
+| `C:drawDebug()` | ImGui window "Speeding Detector Debug": limit, current and average speeds, probability, penalties and samples. Currently never called by update. | 155 |
+| `C:getAverageSpeed()` | Average of the valid samples in the buffer. | 49 |
+| `C:getCurrentSpeedKph()` | Speed of player vehicle 0 in km/h (speed norm * 3.6). | 35 |
+| `C:init(manager)` | Initializes the buffer and parameters. Called by the constructor. | 9 |
+| `C:stochasticPenalty(maxSpeedOver, maxProbability)` | Randomly decides whether a penalty is triggered based on the average relative to the limit: linear probability from 0 (at the limit) to maxProbability (at maxSpeedOver above). | 60 |
+| `C:update(dtSim, limitKph, strictMode)` | Call every frame. Accumulates time, takes a sample every second and, if the 60 s delay has elapsed, draws a penalty; on a penalty, stores {averageSpeed, instantSpeed, speedLimit, speedOver, probability, strictMode} and calls manager:recordSpeedingPenalty. | 86 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/loop/speedingDetector.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/loop/speedingDetector.lua`.*

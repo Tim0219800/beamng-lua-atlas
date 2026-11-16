@@ -1,22 +1,22 @@
 # `editor_flowgraph_legend`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/legend.lua` · VM : Game Engine (GE) · 57 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/legend.lua` · VM: Game Engine (GE) · 57 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/legend")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/legend")` (file under extensions/ but not a regular extension)
 
-Fenêtre « Legend Test » (fg_legend) de l'éditeur Flowgraph. C'est un squelette de test : quatre onglets A, B, C, D réordonnables et fermables (ImGui TabBar) avec affichage de la liste des onglets ouverts. Sans lien avec le graphe réel.
+"Legend Test" window (fg_legend) of the Flowgraph editor. It is a test skeleton: four reorderable and closable tabs A, B, C, D (ImGui TabBar) with a display of the list of open tabs. Unrelated to the actual graph.
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre Legend (windowName = 'fg_legend').
+Legend window class (windowName = 'fg_legend').
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Désérialisation (vide). | 52 |
-| `C:_onSerialize(data)` | Sérialisation (vide). | 48 |
-| `C:attach(mgr)` | Associe le manager flowgraph. | 11 |
-| `C:draw()` | Dessine la barre d'onglets de test si la fenêtre est visible. | 25 |
-| `C:init()` | Enregistre la fenêtre et crée les 4 éléments de test. | 15 |
+| `C:_onDeserialized(data)` | Deserialization (empty). | 52 |
+| `C:_onSerialize(data)` | Serialization (empty). | 48 |
+| `C:attach(mgr)` | Associates the flowgraph manager. | 11 |
+| `C:draw()` | Draws the test tab bar if the window is visible. | 25 |
+| `C:init()` | Registers the window and creates the 4 test items. | 15 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/legend.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/legend.lua`.*

@@ -1,17 +1,49 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/career/onTestDriveChanged.lua",
-  "module": "Nœud flowgraph « On Testdrive Changed » (catégorie repeat_instant, couleur/icône ui). Détecte le début (hook onTestDriveStarted) et la fin après fondu (onTestDriveEndedAfterFade) d'un essai de véhicule en carrière. Sorties en impulsion : started et ended.",
-  "notes": ["La description du nœud est « TBD » et celle du pin ended est copiée de started (« when the vehicle is spawned »).", "work() ne remet à faux que started ; ended reste à vrai après un évènement."],
+  "module": "Flowgraph node \"On Testdrive Changed\" (category repeat_instant, ui color/icon). Detects the start (onTestDriveStarted hook) and the end after the fade (onTestDriveEndedAfterFade) of a vehicle test drive in career. Impulse outputs: started and ended.",
+  "notes": [
+    "The node's description is \"TBD\" and that of the ended pin is copied from started (\"when the vehicle is spawned\").",
+    "work() sets back to false only started; ended stays true after an event."
+  ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "init": {"desc": "Crée la table de drapeaux.", "internal": true},
-        "work": {"desc": "Chaque frame : started à faux, applique puis efface les drapeaux.", "params": {"args": {"type": "any", "desc": "non utilisé"}}},
-        "onTestDriveStarted": {"desc": "Hook : lève started.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true},
-        "onTestDriveEndedAfterFade": {"desc": "Hook : lève ended.", "params": {"data": {"type": "any", "desc": "non utilisé"}}, "internal": true}
+        "init": {
+          "desc": "Creates the flag table.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Every frame: started to false, applies then clears the flags.",
+          "params": {
+            "args": {
+              "type": "any",
+              "desc": "unused"
+            }
+          }
+        },
+        "onTestDriveStarted": {
+          "desc": "Hook: raises started.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        },
+        "onTestDriveEndedAfterFade": {
+          "desc": "Hook: raises ended.",
+          "params": {
+            "data": {
+              "type": "any",
+              "desc": "unused"
+            }
+          },
+          "internal": true
+        }
       }
     }
   }

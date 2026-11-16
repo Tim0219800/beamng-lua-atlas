@@ -1,57 +1,211 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/surfaceKit.lua",
-  "module": "Kit partagé pour peindre des groundmodels (physique) sur des routes en mesh (mode groundmodel du Hero Road Editor). Le groundmodel est déduit du nom du matériau d'un triangle : les variantes de grip ont le même aspect que la base et ne diffèrent que par groundType. Les variantes sont le matériau de chaussée de la route plus un suffixe (_wet, _snow ou _snowy, _ice) ; Dry est le matériau de base et sert de gomme. Un état n'est peignable que si son matériau existe dans le niveau. La peinture est stockée en tampons monde { x, y, r, m } (m = indice de palette à partir de 1).",
+  "module": "Shared kit for painting groundmodels (physics) on mesh roads (groundmodel mode of the Hero Road Editor). The groundmodel is inferred from the name of a triangle's material: grip variants look the same as the base and differ only by groundType. The variants are the road's pavement material plus a suffix (_wet, _snow or _snowy, _ice); Dry is the base material and serves as an eraser. A state can only be painted if its material exists in the level. The paint is stored in world stamps { x, y, r, m } (m = palette index starting at 1).",
   "notes": [
-    "Palette : 1 Dry (ASPHALT1), 2 Wet (ASPHALT_WET), 3 Snow (SNOW), 4 Ice (ICE). Les couleurs ne servent qu'à la surcouche de l'éditeur.",
-    "Dans materialAt, le tampon d'indice le plus haut (peint en dernier) gagne, y compris un tampon Dry de gomme.",
-    "La grille spatiale a une cellule égale au plus grand rayon de pinceau (au moins 0.5) et une recherche en voisinage 3x3.",
-    "materialOf retombe sur le matériau de base si la variante n'existe pas ; sans baseMat, renvoie 'dry' (id de la palette)."
+    "Palette: 1 Dry (ASPHALT1), 2 Wet (ASPHALT_WET), 3 Snow (SNOW), 4 Ice (ICE). The colors are only used for the editor overlay.",
+    "In materialAt, the stamp with the highest index (painted last) wins, including a Dry eraser stamp.",
+    "The spatial grid has a cell equal to the largest brush radius (at least 0.5) and a 3x3 neighborhood search.",
+    "materialOf falls back to the base material if the variant does not exist; without baseMat, returns 'dry' (palette id)."
   ],
   "functions": {
-    "count": {"desc": "Nombre d'entrées de la palette.", "params": {}, "returns": [{"type": "integer", "desc": "4"}]},
-    "get": {"desc": "Entrée de palette (id, label, groundmodel, col, suffixes).", "params": {"i": {"type": "integer", "desc": "Indice à partir de 1."}}, "returns": [{"type": "table|nil", "desc": "Entrée."}]},
-    "isBase": {"desc": "Vrai si l'indice est celui de la surface de base (Dry) ; nil est traité comme la base.", "params": {"i": {"type": "integer|nil", "desc": "Indice de palette."}}, "returns": [{"type": "boolean", "desc": "Est la base."}]},
-    "labelOf": {"desc": "Libellé de l'entrée, '?' si inconnue.", "params": {"i": {"type": "integer", "desc": "Indice."}}, "returns": [{"type": "string", "desc": "Libellé."}]},
-    "colOf": {"desc": "Couleur de surcouche { r, g, b } (0-255) ; celle de Dry si l'indice est inconnu.", "params": {"i": {"type": "integer", "desc": "Indice."}}, "returns": [{"type": "table", "desc": "{ r, g, b }."}]},
+    "count": {
+      "desc": "Number of palette entries.",
+      "params": {},
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "4"
+        }
+      ]
+    },
+    "get": {
+      "desc": "Palette entry (id, label, groundmodel, col, suffixes).",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Index starting at 1."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Entry."
+        }
+      ]
+    },
+    "isBase": {
+      "desc": "True if the index is that of the base surface (Dry); nil is treated as the base.",
+      "params": {
+        "i": {
+          "type": "integer|nil",
+          "desc": "Palette index."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Is the base."
+        }
+      ]
+    },
+    "labelOf": {
+      "desc": "Label of the entry, '?' if unknown.",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Index."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Label."
+        }
+      ]
+    },
+    "colOf": {
+      "desc": "Overlay color { r, g, b } (0-255); that of Dry if the index is unknown.",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Index."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ r, g, b }."
+        }
+      ]
+    },
     "materialExists": {
-      "desc": "Vrai si un matériau de ce nom est présent dans le niveau (scenetree.findObject).",
-      "params": {"name": {"type": "string|nil", "desc": "Nom du matériau."}},
-      "returns": [{"type": "boolean", "desc": "Existe."}]
+      "desc": "True if a material of this name is present in the level (scenetree.findObject).",
+      "params": {
+        "name": {
+          "type": "string|nil",
+          "desc": "Material name."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Exists."
+        }
+      ]
     },
     "variantMaterial": {
-      "desc": "Nom du matériau variante de la surface `i` pour la chaussée `baseMat`, ou nil si aucune variante n'existe (non peignable). Dry renvoie le matériau de base.",
-      "params": {"i": {"type": "integer", "desc": "Indice de palette."}, "baseMat": {"type": "string", "desc": "Matériau de base de la chaussée."}},
-      "returns": [{"type": "string|nil", "desc": "Nom du matériau."}]
+      "desc": "Name of the variant material of surface `i` for the pavement `baseMat`, or nil if no variant exists (not paintable). Dry returns the base material.",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Palette index."
+        },
+        "baseMat": {
+          "type": "string",
+          "desc": "Base material of the pavement."
+        }
+      },
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Material name."
+        }
+      ]
     },
     "isAvailable": {
-      "desc": "Vrai si la surface `i` est peignable : Dry toujours, les autres seulement si une variante existe.",
-      "params": {"i": {"type": "integer", "desc": "Indice de palette."}, "baseMat": {"type": "string", "desc": "Matériau de base."}},
-      "returns": [{"type": "boolean", "desc": "Disponible."}]
+      "desc": "True if surface `i` is paintable: Dry always, the others only if a variant exists.",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Palette index."
+        },
+        "baseMat": {
+          "type": "string",
+          "desc": "Base material."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Available."
+        }
+      ]
     },
     "materialOf": {
-      "desc": "Matériau réellement appliqué à un quad peint de la surface `i` : la variante si elle existe, sinon la base.",
-      "params": {"i": {"type": "integer", "desc": "Indice."}, "baseMat": {"type": "string", "desc": "Matériau de base."}},
-      "returns": [{"type": "string", "desc": "Nom du matériau."}]
+      "desc": "Material actually applied to a painted quad of surface `i`: the variant if it exists, otherwise the base.",
+      "params": {
+        "i": {
+          "type": "integer",
+          "desc": "Index."
+        },
+        "baseMat": {
+          "type": "string",
+          "desc": "Base material."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Material name."
+        }
+      ]
     },
     "resolveMaterials": {
-      "desc": "Résout le matériau de chaque surface pour une base donnée, en un passage (appelé une fois par construction de mesh).",
-      "params": {"baseMat": {"type": "string", "desc": "Matériau de base."}},
-      "returns": [{"type": "table<integer, string>", "desc": "Indice de palette -> nom de matériau."}]
+      "desc": "Resolves the material of each surface for a given base, in one pass (called once per mesh build).",
+      "params": {
+        "baseMat": {
+          "type": "string",
+          "desc": "Base material."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<integer, string>",
+          "desc": "Palette index -> material name."
+        }
+      ]
     },
     "buildGrid": {
-      "desc": "Construit un hachage spatial uniforme sur les tampons pour que la recherche par quad soit environ O(1). Renvoie nil s'il n'y a rien de peint.",
-      "params": {"stamps": {"type": "table|nil", "desc": "Liste de tampons { x, y, r, m }."}},
-      "returns": [{"type": "table|nil", "desc": "{ cell, map } ou nil."}]
+      "desc": "Builds a uniform spatial hash over the stamps so the per-quad lookup is roughly O(1). Returns nil if nothing is painted.",
+      "params": {
+        "stamps": {
+          "type": "table|nil",
+          "desc": "List of stamps { x, y, r, m }."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{ cell, map } or nil."
+        }
+      ]
     },
     "materialAt": {
-      "desc": "Indice de palette de la surface peinte au point monde (px, py) : le tampon d'indice le plus élevé couvrant le point gagne. Renvoie l'indice de base si rien ne le couvre.",
+      "desc": "Palette index of the painted surface at world point (px, py): the highest-index stamp covering the point wins. Returns the base index if nothing covers it.",
       "params": {
-        "grid": {"type": "table|nil", "desc": "Résultat de buildGrid."},
-        "stamps": {"type": "table", "desc": "Les mêmes tampons."},
-        "px": {"type": "number", "desc": "X monde (m)."},
-        "py": {"type": "number", "desc": "Y monde (m)."}
+        "grid": {
+          "type": "table|nil",
+          "desc": "Result of buildGrid."
+        },
+        "stamps": {
+          "type": "table",
+          "desc": "The same stamps."
+        },
+        "px": {
+          "type": "number",
+          "desc": "World X (m)."
+        },
+        "py": {
+          "type": "number",
+          "desc": "World Y (m)."
+        }
       },
-      "returns": [{"type": "integer", "desc": "Indice de palette."}]
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Palette index."
+        }
+      ]
     }
   }
 }

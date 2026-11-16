@@ -1,79 +1,79 @@
 # `career_modules_delivery_cargoCards`
 
-*Fichier : `lua/ge/extensions/career/modules/delivery/cargoCards.lua` · VM : Game Engine (GE) · 588 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/delivery/cargoCards.lua` · VM: Game Engine (GE) · 588 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_delivery_cargoCards` : `extensions.load("career_modules_delivery_cargoCards")`, puis la globale `career_modules_delivery_cargoCards`
+**Access:** extension `career_modules_delivery_cargoCards`: `extensions.load("career_modules_delivery_cargoCards")`, then the global `career_modules_delivery_cargoCards`
 
-Aide à la présentation de l'écran de cargaison (livraison) : prépare pour l'UI les filtres (parcel, vehicle, trailer, material, all, loaner), les regroupements (par type, destination, conteneur du joueur, tâche) et les tris des « cartes » de cargaison/offres. Appelé par career_modules_delivery_cargoScreen ; ne modifie pas le jeu, il annote les tables de cartes (groupTags, filterTags, sortValues).
+Helper for presenting the cargo screen (delivery): prepares for the UI the filters (parcel, vehicle, trailer, material, all, loaner), the groupings (by type, destination, player container, task) and the sorts of cargo/offer "cards". Called by career_modules_delivery_cargoScreen; does not modify the game, it annotates the card tables (groupTags, filterTags, sortValues).
 
-## Remarques
+## Notes
 
-- Les filtres sont construits paresseusement (ensureFilterTags) avec des libellés traduits ; onLanguageChanged les réinitialise.
-- Verrouillage : le filtre 'trailer' demande le niveau 3 et 'material' le niveau 5 de la branche 'logistics-delivery'.
-- Chaque filtre compte facilityCards et playerCards (remis à zéro par resetFilterCounters, incrémentés par getCardGroupSetsByKey avec usePlayerCards faux).
-- Bug probable : dans getFilterSets, 'filter.order = i' utilise une variable i non définie (la boucle est 'for _, filter'), donc order vaut nil.
-- Incohérence : dans le tri 'distance', le test de repli compare a.weight/b.weight au lieu des distances ; les commentaires disent 'high to low' pour rewardMoney et weight alors que les comparateurs trient en ordre croissant.
+- The filters are built lazily (ensureFilterTags) with translated labels; onLanguageChanged resets them.
+- Locking: the 'trailer' filter requires level 3 and 'material' level 5 of the 'logistics-delivery' branch.
+- Each filter counts facilityCards and playerCards (reset to zero by resetFilterCounters, incremented by getCardGroupSetsByKey with usePlayerCards false).
+- Probable bug: in getFilterSets, 'filter.order = i' uses an undefined variable i (the loop is 'for _, filter'), so order is nil.
+- Inconsistency: in the 'distance' sort, the fallback test compares a.weight/b.weight instead of the distances; the comments say 'high to low' for rewardMoney and weight while the comparators sort in ascending order.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_delivery_cargoCards.addFilterPlayerData(filterSets, playerGroupSets, playerCargoContainers)` | Marque filter.noContainers pour les filtres 'parcel', 'material' et 'all' lorsque le joueur n'a aucun conteneur adapté (parcel, fluid, dryBulk). | 531 |
-| `career_modules_delivery_cargoCards.addSortingValuesToGroups(cardsById, groupSets)` | Donne à chaque groupe des sortValues (cardId, rewardMoney, weight, distance) égales au minimum des valeurs de ses cartes. | 473 |
-| `career_modules_delivery_cargoCards.getCardGroupSetsByKey(cardsById, usePlayerCards, playerCargoContainers)` | Construit les ensembles de regroupement ('ungrouped', par type de cargo, par destination, par conteneur/stockage du joueur, par tâche) : renseigne card.groupTags et card.filterTags pour chaque carte, crée les groupes avec leur liste d'ids de cartes et leurs filterTags, et met à jour les compteurs de filtres. | 84 |
-| `career_modules_delivery_cargoCards.getCardSortingSetsByKey(cardsById)` | Calcule des rangs de tri (card.sortValues) pour cardId, rewardMoney, weight, distance et availablilty (ordre : limite, plus de place, verrouillé, tutoriel, expiré) et renvoie la description des tris. | 360 |
-| `career_modules_delivery_cargoCards.getConfirmButtonFromPlayerCards(cardsById)` | Compte les éléments à confirmer (cartes du joueur avec déplacements transitoires ou spawnWhenCommitingCargo ; un parcelGroup non matériau compte pour #ids) pour le bouton de confirmation de l'UI. | 556 |
-| `career_modules_delivery_cargoCards.getFilterSets(cardsById)` | Renvoie la liste des filtres pour l'UI : hasAvailableOffers si des cartes existent, lockedInfo (niveau minimal de logistics-delivery pour 'trailer' et 'material') et order. | 489 |
-| `career_modules_delivery_cargoCards.onCareerActivated()` | Hook : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager, parcelMods, vehicleTasks, tutorial). *(interne)* *(hook)* | 8 |
-| `career_modules_delivery_cargoCards.onLanguageChanged()` | Hook : vide les filtres mis en cache pour régénérer les libellés dans la nouvelle langue. *(interne)* *(hook)* | 575 |
-| `career_modules_delivery_cargoCards.resetFilterCounters()` | Remet à 0 les compteurs facilityCards et playerCards de tous les filtres et reconstruit leur index par clé. | 70 |
+| `career_modules_delivery_cargoCards.addFilterPlayerData(filterSets, playerGroupSets, playerCargoContainers)` | Sets filter.noContainers for the 'parcel', 'material' and 'all' filters when the player has no suitable container (parcel, fluid, dryBulk). | 531 |
+| `career_modules_delivery_cargoCards.addSortingValuesToGroups(cardsById, groupSets)` | Gives each group sortValues (cardId, rewardMoney, weight, distance) equal to the minimum of the values of its cards. | 473 |
+| `career_modules_delivery_cargoCards.getCardGroupSetsByKey(cardsById, usePlayerCards, playerCargoContainers)` | Builds the grouping sets ('ungrouped', by cargo type, by destination, by player container/storage, by task): fills card.groupTags and card.filterTags for each card, creates the groups with their list of card ids and their filterTags, and updates the filter counters. | 84 |
+| `career_modules_delivery_cargoCards.getCardSortingSetsByKey(cardsById)` | Computes sort ranks (card.sortValues) for cardId, rewardMoney, weight, distance and availablilty (order: limit, no more room, locked, tutorial, expired) and returns the description of the sorts. | 360 |
+| `career_modules_delivery_cargoCards.getConfirmButtonFromPlayerCards(cardsById)` | Counts the items to confirm (player cards with transient moves or spawnWhenCommitingCargo; a non-material parcelGroup counts as #ids) for the UI confirmation button. | 556 |
+| `career_modules_delivery_cargoCards.getFilterSets(cardsById)` | Returns the list of filters for the UI: hasAvailableOffers if cards exist, lockedInfo (minimum logistics-delivery level for 'trailer' and 'material') and order. | 489 |
+| `career_modules_delivery_cargoCards.onCareerActivated()` | Hook: stores the delivery modules (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager, parcelMods, vehicleTasks, tutorial). *(internal)* *(hook)* | 8 |
+| `career_modules_delivery_cargoCards.onLanguageChanged()` | Hook: clears the cached filters to regenerate the labels in the new language. *(internal)* *(hook)* | 575 |
+| `career_modules_delivery_cargoCards.resetFilterCounters()` | Resets the facilityCards and playerCards counters of all filters to 0 and rebuilds their key index. | 70 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_delivery_cargoCards.addFilterPlayerData(filterSets, playerGroupSets, playerCargoContainers)`
 
-Marque filter.noContainers pour les filtres 'parcel', 'material' et 'all' lorsque le joueur n'a aucun conteneur adapté (parcel, fluid, dryBulk).
+Sets filter.noContainers for the 'parcel', 'material' and 'all' filters when the player has no suitable container (parcel, fluid, dryBulk).
 
-- `filterSets` (*table[]*) : Filtres de getFilterSets.
-- `playerGroupSets` (*table*) : Non utilisé dans la fonction.
-- `playerCargoContainers` (*table[]*) : Conteneurs du joueur avec cargoTypesLookup.
+- `filterSets` (*table[]*) : Filters from getFilterSets.
+- `playerGroupSets` (*table*) : Not used in the function.
+- `playerCargoContainers` (*table[]*) : Player containers with cargoTypesLookup.
 
 #### `career_modules_delivery_cargoCards.addSortingValuesToGroups(cardsById, groupSets)`
 
-Donne à chaque groupe des sortValues (cardId, rewardMoney, weight, distance) égales au minimum des valeurs de ses cartes.
+Gives each group sortValues (cardId, rewardMoney, weight, distance) equal to the minimum of the values of its cards.
 
-- `cardsById` (*table<any, table>*) : Cartes avec sortValues.
-- `groupSets` (*table<string, table>*) : Ensembles issus de getCardGroupSetsByKey.
+- `cardsById` (*table<any, table>*) : Cards with sortValues.
+- `groupSets` (*table<string, table>*) : Sets produced by getCardGroupSetsByKey.
 
 #### `career_modules_delivery_cargoCards.getCardGroupSetsByKey(cardsById, usePlayerCards, playerCargoContainers)`
 
-Construit les ensembles de regroupement ('ungrouped', par type de cargo, par destination, par conteneur/stockage du joueur, par tâche) : renseigne card.groupTags et card.filterTags pour chaque carte, crée les groupes avec leur liste d'ids de cartes et leurs filterTags, et met à jour les compteurs de filtres.
+Builds the grouping sets ('ungrouped', by cargo type, by destination, by player container/storage, by task): fills card.groupTags and card.filterTags for each card, creates the groups with their list of card ids and their filterTags, and updates the filter counters.
 
-- `cardsById` (*table<any, table>*) : Cartes (parcelGroup, storage, vehicleOffer, loaner) indexées par id.
-- `usePlayerCards` (*boolean*) : true : ne traiter que les cartes du joueur ; false : celles de la facilité.
-- `playerCargoContainers` (*table[]|nil*) : Conteneurs du joueur (voir career_modules_delivery_general.getNearbyVehicleCargoContainers), utilisés pour les groupes de conteneurs et de stockage total.
-- **renvoie** : table<string, table> Ensembles de regroupement par clé, chacun avec key, label et groups.
+- `cardsById` (*table<any, table>*) : Cards (parcelGroup, storage, vehicleOffer, loaner) keyed by id.
+- `usePlayerCards` (*boolean*) : true: only process the player's cards; false: those of the facility.
+- `playerCargoContainers` (*table[]|nil*) : Player containers (see career_modules_delivery_general.getNearbyVehicleCargoContainers), used for the container groups and total storage.
+- **returns**: table<string, table> Grouping sets by key, each with key, label and groups.
 
 #### `career_modules_delivery_cargoCards.getCardSortingSetsByKey(cardsById)`
 
-Calcule des rangs de tri (card.sortValues) pour cardId, rewardMoney, weight, distance et availablilty (ordre : limite, plus de place, verrouillé, tutoriel, expiré) et renvoie la description des tris.
+Computes sort ranks (card.sortValues) for cardId, rewardMoney, weight, distance and availablilty (order: limit, no more room, locked, tutorial, expired) and returns the description of the sorts.
 
-- `cardsById` (*table<any, table>*) : Cartes à trier.
-- **renvoie** : table<string, {label: string, key: string}> Tris disponibles par clé.
+- `cardsById` (*table<any, table>*) : Cards to sort.
+- **returns**: table<string, {label: string, key: string}> Available sorts by key.
 
 #### `career_modules_delivery_cargoCards.getConfirmButtonFromPlayerCards(cardsById)`
 
-Compte les éléments à confirmer (cartes du joueur avec déplacements transitoires ou spawnWhenCommitingCargo ; un parcelGroup non matériau compte pour #ids) pour le bouton de confirmation de l'UI.
+Counts the items to confirm (player cards with transient moves or spawnWhenCommitingCargo; a non-material parcelGroup counts as #ids) for the UI confirmation button.
 
-- `cardsById` (*table<any, table>*) : Cartes.
-- **renvoie** : {itemCount: integer} Nombre d'éléments à confirmer.
+- `cardsById` (*table<any, table>*) : Cards.
+- **returns**: {itemCount: integer} Number of items to confirm.
 
 #### `career_modules_delivery_cargoCards.getFilterSets(cardsById)`
 
-Renvoie la liste des filtres pour l'UI : hasAvailableOffers si des cartes existent, lockedInfo (niveau minimal de logistics-delivery pour 'trailer' et 'material') et order.
+Returns the list of filters for the UI: hasAvailableOffers if cards exist, lockedInfo (minimum logistics-delivery level for 'trailer' and 'material') and order.
 
-- `cardsById` (*table*) : Non utilisé dans la fonction.
-- **renvoie** : table[] Filtres.
+- `cardsById` (*table*) : Not used in the function.
+- **returns**: table[] Filters.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/delivery/cargoCards.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/delivery/cargoCards.lua`.*

@@ -1,81 +1,81 @@
 # `server`
 
-*Fichier : `lua/ge/server/server.lua` · VM : Game Engine (GE) · 424 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/server/server.lua` · VM: Game Engine (GE) · 424 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `server`
+**Access:** global `server`
 
-Chargement et déchargement d'un niveau côté « serveur » du jeu (mode solo/freeroam). `createGame` ouvre l'écran de chargement puis exécute la séquence complète : datablocks et matériaux, création du monde physique, chargement des objets du niveau (dossier main/ JSON, ou ancien format .mis), décals, démarrage de la physique, création de la caméra et du joueur, puis fondu de sortie. `destroy` fait l'inverse. Les durées de chaque étape sont journalisées.
+Loading and unloading of a level on the game's "server" side (solo/freeroam mode). `createGame` opens the loading screen then runs the complete sequence: datablocks and materials, creation of the physics world, loading of the level objects (main/ JSON folder, or old .mis format), decals, starting the physics, creation of the camera and the player, then fade-out. `destroy` does the reverse. The duration of each step is logged.
 
-## Exemple
+## Example
 
 ```lua
 server.createGame('/levels/gridmap_v2/info.json')
--- ligne de commande : server.setLevelOffset(100, 0, 0) avant le chargement décale tout le niveau
+-- command line: server.setLevelOffset(100, 0, 0) before loading shifts the whole level
 ```
 
-## Remarques
+## Notes
 
-- Bug : M.loadingProgress est copié à l'import du module alors que la variable locale est affectée plus tard (createGameActual) ; le champ exporté vaut donc toujours nil.
-- Hooks émis : onClientCustomObjectSpawning (après chargement des objets), onPlayerCameraReady (après spawn du joueur), onLoadingScreenFadeout (fin du chargement). Évènement UI : MenuHide (fadeoutLoadingScreen avec skipStart).
-- Ne pas retirer les VariableRegistry.set('$loadingLevel', ...) : utilisées côté C++.
-- Si le niveau est introuvable ou qu'il n'y a pas de MissionGroup, createGameActual journalise une erreur et s'arrête sans fondu de sortie.
-- Fonctions locales non exportées : endMission (nettoie MissionGroup, MissionCleanup, décals, audio…) et patchLoadingContext (applique le décalage de niveau).
+- Bug: M.loadingProgress is copied at module import while the local variable is assigned later (createGameActual); the exported field is therefore always nil.
+- Emitted hooks: onClientCustomObjectSpawning (after loading the objects), onPlayerCameraReady (after player spawn), onLoadingScreenFadeout (end of loading). UI event: MenuHide (fadeoutLoadingScreen with skipStart).
+- Do not remove the VariableRegistry.set('$loadingLevel', ...): used on the C++ side.
+- If the level is not found or there is no MissionGroup, createGameActual logs an error and stops without a fade-out.
+- Non-exported local functions: endMission (cleans MissionGroup, MissionCleanup, decals, audio…) and patchLoadingContext (applies the level offset).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `server.createGame(levelPath, customLoadingFunction)` | Charge un niveau. Demande l'écran de chargement à core_gamestate, puis exécute createGameActual (datablocks, matériaux, objets, physique, spawn caméra et joueur). Si customLoadingFunction est donné, le fondu de sortie est retardé : c'est à cette fonction d'appeler server.fadeoutLoadingScreen. | 405 |
-| `server.destroy(p)` | Détruit la session : met $missionRunning à faux, termine le niveau (endMission), détruit le monde physique, supprime les datablocks et incrémente $Server::Session. | 376 |
-| `server.fadeoutLoadingScreen(skipStart)` | Termine le chargement : demande la sortie de l'écran de chargement, appelle clientPostStartMission/clientStartMission (sauf si skipStart), coupe le chargement, émet onLoadingScreenFadeout et journalise la durée. Sans effet (avertissement) si aucun chargement n'est en cours. | 338 |
-| `server.setLevelOffset(x, y, z)` | Définit un décalage global appliqué à la transformée de tuile du prochain niveau chargé. Appeler sans argument supprime le décalage ; avec des arguments incomplets, journalise une erreur. | 61 |
+| `server.createGame(levelPath, customLoadingFunction)` | Loads a level. Requests the loading screen from core_gamestate, then runs createGameActual (datablocks, materials, objects, physics, camera and player spawn). If customLoadingFunction is given, the fade-out is delayed: that function must call server.fadeoutLoadingScreen. | 405 |
+| `server.destroy(p)` | Destroys the session: sets $missionRunning to false, ends the level (endMission), destroys the physics world, deletes the datablocks and increments $Server::Session. | 376 |
+| `server.fadeoutLoadingScreen(skipStart)` | Finishes the loading: requests leaving the loading screen, calls clientPostStartMission/clientStartMission (unless skipStart), ends the loading, emits onLoadingScreenFadeout and logs the duration. No effect (warning) if no loading is in progress. | 338 |
+| `server.setLevelOffset(x, y, z)` | Sets a global offset applied to the tile transform of the next loaded level. Calling without an argument removes the offset; with incomplete arguments, logs an error. | 61 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `server.createGame(levelPath, customLoadingFunction)`
 
-Charge un niveau. Demande l'écran de chargement à core_gamestate, puis exécute createGameActual (datablocks, matériaux, objets, physique, spawn caméra et joueur). Si customLoadingFunction est donné, le fondu de sortie est retardé : c'est à cette fonction d'appeler server.fadeoutLoadingScreen.
+Loads a level. Requests the loading screen from core_gamestate, then runs createGameActual (datablocks, materials, objects, physics, camera and player spawn). If customLoadingFunction is given, the fade-out is delayed: that function must call server.fadeoutLoadingScreen.
 
-- `levelPath` (*string*) : chemin du niveau (info.json, .mis ou dossier/nom de niveau ; mis en minuscules)
-- `customLoadingFunction` (*function|nil*) : appelée à la place du fondu de sortie automatique
+- `levelPath` (*string*) : level path (info.json, .mis or folder/level name; lowercased)
+- `customLoadingFunction` (*function|nil*) : called instead of the automatic fade-out
 
 #### `server.destroy(p)`
 
-Détruit la session : met $missionRunning à faux, termine le niveau (endMission), détruit le monde physique, supprime les datablocks et incrémente $Server::Session.
+Destroys the session: sets $missionRunning to false, ends the level (endMission), destroys the physics world, deletes the datablocks and increments $Server::Session.
 
-- `p` (*table|nil*) : profileur optionnel exposant :add(nom) pour marquer les étapes
+- `p` (*table|nil*) : optional profiler exposing :add(name) to mark the steps
 
 #### `server.fadeoutLoadingScreen(skipStart)`
 
-Termine le chargement : demande la sortie de l'écran de chargement, appelle clientPostStartMission/clientStartMission (sauf si skipStart), coupe le chargement, émet onLoadingScreenFadeout et journalise la durée. Sans effet (avertissement) si aucun chargement n'est en cours.
+Finishes the loading: requests leaving the loading screen, calls clientPostStartMission/clientStartMission (unless skipStart), ends the loading, emits onLoadingScreenFadeout and logs the duration. No effect (warning) if no loading is in progress.
 
-- `skipStart` (*boolean|nil*) : si vrai, saute clientPostStartMission/clientStartMission et déclenche guihooks MenuHide
+- `skipStart` (*boolean|nil*) : if true, skips clientPostStartMission/clientStartMission and triggers guihooks MenuHide
 
 #### `server.setLevelOffset(x, y, z)`
 
-Définit un décalage global appliqué à la transformée de tuile du prochain niveau chargé. Appeler sans argument supprime le décalage ; avec des arguments incomplets, journalise une erreur.
+Sets a global offset applied to the tile transform of the next loaded level. Calling without an argument removes the offset; with incomplete arguments, logs an error.
 
-- `x` (*number|nil*) : décalage X en mètres ; nil annule le décalage
-- `y` (*number|nil*) : décalage Y en mètres
-- `z` (*number|nil*) : décalage Z en mètres
+- `x` (*number|nil*) : X offset in meters; nil cancels the offset
+- `y` (*number|nil*) : Y offset in meters
+- `z` (*number|nil*) : Z offset in meters
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `loadingProgress` | any | Exporté à l'initialisation du module, donc nil (voir notes) ; la vraie valeur est le handle LoadingManager local. |
+| `loadingProgress` | any | Exported at module initialization, hence nil (see notes); the real value is the local LoadingManager handle. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onClientCustomObjectSpawning` — écouté par 2 module(s)
-- `onLoadingScreenFadeout` — écouté par 7 module(s)
-- `onPlayerCameraReady` — écouté par 1 module(s)
+- `onClientCustomObjectSpawning` — listened to by 2 module(s)
+- `onLoadingScreenFadeout` — listened to by 7 module(s)
+- `onPlayerCameraReady` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `MenuHide`
+**UI events (guihooks.trigger):** `MenuHide`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`, `fileExists`, `findFiles`
 - `Sim.` `deserializeObjectsFromFile`
@@ -84,4 +84,4 @@ Définit un décalage global appliqué à la transformée de tuile du prochain n
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/server/server.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/server/server.lua`.*

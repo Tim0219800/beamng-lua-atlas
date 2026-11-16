@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_traffic_signals_sequence`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequence.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequence.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/sequence")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/signals/sequence")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Signal Sequence » (repeat_instant). Lit une séquence de feux (signalSequenceData) : step (currStep), maxSteps (#timelineTimes), duration (totalDuration), phase (currPhase), active, timed (not ignoreTimer).
+Flowgraph node "Get Signal Sequence" (repeat_instant). Reads a traffic light sequence (signalSequenceData): step (currStep), maxSteps (#timelineTimes), duration (totalDuration), phase (currPhase), active, timed (not ignoreTimer).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Recopie les propriétés de la séquence sur les sorties. | 27 |
+| `C:work(args)` | Copies the sequence's properties to the outputs. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequence.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/signals/sequence.lua`.*

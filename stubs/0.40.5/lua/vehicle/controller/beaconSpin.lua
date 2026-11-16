@@ -2,22 +2,22 @@
 -- tim19Atlas stub generated from lua/vehicle/controller/beaconSpin.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Contrôleur auxiliaire minimal qui anime les éléments rotatifs d'une rampe lumineuse : tant que `electrics.values.lightbar` est supérieur à 0, il fait tourner une valeur electrics (angle en degrés, modulo 360) ; sinon il la remet à 0.
---- Accès : contrôleur `beaconSpin` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+--- Minimal auxiliary controller that animates the rotating elements of a light bar: as long as `electrics.values.lightbar` is greater than 0, it rotates an electrics value (angle in degrees, modulo 360); otherwise it resets it to 0.
+--- Access: controller `beaconSpin` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 ---@class controller_beaconSpin
 ---@field type string "auxiliary".
 local controller_beaconSpin = {}
 
---- Lit `spinSpeed` et `electricsName` et initialise la valeur electrics à 1.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/beaconSpin.lua:17
----@param jbeamData table Données jbeam du contrôleur.
+--- Reads `spinSpeed` and `electricsName` and initializes the electrics value to 1.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/beaconSpin.lua:17
+---@param jbeamData table Controller jbeam data.
 function controller_beaconSpin.init(jbeamData) end
 
---- Chaque frame : avance l'angle de dt × spinSpeed (modulo 360) si la rampe est active, sinon met la valeur à 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/controller/beaconSpin.lua:13
----@param dt number Pas de temps en secondes.
+--- Every frame: advances the angle by dt × spinSpeed (modulo 360) if the light bar is active, otherwise sets the value to 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/controller/beaconSpin.lua:13
+---@param dt number Time step in seconds.
 function controller_beaconSpin.updateGFX(dt) end
 
 return controller_beaconSpin

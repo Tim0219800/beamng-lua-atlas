@@ -1,15 +1,15 @@
 # `gameplay_missions_missionTypes_editorHelper`
 
-*Fichier : `lua/ge/extensions/gameplay/missions/missionTypes/editorHelper.lua` · VM : Game Engine (GE) · 1310 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/missions/missionTypes/editorHelper.lua` · VM: Game Engine (GE) · 1310 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/missions/missionTypes/editorHelper")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/missions/missionTypes/editorHelper")` (file under extensions/ but not a regular extension)
 
-Classe de base pour écrire l'éditeur d'un type de mission dans l'éditeur du jeu (interface imgui). Un type de mission déclare ses champs missionTypeData avec des méthodes addXxx (nombre, texte, booléen, transformation 3D, véhicule modèle/config, fichier, course, classement, liste déroulante...) ; le helper sait ensuite fournir les valeurs par défaut (getNewData), charger une mission (setMission), vérifier ses champs (checkMission), dessiner les widgets et les gizmos 3D (draw). Le module renvoie une fabrique `function(derivedClass, ...)` qui crée l'objet, copie les clés de la classe dérivée, initialise elements et autoAdditionalAttributes puis appelle init() s'il existe.
+Base class for writing the editor of a mission type in the game's editor (imgui interface). A mission type declares its missionTypeData fields with addXxx methods (number, text, boolean, 3D transform, vehicle model/config, file, race, leaderboard, dropdown...); the helper can then provide the default values (getNewData), load a mission (setMission), check its fields (checkMission), draw the widgets and the 3D gizmos (draw). The module returns a factory `function(derivedClass, ...)` that creates the object, copies the keys of the derived class, initializes elements and autoAdditionalAttributes then calls init() if it exists.
 
-## Exemple
+## Example
 
 ```lua
--- editor.lua d'un type de mission (ancien style)
+-- editor.lua of a mission type (old style)
 local C = {}
 function C:init()
   self:addNumeric('Laps', 'laps', 3)
@@ -18,63 +18,63 @@ end
 return function() return gameplay_missions_missions.editorHelper(C) end
 ```
 
-## Remarques
+## Notes
 
-- Chaque élément est une table {type, label, fieldName, displayOptions, ...}. addElement leur donne un _id unique et convertit displayOptions.associatedStars (chaîne) en table {clé=true}.
-- Un élément multi-champs écrit plusieurs clés dans missionTypeData : transform -> <fieldName>Pos / Rot / Scl ; modelconfig -> <fieldName>Model / Config / ConfigPath ; leaderboard -> <fieldName>BestResult / MediumResult / WorstResult (et Count côté interface).
-- Gravités des problèmes de checkMission : « error » pour champ manquant, type différent ou modèle/config/fichier introuvable ; « warning » pour champ en trop (fixable = true).
-- Bug : newDataFunctions.reward et newDataFunctions.simpleLapConfig valent `defaultValue`, une variable non définie à cet endroit (nil) : ces deux types n'ont donc aucune valeur par défaut dans getNewData ni de contrôle dans checkMission (traités comme nop). Les fonctions de SetMission existent pour eux.
-- Bug : missionIdSetMission lit `mtd.value` au lieu de `mtd[e.fieldName]` : un champ missionId n'est jamais rechargé depuis la mission.
-- Les couleurs defaultColors.default / orange / red sont construites avec 5 composantes (par ex. ImVec4(1,0.6,0,8,0.75)), signe d'une faute de frappe (0.8 attendu) ; seules les 4 premières sont prises en compte.
-- gameplay_missions_missions.editorHelper(C, ...) ne renvoie pas ce fichier mais editor/util/editorElementHelper (contexte 'mission') ; ce module-ci n'est utilisé que par des appels directs (par ex. editor/missionEditor/genericTypeData.lua).
+- Each element is a table {type, label, fieldName, displayOptions, ...}. addElement gives them a unique _id and converts displayOptions.associatedStars (string) into a table {key=true}.
+- A multi-field element writes several keys in missionTypeData: transform -> <fieldName>Pos / Rot / Scl; modelconfig -> <fieldName>Model / Config / ConfigPath; leaderboard -> <fieldName>BestResult / MediumResult / WorstResult (and Count on the interface side).
+- Severities of checkMission problems: "error" for a missing field, different type or model/config/file not found; "warning" for an extra field (fixable = true).
+- Bug: newDataFunctions.reward and newDataFunctions.simpleLapConfig equal `defaultValue`, a variable undefined at this point (nil): these two types therefore have no default value in getNewData nor a check in checkMission (treated as nop). SetMission functions exist for them.
+- Bug: missionIdSetMission reads `mtd.value` instead of `mtd[e.fieldName]`: a missionId field is never reloaded from the mission.
+- The colors defaultColors.default / orange / red are built with 5 components (e.g. ImVec4(1,0.6,0,8,0.75)), a sign of a typo (0.8 expected); only the first 4 are taken into account.
+- gameplay_missions_missions.editorHelper(C, ...) does not return this file but editor/util/editorElementHelper (context 'mission'); this module is only used by direct calls (e.g. editor/missionEditor/genericTypeData.lua).
 
-## Classe `C`
+## Class `C`
 
-Classe d'éditeur de type de mission. Champs d'instance : elements (liste ordonnée), autoAdditionalAttributes, mission (mission en cours d'édition), mouseInfo (état de la souris pour les gizmos).
+Mission type editor class. Instance fields: elements (ordered list), autoAdditionalAttributes, mission (mission being edited), mouseInfo (mouse state for the gizmos).
 
-Le module renvoie un constructeur : `local obj = require("gameplay_missions_missionTypes_editorHelper")(options)`.
+The module returns a constructor: `local obj = require("gameplay_missions_missionTypes_editorHelper")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addBool(label, fieldName, defaultValue, hideElementList, displayOptions)` | Case à cocher ; défaut false. Si hideElementList est donné, ces éléments sont déplacés juste après et masqués quand la case est décochée. | 32 |
-| `C:addCustomElement(label, getNewFunction, setMissionFunction, drawFunction)` | Ajoute un élément personnalisé géré par vos propres fonctions. | 19 |
-| `C:addDecoDummy(height)` | Décoration : espace vertical de hauteur donnée (1 par défaut). | 197 |
-| `C:addDecoHeader(text, color)` | Décoration : titre coloré (default, orange, red, green, blue, white, black). | 193 |
-| `C:addDecoSeparator()` | Décoration : ligne de séparation. | 195 |
-| `C:addDecoSpacer()` | Décoration : espace vertical de 4 pixels. | 196 |
-| `C:addDecoText(text, tooltip)` | Décoration : ligne de texte avec infobulle facultative. | 194 |
-| `C:addDropdown(label, fieldName, values, defaultValue, valueTooltips)` | Liste déroulante de valeurs ; si la liste est vide, elle contient « issues Values! ». Défaut : premier élément. | 166 |
-| `C:addElement(element)` | Ajoute un élément déjà construit à la liste (attribue _id, normalise displayOptions). Toutes les méthodes addXxx passent par elle et renvoient l'élément. | 198 |
-| `C:addFile(label, fieldName, defaultValue, allowedExtensions, displayOptions)` | Chemin de fichier avec sélecteur de fichier. | 104 |
-| `C:addFixedFile(label, filepathsInMissionfolder, displayOptions)` | Fichier attendu à un nom fixe dans le dossier de la mission (une chaîne, ou une liste dont un des fichiers est requis). Ne stocke aucune valeur. | 113 |
-| `C:addLeaderboard(label, fieldName, defaultCount, defaultBest, defaultMedium, defaultWorst)` | Réglages de classement : nombre d'entrées et résultats de référence meilleur / moyen / pire. Défauts : 10, 80, 120, 200. | 141 |
-| `C:addMissionId(label, fieldName, defaultValue, displayOptions)` | Champ contenant l'id d'une autre mission ; défaut « (none) ». | 176 |
-| `C:addModelConfig(label, fieldName, defaultModel, defaultConfig, displayOptions)` | Choix d'un véhicule (modèle + configuration). Défaut : modèle « sbr », config « TT_RWD_S_M ». Stocké dans <fieldName>Model / Config / ConfigPath. | 93 |
-| `C:addNumeric(label, fieldName, defaultValue, displayOptions)` | Champ numérique (flottant) ; défaut 0. | 22 |
-| `C:addRace(label, fieldName, defaultValue, ...)` | Fichier de course (addFile filtré sur *.path.json) de type « race ». | 125 |
-| `C:addReward(label, fieldName, defaultValue)` | Champ numérique de type « reward » (récompense). | 161 |
-| `C:addSimpleLapConfig(label, fieldName, displayOptions)` | Configuration simple de tours (outil editor/util/lapConfigUtil). | 130 |
-| `C:addSites(label, fieldName, defaultValue)` | Fichier de sites (addFile filtré sur *.sites.json) de type « sites ». | 136 |
-| `C:addString(label, fieldName, defaultValue, len, displayOptions)` | Champ texte (tampon de 1024 caractères par défaut) ; défaut chaîne vide. | 26 |
-| `C:addTransform(label, fieldName, valueOptions, displayOptions)` | Position / rotation / échelle éditables dans le monde 3D (gizmo transformUtil). Stockés dans <fieldName>Pos, <fieldName>Rot, <fieldName>Scl. | 55 |
-| `C:checkMission(m, fix)` | Vérifie missionTypeData par rapport aux éléments : champs manquants, types différents, champs en trop, modèles/configs/fichiers inexistants. Renvoie la liste de problèmes {label, severity, fixable, data}. | 374 |
-| `C:clear()` | Vide la liste des éléments. | 211 |
-| `C:draw(filterOptions)` | Dessine tous les éléments (widgets imgui et gizmos 3D) ; marque mission._dirty quand une valeur change. filterOptions.onlyStar limite l'affichage aux éléments associés à une étoile. | 1024 |
-| `C:drawAxisBox(corner, x, y, z, clr)` | Dessine une boîte alignée sur trois axes à partir d'un coin avec debugDrawer. | 1179 |
-| `C:drawTransformAsSphereDir(e)` | Dessine une transformation comme une sphère avec une flèche de direction. | 1066 |
-| `C:drawTransformAsVehicle(e)` | Dessine une transformation comme un boîtier de véhicule (autres fonctions d'aide de dessin). | 1105 |
-| `C:editingAnyTransform()` | Indique si une transformation (d'un élément ou du déclencheur de départ) est en cours d'édition. | 1011 |
-| `C:getAllFieldNames()` | Liste tous les champs missionTypeData gérés par l'éditeur, avec leur type. | 1278 |
-| `C:getNewData()` | Construit la table missionTypeData par défaut d'une nouvelle mission en rassemblant les valeurs par défaut de tous les éléments. | 256 |
-| `C:setAutoAdditionalAttributes(key, auto)` | Active ou désactive la génération automatique d'un attribut additionnel de mission. | 1288 |
-| `C:setMission(m)` | Charge une mission dans l'éditeur : mémorise self.mission et met à jour chaque widget depuis mission.missionTypeData, puis appelle valueChangedCallback. | 297 |
-| `C:updateMouseInfo(mission)` | Met à jour mouseInfo : position caméra, rayon et impact du rayon sous la souris (collision de la forêt désactivée le temps du tir), état clic/maintien/relâché, élément survolé. | 946 |
+| `C:addBool(label, fieldName, defaultValue, hideElementList, displayOptions)` | Checkbox; default false. If hideElementList is given, these elements are moved right after it and hidden when the checkbox is unchecked. | 32 |
+| `C:addCustomElement(label, getNewFunction, setMissionFunction, drawFunction)` | Adds a custom element managed by your own functions. | 19 |
+| `C:addDecoDummy(height)` | Decoration: vertical space of given height (1 by default). | 197 |
+| `C:addDecoHeader(text, color)` | Decoration: colored title (default, orange, red, green, blue, white, black). | 193 |
+| `C:addDecoSeparator()` | Decoration: separator line. | 195 |
+| `C:addDecoSpacer()` | Decoration: 4-pixel vertical space. | 196 |
+| `C:addDecoText(text, tooltip)` | Decoration: text line with optional tooltip. | 194 |
+| `C:addDropdown(label, fieldName, values, defaultValue, valueTooltips)` | Dropdown list of values; if the list is empty, it contains "issues Values!". Default: first element. | 166 |
+| `C:addElement(element)` | Adds an already built element to the list (assigns _id, normalizes displayOptions). All addXxx methods go through it and return the element. | 198 |
+| `C:addFile(label, fieldName, defaultValue, allowedExtensions, displayOptions)` | File path with file selector. | 104 |
+| `C:addFixedFile(label, filepathsInMissionfolder, displayOptions)` | File expected at a fixed name in the mission folder (a string, or a list of which one of the files is required). Stores no value. | 113 |
+| `C:addLeaderboard(label, fieldName, defaultCount, defaultBest, defaultMedium, defaultWorst)` | Leaderboard settings: number of entries and reference results best / medium / worst. Defaults: 10, 80, 120, 200. | 141 |
+| `C:addMissionId(label, fieldName, defaultValue, displayOptions)` | Field containing the id of another mission; default "(none)". | 176 |
+| `C:addModelConfig(label, fieldName, defaultModel, defaultConfig, displayOptions)` | Vehicle choice (model + configuration). Default: model "sbr", config "TT_RWD_S_M". Stored in <fieldName>Model / Config / ConfigPath. | 93 |
+| `C:addNumeric(label, fieldName, defaultValue, displayOptions)` | Numeric (float) field; default 0. | 22 |
+| `C:addRace(label, fieldName, defaultValue, ...)` | Race file (addFile filtered on *.path.json) of type "race". | 125 |
+| `C:addReward(label, fieldName, defaultValue)` | Numeric field of type "reward". | 161 |
+| `C:addSimpleLapConfig(label, fieldName, displayOptions)` | Simple lap configuration (editor/util/lapConfigUtil tool). | 130 |
+| `C:addSites(label, fieldName, defaultValue)` | Sites file (addFile filtered on *.sites.json) of type "sites". | 136 |
+| `C:addString(label, fieldName, defaultValue, len, displayOptions)` | Text field (1024-character buffer by default); default empty string. | 26 |
+| `C:addTransform(label, fieldName, valueOptions, displayOptions)` | Position / rotation / scale editable in the 3D world (transformUtil gizmo). Stored in <fieldName>Pos, <fieldName>Rot, <fieldName>Scl. | 55 |
+| `C:checkMission(m, fix)` | Checks missionTypeData against the elements: missing fields, different types, extra fields, nonexistent models/configs/files. Returns the list of problems {label, severity, fixable, data}. | 374 |
+| `C:clear()` | Empties the list of elements. | 211 |
+| `C:draw(filterOptions)` | Draws all elements (imgui widgets and 3D gizmos); marks mission._dirty when a value changes. filterOptions.onlyStar limits the display to the elements associated with a star. | 1024 |
+| `C:drawAxisBox(corner, x, y, z, clr)` | Draws a box aligned on three axes from a corner with debugDrawer. | 1179 |
+| `C:drawTransformAsSphereDir(e)` | Draws a transform as a sphere with a direction arrow. | 1066 |
+| `C:drawTransformAsVehicle(e)` | Draws a transform as a vehicle box (other drawing helper functions). | 1105 |
+| `C:editingAnyTransform()` | Returns whether a transform (of an element or of the start trigger) is being edited. | 1011 |
+| `C:getAllFieldNames()` | Lists all missionTypeData fields handled by the editor, with their type. | 1278 |
+| `C:getNewData()` | Builds the default missionTypeData table of a new mission by gathering the default values of all elements. | 256 |
+| `C:setAutoAdditionalAttributes(key, auto)` | Enables or disables the automatic generation of an additional mission attribute. | 1288 |
+| `C:setMission(m)` | Loads a mission into the editor: stores self.mission and updates each widget from mission.missionTypeData, then calls valueChangedCallback. | 297 |
+| `C:updateMouseInfo(mission)` | Updates mouseInfo: camera position, ray and ray hit under the mouse (forest collision disabled during the cast), click/hold/release state, hovered element. | 946 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 - `Sim.` `getUniqueName`
 - `debugDrawer:` `drawLine`, `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`, `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/missions/missionTypes/editorHelper.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/missions/missionTypes/editorHelper.lua`.*

@@ -1,168 +1,168 @@
 # `core_vehicleActivePooling`
 
-*Fichier : `lua/ge/extensions/core/vehicleActivePooling.lua` · VM : Game Engine (GE) · 512 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicleActivePooling.lua` · VM: Game Engine (GE) · 512 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicleActivePooling` : `extensions.load("core_vehicleActivePooling")`, puis la globale `core_vehicleActivePooling`
+**Access:** extension `core_vehicleActivePooling`: `extensions.load("core_vehicleActivePooling")`, then the global `core_vehicleActivePooling`
 
-Extension GE `core_vehicleActivePooling` : gère des « pools » de véhicules dont seule une partie est active (visible et simulée) à la fois, pour limiter la charge (trafic, véhicules garés…). Un pool (classe VehPool) garde deux listes (activeVehs, inactiveVehs), une limite maxActiveAmount, un mode distance (activation selon la distance à la caméra) et un fondu (fade) des meshes. L'état actif d'un véhicule est celui de l'objet (`obj:setActive(0|1)`).
+GE extension `core_vehicleActivePooling`: manages vehicle "pools" of which only a part is active (visible and simulated) at a time, to limit the load (traffic, parked vehicles...). A pool (class VehPool) keeps two lists (activeVehs, inactiveVehs), a maxActiveAmount limit, a distance mode (activation based on distance to the camera) and a mesh fade. A vehicle's active state is that of the object (`obj:setActive(0|1)`).
 
-## Exemple
+## Example
 
 ```lua
-local pool = core_vehicleActivePooling.createPool({name = 'monTrafic', maxActiveAmount = 8})
-pool:insertVeh(vehId)            -- ajoute un véhicule (actif si la limite le permet)
-pool.useDistanceMode = true      -- active/désactive selon la distance à la caméra
+local pool = core_vehicleActivePooling.createPool({name = 'myTraffic', maxActiveAmount = 8})
+pool:insertVeh(vehId)            -- adds a vehicle (active if the limit allows it)
+pool.useDistanceMode = true      -- activates/deactivates based on distance to the camera
 pool.activeDistance = 250
-pool:cycle()                     -- désactive le 1er actif, active le 1er inactif
+pool:cycle()                     -- deactivates the 1st active, activates the 1st inactive
 ```
 
-## Remarques
+## Notes
 
-- Champs d'un pool : id, name, activeVehs (tableau d'ids), inactiveVehs (tableau d'ids), allVehs ([id] = 1 actif / 0 inactif), fadeQueue ([id] = 1 fondu entrant / 0 sortant), total, maxActiveAmount (math.huge par défaut), useSceneVehiclesCap (compter tous les véhicules actifs de la scène au lieu de ceux du pool), useDistanceMode (prioritaire sur les autres méthodes), updateActiveStatePostFade (changer l'état actif après le fondu), activeDistance (300 m), fadeDuration (0.25 s).
-- Les changements d'état actif passent par obj:setActive, qui déclenche le hook onVehicleActiveChanged, lequel appelle VehPool:_setVeh pour tenir les listes à jour.
-- Incohérence : la fonction de module deletePool(id) se contente de retirer le pool de la table (pas de suppression des véhicules inactifs, pas de hook onVehiclePoolRemoved), alors que VehPool:deletePool() supprime les véhicules inactifs (sauf keepVehicles) et émet onVehiclePoolRemoved.
-- VehPool:getSceneActiveAmount(vehTypes) lit un argument vehTypes (liste de types) que la liste automatique ne signale pas ; nil = types par défaut de getAllVehiclesByType, véhicules garés (isParked) exclus.
-- Les signatures de plusieurs méthodes dans la liste automatique omettent le premier argument vehId (ex. fadeVeh(vehId, dt)) ; les signatures réelles sont données ci-dessous.
+- Pool fields: id, name, activeVehs (array of ids), inactiveVehs (array of ids), allVehs ([id] = 1 active / 0 inactive), fadeQueue ([id] = 1 fading in / 0 fading out), total, maxActiveAmount (math.huge by default), useSceneVehiclesCap (count all active vehicles of the scene instead of those of the pool), useDistanceMode (takes precedence over the other methods), updateActiveStatePostFade (change the active state after the fade), activeDistance (300 m), fadeDuration (0.25 s).
+- Active state changes go through obj:setActive, which triggers the onVehicleActiveChanged hook, which calls VehPool:_setVeh to keep the lists up to date.
+- Inconsistency: the module function deletePool(id) merely removes the pool from the table (no deletion of inactive vehicles, no onVehiclePoolRemoved hook), whereas VehPool:deletePool() deletes the inactive vehicles (except keepVehicles) and emits onVehiclePoolRemoved.
+- VehPool:getSceneActiveAmount(vehTypes) reads a vehTypes argument (list of types) that the automatic list does not report; nil = default types of getAllVehiclesByType, parked vehicles (isParked) excluded.
+- The signatures of several methods in the automatic list omit the first argument vehId (e.g. fadeVeh(vehId, dt)); the actual signatures are given below.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicleActivePooling.createPool(data)` | Crée un pool, l'enregistre et émet onVehiclePoolAdded(id). | 394 |
-| `core_vehicleActivePooling.deleteAllPools()` | Appelle VehPool:deletePool() sur chaque pool (supprime leurs véhicules inactifs) puis vide la table. | 428 |
-| `core_vehicleActivePooling.deletePool(id)` | Retire le pool de la table des pools (sans supprimer de véhicules ni émettre de hook ; voir notes). | 401 |
-| `core_vehicleActivePooling.getAllPools()` | Renvoie la table de tous les pools (pas une copie). | 424 |
-| `core_vehicleActivePooling.getPool(name)` | Trouve un pool par son nom. | 405 |
-| `core_vehicleActivePooling.getPoolById(id)` | Trouve un pool par son id. | 420 |
-| `core_vehicleActivePooling.getPoolOfVeh(vehId)` | Trouve le pool contenant un véhicule. | 412 |
-| `core_vehicleActivePooling.onClientEndMission()` | Hook : fin du niveau ; supprime tous les pools (deleteAllPools). *(interne)* *(hook)* | 447 |
-| `core_vehicleActivePooling.onDeserialized(data)` | Hook : recrée les pools à partir des données sérialisées. *(interne)* *(hook)* | 490 |
-| `core_vehicleActivePooling.onSerialize()` | Hook : sérialise tous les pools avant un rechargement Lua. *(interne)* *(hook)* | 481 |
-| `core_vehicleActivePooling.onUpdate(dt, dtSim)` | Hook appelé à chaque frame : applique le mode distance (activateByDistanceTo) et fait progresser les fondus de fadeQueue avec dtSim / fadeDuration. *(interne)* *(hook)* | 451 |
-| `core_vehicleActivePooling.onVehicleActiveChanged(vehId, active)` | Hook : l'état actif d'un véhicule change ; met à jour les listes de tous les pools qui le contiennent. *(interne)* *(hook)* | 435 |
-| `core_vehicleActivePooling.onVehicleDestroyed(vehId)` | Hook : un véhicule est détruit ; le retire de tous les pools. *(interne)* *(hook)* | 441 |
+| `core_vehicleActivePooling.createPool(data)` | Creates a pool, registers it and emits onVehiclePoolAdded(id). | 394 |
+| `core_vehicleActivePooling.deleteAllPools()` | Calls VehPool:deletePool() on each pool (deletes their inactive vehicles) then empties the table. | 428 |
+| `core_vehicleActivePooling.deletePool(id)` | Removes the pool from the pool table (without deleting vehicles or emitting a hook; see notes). | 401 |
+| `core_vehicleActivePooling.getAllPools()` | Returns the table of all pools (not a copy). | 424 |
+| `core_vehicleActivePooling.getPool(name)` | Finds a pool by its name. | 405 |
+| `core_vehicleActivePooling.getPoolById(id)` | Finds a pool by its id. | 420 |
+| `core_vehicleActivePooling.getPoolOfVeh(vehId)` | Finds the pool containing a vehicle. | 412 |
+| `core_vehicleActivePooling.onClientEndMission()` | Hook: end of the level; deletes all pools (deleteAllPools). *(internal)* *(hook)* | 447 |
+| `core_vehicleActivePooling.onDeserialized(data)` | Hook: recreates the pools from the serialized data. *(internal)* *(hook)* | 490 |
+| `core_vehicleActivePooling.onSerialize()` | Hook: serializes all pools before a Lua reload. *(internal)* *(hook)* | 481 |
+| `core_vehicleActivePooling.onUpdate(dt, dtSim)` | Hook called every frame: applies the distance mode (activateByDistanceTo) and advances the fadeQueue fades with dtSim / fadeDuration. *(internal)* *(hook)* | 451 |
+| `core_vehicleActivePooling.onVehicleActiveChanged(vehId, active)` | Hook: a vehicle's active state changes; updates the lists of all pools that contain it. *(internal)* *(hook)* | 435 |
+| `core_vehicleActivePooling.onVehicleDestroyed(vehId)` | Hook: a vehicle is destroyed; removes it from all pools. *(internal)* *(hook)* | 441 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicleActivePooling.createPool(data)`
 
-Crée un pool, l'enregistre et émet onVehiclePoolAdded(id).
+Creates a pool, registers it and emits onVehiclePoolAdded(id).
 
-- `data` (*table|nil*) : {id?, name?, activeVehs?, inactiveVehs?, maxActiveAmount?} ; name par défaut 'pool<id>'
-- **renvoie** : VehPool le pool créé
+- `data` (*table|nil*) : {id?, name?, activeVehs?, inactiveVehs?, maxActiveAmount?}; name defaults to 'pool<id>'
+- **returns**: VehPool the created pool
 
 #### `core_vehicleActivePooling.deletePool(id)`
 
-Retire le pool de la table des pools (sans supprimer de véhicules ni émettre de hook ; voir notes).
+Removes the pool from the pool table (without deleting vehicles or emitting a hook; see notes).
 
-- `id` (*integer*) : identifiant du pool
+- `id` (*integer*) : pool identifier
 
 #### `core_vehicleActivePooling.getAllPools()`
 
-Renvoie la table de tous les pools (pas une copie).
+Returns the table of all pools (not a copy).
 
-- **renvoie** : table<integer, VehPool> [id] = pool
+- **returns**: table<integer, VehPool> [id] = pool
 
 #### `core_vehicleActivePooling.getPool(name)`
 
-Trouve un pool par son nom.
+Finds a pool by its name.
 
-- `name` (*string|nil*) : nom du pool
-- **renvoie** : VehPool|nil pool trouvé
+- `name` (*string|nil*) : pool name
+- **returns**: VehPool|nil pool found
 
 #### `core_vehicleActivePooling.getPoolById(id)`
 
-Trouve un pool par son id.
+Finds a pool by its id.
 
-- `id` (*integer|nil*) : identifiant
-- **renvoie** : VehPool|nil pool trouvé
+- `id` (*integer|nil*) : identifier
+- **returns**: VehPool|nil pool found
 
 #### `core_vehicleActivePooling.getPoolOfVeh(vehId)`
 
-Trouve le pool contenant un véhicule.
+Finds the pool containing a vehicle.
 
-- `vehId` (*integer*) : identifiant du véhicule
-- **renvoie** : VehPool|nil pool
-- **renvoie** : boolean|nil true si le véhicule y est actif
+- `vehId` (*integer*) : vehicle identifier
+- **returns**: VehPool|nil pool
+- **returns**: boolean|nil true if the vehicle is active in it
 
 #### `core_vehicleActivePooling.onDeserialized(data)`
 
-Hook : recrée les pools à partir des données sérialisées.
+Hook: recreates the pools from the serialized data.
 
-- `data` (*table[]*) : données de onSerialize
+- `data` (*table[]*) : data from onSerialize
 
 #### `core_vehicleActivePooling.onSerialize()`
 
-Hook : sérialise tous les pools avant un rechargement Lua.
+Hook: serializes all pools before a Lua reload.
 
-- **renvoie** : table[] données des pools
+- **returns**: table[] pool data
 
 #### `core_vehicleActivePooling.onUpdate(dt, dtSim)`
 
-Hook appelé à chaque frame : applique le mode distance (activateByDistanceTo) et fait progresser les fondus de fadeQueue avec dtSim / fadeDuration.
+Hook called every frame: applies the distance mode (activateByDistanceTo) and advances the fadeQueue fades with dtSim / fadeDuration.
 
-- `dt` (*number*) : temps réel écoulé (s)
-- `dtSim` (*number*) : temps de simulation écoulé (s)
+- `dt` (*number*) : real elapsed time (s)
+- `dtSim` (*number*) : simulation elapsed time (s)
 
 #### `core_vehicleActivePooling.onVehicleActiveChanged(vehId, active)`
 
-Hook : l'état actif d'un véhicule change ; met à jour les listes de tous les pools qui le contiennent.
+Hook: a vehicle's active state changes; updates the lists of all pools that contain it.
 
-- `vehId` (*integer*) : véhicule
-- `active` (*boolean*) : nouvel état
+- `vehId` (*integer*) : vehicle
+- `active` (*boolean*) : new state
 
 #### `core_vehicleActivePooling.onVehicleDestroyed(vehId)`
 
-Hook : un véhicule est détruit ; le retire de tous les pools.
+Hook: a vehicle is destroyed; removes it from all pools.
 
-- `vehId` (*integer*) : véhicule
+- `vehId` (*integer*) : vehicle
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `logErrors` | boolean | false par défaut ; si true, les avertissements (véhicule déjà actif, limite atteinte…) sont logués. |
+| `logErrors` | boolean | false by default; if true, warnings (vehicle already active, limit reached...) are logged. |
 
-## Classe `VehPool`
+## Class `VehPool`
 
-Pool de véhicules créé par createPool. Les méthodes s'appellent avec `:` (pool:insertVeh(id)).
+Vehicle pool created by createPool. Methods are called with `:` (pool:insertVeh(id)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `VehPool:__tostring()` | Texte '[id] active: {...}, inactive: {...}'. | 34 |
-| `VehPool:_setVeh(vehId, activate)` | Interne : met à jour les listes quand l'état actif d'un véhicule a changé (appelé par onVehicleActiveChanged). Ne pas appeler. | 305 |
-| `VehPool:activateByDistanceTo(pos, dist, buffer)` | Désactive les véhicules actifs plus loin que dist + buffer et active les inactifs plus proches que dist (le buffer évite les basculements rapides). | 368 |
-| `VehPool:checkActiveLimit()` | Renvoie true si la limite de véhicules actifs est atteinte (compte les actifs du pool, ou de la scène si useSceneVehiclesCap). | 121 |
-| `VehPool:clearPool()` | Vide toutes les listes du pool sans toucher aux véhicules. | 133 |
-| `VehPool:crossCycle(otherPool, vehId1, vehId2)` | Désactive un véhicule de ce pool et active un véhicule d'un autre pool. | 167 |
-| `VehPool:cycle(vehId1, vehId2)` | Désactive un véhicule actif et en active un inactif du même pool (la limite est ignorée pendant l'opération). | 153 |
-| `VehPool:deletePool(keepVehicles)` | Supprime le pool ; sauf si keepVehicles, supprime aussi les véhicules inactifs. Émet onVehiclePoolRemoved(id). | 141 |
-| `VehPool:fadeInVeh(vehId)` | Programme un fondu vers opaque. Si le véhicule est inactif et updateActiveStatePostFade est true, l'active d'abord. | 192 |
-| `VehPool:fadeOutVeh(vehId)` | Programme un fondu vers transparent (véhicule actif requis). Avec updateActiveStatePostFade, il est désactivé en fin de fondu. | 212 |
-| `VehPool:fadeVeh(vehId, dt)` | Augmente ou diminue directement l'alpha des meshes du véhicule de `dt` (clampé 0..1). À utiliser à chaque frame pour un fondu progressif. | 181 |
-| `VehPool:getSceneActiveAmount(vehTypes)` | Nombre total de véhicules actifs de la scène (tous pools confondus), véhicules garés exclus sauf si 'PropParked' est demandé. | 108 |
-| `VehPool:getVehs()` | Liste de tous les ids du pool (actifs d'abord). | 388 |
-| `VehPool:insertVeh(vehId, forceInsert)` | Ajoute un véhicule au pool ; il est actif si l'objet est actif et que la limite le permet, sinon inactif (et désactivé via obj:setActive). | 234 |
-| `VehPool:new(data)` | Constructeur (utiliser plutôt createPool). Initialise listes, limites et valeurs par défaut, et garantit un id unique. | 38 |
-| `VehPool:onDeserialized(data)` | Copie les champs de data dans le pool. | 100 |
-| `VehPool:onSerialize()` | Renvoie les données du pool à sauvegarder. | 81 |
-| `VehPool:removeVeh(vehId)` | Retire un véhicule du pool (sans le supprimer). | 259 |
-| `VehPool:setAllVehs(activate)` | Active (dans la limite de maxActiveAmount) ou désactive tous les véhicules du pool. | 282 |
-| `VehPool:setMaxActiveAmount(amount)` | Fixe la limite de véhicules actifs et désactive l'excédent s'il y en a. | 348 |
-| `VehPool:setVeh(vehId, activate, forceInsert)` | Active ou désactive un véhicule du pool en respectant la limite. | 326 |
-| `VehPool:tryInsertActiveVeh(vehId, forceInsert)` | Vérifie si un véhicule actif de plus est autorisé ; avec forceInsert, augmente maxActiveAmount de 1 au lieu de refuser. | 220 |
+| `VehPool:__tostring()` | Text '[id] active: {...}, inactive: {...}'. | 34 |
+| `VehPool:_setVeh(vehId, activate)` | Internal: updates the lists when a vehicle's active state has changed (called by onVehicleActiveChanged). Do not call. | 305 |
+| `VehPool:activateByDistanceTo(pos, dist, buffer)` | Deactivates active vehicles farther than dist + buffer and activates inactive ones closer than dist (the buffer avoids rapid toggling). | 368 |
+| `VehPool:checkActiveLimit()` | Returns true if the active vehicle limit is reached (counts the pool's active vehicles, or the scene's if useSceneVehiclesCap). | 121 |
+| `VehPool:clearPool()` | Empties all the pool's lists without touching the vehicles. | 133 |
+| `VehPool:crossCycle(otherPool, vehId1, vehId2)` | Deactivates a vehicle of this pool and activates a vehicle of another pool. | 167 |
+| `VehPool:cycle(vehId1, vehId2)` | Deactivates an active vehicle and activates an inactive one from the same pool (the limit is ignored during the operation). | 153 |
+| `VehPool:deletePool(keepVehicles)` | Deletes the pool; unless keepVehicles, also deletes the inactive vehicles. Emits onVehiclePoolRemoved(id). | 141 |
+| `VehPool:fadeInVeh(vehId)` | Schedules a fade toward opaque. If the vehicle is inactive and updateActiveStatePostFade is true, activates it first. | 192 |
+| `VehPool:fadeOutVeh(vehId)` | Schedules a fade toward transparent (active vehicle required). With updateActiveStatePostFade, it is deactivated at the end of the fade. | 212 |
+| `VehPool:fadeVeh(vehId, dt)` | Directly increases or decreases the alpha of the vehicle's meshes by `dt` (clamped 0..1). Use it every frame for a progressive fade. | 181 |
+| `VehPool:getSceneActiveAmount(vehTypes)` | Total number of active vehicles in the scene (all pools combined), parked vehicles excluded unless 'PropParked' is requested. | 108 |
+| `VehPool:getVehs()` | List of all pool ids (active first). | 388 |
+| `VehPool:insertVeh(vehId, forceInsert)` | Adds a vehicle to the pool; it is active if the object is active and the limit allows it, otherwise inactive (and deactivated via obj:setActive). | 234 |
+| `VehPool:new(data)` | Constructor (prefer createPool). Initializes lists, limits and default values, and guarantees a unique id. | 38 |
+| `VehPool:onDeserialized(data)` | Copies the fields of data into the pool. | 100 |
+| `VehPool:onSerialize()` | Returns the pool data to save. | 81 |
+| `VehPool:removeVeh(vehId)` | Removes a vehicle from the pool (without deleting it). | 259 |
+| `VehPool:setAllVehs(activate)` | Activates (within the maxActiveAmount limit) or deactivates all vehicles of the pool. | 282 |
+| `VehPool:setMaxActiveAmount(amount)` | Sets the active vehicle limit and deactivates the excess if any. | 348 |
+| `VehPool:setVeh(vehId, activate, forceInsert)` | Activates or deactivates a vehicle of the pool while respecting the limit. | 326 |
+| `VehPool:tryInsertActiveVeh(vehId, forceInsert)` | Checks whether one more active vehicle is allowed; with forceInsert, increases maxActiveAmount by 1 instead of refusing. | 220 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onVehiclePoolAdded`
 - `onVehiclePoolRemoved`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectActive`
 - `obj:` `delete`, `getActive`, `getMeshAlpha`, `getPositionXYZ`, `setActive`, `setMeshAlpha`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicleActivePooling.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicleActivePooling.lua`.*

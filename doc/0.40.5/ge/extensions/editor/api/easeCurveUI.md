@@ -1,34 +1,34 @@
 # `editor_api_easeCurveUI`
 
-*Fichier : `lua/ge/extensions/editor/api/easeCurveUI.lua` · VM : Game Engine (GE) · 203 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/easeCurveUI.lua` · VM: Game Engine (GE) · 203 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_easeCurveUI` : `extensions.load("editor_api_easeCurveUI")`, puis la globale `editor_api_easeCurveUI`
+**Access:** extension `editor_api_easeCurveUI`: `extensions.load("editor_api_easeCurveUI")`, then the global `editor_api_easeCurveUI`
 
-Widget ImGui de l'éditeur pour éditer une courbe d'easing (type EaseF du moteur). La valeur est une chaîne "dir type param0 param1". Le widget affiche deux combos (direction InOut/In/Out, type Linear..Bounce), un aperçu de la courbe cliquable ouvrant un sélecteur de miniatures, et des sliders de paramètres pour Elastic (Amplitude, Period) et Back (Overshoot).
+Editor ImGui widget for editing an easing curve (engine EaseF type). The value is a "dir type param0 param1" string. The widget shows two combos (direction InOut/In/Out, type Linear..Bounce), a clickable curve preview opening a thumbnail picker, and parameter sliders for Elastic (Amplitude, Period) and Back (Overshoot).
 
-## Remarques
+## Notes
 
-- Les noms de direction et de type doivent rester synchronisés avec engine::Ease::enumDirection et enumType (l'indice vaut l'ordre dans l'enum).
-- Un paramètre à -1 signifie « valeur par défaut de la courbe ».
-- Les courbes sont échantillonnées par worldEditorCppApi.getEaseCurveSamples (64 points pour l'aperçu, 32 pour les miniatures).
+- The direction and type names must stay in sync with engine::Ease::enumDirection and enumType (the index equals the order in the enum).
+- A parameter of -1 means "default value of the curve".
+- Curves are sampled by worldEditorCppApi.getEaseCurveSamples (64 points for the preview, 32 for the thumbnails).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_easeCurveUI.draw(opts)` | Dessine le widget d'édition de courbe. Appelle opts.setValue(valueString, editEnded) à chaque modification ; editEnded est true pour les choix de combo/sélecteur et à la fin du glissement d'un slider. | 147 |
+| `editor_api_easeCurveUI.draw(opts)` | Draws the curve editing widget. Calls opts.setValue(valueString, editEnded) on each change; editEnded is true for combo/picker choices and at the end of a slider drag. | 147 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_easeCurveUI.draw(opts)`
 
-Dessine le widget d'édition de courbe. Appelle opts.setValue(valueString, editEnded) à chaque modification ; editEnded est true pour les choix de combo/sélecteur et à la fin du glissement d'un slider.
+Draws the curve editing widget. Calls opts.setValue(valueString, editEnded) on each change; editEnded is true for combo/picker choices and at the end of a slider drag.
 
-- `opts` (*table*) : id (string unique), value (string "dir type param0 param1"), setValue(valueString, editEnded)
+- `opts` (*table*) : id (unique string), value (string "dir type param0 param1"), setValue(valueString, editEnded)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `worldEditorCppApi.` `getEaseCurveSamples`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/easeCurveUI.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/easeCurveUI.lua`.*

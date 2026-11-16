@@ -1,28 +1,28 @@
 # `flowgraph_nodes_thread_receiveMessage`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/thread/receiveMessage.lua` · VM : Game Engine (GE) · 84 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/thread/receiveMessage.lua` · VM: Game Engine (GE) · 84 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/thread/receiveMessage")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/thread/receiveMessage")` (file under extensions/ but not a regular extension)
 
-Noeud « Receive Message » (thread). Reçoit un message envoyé par un autre projet flowgraph en cours (Send Message) et expose ses champs sur des pins de sortie personnalisés (nom des pins = clés du message). Pins : flow, reset, isNetwork, name (filtre), sorties flow, receiving (impulsion), received. Un seul message est consommé jusqu'au reset.
+Node "Receive Message" (thread). Receives a message sent by another running flowgraph project (Send Message) and exposes its fields on custom output pins (pin names = message keys). Pins: flow, reset, isNetwork, name (filter), outputs flow, receiving (impulse), received. Only one message is consumed until reset.
 
-## Remarques
+## Notes
 
-- La description du noeud dit « Sends a message... » (copie de Send Message), alors qu'il reçoit.
-- Le pin name est seulement requis non nil : le code ne compare pas le nom du message (le filtre « matches exactly » n'est pas appliqué ici).
-- Le pin isNetwork n'est pas utilisé.
+- The node's description says "Sends a message..." (copy of Send Message), whereas it receives.
+- The name pin is only required to be non-nil: the code does not compare the message name (the "matches exactly" filter is not applied here).
+- The isNetwork pin is not used.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:_executionStarted()` | done = false. | 74 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 78 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 78 |
 | `C:init()` | savePins = true, allowCustomOutPins = true. | 42 |
-| `C:onThreadMessageProcess(message)` | Hook : mémorise le message reçu s'il n'a pas déjà été traité (done = false). | 47 |
-| `C:work()` | Sur reset, remet à zéro ; sinon, si un message est en attente et name est donné, copie ses champs sur les pins, active receiving et received. | 55 |
+| `C:onThreadMessageProcess(message)` | Hook: stores the received message if it has not already been processed (done = false). | 47 |
+| `C:work()` | On reset, resets to zero; otherwise, if a message is pending and name is given, copies its fields to the pins, activates receiving and received. | 55 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/thread/receiveMessage.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/thread/receiveMessage.lua`.*

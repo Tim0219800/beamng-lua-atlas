@@ -1,12 +1,12 @@
 # `kdtreepoint3d`
 
-*Fichier : `lua/common/kdtreepoint3d.lua` · VM : Commun (GE + véhicule) · 319 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/kdtreepoint3d.lua` · VM: Common (GE + vehicle) · 319 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("kdtreepoint3d")`
+**Access:** `require("kdtreepoint3d")`
 
-Arbre k-d pour points 3D. Offre deux types de requêtes : les points dans une boîte (query / queryNotNested, itérateurs) et le point le plus proche d'un point donné (findNearest). Typique pour retrouver le noeud de route ou l'objet le plus proche d'une position. Flux : new -> preLoad -> build -> requêtes.
+K-d tree for 3D points. Offers two kinds of queries: the points in a box (query / queryNotNested, iterators) and the nearest point to a given point (findNearest). Typical for finding the road node or object nearest to a position. Flow: new -> preLoad -> build -> queries.
 
-## Exemple
+## Example
 
 ```lua
 local kdTreeP3d = require('kdtreepoint3d')
@@ -17,44 +17,44 @@ local nearestId, dist = kdT:findNearest(x, y, z)
 for id in kdT:queryNotNested(xmin, ymin, zmin, xmax, ymax, zmax) do ... end
 ```
 
-## Remarques
+## Notes
 
-- Chaque point occupe 4 valeurs dans self.items (x, y, z, id) ; avant build() itemCount compte des valeurs, après build() c'est le nombre de points.
-- Le commentaire d'usage écrit `kdT:preload` mais la méthode réelle est preLoad (L majuscule).
-- findNearest renvoie l'id et la DISTANCE (racine carrée, pas le carré). Il utilise self.qPoint et self.stack : pas réentrant, et il ne marche pas avant build. Il utilise la globale square (mathlib).
-- queryNotNested n'est pas imbricable (état réutilisé) ; query l'est. Bornes de requête clampées à ±1.7e308.
-- Pas de méthode clear() dans cette version (contrairement à kdtreebox2d).
+- Each point occupies 4 values in self.items (x, y, z, id); before build() itemCount counts values, after build() it is the number of points.
+- The usage comment writes `kdT:preload` but the actual method is preLoad (capital L).
+- findNearest returns the id and the DISTANCE (square root, not the squared value). It uses self.qPoint and self.stack: not reentrant, and it does not work before build. It uses the global square (mathlib).
+- queryNotNested cannot be nested (state reused); query can. Query bounds clamped to ±1.7e308.
+- No clear() method in this version (unlike kdtreebox2d).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `kdtreepoint3d.new(itemCount)` | Crée un arbre k-d de points 3D vide. | 105 |
+| `kdtreepoint3d.new(itemCount)` | Creates an empty 3D point k-d tree. | 105 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `kdtreepoint3d.new(itemCount)`
 
-Crée un arbre k-d de points 3D vide.
+Creates an empty 3D point k-d tree.
 
-- `itemCount` (*integer|nil*) : nombre de points prévus (préallocation, facultatif)
-- **renvoie** : kdTree arbre vide
+- `itemCount` (*integer|nil*) : expected number of points (preallocation, optional)
+- **returns**: kdTree empty tree
 
-## Classe `kdTree`
+## Class `kdTree`
 
-Objet renvoyé par new().
+Object returned by new().
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `kdTree:_build(axis, left, right, treeIdx)` | Interne : construction récursive d'un noeud. | 143 |
-| `kdTree:analytics()` | Affiche (print) des statistiques de l'arbre. | 309 |
-| `kdTree:build()` | Construit l'arbre à partir des points chargés. | 175 |
-| `kdTree:export()` | Renvoie les données de l'arbre (références) pour réutilisation. | 121 |
-| `kdTree:findNearest(x, y, z)` | Trouve le point le plus proche de (x, y, z) et renvoie son id et la distance euclidienne. | 262 |
-| `kdTree:import(kdTreeData)` | Charge des données produites par export(). | 130 |
-| `kdTree:preLoad(id, x, y, z)` | Ajoute un point (avant build). | 137 |
-| `kdTree:query(query_xmin, query_ymin, query_zmin, query_xmax, query_ymax, query_zmax)` | Itérateur sur les ids des points situés dans la boîte de requête ; imbrication possible. | 233 |
-| `kdTree:queryNotNested(query_xmin, query_ymin, query_zmin, query_xmax, query_ymax, query_zmax)` | Comme query sans allocation ; ne pas imbriquer. | 247 |
+| `kdTree:_build(axis, left, right, treeIdx)` | Internal: recursive construction of a node. | 143 |
+| `kdTree:analytics()` | Prints (print) tree statistics. | 309 |
+| `kdTree:build()` | Builds the tree from the loaded points. | 175 |
+| `kdTree:export()` | Returns the tree data (references) for reuse. | 121 |
+| `kdTree:findNearest(x, y, z)` | Finds the point nearest to (x, y, z) and returns its id and the Euclidean distance. | 262 |
+| `kdTree:import(kdTreeData)` | Loads data produced by export(). | 130 |
+| `kdTree:preLoad(id, x, y, z)` | Adds a point (before build). | 137 |
+| `kdTree:query(query_xmin, query_ymin, query_zmin, query_xmax, query_ymax, query_zmax)` | Iterator over the ids of the points located in the query box; nesting possible. | 233 |
+| `kdTree:queryNotNested(query_xmin, query_ymin, query_zmin, query_xmax, query_ymax, query_zmax)` | Like query without allocation; do not nest. | 247 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/kdtreepoint3d.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/kdtreepoint3d.lua`.*

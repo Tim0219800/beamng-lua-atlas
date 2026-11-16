@@ -2,40 +2,40 @@
 -- tim19Atlas stub generated from lua/common/libs/lua-websockets/websocket/client_copas.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Backend client WebSocket de lua-websockets pour la bibliothèque coopérative 'copas' (sockets non bloquants dans des coroutines). Le module renvoie une fonction constructeur ; l'objet renvoyé est étendu par websocket/sync (méthodes connect, send, receive, close).
---- Accès : `require("libs/lua-websockets/websocket/client_copas")`
+--- WebSocket client backend of lua-websockets for the cooperative 'copas' library (non-blocking sockets in coroutines). The module returns a constructor function; the returned object is extended by websocket/sync (connect, send, receive, close methods).
+--- Access: `require("libs/lua-websockets/websocket/client_copas")`
 ---@class libs_lua_websockets_websocket_client_copas
 local libs_lua_websockets_websocket_client_copas = {}
 
---- Objet renvoyé par le constructeur new(ws). ws est une table d'options facultative (champ timeout en secondes). Les méthodes connect/send/receive/close viennent de websocket/sync ; les méthodes sock_* ci-dessous fournissent le transport.
+--- Object returned by the constructor new(ws). ws is an optional options table (timeout field in seconds). The connect/send/receive/close methods come from websocket/sync; the sock_* methods below provide the transport.
 ---@class libs_lua_websockets_websocket_client_copas_client
 local libs_lua_websockets_websocket_client_copas_client = {}
 
---- Délègue à copas.dohandshake (négociation TLS) sur le socket.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
+--- Delegates to copas.dohandshake (TLS negotiation) on the socket.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
 function libs_lua_websockets_websocket_client_copas_client:dohandshake() end
 
---- Ferme le socket.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
+--- Closes the socket.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
 function libs_lua_websockets_websocket_client_copas_client:sock_close() end
 
---- Crée un socket TCP (luasocket), applique ws.timeout et se connecte via copas.connect. Renvoie nil et l'erreur en cas d'échec (sauf 'already connected').
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
----@param host string Hôte.
+--- Creates a TCP socket (luasocket), applies ws.timeout and connects via copas.connect. Returns nil and the error on failure (except 'already connected').
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
+---@param host string Host.
 ---@param port integer Port.
----@return nil|string  nil, message d'erreur en cas d'échec.
+---@return nil|string  nil, error message on failure.
 function libs_lua_websockets_websocket_client_copas_client:sock_connect(host, port) end
 
---- Lit des données via copas.receive sur le socket.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
+--- Reads data via copas.receive on the socket.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
 function libs_lua_websockets_websocket_client_copas_client:sock_receive() end
 
---- Envoie des données via copas.send sur le socket.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
+--- Sends data via copas.send on the socket.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/libs/lua-websockets/websocket/client_copas.lua:dyn
 function libs_lua_websockets_websocket_client_copas_client:sock_send() end
 

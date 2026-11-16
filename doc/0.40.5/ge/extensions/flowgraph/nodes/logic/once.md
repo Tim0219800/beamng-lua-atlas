@@ -1,20 +1,20 @@
 # `flowgraph_nodes_logic_once`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/logic/once.lua` · VM : Game Engine (GE) · 50 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/logic/once.lua` · VM: Game Engine (GE) · 50 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/logic/once")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/logic/once")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Once' (categorie logic, behaviour once). Laisse passer le flux une seule fois (impulsion en sortie) ; le pin impulsion 'reset' le rearme. L'etat est reinitialise a l'arret de l'execution.
+Flowgraph node 'Once' (logic category, behaviour once). Lets the flow through only once (output impulse); the impulse pin 'reset' rearms it. The state is reset when execution stops.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Rearme le noeud (ready = true). | 27 |
+| `C:_executionStopped()` | Rearms the node (ready = true). | 27 |
 | `C:init(mgr, ...)` | ready = true. | 23 |
-| `C:work(args)` | Si reset : rearme et sortie false. Sinon, si pret et flux d'entree : sortie true une fois puis ready=false ; dans tous les autres cas sortie false. | 31 |
+| `C:work(args)` | If reset: rearms and output false. Otherwise, if ready and input flow: output true once then ready=false; in all other cases output false. | 31 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/logic/once.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/logic/once.lua`.*

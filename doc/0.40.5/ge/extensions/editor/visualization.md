@@ -1,53 +1,53 @@
 # `editor_visualization`
 
-*Fichier : `lua/ge/extensions/editor/visualization.lua` · VM : Game Engine (GE) · 542 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/visualization.lua` · VM: Game Engine (GE) · 542 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_visualization` : `extensions.load("editor_visualization")`, puis la globale `editor_visualization`
+**Access:** extension `editor_visualization`: `extensions.load("editor_visualization")`, then the global `editor_visualization`
 
-Fenêtre « Visualization » de l'éditeur de monde. Trois onglets : Debug (cases à cocher pour les types de visualisation enregistrés : wireframe, bounding boxes, triggers, terrain, decals, frustums de lumière, graphes de navigation, vues Advanced Lighting, Material Debug...), Visible (affichage par classe d'objet) et Selectable (sélectionnabilité par classe, avec des presets). Elle ajoute aussi la visualisation « Lights Status » (sphères colorées et textes sur les lumières de la scène) et enregistre les préférences gizmos.visualization.*.
+"Visualization" window of the world editor. Three tabs: Debug (checkboxes for the registered visualization types: wireframe, bounding boxes, triggers, terrain, decals, light frustums, navigation graphs, Advanced Lighting views, Material Debug...), Visible (display by object class) and Selectable (selectability by class, with presets). It also adds the "Lights Status" visualization (colored spheres and texts on the scene's lights) and registers the gizmos.visualization.* preferences.
 
-## Remarques
+## Notes
 
-- Préférences enregistrées dans la catégorie gizmos/visualization : visTypes, visible, selectable (tables cachées), visualizationDrawDistance (int, défaut 250, 50 à 2000), saveVisualizationSettings (bool, défaut true), showMaterialDebugLegend (bool, défaut true). Si saveVisualizationSettings est false, visTypes/visible/selectable sont marquées non persistantes.
-- Lights Status : lit toutes les lumières (sous-classes de LightBase) avec scenetree.findSubClassObjects, rafraîchit au plus toutes les 0,75 s. Bleu = contrôlée par la nuit (champ nightLight), vert = activée, rouge = désactivée (champ isEnabled). Rayon de sphère 0,05 à 5 m (défaut 0,5), distance de dessin 10 à 2000 m (défaut 120). Les textes ne s'affichent que dans les 25 m et pour 12 lumières au maximum.
-- Visualisations activées par défaut : SFXEmitter.renderEmitters, BeamNGWaypointDrawDebug et SceneCullingState.disableTerrainOcclusion ; toutes les autres sont à false.
-- La visualisation « Annotation Viz » n'est enregistrée que si ResearchVerifier.isTechLicenseVerified() est vrai (licence BeamNG.tech).
-- Le rayon affiché dans le libellé d'une lumière vient du champ 'range' pour un SpotLight et 'radius' pour les autres.
-- Dépend de l'extension editor_aiViz (commentaire du code : dépendance « pas élégante » mais pratique pour réutiliser la visualisation du navgraph).
+- Preferences registered in the gizmos/visualization category: visTypes, visible, selectable (hidden tables), visualizationDrawDistance (int, default 250, 50 to 2000), saveVisualizationSettings (bool, default true), showMaterialDebugLegend (bool, default true). If saveVisualizationSettings is false, visTypes/visible/selectable are marked non-persistent.
+- Lights Status: reads all lights (LightBase subclasses) with scenetree.findSubClassObjects, refreshing at most every 0.75 s. Blue = controlled by night (nightLight field), green = enabled, red = disabled (isEnabled field). Sphere radius 0.05 to 5 m (default 0.5), draw distance 10 to 2000 m (default 120). Texts are shown only within 25 m and for at most 12 lights.
+- Visualizations enabled by default: SFXEmitter.renderEmitters, BeamNGWaypointDrawDebug and SceneCullingState.disableTerrainOcclusion; all the others are false.
+- The "Annotation Viz" visualization is registered only if ResearchVerifier.isTechLicenseVerified() is true (BeamNG.tech license).
+- The radius shown in a light's label comes from the 'range' field for a SpotLight and 'radius' for the others.
+- Depends on the editor_aiViz extension (code comment: an "inelegant" dependency but convenient for reusing the navgraph visualization).
 
-**Dépendances (chargées avant) :** `editor_aiViz`
+**Dependencies (loaded first):** `editor_aiViz`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_visualization.onEditorGui()` | Hook de l'éditeur appelé à chaque frame : dessine les sphères/textes de la visualisation des lumières, la fenêtre Visualization (filtre de recherche, trois onglets), la fenêtre de réglages des lumières et la légende de material debug. *(interne)* *(hook)* | 225 |
-| `editor_visualization.onEditorInitialized()` | Hook de l'éditeur appelé à l'initialisation : initialise selectabilityPresets, enregistre les fenêtres, efface puis enregistre tous les types de visualisation (editor.registerVisualizationType), initialise materialDebugViz et calcule les valeurs par défaut de chaque type. Expose aussi editor.updateVisSettings. *(interne)* *(hook)* | 440 |
-| `editor_visualization.onEditorPreferenceValueChanged(path, value)` | Hook de l'éditeur appelé quand une préférence change : applique visTypes, visible ou selectable aux objets de l'éditeur, synchronise le preset de sélectabilité, et bascule les chemins non persistants quand saveVisualizationSettings change. *(interne)* *(hook)* | 359 |
-| `editor_visualization.onEditorRegisterPreferences(prefsRegistry)` | Hook de l'éditeur appelé à l'enregistrement des préférences : mémorise l'état initial visible/sélectionnable de chaque classe d'objet et enregistre la catégorie gizmos/visualization. *(interne)* *(hook)* | 401 |
+| `editor_visualization.onEditorGui()` | Editor hook called every frame: draws the spheres/texts of the lights visualization, the Visualization window (search filter, three tabs), the lights settings window and the material debug legend. *(internal)* *(hook)* | 225 |
+| `editor_visualization.onEditorInitialized()` | Editor hook called at initialization: initializes selectabilityPresets, registers the windows, clears then registers all visualization types (editor.registerVisualizationType), initializes materialDebugViz and computes the default values of each type. Also exposes editor.updateVisSettings. *(internal)* *(hook)* | 440 |
+| `editor_visualization.onEditorPreferenceValueChanged(path, value)` | Editor hook called when a preference changes: applies visTypes, visible or selectable to the editor objects, synchronizes the selectability preset, and toggles the non-persistent paths when saveVisualizationSettings changes. *(internal)* *(hook)* | 359 |
+| `editor_visualization.onEditorRegisterPreferences(prefsRegistry)` | Editor hook called when preferences are registered: remembers the initial visible/selectable state of each object class and registers the gizmos/visualization category. *(internal)* *(hook)* | 401 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_visualization.onEditorPreferenceValueChanged(path, value)`
 
-Hook de l'éditeur appelé quand une préférence change : applique visTypes, visible ou selectable aux objets de l'éditeur, synchronise le preset de sélectabilité, et bascule les chemins non persistants quand saveVisualizationSettings change.
+Editor hook called when a preference changes: applies visTypes, visible or selectable to the editor objects, synchronizes the selectability preset, and toggles the non-persistent paths when saveVisualizationSettings changes.
 
-- `path` (*string*) : chemin de la préférence, ex. 'gizmos.visualization.visTypes'
-- `value` (*any*) : nouvelle valeur (table pour visTypes/visible/selectable, booléen pour saveVisualizationSettings)
+- `path` (*string*) : preference path, e.g. 'gizmos.visualization.visTypes'
+- `value` (*any*) : new value (table for visTypes/visible/selectable, boolean for saveVisualizationSettings)
 
 #### `editor_visualization.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook de l'éditeur appelé à l'enregistrement des préférences : mémorise l'état initial visible/sélectionnable de chaque classe d'objet et enregistre la catégorie gizmos/visualization.
+Editor hook called when preferences are registered: remembers the initial visible/selectable state of each object class and registers the gizmos/visualization category.
 
-- `prefsRegistry` (*table*) : registre de préférences de l'éditeur
+- `prefsRegistry` (*table*) : editor preferences registry
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | {'editor_aiViz'} : extension chargée avant celle-ci. |
+| `dependencies` | table<integer, string> | {'editor_aiViz'}: extension loaded before this one. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `ResearchVerifier.` `isTechLicenseVerified`
 - `debugDrawer:` `drawSphere`, `drawTextAdvanced`
@@ -56,4 +56,4 @@ Hook de l'éditeur appelé à l'enregistrement des préférences : mémorise l'�
 - `worldEditorCppApi.` `getObjectClassNames`, `getRenderableObjectClassNames`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/visualization.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/visualization.lua`.*

@@ -1,51 +1,51 @@
 # `core_input_tests`
 
-*Fichier : `lua/ge/extensions/core/input/tests.lua` · VM : Game Engine (GE) · 98 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/input/tests.lua` · VM: Game Engine (GE) · 98 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_input_tests` : `extensions.load("core_input_tests")`, puis la globale `core_input_tests`
+**Access:** extension `core_input_tests`: `extensions.load("core_input_tests")`, then the global `core_input_tests`
 
-Extension GE `core_input_tests` : orchestre les tests de latence/fréquence des entrées (système, moteur, véhicule, oscillation) affichés dans l'UI. Elle met la simulation en marche (dépause), lance côté véhicule l'extension `inputTests` pour chaque test d'une file, reçoit les statistiques et pousse l'état à l'UI par `InputTestStateChanged`. Surtout destinée à l'interface de diagnostic, peu utile à un moddeur.
+GE extension `core_input_tests`: orchestrates the input latency/frequency tests (system, engine, vehicle, oscillation) displayed in the UI. It unpauses the simulation, launches the `inputTests` extension on the vehicle side for each test in a queue, receives the statistics and pushes the state to the UI via `InputTestStateChanged`. Mainly intended for the diagnostic interface, of little use to a modder.
 
-## Remarques
+## Notes
 
-- Tests déclarés : systemFrequencyTest, systemResolutionTest, systemLatencyTest (run 'systemTest'), engineLatencyTest ('simulationTest'), vehicleLatencyTest ('vehicleTest'), oscillationTest et vehicleFrequencyTest ('vehicleOscillationTest'). startTests reçoit des runId, pas des id de test.
-- La pause de simulation précédente est mémorisée (simTimeAuthority.getPause) et restaurée à la fin ; les tests déclenchent simTimeAuthority.pause(false).
-- Message affiché si le véhicule disparaît : 'Vehicle lost while the test was running.'.
-- M.updateUI et onVehicleSpawned/onVehicleSwitched sont la même fonction (updateUI).
+- Declared tests: systemFrequencyTest, systemResolutionTest, systemLatencyTest (run 'systemTest'), engineLatencyTest ('simulationTest'), vehicleLatencyTest ('vehicleTest'), oscillationTest and vehicleFrequencyTest ('vehicleOscillationTest'). startTests receives runIds, not test ids.
+- The previous simulation pause state is stored (simTimeAuthority.getPause) and restored at the end; the tests trigger simTimeAuthority.pause(false).
+- Message displayed if the vehicle disappears: 'Vehicle lost while the test was running.'.
+- M.updateUI and onVehicleSpawned/onVehicleSwitched are the same function (updateUI).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_input_tests.onInputTestStats(stats)` | Hook appelé (depuis le véhicule) avec les statistiques d'un test : enregistre message et stats sur la ligne du test et rafraîchit l'UI. *(interne)* *(hook)* | 78 |
-| `core_input_tests.onInputTestStatus(testId)` | Hook appelé quand un run se termine : si c'est le run en cours, passe au suivant de la file. *(interne)* *(hook)* | 85 |
-| `core_input_tests.onVehicleDestroyed()` | Hook : si le véhicule joueur a disparu pendant un test, termine les tests avec un message d'erreur ; sinon rafraîchit l'UI. *(interne)* *(hook)* | 90 |
-| `core_input_tests.onVehicleSpawned()` | Hook : alias de updateUI. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `core_input_tests.onVehicleSwitched()` | Hook : alias de updateUI. (assignée dynamiquement) *(interne)* *(hook)* | dyn |
-| `core_input_tests.startTests(runIds)` | Démarre une file de tests. Supprime les doublons, efface messages et stats des tests concernés, dépause la simulation puis lance le premier run sur le véhicule joueur (extensions.load('inputTests') ; inputTests.start(runId)). | 58 |
-| `core_input_tests.updateUI()` | Met à jour state.hasVehicle (véhicule joueur 0 présent) et envoie l'état complet à l'UI via guihooks InputTestStateChanged. | 33 |
+| `core_input_tests.onInputTestStats(stats)` | Hook called (from the vehicle) with a test's statistics: stores the message and stats on the test's row and refreshes the UI. *(internal)* *(hook)* | 78 |
+| `core_input_tests.onInputTestStatus(testId)` | Hook called when a run ends: if it is the current run, moves on to the next one in the queue. *(internal)* *(hook)* | 85 |
+| `core_input_tests.onVehicleDestroyed()` | Hook: if the player vehicle disappeared during a test, ends the tests with an error message; otherwise refreshes the UI. *(internal)* *(hook)* | 90 |
+| `core_input_tests.onVehicleSpawned()` | Hook: alias of updateUI. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `core_input_tests.onVehicleSwitched()` | Hook: alias of updateUI. (dynamically assigned) *(internal)* *(hook)* | dyn |
+| `core_input_tests.startTests(runIds)` | Starts a queue of tests. Removes duplicates, clears the messages and stats of the tests concerned, unpauses the simulation then launches the first run on the player vehicle (extensions.load('inputTests'); inputTests.start(runId)). | 58 |
+| `core_input_tests.updateUI()` | Updates state.hasVehicle (player vehicle 0 present) and sends the full state to the UI via guihooks InputTestStateChanged. | 33 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_input_tests.onInputTestStats(stats)`
 
-Hook appelé (depuis le véhicule) avec les statistiques d'un test : enregistre message et stats sur la ligne du test et rafraîchit l'UI.
+Hook called (from the vehicle) with a test's statistics: stores the message and stats on the test's row and refreshes the UI.
 
 - `stats` (*table*) : {testId, message?, sampleCount, …}.
 
 #### `core_input_tests.onInputTestStatus(testId)`
 
-Hook appelé quand un run se termine : si c'est le run en cours, passe au suivant de la file.
+Hook called when a run ends: if it is the current run, moves on to the next one in the queue.
 
-- `testId` (*string*) : runId du run terminé.
+- `testId` (*string*) : runId of the finished run.
 
 #### `core_input_tests.startTests(runIds)`
 
-Démarre une file de tests. Supprime les doublons, efface messages et stats des tests concernés, dépause la simulation puis lance le premier run sur le véhicule joueur (extensions.load('inputTests') ; inputTests.start(runId)).
+Starts a queue of tests. Removes duplicates, clears the messages and stats of the tests concerned, unpauses the simulation then launches the first run on the player vehicle (extensions.load('inputTests'); inputTests.start(runId)).
 
-- `runIds` (*string[]*) : Liste de runId : 'systemTest', 'simulationTest', 'vehicleTest', 'vehicleOscillationTest'. Liste vide : ne fait que rafraîchir l'UI.
+- `runIds` (*string[]*) : List of runIds: 'systemTest', 'simulationTest', 'vehicleTest', 'vehicleOscillationTest'. Empty list: only refreshes the UI.
 
-**Évènements UI (guihooks.trigger) :** `InputTestStateChanged`
+**UI events (guihooks.trigger):** `InputTestStateChanged`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/input/tests.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/input/tests.lua`.*

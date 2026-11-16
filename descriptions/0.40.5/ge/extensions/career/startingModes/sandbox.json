@@ -1,25 +1,54 @@
 {
   "path": "lua/ge/extensions/career/startingModes/sandbox.lua",
-  "module": "Mode de départ de carrière « sandbox » (tier minor, ordre 400) : 50 millions d'argent, « tout débloqué » d'après sa description. Table de description chargée par career/career.lua, pas une extension. Le champ ignore = true indique que ce mode est ignoré (non proposé) dans cette version.",
+  "module": "Career starting mode \"sandbox\" (tier minor, order 400): 50 million money, \"everything unlocked\" according to its description. Description table loaded by career/career.lua, not an extension. The field ignore = true indicates that this mode is ignored (not offered) in this version.",
   "notes": [
-    "ignore = true : le mode existe dans le code mais est masqué du choix de départ (comportement déduit du nom du champ, à vérifier dans career.lua).",
-    "title et description sont des chaînes en dur (non traduites)."
+    "ignore = true: the mode exists in the code but is hidden from the starting choice (behavior inferred from the field name, to verify in career.lua).",
+    "title and description are hardcoded strings (not translated)."
   ],
   "fields": {
-    "ignore": {"type": "boolean", "desc": "true."},
-    "id": {"type": "string", "desc": "\"sandbox\"."},
-    "order": {"type": "number", "desc": "400."},
-    "tier": {"type": "string", "desc": "\"minor\"."},
-    "title": {"type": "string", "desc": "\"Sandbox\"."},
-    "description": {"type": "string", "desc": "« Start with 50 million bucks and everthing unlocked. » (faute d'orthographe dans le code)."},
-    "image": {"type": "string", "desc": "images/career/start_sandbox.jpg."}
+    "ignore": {
+      "type": "boolean",
+      "desc": "true."
+    },
+    "id": {
+      "type": "string",
+      "desc": "\"sandbox\"."
+    },
+    "order": {
+      "type": "number",
+      "desc": "400."
+    },
+    "tier": {
+      "type": "string",
+      "desc": "\"minor\"."
+    },
+    "title": {
+      "type": "string",
+      "desc": "\"Sandbox\"."
+    },
+    "description": {
+      "type": "string",
+      "desc": "\"Start with 50 million bucks and everthing unlocked.\" (spelling mistake in the code)."
+    },
+    "image": {
+      "type": "string",
+      "desc": "images/career/start_sandbox.jpg."
+    }
   },
   "functions": {
     "initPlayerAttributes": {
-      "desc": "Initialise l'argent à 50 000 000.",
-      "params": {"playerAttributes": {"type": "table", "desc": "Module career_modules_playerAttributes."}},
+      "desc": "Initializes money to 50,000,000.",
+      "params": {
+        "playerAttributes": {
+          "type": "table",
+          "desc": "Module career_modules_playerAttributes."
+        }
+      },
       "internal": true
     },
-    "setupInventory": {"desc": "Téléporte le joueur en (-808.56, 898.56, 75.51) et règle son orientation.", "internal": true}
+    "setupInventory": {
+      "desc": "Teleports the player to (-808.56, 898.56, 75.51) and sets their orientation.",
+      "internal": true
+    }
   }
 }

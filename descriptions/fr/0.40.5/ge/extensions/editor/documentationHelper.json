@@ -1,0 +1,28 @@
+{
+  "path": "lua/ge/extensions/editor/documentationHelper.lua",
+  "module": "Petite extension de l'éditeur qui ajoute à la table globale `editor` deux fonctions pour ouvrir la documentation en ligne de BeamNG dans le navigateur. Les autres outils de l'éditeur s'en servent pour leurs boutons d'aide.",
+  "usage": "editor.openHelp(\"terrain_editor\")  -- ouvre https://documentation.beamng.com/world_editor/terrain_editor.html",
+  "notes": ["Les fonctions ne sont installées dans `editor` qu'au moment du hook onEditorInitialized ; avant cela editor.openHelp vaut nil.", "Sans argument, la page « index » est ouverte."],
+  "functions": {
+    "onEditorInitialized": {
+      "desc": "Hook appelé par l'éditeur quand il est initialisé. Installe editor.openHelp et editor.openCodingHelp.",
+      "params": {},
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à la table globale `editor` par onEditorInitialized.",
+      "functions": {
+        "openHelp": {
+          "desc": "Ouvre dans le navigateur https://documentation.beamng.com/world_editor/<page>.html.",
+          "params": {"contextPageName": {"type": "string|nil", "desc": "Nom de la page sans extension ; « index » si nil."}}
+        },
+        "openCodingHelp": {
+          "desc": "Ouvre dans le navigateur la référence d'API de l'éditeur : https://documentation.beamng.com/world_editor/api_reference/<page>.html.",
+          "params": {"contextPageName": {"type": "string|nil", "desc": "Nom de la page sans extension ; « index » si nil."}}
+        }
+      }
+    }
+  }
+}

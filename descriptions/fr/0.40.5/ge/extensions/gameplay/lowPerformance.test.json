@@ -1,0 +1,40 @@
+{
+  "path": "lua/ge/extensions/gameplay/lowPerformance.test.lua",
+  "module": "Tests automatisés du détecteur gameplay/lowPerformance, à lancer avec require('testFramework/TestManager'):runTestFiles('gameplay/lowPerformance'). Chaque test charge lowPerformance.lua dans un environnement simulé (setfenv avec faux settings, Engine, ui_router, VariableRegistry, guihooks...) puis fait avancer des images à une fréquence donnée pour vérifier les transitions d'état. Ce n'est pas une API de jeu : aucune utilité directe pour un moddeur, sauf comme exemple de test avec environnement simulé.",
+  "notes": [
+    "La fonction locale runtime(mode) fabrique l'environnement simulé ; runFrames(detector, state, fps, seconds) appelle onUpdate avec dt = 1/fps.",
+    "Chaque fonction testXxx reçoit un contexte ctx (méthodes assert et assertEqual) fourni par testFramework/TestManager."
+  ],
+  "functions": {
+    "testSustainedLowFpsEntersAndRecovers": {
+      "desc": "20 FPS pendant 12 s doit activer la faible performance (un seul toast) ; 60 FPS pendant 15 s doit la désactiver.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "internal": true
+    },
+    "testDipShorterThanDwellDoesNotTrigger": {
+      "desc": "Une chute brève (moyenne sous 25 pendant environ 3 s, moins que les 5 s requis) ne déclenche rien ; une chute prolongée à 5 FPS déclenche.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "internal": true
+    },
+    "testSkippedFramesRestartGrace": {
+      "desc": "Vérifie que la pause (route différente de play), l'apparition d'un véhicule et un fondu d'écran en cours redémarrent la période de grâce.",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "internal": true
+    },
+    "testCuratedContentIsNeverChecked": {
+      "desc": "En mode mission rien n'est détecté ni notifié ; passer de freeroam à mission annule l'effet (isLowPerformance faux, pas de pause notice).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "internal": true
+    },
+    "testSpawnWarningOncePerEpisode": {
+      "desc": "confirmSpawn exécute directement hors faible performance ; en faible performance il retourne false et diffère jusqu'à confirmPendingSpawn ; l'avertissement n'apparaît qu'une fois par épisode (deux dialogues sur deux épisodes).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "internal": true
+    },
+    "testNotificationsCanBeMuted": {
+      "desc": "Vérifie muteAndConfirmPendingSpawn (réglage notifyLowPerformance = false, détection maintenue sans notification) et le mode menu simple (notifications toujours actives, dialogue à 2 boutons au lieu de 3).",
+      "params": {"ctx": {"type": "table", "desc": "Contexte de test."}},
+      "internal": true
+    }
+  }
+}

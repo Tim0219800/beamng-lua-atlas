@@ -1,32 +1,32 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/recording/recordCamera.lua",
-  "module": "Noeud flowgraph 'Record Camera' (categorie repeat_f_duration). Enregistre un trajet de camera par images cles : la premiere impulsion 'snap' demarre l'enregistrement, chaque 'snap' suivant ajoute une cle (pos, rot, temps os.clock). L'impulsion 'stop' termine et cree dans MissionGroup un objet SimPath avec un Marker par cle (position, rotation, timeToNext). Sortie 'filename' : nom genere (prefix + os.time()).",
+  "module": "Flowgraph node 'Record Camera' (repeat_f_duration category). Records a camera path with keyframes: the first 'snap' impulse starts the recording, each following 'snap' adds a key (pos, rot, os.clock time). The 'stop' impulse ends it and creates in MissionGroup a SimPath object with a Marker per key (position, rotation, timeToNext). Output 'filename': generated name (prefix + os.time()).",
   "notes": [
-    "Le premier snap demarre l'enregistrement et ajoute aussi la premiere cle (les deux tests sont evalues dans la meme frame).",
-    "Les noms de marqueurs sont 'maker_N' (faute de frappe pour marker)."
+    "The first snap starts the recording and also adds the first key (both tests are evaluated in the same frame).",
+    "The marker names are 'maker_N' (typo for marker)."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "init": {
-          "desc": "Etat de duree 'inactive' et trajet vide.",
+          "desc": "Duration state 'inactive' and empty path.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Remet l'etat inactif, vide le trajet et memorise l'heure de depart.",
+          "desc": "Resets to the inactive state, empties the path and stores the start time.",
           "internal": true
         },
         "finishUp": {
-          "desc": "Cree le SimPath et les Marker (maker_N) depuis le trajet enregistre, renseigne timeToNext et ecrit filename.",
+          "desc": "Creates the SimPath and the Markers (maker_N) from the recorded path, sets timeToNext and writes filename.",
           "internal": true
         },
         "work": {
-          "desc": "Etat inactive : snap demarre l'enregistrement. Etat started : snap ajoute une cle ; stop passe a 'finished' et appelle finishUp.",
+          "desc": "State inactive: snap starts the recording. State started: snap adds a key; stop goes to 'finished' and calls finishUp.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Affiche l'etat et le nombre de cles.",
+          "desc": "Displays the state and the number of keys.",
           "internal": true
         }
       }

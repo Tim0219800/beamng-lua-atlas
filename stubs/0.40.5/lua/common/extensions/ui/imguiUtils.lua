@@ -2,153 +2,153 @@
 -- tim19Atlas stub generated from lua/common/extensions/ui/imguiUtils.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Boîte à outils ImGui de haut niveau (ui_imguiUtils) : changement d'échelle d'UI, chargement de textures, boutons-menus déroulants (DropdownButton/Selectable/Select), affichage récursif d'une table Lua en arbre ou en colonnes clé/valeur, petite appli clé/valeur, et affichage d'un flottant échantillonné avec min/max (SampleFloatDisplay). Utile pour les outils de debug en ImGui d'un moddeur. Tout passe par ui_imgui ; certaines fonctions supposent la présence de l'éditeur (editor.uiIconImageButton).
---- Accès : extension `ui_imguiUtils` : `extensions.load("ui_imguiUtils")`, puis la globale `ui_imguiUtils`
+--- High-level ImGui toolbox (ui_imguiUtils): UI scale change, texture loading, dropdown menu buttons (DropdownButton/Selectable/Select), recursive display of a Lua table as a tree or in key/value columns, a small key/value app, and display of a sampled float with min/max (SampleFloatDisplay). Useful for a modder's ImGui debug tools. Everything goes through ui_imgui; some functions assume the editor is present (editor.uiIconImageButton).
+--- Access: extension `ui_imguiUtils`: `extensions.load("ui_imguiUtils")`, then the global `ui_imguiUtils`
 ---@class ui_imguiUtils
----@field sampleFloatDisplayState table États des affichages échantillonnés, indexés par id ImGui.
+---@field sampleFloatDisplayState table States of the sampled displays, keyed by ImGui id.
 ui_imguiUtils = {}
 
---- Crée une fenêtre ImGui simple avec un TreeNode qui affiche une table Lua clé/valeur.
----Source : lua/common/extensions/ui/imguiUtils.lua:305
----@param window string Titre de la fenêtre.
----@param section string Titre du TreeNode.
----@param tbl table Table à afficher.
----@param callback function|nil Appelé quand le TreeNode est ouvert, avant l'affichage.
+--- Creates a simple ImGui window with a TreeNode that displays a Lua table key/value.
+---Source: lua/common/extensions/ui/imguiUtils.lua:305
+---@param window string Window title.
+---@param section string TreeNode title.
+---@param tbl table Table to display.
+---@param callback function|nil Called when the TreeNode is open, before display.
 function ui_imguiUtils.CreateKeyValApp(window, section, tbl, callback) end
 
---- Crée un afficheur de flottant échantillonné : l'objet renvoyé a une méthode draw(newValue) qui montre la valeur échantillonnée toutes les sampleTime secondes, avec infobulle (dernière, échantillonnée, min, max).
----Source : lua/common/extensions/ui/imguiUtils.lua:548
----@param sampleTimeInSeconds number|nil Intervalle d'échantillonnage, 1 par défaut.
----@param startingValue number|nil Valeur initiale, 0 par défaut.
----@param precision integer|nil Décimales, 6 par défaut.
----@return table  ValueSampler avec precision et draw.
+--- Creates a sampled float display: the returned object has a draw(newValue) method that shows the value sampled every sampleTime seconds, with a tooltip (last, sampled, min, max).
+---Source: lua/common/extensions/ui/imguiUtils.lua:548
+---@param sampleTimeInSeconds number|nil Sampling interval, 1 by default.
+---@param startingValue number|nil Initial value, 0 by default.
+---@param precision integer|nil Decimals, 6 by default.
+---@return table  ValueSampler with precision and draw.
 function ui_imguiUtils.CreateSampleFloatDisplay(sampleTimeInSeconds, startingValue, precision) end
 
---- Affiche un bouton (texte ou icône) qui ouvre un popup listant des items DropdownItem, à placer sous le bouton ou à sa droite (horizontal).
----Source : lua/common/extensions/ui/imguiUtils.lua:61
----@param label string Texte du bouton.
----@param size ImVec2|nil Taille du bouton.
----@param items table Liste d'items DropdownItem.
----@param icon any|nil Icône ; sinon bouton texte.
----@param horizontal boolean|nil Popup à droite plutôt qu'en dessous, items sur une ligne.
----@return boolean  Voir le code : renvoie false dans les chemins observés.
+--- Displays a button (text or icon) that opens a popup listing DropdownItem items, to be placed below the button or to its right (horizontal).
+---Source: lua/common/extensions/ui/imguiUtils.lua:61
+---@param label string Button text.
+---@param size ImVec2|nil Button size.
+---@param items table List of DropdownItem items.
+---@param icon any|nil Icon; otherwise text button.
+---@param horizontal boolean|nil Popup to the right rather than below, items on one line.
+---@return boolean  See the code: returns false in the observed paths.
 function ui_imguiUtils.DropdownButton(label, size, items, icon, horizontal) end
 
---- Crée un élément pour DropdownButton.
----Source : lua/common/extensions/ui/imguiUtils.lua:43
----@param label string Texte.
----@param icon any|nil Icône.
----@param func function Callback appelé à la sélection.
----@param tooltip string|nil Infobulle.
+--- Creates an item for DropdownButton.
+---Source: lua/common/extensions/ui/imguiUtils.lua:43
+---@param label string Text.
+---@param icon any|nil Icon.
+---@param func function Callback called on selection.
+---@param tooltip string|nil Tooltip.
 ---@return table  {label, icon, func, tooltip}.
 function ui_imguiUtils.DropdownItem(label, icon, func, tooltip) end
 
---- Liste déroulante : le bouton affiche l'item courant items[selectedItem[0]] ; le popup permet d'en choisir un autre.
----Source : lua/common/extensions/ui/imguiUtils.lua:194
----@param label string Identifiant ImGui (ajouté après ##).
----@param size ImVec2|nil Taille du bouton.
----@param selectedItem table Pointeur entier (IntPtr), indice [0] = item sélectionné.
----@param items table Liste d'items avec label et icon.
----@param horizontal boolean|nil Popup à droite.
----@param excludeCurrent boolean|nil Masque l'item courant dans la liste (déduit du nom).
----@return boolean  Voir le code ; false par défaut.
+--- Dropdown list: the button shows the current item items[selectedItem[0]]; the popup lets you choose another.
+---Source: lua/common/extensions/ui/imguiUtils.lua:194
+---@param label string ImGui identifier (appended after ##).
+---@param size ImVec2|nil Button size.
+---@param selectedItem table Integer pointer (IntPtr), index [0] = selected item.
+---@param items table List of items with label and icon.
+---@param horizontal boolean|nil Popup to the right.
+---@param excludeCurrent boolean|nil Hides the current item in the list (inferred from the name).
+---@return boolean  See the code; false by default.
 function ui_imguiUtils.DropdownSelect(label, size, selectedItem, items, horizontal, excludeCurrent) end
 
---- Bouton ouvrant un popup d'items à cocher (DropdownSelectableItem) ; le clic droit peut ouvrir un second menu (itemsRMB).
----Source : lua/common/extensions/ui/imguiUtils.lua:114
----@param label string Texte du bouton.
----@param items table Items DropdownSelectableItem.
----@param icon any|nil Icône, sinon SmallButton.
----@param iconSize ImVec2|nil Taille d'icône avant échelle UI, 32x32 par défaut.
----@param popupWidth number|nil Largeur du popup.
----@param onChangeFunc function|nil Callback de changement.
----@param tooltip string|nil Infobulle.
----@param itemsRMB table|nil Items du menu clic droit.
----@return boolean  false dans les chemins observés.
+--- Button opening a popup of checkable items (DropdownSelectableItem); right click can open a second menu (itemsRMB).
+---Source: lua/common/extensions/ui/imguiUtils.lua:114
+---@param label string Button text.
+---@param items table DropdownSelectableItem items.
+---@param icon any|nil Icon, otherwise SmallButton.
+---@param iconSize ImVec2|nil Icon size before UI scaling, 32x32 by default.
+---@param popupWidth number|nil Popup width.
+---@param onChangeFunc function|nil Change callback.
+---@param tooltip string|nil Tooltip.
+---@param itemsRMB table|nil Right-click menu items.
+---@return boolean  false in the observed paths.
 function ui_imguiUtils.DropdownSelectable(label, items, icon, iconSize, popupWidth, onChangeFunc, tooltip, itemsRMB) end
 
---- Crée un élément pour DropdownSelectable.
----Source : lua/common/extensions/ui/imguiUtils.lua:52
----@param label string Texte.
----@param active boolean État sélectionné.
----@param func function Callback appelé à la sélection.
----@param tooltip string|nil Infobulle.
+--- Creates an item for DropdownSelectable.
+---Source: lua/common/extensions/ui/imguiUtils.lua:52
+---@param label string Text.
+---@param active boolean Selected state.
+---@param func function Callback called on selection.
+---@param tooltip string|nil Tooltip.
 ---@return table  {label, active, func, tooltip}.
 function ui_imguiUtils.DropdownSelectableItem(label, active, func, tooltip) end
 
---- Teste si la souris est dans un rectangle de fenêtre donné (position + taille).
----Source : lua/common/extensions/ui/imguiUtils.lua:276
----@param windowPos ImVec2 Position, ex. im.GetWindowPos().
----@param windowSize table Taille sous forme de pointeur : windowSize[0].x / .y utilisés.
----@return boolean  Vrai si la souris est strictement à l'intérieur.
+--- Tests whether the mouse is inside a given window rectangle (position + size).
+---Source: lua/common/extensions/ui/imguiUtils.lua:276
+---@param windowPos ImVec2 Position, e.g. im.GetWindowPos().
+---@param windowSize table Size as a pointer: windowSize[0].x / .y are used.
+---@return boolean  True if the mouse is strictly inside.
 function ui_imguiUtils.IsWindowHovered(windowPos, windowSize) end
 
---- Version à une seule ligne de CreateSampleFloatDisplay : crée l'afficheur à la première utilisation (clé = imgui.GetID1(id)), puis le dessine avec value.
----Source : lua/common/extensions/ui/imguiUtils.lua:607
----@param id string Identifiant unique de l'affichage.
----@param value number Valeur courante.
----@param sampleTimeInSeconds number|nil Intervalle (première création).
----@param precision integer|nil Décimales (première création).
+--- One-line version of CreateSampleFloatDisplay: creates the display on first use (key = imgui.GetID1(id)), then draws it with value.
+---Source: lua/common/extensions/ui/imguiUtils.lua:607
+---@param id string Unique identifier of the display.
+---@param value number Current value.
+---@param sampleTimeInSeconds number|nil Interval (first creation).
+---@param precision integer|nil Decimals (first creation).
 function ui_imguiUtils.SampleFloatDisplay(id, value, sampleTimeInSeconds, precision) end
 
---- Affiche n'importe quelle valeur Lua : tables en arbre ou en colonnes, booléens/nombres/chaînes colorés, float3, fonctions (noms des variables locales), autres types avec tostring.
----Source : lua/common/extensions/ui/imguiUtils.lua:418
----@param data any Valeur à afficher.
----@param fullpath string Chemin courant ; le nombre de « / » donne la profondeur.
----@param noColumns boolean|nil Force l'arbre plutôt que les colonnes.
----@param highlightCallback function|nil Callback de survol.
----@param itemCallback function|nil Callback begin/end par entrée.
+--- Displays any Lua value: tables as a tree or in columns, colored booleans/numbers/strings, float3, functions (names of local variables), other types with tostring.
+---Source: lua/common/extensions/ui/imguiUtils.lua:418
+---@param data any Value to display.
+---@param fullpath string Current path; the number of '/' gives the depth.
+---@param noColumns boolean|nil Forces the tree instead of columns.
+---@param highlightCallback function|nil Hover callback.
+---@param itemCallback function|nil Per-entry begin/end callback.
 function ui_imguiUtils.addRecursiveTreeTable(data, fullpath, noColumns, highlightCallback, itemCallback) end
 
---- Affiche deux textes dans deux cellules de colonne (Text puis NextColumn deux fois).
----Source : lua/common/extensions/ui/imguiUtils.lua:487
----@param a string Texte colonne 1.
----@param b string Texte colonne 2.
+--- Displays two texts in two column cells (Text then NextColumn twice).
+---Source: lua/common/extensions/ui/imguiUtils.lua:487
+---@param a string Column 1 text.
+---@param b string Column 2 text.
 function ui_imguiUtils.cell(a, b) end
 
---- Définit l'échelle d'interface ImGui (imgui.uiscale[0]) et la FontGlobalScale de l'IO, en tenant compte de la mise à l'échelle DPI de la fenêtre selon la préférence de l'éditeur.
----Source : lua/common/extensions/ui/imguiUtils.lua:10
----@param uiscale number Échelle souhaitée (1 = 100 %).
+--- Sets the ImGui UI scale (imgui.uiscale[0]) and the IO's FontGlobalScale, taking the window's DPI scaling into account according to the editor preference.
+---Source: lua/common/extensions/ui/imguiUtils.lua:10
+---@param uiscale number Desired scale (1 = 100%).
 function ui_imguiUtils.changeUIScale(uiscale) end
 
---- Affiche les paires clé : valeur d'une table Lua ; les sous-tables deviennent des TreeNode récursifs.
----Source : lua/common/extensions/ui/imguiUtils.lua:286
----@param tbl table|nil Table à afficher.
+--- Displays the key: value pairs of a Lua table; sub-tables become recursive TreeNodes.
+---Source: lua/common/extensions/ui/imguiUtils.lua:286
+---@param tbl table|nil Table to display.
 function ui_imguiUtils.displayKeyValues(tbl) end
 
---- Dessine une petite croix rouge (8 px) à une position d'écran, par défaut la position actuelle du curseur ImGui ; sert à déboguer le placement.
----Source : lua/common/extensions/ui/imguiUtils.lua:26
----@param posX number|nil X écran ; défaut : position de fenêtre + curseur X.
----@param posY number|nil Y écran ; défaut : position de fenêtre + curseur Y.
+--- Draws a small red cross (8 px) at a screen position, by default the current ImGui cursor position; used to debug placement.
+---Source: lua/common/extensions/ui/imguiUtils.lua:26
+---@param posX number|nil Screen X; default: window position + cursor X.
+---@param posY number|nil Screen Y; default: window position + cursor Y.
 function ui_imguiUtils.drawCursorPos(posX, posY) end
 
---- Affiche une table en deux colonnes (clés triées / valeurs récursives).
----Source : lua/common/extensions/ui/imguiUtils.lua:351
+--- Displays a table in two columns (sorted keys / recursive values).
+---Source: lua/common/extensions/ui/imguiUtils.lua:351
 ---@param data table Table.
----@param fullpath string Chemin courant (ex. '/root'), utilisé pour les ids ImGui.
----@param highlightCallback function|nil Appelé (path, key, value) quand un élément est survolé.
----@param itemCallback function|nil Appelé (begin, path, key, value) avant (true) puis après (false) chaque entrée ; le retour de l'appel begin décide si l'entrée est affichée.
+---@param fullpath string Current path (e.g. '/root'), used for ImGui ids.
+---@param highlightCallback function|nil Called (path, key, value) when an item is hovered.
+---@param itemCallback function|nil Called (begin, path, key, value) before (true) then after (false) each entry; the return value of the begin call decides whether the entry is displayed.
 function ui_imguiUtils.keyValueTable(data, fullpath, highlightCallback, itemCallback) end
 
---- Charge une texture via ImTextureHandler et renvoie une table utilisable avec ImGui.
----Source : lua/common/extensions/ui/imguiUtils.lua:33
----@param path string Chemin de l'image, ex. '/ui/...png'.
----@return table  {file = nom du fichier, path, tex = ImTextureHandler, texId (hérité, ne pas utiliser), size = taille}.
+--- Loads a texture via ImTextureHandler and returns a table usable with ImGui.
+---Source: lua/common/extensions/ui/imguiUtils.lua:33
+---@param path string Image path, e.g. '/ui/...png'.
+---@return table  {file = file name, path, tex = ImTextureHandler, texId (legacy, do not use), size = size}.
 function ui_imguiUtils.texObj(path) end
 
---- Objet interne renvoyé par CreateSampleFloatDisplay : mesure le temps, mémorise la valeur échantillonnée st et le min/max observés.
+--- Internal object returned by CreateSampleFloatDisplay: measures time, stores the sampled value st and the observed min/max.
 ---@class ui_imguiUtils_ValueSampler
 local ui_imguiUtils_ValueSampler = {}
 
---- Ajoute le temps écoulé, met à jour min/max avec l'échantillon, et renvoie la valeur échantillonnée.
----Source : lua/common/extensions/ui/imguiUtils.lua:523
----@param sample number Valeur courante.
----@return number  Valeur échantillonnée (mise à jour toutes les sampleTime secondes).
----@return number  Minimum observé.
----@return number  Maximum observé.
+--- Adds the elapsed time, updates min/max with the sample, and returns the sampled value.
+---Source: lua/common/extensions/ui/imguiUtils.lua:523
+---@param sample number Current value.
+---@return number  Sampled value (updated every sampleTime seconds).
+---@return number  Observed minimum.
+---@return number  Observed maximum.
 function ui_imguiUtils_ValueSampler:get(sample) end
 
---- Remet min/max, valeur échantillonnée et temps à zéro.
----Source : lua/common/extensions/ui/imguiUtils.lua:534
+--- Resets min/max, sampled value and time to zero.
+---Source: lua/common/extensions/ui/imguiUtils.lua:534
 function ui_imguiUtils_ValueSampler:reset() end
 

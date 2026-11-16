@@ -1,225 +1,225 @@
 # `gameplay_garageMode`
 
-*Fichier : `lua/ge/extensions/gameplay/garageMode.lua` · VM : Game Engine (GE) · 582 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/garageMode.lua` · VM: Game Engine (GE) · 582 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_garageMode` : `extensions.load("gameplay_garageMode")`, puis la globale `gameplay_garageMode`
+**Access:** extension `gameplay_garageMode`: `extensions.load("gameplay_garageMode")`, then the global `gameplay_garageMode`
 
-Mode garage : charge le niveau garage_v2 (ou utilise l'emplacement actuel en carrière), gèle le véhicule sur son point d'apparition, passe la caméra en orbite, bloque certaines actions d'entrée (map, menus véhicule, IA, marche, reset...), masque automatiquement plafond et piliers selon la position de la caméra, gère l'éclairage par groupes et permet de tester le véhicule dans le niveau gridmap_v2. Un moddeur s'en sert pour entrer/sortir du garage (start/stop) ou ajuster caméra et éclairage.
+Garage mode: loads the garage_v2 level (or uses the current location in career), freezes the vehicle at its spawn point, switches the camera to orbit, blocks certain input actions (map, vehicle menus, AI, walking, reset...), automatically hides ceiling and pillars depending on the camera position, manages lighting by groups and allows testing the vehicle in the gridmap_v2 level. A modder uses it to enter/exit the garage (start/stop) or adjust camera and lighting.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('gameplay_garageMode')
-gameplay_garageMode.start(false)   -- charge garage_v2 avec le véhicule courant
+gameplay_garageMode.start(false)   -- loads garage_v2 with the current vehicle
 gameplay_garageMode.setCamera('front')
-gameplay_garageMode.setLighting({true, false, true}) -- ouest, milieu, est
+gameplay_garageMode.setLighting({true, false, true}) -- west, middle, east
 gameplay_garageMode.stop()
 ```
 
-## Remarques
+## Notes
 
-- Préréglages de caméra de setCamera : default, front, back, side, left, right, top. Un nom inconnu donne nil à setDefaultRotation.
-- Groupes de scène masqués : hide_from_camera (plafond, si la caméra est au-dessus de z = 108.1), hide_from_camera_pillars_west / _east (selon x de la caméra) ; groupes d'éclairage lights_group_west, _middle, _east.
-- Le véhicule est gelé (setFreeze) 5 frames après son apparition, car le vlua peut être réinitialisé avant.
-- onUpdate n'est enregistré que pendant que le mode est actif (setActive appelle extensions.hookUpdate).
-- En carrière, les textes de chargement/sauvegarde passent par career_saveSystem.saveCurrent puis la chaîne d'étapes garageInitModules (gameplay_garageMode, career_modules_inventory) via initStepFinished.
-- Incohérence : la variable locale vehicleToLoad n'est jamais assignée ; le code de onClientStartMission (replaceVehicle) est donc inutilisé.
-- Émet le hook extensions.hook('onEndGarageMode') à la fin du mode.
+- Camera presets of setCamera: default, front, back, side, left, right, top. An unknown name gives nil to setDefaultRotation.
+- Hidden scene groups: hide_from_camera (ceiling, if the camera is above z = 108.1), hide_from_camera_pillars_west / _east (depending on the camera's x); lighting groups lights_group_west, _middle, _east.
+- The vehicle is frozen (setFreeze) 5 frames after spawning, because the vlua can be reinitialized before.
+- onUpdate is only registered while the mode is active (setActive calls extensions.hookUpdate).
+- In career, loading/saving texts go through career_saveSystem.saveCurrent then the garageInitModules step chain (gameplay_garageMode, career_modules_inventory) via initStepFinished.
+- Inconsistency: the local variable vehicleToLoad is never assigned; the onClientStartMission code (replaceVehicle) is therefore unused.
+- Emits the hook extensions.hook('onEndGarageMode') at the end of the mode.
 
-**Dépendances (chargées avant) :** `core_jobsystem`, `core_vehicle_manager`
+**Dependencies (loaded first):** `core_jobsystem`, `core_vehicle_manager`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_garageMode.garageModeStartStep()` | Étape d'initialisation en chaîne : lance career_saveSystem.saveCurrent() ; la fin de la sauvegarde appelle initStepFinished. *(interne)* | 372 |
-| `gameplay_garageMode.getGarageMenuState()` | Renvoie le menu de garage mémorisé. | 65 |
-| `gameplay_garageMode.getLastOwnedVehicleId()` | ID du dernier véhicule possédé entré ou courant en carrière. | 541 |
-| `gameplay_garageMode.getLighting()` | Renvoie l'état des trois groupes d'éclairage. | 450 |
-| `gameplay_garageMode.initStepFinished()` | Passe à l'étape d'initialisation suivante (extension suivante de garageInitModules) ou termine la chaîne. *(interne)* | 362 |
-| `gameplay_garageMode.isActive()` | Indique si le mode garage est actif. | 485 |
-| `gameplay_garageMode.isObjectsAutohide()` | Indique si le masquage automatique est actif. | 493 |
-| `gameplay_garageMode.onClientPreStartMission(levelPath)` | Hook avant le démarrage d'un niveau : active le mode garage si demandé au chargement (décharge/recharge les extensions), sinon termine le mode garage s'il était actif. *(interne)* *(hook)* | 461 |
-| `gameplay_garageMode.onClientStartMission(levelPath)` | Hook au démarrage d'un niveau : remplace le véhicule par vehicleToLoad s'il existe (jamais assigné dans ce fichier). *(interne)* *(hook)* | 454 |
-| `gameplay_garageMode.onDeserialized(v)` | Hook de rechargement des extensions : restaure l'état actif. *(interne)* *(hook)* | 481 |
-| `gameplay_garageMode.onEnterVehicleFinished(vehicleId)` | Hook : mémorise le véhicule entré comme dernier véhicule possédé. *(interne)* *(hook)* | 69 |
-| `gameplay_garageMode.onGarageEnter(context, toRoute, fromRoute, data)` | Hook de navigation UI : remplit data.layoutMenu (barre du haut avec onglets Garage/Tuning, en-tête, rails) et data.garage pour la route garage. *(interne)* *(hook)* | 146 |
-| `gameplay_garageMode.onLoadingScreenFadeout()` | Hook à la fin de l'écran de chargement : après testVehicle, navigue vers la route UI "play". *(interne)* *(hook)* | 545 |
-| `gameplay_garageMode.onSerialize()` | Hook de rechargement des extensions : sauvegarde {active}. *(interne)* *(hook)* | 475 |
-| `gameplay_garageMode.onSpawnCCallback(vehicleId)` | Hook de spawn : demande que le véhicule apparaisse moteur éteint (spawnWithEngineRunning = false). *(interne)* *(hook)* | 121 |
-| `gameplay_garageMode.onThumbnailTriggered(active)` | Hook de prise de vignette : dans garage_v2, quitte le mode garage et masque piliers est (affiche ouest/plafond) pendant la capture, puis réactive le mode ; affiche/retire l'écran noir GarageModeBlackscreen. *(interne)* *(hook)* | 497 |
-| `gameplay_garageMode.onVehicleSaveFinished()` | Hook : si l'initialisation du garage attend la sauvegarde, passe à l'étape suivante. *(interne)* *(hook)* | 377 |
-| `gameplay_garageMode.onVehicleSpawned(vehicleId)` | Hook appelé à l'apparition d'un véhicule ; en mode garage, le téléporte sur le point de spawn du niveau garage et programme le gel. *(interne)* *(hook)* | 114 |
-| `gameplay_garageMode.setCamera(preset)` | Lance un job qui passe en caméra orbite et applique une rotation par défaut prédéfinie. | 84 |
-| `gameplay_garageMode.setGarageMenuState(state)` | Mémorise le menu de garage ouvert ; l'état "paint" marque le véhicule comme modifié. | 56 |
-| `gameplay_garageMode.setLighting(state)` | Allume/éteint les trois groupes d'éclairage du garage (ouest, milieu, est). | 318 |
-| `gameplay_garageMode.setObjectsAutohide(v)` | Active ou désactive le masquage automatique du plafond et des piliers. | 489 |
-| `gameplay_garageMode.setVehicleDirty(vehicleDirty, switchedToNewVehicle)` | Prévu pour signaler un véhicule modifié en carrière ; le déclenchement du guihook est actuellement commenté, la fonction ne fait donc rien d'observable. | 50 |
-| `gameplay_garageMode.start(_useCurrentLocation, skipInventoryStep)` | Entre en mode garage. Avec useCurrentLocation vrai, reste sur la carte actuelle (carrière : vérifie qu'il y a des véhicules en inventaire, appelle career_modules_inventory.onBeforeGarage, passe en caméra orbite, met l'allumage à 0) ; sinon charge le niveau garage_v2 avec le véhicule courant. | 385 |
-| `gameplay_garageMode.stop()` | Quitte le mode garage : remet l'allumage au niveau 3, dégèle le véhicule, restaure la caméra et l'état freeroam, puis émet onEndGarageMode. | 445 |
-| `gameplay_garageMode.testVehicle()` | Lance un job qui fait sortir le véhicule du garage (ai vers le waypoint garageExit), fond au noir puis charge gridmap_v2 en freeroam avec le véhicule courant. | 537 |
-| `gameplay_garageMode.vehicleByIdOrActive(vehicleId)` | Renvoie « Marque Nom » du modèle donné, ou du véhicule actif si aucun n'est fourni. | 191 |
-| `gameplay_garageMode.zoom(value)` | Zoome la caméra de façon progressive (accélération limitée) ; sans effet hors mode garage. Le zoom s'arrête de lui-même après un court délai. | 211 |
+| `gameplay_garageMode.garageModeStartStep()` | Chained initialization step: launches career_saveSystem.saveCurrent(); the end of the save calls initStepFinished. *(internal)* | 372 |
+| `gameplay_garageMode.getGarageMenuState()` | Returns the stored garage menu. | 65 |
+| `gameplay_garageMode.getLastOwnedVehicleId()` | ID of the last owned vehicle entered, or the current one in career. | 541 |
+| `gameplay_garageMode.getLighting()` | Returns the state of the three lighting groups. | 450 |
+| `gameplay_garageMode.initStepFinished()` | Moves to the next initialization step (next extension of garageInitModules) or ends the chain. *(internal)* | 362 |
+| `gameplay_garageMode.isActive()` | Returns whether garage mode is active. | 485 |
+| `gameplay_garageMode.isObjectsAutohide()` | Returns whether automatic hiding is active. | 493 |
+| `gameplay_garageMode.onClientPreStartMission(levelPath)` | Hook before a level starts: activates garage mode if requested at load (unloads/reloads extensions), otherwise ends garage mode if it was active. *(internal)* *(hook)* | 461 |
+| `gameplay_garageMode.onClientStartMission(levelPath)` | Hook at level start: replaces the vehicle with vehicleToLoad if it exists (never assigned in this file). *(internal)* *(hook)* | 454 |
+| `gameplay_garageMode.onDeserialized(v)` | Extension reload hook: restores the active state. *(internal)* *(hook)* | 481 |
+| `gameplay_garageMode.onEnterVehicleFinished(vehicleId)` | Hook: stores the entered vehicle as the last owned vehicle. *(internal)* *(hook)* | 69 |
+| `gameplay_garageMode.onGarageEnter(context, toRoute, fromRoute, data)` | UI navigation hook: fills data.layoutMenu (top bar with Garage/Tuning tabs, header, rails) and data.garage for the garage route. *(internal)* *(hook)* | 146 |
+| `gameplay_garageMode.onLoadingScreenFadeout()` | Hook at the end of the loading screen: after testVehicle, navigates to the UI route "play". *(internal)* *(hook)* | 545 |
+| `gameplay_garageMode.onSerialize()` | Extension reload hook: saves {active}. *(internal)* *(hook)* | 475 |
+| `gameplay_garageMode.onSpawnCCallback(vehicleId)` | Spawn hook: requests that the vehicle spawns with the engine off (spawnWithEngineRunning = false). *(internal)* *(hook)* | 121 |
+| `gameplay_garageMode.onThumbnailTriggered(active)` | Thumbnail capture hook: in garage_v2, exits garage mode and hides the east pillars (shows west/ceiling) during the capture, then re-enables the mode; shows/removes the GarageModeBlackscreen black screen. *(internal)* *(hook)* | 497 |
+| `gameplay_garageMode.onVehicleSaveFinished()` | Hook: if the garage initialization is waiting for the save, moves to the next step. *(internal)* *(hook)* | 377 |
+| `gameplay_garageMode.onVehicleSpawned(vehicleId)` | Hook called when a vehicle spawns; in garage mode, teleports it to the garage level's spawn point and schedules the freeze. *(internal)* *(hook)* | 114 |
+| `gameplay_garageMode.setCamera(preset)` | Starts a job that switches to orbit camera and applies a predefined default rotation. | 84 |
+| `gameplay_garageMode.setGarageMenuState(state)` | Stores the open garage menu; the "paint" state marks the vehicle as modified. | 56 |
+| `gameplay_garageMode.setLighting(state)` | Turns the garage's three lighting groups on/off (west, middle, east). | 318 |
+| `gameplay_garageMode.setObjectsAutohide(v)` | Enables or disables the automatic hiding of the ceiling and pillars. | 489 |
+| `gameplay_garageMode.setVehicleDirty(vehicleDirty, switchedToNewVehicle)` | Intended to signal a modified vehicle in career; the guihook trigger is currently commented out, so the function does nothing observable. | 50 |
+| `gameplay_garageMode.start(_useCurrentLocation, skipInventoryStep)` | Enters garage mode. With useCurrentLocation true, stays on the current map (career: checks that there are vehicles in the inventory, calls career_modules_inventory.onBeforeGarage, switches to orbit camera, sets ignition to 0); otherwise loads the garage_v2 level with the current vehicle. | 385 |
+| `gameplay_garageMode.stop()` | Exits garage mode: sets ignition back to level 3, unfreezes the vehicle, restores the camera and the freeroam state, then emits onEndGarageMode. | 445 |
+| `gameplay_garageMode.testVehicle()` | Starts a job that makes the vehicle leave the garage (ai to the garageExit waypoint), fades to black then loads gridmap_v2 in freeroam with the current vehicle. | 537 |
+| `gameplay_garageMode.vehicleByIdOrActive(vehicleId)` | Returns "Brand Name" of the given model, or of the active vehicle if none is provided. | 191 |
+| `gameplay_garageMode.zoom(value)` | Zooms the camera progressively (limited acceleration); no effect outside garage mode. The zoom stops by itself after a short delay. | 211 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_garageMode.getGarageMenuState()`
 
-Renvoie le menu de garage mémorisé.
+Returns the stored garage menu.
 
-- **renvoie** : string|nil Nom du menu.
+- **returns**: string|nil Menu name.
 
 #### `gameplay_garageMode.getLastOwnedVehicleId()`
 
-ID du dernier véhicule possédé entré ou courant en carrière.
+ID of the last owned vehicle entered, or the current one in career.
 
-- **renvoie** : integer|nil ID de véhicule.
+- **returns**: integer|nil Vehicle ID.
 
 #### `gameplay_garageMode.getLighting()`
 
-Renvoie l'état des trois groupes d'éclairage.
+Returns the state of the three lighting groups.
 
-- **renvoie** : boolean[] {ouest, milieu, est}.
+- **returns**: boolean[] {west, middle, east}.
 
 #### `gameplay_garageMode.isActive()`
 
-Indique si le mode garage est actif.
+Returns whether garage mode is active.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `gameplay_garageMode.isObjectsAutohide()`
 
-Indique si le masquage automatique est actif.
+Returns whether automatic hiding is active.
 
-- **renvoie** : boolean État courant.
+- **returns**: boolean Current state.
 
 #### `gameplay_garageMode.onClientPreStartMission(levelPath)`
 
-Hook avant le démarrage d'un niveau : active le mode garage si demandé au chargement (décharge/recharge les extensions), sinon termine le mode garage s'il était actif.
+Hook before a level starts: activates garage mode if requested at load (unloads/reloads extensions), otherwise ends garage mode if it was active.
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `gameplay_garageMode.onClientStartMission(levelPath)`
 
-Hook au démarrage d'un niveau : remplace le véhicule par vehicleToLoad s'il existe (jamais assigné dans ce fichier).
+Hook at level start: replaces the vehicle with vehicleToLoad if it exists (never assigned in this file).
 
-- `levelPath` (*string*) : Chemin du niveau.
+- `levelPath` (*string*) : Level path.
 
 #### `gameplay_garageMode.onDeserialized(v)`
 
-Hook de rechargement des extensions : restaure l'état actif.
+Extension reload hook: restores the active state.
 
-- `v` (*table*) : Données de onSerialize.
+- `v` (*table*) : Data from onSerialize.
 
 #### `gameplay_garageMode.onEnterVehicleFinished(vehicleId)`
 
-Hook : mémorise le véhicule entré comme dernier véhicule possédé.
+Hook: stores the entered vehicle as the last owned vehicle.
 
-- `vehicleId` (*integer|nil*) : ID du véhicule.
+- `vehicleId` (*integer|nil*) : Vehicle ID.
 
 #### `gameplay_garageMode.onGarageEnter(context, toRoute, fromRoute, data)`
 
-Hook de navigation UI : remplit data.layoutMenu (barre du haut avec onglets Garage/Tuning, en-tête, rails) et data.garage pour la route garage.
+UI navigation hook: fills data.layoutMenu (top bar with Garage/Tuning tabs, header, rails) and data.garage for the garage route.
 
-- `context` (*table|nil*) : Contexte de navigation.
-- `toRoute` (*table|nil*) : Route de destination (champ name).
-- `fromRoute` (*table|nil*) : Route d'origine (non utilisée).
-- `data` (*table*) : Table de données de route, modifiée en place.
+- `context` (*table|nil*) : Navigation context.
+- `toRoute` (*table|nil*) : Destination route (field name).
+- `fromRoute` (*table|nil*) : Origin route (unused).
+- `data` (*table*) : Route data table, modified in place.
 
 #### `gameplay_garageMode.onSerialize()`
 
-Hook de rechargement des extensions : sauvegarde {active}.
+Extension reload hook: saves {active}.
 
-- **renvoie** : table {active = boolean}.
+- **returns**: table {active = boolean}.
 
 #### `gameplay_garageMode.onSpawnCCallback(vehicleId)`
 
-Hook de spawn : demande que le véhicule apparaisse moteur éteint (spawnWithEngineRunning = false).
+Spawn hook: requests that the vehicle spawns with the engine off (spawnWithEngineRunning = false).
 
-- `vehicleId` (*integer*) : ID du véhicule.
+- `vehicleId` (*integer*) : Vehicle ID.
 
 #### `gameplay_garageMode.onThumbnailTriggered(active)`
 
-Hook de prise de vignette : dans garage_v2, quitte le mode garage et masque piliers est (affiche ouest/plafond) pendant la capture, puis réactive le mode ; affiche/retire l'écran noir GarageModeBlackscreen.
+Thumbnail capture hook: in garage_v2, exits garage mode and hides the east pillars (shows west/ceiling) during the capture, then re-enables the mode; shows/removes the GarageModeBlackscreen black screen.
 
-- `active` (*boolean*) : true au début de la capture, false à la fin.
+- `active` (*boolean*) : true at the start of the capture, false at the end.
 
 #### `gameplay_garageMode.onVehicleSpawned(vehicleId)`
 
-Hook appelé à l'apparition d'un véhicule ; en mode garage, le téléporte sur le point de spawn du niveau garage et programme le gel.
+Hook called when a vehicle spawns; in garage mode, teleports it to the garage level's spawn point and schedules the freeze.
 
-- `vehicleId` (*integer*) : ID du véhicule.
+- `vehicleId` (*integer*) : Vehicle ID.
 
 #### `gameplay_garageMode.setCamera(preset)`
 
-Lance un job qui passe en caméra orbite et applique une rotation par défaut prédéfinie.
+Starts a job that switches to orbit camera and applies a predefined default rotation.
 
-- `preset` (*string|nil*) : default, front, back, side, left, right ou top (default si nil).
+- `preset` (*string|nil*) : default, front, back, side, left, right or top (default if nil).
 
 #### `gameplay_garageMode.setGarageMenuState(state)`
 
-Mémorise le menu de garage ouvert ; l'état "paint" marque le véhicule comme modifié.
+Stores the open garage menu; the "paint" state marks the vehicle as modified.
 
-- `state` (*string|nil*) : Nom du menu.
+- `state` (*string|nil*) : Menu name.
 
 #### `gameplay_garageMode.setLighting(state)`
 
-Allume/éteint les trois groupes d'éclairage du garage (ouest, milieu, est).
+Turns the garage's three lighting groups on/off (west, middle, east).
 
-- `state` (*boolean[]|nil*) : Tableau de 3 booléens ; nil rallume tout.
+- `state` (*boolean[]|nil*) : Array of 3 booleans; nil turns everything back on.
 
 #### `gameplay_garageMode.setObjectsAutohide(v)`
 
-Active ou désactive le masquage automatique du plafond et des piliers.
+Enables or disables the automatic hiding of the ceiling and pillars.
 
-- `v` (*boolean*) : true pour masquer automatiquement.
+- `v` (*boolean*) : true to hide automatically.
 
 #### `gameplay_garageMode.setVehicleDirty(vehicleDirty, switchedToNewVehicle)`
 
-Prévu pour signaler un véhicule modifié en carrière ; le déclenchement du guihook est actuellement commenté, la fonction ne fait donc rien d'observable.
+Intended to signal a modified vehicle in career; the guihook trigger is currently commented out, so the function does nothing observable.
 
-- `vehicleDirty` (*boolean*) : État modifié.
-- `switchedToNewVehicle` (*boolean|nil*) : Changement de véhicule.
+- `vehicleDirty` (*boolean*) : Modified state.
+- `switchedToNewVehicle` (*boolean|nil*) : Vehicle change.
 
 #### `gameplay_garageMode.start(_useCurrentLocation, skipInventoryStep)`
 
-Entre en mode garage. Avec useCurrentLocation vrai, reste sur la carte actuelle (carrière : vérifie qu'il y a des véhicules en inventaire, appelle career_modules_inventory.onBeforeGarage, passe en caméra orbite, met l'allumage à 0) ; sinon charge le niveau garage_v2 avec le véhicule courant.
+Enters garage mode. With useCurrentLocation true, stays on the current map (career: checks that there are vehicles in the inventory, calls career_modules_inventory.onBeforeGarage, switches to orbit camera, sets ignition to 0); otherwise loads the garage_v2 level with the current vehicle.
 
-- `_useCurrentLocation` (*boolean|nil*) : true pour utiliser l'emplacement actuel au lieu de charger garage_v2.
-- `skipInventoryStep` (*boolean|nil*) : En carrière, saute l'appel à career_modules_inventory.onBeforeGarage.
+- `_useCurrentLocation` (*boolean|nil*) : true to use the current location instead of loading garage_v2.
+- `skipInventoryStep` (*boolean|nil*) : In career, skips the call to career_modules_inventory.onBeforeGarage.
 
 #### `gameplay_garageMode.vehicleByIdOrActive(vehicleId)`
 
-Renvoie « Marque Nom » du modèle donné, ou du véhicule actif si aucun n'est fourni.
+Returns "Brand Name" of the given model, or of the active vehicle if none is provided.
 
-- `vehicleId` (*string|nil*) : Clé de modèle (nom du dossier jbeam), malgré son nom.
-- **renvoie** : string|nil Texte « Brand Name » ou nil.
+- `vehicleId` (*string|nil*) : Model key (jbeam folder name), despite its name.
+- **returns**: string|nil "Brand Name" text or nil.
 
 #### `gameplay_garageMode.zoom(value)`
 
-Zoome la caméra de façon progressive (accélération limitée) ; sans effet hors mode garage. Le zoom s'arrête de lui-même après un court délai.
+Zooms the camera progressively (limited acceleration); no effect outside garage mode. The zoom stops by itself after a short delay.
 
-- `value` (*number*) : Sens et intensité (positif ou négatif) ; 0 ne fait rien.
+- `value` (*number*) : Direction and intensity (positive or negative); 0 does nothing.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | core_jobsystem et core_vehicle_manager. |
+| `dependencies` | string[] | core_jobsystem and core_vehicle_manager. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onEndGarageMode`
-- `onUpdate` — écouté par 186 module(s)
+- `onUpdate` — listened to by 186 module(s)
 
-**Évènements UI (guihooks.trigger) :** `FadeScreen`, `GarageModeBlackscreen`
+**UI events (guihooks.trigger):** `FadeScreen`, `GarageModeBlackscreen`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/garageMode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/garageMode.lua`.*

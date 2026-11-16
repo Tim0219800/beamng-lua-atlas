@@ -1,31 +1,31 @@
 # `gameplay_freeformDelivery_endScreen`
 
-*Fichier : `lua/ge/extensions/gameplay/freeformDelivery/endScreen.lua` · VM : Game Engine (GE) · 61 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/freeformDelivery/endScreen.lua` · VM: Game Engine (GE) · 61 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_freeformDelivery_endScreen` : `extensions.load("gameplay_freeformDelivery_endScreen")`, puis la globale `gameplay_freeformDelivery_endScreen`
+**Access:** extension `gameplay_freeformDelivery_endScreen`: `extensions.load("gameplay_freeformDelivery_endScreen")`, then the global `gameplay_freeformDelivery_endScreen`
 
-Petit module du mode de livraison libre (freeformDelivery) qui rassemble les statistiques affichées à la fin d'une livraison : temps écoulé, avancement des objectifs (via gameplay_freeformDelivery_goals.getProgress) et dégâts de chaque véhicule de la livraison (lus dans map.objects). Ne contient pas d'interface : il ne fait que construire la table de résultats.
+Small module of the freeform delivery mode (freeformDelivery) that gathers the statistics displayed at the end of a delivery: elapsed time, goal progress (via gameplay_freeformDelivery_goals.getProgress) and damage of each vehicle of the delivery (read from map.objects). Contains no UI: it only builds the results table.
 
-## Remarques
+## Notes
 
-- Le temps est calculé avec os.clock() - startTime : startTime doit donc venir de os.clock().
-- Renvoie nil (avec une erreur loggée) si delivery est nil, si startTime est nil ou 0, ou si getProgress ne renvoie rien.
+- Time is computed with os.clock() - startTime: startTime must therefore come from os.clock().
+- Returns nil (with a logged error) if delivery is nil, if startTime is nil or 0, or if getProgress returns nothing.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_freeformDelivery_endScreen.collectStatistics(delivery, startTime)` | Construit la table de statistiques de fin de livraison : durée (brute et formatée par gameplay_freeformDelivery_utils.formatTime), nombre d'objectifs total/complétés/requis/requis complétés, dégâts par véhicule (vehData.damage) et indicateur allRequiredComplete. | 8 |
+| `gameplay_freeformDelivery_endScreen.collectStatistics(delivery, startTime)` | Builds the end-of-delivery statistics table: duration (raw and formatted by gameplay_freeformDelivery_utils.formatTime), number of goals total/completed/required/required completed, damage per vehicle (vehData.damage) and the allRequiredComplete flag. | 8 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_freeformDelivery_endScreen.collectStatistics(delivery, startTime)`
 
-Construit la table de statistiques de fin de livraison : durée (brute et formatée par gameplay_freeformDelivery_utils.formatTime), nombre d'objectifs total/complétés/requis/requis complétés, dégâts par véhicule (vehData.damage) et indicateur allRequiredComplete.
+Builds the end-of-delivery statistics table: duration (raw and formatted by gameplay_freeformDelivery_utils.formatTime), number of goals total/completed/required/required completed, damage per vehicle (vehData.damage) and the allRequiredComplete flag.
 
-- `delivery` (*table*) : Données de la livraison chargée (liste vehicles avec id et name).
-- `startTime` (*number*) : Instant de début en secondes, mesuré avec os.clock().
-- **renvoie** : table|nil {time, timeStr, goalsTotal, goalsCompleted, goalsRequired, goalsRequiredCompleted, vehicleDamages = {[deliveryId] = {name, damage}}, allRequiredComplete}, ou nil en cas d'erreur.
+- `delivery` (*table*) : Data of the loaded delivery (vehicles list with id and name).
+- `startTime` (*number*) : Start time in seconds, measured with os.clock().
+- **returns**: table|nil {time, timeStr, goalsTotal, goalsCompleted, goalsRequired, goalsRequiredCompleted, vehicleDamages = {[deliveryId] = {name, damage}}, allRequiredComplete}, or nil on error.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/freeformDelivery/endScreen.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/freeformDelivery/endScreen.lua`.*

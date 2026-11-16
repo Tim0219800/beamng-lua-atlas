@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/ui/router/services/navigationContext.lua",
+  "module": "Construit le contexte de navigation du routeur UI : un instantané de l'état du jeu (carrière, garage, mission, scénario, multijoueur, multiseat, premier trajet, tutoriel freeroam, grande carte autorisée ou non) et le mode courant. Chaque lecture est protégée par pcall, donc un module de jeu absent donne simplement false/nil. Sert aux décisions de routes (écrans, décorateurs de contexte).",
+  "notes": [
+    "Priorité du champ `mode` : multiplayer, mission, scenario, garage, career, freeroamTutorial, multiseatGamemode, sinon freeroam.",
+    "isMultiseatActive est vrai si le multiseat, le freeroam multiseat ou plusieurs joueurs sont actifs.",
+    "L'action testée pour la grande carte est « toggleBigMap » (core_input_actionFilter)."
+  ],
+  "functions": {
+    "getContext": {
+      "desc": "Renvoie la table de contexte : isCareerActive, isGarageActive, isMissionActive, isScenarioActive, isMultiplayerActive, foregroundMissionId, isBigMapBlocked, isBigMapAllowed, isFreeroamTutorialActive, isFirstDriveActive, isFirstDriveGuided, isMultiseatGamemodeActive, isMultiseatActive, mode.",
+      "returns": [{"type": "table", "desc": "Contexte courant."}],
+      "internal": false
+    },
+    "buildNavigationContext": {
+      "desc": "Complète getContext() avec le type de navigation, des extras et des résumés {name, params, meta} des routes d'arrivée et de départ.",
+      "params": {
+        "toRoute": {"type": "table|nil", "desc": "Route de destination."},
+        "fromRoute": {"type": "table|nil", "desc": "Route d'origine."},
+        "kind": {"type": "string", "desc": "Nature de la navigation (déduit du code : transmis tel quel dans context.kind)."},
+        "extras": {"type": "table|nil", "desc": "Données supplémentaires (défaut {})."}
+      },
+      "returns": [{"type": "table", "desc": "Contexte avec kind, extras, toRoute, fromRoute."}],
+      "internal": false
+    }
+  }
+}

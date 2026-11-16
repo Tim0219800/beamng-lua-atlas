@@ -1,34 +1,106 @@
 {
   "path": "lua/common/luaProfiler.lua",
-  "module": "Petit profileur de sections de code Lua. On crée un profileur avec LuaProfiler(titre), on appelle p:start() au début d'une fonction, p:add('nom') après chaque section à mesurer (temps et mémoire allouée), puis p:finish(...) à la fin pour écrire dans le log les durées, la mémoire et un petit graphique, avec détection optionnelle de pics par rapport à une moyenne lissée. Utile pour trouver les parties lentes ou génératrices de garbage d'un mod.",
-  "usage": "local p = LuaProfiler('mon profileur')\nfunction updateGFX(dt)\n  p:start()\n  foo()\n  p:add('foo')\n  bar()\n  p:add('bar')\n  p:finish(true)            -- afficher à chaque frame\n  -- p:finish(dt > 0, dt)   -- avec détection de pics\n  -- p:finish(true, nil, 0.002) -- masquer les sections < 2 ms\nend",
+  "module": "Small Lua code-section profiler. You create a profiler with LuaProfiler(title), call p:start() at the beginning of a function, p:add('name') after each section to measure (time and allocated memory), then p:finish(...) at the end to write the durations, the memory and a small graph to the log, with optional peak detection against a smoothed average. Useful for finding the slow or garbage-generating parts of a mod.",
+  "usage": "local p = LuaProfiler('mon profileur')\nfunction updateGFX(dt)\n  p:start()\n  foo()\n  p:add('foo')\n  bar()\n  p:add('bar')\n  p:finish(true)            -- display every frame\n  -- p:finish(dt > 0, dt)   -- with peak detection\n  -- p:finish(true, nil, 0.002) -- hide sections < 2 ms\nend",
   "notes": [
-    "SIGNATURE RÉELLE : finish(compute, dt, threshold) ; finishToTable(dt, threshold). La page extraite affichait finish(dt, threshold), ce qui est inexact.",
-    "compute == false désactive tout calcul et tout log (moyen rapide de couper le profilage sans retirer les add()). dt (nombre) active le calcul de moyenne et la détection de pics ; threshold = durée minimale pour afficher une ligne.",
-    "Plusieurs add() avec le même nom dans une même frame sont cumulés (champ runs, affiché '(xN)'). start() et add() réinitialisent le chronomètre : mesurer des fonctions indépendantes demande un start() chacune.",
-    "Les durées sont affichées en 'ms' dans les messages (valeur renvoyée par le chronomètre haute précision, HighPerfTimer ou hptimer) et la mémoire en octets (collectgarbage('count')*1024).",
-    "Dans le code, `peakDetected = true` est affecté inconditionnellement dans computeFrameResult juste après son calcul : la détection de pic globale est donc toujours vraie (seul le test par section sur deltaRel > 0.3 filtre).",
-    "Utilise des globales du jeu : log, newTemporalSmoothing (filters.lua), lpad, graphs, HighPerfTimer/hptimer.",
-    "Le commentaire d'exemple du code contient une faute (`p.add` et `done`), ignorer : la syntaxe correcte est p:add et end."
+    "ACTUAL SIGNATURE: finish(compute, dt, threshold); finishToTable(dt, threshold). The extracted page showed finish(dt, threshold), which is inaccurate.",
+    "compute == false disables all computation and logging (quick way to turn profiling off without removing the add() calls). dt (number) enables the average computation and peak detection; threshold = minimum duration to display a line.",
+    "Several add() with the same name in the same frame are accumulated (field runs, displayed '(xN)'). start() and add() reset the timer: measuring independent functions requires one start() each.",
+    "Durations are displayed in 'ms' in the messages (value returned by the high-precision timer, HighPerfTimer or hptimer) and memory in bytes (collectgarbage('count')*1024).",
+    "In the code, `peakDetected = true` is assigned unconditionally in computeFrameResult right after its computation: the global peak detection is therefore always true (only the per-section test on deltaRel > 0.3 filters).",
+    "Uses game globals: log, newTemporalSmoothing (filters.lua), lpad, graphs, HighPerfTimer/hptimer.",
+    "The example comment in the code contains a mistake (`p.add` and `done`), ignore it: the correct syntax is p:add and end."
   ],
   "fields": {},
   "functions": {
     "LuaProfiler": {
-      "desc": "Fonction GLOBALE : crée un profileur (objet de classe C) et appelle son init avec les arguments donnés.",
-      "params": {"title": {"type": "string|nil", "desc": "titre affiché dans les logs (permet de distinguer plusieurs profileurs)"}},
-      "returns": [{"type": "table", "desc": "profileur avec méthodes start, add, finish, finishToTable"}],
+      "desc": "GLOBAL function: creates a profiler (object of class C) and calls its init with the given arguments.",
+      "params": {
+        "title": {
+          "type": "string|nil",
+          "desc": "title displayed in the logs (allows distinguishing several profilers)"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "profiler with methods start, add, finish, finishToTable"
+        }
+      ],
       "internal": false
     }
   },
   "classes": {
     "C": {
-      "desc": "Classe du profileur (objet renvoyé par LuaProfiler).",
+      "desc": "Profiler class (object returned by LuaProfiler).",
       "functions": {
-        "init": {"desc": "Constructeur : mémorise le titre.", "params": {"title": {"type": "string|nil", "desc": "titre"}}, "returns": []},
-        "start": {"desc": "Démarre (ou réinitialise) le chronomètre et le compteur de mémoire. À appeler une fois par fonction indépendante à profiler (sans appelant commun avec une autre déjà profilée).", "params": {}, "returns": []},
-        "add": {"desc": "À appeler après chaque section de code à mesurer : enregistre le temps et la mémoire depuis le dernier start/add sous le nom `section`, puis relance le chronomètre. Journalise une erreur si start() n'a pas été appelé.", "params": {"section": {"type": "string|nil", "desc": "nom de la section (nil = seulement réinitialiser le chronomètre)"}}, "returns": []},
-        "finish": {"desc": "Termine la frame : calcule les statistiques et écrit dans le log la ligne TOTAL puis une ligne par section (mémoire, durée, éventuel écart à la moyenne, graphique). Réinitialise ensuite le chronomètre et les sections.", "params": {"compute": {"type": "boolean|nil", "desc": "false = ne rien calculer ni afficher"}, "dt": {"type": "number|nil", "desc": "pas de temps pour la moyenne/détection de pics (active la détection)"}, "threshold": {"type": "number|nil", "desc": "durée minimale pour afficher, défaut 0"}}, "returns": [{"type": "number|nil", "desc": "temps total des sections de la frame (nil si compute == false)"}]},
-        "finishToTable": {"desc": "Comme finish mais renvoie un rapport sérialisable au lieu d'écrire dans le log : {title, detectPeaks, threshold, peakDetected, shouldOutput, total = {time, garbage, stats}, sections = [{section, runs, time, garbage, peakDetected, shouldOutput, graph, stats}]}.", "params": {"dt": {"type": "number|nil", "desc": "pas de temps pour la détection de pics"}, "threshold": {"type": "number|nil", "desc": "durée minimale"}}, "returns": [{"type": "table", "desc": "rapport"}]}
+        "init": {
+          "desc": "Constructor: stores the title.",
+          "params": {
+            "title": {
+              "type": "string|nil",
+              "desc": "title"
+            }
+          },
+          "returns": []
+        },
+        "start": {
+          "desc": "Starts (or resets) the timer and the memory counter. To be called once per independent function to profile (with no common caller with another already profiled).",
+          "params": {},
+          "returns": []
+        },
+        "add": {
+          "desc": "To be called after each code section to measure: records the time and memory since the last start/add under the name `section`, then restarts the timer. Logs an error if start() was not called.",
+          "params": {
+            "section": {
+              "type": "string|nil",
+              "desc": "section name (nil = only reset the timer)"
+            }
+          },
+          "returns": []
+        },
+        "finish": {
+          "desc": "Ends the frame: computes the statistics and writes to the log the TOTAL line then one line per section (memory, duration, optional deviation from the average, graph). Then resets the timer and the sections.",
+          "params": {
+            "compute": {
+              "type": "boolean|nil",
+              "desc": "false = compute and display nothing"
+            },
+            "dt": {
+              "type": "number|nil",
+              "desc": "time step for the average/peak detection (enables detection)"
+            },
+            "threshold": {
+              "type": "number|nil",
+              "desc": "minimum duration to display, default 0"
+            }
+          },
+          "returns": [
+            {
+              "type": "number|nil",
+              "desc": "total time of the frame's sections (nil if compute == false)"
+            }
+          ]
+        },
+        "finishToTable": {
+          "desc": "Like finish but returns a serializable report instead of writing to the log: {title, detectPeaks, threshold, peakDetected, shouldOutput, total = {time, garbage, stats}, sections = [{section, runs, time, garbage, peakDetected, shouldOutput, graph, stats}]}.",
+          "params": {
+            "dt": {
+              "type": "number|nil",
+              "desc": "time step for peak detection"
+            },
+            "threshold": {
+              "type": "number|nil",
+              "desc": "minimum duration"
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "report"
+            }
+          ]
+        }
       }
     }
   }

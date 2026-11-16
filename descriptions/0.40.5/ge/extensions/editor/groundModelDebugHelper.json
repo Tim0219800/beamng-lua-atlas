@@ -1,9 +1,9 @@
 {
   "path": "lua/ge/extensions/editor/groundModelDebugHelper.lua",
-  "module": "Ajoute à l'éditeur l'entrée de menu Window > Debug > « GroundModel Debug », qui ouvre la fenêtre de l'extension util_groundModelDebug (extensions.util_groundModelDebug.openWindow()).",
+  "module": "Adds to the editor the menu entry Window > Debug > \"GroundModel Debug\", which opens the window of the util_groundModelDebug extension (extensions.util_groundModelDebug.openWindow()).",
   "functions": {
     "onEditorInitialized": {
-      "desc": "Hook appelé à l'initialisation de l'éditeur : ajoute l'entrée de menu « GroundModel Debug » (groupe Debug).",
+      "desc": "Hook called at editor initialization: adds the \"GroundModel Debug\" menu entry (Debug group).",
       "params": {},
       "returns": [],
       "internal": true

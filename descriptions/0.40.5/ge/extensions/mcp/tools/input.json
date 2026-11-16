@@ -1,38 +1,91 @@
 {
   "path": "lua/ge/extensions/mcp/tools/input.lua",
-  "module": "Outils MCP d'entrées véhicule : injecter un évènement de contrôle (direction, accélérateur, frein…), tester un contrôle « hydro » en aller-retour avec détection d'erreurs dans le log, et exécuter du Lua dans la VM d'un ou de tous les véhicules.",
+  "module": "MCP vehicle input tools: inject a control event (steering, throttle, brake…), test a \"hydro\" control round trip with error detection in the log, and run Lua in the VM of one or all vehicles.",
   "notes": [
-    "run_lua_vehicle est asynchrone : il renvoie les résultats de l'appel PRÉCÉDENT (JSON vehId -> résultat) et lance le nouveau ; rappeler pour obtenir le dernier. Le code est compilé avec loadstring dans la VM véhicule, erreurs capturées par pcall.",
-    "test_hydro enchaîne input.event(event, 1) -> (0,6 s) -> -1 -> (0,6 s) -> 0 -> (0,3 s) puis scanne beamng.log à la recherche de lignes « |E| » ; résultat dans shared.asyncResults.hydro, renvoyé à l'appel suivant.",
-    "filter 2 = FILTER_DIRECT (valeur par défaut).",
-    "Attention sécurité : run_lua_vehicle exécute du code arbitraire dans les VM véhicule."
+    "run_lua_vehicle is asynchronous: it returns the results of the PREVIOUS call (JSON vehId -> result) and launches the new one; call again to get the latest. The code is compiled with loadstring in the vehicle VM, errors caught by pcall.",
+    "test_hydro chains input.event(event, 1) -> (0.6 s) -> -1 -> (0.6 s) -> 0 -> (0.3 s) then scans beamng.log for \"|E|\" lines; result in shared.asyncResults.hydro, returned on the next call.",
+    "filter 2 = FILTER_DIRECT (default value).",
+    "Security warning: run_lua_vehicle runs arbitrary code in the vehicle VMs."
   ],
   "fields": {
-    "schemas": {"type": "table<string, table>", "desc": "Schémas de inject_input, test_hydro, run_lua_vehicle."},
-    "cb": {"type": "table<string, function>", "desc": "Callback `vehLua(vid, result)` : stocke result dans shared.asyncResults.vehLua[tostring(vid)]."}
+    "schemas": {
+      "type": "table<string, table>",
+      "desc": "Schemas of inject_input, test_hydro, run_lua_vehicle."
+    },
+    "cb": {
+      "type": "table<string, function>",
+      "desc": "Callback `vehLua(vid, result)`: stores result in shared.asyncResults.vehLua[tostring(vid)]."
+    }
   },
   "functions": {
     "onUpdate": {
-      "desc": "Appelé chaque frame : fait avancer la séquence test_hydro (étapes 1 à 3 temporisées) et, à la fin, lit les erreurs du log.",
-      "params": {"dtReal": {"type": "number", "desc": "Durée réelle (s)."}},
+      "desc": "Called every frame: advances the test_hydro sequence (timed steps 1 to 3) and, at the end, reads the errors from the log.",
+      "params": {
+        "dtReal": {
+          "type": "number",
+          "desc": "Real duration (s)."
+        }
+      },
       "internal": true
     },
     "inject_input": {
-      "desc": "Envoie input.event(event, value, filter) dans la VM du véhicule via be:queueObjectLua.",
-      "params": {"args": {"type": "table", "desc": "{event: string (steering, throttle, brake, parkingbrake, clutch…), value?: number (défaut 0, typ. -1..1 ou 0..1), filter?: integer (défaut 2), id?: integer}"}},
-      "returns": [{"type": "string", "desc": "Confirmation."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "desc": "Sends input.event(event, value, filter) into the vehicle's VM via be:queueObjectLua.",
+      "params": {
+        "args": {
+          "type": "table",
+          "desc": "{event: string (steering, throttle, brake, parkingbrake, clutch…), value?: number (default 0, typ. -1..1 or 0..1), filter?: integer (default 2), id?: integer}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Confirmation."
+        },
+        {
+          "type": "boolean",
+          "desc": "true on error."
+        }
+      ],
       "internal": false
     },
     "test_hydro": {
-      "desc": "Lance le test haut/bas/neutre d'un évènement d'entrée et détecte les erreurs loggées. Asynchrone : rappeler après ~2 s.",
-      "params": {"args": {"type": "table|nil", "desc": "{event?: string (défaut 'steering'), id?: integer}"}},
-      "returns": [{"type": "string", "desc": "JSON {event, vid, ok, errors} du test précédent, ou message de démarrage."}, {"type": "boolean", "desc": "true si le véhicule n'existe pas."}],
+      "desc": "Runs the up/down/neutral test of an input event and detects logged errors. Asynchronous: call again after ~2 s.",
+      "params": {
+        "args": {
+          "type": "table|nil",
+          "desc": "{event?: string (default 'steering'), id?: integer}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "JSON {event, vid, ok, errors} from the previous test, or start message."
+        },
+        {
+          "type": "boolean",
+          "desc": "true if the vehicle does not exist."
+        }
+      ],
       "internal": false
     },
     "run_lua_vehicle": {
-      "desc": "Exécute du Lua dans la VM d'un véhicule (ou de tous avec all=true) ; résultats asynchrones.",
-      "params": {"args": {"type": "table", "desc": "{code: string, id?: integer, all?: boolean}"}},
-      "returns": [{"type": "string", "desc": "JSON des résultats précédents ou message « queued »."}, {"type": "boolean", "desc": "true en cas d'erreur."}],
+      "desc": "Runs Lua in a vehicle's VM (or all of them with all=true); asynchronous results.",
+      "params": {
+        "args": {
+          "type": "table",
+          "desc": "{code: string, id?: integer, all?: boolean}"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "JSON of the previous results or \"queued\" message."
+        },
+        {
+          "type": "boolean",
+          "desc": "true on error."
+        }
+      ],
       "internal": false
     }
   }

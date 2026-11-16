@@ -1,0 +1,287 @@
+{
+  "path": "lua/ge/extensions/flowgraph/basenode.lua",
+  "module": "Classe de base de tous les nœuds flowgraph. Elle crée les pins à partir de C.pinSchema du nœud dérivé, gère les comportements (once, duration, simple...) selon C.category, exécute work()/workOnce() sous xpcall (les erreurs deviennent des erreurs de nœud affichées en rouge), dessine le nœud dans l'éditeur (en-tête, pins, tooltip, menu contextuel) et sérialise/désérialise le nœud (position, couleur perso, pins en dur, pins cachés). Un moddeur qui écrit un nœud personnalisé hérite de cette classe et surcharge work, init, postInit, drawMiddle, etc.",
+  "usage": "-- squelette d'un nœud flowgraph\nlocal C = {}\nC.name = 'Mon nœud'\nC.description = 'Fait quelque chose.'\nC.category = 'once_p_duration'\nC.pinSchema = {\n  {dir = 'in', type = 'number', name = 'valeur', default = 1, description = 'Entrée.'},\n  {dir = 'out', type = 'number', name = 'resultat', description = 'Sortie.'},\n}\nfunction C:work()\n  self.pinOut.resultat.value = self.pinIn.valeur.value * 2\nend\nreturn _flowgraph_createNode(C)",
+  "notes": [
+    "Format de C.pinSchema (lu par _preInit pour les sorties puis _postInit pour les entrées) : {dir='in'|'out', type, name, default, description, fixed, hidden, impulse, chainFlow, tableType, hardcoded, defaultHardCodeType}. L'ancien format sans champ dir est refusé (log d'erreur). Les valeurs default sur une sortie sont ignorées avec un avertissement.",
+    "self.pinIn[nom] et self.pinOut[nom] : accès par nom aux pins. pinIn renvoie un pin vide (emptyPin, non modifiable) si le nom n'existe pas et refuse l'écriture. pinInLocal contient les pins d'entrée réels ; pinIn contient des entrées « en dur » (hardcoded) quand une valeur constante est posée.",
+    "Comportements (self.behaviour) : 'once', 'duration', 'simple', 'singleActive', 'obsolete'. Les pins flow/reset/incomplete/complete/completed sont créés automatiquement selon la catégorie (ui_flowgraph_editor.isFunctionalNode, isSimpleNode, isDurationNode, isF_DurationNode, isOnceNode, isDynamicNode).",
+    "Ordre fixe de certains pins : flow in, flow out, reset in, incomplete out, complete out, completed out.",
+    "dynamicMode : 'repeat' (par défaut, work appelé à chaque fois) ou 'once' (workOnce une fois puis work, avec pin reset).",
+    "Grille de l'éditeur : gridSize 14, décalage (10, 8) ; alignToGrid aligne la position dessus.",
+    "Bug : isFlowActive boucle sur _flowInDeps mais renvoie toujours true (le return true final est atteint même si aucune dépendance n'a de flux).",
+    "Bug : dans __onDeserialized, le test type(data) == 'cdata' utilise la variable data (globale, nil) au lieu de v ; la branche cdata n'est donc jamais prise.",
+    "Bug : alignToGrid référence une variable force non définie (globale nil) ; la condition ne dépend que de nodePosition.",
+    "Bug : dans _workDynamicOnce, workCount est incrémenté jusqu'à deux fois par appel (une fois dans le bloc, une fois à la fin).",
+    "Les fonctions préfixées _ ou __ sont des enveloppes internes appelées par le manager/graphe ; les versions sans préfixe (onLink, onUnlink, onSetHardcode, onUnsetHardcode, onNodeReset, onDurationXxx) sont les hooks à surcharger."
+  ],
+  "functions": {
+    "createBase": {
+      "desc": "Crée un objet nœud avec C comme métatable et appelle init(...).",
+      "params": {"...": {"type": "any", "desc": "mgr, graph, forceId (transmis à C:init)"}},
+      "returns": [{"type": "table", "desc": "nœud de base"}],
+      "internal": true
+    },
+    "use": {
+      "desc": "Crée un nœud de base, copie la classe dérivée par-dessus, puis appelle _preInit (pins de sortie), init (si redéfini) et _postInit (pins d'entrée, catégories, postInit).",
+      "params": {
+        "mgr": {"type": "table", "desc": "manager flowgraph"},
+        "graph": {"type": "table", "desc": "graphe contenant le nœud"},
+        "forceId": {"type": "integer|nil", "desc": "id imposé (sinon mgr:getNextFreeGraphNodeId())"},
+        "derivedClass": {"type": "table", "desc": "classe du type de nœud concret"}
+      },
+      "returns": [{"type": "table", "desc": "nœud initialisé"}],
+      "internal": true
+    }
+  },
+  "classes": {
+    "C": {
+      "desc": "Nœud flowgraph. Champs principaux : mgr, graph, id, name, description, color, iconColor, type ('node' par défaut, 'simple', 'variable'), tags, behaviour, triggerCount, workCount, data, dynamicMode, durationState, pinIn, pinInLocal, pinOut, pinList (ordre d'affichage), nodePosition ({x, y}), customName/customColor/customIcon/customIconColor, _error.",
+      "functions": {
+        "init": {
+          "desc": "Initialise tous les champs du nœud (identifiant, nom 'unknown', couleur par défaut, tables de pins, pin d'alignement). Vérifie les identifiants dupliqués si mgr.__safeIds.",
+          "params": {
+            "mgr": {"type": "table", "desc": "manager flowgraph"},
+            "graph": {"type": "table", "desc": "graphe propriétaire"},
+            "forceId": {"type": "integer|nil", "desc": "id imposé"}
+          },
+          "internal": true
+        },
+        "getData": {"desc": "Renvoie la table self.data (propriétés éditables du nœud).", "returns": [{"type": "table", "desc": "data du nœud"}]},
+        "setData": {"desc": "Remplace self.data.", "params": {"data": {"type": "table", "desc": "nouvelle table de données"}}},
+        "getPinIn": {"desc": "Renvoie self.pinIn.", "returns": [{"type": "table", "desc": "table des pins d'entrée nommés"}]},
+        "setPinIn": {"desc": "Remplace self.pinIn.", "params": {"data": {"type": "table", "desc": "nouvelle table pinIn"}}},
+        "destroy": {"desc": "Hook vide appelé à la destruction du nœud ; à surcharger pour libérer des ressources."},
+        "_destroy": {"desc": "Appelle self:destroy().", "internal": true},
+        "addedToGraph": {"desc": "Hook vide appelé quand le nœud est ajouté à un graphe.", "params": {"graph": {"type": "table", "desc": "graphe"}}},
+        "representsGraph": {"desc": "Renvoie nil par défaut ; les nœuds qui représentent un sous-graphe renvoient ce graphe.", "returns": [{"type": "table|nil", "desc": "graphe représenté"}]},
+        "_preInit": {"desc": "Crée les pins de sortie décrits dans pinSchema (hidden, impulse, chainFlow, tableType).", "internal": true},
+        "_postInit": {"desc": "Crée les pins d'entrée de pinSchema (avec valeurs hardcoded si demandé), crée un pin reset si le mode est 'once', appelle handleNodeCategories puis postInit.", "internal": true},
+        "postInit": {"desc": "Hook vide appelé à la fin de _postInit, une fois tous les pins créés."},
+        "handleNodeCategories": {"desc": "Selon self.category, ajoute les comportements et crée automatiquement les pins flow, reset, incomplete, complete, completed. Journalise une erreur si un nœud 'simple' a des pins flow ou si un 'provider' a des entrées. Sans catégorie, force le mode 'repeat'.", "internal": true},
+        "addBehaviour": {"desc": "Active un comportement dans self.behaviour.", "params": {"behaviour": {"type": "string", "desc": "'once', 'duration', 'simple', 'singleActive' ou 'obsolete'"}}},
+        "removeBehaviour": {"desc": "Désactive un comportement (met la valeur à false).", "params": {"behaviour": {"type": "string", "desc": "nom du comportement"}}},
+        "autoCreatePin": {
+          "desc": "Comme createPin, mais seulement si aucun pin du même nom/direction n'existe, puis replace le pin à la position imposée par pinOrder pour les nœuds fonctionnels.",
+          "params": {
+            "direction": {"type": "string", "desc": "'in' ou 'out'"},
+            "type": {"type": "string|table", "desc": "type du pin (ex. 'flow', 'number')"},
+            "name": {"type": "string", "desc": "nom du pin"},
+            "default": {"type": "any", "desc": "valeur par défaut (entrées)"},
+            "description": {"type": "string", "desc": "description affichée"},
+            "extra": {"type": "any", "desc": "données supplémentaires (pin.extraData)"},
+            "fixed": {"type": "boolean|nil", "desc": "pin non supprimable/non modifiable"}
+          },
+          "returns": [{"type": "table|nil", "desc": "le pin créé, ou nil s'il existait déjà"}]
+        },
+        "hasFlowPins": {"desc": "Indique si pinSchema contient un pin de type 'flow'.", "returns": [{"type": "boolean", "desc": "true si oui"}]},
+        "hasInputPins": {"desc": "Indique si pinSchema contient un pin d'entrée.", "returns": [{"type": "boolean", "desc": "true si oui"}]},
+        "createResetPin": {"desc": "Crée un pin d'entrée flow 'reset' (impulsion) et ajoute le comportement 'once', s'il n'existe pas."},
+        "removeResetPin": {"desc": "Supprime le pin 'reset' et le comportement 'once'."},
+        "work": {
+          "desc": "Fonction principale du nœud, à surcharger. Appelée par le manager à chaque passage du flux, dans un xpcall. En mode 'once', elle est appelée après workOnce.",
+          "params": {"args": {"type": "any", "desc": "non utilisé par la base"}}
+        },
+        "workOnce": {"desc": "Hook vide appelé une seule fois (mode dynamique 'once') quand le flux arrive, avant les appels de work. Réarmé par un reset."},
+        "_workDynamicRepeat": {"desc": "Exécute work sous xpcall, applique checkAutomatedFlow, incrémente workCount et enregistre l'erreur éventuelle (erreur de nœud + évènement du manager).", "internal": true},
+        "_workDynamicOnce": {"desc": "Mode 'once' : gère le reset (pinIn.reset), appelle workOnce une fois puis work à chaque appel tant que le flux est actif.", "internal": true},
+        "onNodeReset": {"desc": "Hook vide appelé quand le nœud est réinitialisé (pin reset en mode 'once')."},
+        "_onNodeReset": {"desc": "Appelle onNodeReset sous xpcall puis remet toutes les valeurs de pinOut à nil.", "internal": true},
+        "setDurationState": {
+          "desc": "Change l'état d'un nœud de catégorie f_duration et signale le changement ; checkAutomatedFlow met alors à jour les pins incomplete/complete/completed et appelle onDurationXxx.",
+          "params": {"state": {"type": "string", "desc": "'inactive', 'started' ou 'finished'"}}
+        },
+        "checkAutomatedFlow": {"desc": "Recopie pinIn.flow vers pinOut.flow pour les nœuds fonctionnels non simples et pilote incomplete/complete/completed pour les nœuds f_duration. 'completed' retombe à false après une frame.", "internal": true},
+        "onDurationInactive": {"desc": "Hook vide : l'état de durée passe à 'inactive'."},
+        "onDurationStarted": {"desc": "Hook vide : l'état de durée passe à 'started'."},
+        "onDurationFinished": {"desc": "Hook vide : l'état de durée passe à 'finished'."},
+        "toggleDynamicMode": {"desc": "Bascule entre 'repeat' et 'once' si la catégorie est dynamique."},
+        "setDynamicMode": {
+          "desc": "Fixe le mode dynamique ; crée le pin reset pour 'once', le supprime pour 'repeat'.",
+          "params": {"mode": {"type": "string", "desc": "'repeat' ou 'once'"}}
+        },
+        "createPin": {
+          "desc": "Crée un pin sur le nœud (module flowgraph/pin), l'ajoute à pinInLocal/pinOut, à pinList et à graph.pins. Refuse les noms vides ou en double (sauf autoNumber, qui ajoute un suffixe 2..101).",
+          "params": {
+            "direction": {"type": "string", "desc": "'in' ou 'out'"},
+            "type": {"type": "string|table", "desc": "type du pin ou liste de types"},
+            "name": {"type": "string", "desc": "nom unique du pin"},
+            "default": {"type": "any", "desc": "valeur par défaut"},
+            "description": {"type": "string", "desc": "texte d'aide"},
+            "autoNumber": {"type": "boolean|nil", "desc": "numéroter automatiquement en cas de doublon"},
+            "extra": {"type": "any", "desc": "données supplémentaires (pin.extraData)"},
+            "fixed": {"type": "boolean|nil", "desc": "pin fixe"}
+          },
+          "returns": [{"type": "table|nil", "desc": "pin créé, nil en cas d'erreur"}]
+        },
+        "removePin": {
+          "desc": "Supprime un pin : supprime d'abord les liens du graphe qui l'utilisent, retire le pin des tables et de pinList. Le commentaire du code signale que d'autres effets de bord sont à vérifier.",
+          "params": {"pin": {"type": "table", "desc": "pin à supprimer"}}
+        },
+        "renamePin": {
+          "desc": "Renomme un pin d'entrée dans pinInLocal. Refuse (avec un avertissement) si le nouveau nom est déjà pris par un autre pin. Ne gère que les pins d'entrée.",
+          "params": {
+            "pin": {"type": "table", "desc": "pin à renommer"},
+            "newName": {"type": "string", "desc": "nouveau nom"}
+          }
+        },
+        "shiftPin": {
+          "desc": "Échange un pin de pinList avec son voisin (circulaire) pour changer l'ordre d'affichage.",
+          "params": {
+            "idInList": {"type": "integer", "desc": "indice (1-based) du pin dans pinList"},
+            "direction": {"type": "integer", "desc": "+1 ou -1"}
+          }
+        },
+        "trigger": {"desc": "Déclenche le nœud via self._trigger (fonction compilée par le manager) si le graphe n'est pas arrêté ; incrémente triggerCount et met à jour _frameLastUsed.", "internal": true},
+        "isFlowActive": {"desc": "Censée dire si une dépendance de flux est active, mais renvoie toujours true (voir notes)."},
+        "showProperties": {"desc": "Hook vide appelé quand le nœud est sélectionné pour afficher ses propriétés."},
+        "hideProperties": {"desc": "Hook vide appelé quand la sélection quitte le nœud."},
+        "_doubleClicked": {"desc": "Appelle self:doubleClicked() si cette fonction existe sur le nœud dérivé.", "internal": true},
+        "onLink": {"desc": "Hook vide appelé quand un lien est créé sur un pin du nœud.", "params": {"link": {"type": "table", "desc": "lien créé"}}},
+        "_onLink": {"desc": "Appelle onLink.", "params": {"link": {"type": "table", "desc": "lien"}}, "internal": true},
+        "onUnlink": {"desc": "Hook vide appelé quand un lien est supprimé.", "params": {"link": {"type": "table", "desc": "lien supprimé"}}},
+        "_onUnlink": {"desc": "Appelle onUnlink.", "params": {"link": {"type": "table", "desc": "lien"}}, "internal": true},
+        "onSetHardcode": {
+          "desc": "Hook vide appelé quand une valeur constante (hardcoded) est posée sur un pin d'entrée.",
+          "params": {
+            "pin": {"type": "table", "desc": "pin concerné"},
+            "value": {"type": "any", "desc": "valeur constante"},
+            "forceType": {"type": "string|nil", "desc": "type imposé"}
+          }
+        },
+        "_onSetHardcode": {
+          "desc": "Appelle onSetHardcode.",
+          "params": {
+            "pin": {"type": "table", "desc": "pin"},
+            "value": {"type": "any", "desc": "valeur"},
+            "forceType": {"type": "string|nil", "desc": "type imposé"}
+          },
+          "internal": true
+        },
+        "onUnsetHardcode": {"desc": "Hook vide appelé quand la valeur constante d'un pin est retirée.", "params": {"pin": {"type": "table", "desc": "pin concerné"}}},
+        "_onUnsetHardcode": {"desc": "Appelle onUnsetHardcode.", "params": {"pin": {"type": "table", "desc": "pin"}}, "internal": true},
+        "_onClear": {"desc": "Vide (l'appel à _executionStopped y est commenté).", "internal": true},
+        "_executionStopped": {"desc": "Hook interne vide appelé à l'arrêt de l'exécution.", "internal": true},
+        "__executionStopped": {"desc": "Appelé par le manager à l'arrêt : appelle _executionStopped et remet _dynamicDone à false.", "internal": true},
+        "_executionStarted": {"desc": "Hook interne vide appelé au démarrage.", "internal": true},
+        "__executionStarted": {"desc": "Appelé par le manager au démarrage : efface l'erreur du nœud, remet à nil les sorties si clearOutPinsOnStart, réinitialise _frameLastUsed et _dynamicDone, puis appelle _executionStarted.", "internal": true},
+        "getLinks": {
+          "desc": "Parcourt les liens du graphe et renvoie ceux qui arrivent sur le nœud puis ceux qui en partent.",
+          "returns": [
+            {"type": "table", "desc": "liens dont le nœud est la cible"},
+            {"type": "table", "desc": "liens dont le nœud est la source"}
+          ]
+        },
+        "HSVtoRGB": {
+          "desc": "Convertit HSV en RGB via la fonction globale HSVtoRGB après avoir ramené h à sa partie fractionnaire et borné s et v dans [0, 1].",
+          "params": {
+            "h": {"type": "number", "desc": "teinte (la partie entière est ignorée)"},
+            "s": {"type": "number", "desc": "saturation 0..1"},
+            "v": {"type": "number", "desc": "valeur 0..1"}
+          },
+          "returns": [{"type": "table", "desc": "{r, g, b}"}]
+        },
+        "drawHeader": {
+          "desc": "Dessine l'en-tête du nœud (icône, nom, [ERROR] si erreur, id si préférence, couleur heatmap selon l'ancienneté de _frameLastUsed).",
+          "params": {
+            "builder": {"type": "table", "desc": "builder flowgraph"},
+            "style": {"type": "table", "desc": "style ImGui courant"}
+          },
+          "internal": true
+        },
+        "drawTooltip": {"desc": "Dessine l'infobulle du nœud survolé : activité en mode heatmap, nom, nom perso, comportements, obsolescence, description, TODO, erreurs.", "internal": true},
+        "overDraw": {"desc": "Dessine une grande icône semi-transparente par-dessus le nœud (appel commenté dans draw, donc inutilisé).", "internal": true},
+        "_drawMiddle": {
+          "desc": "Dessine la zone centrale selon le mode d'affichage (flowLevel, simple, debug, default, heatmap, geometry) ; appelle drawMiddle si le nœud dérivé le définit.",
+          "params": {
+            "builder": {"type": "table", "desc": "builder flowgraph"},
+            "style": {"type": "table", "desc": "style ImGui"},
+            "drawType": {"type": "string", "desc": "valeur de la préférence flowgraph.debug.viewMode"}
+          },
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Hook de dessin du milieu du nœud à surcharger ; la version de base appelle simplement builder:Middle().",
+          "params": {
+            "builder": {"type": "table", "desc": "builder flowgraph"},
+            "style": {"type": "table", "desc": "style ImGui"}
+          }
+        },
+        "draw": {
+          "desc": "Dessine tout le nœud dans l'éditeur : styles selon erreur/activité récente, en-tête, pins d'entrée, milieu (sous xpcall), pins de sortie, icônes de comportement. Ignore les types autres que node, simple, variable.",
+          "params": {
+            "builder": {"type": "table", "desc": "builder flowgraph"},
+            "style": {"type": "table", "desc": "style ImGui"}
+          },
+          "internal": true
+        },
+        "getPinInConstValue": {
+          "desc": "Renvoie la valeur constante d'un pin d'entrée si elle a été posée en dur (hardcoded), sinon nil.",
+          "params": {"pinName": {"type": "string", "desc": "nom du pin d'entrée"}},
+          "returns": [{"type": "any", "desc": "valeur constante ou nil"}]
+        },
+        "customContextMenu": {"desc": "Hook vide pour ajouter des entrées au menu contextuel du nœud."},
+        "showContextMenu": {
+          "desc": "Affiche le menu contextuel (copier, supprimer, afficher/masquer les pins, créer un sous-graphe, dégrouper, commentaire, outils de développement selon préférences).",
+          "params": {"menuPos": {"type": "ImVec2", "desc": "position du menu (non utilisée dans le corps)"}},
+          "internal": true
+        },
+        "_setHardcodedDummyInputPin": {
+          "desc": "Pose (val non nil) ou retire (val nil) une valeur constante sur un pin d'entrée : crée une entrée factice dans pinIn avec hardCodeType, passe pin.pinMode à 'hardcoded' ou 'normal' et appelle les hooks.",
+          "params": {
+            "pin": {"type": "table", "desc": "pin d'entrée"},
+            "val": {"type": "any", "desc": "valeur ou nil pour retirer"},
+            "forceType": {"type": "string|nil", "desc": "type imposé ; sinon le type du pin (ou defaultHardCodeType si multiple ou 'any')"}
+          },
+          "returns": [{"type": "string|nil", "desc": "type retenu quand une valeur est posée"}],
+          "internal": true
+        },
+        "_setupTimeline": {
+          "desc": "Crée self.timeline {beginTime, endTime, lane = 0} et définit des onTimelineBegin/End/Trigger vides (nop) si absents.",
+          "params": {
+            "beginTime": {"type": "number", "desc": "début"},
+            "endTime": {"type": "number", "desc": "fin"}
+          },
+          "internal": true
+        },
+        "_onSerialize": {"desc": "Hook vide permettant au nœud dérivé d'ajouter des champs à la table sérialisée.", "params": {"res": {"type": "table", "desc": "table de sortie"}}, "internal": true},
+        "__onSerialize": {
+          "desc": "Sérialise le nœud : data (sans cdata), type, position, nom/couleur/icône perso, identifiant, mode dynamique, pins (si savePins), pins en dur, quickAccess, pins cachés, timeline.",
+          "returns": [{"type": "table", "desc": "données du nœud pour le fichier de graphe"}],
+          "internal": true
+        },
+        "_onDeserialized": {"desc": "Hook vide appelé pendant la désérialisation.", "params": {"nodeData": {"type": "table", "desc": "données du nœud"}}, "internal": true},
+        "__onDeserialized": {
+          "desc": "Restaure position, personnalisations, data (propriétés connues seulement), mode dynamique, pins sauvegardés, valeurs en dur, quickAccess et pins cachés. Journalise des avertissements si un pin est introuvable.",
+          "params": {"nodeData": {"type": "table", "desc": "données produites par __onSerialize"}},
+          "internal": true
+        },
+        "updateNodePosition": {"desc": "Lit la position du nœud dans l'éditeur ImGui et la mémorise dans nodePosition (si dans ±2e8)."},
+        "updateEditorPosition": {"desc": "Applique nodePosition au nœud dans l'éditeur (SetNodePosition). À n'appeler que lorsque le manager est ouvert dans l'éditeur."},
+        "__setNodeError": {
+          "desc": "Enregistre une erreur pour une catégorie (log E) ; appelé sans catégorie, efface toutes les erreurs.",
+          "params": {
+            "category": {"type": "string|nil", "desc": "catégorie ('work', 'onNodeReset'...) ou nil pour tout effacer"},
+            "err": {"type": "string|nil", "desc": "message ; nil retire la catégorie"}
+          },
+          "internal": true
+        },
+        "__getNodeError": {
+          "desc": "Renvoie le message d'erreur d'une catégorie.",
+          "params": {"category": {"type": "string", "desc": "catégorie"}},
+          "returns": [{"type": "string|nil", "desc": "message d'erreur"}],
+          "internal": true
+        },
+        "_postDeserialize": {"desc": "Hook vide appelé après la désérialisation complète du graphe.", "internal": true},
+        "toString": {"desc": "Renvoie une chaîne « nom (nodeType / id) in graphe » pour les logs.", "returns": [{"type": "string", "desc": "description du nœud"}]},
+        "alignToGrid": {
+          "desc": "Aligne le nœud sur la grille de 14 px (décalage 10, 8), éventuellement après avoir fixé une position, puis met à jour l'éditeur.",
+          "params": {
+            "x": {"type": "number|nil", "desc": "nouvelle position x (avec y)"},
+            "y": {"type": "number|nil", "desc": "nouvelle position y"}
+          }
+        }
+      }
+    }
+  }
+}

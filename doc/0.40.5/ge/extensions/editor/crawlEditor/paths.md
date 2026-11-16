@@ -1,71 +1,71 @@
 # `editor_crawlEditor_paths`
 
-*Fichier : `lua/ge/extensions/editor/crawlEditor/paths.lua` · VM : Game Engine (GE) · 833 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/crawlEditor/paths.lua` · VM: Game Engine (GE) · 833 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/crawlEditor/paths")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/crawlEditor/paths")` (file under extensions/ but not a regular extension)
 
-Sous-outil « Paths » de l'éditeur de crawl : édite les chemins (table {name, description, nodes}) formés de nœuds (pathnodes) {name, pos, rotation, radius, flags}. Le module renvoie un constructeur : require('editor_crawlEditor_paths')(crawlEditor) crée une instance C. L'outil liste les chemins, affiche le détail (nom, nom de fichier, description, nombre de nœuds, longueur, dénivelé cumulé), permet d'ajouter, insérer, déplacer (gizmo) ou supprimer des nœuds, de les orienter, renuméroter, caler au terrain, d'inverser le chemin, de fixer un rayon commun et de valider le chemin. Dessine aussi les nœuds dans le monde (sphères, flèches de direction, étiquettes, distances cumulées).
+"Paths" subtool of the crawl editor: edits paths (table {name, description, nodes}) made of nodes (pathnodes) {name, pos, rotation, radius, flags}. The module returns a constructor: require('editor_crawlEditor_paths')(crawlEditor) creates an instance C. The tool lists the paths, shows the detail (name, file name, description, node count, length, cumulative elevation change), lets you add, insert, move (gizmo) or delete nodes, orient them, renumber, snap to terrain, reverse the path, set a common radius and validate the path. It also draws the nodes in the world (spheres, direction arrows, labels, cumulative distances).
 
-## Exemple
+## Example
 
 ```lua
 local paths = require('editor_crawlEditor_paths')(crawlEditorInstance)
-paths:setPath(monChemin)
--- à chaque frame :
+paths:setPath(myPath)
+-- every frame:
 paths:draw(mouseInfo)
 paths:drawPathnodeSelectionIndicators(mouseInfo)
 ```
 
-## Remarques
+## Notes
 
-- Commandes souris : Shift + clic = ajoute un nœud à l'endroit cliqué (calé au terrain si snapToTerrain) ; Alt + clic sur le milieu d'un segment = insère un nœud entre ses deux extrémités (le dernier segment relie le dernier nœud au premier dans la détection) ; clic = sélectionne un nœud ; clic dans le vide = désélectionne.
-- Nouveau nœud (getNewPathnode) : nom « Node N », pos (0,0,0), rotation identité, rayon 4.0, flags vide.
-- Flags de nœud utilisés par l'outil : isRecoveryCheckpoint (sphère verte) et isBonusCheckpoint (sphère dorée) ; les autres flags sont éditables en JSON.
-- Dans dragging(), le décalage de translation du gizmo est divisé par 2 (posOffset = delta / 2), comportement du code ; en mode rotation, la rotation du nœud est celle du gizmo.
-- dropToTerrain renvoie (pos, true) dès que core_terrain existe, même si la hauteur est nil (z conservé) ; sinon (pos, false).
-- validatePath signale : moins de 2 nœuds, rayon nul ou négatif, nœud en (0,0,0), absence de rotation, segment de moins de 0,5 m.
-- Tout changement marque le chemin comme modifié (path._dirty = true). Les déplacements au gizmo passent par editor.history (« Manipulate Pathnode ») ; les autres opérations (ajout, renumérotation, inversion…) ne sont pas annulables.
-- Dans drawPathsList, la mise à zéro de selection.index quand on reclique le même chemin est immédiatement écrasée (selection.index = i ensuite).
+- Mouse controls: Shift + click = adds a node where clicked (snapped to terrain if snapToTerrain); Alt + click on the middle of a segment = inserts a node between its two ends (in detection, the last segment links the last node to the first); click = selects a node; click in empty space = deselects.
+- New node (getNewPathnode): name "Node N", pos (0,0,0), identity rotation, radius 4.0, empty flags.
+- Node flags used by the tool: isRecoveryCheckpoint (green sphere) and isBonusCheckpoint (gold sphere); the other flags are editable as JSON.
+- In dragging(), the gizmo translation offset is divided by 2 (posOffset = delta / 2), code behavior; in rotation mode, the node rotation is that of the gizmo.
+- dropToTerrain returns (pos, true) as soon as core_terrain exists, even if the height is nil (z kept); otherwise (pos, false).
+- validatePath reports: fewer than 2 nodes, zero or negative radius, node at (0,0,0), missing rotation, segment shorter than 0.5 m.
+- Any change marks the path as modified (path._dirty = true). Gizmo moves go through editor.history ("Manipulate Pathnode"); other operations (add, renumber, reverse...) are not undoable.
+- In drawPathsList, setting selection.index to zero when the same path is clicked again is immediately overwritten (selection.index = i afterwards).
 
-## Classe `C`
+## Class `C`
 
-Instance de l'outil chemins. Champs principaux : crawlEditor, path (chemin édité), selectedPathnodeIndex (-1 = aucun), currentPathnode, snapToTerrain (true par défaut), _isDragging.
+Instance of the paths tool. Main fields: crawlEditor, path (path being edited), selectedPathnodeIndex (-1 = none), currentPathnode, snapToTerrain (true by default), _isDragging.
 
-Le module renvoie un constructeur : `local obj = require("editor_crawlEditor_paths")(options)`.
+The module returns a constructor: `local obj = require("editor_crawlEditor_paths")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:addNodeAtCamera()` | Ajoute un nœud 15 m devant la caméra, posé sur le terrain (si snapToTerrain), et le sélectionne. | 588 |
-| `C:autoOrientNodes()` | Oriente chaque nœud (quatFromDir, haut +Z) vers le suivant ; le dernier garde la direction entrante. Ignore les segments de longueur <= 0,001. Sans effet avec moins de 2 nœuds. | 614 |
-| `C:beginDrag()` | Début de manipulation du gizmo : mémorise position et rotation du nœud. | 545 |
-| `C:dragging()` | Pendant la manipulation : translate (avec snap terrain) ou fait tourner le nœud selon le gizmo. | 554 |
-| `C:draw(mouseInfo)` | Appelée à chaque frame : gère le gizmo d'axes si un nœud est sélectionné, traite l'entrée souris et met à jour le gizmo hors manipulation. | 720 |
-| `C:drawPathDetail(path)` | Dessine le détail d'un chemin : Goto, nom, nom de fichier (Rename), description, statistiques (nœuds, longueur, dénivelé), boutons d'outils (Add Node, Add Node At Camera, Reverse Order, Auto-Orient Nodes, Renumber, Snap All To Terrain, Set All Radii, Validate Path), liste des nœuds avec Delete et éditeur du nœud sélectionné (nom, position, rotation, rayon, drapeaux de récupération/bonus, flags JSON). | 140 |
-| `C:drawPathnodeSelectionIndicators(mouseInfo)` | Dessine dans le monde les nœuds (sphère de leur rayon : orange sélectionné, vert recovery, doré bonus, blanc sinon), flèches de direction, étiquettes « nom (indice) [RECOVERY/BONUS] », prismes entre nœuds et distance cumulée. | 740 |
-| `C:drawPathsList(allPaths, selection)` | Dessine la liste des chemins avec « Add Path » et un menu contextuel « Delete ». Remplit selection.index et selection.clicked. | 101 |
-| `C:dropToTerrain(pos)` | Pose un point sur la hauteur du terrain. | 578 |
-| `C:endDragging()` | Fin de manipulation : re-snap au terrain en translation, enregistre « Manipulate Pathnode » dans l'historique, marque le chemin modifié. | 698 |
-| `C:findPathnode(mouseInfo, objects)` | Dessine des sphères sur les éléments (orange si sélectionné) et renvoie le plus proche de la caméra dont le rayon de souris traverse la sphère. | 427 |
-| `C:getNewPath()` | Crée une table de chemin vide : name « New Path », description « A new path », nodes vide. | 401 |
-| `C:getNewPathnode()` | Crée un nœud par défaut et l'ajoute à la fin du chemin courant (crée un chemin si aucun). | 410 |
-| `C:getSelectedPathnodeIndex()` | Renvoie l'indice du nœud sélectionné. | 93 |
-| `C:init(crawlEditorParam)` | Initialise l'instance (appelé par le constructeur). | 60 |
-| `C:input(mouseInfo)` | Traite l'entrée souris : Shift = ajout, Alt = insertion, sinon sélection de nœud. | 492 |
-| `C:renumberNodes()` | Renomme tous les nœuds « Node N » dans l'ordre. | 645 |
-| `C:reversePathOrder()` | Inverse l'ordre des nœuds et désélectionne. | 603 |
-| `C:selectPathnode(index)` | Sélectionne le nœud d'indice donné (à partir de 1) ; un indice invalide, nil ou <= 0 désélectionne. | 84 |
-| `C:setAllRadii(radius)` | Applique le même rayon à tous les nœuds. | 636 |
-| `C:setFields(path)` | Recopie nom, nom de fichier et description du chemin dans les tampons de saisie imgui. | 73 |
-| `C:setPath(pathParam)` | Définit le chemin édité. | 80 |
-| `C:setSelectedPathnodeIndex(index)` | Alias de selectPathnode. | 97 |
-| `C:snapAllToTerrain()` | Pose tous les nœuds sur le terrain. | 654 |
-| `C:tryInsert(mouseInfo)` | Détecte un clic sur le milieu d'un segment et y insère un nouveau nœud, qu'il sélectionne. | 459 |
-| `C:updateTransform()` | Place le gizmo d'axes sur la position et la rotation du nœud sélectionné. | 535 |
-| `C:validatePath()` | Analyse le chemin et renvoie la liste des problèmes trouvés (voir notes). | 665 |
+| `C:addNodeAtCamera()` | Adds a node 15 m in front of the camera, placed on the terrain (if snapToTerrain), and selects it. | 588 |
+| `C:autoOrientNodes()` | Orients each node (quatFromDir, up +Z) toward the next; the last keeps the incoming direction. Ignores segments of length <= 0.001. No effect with fewer than 2 nodes. | 614 |
+| `C:beginDrag()` | Start of gizmo manipulation: stores the node's position and rotation. | 545 |
+| `C:dragging()` | During manipulation: translates (with terrain snap) or rotates the node according to the gizmo. | 554 |
+| `C:draw(mouseInfo)` | Called every frame: handles the axis gizmo if a node is selected, processes mouse input and updates the gizmo outside manipulation. | 720 |
+| `C:drawPathDetail(path)` | Draws the detail of a path: Goto, name, file name (Rename), description, statistics (nodes, length, elevation change), tool buttons (Add Node, Add Node At Camera, Reverse Order, Auto-Orient Nodes, Renumber, Snap All To Terrain, Set All Radii, Validate Path), node list with Delete and the selected node editor (name, position, rotation, radius, recovery/bonus flags, JSON flags). | 140 |
+| `C:drawPathnodeSelectionIndicators(mouseInfo)` | Draws in the world the nodes (sphere of their radius: orange selected, green recovery, gold bonus, white otherwise), direction arrows, labels "name (index) [RECOVERY/BONUS]", prisms between nodes and cumulative distance. | 740 |
+| `C:drawPathsList(allPaths, selection)` | Draws the list of paths with "Add Path" and a "Delete" context menu. Fills selection.index and selection.clicked. | 101 |
+| `C:dropToTerrain(pos)` | Places a point at the terrain height. | 578 |
+| `C:endDragging()` | End of manipulation: re-snaps to the terrain on translation, records "Manipulate Pathnode" in the history, marks the path as modified. | 698 |
+| `C:findPathnode(mouseInfo, objects)` | Draws spheres on the elements (orange if selected) and returns the one closest to the camera whose mouse ray crosses the sphere. | 427 |
+| `C:getNewPath()` | Creates an empty path table: name "New Path", description "A new path", empty nodes. | 401 |
+| `C:getNewPathnode()` | Creates a default node and adds it at the end of the current path (creates a path if none). | 410 |
+| `C:getSelectedPathnodeIndex()` | Returns the index of the selected node. | 93 |
+| `C:init(crawlEditorParam)` | Initializes the instance (called by the constructor). | 60 |
+| `C:input(mouseInfo)` | Processes mouse input: Shift = add, Alt = insertion, otherwise node selection. | 492 |
+| `C:renumberNodes()` | Renames all nodes "Node N" in order. | 645 |
+| `C:reversePathOrder()` | Reverses the order of the nodes and deselects. | 603 |
+| `C:selectPathnode(index)` | Selects the node with the given index (1-based); an invalid index, nil or <= 0 deselects. | 84 |
+| `C:setAllRadii(radius)` | Applies the same radius to all nodes. | 636 |
+| `C:setFields(path)` | Copies the path's name, file name and description into the imgui input buffers. | 73 |
+| `C:setPath(pathParam)` | Sets the path being edited. | 80 |
+| `C:setSelectedPathnodeIndex(index)` | Alias of selectPathnode. | 97 |
+| `C:snapAllToTerrain()` | Places all nodes on the terrain. | 654 |
+| `C:tryInsert(mouseInfo)` | Detects a click on the middle of a segment and inserts a new node there, which it selects. | 459 |
+| `C:updateTransform()` | Places the axis gizmo on the position and rotation of the selected node. | 535 |
+| `C:validatePath()` | Analyzes the path and returns the list of problems found (see notes). | 665 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/crawlEditor/paths.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/crawlEditor/paths.lua`.*

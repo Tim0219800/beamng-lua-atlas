@@ -2,133 +2,133 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/router/navigationState.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Mémoire d'état du routeur d'interface : entrée précédente, entrée courante et entrée en attente (pending), état du décorateur de fil d'Ariane, et dernière portée active par route. Il fournit les accesseurs, la promotion d'une entrée en attente en entrée courante, la sérialisation (pour survivre au rechargement des extensions Lua) et la réinitialisation. Aucune logique de navigation : c'est le routeur qui décide.
---- Accès : extension `ui_router_navigationState` : `extensions.load("ui_router_navigationState")`, puis la globale `ui_router_navigationState`
+--- State memory of the UI router: previous entry, current entry and pending entry, breadcrumb decorator state, and last active scope per route. It provides the accessors, the promotion of a pending entry to current entry, serialization (to survive Lua extensions reload) and reset. No navigation logic: the router decides.
+--- Access: extension `ui_router_navigationState`: `extensions.load("ui_router_navigationState")`, then the global `ui_router_navigationState`
 ---@class ui_router_navigationState
 ui_router_navigationState = {}
 
---- Réinitialise le décorateur (valeur et module à nil, visibilité par défaut de la config).
----Source : lua/ge/extensions/ui/router/navigationState.lua:132
+--- Resets the decorator (value and module to nil, visibility to the config default).
+---Source: lua/ge/extensions/ui/router/navigationState.lua:132
 function ui_router_navigationState.clearDecorator() end
 
---- Oublie la dernière portée active d'une route (ignoré si routeName est nil).
----Source : lua/ge/extensions/ui/router/navigationState.lua:26
----@param routeName string|nil Nom de route.
+--- Forgets a route's last active scope (ignored if routeName is nil).
+---Source: lua/ge/extensions/ui/router/navigationState.lua:26
+---@param routeName string|nil Road name.
 function ui_router_navigationState.clearLastActiveScope(routeName) end
 
---- Supprime l'entrée en attente non validée.
----Source : lua/ge/extensions/ui/router/navigationState.lua:44
+--- Removes the unvalidated pending entry.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:44
 function ui_router_navigationState.clearPendingEntry() end
 
---- Restaure l'état depuis les données de serialize (sans effet si data est nil). Sans champ decorator, le décorateur est réinitialisé.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/navigationState.lua:153
----@param data table|nil Données produites par serialize.
+--- Restores the state from serialize data (no effect if data is nil). Without a decorator field, the decorator is reset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/navigationState.lua:153
+---@param data table|nil Data produced by serialize.
 function ui_router_navigationState.deserialize(data) end
 
---- Renvoie le fil d'Ariane de l'entrée courante ({} si aucun).
----Source : lua/ge/extensions/ui/router/navigationState.lua:82
----@return table[]  Miettes de pain.
+--- Returns the breadcrumb of the current entry ({} if none).
+---Source: lua/ge/extensions/ui/router/navigationState.lua:82
+---@return table[]  Breadcrumbs.
 function ui_router_navigationState.getBreadcrumbs() end
 
---- Renvoie l'entrée de navigation courante (validée).
----Source : lua/ge/extensions/ui/router/navigationState.lua:54
----@return table|nil  Entrée {request, resolved, origin, toRoute, fromRoute, routeNode}.
+--- Returns the current (committed) navigation entry.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:54
+---@return table|nil  Entry {request, resolved, origin, toRoute, fromRoute, routeNode}.
 function ui_router_navigationState.getCurrentEntry() end
 
---- Raccourci de compatibilité : renvoie l'entrée courante complète (voir notes).
----Source : lua/ge/extensions/ui/router/navigationState.lua:70
----@return table|nil  Entrée courante.
+--- Compatibility shortcut: returns the full current entry (see notes).
+---Source: lua/ge/extensions/ui/router/navigationState.lua:70
+---@return table|nil  Current entry.
 function ui_router_navigationState.getCurrentResolved() end
 
---- Renvoie la configuration de route (routeNode, avec ses hooks) de l'entrée courante.
----Source : lua/ge/extensions/ui/router/navigationState.lua:74
----@return table|nil  Nœud de route.
+--- Returns the route configuration (routeNode, with its hooks) of the current entry.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:74
+---@return table|nil  Route node.
 function ui_router_navigationState.getCurrentRouteNode() end
 
---- Renvoie la valeur du décorateur.
----Source : lua/ge/extensions/ui/router/navigationState.lua:116
----@return any  Décorateur ou nil.
+--- Returns the decorator value.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:116
+---@return any  Decorator or nil.
 function ui_router_navigationState.getDecorator() end
 
---- Renvoie le module propriétaire du décorateur.
----Source : lua/ge/extensions/ui/router/navigationState.lua:120
----@return string|nil  Nom du module.
+--- Returns the decorator's owner module.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:120
+---@return string|nil  Module name.
 function ui_router_navigationState.getDecoratorModule() end
 
---- Renvoie la dernière portée active mémorisée pour la route.
----Source : lua/ge/extensions/ui/router/navigationState.lua:22
----@param routeName string Nom de route.
----@return string|nil  Identifiant de portée.
+--- Returns the last stored active scope for the route.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:22
+---@param routeName string Road name.
+---@return string|nil  Scope identifier.
 function ui_router_navigationState.getLastActiveScope(routeName) end
 
---- Renvoie l'entrée en attente.
----Source : lua/ge/extensions/ui/router/navigationState.lua:58
----@return table|nil  Entrée en attente.
+--- Returns the pending entry.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:58
+---@return table|nil  Pending entry.
 function ui_router_navigationState.getPendingEntry() end
 
---- Renvoie le routeNode de l'entrée en attente.
----Source : lua/ge/extensions/ui/router/navigationState.lua:78
----@return table|nil  Nœud de route.
+--- Returns the routeNode of the pending entry.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:78
+---@return table|nil  Route node.
 function ui_router_navigationState.getPendingRouteNode() end
 
---- Renvoie l'entrée précédente.
----Source : lua/ge/extensions/ui/router/navigationState.lua:62
----@return table|nil  Entrée précédente.
+--- Returns the previous entry.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:62
+---@return table|nil  Previous entry.
 function ui_router_navigationState.getPreviousEntry() end
 
---- Indique si le décorateur est visible.
----Source : lua/ge/extensions/ui/router/navigationState.lua:128
----@return boolean  Visibilité.
+--- Returns whether the decorator is visible.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:128
+---@return boolean  Visibility.
 function ui_router_navigationState.isDecoratorVisible() end
 
---- Promeut l'entrée en attente en entrée courante (l'ancienne courante devient précédente).
----Source : lua/ge/extensions/ui/router/navigationState.lua:48
+--- Promotes the pending entry to current entry (the old current becomes previous).
+---Source: lua/ge/extensions/ui/router/navigationState.lua:48
 function ui_router_navigationState.promotePendingEntry() end
 
---- Raccourci de compatibilité : appelle promotePendingEntry.
----Source : lua/ge/extensions/ui/router/navigationState.lua:95
+--- Compatibility shortcut: calls promotePendingEntry.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:95
 function ui_router_navigationState.promotePendingStates() end
 
---- Remet à zéro les trois entrées, les dernières portées actives et le décorateur.
----Source : lua/ge/extensions/ui/router/navigationState.lua:167
+--- Resets the three entries, the last active scopes and the decorator.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:167
 function ui_router_navigationState.reset() end
 
---- Sérialise les entrées précédente/courante/en attente (formes stockables) et le décorateur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/ui/router/navigationState.lua:140
+--- Serializes the previous/current/pending entries (storable forms) and the decorator.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/ui/router/navigationState.lua:140
 ---@return table  {previousEntry, currentEntry, pendingEntry, decorator={value, moduleName, visible}}.
 function ui_router_navigationState.serialize() end
 
---- Définit la valeur du décorateur et son module.
----Source : lua/ge/extensions/ui/router/navigationState.lua:111
----@param value any Valeur du décorateur.
----@param moduleName string Module propriétaire (premier segment du nom de route).
+--- Sets the decorator value and its module.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:111
+---@param value any Decorator value.
+---@param moduleName string Owner module (first segment of the route name).
 function ui_router_navigationState.setDecorator(value, moduleName) end
 
---- Affiche ou masque le décorateur.
----Source : lua/ge/extensions/ui/router/navigationState.lua:124
----@param visible boolean Visibilité.
+--- Shows or hides the decorator.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:124
+---@param visible boolean Visibility.
 function ui_router_navigationState.setDecoratorVisible(visible) end
 
---- Mémorise la dernière portée active d'une route.
----Source : lua/ge/extensions/ui/router/navigationState.lua:18
----@param routeName string Nom de route.
----@param scopeId string Identifiant de portée.
+--- Stores a route's last active scope.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:18
+---@param routeName string Road name.
+---@param scopeId string Scope identifier.
 function ui_router_navigationState.setLastActiveScope(routeName, scopeId) end
 
---- Définit l'entrée de navigation en attente de validation par le framework.
----Source : lua/ge/extensions/ui/router/navigationState.lua:38
----@param entry table Entrée de navigation.
+--- Sets the navigation entry pending validation by the framework.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:38
+---@param entry table Navigation entry.
 function ui_router_navigationState.setPendingEntry(entry) end
 
---- Raccourci de compatibilité : construit l'entrée en attente à partir d'un routeNode et de {request, resolved, origin}.
----Source : lua/ge/extensions/ui/router/navigationState.lua:86
----@param routeNode table Nœud de route.
+--- Compatibility shortcut: builds the pending entry from a routeNode and {request, resolved, origin}.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:86
+---@param routeNode table Route node.
 ---@param data table {request, resolved, origin}.
 function ui_router_navigationState.setPendingState(routeNode, data) end
 
---- Raccourci de compatibilité : ne fait rien.
----Source : lua/ge/extensions/ui/router/navigationState.lua:99
+--- Compatibility shortcut: does nothing.
+---Source: lua/ge/extensions/ui/router/navigationState.lua:99
 function ui_router_navigationState.setRequest() end
 

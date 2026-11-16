@@ -1,42 +1,362 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/render/spheres.lua",
-  "module": "Dessin de sphères et de poignées de debug pour les outils d'édition de splines (issu de l'ancien render.lua). Module feuille : dépend de utils/debugDraw et du style partagé. Le rayon est proportionnel à la distance à la caméra (taille apparente constante jusqu'à 60 m, puis taille monde fixe), via getSphereScale que réutilisent les modules render/spline, transport et graph. Contient les nœuds, jonctions, poignées de barre et de courbe, surbrillances (survol, sélection, pulsées dans le temps) et fantômes « rayons X » sans test de profondeur.",
+  "module": "Drawing of debug spheres and handles for the spline editing tools (from the old render.lua). Leaf module: depends on utils/debugDraw and the shared style. The radius is proportional to the distance to the camera (constant apparent size up to 60 m, then fixed world size), via getSphereScale which the render/spline, transport and graph modules reuse. Contains nodes, junctions, bar and curve handles, highlights (hover, selection, pulsing over time) and \"X-ray\" ghosts without depth test.",
   "notes": [
-    "Les variantes « Culled » (et la plupart des dessins de nœuds) ne dessinent qu'à moins de 600 m de la caméra ; drawSphereCursor et drawSphereImmediate ne sont pas filtrées.",
-    "Les surbrillances pulsent avec os.clock() selon les fréquences du style (highlightPulseHz, highlightHoverPulseHz).",
-    "Les fonctions « Fixed » prennent un rayon monde fixe au lieu de l'échelle liée à la distance.",
-    "Les fantômes (Ghost) et surbrillances sont dessinés sans test de profondeur : visibles à travers le terrain."
+    "The \"Culled\" variants (and most node drawings) only draw within 600 m of the camera; drawSphereCursor and drawSphereImmediate are not filtered.",
+    "The highlights pulse with os.clock() according to the style frequencies (highlightPulseHz, highlightHoverPulseHz).",
+    "The \"Fixed\" functions take a fixed world radius instead of the distance-linked scale.",
+    "Ghosts (Ghost) and highlights are drawn without depth test: visible through the terrain."
   ],
   "functions": {
-    "getSphereScale": {"desc": "Facteur d'échelle de sphère pour une distance d à la caméra : d plafonné à 60 m, multiplié par une pente (1/sqrt(30) * 0.8).", "params": {"d": {"type": "number", "desc": "Distance caméra-point en mètres."}}, "returns": [{"type": "number", "desc": "Échelle de base."}], "internal": false},
-    "drawSphereCulled": {"desc": "Sphère à l'échelle liée à la distance, si le point est à moins de 600 m.", "params": {"p": {"type": "vec3", "desc": "Centre."}, "scale": {"type": "number", "desc": "Multiplicateur d'échelle."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
-    "drawSphereImmediate": {"desc": "Sphère à l'échelle liée à la distance, sans filtrage par distance.", "params": {"p": {"type": "vec3", "desc": "Centre."}, "scale": {"type": "number", "desc": "Multiplicateur d'échelle."}, "col": {"type": "integer", "desc": "Couleur packée."}}, "returns": []},
-    "drawSphereRib": {"desc": "Poignée de nervure : halo puis cœur.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereBar": {"desc": "Poignée de barre (halo puis cœur).", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereBarHover": {"desc": "Poignée de barre survolée : halo pulsé plus grand.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereBarGhost": {"desc": "Fantôme rayons X de la poignée de barre.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereCornerHandleGhost": {"desc": "Fantôme rayons X de la poignée de coin.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereCurveHandle": {"desc": "Poignée d'apex de courbe (flexion d'arête, rayon de coin), verte par défaut.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereCurveHandleHover": {"desc": "Poignée de courbe survolée (halo pulsé).", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereCurveHandleCol": {"desc": "Poignée de courbe avec couleurs de cœur et de halo choisies par l'outil : point stable avec halo doux.", "params": {"p": {"type": "vec3", "desc": "Centre."}, "coreCol": {"type": "integer", "desc": "Couleur du cœur."}, "glowCol": {"type": "integer", "desc": "Couleur du halo."}}, "returns": []},
-    "drawSphereCurveHandleHoverCol": {"desc": "Version survolée de drawSphereCurveHandleCol : halo plus grand, plus brillant et pulsé.", "params": {"p": {"type": "vec3", "desc": "Centre."}, "coreCol": {"type": "integer", "desc": "Couleur du cœur."}, "glowCol": {"type": "integer", "desc": "Couleur du halo."}}, "returns": []},
-    "drawSphereHighlight": {"desc": "Surbrillance de nœud (colourHighlight, sans test de profondeur), filtrée à 600 m.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereHighlightForeground": {"desc": "Surbrillance de nœud sans filtrage de distance.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereHighlightHover": {"desc": "Surbrillance de survol pulsée, à l'échelle liée à la distance.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereHighlightHoverFixed": {"desc": "Surbrillance de survol pulsée de rayon monde fixe.", "params": {"p": {"type": "vec3", "desc": "Centre."}, "radius": {"type": "number", "desc": "Rayon de base en mètres."}}, "returns": []},
-    "drawSphereHighlightSelected": {"desc": "Surbrillance de sélection pulsée, à l'échelle liée à la distance.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereHighlightSelectedFixed": {"desc": "Surbrillance de sélection pulsée de rayon monde fixe.", "params": {"p": {"type": "vec3", "desc": "Centre."}, "radius": {"type": "number", "desc": "Rayon de base en mètres."}}, "returns": []},
-    "drawPathNode": {"desc": "Nœud de chemin (colourPathNode).", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSelectedNavGraphNode": {"desc": "Gros nœud pulsé du graphe de navigation sélectionné.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawHoverNavGraphNode": {"desc": "Halo pulsé d'un nœud de navGraph survolé.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereNode": {"desc": "Nœud standard : halo puis cœur.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereNodeLocked": {"desc": "Nœud verrouillé (couleurs colourNodeLocked).", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereNodeDull": {"desc": "Nœud atténué.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereNodeForeground": {"desc": "Nœud (halo puis cœur) dessiné sans test de profondeur.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereNodeGhost": {"desc": "Fantôme rayons X d'un nœud : seule la partie enfouie dans le terrain ou un maillage se voit.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereJunction": {"desc": "Centre de jonction (halo puis cœur).", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereJunctionDull": {"desc": "Centre de jonction atténué.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereJunctionGhost": {"desc": "Fantôme rayons X d'une jonction.", "params": {"p": {"type": "vec3", "desc": "Centre."}}, "returns": []},
-    "drawSphereCursor": {"desc": "Sphère du curseur souris sur la carte ; distance plafonnée à 100 m pour la taille. Non filtrée.", "params": {"p": {"type": "vec3", "desc": "Position."}, "isActive": {"type": "boolean|nil", "desc": "true pour la couleur active, sinon couleur inactive."}}, "returns": []}
+    "getSphereScale": {
+      "desc": "Sphere scale factor for a distance d to the camera: d capped at 60 m, multiplied by a slope (1/sqrt(30) * 0.8).",
+      "params": {
+        "d": {
+          "type": "number",
+          "desc": "Camera-to-point distance in meters."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Base scale."
+        }
+      ],
+      "internal": false
+    },
+    "drawSphereCulled": {
+      "desc": "Sphere at the distance-linked scale, if the point is within 600 m.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "scale": {
+          "type": "number",
+          "desc": "Scale multiplier."
+        },
+        "col": {
+          "type": "integer",
+          "desc": "Packed color."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereImmediate": {
+      "desc": "Sphere at the distance-linked scale, without distance filtering.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "scale": {
+          "type": "number",
+          "desc": "Scale multiplier."
+        },
+        "col": {
+          "type": "integer",
+          "desc": "Packed color."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereRib": {
+      "desc": "Rib handle: halo then core.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereBar": {
+      "desc": "Bar handle (halo then core).",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereBarHover": {
+      "desc": "Hovered bar handle: larger pulsing halo.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereBarGhost": {
+      "desc": "X-ray ghost of the bar handle.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereCornerHandleGhost": {
+      "desc": "X-ray ghost of the corner handle.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereCurveHandle": {
+      "desc": "Curve apex handle (edge bending, corner radius), green by default.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereCurveHandleHover": {
+      "desc": "Hovered curve handle (pulsing halo).",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereCurveHandleCol": {
+      "desc": "Curve handle with core and halo colors chosen by the tool: stable point with soft halo.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "coreCol": {
+          "type": "integer",
+          "desc": "Core color."
+        },
+        "glowCol": {
+          "type": "integer",
+          "desc": "Halo color."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereCurveHandleHoverCol": {
+      "desc": "Hovered version of drawSphereCurveHandleCol: larger, brighter, pulsing halo.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "coreCol": {
+          "type": "integer",
+          "desc": "Core color."
+        },
+        "glowCol": {
+          "type": "integer",
+          "desc": "Halo color."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereHighlight": {
+      "desc": "Node highlight (colourHighlight, no depth test), filtered at 600 m.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereHighlightForeground": {
+      "desc": "Node highlight without distance filtering.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereHighlightHover": {
+      "desc": "Pulsing hover highlight, at the distance-linked scale.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereHighlightHoverFixed": {
+      "desc": "Pulsing hover highlight with fixed world radius.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "radius": {
+          "type": "number",
+          "desc": "Base radius in meters."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereHighlightSelected": {
+      "desc": "Pulsing selection highlight, at the distance-linked scale.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereHighlightSelectedFixed": {
+      "desc": "Pulsing selection highlight with fixed world radius.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "radius": {
+          "type": "number",
+          "desc": "Base radius in meters."
+        }
+      },
+      "returns": []
+    },
+    "drawPathNode": {
+      "desc": "Path node (colourPathNode).",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSelectedNavGraphNode": {
+      "desc": "Large pulsing node of the selected navigation graph.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawHoverNavGraphNode": {
+      "desc": "Pulsing halo of a hovered navGraph node.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereNode": {
+      "desc": "Standard node: halo then core.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereNodeLocked": {
+      "desc": "Locked node (colourNodeLocked colors).",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereNodeDull": {
+      "desc": "Dimmed node.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereNodeForeground": {
+      "desc": "Node (halo then core) drawn without depth test.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereNodeGhost": {
+      "desc": "X-ray ghost of a node: only the part buried in the terrain or a mesh is visible.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereJunction": {
+      "desc": "Junction center (halo then core).",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereJunctionDull": {
+      "desc": "Dimmed junction center.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereJunctionGhost": {
+      "desc": "X-ray ghost of a junction.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Center."
+        }
+      },
+      "returns": []
+    },
+    "drawSphereCursor": {
+      "desc": "Mouse cursor sphere on the map; distance capped at 100 m for the size. Not filtered.",
+      "params": {
+        "p": {
+          "type": "vec3",
+          "desc": "Position."
+        },
+        "isActive": {
+          "type": "boolean|nil",
+          "desc": "true for the active color, otherwise inactive color."
+        }
+      },
+      "returns": []
+    }
   }
 }

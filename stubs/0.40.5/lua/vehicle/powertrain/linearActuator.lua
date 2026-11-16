@@ -2,78 +2,78 @@
 -- tim19Atlas stub generated from lua/vehicle/powertrain/linearActuator.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Composant powertrain `linearActuator` : vérin à vis (actionneur linéaire mécanique) entraîné par un arbre. Il transforme le couple d'entrée en force axiale sur des poutres (obj:screwBeam) repérées par les tags `beamTags` et mesure la vitesse d'extension, qu'il renvoie à son parent comme vitesse de rotation (vitesse / pas de vis). Catégorie `torqueConsumer`, sans port de sortie. Utile pour benne, plateforme ou vérin électrique. Il suit l'extension (`currentExtend`, `currentExtendPercent`).
---- Accès : type de composant powertrain `linearActuator` (jbeam `powertrain`), accessible par `powertrain.getDevice("nom")`
+--- Powertrain component `linearActuator`: screw jack (mechanical linear actuator) driven by a shaft. It converts the input torque into axial force on beams (obj:screwBeam) identified by the `beamTags` tags and measures the extension speed, which it returns to its parent as a rotation speed (speed / screw lead). Category `torqueConsumer`, without an output port. Useful for dump bed, platform or electric cylinder. It tracks the extension (`currentExtend`, `currentExtendPercent`).
+--- Access: powertrain device type `linearActuator` (jbeam `powertrain`), reachable with `powertrain.getDevice("name")`
 ---@class powertrain_linearActuator
 ---@field deviceCategories table<string, boolean> {torqueConsumer=true}.
----@field outputPorts table Table vide : aucun port de sortie.
+---@field outputPorts table Empty table: no output port.
 local powertrain_linearActuator = {}
 
---- Construit le vérin à vis : géométrie de la vis (diamètre, pas, angle d'hélice), limites d'extension, vitesse limite et liste des poutres motrices à partir des tags beamTags.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:128
----@param jbeamData table Données jbeam du composant (leadMillimeterPerRevolution obligatoire).
----@return table  Le device (classe `device`).
+--- Builds the screw jack: screw geometry (diameter, lead, helix angle), extension limits, speed limit and the list of driving beams from the beamTags tags.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:128
+---@param jbeamData table jbeam data of the component (leadMillimeterPerRevolution required).
+---@return table  The device (class `device`).
 function powertrain_linearActuator.new(jbeamData) end
 
---- Objet renvoyé par new(jbeamData).
+--- Object returned by new(jbeamData).
 ---@class powertrain_linearActuator_device
 local powertrain_linearActuator_device = {}
 
---- Augmente le coefficient de frottement de dégâts (0.01 de dégât = +0.1).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:52
----@param damageAmount number Quantité de dégâts du groupe de déformation.
+--- Increases the damage friction coefficient (0.01 of damage = +0.1).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:52
+---@param damageAmount number Amount of damage of the deformation group.
 function powertrain_linearActuator_device:applyDeformGroupDamage(damageAmount) end
 
---- Inertie purement virtuelle : cumulativeInertia = virtualInertia / gearRatio² ; rapports cumulés = gearRatio.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:90
+--- Purely virtual inertia: cumulativeInertia = virtualInertia / gearRatio²; cumulative ratios = gearRatio.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:90
 function powertrain_linearActuator_device:calculateInertia() end
 
---- Renvoie l'intégrité 0..1 (0 si cassé) et {damageFrictionCoef, isBroken}.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:71
----@return number  Intégrité 0..1.
----@return table  État sauvegardable.
+--- Returns the integrity 0..1 (0 if broken) and {damageFrictionCoef, isBroken}.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:71
+---@return number  Integrity 0..1.
+---@return table  Saveable state.
 function powertrain_linearActuator_device:getPartCondition() end
 
---- Marque le vérin comme cassé (isBroken = true) et réselectionne les mises à jour (sans effet réel).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:84
+--- Marks the actuator as broken (isBroken = true) and reselects the updates (no real effect).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:84
 function powertrain_linearActuator_device:onBreak() end
 
---- Remet à zéro vitesses, extension, coefficients d'usure/dégâts et isBroken ; relit gearRatio et friction.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:103
----@param jbeamData table Données jbeam du composant.
----@return table  Le device.
+--- Resets speeds, extension, wear/damage coefficients and isBroken; rereads gearRatio and friction.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:103
+---@param jbeamData table jbeam data of the component.
+---@return table  The device.
 function powertrain_linearActuator_device:reset(jbeamData) end
 
---- Applique usure (coefficient de 1 à 1.5) et dégâts selon l'odomètre et l'intégrité ; appelle onBreak si isBroken.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:56
----@param subSystem any Non utilisé.
----@param odometer number Distance parcourue en mètres.
----@param integrity number|table Nombre 0..1 ou table {damageFrictionCoef, isBroken}.
----@param visual any Non utilisé.
+--- Applies wear (coefficient from 1 to 1.5) and damage according to the odometer and the integrity; calls onBreak if isBroken.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:56
+---@param subSystem any Not used.
+---@param odometer number Distance traveled in meters.
+---@param integrity number|table Number 0..1 or table {damageFrictionCoef, isBroken}.
+---@param visual any Not used.
 function powertrain_linearActuator_device:setPartCondition(subSystem, odometer, integrity, visual) end
 
---- Appelée à chaque pas physique : calcule la force de vis depuis le couple parent (moins frottements), l'applique à chaque poutre par obj:screwBeam avec minExtend/maxExtend/speedLimit, puis met à jour velocity, currentExtend et currentExtendPercent.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:21
+--- Called at each physics step: computes the screw force from the parent torque (minus friction), applies it to each beam via obj:screwBeam with minExtend/maxExtend/speedLimit, then updates velocity, currentExtend and currentExtendPercent.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:21
 function powertrain_linearActuator_device:torqueUpdate() end
 
---- Appelée après construction du powertrain ; renvoie toujours true.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:80
+--- Called after the powertrain is built; always returns true.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:80
 ---@return boolean  true.
 function powertrain_linearActuator_device:validate() end
 
---- Appelée à chaque pas physique : inputAV = velocity * invLeadRadian * gearRatio, écrit dans le parent ; outputAV1 = 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/powertrain/linearActuator.lua:14
----@param dt number Pas de temps en secondes (inutilisé).
+--- Called at each physics step: inputAV = velocity * invLeadRadian * gearRatio, written to the parent; outputAV1 = 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/powertrain/linearActuator.lua:14
+---@param dt number Time step in seconds (unused).
 function powertrain_linearActuator_device:velocityUpdate(dt) end
 
 return powertrain_linearActuator

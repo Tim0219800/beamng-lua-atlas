@@ -1,16 +1,16 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setVehicleData.lua",
-  "module": "Nœud flowgraph « Set Traffic Vehicle Data » (once_instant). Règle un véhicule actif du trafic : role (veh:setRole), enableActions (inverse de role.lockAction), enableRespawn, enableTracking, enablePoolCycle (enableAutoPooling), changePaint (useRandomPaint). Seuls les pins non nil sont appliqués.",
+  "module": "Flowgraph node \"Set Traffic Vehicle Data\" (once_instant). Sets an active traffic vehicle: role (veh:setRole), enableActions (inverse of role.lockAction), enableRespawn, enableTracking, enablePoolCycle (enableAutoPooling), changePaint (useRandomPaint). Only non-nil pins are applied.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true
         },
         "workOnce": {
-          "desc": "Applique les pins non nil au véhicule de trafic vehId (s'il existe).",
+          "desc": "Applies the non-nil pins to traffic vehicle vehId (if it exists).",
           "internal": true
         }
       }

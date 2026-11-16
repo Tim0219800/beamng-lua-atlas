@@ -1,113 +1,113 @@
 # `editor_dragRaceEditor_dragSettings`
 
-*Fichier : `lua/ge/extensions/editor/dragRaceEditor/dragSettings.lua` · VM : Game Engine (GE) · 1167 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dragRaceEditor/dragSettings.lua` · VM: Game Engine (GE) · 1167 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dragRaceEditor_dragSettings` : `extensions.load("editor_dragRaceEditor_dragSettings")`, puis la globale `editor_dragRaceEditor_dragSettings`
+**Access:** extension `editor_dragRaceEditor_dragSettings`: `extensions.load("editor_dragRaceEditor_dragSettings")`, then the global `editor_dragRaceEditor_dragSettings`
 
-Gère les fichiers de réglages de drag (*.dragSettings.json) dans l'éditeur de drag race. Un réglage décrit une course : id, stripId, dragType (headsUpRace/bracketRace), context (freeroam/activity), phases (stage, countdown, race, stop), timers et prefabs (arbre de départ, panneau d'affichage, chemins, décorations). Le module garde en mémoire un seul objet dragSettings (le réglage affiché) et la liste des fichiers trouvés, liste, charge, crée, renomme et sauvegarde ces fichiers, et dessine les panneaux ImGui correspondants.
+Manages the drag settings files (*.dragSettings.json) in the drag race editor. A settings entry describes a race: id, stripId, dragType (headsUpRace/bracketRace), context (freeroam/activity), phases (stage, countdown, race, stop), timers and prefabs (starting tree, display board, paths, decorations). The module keeps in memory a single dragSettings object (the displayed settings) and the list of files found, lists, loads, creates, renames and saves these files, and draws the corresponding ImGui panels.
 
-## Remarques
+## Notes
 
-- loadAllSettings cherche dans /levels/<niveau>/dragstrips/*.dragSettings.json puis dans /gameplay/missions/<niveau>/dragStripRace/*/dragSettings.json et dragStripAPM/*/dragSettings.json. Il essaie le nom du niveau tel quel, en minuscules, avec espaces remplacés par « _ », et les deux.
-- Un fichier de la liste est {type, path, name, _dirty, _fileExists?, _cachedData?}. Le type vaut level, dragStripRace, dragStripAPM (ou mission via le bouton Add).
-- Les index de sélection commencent à 1, -1 = aucune.
-- Seul l'objet dragSettings courant est éditable : changer de sélection met en cache (_cachedData) le réglage modifié non sauvé et recharge l'autre depuis le disque.
-- facilityId est ajouté en mémoire par facilities.selectFacility mais retiré au chargement et à la sauvegarde (jamais écrit dans le fichier).
-- Sauvegarde : validation (dragType et stripId non vides), puis si le fichier est dans le dossier dragstrips du niveau et que id a changé, le fichier est renommé en <id>.dragSettings.json (échec si ce nom existe).
-- À la lecture, si timers est absent ou vide, dragSaveSystem.DEFAULT_TIMERS est utilisé.
-- Dans loadAllSettings, la boucle qui remet _dirty à false s'exécute sur une liste qui vient d'être vidée (sans effet).
+- loadAllSettings searches in /levels/<level>/dragstrips/*.dragSettings.json then in /gameplay/missions/<level>/dragStripRace/*/dragSettings.json and dragStripAPM/*/dragSettings.json. It tries the level name as is, in lowercase, with spaces replaced by "_", and both.
+- A file in the list is {type, path, name, _dirty, _fileExists?, _cachedData?}. The type is level, dragStripRace, dragStripAPM (or mission via the Add button).
+- Selection indices start at 1, -1 = none.
+- Only the current dragSettings object is editable: changing the selection caches (_cachedData) the modified unsaved settings and reloads the other one from disk.
+- facilityId is added in memory by facilities.selectFacility but removed on load and on save (never written to the file).
+- Save: validation (dragType and stripId non-empty), then if the file is in the level's dragstrips folder and id has changed, the file is renamed to <id>.dragSettings.json (fails if that name exists).
+- On read, if timers is missing or empty, dragSaveSystem.DEFAULT_TIMERS is used.
+- In loadAllSettings, the loop that resets _dirty to false runs on a list that has just been emptied (no effect).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dragRaceEditor_dragSettings.drawDragSettingsSection()` | Dessine un panneau ImGui « Drag Settings » (ancienne présentation en bloc fixe de 200 px de haut). *(interne)* | 957 |
-| `editor_dragRaceEditor_dragSettings.drawPhasesSection()` | Dessine l'édition des phases de course. *(interne)* | 1108 |
-| `editor_dragRaceEditor_dragSettings.drawPrefabsSection()` | Dessine l'édition des prefabs (arbre, panneau, chemins, décorations). *(interne)* | 1041 |
-| `editor_dragRaceEditor_dragSettings.drawSettingsDetails()` | Dessine le détail du réglage sélectionné : Basics, Phases, Timers, Prefabs. Les modifications appellent markDirty. *(interne)* | 402 |
-| `editor_dragRaceEditor_dragSettings.drawSettingsList()` | Dessine la section « Drag Settings » (liste, bouton Add via dialogue de sauvegarde, etc.). Les boutons sont désactivés s'il n'y a aucun strip sauvegardé. *(interne)* | 236 |
-| `editor_dragRaceEditor_dragSettings.getAllSettings()` | Renvoie la liste des fichiers de réglages. | 189 |
-| `editor_dragRaceEditor_dragSettings.getDragSettings()` | Renvoie l'objet dragSettings en cours d'édition. | 834 |
-| `editor_dragRaceEditor_dragSettings.getSelectedSettings()` | Renvoie l'entrée de fichier sélectionnée. | 201 |
-| `editor_dragRaceEditor_dragSettings.getSelectedSettingsIndex()` | Index (base 1) du fichier sélectionné, -1 si aucun. | 193 |
-| `editor_dragRaceEditor_dragSettings.loadAllSettings()` | Vide la liste puis la remplit avec les fichiers de réglages du niveau courant et de ses missions dragStripRace / dragStripAPM. Le nom affiché est json.id s'il existe, sinon le nom de fichier ou de dossier. Ne fait rien sans niveau chargé. | 68 |
-| `editor_dragRaceEditor_dragSettings.loadDragSettings(filePath)` | Lit un fichier JSON dans dragSettings, supprime facilityId, complète id (nom de fichier) et timers par défaut, et remet _dirty à false pour le fichier correspondant. | 850 |
-| `editor_dragRaceEditor_dragSettings.markDirty()` | Marque le fichier sélectionné comme modifié et copie dragSettings dans son cache. | 842 |
-| `editor_dragRaceEditor_dragSettings.saveDragSettings(filePath)` | Valide puis écrit dragSettings (sans facilityId) en JSON. Corrige l'extension en .dragSettings.json, retire les caractères *?<>\|", renomme le fichier si l'id a changé (dossier du niveau), crée le dossier si besoin et met à jour l'entrée sélectionnée. | 876 |
-| `editor_dragRaceEditor_dragSettings.selectSettings(index)` | Sélectionne un fichier : met en cache le réglage précédent s'il est modifié, désélectionne le strip, puis restaure le cache, ou charge le fichier depuis le disque, ou pour un fichier inexistant reprend le nom comme id. | 208 |
-| `editor_dragRaceEditor_dragSettings.setDragSettings(settings)` | Remplace l'objet dragSettings courant (inchangé si nil). | 838 |
-| `editor_dragRaceEditor_dragSettings.setSelectedSettingsIndex(index)` | Fixe l'index sélectionné sans charger de données. | 197 |
-| `editor_dragRaceEditor_dragSettings.validateDragSettings(settings)` | Vérifie qu'un réglage a un dragType et un stripId non vides. | 946 |
+| `editor_dragRaceEditor_dragSettings.drawDragSettingsSection()` | Draws an ImGui "Drag Settings" panel (old presentation in a fixed 200 px high block). *(internal)* | 957 |
+| `editor_dragRaceEditor_dragSettings.drawPhasesSection()` | Draws the race phase editing. *(internal)* | 1108 |
+| `editor_dragRaceEditor_dragSettings.drawPrefabsSection()` | Draws the prefab editing (tree, board, paths, decorations). *(internal)* | 1041 |
+| `editor_dragRaceEditor_dragSettings.drawSettingsDetails()` | Draws the detail of the selected settings: Basics, Phases, Timers, Prefabs. Modifications call markDirty. *(internal)* | 402 |
+| `editor_dragRaceEditor_dragSettings.drawSettingsList()` | Draws the "Drag Settings" section (list, Add button via save dialog, etc.). The buttons are disabled if there is no saved strip. *(internal)* | 236 |
+| `editor_dragRaceEditor_dragSettings.getAllSettings()` | Returns the list of settings files. | 189 |
+| `editor_dragRaceEditor_dragSettings.getDragSettings()` | Returns the dragSettings object being edited. | 834 |
+| `editor_dragRaceEditor_dragSettings.getSelectedSettings()` | Returns the selected file entry. | 201 |
+| `editor_dragRaceEditor_dragSettings.getSelectedSettingsIndex()` | Index (1-based) of the selected file, -1 if none. | 193 |
+| `editor_dragRaceEditor_dragSettings.loadAllSettings()` | Empties the list then fills it with the settings files of the current level and its dragStripRace / dragStripAPM missions. The displayed name is json.id if it exists, otherwise the file or folder name. Does nothing without a loaded level. | 68 |
+| `editor_dragRaceEditor_dragSettings.loadDragSettings(filePath)` | Reads a JSON file into dragSettings, removes facilityId, fills in id (file name) and default timers, and resets _dirty to false for the corresponding file. | 850 |
+| `editor_dragRaceEditor_dragSettings.markDirty()` | Marks the selected file as modified and copies dragSettings into its cache. | 842 |
+| `editor_dragRaceEditor_dragSettings.saveDragSettings(filePath)` | Validates then writes dragSettings (without facilityId) as JSON. Fixes the extension to .dragSettings.json, removes the characters *?<>\|", renames the file if the id changed (level folder), creates the folder if needed and updates the selected entry. | 876 |
+| `editor_dragRaceEditor_dragSettings.selectSettings(index)` | Selects a file: caches the previous settings if modified, deselects the strip, then restores the cache, or loads the file from disk, or for a nonexistent file takes the name as id. | 208 |
+| `editor_dragRaceEditor_dragSettings.setDragSettings(settings)` | Replaces the current dragSettings object (unchanged if nil). | 838 |
+| `editor_dragRaceEditor_dragSettings.setSelectedSettingsIndex(index)` | Sets the selected index without loading data. | 197 |
+| `editor_dragRaceEditor_dragSettings.validateDragSettings(settings)` | Checks that a settings entry has a non-empty dragType and stripId. | 946 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dragRaceEditor_dragSettings.getAllSettings()`
 
-Renvoie la liste des fichiers de réglages.
+Returns the list of settings files.
 
-- **renvoie** : table tableau de {type, path, name, _dirty…}
+- **returns**: table array of {type, path, name, _dirty...}
 
 #### `editor_dragRaceEditor_dragSettings.getDragSettings()`
 
-Renvoie l'objet dragSettings en cours d'édition.
+Returns the dragSettings object being edited.
 
-- **renvoie** : table réglage courant
+- **returns**: table current settings
 
 #### `editor_dragRaceEditor_dragSettings.getSelectedSettings()`
 
-Renvoie l'entrée de fichier sélectionnée.
+Returns the selected file entry.
 
-- **renvoie** : table|nil entrée ou nil
+- **returns**: table|nil entry or nil
 
 #### `editor_dragRaceEditor_dragSettings.getSelectedSettingsIndex()`
 
-Index (base 1) du fichier sélectionné, -1 si aucun.
+Index (1-based) of the selected file, -1 if none.
 
-- **renvoie** : integer index
+- **returns**: integer index
 
 #### `editor_dragRaceEditor_dragSettings.loadDragSettings(filePath)`
 
-Lit un fichier JSON dans dragSettings, supprime facilityId, complète id (nom de fichier) et timers par défaut, et remet _dirty à false pour le fichier correspondant.
+Reads a JSON file into dragSettings, removes facilityId, fills in id (file name) and default timers, and resets _dirty to false for the corresponding file.
 
-- `filePath` (*string*) : chemin du fichier .dragSettings.json
-- **renvoie** : boolean false et erreur affichée si la lecture échoue
+- `filePath` (*string*) : path of the .dragSettings.json file
+- **returns**: boolean false and error displayed if reading fails
 
 #### `editor_dragRaceEditor_dragSettings.saveDragSettings(filePath)`
 
-Valide puis écrit dragSettings (sans facilityId) en JSON. Corrige l'extension en .dragSettings.json, retire les caractères *?<>|", renomme le fichier si l'id a changé (dossier du niveau), crée le dossier si besoin et met à jour l'entrée sélectionnée.
+Validates then writes dragSettings (without facilityId) as JSON. Fixes the extension to .dragSettings.json, removes the characters *?<>|", renames the file if the id changed (level folder), creates the folder if needed and updates the selected entry.
 
-- `filePath` (*string|nil*) : chemin cible ; chemin de l'entrée sélectionnée si nil
-- **renvoie** : boolean succès
+- `filePath` (*string|nil*) : target path; path of the selected entry if nil
+- **returns**: boolean success
 
 #### `editor_dragRaceEditor_dragSettings.selectSettings(index)`
 
-Sélectionne un fichier : met en cache le réglage précédent s'il est modifié, désélectionne le strip, puis restaure le cache, ou charge le fichier depuis le disque, ou pour un fichier inexistant reprend le nom comme id.
+Selects a file: caches the previous settings if modified, deselects the strip, then restores the cache, or loads the file from disk, or for a nonexistent file takes the name as id.
 
-- `index` (*integer*) : index base 1
+- `index` (*integer*) : 1-based index
 
 #### `editor_dragRaceEditor_dragSettings.setDragSettings(settings)`
 
-Remplace l'objet dragSettings courant (inchangé si nil).
+Replaces the current dragSettings object (unchanged if nil).
 
-- `settings` (*table|nil*) : nouveau réglage
+- `settings` (*table|nil*) : new settings
 
 #### `editor_dragRaceEditor_dragSettings.setSelectedSettingsIndex(index)`
 
-Fixe l'index sélectionné sans charger de données.
+Sets the selected index without loading data.
 
-- `index` (*integer*) : index base 1 ou -1
+- `index` (*integer*) : 1-based index or -1
 
 #### `editor_dragRaceEditor_dragSettings.validateDragSettings(settings)`
 
-Vérifie qu'un réglage a un dragType et un stripId non vides.
+Checks that a settings entry has a non-empty dragType and stripId.
 
-- `settings` (*table|nil*) : réglage
-- **renvoie** : boolean validité
-- **renvoie** : string|nil message d'erreur
+- `settings` (*table|nil*) : settings
+- **returns**: boolean validity
+- **returns**: string|nil error message
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryCreate`, `directoryExists`, `fileExists`, `findFiles`, `renameFile`, `stat`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dragRaceEditor/dragSettings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dragRaceEditor/dragSettings.lua`.*

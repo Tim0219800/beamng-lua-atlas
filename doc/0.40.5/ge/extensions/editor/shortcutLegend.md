@@ -1,35 +1,35 @@
 # `editor_shortcutLegend`
 
-*Fichier : `lua/ge/extensions/editor/shortcutLegend.lua` · VM : Game Engine (GE) · 175 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/shortcutLegend.lua` · VM: Game Engine (GE) · 175 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_shortcutLegend` : `extensions.load("editor_shortcutLegend")`, puis la globale `editor_shortcutLegend`
+**Access:** extension `editor_shortcutLegend`: `extensions.load("editor_shortcutLegend")`, then the global `editor_shortcutLegend`
 
-Fenêtre de l'éditeur de monde (sans barre de titre) qui affiche une légende des raccourcis du mode d'édition actif. Elle lit soit editor.editMode.getLegendCurrentActionNames(), soit les actions de l'actionMap du mode (bindings clavier et souris de core_input_bindings), plus editor.editMode.auxShortcuts, puis les trie et les affiche en ligne. Un moddeur d'outil d'éditeur remplit auxShortcuts ou getLegendCurrentActionNames pour que ses raccourcis apparaissent.
+World editor window (no title bar) that displays a legend of the shortcuts of the active edit mode. It reads either editor.editMode.getLegendCurrentActionNames(), or the actions of the mode's actionMap (keyboard and mouse bindings from core_input_bindings), plus editor.editMode.auxShortcuts, then sorts them and displays them inline. An editor tool modder fills auxShortcuts or getLegendCurrentActionNames so that their shortcuts appear.
 
-## Remarques
+## Notes
 
-- auxShortcuts est une table {drapeau editor.AuxControl_xxx ou chaîne = titre} ; les drapeaux numériques sont combinés en texte (ex. 'Ctrl + LMB').
-- Le titre passe par _tr() pour la traduction.
-- La liste est reconstruite uniquement après un changement de mode d'édition (onEditorEditModeChanged).
-- La touche 'zaxis' est affichée sous le nom 'MouseWheel'.
+- auxShortcuts is a table {editor.AuxControl_xxx flag or string = title}; numeric flags are combined into text (e.g. 'Ctrl + LMB').
+- The title goes through _tr() for translation.
+- The list is rebuilt only after an edit mode change (onEditorEditModeChanged).
+- The 'zaxis' key is displayed as 'MouseWheel'.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_shortcutLegend.onEditorEditModeChanged(oldEditMode, newEditMode)` | Hook appelé quand le mode d'édition change : demande la reconstruction de la liste des raccourcis. *(interne)* *(hook)* | 165 |
-| `editor_shortcutLegend.onEditorGui()` | Hook appelé à chaque frame de l'UI de l'éditeur : reconstruit la liste des raccourcis si nécessaire et dessine la légende centrée avec des pastilles pour les touches. *(interne)* *(hook)* | 22 |
-| `editor_shortcutLegend.onEditorInitialized()` | Hook appelé à l'initialisation de l'éditeur : remplit la table des noms de modificateurs (Ctrl, Shift, Alt, LMB, MMB, RMB, MouseWheel, Copy, Paste, etc.), enregistre et affiche la fenêtre shortcutLegend. *(interne)* *(hook)* | 140 |
-| `editor_shortcutLegend.onExtensionLoaded()` | Hook de chargement de l'extension ; vide. *(interne)* *(hook)* | 137 |
+| `editor_shortcutLegend.onEditorEditModeChanged(oldEditMode, newEditMode)` | Hook called when the edit mode changes: requests a rebuild of the shortcut list. *(internal)* *(hook)* | 165 |
+| `editor_shortcutLegend.onEditorGui()` | Hook called every frame of the editor UI: rebuilds the shortcut list if needed and draws the centered legend with key badges. *(internal)* *(hook)* | 22 |
+| `editor_shortcutLegend.onEditorInitialized()` | Hook called at editor initialization: fills the modifier name table (Ctrl, Shift, Alt, LMB, MMB, RMB, MouseWheel, Copy, Paste, etc.), registers and shows the shortcutLegend window. *(internal)* *(hook)* | 140 |
+| `editor_shortcutLegend.onExtensionLoaded()` | Extension load hook; empty. *(internal)* *(hook)* | 137 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_shortcutLegend.onEditorEditModeChanged(oldEditMode, newEditMode)`
 
-Hook appelé quand le mode d'édition change : demande la reconstruction de la liste des raccourcis.
+Hook called when the edit mode changes: requests a rebuild of the shortcut list.
 
-- `oldEditMode` (*table*) : Ancien mode d'édition.
-- `newEditMode` (*table*) : Nouveau mode d'édition.
+- `oldEditMode` (*table*) : Old edit mode.
+- `newEditMode` (*table*) : New edit mode.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/shortcutLegend.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/shortcutLegend.lua`.*

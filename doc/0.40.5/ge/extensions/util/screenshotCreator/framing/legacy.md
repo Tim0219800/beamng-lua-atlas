@@ -1,79 +1,79 @@
 # `util_screenshotCreator_framing_legacy`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/framing/legacy.lua` · VM : Game Engine (GE) · 359 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/framing/legacy.lua` · VM: Game Engine (GE) · 359 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_framing_legacy` : `extensions.load("util_screenshotCreator_framing_legacy")`, puis la globale `util_screenshotCreator_framing_legacy`
+**Access:** extension `util_screenshotCreator_framing_legacy`: `extensions.load("util_screenshotCreator_framing_legacy")`, then the global `util_screenshotCreator_framing_legacy`
 
-Mode de cadrage « Legacy (pre-r186184) » du créateur de captures : calcule la position et l'orientation de la caméra pour qu'un véhicule tienne dans l'image, avec l'ancienne méthode (FOV fixe de 20°). Il s'enregistre auprès de util_screenshotCreator_framingManager via le hook onScreenshotCreatorCollectFramingModes (id « legacy », ordre 50). Il retient les nœuds du véhicule (hors antennes, drapeaux, nœuds non collidables et nœuds sous le sol), cherche par dichotomie la distance de caméra minimale qui garde tous les points d'extrémité dans les marges, puis relève la caméra si elle passe sous 0,75 m au-dessus du point le plus bas.
+"Legacy (pre-r186184)" framing mode of the screenshot creator: computes the camera position and orientation so that a vehicle fits in the image, with the old method (fixed 20° FOV). It registers with util_screenshotCreator_framingManager via the onScreenshotCreatorCollectFramingModes hook (id "legacy", order 50). It keeps the vehicle's nodes (excluding antennas, flags, non-collidable nodes and nodes below the ground), searches by bisection for the minimum camera distance that keeps all extreme points within the margins, then raises the camera if it goes below 0.75 m above the lowest point.
 
-## Exemple
+## Example
 
 ```lua
 local res, err = util_screenshotCreator_framing_legacy.resolve({vehicle = be:getPlayerVehicle(0), resolution = {500, 281}})
 if res then core_camera.setPosRot(0, res.pos.x, res.pos.y, res.pos.z, res.rot.x, res.rot.y, res.rot.z, res.rot.w) end
 ```
 
-## Remarques
+## Notes
 
-- FOV fixe à 20° (champ fov du résultat) ; context.fov est ignoré par ce mode.
-- Résolution par défaut {500, 281}, plan proche par défaut 0,1.
-- Les marges ne sont appliquées que si context.useFramingMargins (ou context.useMargins) vaut true. Sans context.margin, elles ne sont lues dans les réglages que pour la résolution par défaut 500x281, sinon la marge est nulle.
-- Hauteur minimale de la caméra : 0,75 m au-dessus du nœud le plus bas ; au besoin l'élévation est augmentée (jusqu'à 85°), sauf si context.fixedRotation est fourni.
-- Le champ boundBy de framingData indique le côté (left/right/top/bottom) qui limite le cadrage, ou « fallback ».
+- Fixed FOV at 20° (fov field of the result); context.fov is ignored by this mode.
+- Default resolution {500, 281}, default near plane 0.1.
+- Margins are applied only if context.useFramingMargins (or context.useMargins) is true. Without context.margin, they are read from the settings only for the default resolution 500x281, otherwise the margin is zero.
+- Minimum camera height: 0.75 m above the lowest node; if needed the elevation is increased (up to 85°), unless context.fixedRotation is provided.
+- The boundBy field of framingData indicates the side (left/right/top/bottom) that limits the framing, or "fallback".
 
-**Dépendances (chargées avant) :** `core_vehicle_manager`, `util_screenshotCreator_settings`, `util_screenshotCreator_thumbnailConfig`
+**Dependencies (loaded first):** `core_vehicle_manager`, `util_screenshotCreator_settings`, `util_screenshotCreator_thumbnailConfig`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_framing_legacy.frame(context)` | Alias de resolve (même fonction). | 276 |
-| `util_screenshotCreator_framing_legacy.getVehicleFramingData(vehicle, fixedRotation, configName)` | Construit les données géométriques de cadrage d'un véhicule : boîte englobante orientée selon les axes de référence, centre, demi-étendues, point visé, direction de caméra et points d'extrémité (jusqu'à 100 nœuds max et 100 min par axe). Ne calcule pas la distance de caméra. | 45 |
-| `util_screenshotCreator_framing_legacy.onScreenshotCreatorCollectFramingModes(modes)` | Hook appelé par framingManager lors de la collecte des modes. Ajoute à la liste le mode {id = "legacy", label = "Legacy (pre-r186184)", order = 50, fixedFov = 20, supportsFixedRotation = true, resolve}. *(interne)* *(hook)* | 342 |
-| `util_screenshotCreator_framing_legacy.resolve(context)` | Calcule la caméra de cadrage legacy pour context.vehicle. Renvoie une table {pos, rot, fov = 20, name = "legacy camera", debugData, framingData}, ou nil et un message d'erreur si context.vehicle manque. | 276 |
+| `util_screenshotCreator_framing_legacy.frame(context)` | Alias of resolve (same function). | 276 |
+| `util_screenshotCreator_framing_legacy.getVehicleFramingData(vehicle, fixedRotation, configName)` | Builds the geometric framing data of a vehicle: bounding box oriented along the reference axes, center, half-extents, look-at point, camera direction and extreme points (up to 100 nodes max and 100 min per axis). Does not compute the camera distance. | 45 |
+| `util_screenshotCreator_framing_legacy.onScreenshotCreatorCollectFramingModes(modes)` | Hook called by framingManager when collecting modes. Adds the mode {id = "legacy", label = "Legacy (pre-r186184)", order = 50, fixedFov = 20, supportsFixedRotation = true, resolve} to the list. *(internal)* *(hook)* | 342 |
+| `util_screenshotCreator_framing_legacy.resolve(context)` | Computes the legacy framing camera for context.vehicle. Returns a table {pos, rot, fov = 20, name = "legacy camera", debugData, framingData}, or nil and an error message if context.vehicle is missing. | 276 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_framing_legacy.frame(context)`
 
-Alias de resolve (même fonction).
+Alias of resolve (same function).
 
-- `context` (*table*) : Voir resolve.
-- **renvoie** : table|nil Voir resolve.
-- **renvoie** : string|nil Message d'erreur.
+- `context` (*table*) : See resolve.
+- **returns**: table|nil See resolve.
+- **returns**: string|nil Error message.
 
 #### `util_screenshotCreator_framing_legacy.getVehicleFramingData(vehicle, fixedRotation, configName)`
 
-Construit les données géométriques de cadrage d'un véhicule : boîte englobante orientée selon les axes de référence, centre, demi-étendues, point visé, direction de caméra et points d'extrémité (jusqu'à 100 nœuds max et 100 min par axe). Ne calcule pas la distance de caméra.
+Builds the geometric framing data of a vehicle: bounding box oriented along the reference axes, center, half-extents, look-at point, camera direction and extreme points (up to 100 nodes max and 100 min per axis). Does not compute the camera distance.
 
-- `vehicle` (*table*) : Objet véhicule.
-- `fixedRotation` (*quat|nil*) : Orientation de caméra imposée ; sinon calculée à partir de la direction (-0.75, -0.66, 0.07) dans le repère du véhicule.
-- `configName` (*string|nil*) : Nom de configuration passé à thumbnailConfig.getReferenceAxes pour choisir les axes de référence.
-- **renvoie** : table framingData (bb, center, axis0..2, halfExtents, floorZ, lookAtPoint, camRot, camRight/Forward/Up, framingPoints…).
+- `vehicle` (*table*) : Vehicle object.
+- `fixedRotation` (*quat|nil*) : Imposed camera orientation; otherwise computed from the direction (-0.75, -0.66, 0.07) in the vehicle's frame.
+- `configName` (*string|nil*) : Configuration name passed to thumbnailConfig.getReferenceAxes to choose the reference axes.
+- **returns**: table framingData (bb, center, axis0..2, halfExtents, floorZ, lookAtPoint, camRot, camRight/Forward/Up, framingPoints…).
 
 #### `util_screenshotCreator_framing_legacy.onScreenshotCreatorCollectFramingModes(modes)`
 
-Hook appelé par framingManager lors de la collecte des modes. Ajoute à la liste le mode {id = "legacy", label = "Legacy (pre-r186184)", order = 50, fixedFov = 20, supportsFixedRotation = true, resolve}.
+Hook called by framingManager when collecting modes. Adds the mode {id = "legacy", label = "Legacy (pre-r186184)", order = 50, fixedFov = 20, supportsFixedRotation = true, resolve} to the list.
 
-- `modes` (*table[]*) : Liste à compléter.
+- `modes` (*table[]*) : List to fill.
 
 #### `util_screenshotCreator_framing_legacy.resolve(context)`
 
-Calcule la caméra de cadrage legacy pour context.vehicle. Renvoie une table {pos, rot, fov = 20, name = "legacy camera", debugData, framingData}, ou nil et un message d'erreur si context.vehicle manque.
+Computes the legacy framing camera for context.vehicle. Returns a table {pos, rot, fov = 20, name = "legacy camera", debugData, framingData}, or nil and an error message if context.vehicle is missing.
 
-- `context` (*table*) : Contexte de cadrage : vehicle (obligatoire), resolution ({largeur, hauteur}), aspectRatio, nearPlane, fixedRotation (quat imposé), configName, useFramingMargins/useMargins (boolean), margin ({left,right,top,bottom,extraBottom}).
-- **renvoie** : table|nil Résultat de cadrage (pos: vec3, rot: quat, fov, name, debugData, framingData).
-- **renvoie** : string|nil Message d'erreur.
+- `context` (*table*) : Framing context: vehicle (required), resolution ({width, height}), aspectRatio, nearPlane, fixedRotation (imposed quat), configName, useFramingMargins/useMargins (boolean), margin ({left,right,top,bottom,extraBottom}).
+- **returns**: table|nil Framing result (pos: vec3, rot: quat, fov, name, debugData, framingData).
+- **returns**: string|nil Error message.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : core_vehicle_manager, util_screenshotCreator_settings, util_screenshotCreator_thumbnailConfig. |
+| `dependencies` | string[] | Extensions loaded before: core_vehicle_manager, util_screenshotCreator_settings, util_screenshotCreator_thumbnailConfig. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getSurfaceHeightBelow`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/framing/legacy.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/framing/legacy.lua`.*

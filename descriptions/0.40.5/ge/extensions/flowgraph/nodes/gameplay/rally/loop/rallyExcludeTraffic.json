@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyExcludeTraffic.lua",
-  "module": "Nœud flowgraph « Rally Exclude Traffic » (catégorie once_instant, tag rally). Applique (enable = true, valeur par défaut) ou efface (false) les zones d'exclusion de trafic de la boucle rally via rm:applyTrafficExclusion() / rm:clearTrafficExclusion().",
+  "module": "Flowgraph node \"Rally Exclude Traffic\" (category once_instant, tag rally). Applies (enable = true, default value) or clears (false) the traffic exclusion zones of the rally loop via rm:applyTrafficExclusion() / rm:clearTrafficExclusion().",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Applique ou efface l'exclusion de trafic selon la pin enable.", "internal": true}
+        "workOnce": {
+          "desc": "Applies or clears the traffic exclusion according to the enable pin.",
+          "internal": true
+        }
       }
     }
   }

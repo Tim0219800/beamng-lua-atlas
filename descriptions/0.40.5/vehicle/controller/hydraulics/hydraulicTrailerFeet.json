@@ -1,10 +1,10 @@
 {
   "path": "lua/vehicle/controller/hydraulics/hydraulicTrailerFeet.lua",
-  "module": "Contrôleur auxiliaire pour les béquilles hydrauliques d'une remorque (type \"auxiliary\"). Il mémorise la position du vérin quand la remorque est attelée et détachée (par réglage manuel) et ramène automatiquement les béquilles à la bonne position lors d'un attelage ou dételage, en écrivant la direction de vérin dans electrics (directionElectricsName du vérin).",
+  "module": "Auxiliary controller for a trailer's hydraulic landing legs (type \"auxiliary\"). It stores the cylinder position when the trailer is attached and detached (by manual adjustment) and automatically brings the legs back to the right position on coupling or uncoupling, by writing the cylinder direction into electrics (the cylinder's directionElectricsName).",
   "notes": [
-    "Clés jbeam (défaut) : powertrainHydroName (nom du vérin, obligatoire : erreur Lua si introuvable), attachedDefaultPosition (0), detachedDefaultPosition (1), startValue (0, valeur initiale de la commande de direction).",
-    "États internes : detached, attached, detachedMoveFeet, attachedMoveFeet. Les mouvements manuels (|entrée| > 0.05) mémorisent la position courante pour l'état en cours.",
-    "Les hooks onCouplerAttached/onCouplerDetached ne réagissent que si l'autre objet (obj2id) est différent de ce véhicule."
+    "jbeam keys (default): powertrainHydroName (cylinder name, required: Lua error if not found), attachedDefaultPosition (0), detachedDefaultPosition (1), startValue (0, initial value of the direction command).",
+    "Internal states: detached, attached, detachedMoveFeet, attachedMoveFeet. Manual movements (|input| > 0.05) store the current position for the current state.",
+    "The onCouplerAttached/onCouplerDetached hooks only react if the other object (obj2id) is different from this vehicle."
   ],
   "fields": {
     "type": {
@@ -14,95 +14,95 @@
   },
   "functions": {
     "init": {
-      "desc": "Retrouve le vérin et initialise les positions et états.",
+      "desc": "Finds the cylinder and initializes the positions and states.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateGFX": {
-      "desc": "Écrit la direction du vérin (manuelle ou automatique vers la position mémorisée).",
+      "desc": "Writes the cylinder direction (manual or automatic toward the stored position).",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerAttached": {
-      "desc": "Hook appelé par le moteur quand un coupleur du véhicule s'attache ; lance le mouvement vers la position « attaché » si l'autre objet est un autre véhicule.",
+      "desc": "Hook called by the engine when a coupler of the vehicle attaches; starts the movement toward the \"attached\" position if the other object is another vehicle.",
       "params": {
         "nodeId": {
           "type": "integer",
-          "desc": "Nœud de ce véhicule."
+          "desc": "This vehicle's node."
         },
         "obj2id": {
           "type": "integer",
-          "desc": "Id du véhicule partenaire."
+          "desc": "Partner vehicle id."
         },
         "obj2nodeId": {
           "type": "integer",
-          "desc": "Nœud du partenaire."
+          "desc": "Partner's node."
         }
       },
       "returns": [],
       "internal": true
     },
     "onCouplerDetached": {
-      "desc": "Hook appelé quand un coupleur se détache ; lance le mouvement vers la position « détaché ».",
+      "desc": "Hook called when a coupler detaches; starts the movement toward the \"detached\" position.",
       "params": {
         "nodeId": {
           "type": "integer",
-          "desc": "Nœud de ce véhicule."
+          "desc": "This vehicle's node."
         },
         "obj2id": {
           "type": "integer",
-          "desc": "Id du véhicule partenaire."
+          "desc": "Partner vehicle id."
         },
         "obj2nodeId": {
           "type": "integer",
-          "desc": "Nœud du partenaire."
+          "desc": "Partner's node."
         },
         "breakForce": {
           "type": "number",
-          "desc": "Force de rupture (non utilisée)."
+          "desc": "Breaking force (unused)."
         }
       },
       "returns": [],
       "internal": true
     },
     "moveFeet": {
-      "desc": "Commande manuelle des béquilles : -1 à 1 (la direction est écrite dans electrics). Interrompt un déplacement automatique en cours.",
+      "desc": "Manual command of the legs: -1 to 1 (the direction is written into electrics). Interrupts an ongoing automatic movement.",
       "params": {
         "input": {
           "type": "number",
-          "desc": "Entrée de direction -1..1."
+          "desc": "Direction input -1..1."
         }
       },
       "returns": []
     },
     "getState": {
-      "desc": "Renvoie l'état (positions mémorisées, entrée manuelle, état d'attelage).",
+      "desc": "Returns the state (stored positions, manual input, coupling state).",
       "params": {},
       "returns": [
         {
           "type": "table",
-          "desc": "Table d'état (réutilisée)."
+          "desc": "State table (reused)."
         }
       ]
     },
     "setState": {
-      "desc": "Restaure l'état renvoyé par getState.",
+      "desc": "Restores the state returned by getState.",
       "params": {
         "data": {
           "type": "table|nil",
-          "desc": "Table d'état."
+          "desc": "State table."
         }
       },
       "returns": []

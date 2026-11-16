@@ -1,17 +1,35 @@
 {
   "path": "lua/common/inputFilters.lua",
-  "module": "Définit des constantes globales identifiant le type de filtre d'entrée (clavier, manette, direct, clavier drift, IA) et la table FILTER_NAME qui donne un nom lisible. Utile quand on lit ou envoie des événements d'entrée (input.event) avec un filtre.",
+  "module": "Defines global constants identifying the input filter type (keyboard, gamepad, direct, drift keyboard, AI) and the FILTER_NAME table that gives a readable name. Useful when reading or sending input events (input.event) with a filter.",
   "notes": [
-    "Un filtre valant -1 peut être envoyé par le C++ : il est deviné et traduit côté moteur en un filtre >= 0 avant d'arriver en Lua (commentaire du code).",
-    "FILTER_AI est la chaîne \"FILTER_AI\" (pas un nombre) et n'a pas d'entrée dans FILTER_NAME."
+    "A filter equal to -1 can be sent by the C++: it is guessed and translated engine-side into a filter >= 0 before reaching Lua (code comment).",
+    "FILTER_AI is the string \"FILTER_AI\" (not a number) and has no entry in FILTER_NAME."
   ],
   "fields": {
-    "FILTER_KBD": {"type": "integer", "desc": "Global, vaut 0 : clavier."},
-    "FILTER_PAD": {"type": "integer", "desc": "Global, vaut 1 : manette."},
-    "FILTER_DIRECT": {"type": "integer", "desc": "Global, vaut 2 : entrée directe (sans lissage)."},
-    "FILTER_KBD2": {"type": "integer", "desc": "Global, vaut 3 : clavier en mode drift (nom \"KeyboardDrift\")."},
-    "FILTER_AI": {"type": "string", "desc": "Global, vaut \"FILTER_AI\" : filtre utilisé par l'IA."},
-    "FILTER_NAME": {"type": "table<integer, string>", "desc": "Global : nom lisible de chaque filtre numérique (Keyboard, Gamepad, Direct, KeyboardDrift)."}
+    "FILTER_KBD": {
+      "type": "integer",
+      "desc": "Global, equals 0: keyboard."
+    },
+    "FILTER_PAD": {
+      "type": "integer",
+      "desc": "Global, equals 1: gamepad."
+    },
+    "FILTER_DIRECT": {
+      "type": "integer",
+      "desc": "Global, equals 2: direct input (no smoothing)."
+    },
+    "FILTER_KBD2": {
+      "type": "integer",
+      "desc": "Global, equals 3: keyboard in drift mode (name \"KeyboardDrift\")."
+    },
+    "FILTER_AI": {
+      "type": "string",
+      "desc": "Global, equals \"FILTER_AI\": filter used by the AI."
+    },
+    "FILTER_NAME": {
+      "type": "table<integer, string>",
+      "desc": "Global: readable name of each numeric filter (Keyboard, Gamepad, Direct, KeyboardDrift)."
+    }
   },
   "functions": {}
 }

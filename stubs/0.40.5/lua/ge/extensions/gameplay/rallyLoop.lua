@@ -2,200 +2,200 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/rallyLoop.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension façade du mode « boucle de rallye » (enchaînement service, liaison, spéciales). Elle possède l'instance de RallyLoopManager (loop/rallyLoopManager) créée par setup(missionId, missionDir), lui relaie les mises à jour et les hooks du jeu, et publie chaque image le flux UI « rallyLoop » via guihooks.queueStream. Sans manager, elle publie le flux du StandaloneFallbackStream (mode `standaloneUiBridge`) ; getRuntimeMode renvoie 'rallyLoop', 'standaloneUiBridge' ou 'idle'. Elle héberge aussi la fenêtre imgui « Loop Toolbox » de debug.
---- Accès : extension `gameplay_rallyLoop` : `extensions.load("gameplay_rallyLoop")`, puis la globale `gameplay_rallyLoop`
+--- Facade extension of the "rally loop" mode (chaining service, liaison, special stages). It owns the RallyLoopManager instance (loop/rallyLoopManager) created by setup(missionId, missionDir), relays the game's updates and hooks to it, and publishes the "rallyLoop" UI stream every frame via guihooks.queueStream. Without a manager, it publishes the StandaloneFallbackStream stream (`standaloneUiBridge` mode); getRuntimeMode returns 'rallyLoop', 'standaloneUiBridge' or 'idle'. It also hosts the "Loop Toolbox" debug imgui window.
+--- Access: extension `gameplay_rallyLoop`: `extensions.load("gameplay_rallyLoop")`, then the global `gameplay_rallyLoop`
 ---@class gameplay_rallyLoop
 gameplay_rallyLoop = {}
 
---- Enregistre une pénalité de test dans le manager (recordTestPenalty).
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:324
----@param amount number Montant de la pénalité (unité déduite du code : temps).
----@return boolean|any  Résultat du manager, ou false et 'no rally loop manager'.
+--- Records a test penalty in the manager (recordTestPenalty).
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:324
+---@param amount number Penalty amount (unit inferred from code: time).
+---@return boolean|any  Manager result, or false and 'no rally loop manager'.
 function gameplay_rallyLoop.addTestPenalty(amount) end
 
---- Délègue le dessin de debug au manager.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:205
----@param zOnTop boolean Dessiner au premier plan.
----@param drawRoute boolean Dessiner la route.
----@param drawLabels boolean Dessiner les étiquettes.
+--- Delegates the debug drawing to the manager.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:205
+---@param zOnTop boolean Draw in the foreground.
+---@param drawRoute boolean Draw the route.
+---@param drawLabels boolean Draw the labels.
 function gameplay_rallyLoop.drawDebug(zOnTop, drawRoute, drawLabels) end
 
---- État du log de debug.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:278
+--- Debug log state.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:278
 ---@return boolean  debugLogging.
 function gameplay_rallyLoop.getDebugLogging() end
 
---- Lit un indicateur de dessin de debug du manager.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:374
----@param flagName string Nom de l'indicateur.
----@return boolean  false sans manager.
+--- Reads a debug drawing flag of the manager.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:374
+---@param flagName string Flag name.
+---@return boolean  false without a manager.
 function gameplay_rallyLoop.getDrawFlag(flagName) end
 
---- Objet LoopToolbox courant.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:201
----@return table|nil  Toolbox, nil si la fenêtre n'a jamais été ouverte ou est fermée.
+--- Current LoopToolbox object.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:201
+---@return table|nil  Toolbox, nil if the window was never opened or is closed.
 function gameplay_rallyLoop.getLoopToolbox() end
 
---- Instance RallyLoopManager courante.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:368
+--- Current RallyLoopManager instance.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:368
 ---@return table|nil  Manager.
 function gameplay_rallyLoop.getManager() end
 
---- Lit l'indicateur de transfert d'exécution.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:296
----@return boolean  false sans manager.
+--- Reads the execution transfer flag.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:296
+---@return boolean  false without a manager.
 function gameplay_rallyLoop.getMissionExecutionTransferFlag() end
 
---- Id de la prochaine mission de la boucle.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:303
----@return string|nil  Id, nil sans manager.
+--- Id of the loop's next mission.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:303
+---@return string|nil  Id, nil without a manager.
 function gameplay_rallyLoop.getNextMissionId() end
 
---- Mode d'exécution courant.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:83
----@return string  'rallyLoop', 'standaloneUiBridge' ou 'idle'.
+--- Current runtime mode.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:83
+---@return string  'rallyLoop', 'standaloneUiBridge' or 'idle'.
 function gameplay_rallyLoop.getRuntimeMode() end
 
---- Nombre de reprogrammations de spéciale (SS) du manager.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:387
----@return integer  0 sans manager.
+--- Number of special stage (SS) reschedules of the manager.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:387
+---@return integer  0 without a manager.
 function gameplay_rallyLoop.getSSRescheduleCount() end
 
---- Traite une demande de navigation depuis l'UI : 'restart' relance la boucle, 'abandon' retourne instantanément à la boucle, 'postServiceIn' et tout autre valeur démarrent la mission suivante.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:331
----@param gotoRallyLoop string 'restart', 'abandon', 'postServiceIn' ou autre.
+--- Handles a navigation request from the UI: 'restart' restarts the loop, 'abandon' instantly returns to the loop, 'postServiceIn' and any other value start the next mission.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:331
+---@param gotoRallyLoop string 'restart', 'abandon', 'postServiceIn' or other.
 function gameplay_rallyLoop.handleGOTO(gotoRallyLoop) end
 
---- Indique si la fenêtre Loop Toolbox est affichée.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:283
----@return boolean  Visibilité.
+--- Indicates whether the Loop Toolbox window is shown.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:283
+---@return boolean  Visibility.
 function gameplay_rallyLoop.isLoopToolboxVisible() end
 
---- API publique : vrai si un manager existe.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:75
----@return boolean  true après setup.
+--- Public API: true if a manager exists.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:75
+---@return boolean  true after setup.
 function gameplay_rallyLoop.isReady() end
 
---- Hook appelé avant tout changement d'état de mission. Supprime l'exclusion de trafic du manager et enregistre un DNF en cas d'abandon (sauf en serviceOut).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:351
----@param state string Nouvel état de la mission (ex. 'stopped').
----@param mission table|nil Mission concernée.
----@param abandoned boolean true si la mission est abandonnée.
+--- Hook called before any mission state change. Removes the manager's traffic exclusion and records a DNF on abandon (except in serviceOut).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:351
+---@param state string New mission state (e.g. 'stopped').
+---@param mission table|nil Mission concerned.
+---@param abandoned boolean true if the mission is abandoned.
 function gameplay_rallyLoop.onAnyMissionWillChange(state, mission, abandoned) end
 
---- Hook appelé quand la route des marqueurs au sol est créée ; relayé au manager.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:239
+--- Hook called when the ground markers route is created; relayed to the manager.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:239
 function gameplay_rallyLoop.onCreatedRallyGroundMarkerRoute() end
 
---- Hook de chargement ; n'écrit qu'un log si debugLogging est actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:161
+--- Load hook; only writes a log if debugLogging is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:161
 function gameplay_rallyLoop.onExtensionLoaded() end
 
---- Hook de déchargement : publie un flux {activeState = inactive} et vide le flux de repli.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:169
+--- Unload hook: publishes a {activeState = inactive} stream and clears the fallback stream.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:169
 function gameplay_rallyLoop.onExtensionUnloaded() end
 
---- Hook d'interaction gameplay ; appelle manager:onRallyModeInteract().
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:219
+--- Gameplay interaction hook; calls manager:onRallyModeInteract().
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:219
 function gameplay_rallyLoop.onGameplayInteract() end
 
---- Hook appelé à chaque mise à jour GUI ; relayé au manager.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:136
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta temps brut (s).
+--- Hook called on every GUI update; relayed to the manager.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:136
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw time delta (s).
 function gameplay_rallyLoop.onGuiUpdate(dtReal, dtSim, dtRaw) end
 
---- Hook émis quand les données de rallye changent ; relayé au manager, sinon au flux de repli.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:211
----@param data table Données de rallye.
+--- Hook emitted when the rally data changes; relayed to the manager, otherwise to the fallback stream.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:211
+---@param data table Rally data.
 function gameplay_rallyLoop.onRallyDataUpdated(data) end
 
---- Hook appelé quand la récupération de route est terminée ; relayé au manager s'il gère le hook.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:251
----@param data table Données de la récupération.
+--- Hook called when the route recovery is finished; relayed to the manager if it handles the hook.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:251
+---@param data table Recovery data.
 function gameplay_rallyLoop.onRallyRouteRecoveryComplete(data) end
 
---- Hook appelé lors d'une récupération du véhicule ; appelle manager:trackRecovery.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:245
----@param recoveryType string Type de récupération.
+--- Hook called on a vehicle recovery; calls manager:trackRecovery.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:245
+---@param recoveryType string Recovery type.
 function gameplay_rallyLoop.onRallyVehicleRecovery(recoveryType) end
 
---- Hook appelé quand la route a été recalculée ; relayé au manager.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:233
+--- Hook called when the route has been recomputed; relayed to the manager.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:233
 function gameplay_rallyLoop.onRecalculatedRoute() end
 
---- Hook appelé quand les réglages changent ; relayé au manager (s'il gère le hook) et au flux de repli.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:185
+--- Hook called when the settings change; relayed to the manager (if it handles the hook) and to the fallback stream.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:185
 function gameplay_rallyLoop.onSettingsChanged() end
 
---- Hook appelé quand le bouton de départ de l'UI est cliqué ; relayé au manager.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:227
+--- Hook called when the UI start button is clicked; relayed to the manager.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:227
 function gameplay_rallyLoop.onUIStartButtonClicked() end
 
---- Hook d'extension appelé chaque image. Met à jour le manager et publie le flux 'rallyLoop' ; gère aussi la fenêtre Loop Toolbox.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:101
----@param dtReal number Delta temps réel (s).
----@param dtSim number Delta temps simulé (s).
----@param dtRaw number Delta temps brut (s).
+--- Extension hook called every frame. Updates the manager and publishes the 'rallyLoop' stream; also handles the Loop Toolbox window.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:101
+---@param dtReal number Real time delta (s).
+---@param dtSim number Simulated time delta (s).
+---@param dtRaw number Raw time delta (s).
 function gameplay_rallyLoop.onUpdate(dtReal, dtSim, dtRaw) end
 
---- Active le log de debug.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:279
----@param val boolean Nouvelle valeur.
+--- Enables the debug log.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:279
+---@param val boolean New value.
 function gameplay_rallyLoop.setDebugLogging(val) end
 
---- Fixe un indicateur de dessin de debug du manager.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:381
----@param flagName string Nom de l'indicateur.
----@param value boolean Valeur.
+--- Sets a debug drawing flag of the manager.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:381
+---@param flagName string Flag name.
+---@param value boolean Value.
 function gameplay_rallyLoop.setDrawFlag(flagName, value) end
 
---- Fixe l'indicateur de transfert d'exécution de mission du manager.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:291
----@param val boolean Valeur.
+--- Sets the manager's mission execution transfer flag.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:291
+---@param val boolean Value.
 function gameplay_rallyLoop.setMissionExecutionTransferFlag(val) end
 
---- Crée le RallyLoopManager pour la mission et vide le flux de repli.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:64
----@param missionId string Id de la mission boucle.
----@param missionDir string Dossier de la mission.
+--- Creates the RallyLoopManager for the mission and clears the fallback stream.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:64
+---@param missionId string Loop mission id.
+---@param missionDir string Mission folder.
 function gameplay_rallyLoop.setup(missionId, missionDir) end
 
---- Prépare le manager pour la mission suivante (manager:setupForNewMission).
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:285
+--- Prepares the manager for the next mission (manager:setupForNewMission).
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:285
 function gameplay_rallyLoop.setupForNewMission() end
 
---- Aide de test : saute la liaison.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:317
----@param options table|nil Options transmises au manager (déduit du code).
----@return boolean  Succès.
----@return string|nil  'no rally loop manager' sans manager.
+--- Test helper: skips the liaison.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:317
+---@param options table|nil Options passed to the manager (inferred from code).
+---@return boolean  Success.
+---@return string|nil  'no rally loop manager' without a manager.
 function gameplay_rallyLoop.skipLiaisonForTesting(options) end
 
---- Démarre la mission suivante de la boucle.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:310
----@return any  Résultat du manager (false sans manager).
+--- Starts the loop's next mission.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:310
+---@return any  Manager result (false without a manager).
 function gameplay_rallyLoop.startNextMission() end
 
---- Affiche ou masque la fenêtre Loop Toolbox.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:193
+--- Shows or hides the Loop Toolbox window.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:193
 function gameplay_rallyLoop.toggleDebug() end
 
---- Détruit le manager et vide le flux de repli.
----Source : lua/ge/extensions/gameplay/rallyLoop.lua:69
+--- Destroys the manager and clears the fallback stream.
+---Source: lua/ge/extensions/gameplay/rallyLoop.lua:69
 function gameplay_rallyLoop.unload() end
 

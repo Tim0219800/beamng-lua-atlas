@@ -2,87 +2,87 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/tutorial/bounds.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère les limites de la zone du tutoriel de carrière. Il vérifie que le joueur reste dans les zones actives des sites du tutoriel ; sinon il affiche un avertissement avec un compte à rebours de 5 s dans la liste de tâches, puis déclenche un retour automatique via des callbacks (hooks onCareerTutorial...). Peut aussi dessiner les zones actives en debug.
---- Accès : extension `gameplay_tutorial_bounds` : `extensions.load("gameplay_tutorial_bounds")`, puis la globale `gameplay_tutorial_bounds`
+--- Manages the bounds of the career tutorial zone. It checks that the player stays within the active zones of the tutorial sites; otherwise it displays a warning with a 5 s countdown in the task list, then triggers an automatic return via callbacks (onCareerTutorial... hooks). Can also draw the active zones in debug.
+--- Access: extension `gameplay_tutorial_bounds`: `extensions.load("gameplay_tutorial_bounds")`, then the global `gameplay_tutorial_bounds`
 ---@class gameplay_tutorial_bounds
 gameplay_tutorial_bounds = {}
 
---- Quitte l'état hors limites et remet à zéro sites, zones actives, zones désactivées et debug.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:278
+--- Leaves the out-of-bounds state and resets sites, active zones, disabled zones and debug.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:278
 function gameplay_tutorial_bounds.cleanup() end
 
---- Renvoie la liste triée des noms de zones actives.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:188
----@return string[]  Noms triés par ordre alphabétique.
+--- Returns the sorted list of active zone names.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:188
+---@return string[]  Names sorted alphabetically.
 function gameplay_tutorial_bounds.getActiveZoneNames() end
 
---- Indique si le dessin debug des zones est actif.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:205
----@return boolean  État du dessin debug.
+--- Indicates whether the debug drawing of the zones is active.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:205
+---@return boolean  State of the debug drawing.
 function gameplay_tutorial_bounds.getDebugDrawBounds() end
 
---- Renvoie la table interne zoneEnabled (nom -> booléen), référence directe.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:197
----@return table<string, boolean>  Zones explicitement activées/désactivées.
+--- Returns the internal zoneEnabled table (name -> boolean), direct reference.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:197
+---@return table<string, boolean>  Zones explicitly enabled/disabled.
 function gameplay_tutorial_bounds.getEnabledZones() end
 
---- Indique si une zone est activée (true par défaut si jamais réglée).
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:183
----@param zoneName string Nom de la zone.
----@return boolean  État d'activation.
+--- Indicates whether a zone is enabled (true by default if never set).
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:183
+---@param zoneName string Zone name.
+---@return boolean  Activation state.
 function gameplay_tutorial_bounds.getZoneEnabled(zoneName) end
 
---- Indique si le joueur est dans les limites. Renvoie true si le tutoriel n'est pas actif.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:209
----@return boolean  true si dans une zone active et activée (ou si rien à contrôler).
+--- Indicates whether the player is within bounds. Returns true if the tutorial is not active.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:209
+---@return boolean  true if in an active and enabled zone (or if there is nothing to check).
 function gameplay_tutorial_bounds.isInBounds() end
 
---- Hook de rendu appelé chaque frame ; dessine les zones actives si le debug est activé et le tutoriel actif.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:271
----@param dtReal number Delta temps réel.
----@param dtSim number Delta temps de simulation.
----@param dtRaw number Delta temps brut.
+--- Render hook called every frame; draws the active zones if debug is enabled and the tutorial is active.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:271
+---@param dtReal number Real-time delta.
+---@param dtSim number Simulation time delta.
+---@param dtRaw number Raw time delta.
 function gameplay_tutorial_bounds.onPreRender(dtReal, dtSim, dtRaw) end
 
---- Définit la liste des zones dans lesquelles le joueur est autorisé (remplace la liste précédente).
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:170
----@param names string[]|nil Noms de zones ; nil vide la liste (plus de limite).
+--- Sets the list of zones in which the player is allowed (replaces the previous list).
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:170
+---@param names string[]|nil Zone names; nil clears the list (no more limit).
 function gameplay_tutorial_bounds.setActiveZones(names) end
 
---- Remplace tout ou partie des callbacks de sortie de limites ; les clés absentes conservent leur callback actuel.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:71
----@param newCallbacks table Clés possibles : onOutOfBoundsStarted, onOutOfBoundsEnded, onOutOfBoundsTimedOut(currentStepId), onOutOfBoundsWhileNotAllowed.
+--- Replaces all or some of the out-of-bounds callbacks; absent keys keep their current callback.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:71
+---@param newCallbacks table Possible keys: onOutOfBoundsStarted, onOutOfBoundsEnded, onOutOfBoundsTimedOut(currentStepId), onOutOfBoundsWhileNotAllowed.
 function gameplay_tutorial_bounds.setCallbacks(newCallbacks) end
 
---- Définit la fonction qui renvoie l'identifiant de l'étape courante du tutoriel (transmis au callback de timeout).
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:63
----@param getter function Fonction sans argument renvoyant l'id d'étape (string) ou nil.
+--- Sets the function that returns the current tutorial step identifier (passed to the timeout callback).
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:63
+---@param getter function Function with no argument returning the step id (string) or nil.
 function gameplay_tutorial_bounds.setCurrentStepGetter(getter) end
 
---- Active ou coupe le dessin debug des zones actives (jaune semi-transparent), effectué dans onPreRender.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:201
----@param enabled boolean true pour dessiner.
+--- Enables or disables the debug drawing of the active zones (semi-transparent yellow), done in onPreRender.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:201
+---@param enabled boolean true to draw.
 function gameplay_tutorial_bounds.setDebugDrawBounds(enabled) end
 
---- Définit la fonction qui indique si le tutoriel est actif. Une valeur non fonctionnelle la remet à une fonction renvoyant false.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:55
----@param getter function Fonction sans argument renvoyant un booléen.
+--- Sets the function that indicates whether the tutorial is active. A non-function value resets it to a function returning false.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:55
+---@param getter function Function with no argument returning a boolean.
 function gameplay_tutorial_bounds.setRuntimeActiveGetter(getter) end
 
---- Définit l'objet de sites (avec zones) utilisé pour tester les limites. S'il est nil, update le charge depuis gameplay_tutorial_setup.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:166
----@param newSites table|nil Objet sites avec sites.zones.byName / sites.zones.objects ou la méthode getZonesForPosition.
+--- Sets the sites object (with zones) used to test the bounds. If it is nil, update loads it from gameplay_tutorial_setup.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:166
+---@param newSites table|nil Sites object with sites.zones.byName / sites.zones.objects or the getZonesForPosition method.
 function gameplay_tutorial_bounds.setSites(newSites) end
 
---- Active ou désactive temporairement une zone sans la retirer de la liste active.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:179
----@param zoneName string Nom de la zone.
----@param enabled boolean false pour ignorer cette zone.
+--- Temporarily enables or disables a zone without removing it from the active list.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:179
+---@param zoneName string Zone name.
+---@param enabled boolean false to ignore this zone.
 function gameplay_tutorial_bounds.setZoneEnabled(zoneName, enabled) end
 
---- À appeler chaque frame : si le tutoriel est actif, teste les limites ; hors limites, affiche l'avertissement avec compte à rebours, et après 5 s déclenche (via un job de 1 s de pause) le callback onOutOfBoundsTimedOut. Si le retour automatique n'est pas autorisé (gameplay_tutorial_setup.isOutOfBoundsResetAllowed), appelle seulement onOutOfBoundsWhileNotAllowed.
----Source : lua/ge/extensions/gameplay/tutorial/bounds.lua:214
----@param dtReal number Delta temps réel en secondes.
+--- To call every frame: if the tutorial is active, tests the bounds; when out of bounds, displays the warning with countdown, and after 5 s triggers (via a job with a 1 s pause) the onOutOfBoundsTimedOut callback. If automatic return is not allowed (gameplay_tutorial_setup.isOutOfBoundsResetAllowed), only calls onOutOfBoundsWhileNotAllowed.
+---Source: lua/ge/extensions/gameplay/tutorial/bounds.lua:214
+---@param dtReal number Real-time delta in seconds.
 function gameplay_tutorial_bounds.update(dtReal) end
 

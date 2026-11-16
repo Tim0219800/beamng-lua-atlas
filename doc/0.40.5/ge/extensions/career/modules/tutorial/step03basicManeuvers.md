@@ -1,49 +1,49 @@
 # `career_modules_tutorial_step03basicManeuvers`
 
-*Fichier : `lua/ge/extensions/career/modules/tutorial/step03basicManeuvers.lua` · VM : Game Engine (GE) · 186 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/tutorial/step03basicManeuvers.lua` · VM: Game Engine (GE) · 186 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_tutorial_step03basicManeuvers` : `extensions.load("career_modules_tutorial_step03basicManeuvers")`, puis la globale `career_modules_tutorial_step03basicManeuvers`
+**Access:** extension `career_modules_tutorial_step03basicManeuvers`: `extensions.load("career_modules_tutorial_step03basicManeuvers")`, then the global `career_modules_tutorial_step03basicManeuvers`
 
-Étape 3 du tutoriel de carrière (« basicManeuvers ») : le joueur conduit librement (message sur le changement de caméra) puis doit garer le véhicule sur la place de parking nommée simpleCourseStart (marqueur + décalque au sol). Le objectif est validé quand le véhicule reste immobile dans la place pendant 1 s (gameplay_tutorial_markers.checkParkGoalWithStationaryTime) ; l'étape suivante est alors activée après 1,5 s.
+Career tutorial step 3 ("basicManeuvers"): the player drives freely (message about changing camera) then must park the vehicle in the parking spot named simpleCourseStart (marker + ground decal). The objective is validated when the vehicle stays stationary in the spot for 1 s (gameplay_tutorial_markers.checkParkGoalWithStationaryTime); the next step is then activated after 1.5 s.
 
-## Remarques
+## Notes
 
-- Si la place simpleCourseStart est introuvable dans les sites du tutoriel, un avertissement est loggé et l'objectif de parking ne peut pas se valider.
-- Les hooks sont appelés par le runtime du tutoriel.
+- If the simpleCourseStart spot is not found in the tutorial sites, a warning is logged and the parking objective cannot be validated.
+- The hooks are called by the tutorial runtime.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_tutorial_step03basicManeuvers.cleanup()` | Appelé à la fin de l'étape : retire le reset de sortie de zone, vide la liste de tâches, supprime marqueur et décalque. *(interne)* | 125 |
-| `career_modules_tutorial_step03basicManeuvers.onCareerTutorialLeftBounds()` | Hook de sortie de zone : lance le reset de sortie de zone de l'étape. *(interne)* *(hook)* | 107 |
-| `career_modules_tutorial_step03basicManeuvers.onDebugMenu(im)` | Affiche l'état des objectifs et un bouton « Skip Step 3 » (téléporte le véhicule sur la place et avance). *(interne)* *(hook)* | 164 |
-| `career_modules_tutorial_step03basicManeuvers.onUpdate(dtReal, dtSim, dtRaw)` | Appelé chaque frame : teste l'objectif de parking ; une fois validé, passe à l'étape suivante après 1,5 s. *(interne)* *(hook)* | 112 |
-| `career_modules_tutorial_step03basicManeuvers.setup(stepData)` | Appelé à l'activation : réinitialise l'objectif, active la zone evalZone, installe le reset de sortie de zone, puis démarre directement la phase de parking (débloque les vitesses, dégèle le véhicule, crée le marqueur). *(interne)* | 89 |
+| `career_modules_tutorial_step03basicManeuvers.cleanup()` | Called at the end of the step: removes the out-of-bounds reset, clears the task list, deletes the marker and decal. *(internal)* | 125 |
+| `career_modules_tutorial_step03basicManeuvers.onCareerTutorialLeftBounds()` | Out-of-bounds hook: starts the step's out-of-bounds reset. *(internal)* *(hook)* | 107 |
+| `career_modules_tutorial_step03basicManeuvers.onDebugMenu(im)` | Displays the objectives state and a "Skip Step 3" button (teleports the vehicle to the spot and advances). *(internal)* *(hook)* | 164 |
+| `career_modules_tutorial_step03basicManeuvers.onUpdate(dtReal, dtSim, dtRaw)` | Called every frame: tests the parking objective; once validated, moves to the next step after 1.5 s. *(internal)* *(hook)* | 112 |
+| `career_modules_tutorial_step03basicManeuvers.setup(stepData)` | Called on activation: resets the objective, activates the evalZone zone, installs the out-of-bounds reset, then directly starts the parking phase (unlocks the gears, unfreezes the vehicle, creates the marker). *(internal)* | 89 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_tutorial_step03basicManeuvers.onDebugMenu(im)`
 
-Affiche l'état des objectifs et un bouton « Skip Step 3 » (téléporte le véhicule sur la place et avance).
+Displays the objectives state and a "Skip Step 3" button (teleports the vehicle to the spot and advances).
 
-- `im` (*table*) : Table ui_imgui.
+- `im` (*table*) : ui_imgui table.
 
 #### `career_modules_tutorial_step03basicManeuvers.onUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame : teste l'objectif de parking ; une fois validé, passe à l'étape suivante après 1,5 s.
+Called every frame: tests the parking objective; once validated, moves to the next step after 1.5 s.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta simulation (s).
-- `dtRaw` (*number*) : Delta brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation delta (s).
+- `dtRaw` (*number*) : Raw delta (s).
 
 #### `career_modules_tutorial_step03basicManeuvers.setup(stepData)`
 
-Appelé à l'activation : réinitialise l'objectif, active la zone evalZone, installe le reset de sortie de zone, puis démarre directement la phase de parking (débloque les vitesses, dégèle le véhicule, crée le marqueur).
+Called on activation: resets the objective, activates the evalZone zone, installs the out-of-bounds reset, then directly starts the parking phase (unlocks the gears, unfreezes the vehicle, creates the marker).
 
-- `stepData` (*any*) : Données de l'étape (non utilisées).
+- `stepData` (*any*) : Step data (unused).
 
-**Évènements UI (guihooks.trigger) :** `ClearTasklist`
+**UI events (guihooks.trigger):** `ClearTasklist`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/tutorial/step03basicManeuvers.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/tutorial/step03basicManeuvers.lua`.*

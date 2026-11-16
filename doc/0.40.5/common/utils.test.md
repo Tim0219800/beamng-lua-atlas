@@ -1,421 +1,421 @@
 # `utils_test`
 
-*Fichier : `lua/common/utils.test.lua` · VM : Commun (GE + véhicule) · 955 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/utils.test.lua` · VM: Common (GE + vehicle) · 955 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("utils.test")`
+**Access:** `require("utils.test")`
 
-Tests unitaires des fonctions utilitaires globales de `utils` (couleurs, chaînes, tables, JSON, sérialisation, copie, chemins, itérateurs triés/mélangés), à exécuter avec testFramework/TestManager. Lancement : `require('testFramework/TestManager'):runTestFiles('utils')` dans la console GE. Utile à un moddeur comme exemples de comportement attendu (cas limites compris) des helpers globaux.
+Unit tests of the global utility functions of `utils` (colors, strings, tables, JSON, serialization, copying, paths, sorted/shuffled iterators), to run with testFramework/TestManager. Launch: `require('testFramework/TestManager'):runTestFiles('utils')` in the GE console. Useful to a modder as examples of the expected behavior (edge cases included) of the global helpers.
 
-## Exemple
+## Example
 
 ```lua
 require('testFramework/TestManager'):runTestFiles('utils')
 ```
 
-## Remarques
+## Notes
 
-- Chaque fonction prend un contexte `ctx` fourni par TestManager et n'est pas destinée à être appelée directement ; le fichier fait `require('utils')` pour charger les helpers.
-- Plusieurs tests « NoGarbage »/« single-shot » vérifient un budget d'allocation (ctx:allowGarbage / checkGarbage).
-- Les tests de table testTableEndC, testTableInsertC et testTableSizeC couvrent les enveloppes de fonctions C du moteur (table.new-like).
+- Each function takes a context `ctx` provided by TestManager and is not meant to be called directly; the file does `require('utils')` to load the helpers.
+- Several "NoGarbage"/"single-shot" tests check an allocation budget (ctx:allowGarbage / checkGarbage).
+- The table tests testTableEndC, testTableInsertC and testTableSizeC cover the engine's C function wrappers (table.new-like).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `utils_test.testArrayConcat(ctx)` | Teste la concaténation de tableaux. *(interne)* | 575 |
-| `utils_test.testArrayFindValueIndex(ctx)` | Teste la recherche de l'indice d'une valeur dans un tableau. *(interne)* | 692 |
-| `utils_test.testArrayReverse(ctx)` | Teste l'inversion d'un tableau. *(interne)* | 724 |
-| `utils_test.testArrayShuffle(ctx)` | Teste que le mélange d'un tableau conserve les éléments et la taille. *(interne)* | 702 |
-| `utils_test.testBytesToString(ctx)` | Teste le formatage de tailles en octets selon les unités et les cas limites. *(interne)* | 303 |
-| `utils_test.testCheckTableDataTypes(ctx)` | Teste le helper de validation des types de données d'une table. *(interne)* | 804 |
-| `utils_test.testColorConversion(ctx)` | Teste les conversions RGB/HSV et hexadécimal des couleurs. *(interne)* | 36 |
-| `utils_test.testColorCreation(ctx)` | Teste les constructeurs de couleur RGBA et de valeurs empaquetées. *(interne)* | 83 |
-| `utils_test.testColorGenerators(ctx)` | Teste que les générateurs procéduraux de couleurs renvoient des couleurs valides. *(interne)* | 138 |
-| `utils_test.testDeepCopy(ctx)` | Teste la copie profonde, y compris les références partagées en losange. *(interne)* | 777 |
-| `utils_test.testDumps(ctx)` | Teste le format de dumps pour quelques formes d'arguments (table, plusieurs arguments, aucun). *(interne)* | 149 |
-| `utils_test.testFlattenTable(ctx)` | Teste l'aplatissement de tables imbriquées. *(interne)* | 922 |
-| `utils_test.testFormatTimeStringNow(ctx)` | Teste la forme de la sortie du helper de formatage de l'heure courante. *(interne)* | 325 |
-| `utils_test.testGraphs(ctx)` | Teste le rendu de graphes ASCII (signes, écrêtage). *(interne)* | 332 |
-| `utils_test.testJsonCdataRoundtrip(ctx)` | Teste la gestion JSON des valeurs cdata vec3/quat de BeamNG. *(interne)* | 424 |
-| `utils_test.testJsonDecodeEncodePrettyRoundtrip(ctx)` | Teste la stabilité de decode puis encodePretty. *(interne)* | 403 |
-| `utils_test.testJsonDecodeInvalid(ctx)` | Teste le comportement du décodage JSON invalide et la suppression des logs. *(interne)* | 447 |
-| `utils_test.testJsonEncodePrefix(ctx)` | Teste l'encodage JSON avec un préfixe de sortie facultatif. *(interne)* | 375 |
-| `utils_test.testJsonEncodePretty(ctx)` | Teste que l'encodage JSON lisible (pretty) contient des clés formatées. *(interne)* | 365 |
-| `utils_test.testJsonEncodePrettyDecodeRoundtrip(ctx)` | Teste la stabilité de encodePretty puis decode. *(interne)* | 382 |
-| `utils_test.testJsonRoundtrip(ctx)` | Teste l'aller-retour encode/decode JSON sur des tables simples. *(interne)* | 355 |
-| `utils_test.testLoadIni(ctx)` | Teste l'analyse de fichiers INI et le traitement des lignes mal formées. *(interne)* | 883 |
-| `utils_test.testLpadRpad(ctx)` | Teste les helpers de remplissage à gauche (lpad) et à droite (rpad). *(interne)* | 189 |
-| `utils_test.testNoGarbageDumpDumpsSingleShot(ctx)` | Teste le budget de garbage (12288 octets) de dump/dumps pour les chemins d'appel courants, en un seul appel. *(interne)* | 161 |
-| `utils_test.testParseColor(ctx)` | Teste parseColor avec un hexadécimal, une table et des valeurs invalides. *(interne)* | 119 |
-| `utils_test.testPathUtils(ctx)` | Teste les helpers de chemins et d'extraction de nom de niveau. *(interne)* | 828 |
-| `utils_test.testRainbowColor(ctx)` | Teste la génération de couleurs arc-en-ciel aux bornes de la plage. *(interne)* | 70 |
-| `utils_test.testSerialization(ctx)` | Teste les helpers de sérialisation et de désérialisation. *(interne)* | 869 |
-| `utils_test.testSetOperations(ctx)` | Teste les helpers de type ensemble : appartenance et mises à jour. *(interne)* | 472 |
-| `utils_test.testShallowCopy(ctx)` | Teste que la copie superficielle conserve les références du premier niveau. *(interne)* | 768 |
-| `utils_test.testShuffledPairs(ctx)` | Teste que shuffledPairs renvoie chaque paire exactement une fois. *(interne)* | 946 |
-| `utils_test.testSortedPairs(ctx)` | Teste l'ordre d'itération déterministe de sortedPairs. *(interne)* | 934 |
-| `utils_test.testSplit(ctx)` | Teste split : limites et cas limites de délimiteur. *(interne)* | 203 |
-| `utils_test.testStringHash(ctx)` | Teste que le hachage de chaînes est déterministe. *(interne)* | 281 |
-| `utils_test.testStringSentenceCase(ctx)` | Teste la conversion en casse de phrase. *(interne)* | 275 |
-| `utils_test.testStringSplit(ctx)` | Teste les variantes de l'API string.split et ses limites. *(interne)* | 259 |
-| `utils_test.testStringStartEnd(ctx)` | Teste les helpers startswith/endswith des chaînes. *(interne)* | 235 |
-| `utils_test.testStringStrip(ctx)` | Teste string.strip avec des classes de caractères explicites. *(interne)* | 248 |
-| `utils_test.testTableContainsCaseInsensitive(ctx)` | Teste l'appartenance d'une valeur à une table sans tenir compte de la casse. *(interne)* | 685 |
-| `utils_test.testTableDepth(ctx)` | Teste le calcul récursif de la profondeur d'une table. *(interne)* | 739 |
-| `utils_test.testTableEndC(ctx)` | Teste l'enveloppe du helper « fin de table » côté C. *(interne)* | 657 |
-| `utils_test.testTableFindKey(ctx)` | Teste la recherche d'une clé à partir d'une valeur. *(interne)* | 676 |
-| `utils_test.testTableHelpers(ctx)` | Teste des helpers de table courants. *(interne)* | 505 |
-| `utils_test.testTableInsertC(ctx)` | Teste l'enveloppe du helper d'insertion côté C. *(interne)* | 665 |
-| `utils_test.testTableIsArray(ctx)` | Teste la classification de tableIsArray. *(interne)* | 527 |
-| `utils_test.testTableIsEmpty(ctx)` | Teste la détection de table vide. *(interne)* | 538 |
-| `utils_test.testTableKeysSorted(ctx)` | Teste l'extraction triée des clés d'une table. *(interne)* | 548 |
-| `utils_test.testTableMerge(ctx)` | Teste la fusion superficielle de tables. *(interne)* | 591 |
-| `utils_test.testTableReadOnly(ctx)` | Teste la protection des tables en lecture seule. *(interne)* | 641 |
-| `utils_test.testTableRecursive(ctx)` | Teste la sémantique de la fusion récursive de tables. *(interne)* | 600 |
-| `utils_test.testTableRecursiveArray(ctx)` | Teste la fusion récursive quand les valeurs sont des tableaux. *(interne)* | 622 |
-| `utils_test.testTableRoundRobinKey(ctx)` | Teste le helper de sélection de clé en tourniquet. *(interne)* | 752 |
-| `utils_test.testTableSizeC(ctx)` | Teste l'enveloppe du helper de taille de table côté C. *(interne)* | 650 |
-| `utils_test.testTableToColor(ctx)` | Teste la conversion table vers couleur, y compris avec des valeurs nil. *(interne)* | 111 |
-| `utils_test.testTableValuesAsLookupDict(ctx)` | Teste la conversion d'un tableau de valeurs en dictionnaire de recherche. *(interne)* | 562 |
-| `utils_test.testTrim(ctx)` | Teste la suppression des espaces en début et fin de chaîne. *(interne)* | 195 |
+| `utils_test.testArrayConcat(ctx)` | Tests array concatenation. *(internal)* | 575 |
+| `utils_test.testArrayFindValueIndex(ctx)` | Tests looking up the index of a value in an array. *(internal)* | 692 |
+| `utils_test.testArrayReverse(ctx)` | Tests array reversal. *(internal)* | 724 |
+| `utils_test.testArrayShuffle(ctx)` | Tests that shuffling an array preserves its elements and size. *(internal)* | 702 |
+| `utils_test.testBytesToString(ctx)` | Tests formatting of byte sizes across units and edge cases. *(internal)* | 303 |
+| `utils_test.testCheckTableDataTypes(ctx)` | Tests the helper that validates the data types of a table. *(internal)* | 804 |
+| `utils_test.testColorConversion(ctx)` | Tests RGB/HSV and hexadecimal color conversions. *(internal)* | 36 |
+| `utils_test.testColorCreation(ctx)` | Tests the RGBA color constructors and packed value constructors. *(internal)* | 83 |
+| `utils_test.testColorGenerators(ctx)` | Tests that the procedural color generators return valid colors. *(internal)* | 138 |
+| `utils_test.testDeepCopy(ctx)` | Tests the deep copy, including shared diamond-shaped references. *(internal)* | 777 |
+| `utils_test.testDumps(ctx)` | Tests the dumps format for a few argument shapes (table, several arguments, none). *(internal)* | 149 |
+| `utils_test.testFlattenTable(ctx)` | Tests flattening of nested tables. *(internal)* | 922 |
+| `utils_test.testFormatTimeStringNow(ctx)` | Tests the shape of the output of the current-time formatting helper. *(internal)* | 325 |
+| `utils_test.testGraphs(ctx)` | Tests ASCII graph rendering (signs, clipping). *(internal)* | 332 |
+| `utils_test.testJsonCdataRoundtrip(ctx)` | Tests the JSON handling of BeamNG vec3/quat cdata values. *(internal)* | 424 |
+| `utils_test.testJsonDecodeEncodePrettyRoundtrip(ctx)` | Tests the stability of decode followed by encodePretty. *(internal)* | 403 |
+| `utils_test.testJsonDecodeInvalid(ctx)` | Tests the behavior of invalid JSON decoding and log suppression. *(internal)* | 447 |
+| `utils_test.testJsonEncodePrefix(ctx)` | Tests JSON encoding with an optional output prefix. *(internal)* | 375 |
+| `utils_test.testJsonEncodePretty(ctx)` | Tests that pretty (readable) JSON encoding contains formatted keys. *(internal)* | 365 |
+| `utils_test.testJsonEncodePrettyDecodeRoundtrip(ctx)` | Tests the stability of encodePretty followed by decode. *(internal)* | 382 |
+| `utils_test.testJsonRoundtrip(ctx)` | Tests the JSON encode/decode round trip on simple tables. *(internal)* | 355 |
+| `utils_test.testLoadIni(ctx)` | Tests INI file parsing and the handling of malformed lines. *(internal)* | 883 |
+| `utils_test.testLpadRpad(ctx)` | Tests the left padding (lpad) and right padding (rpad) helpers. *(internal)* | 189 |
+| `utils_test.testNoGarbageDumpDumpsSingleShot(ctx)` | Tests the garbage budget (12288 bytes) of dump/dumps for the common call paths, in a single call. *(internal)* | 161 |
+| `utils_test.testParseColor(ctx)` | Tests parseColor with a hexadecimal, a table and invalid values. *(internal)* | 119 |
+| `utils_test.testPathUtils(ctx)` | Tests the path helpers and level name extraction. *(internal)* | 828 |
+| `utils_test.testRainbowColor(ctx)` | Tests rainbow color generation at the range bounds. *(internal)* | 70 |
+| `utils_test.testSerialization(ctx)` | Tests the serialization and deserialization helpers. *(internal)* | 869 |
+| `utils_test.testSetOperations(ctx)` | Tests the set-like helpers: membership and updates. *(internal)* | 472 |
+| `utils_test.testShallowCopy(ctx)` | Tests that the shallow copy preserves first-level references. *(internal)* | 768 |
+| `utils_test.testShuffledPairs(ctx)` | Tests that shuffledPairs returns each pair exactly once. *(internal)* | 946 |
+| `utils_test.testSortedPairs(ctx)` | Tests the deterministic iteration order of sortedPairs. *(internal)* | 934 |
+| `utils_test.testSplit(ctx)` | Tests split: limits and delimiter edge cases. *(internal)* | 203 |
+| `utils_test.testStringHash(ctx)` | Tests that string hashing is deterministic. *(internal)* | 281 |
+| `utils_test.testStringSentenceCase(ctx)` | Tests conversion to sentence case. *(internal)* | 275 |
+| `utils_test.testStringSplit(ctx)` | Tests the variants of the string.split API and its limits. *(internal)* | 259 |
+| `utils_test.testStringStartEnd(ctx)` | Tests the string startswith/endswith helpers. *(internal)* | 235 |
+| `utils_test.testStringStrip(ctx)` | Tests string.strip with explicit character classes. *(internal)* | 248 |
+| `utils_test.testTableContainsCaseInsensitive(ctx)` | Tests whether a value belongs to a table, ignoring case. *(internal)* | 685 |
+| `utils_test.testTableDepth(ctx)` | Tests the recursive computation of a table's depth. *(internal)* | 739 |
+| `utils_test.testTableEndC(ctx)` | Tests the wrapper of the C-side "table end" helper. *(internal)* | 657 |
+| `utils_test.testTableFindKey(ctx)` | Tests looking up a key from a value. *(internal)* | 676 |
+| `utils_test.testTableHelpers(ctx)` | Tests common table helpers. *(internal)* | 505 |
+| `utils_test.testTableInsertC(ctx)` | Tests the wrapper of the C-side insertion helper. *(internal)* | 665 |
+| `utils_test.testTableIsArray(ctx)` | Tests the classification of tableIsArray. *(internal)* | 527 |
+| `utils_test.testTableIsEmpty(ctx)` | Tests empty table detection. *(internal)* | 538 |
+| `utils_test.testTableKeysSorted(ctx)` | Tests the sorted extraction of a table's keys. *(internal)* | 548 |
+| `utils_test.testTableMerge(ctx)` | Tests the shallow merge of tables. *(internal)* | 591 |
+| `utils_test.testTableReadOnly(ctx)` | Tests read-only table protection. *(internal)* | 641 |
+| `utils_test.testTableRecursive(ctx)` | Tests the semantics of the recursive table merge. *(internal)* | 600 |
+| `utils_test.testTableRecursiveArray(ctx)` | Tests the recursive merge when the values are arrays. *(internal)* | 622 |
+| `utils_test.testTableRoundRobinKey(ctx)` | Tests the round-robin key selection helper. *(internal)* | 752 |
+| `utils_test.testTableSizeC(ctx)` | Tests the wrapper of the C-side table size helper. *(internal)* | 650 |
+| `utils_test.testTableToColor(ctx)` | Tests table to color conversion, including with nil values. *(internal)* | 111 |
+| `utils_test.testTableValuesAsLookupDict(ctx)` | Tests converting an array of values into a lookup dictionary. *(internal)* | 562 |
+| `utils_test.testTrim(ctx)` | Tests removal of spaces at the start and end of a string. *(internal)* | 195 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `utils_test.testArrayConcat(ctx)`
 
-Teste la concaténation de tableaux.
+Tests array concatenation.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testArrayFindValueIndex(ctx)`
 
-Teste la recherche de l'indice d'une valeur dans un tableau.
+Tests looking up the index of a value in an array.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testArrayReverse(ctx)`
 
-Teste l'inversion d'un tableau.
+Tests array reversal.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testArrayShuffle(ctx)`
 
-Teste que le mélange d'un tableau conserve les éléments et la taille.
+Tests that shuffling an array preserves its elements and size.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testBytesToString(ctx)`
 
-Teste le formatage de tailles en octets selon les unités et les cas limites.
+Tests formatting of byte sizes across units and edge cases.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testCheckTableDataTypes(ctx)`
 
-Teste le helper de validation des types de données d'une table.
+Tests the helper that validates the data types of a table.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testColorConversion(ctx)`
 
-Teste les conversions RGB/HSV et hexadécimal des couleurs.
+Tests RGB/HSV and hexadecimal color conversions.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testColorCreation(ctx)`
 
-Teste les constructeurs de couleur RGBA et de valeurs empaquetées.
+Tests the RGBA color constructors and packed value constructors.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testColorGenerators(ctx)`
 
-Teste que les générateurs procéduraux de couleurs renvoient des couleurs valides.
+Tests that the procedural color generators return valid colors.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testDeepCopy(ctx)`
 
-Teste la copie profonde, y compris les références partagées en losange.
+Tests the deep copy, including shared diamond-shaped references.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testDumps(ctx)`
 
-Teste le format de dumps pour quelques formes d'arguments (table, plusieurs arguments, aucun).
+Tests the dumps format for a few argument shapes (table, several arguments, none).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testFlattenTable(ctx)`
 
-Teste l'aplatissement de tables imbriquées.
+Tests flattening of nested tables.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testFormatTimeStringNow(ctx)`
 
-Teste la forme de la sortie du helper de formatage de l'heure courante.
+Tests the shape of the output of the current-time formatting helper.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testGraphs(ctx)`
 
-Teste le rendu de graphes ASCII (signes, écrêtage).
+Tests ASCII graph rendering (signs, clipping).
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testJsonCdataRoundtrip(ctx)`
 
-Teste la gestion JSON des valeurs cdata vec3/quat de BeamNG.
+Tests the JSON handling of BeamNG vec3/quat cdata values.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testJsonDecodeEncodePrettyRoundtrip(ctx)`
 
-Teste la stabilité de decode puis encodePretty.
+Tests the stability of decode followed by encodePretty.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testJsonDecodeInvalid(ctx)`
 
-Teste le comportement du décodage JSON invalide et la suppression des logs.
+Tests the behavior of invalid JSON decoding and log suppression.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testJsonEncodePrefix(ctx)`
 
-Teste l'encodage JSON avec un préfixe de sortie facultatif.
+Tests JSON encoding with an optional output prefix.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testJsonEncodePretty(ctx)`
 
-Teste que l'encodage JSON lisible (pretty) contient des clés formatées.
+Tests that pretty (readable) JSON encoding contains formatted keys.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testJsonEncodePrettyDecodeRoundtrip(ctx)`
 
-Teste la stabilité de encodePretty puis decode.
+Tests the stability of encodePretty followed by decode.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testJsonRoundtrip(ctx)`
 
-Teste l'aller-retour encode/decode JSON sur des tables simples.
+Tests the JSON encode/decode round trip on simple tables.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testLoadIni(ctx)`
 
-Teste l'analyse de fichiers INI et le traitement des lignes mal formées.
+Tests INI file parsing and the handling of malformed lines.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testLpadRpad(ctx)`
 
-Teste les helpers de remplissage à gauche (lpad) et à droite (rpad).
+Tests the left padding (lpad) and right padding (rpad) helpers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testNoGarbageDumpDumpsSingleShot(ctx)`
 
-Teste le budget de garbage (12288 octets) de dump/dumps pour les chemins d'appel courants, en un seul appel.
+Tests the garbage budget (12288 bytes) of dump/dumps for the common call paths, in a single call.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testParseColor(ctx)`
 
-Teste parseColor avec un hexadécimal, une table et des valeurs invalides.
+Tests parseColor with a hexadecimal, a table and invalid values.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testPathUtils(ctx)`
 
-Teste les helpers de chemins et d'extraction de nom de niveau.
+Tests the path helpers and level name extraction.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testRainbowColor(ctx)`
 
-Teste la génération de couleurs arc-en-ciel aux bornes de la plage.
+Tests rainbow color generation at the range bounds.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testSerialization(ctx)`
 
-Teste les helpers de sérialisation et de désérialisation.
+Tests the serialization and deserialization helpers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testSetOperations(ctx)`
 
-Teste les helpers de type ensemble : appartenance et mises à jour.
+Tests the set-like helpers: membership and updates.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testShallowCopy(ctx)`
 
-Teste que la copie superficielle conserve les références du premier niveau.
+Tests that the shallow copy preserves first-level references.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testShuffledPairs(ctx)`
 
-Teste que shuffledPairs renvoie chaque paire exactement une fois.
+Tests that shuffledPairs returns each pair exactly once.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testSortedPairs(ctx)`
 
-Teste l'ordre d'itération déterministe de sortedPairs.
+Tests the deterministic iteration order of sortedPairs.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testSplit(ctx)`
 
-Teste split : limites et cas limites de délimiteur.
+Tests split: limits and delimiter edge cases.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testStringHash(ctx)`
 
-Teste que le hachage de chaînes est déterministe.
+Tests that string hashing is deterministic.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testStringSentenceCase(ctx)`
 
-Teste la conversion en casse de phrase.
+Tests conversion to sentence case.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testStringSplit(ctx)`
 
-Teste les variantes de l'API string.split et ses limites.
+Tests the variants of the string.split API and its limits.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testStringStartEnd(ctx)`
 
-Teste les helpers startswith/endswith des chaînes.
+Tests the string startswith/endswith helpers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testStringStrip(ctx)`
 
-Teste string.strip avec des classes de caractères explicites.
+Tests string.strip with explicit character classes.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableContainsCaseInsensitive(ctx)`
 
-Teste l'appartenance d'une valeur à une table sans tenir compte de la casse.
+Tests whether a value belongs to a table, ignoring case.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableDepth(ctx)`
 
-Teste le calcul récursif de la profondeur d'une table.
+Tests the recursive computation of a table's depth.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableEndC(ctx)`
 
-Teste l'enveloppe du helper « fin de table » côté C.
+Tests the wrapper of the C-side "table end" helper.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableFindKey(ctx)`
 
-Teste la recherche d'une clé à partir d'une valeur.
+Tests looking up a key from a value.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableHelpers(ctx)`
 
-Teste des helpers de table courants.
+Tests common table helpers.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableInsertC(ctx)`
 
-Teste l'enveloppe du helper d'insertion côté C.
+Tests the wrapper of the C-side insertion helper.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableIsArray(ctx)`
 
-Teste la classification de tableIsArray.
+Tests the classification of tableIsArray.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableIsEmpty(ctx)`
 
-Teste la détection de table vide.
+Tests empty table detection.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableKeysSorted(ctx)`
 
-Teste l'extraction triée des clés d'une table.
+Tests the sorted extraction of a table's keys.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableMerge(ctx)`
 
-Teste la fusion superficielle de tables.
+Tests the shallow merge of tables.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableReadOnly(ctx)`
 
-Teste la protection des tables en lecture seule.
+Tests read-only table protection.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableRecursive(ctx)`
 
-Teste la sémantique de la fusion récursive de tables.
+Tests the semantics of the recursive table merge.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableRecursiveArray(ctx)`
 
-Teste la fusion récursive quand les valeurs sont des tableaux.
+Tests the recursive merge when the values are arrays.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableRoundRobinKey(ctx)`
 
-Teste le helper de sélection de clé en tourniquet.
+Tests the round-robin key selection helper.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableSizeC(ctx)`
 
-Teste l'enveloppe du helper de taille de table côté C.
+Tests the wrapper of the C-side table size helper.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableToColor(ctx)`
 
-Teste la conversion table vers couleur, y compris avec des valeurs nil.
+Tests table to color conversion, including with nil values.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTableValuesAsLookupDict(ctx)`
 
-Teste la conversion d'un tableau de valeurs en dictionnaire de recherche.
+Tests converting an array of values into a lookup dictionary.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 #### `utils_test.testTrim(ctx)`
 
-Teste la suppression des espaces en début et fin de chaîne.
+Tests removal of spaces at the start and end of a string.
 
-- `ctx` (*table*) : Contexte de test.
+- `ctx` (*table*) : Test context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/utils.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/utils.test.lua`.*

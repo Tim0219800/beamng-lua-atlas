@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+--- Flowgraph node class; each instance represents a node in a graph.
 ---@class flowgraph_nodes_vehicle_ai_arrive_C
 local flowgraph_nodes_vehicle_ai_arrive_C = {}
 
---- Appelle onNodeReset.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:46
+--- Calls onNodeReset.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:46
 function flowgraph_nodes_vehicle_ai_arrive_C:_executionStopped() end
 
---- Affiche l'état et si la commande a été envoyée.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:50
----@param builder table Constructeur de nœud.
----@param style table Style du nœud.
+--- Displays the state and whether the command was sent.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:50
+---@param builder table Node constructor.
+---@param style table Node style.
 function flowgraph_nodes_vehicle_ai_arrive_C:drawMiddle(builder, style) end
 
---- Renvoie le véhicule de aiVehId, ou celui du joueur sans entrée.
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:56
+--- Returns the vehicle of aiVehId, or the player's without input.
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:56
 function flowgraph_nodes_vehicle_ai_arrive_C:getVeh() end
 
---- Initialise sentCommand, data.autoDisableOnArrive=true et l'état de durée « inactive ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:35
+--- Initializes sentCommand, data.autoDisableOnArrive=true and the duration state "inactive".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:35
 function flowgraph_nodes_vehicle_ai_arrive_C:init() end
 
---- Remet sentCommand à false et l'état à « inactive ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:41
+--- Resets sentCommand to false and the state to "inactive".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:41
 function flowgraph_nodes_vehicle_ai_arrive_C:onNodeReset() end
 
---- Si flow est actif et pas terminé : vérifie le waypoint et le véhicule (erreur de nœud sinon), calcule la distance depuis le milieu de l'avant, passe à « finished » à l'arrivée (et désactive l'IA si autoDisableOnArrive), puis envoie une fois ai.setState manual et ai.setTarget.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:66
+--- If flow is active and not finished: checks the waypoint and the vehicle (node error otherwise), computes the distance from the middle of the front, goes to "finished" on arrival (and disables the AI if autoDisableOnArrive), then sends ai.setState manual and ai.setTarget once.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/vehicle/ai/arrive.lua:66
 function flowgraph_nodes_vehicle_ai_arrive_C:work() end
 

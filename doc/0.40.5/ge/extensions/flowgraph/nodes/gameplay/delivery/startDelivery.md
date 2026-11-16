@@ -1,23 +1,23 @@
 # `flowgraph_nodes_gameplay_delivery_startDelivery`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.lua` · VM : Game Engine (GE) · 82 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.lua` · VM: Game Engine (GE) · 82 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/delivery/startDelivery")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/delivery/startDelivery")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Start Delivery » (catégorie once_instant, livraison). Démarre la livraison : objectifs, indices, marqueurs et liste de tâches deviennent visibles et le chrono démarre. Nécessite une livraison chargée (Load Delivery) et non déjà active. Pins : flow, reset (caché) en entrée ; flow, success en sortie.
+Flowgraph node "Start Delivery" (category once_instant, delivery). Starts the delivery: objectives, hints, markers and task list become visible and the timer starts. Requires a loaded delivery (Load Delivery) that is not already active. Pins: flow, reset (hidden) as inputs; flow, success as outputs.
 
-**Dépendances (chargées avant) :** `gameplay_freeformDelivery_freeformDelivery`
+**Dependencies (loaded first):** `gameplay_freeformDelivery_freeformDelivery`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet flow et success à faux. | 35 |
-| `C:_executionStopped()` | Remet flow et success à faux. | 30 |
-| `C:init()` | Remet flow et success à faux. | 25 |
-| `C:work()` | Si flow est actif : vérifie isLoaded() et not isActive(), appelle freeformDelivery.start() et renseigne success/flow ; journalise les erreurs. | 40 |
+| `C:_executionStarted()` | Resets flow and success to false. | 35 |
+| `C:_executionStopped()` | Resets flow and success to false. | 30 |
+| `C:init()` | Resets flow and success to false. | 25 |
+| `C:work()` | If flow is active: checks isLoaded() and not isActive(), calls freeformDelivery.start() and fills success/flow; logs errors. | 40 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/delivery/startDelivery.lua`.*

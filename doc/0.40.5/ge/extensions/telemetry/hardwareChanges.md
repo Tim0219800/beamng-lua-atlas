@@ -1,43 +1,43 @@
 # `telemetry_hardwareChanges`
 
-*Fichier : `lua/ge/extensions/telemetry/hardwareChanges.lua` · VM : Game Engine (GE) · 79 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/hardwareChanges.lua` · VM: Game Engine (GE) · 79 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_hardwareChanges` : `extensions.load("telemetry_hardwareChanges")`, puis la globale `telemetry_hardwareChanges`
+**Access:** extension `telemetry_hardwareChanges`: `extensions.load("telemetry_hardwareChanges")`, then the global `telemetry_hardwareChanges`
 
-Module utilitaire de la télémétrie matérielle (chargé par require) : compare deux instantanés de manettes pour produire des événements de connexion/déconnexion, et dit quelles transitions d'affichage (fenêtre/plein écran) sont suivies. S'appuie sur telemetry/hardwareInput.
+Hardware telemetry utility module (loaded by require): compares two controller snapshots to produce connection/disconnection events, and says which display transitions (window/fullscreen) are tracked. Relies on telemetry/hardwareInput.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_hardwareChanges.connectionChanges(previous, current)` | Compare deux instantanés et renvoie la liste des événements {…champs du périphérique, connected = true\|false}. Les connexions viennent d'abord, triées par nom, puis les déconnexions. Si un même nom change de vidpid ou de productName, il produit une connexion (nouvel appareil) et une déconnexion (ancien). | 46 |
-| `telemetry_hardwareChanges.controllerSnapshot(controllerInfo)` | Construit un instantané indexé par nom de périphérique, limité aux types gamepad, joystick, wheel et xinput (clavier, souris, openxr, vinput ignorés). Chaque entrée contient device, deviceType, productName, vidpid et forceFeedback ; pour un volant, le nom anglais officiel est cherché via hardwareInput.officialEnglishName. | 15 |
-| `telemetry_hardwareChanges.isTrackedDisplayTransition(from, to)` | Vrai seulement pour les passages directs 'Window' vers 'Fullscreen' et 'Fullscreen' vers 'Window'. | 69 |
+| `telemetry_hardwareChanges.connectionChanges(previous, current)` | Compares two snapshots and returns the list of events {...device fields, connected = true\|false}. Connections come first, sorted by name, then disconnections. If the same name changes vidpid or productName, it produces a connection (new device) and a disconnection (old one). | 46 |
+| `telemetry_hardwareChanges.controllerSnapshot(controllerInfo)` | Builds a snapshot keyed by device name, limited to the gamepad, joystick, wheel and xinput types (keyboard, mouse, openxr, vinput ignored). Each entry contains device, deviceType, productName, vidpid and forceFeedback; for a wheel, the official English name is looked up via hardwareInput.officialEnglishName. | 15 |
+| `telemetry_hardwareChanges.isTrackedDisplayTransition(from, to)` | True only for the direct transitions 'Window' to 'Fullscreen' and 'Fullscreen' to 'Window'. | 69 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_hardwareChanges.connectionChanges(previous, current)`
 
-Compare deux instantanés et renvoie la liste des événements {…champs du périphérique, connected = true|false}. Les connexions viennent d'abord, triées par nom, puis les déconnexions. Si un même nom change de vidpid ou de productName, il produit une connexion (nouvel appareil) et une déconnexion (ancien).
+Compares two snapshots and returns the list of events {...device fields, connected = true|false}. Connections come first, sorted by name, then disconnections. If the same name changes vidpid or productName, it produces a connection (new device) and a disconnection (old one).
 
-- `previous` (*table<string, table>*) : Instantané précédent.
-- `current` (*table<string, table>*) : Instantané actuel.
-- **renvoie** : table[] Événements de changement.
+- `previous` (*table<string, table>*) : Previous snapshot.
+- `current` (*table<string, table>*) : Current snapshot.
+- **returns**: table[] Change events.
 
 #### `telemetry_hardwareChanges.controllerSnapshot(controllerInfo)`
 
-Construit un instantané indexé par nom de périphérique, limité aux types gamepad, joystick, wheel et xinput (clavier, souris, openxr, vinput ignorés). Chaque entrée contient device, deviceType, productName, vidpid et forceFeedback ; pour un volant, le nom anglais officiel est cherché via hardwareInput.officialEnglishName.
+Builds a snapshot keyed by device name, limited to the gamepad, joystick, wheel and xinput types (keyboard, mouse, openxr, vinput ignored). Each entry contains device, deviceType, productName, vidpid and forceFeedback; for a wheel, the official English name is looked up via hardwareInput.officialEnglishName.
 
-- `controllerInfo` (*table[]|nil*) : Liste des contrôleurs (name, type, productName, vidpid, ffbAxes…).
-- **renvoie** : table<string, table> Instantané par nom de périphérique.
+- `controllerInfo` (*table[]|nil*) : List of controllers (name, type, productName, vidpid, ffbAxes...).
+- **returns**: table<string, table> Snapshot per device name.
 
 #### `telemetry_hardwareChanges.isTrackedDisplayTransition(from, to)`
 
-Vrai seulement pour les passages directs 'Window' vers 'Fullscreen' et 'Fullscreen' vers 'Window'.
+True only for the direct transitions 'Window' to 'Fullscreen' and 'Fullscreen' to 'Window'.
 
-- `from` (*string*) : Ancien mode d'affichage.
-- `to` (*string*) : Nouveau mode d'affichage.
-- **renvoie** : boolean true si la transition est suivie.
+- `from` (*string*) : Old display mode.
+- `to` (*string*) : New display mode.
+- **returns**: boolean true if the transition is tracked.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/hardwareChanges.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/hardwareChanges.lua`.*

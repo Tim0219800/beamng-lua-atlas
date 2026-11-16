@@ -1,0 +1,66 @@
+{
+  "path": "lua/ge/extensions/gameplay/forceField.lua",
+  "module": "Mode « champ de force » du menu radial Fun Stuff : crée autour du véhicule du joueur 0 une « planète » de gravité (obj:setPlanets) envoyée à tous les autres véhicules, qui sont ainsi repoussés (multiplicateur > 0) ou attirés (< 0). Mise à jour toutes les 0.05 s de temps simulé. Se désactive au changement de véhicule, en fin de niveau, au passage en carrière et avant une sérialisation.",
+  "usage": "extensions.load('gameplay_forceField')\ngameplay_forceField.setForceMultiplier(-1) -- attraction\ngameplay_forceField.activate()",
+  "notes": [
+    "Paramètres codés en dur : portée 100 (inutilisée), rayon de la planète 5, masse de base -6e13 (négative = répulsion), multiplié par la taille du véhicule (plus grand demi-côté / 3) et par forceMultiplier.",
+    "Commande envoyée à chaque véhicule (VM véhicule) : obj:setPlanets({x, y, z, rayon, masse}). La désactivation envoie obj:setPlanets({}) à tous les véhicules.",
+    "active vaut nil (et non false) tant que le mode n'a jamais été activé : isActive peut renvoyer nil.",
+    "Bug : longestHalfExtent = math.max(math.max(halfExtents.x, halfExtents.y), halfExtents.y) répète y et ignore z. Aussi, l'appel vehicle:getID() est utilisé pour la comparaison alors que le reste du code utilise getId().",
+    "La variable range est déclarée mais jamais utilisée."
+  ],
+  "functions": {
+    "activate": {
+      "desc": "Active le champ de force (sans effet s'il est déjà actif) et affiche un message UI indiquant répulsion ou attraction selon le signe de forceMultiplier."
+    },
+    "deactivate": {
+      "desc": "Désactive le champ : envoie obj:setPlanets({}) à tous les véhicules et affiche un message « désactivé » sauf si silent. Sans effet s'il est inactif.",
+      "params": {"silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}}
+    },
+    "toggleActive": {
+      "desc": "Bascule entre actif et inactif."
+    },
+    "isActive": {
+      "desc": "Indique si le champ de force est actif.",
+      "returns": [{"type": "boolean|nil", "desc": "true si actif, false ou nil sinon."}]
+    },
+    "setForceMultiplier": {
+      "desc": "Définit le multiplicateur de force : positif = répulsion, négatif = attraction. Pris en compte à la prochaine mise à jour.",
+      "params": {"factor": {"type": "number", "desc": "Multiplicateur (1 par défaut)."}}
+    },
+    "getForceMultiplier": {
+      "desc": "Renvoie le multiplicateur de force courant.",
+      "returns": [{"type": "number", "desc": "Multiplicateur."}]
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : si actif, toutes les 0.05 s (dtSim) calcule la planète à partir de la boîte englobante du véhicule du joueur 0 et l'envoie aux autres véhicules.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (inutilisé)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé, cumulé pour la cadence."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (inutilisé)."}
+      },
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook : fin de niveau ; désactive le champ.",
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook : changement de véhicule du joueur ; désactive le champ.",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook : avant un rechargement Lua ; désactive le champ (ne renvoie rien).",
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook : après un rechargement Lua ; ne fait rien.",
+      "internal": true
+    },
+    "onCareerActive": {
+      "desc": "Hook : activation de la carrière ; désactive le champ si enabled est vrai.",
+      "params": {"enabled": {"type": "boolean", "desc": "Carrière activée."}},
+      "internal": true
+    }
+  }
+}

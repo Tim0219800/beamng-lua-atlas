@@ -2,11 +2,11 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+--- Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 ---@class flowgraph_nodes_scene_setObjectField_C
 local flowgraph_nodes_scene_setObjectField_C = {}
 
---- Cherche l'objet, convertit la valeur et l'écrit dans le champ (déclaré ou dynamique).
----Source : lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua:24
+--- Looks up the object, converts the value and writes it to the field (declared or dynamic).
+---Source: lua/ge/extensions/flowgraph/nodes/scene/setObjectField.lua:24
 function flowgraph_nodes_scene_setObjectField_C:work() end
 

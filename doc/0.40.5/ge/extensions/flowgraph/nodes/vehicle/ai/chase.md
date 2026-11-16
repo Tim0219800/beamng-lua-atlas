@@ -1,26 +1,26 @@
 # `flowgraph_nodes_vehicle_ai_chase`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/chase.lua` · VM : Game Engine (GE) · 37 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/chase.lua` · VM: Game Engine (GE) · 37 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/ai/chase")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/ai/chase")` (file under extensions/ but not a regular extension)
 
-Nœud « AI Chase » (couleur ai, once_p_duration). Met un véhicule en mode IA « chase » pour poursuivre un autre véhicule, avec contact intentionnel. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).
+Node "AI Chase" (color ai, once_p_duration). Puts a vehicle in "chase" AI mode to pursue another vehicle, with intentional contact. Inputs: aiVehId (no value = player vehicle), targetId (defaults to the player vehicle).
 
-## Remarques
+## Notes
 
-- Si aiVehId n'est pas fourni, le véhicule du joueur est à la fois poursuivant et cible par défaut.
+- If aiVehId is not provided, the player vehicle is both the chaser and the target by default.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Envoie au véhicule ai.setMode("chase") puis ai.setTargetObjectID(targetId). | 22 |
+| `C:workOnce()` | Sends ai.setMode("chase") then ai.setTargetObjectID(targetId) to the vehicle. | 22 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/ai/chase.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/ai/chase.lua`.*

@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/recordTimeCardEntry.lua",
-  "module": "Nœud flowgraph « Rally Loop Record Time Card Entry » (catégorie once_instant, tag rally). Enregistre une entrée de carte de pointage (time card) dans la boucle rally : rm:recordTimeCardEntry(name, time). Entrées : name (string) et time (number).",
+  "module": "Flowgraph node \"Rally Loop Record Time Card Entry\" (category once_instant, tag rally). Records a time card entry in the rally loop: rm:recordTimeCardEntry(name, time). Inputs: name (string) and time (number).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Appelle rm:recordTimeCardEntry avec les pins name et time.", "internal": true}
+        "workOnce": {
+          "desc": "Calls rm:recordTimeCardEntry with the name and time pins.",
+          "internal": true
+        }
       }
     }
   }

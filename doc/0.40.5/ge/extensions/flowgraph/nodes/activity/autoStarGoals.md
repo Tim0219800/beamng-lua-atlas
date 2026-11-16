@@ -1,27 +1,27 @@
 # `flowgraph_nodes_activity_autoStarGoals`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua` · VM : Game Engine (GE) · 72 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua` · VM: Game Engine (GE) · 72 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/activity/autoStarGoals")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/activity/autoStarGoals")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Auto Star Goals » (catégorie once_instant, tag activity). Crée automatiquement les objectifs de l'app Tasklist à partir des étoiles actives de la mission : envoie le guihook SetTasklistHeader (nom de la mission) puis un SetTasklistTask par étoile active (type goal, id = clé d'étoile, label depuis starLabels). Pin d'entrée codé en dur « addMissionTitle » (bool).
+Flowgraph node "Auto Star Goals" (category once_instant, tag activity). Automatically creates the Tasklist app's objectives from the mission's active stars: sends the guihook SetTasklistHeader (mission name) then one SetTasklistTask per active star (type goal, id = star key, label from starLabels). Hardcoded input pin "addMissionTitle" (bool).
 
-## Remarques
+## Notes
 
-- Le pin addMissionTitle est déclaré mais jamais lu : l'en-tête est toujours envoyé.
-- Un label string devient {txt, context} avec le contexte tiré des champs string/number de missionTypeData ; un label function est appelé avec la mission.
-- Plante sans activité associée (self.mgr.activity nil).
+- The addMissionTitle pin is declared but never read: the header is always sent.
+- A string label becomes {txt, context} with the context taken from the string/number fields of missionTypeData; a function label is called with the mission.
+- Crashes without an associated activity (self.mgr.activity is nil).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Vide. | 25 |
-| `C:workOnce()` | Envoie SetTasklistHeader puis un SetTasklistTask (done/fail false, active true) pour chaque étoile de careerSetup.starsActive. | 39 |
+| `C:init()` | Empty. | 25 |
+| `C:workOnce()` | Sends SetTasklistHeader then a SetTasklistTask (done/fail false, active true) for each star of careerSetup.starsActive. | 39 |
 
-**Évènements UI (guihooks.trigger) :** `SetTasklistHeader`
+**UI events (guihooks.trigger):** `SetTasklistHeader`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/activity/autoStarGoals.lua`.*

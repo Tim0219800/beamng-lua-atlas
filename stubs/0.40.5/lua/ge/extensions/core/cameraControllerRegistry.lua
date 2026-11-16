@@ -2,55 +2,55 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraControllerRegistry.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Couche de routage facultative placée devant le chemin d'entrée caméra. Des 'contrôleurs' enregistrés (par id, avec priorité) peuvent consommer certaines entrées (ex. onRelativeInput, onEditorMouseWheel) quand ils sont actifs ; ce qui n'est pas consommé continue vers la caméra active comme avant. Se charge avec require('core/cameraControllerRegistry') (ce n'est pas une extension). Utilisé par core/cameraInput.lua. Un moddeur l'utilise pour intercepter la souris/molette (ex. outil d'édition de caméra) sans casser les caméras normales.
---- Accès : extension `core_cameraControllerRegistry` : `extensions.load("core_cameraControllerRegistry")`, puis la globale `core_cameraControllerRegistry`
+--- Optional routing layer placed in front of the camera input path. Registered 'controllers' (by id, with priority) can consume certain inputs (e.g. onRelativeInput, onEditorMouseWheel) when they are active; whatever is not consumed continues to the active camera as before. Loaded with require('core/cameraControllerRegistry') (it is not an extension). Used by core/cameraInput.lua. A modder uses it to intercept the mouse/wheel (e.g. a camera editing tool) without breaking normal cameras.
+--- Access: extension `core_cameraControllerRegistry`: `extensions.load("core_cameraControllerRegistry")`, then the global `core_cameraControllerRegistry`
 ---@class core_cameraControllerRegistry
 core_cameraControllerRegistry = {}
 
---- Prend la capture exclusive des entrées pour ce contrôleur (voir notes pour les conditions).
----Source : lua/ge/extensions/core/cameraControllerRegistry.lua:70
----@param id string Identifiant d'un contrôleur enregistré
----@return boolean  true si la capture est (ou était déjà) à ce contrôleur
+--- Takes exclusive capture of the inputs for this controller (see notes for the conditions).
+---Source: lua/ge/extensions/core/cameraControllerRegistry.lua:70
+---@param id string Identifier of a registered controller
+---@return boolean  true if the capture is (or already was) held by this controller
 function core_cameraControllerRegistry.acquire(id) end
 
---- Envoie un évènement aux contrôleurs : au propriétaire de la capture seul s'il y en a un, sinon à tous dans l'ordre jusqu'à ce que l'un renvoie true.
----Source : lua/ge/extensions/core/cameraControllerRegistry.lua:51
----@param method string Nom de la méthode à appeler sur les contrôleurs
----@param ... any Arguments passés à la méthode
----@return boolean  true si un contrôleur a consommé l'évènement
+--- Sends an event to the controllers: to the capture owner only if there is one, otherwise to all in order until one returns true.
+---Source: lua/ge/extensions/core/cameraControllerRegistry.lua:51
+---@param method string Name of the method to call on the controllers
+---@param ... any Arguments passed to the method
+---@return boolean  true if a controller consumed the event
 function core_cameraControllerRegistry.dispatch(method, ...) end
 
---- Teste si ce contrôleur détient la capture.
----Source : lua/ge/extensions/core/cameraControllerRegistry.lua:88
----@param id string Identifiant
----@return boolean  true si propriétaire
+--- Tests whether this controller holds the capture.
+---Source: lua/ge/extensions/core/cameraControllerRegistry.lua:88
+---@param id string Identifier
+---@return boolean  true if owner
 function core_cameraControllerRegistry.isOwner(id) end
 
---- Teste si l'id est enregistré (et, si controller est donné, qu'il s'agit de ce contrôleur).
----Source : lua/ge/extensions/core/cameraControllerRegistry.lua:92
----@param id string Identifiant
----@param controller table|nil Contrôleur attendu
----@return boolean  true si enregistré
+--- Tests whether the id is registered (and, if controller is given, that it is this controller).
+---Source: lua/ge/extensions/core/cameraControllerRegistry.lua:92
+---@param id string Identifier
+---@param controller table|nil Expected controller
+---@return boolean  true if registered
 function core_cameraControllerRegistry.isRegistered(id, controller) end
 
---- Enregistre un contrôleur. Échoue (false) si l'id n'est pas une chaîne non vide, si controller n'est pas une table ou si l'id existe déjà.
----Source : lua/ge/extensions/core/cameraControllerRegistry.lua:31
----@param id string Identifiant unique
----@param controller table Table de callbacks nommés
----@param priority number|nil Priorité (plus grand = appelé en premier), 0 par défaut
----@return boolean  true si enregistré
+--- Registers a controller. Fails (false) if the id is not a non-empty string, if controller is not a table or if the id already exists.
+---Source: lua/ge/extensions/core/cameraControllerRegistry.lua:31
+---@param id string Unique identifier
+---@param controller table Table of named callbacks
+---@param priority number|nil Priority (larger = called first), 0 by default
+---@return boolean  true if registered
 function core_cameraControllerRegistry.register(id, controller, priority) end
 
---- Relâche la capture si ce contrôleur la détient.
----Source : lua/ge/extensions/core/cameraControllerRegistry.lua:82
----@param id string Identifiant
----@return boolean  true si relâchée
+--- Releases the capture if this controller holds it.
+---Source: lua/ge/extensions/core/cameraControllerRegistry.lua:82
+---@param id string Identifier
+---@return boolean  true if released
 function core_cameraControllerRegistry.release(id) end
 
---- Retire un contrôleur. Si controller est donné, il doit correspondre à celui enregistré. Libère la capture si besoin.
----Source : lua/ge/extensions/core/cameraControllerRegistry.lua:42
----@param id string Identifiant
----@param controller table|nil Contrôleur attendu (vérification facultative)
----@return boolean  true si retiré
+--- Removes a controller. If controller is given, it must match the registered one. Releases the capture if needed.
+---Source: lua/ge/extensions/core/cameraControllerRegistry.lua:42
+---@param id string Identifier
+---@param controller table|nil Expected controller (optional check)
+---@return boolean  true if removed
 function core_cameraControllerRegistry.unregister(id, controller) end
 

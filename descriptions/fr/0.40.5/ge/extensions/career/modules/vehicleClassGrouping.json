@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/career/modules/vehicleClassGrouping.lua",
+  "module": "Génère des groupes de véhicules par classe de performance (S, A, B, C, D) pour le système core_multiSpawn (adversaires, courses). Parcourt tous les modèles Car/Truck et leurs configs, filtre par modèle, config et type de config, garde ceux dont la classe (gameplay_vehiclePerformance.getClassFromConfig) correspond, puis mélange le résultat. Fournit aussi un coefficient d'agressivité de l'IA par classe.",
+  "notes": [
+    "Coefficients d'agressivité : S 1, A 0,9, B 0,8, C 0,7, D 0,6 ; classe par défaut B.",
+    "Filtres par défaut : modèles exclus atv, utv, us_semi, midtruck, citybus, racetruck, rockbouncer, simple_traffic ; types de config exclus Police, Service, Powerglow.",
+    "Avec performanceIndexTarget, ne garde que les configs dans la fenêtre ±performanceIndexWindow (5 par défaut) ; si aucune, prend les 10 plus proches. Si le groupe reste vide, une entrée de secours {model='midsize'} est ajoutée.",
+    "Le « smart shuffle » entrelace les modèles pour éviter les doublons successifs du même modèle.",
+    "L'argument mode (« default » ou « drag ») est lu mais n'a pas d'effet dans le code."
+  ],
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "{\"gameplay_vehiclePerformance\"}."}
+  },
+  "functions": {
+    "getAggressionMultiplier": {
+      "desc": "Retourne le coefficient d'agressivité de l'IA pour une classe.",
+      "params": {"class": {"type": "string|nil", "desc": "Classe S/A/B/C/D, défaut \"B\"."}},
+      "returns": [{"type": "number", "desc": "Coefficient (1 si classe inconnue)."}],
+      "internal": false
+    },
+    "generateGroup": {
+      "desc": "Construit un groupe de véhicules d'une classe donnée, utilisable par core_multiSpawn.",
+      "params": {
+        "class": {"type": "string|nil", "desc": "Classe de performance, défaut \"B\"."},
+        "mode": {"type": "string|nil", "desc": "\"default\" ou \"drag\" (sans effet)."},
+        "modelFilter": {"type": "table<string, any>|nil", "desc": "Modèles à exclure (clé = modèle)."},
+        "configFilter": {"type": "table<string, any>|nil", "desc": "Configs à exclure (clé \"modèle/config\")."},
+        "configTypeFilter": {"type": "table<string, any>|nil", "desc": "Types de config à exclure."},
+        "invertedFilters": {"type": "table<string, boolean>|nil", "desc": "Ex. {modelFilter = true} inverse le filtre (liste blanche)."},
+        "randomizePaint": {"type": "boolean|nil", "desc": "Peinture « (Random) », vrai par défaut."},
+        "smartShuffle": {"type": "boolean|nil", "desc": "Entrelacer les modèles, vrai par défaut."},
+        "performanceIndexTarget": {"type": "number|nil", "desc": "Indice de performance visé."},
+        "performanceIndexWindow": {"type": "number|nil", "desc": "Tolérance autour de la cible, défaut 5."}
+      },
+      "returns": [{"type": "table", "desc": "{name = \"Class X\", type = \"custom\", data = {{model, config, paintName}, ...}}."}],
+      "internal": false
+    }
+  }
+}

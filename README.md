@@ -8,7 +8,7 @@ Everything is generated from the Lua code shipped with the game (read-only) and 
 **Game version covered: 0.40.5.0 (build 302427).**
 
 > Unofficial project, not affiliated with or endorsed by BeamNG GmbH.
-> The written descriptions are in **French**; signatures, types, hooks and C++ listings are language-neutral.
+> The written descriptions are in **English** (main language) and **French** (`descriptions/fr/`, `doc/fr/`, `stubs-<version>-fr.zip`).
 
 ## What's inside
 
@@ -19,10 +19,11 @@ Everything is generated from the Lua code shipped with the game (read-only) and 
 | [`doc/0.40.5/cpp.md`](doc/0.40.5/cpp.md) | C++ classes and modules exposed to Lua (`obj`, `be`, `Engine.*`, scene objects…) |
 | `stubs/0.40.5/lua/...` | `---@meta` stubs for LuaLS, same tree as the game's `lua/` folder |
 | `stubs/0.40.5/cpp/ge.lua`, `cpp/vehicle.lua` | Stubs for the C++ objects |
-| `descriptions/0.40.5/` | Hand-checked descriptions (JSON), merged by the generator |
+| [`doc/fr/0.40.5/index.md`](doc/fr/0.40.5/index.md) | The same documentation in French |
+| `descriptions/0.40.5/`, `descriptions/fr/0.40.5/` | Hand-checked descriptions (JSON, English / French), merged by the generator |
 | `donnees-0.40.5.zip` (release asset) | Raw data: static extraction and in-game scans, needed to regenerate |
 | `outils/` | The tools: `extraire.py`, `generer.py`, `importer_releve.py`, `mod_releve/`, `comparer.py`, `reporter_descriptions.py`, `verifier_mod.py`, `bissecter.py` (see below) |
-| [`NOUVELLE_VERSION.md`](NOUVELLE_VERSION.md) | Step-by-step procedure to move the atlas to a new game version (planned: 0.41), written in French |
+| [`NEW_VERSION.md`](NEW_VERSION.md) | Step-by-step procedure to move the atlas to a new game version (planned: 0.41) |
 
 ### Coverage
 
@@ -44,7 +45,7 @@ C++ side (in-game scan): 103 instance classes in GE (including 76 scene object t
 ## Using the stubs in VS Code
 
 1. Install the **Lua** extension (sumneko / LuaLS).
-2. Download `stubs-0.40.5.zip` from the [latest release](https://github.com/Tim0219800/beamng-lua-atlas/releases/latest) and unzip it, or clone this repository, for example to `C:/dev/tim19Atlas`.
+2. Download `stubs-0.40.5.zip` (English comments; `stubs-0.40.5-fr.zip` for French) from the [latest release](https://github.com/Tim0219800/beamng-lua-atlas/releases/latest) and unzip it, or clone this repository, for example to `C:/dev/tim19Atlas`.
 3. At the root of your mod, create `.luarc.json`. For **vehicle** Lua:
 
 ```json
@@ -70,7 +71,8 @@ Unzip `donnees-<version>.zip` from the release into `donnees/` first (it is not 
 ```
 python -I outils/extraire.py "<BeamNG.drive install folder>" donnees/<version>/statique.json
 python -I outils/importer_releve.py <version>     # after a game session with the tim19_atlas mod
-python -I outils/generer.py <version>
+python -I outils/generer.py <version>              # English docs and stubs
+python -I outils/generer.py <version> --lang fr    # French docs and stubs (doc/fr/, stubs/fr/)
 ```
 
 In-game scan: copy `outils/mod_releve/` to `mods/unpacked/tim19_atlas/` in your BeamNG user folder, start the game and load a map with a vehicle.
@@ -82,7 +84,7 @@ It can be run again from the GE console with `tim19Atlas_dump.run()`. Remove the
 - **Signatures, line numbers, hooks, dependencies**: extracted from the code, reliable.
 - **Descriptions marked ✍**: written by reading the code; types are inferred. The source line is always given, check it when in doubt.
 - **C++ classes**: exact names and methods from the running game. C++ parameters are not visible from Lua, so stubs declare them as `...`.
-- **Game bugs**: several hundred inconsistencies found while reading the code are listed in each module's "Remarques" section,
+- **Game bugs**: several hundred inconsistencies found while reading the code are listed in each module's "Notes" section,
   and 69 exports pointing to undefined functions are flagged with ⚠. Only a few were checked by hand.
 
 ## Tools for modders
@@ -96,12 +98,12 @@ python -I outils/reporter_descriptions.py <old> <new>                    # carry
 
 - **`verifier_mod.py`**: file conflicts between mods, game files replaced, calls to unknown or removed functions, missing extensions, hooks never fired. Changes nothing.
 - **`bissecter.py`**: disables half of the active mods at each step to find the culprit; keeps a copy of `db.json` (`db.json.bak_bissection`).
-- **`comparer.py`**: produces `doc/<version>/changements.md` (breaking changes, additions, C++) and a JSON used by the checker.
+- **`comparer.py`**: produces `doc/<version>/changements.md` and `doc/fr/<version>/changements.md` (breaking changes, additions, C++) and a JSON used by the checker.
 
 ## Roadmap
 
-1. Move to 0.41: all the tooling is ready, see [`NOUVELLE_VERSION.md`](NOUVELLE_VERSION.md).
-2. Review and enrich descriptions of the very large editor files, and restore accents in part of the flowgraph nodes.
+1. Move to 0.41: all the tooling is ready, see [`NEW_VERSION.md`](NEW_VERSION.md).
+2. Review and enrich descriptions of the very large editor files, and restore accents in part of the French flowgraph node descriptions.
 
 ## License
 

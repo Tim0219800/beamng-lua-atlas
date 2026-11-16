@@ -1,176 +1,361 @@
 {
   "path": "lua/ge/extensions/editor/resourceChecker/resourceUtil.lua",
-  "module": "Moteur de l'outil Resource Checker de l'éditeur : analyse les matériaux, textures, meshes et assets d'un niveau ou d'un véhicule (versions de matériaux, doublons, persistentId, textures manquantes ou non puissance de deux, matériaux/modèles/textures inutilisés, dummies, colmeshes, export DDS vers PNG, statistiques de taille). Chaque vérification tourne dans un job (extensions.core_jobsystem.create) qui met à jour une progression et renvoie son résultat à l'UI via extensions.editor_resourceChecker.jobData(canal, {type, compte, ..., isDone}). Plusieurs fonctions modifient ou suppriment des fichiers (fixPID, removeDummy, removeUnused, textureExporter) : à utiliser avec précaution.",
-  "usage": "local ru = extensions.editor_resourceChecker_resourceUtil\nru.verifyVersion('/levels/mon_niveau/')\n-- plus tard, dans l'UI :\nlocal p = ru.getProgress()\nif p then print(p) end -- 0..100, nil si aucun job ne tourne",
+  "module": "Engine of the editor's Resource Checker tool: analyzes the materials, textures, meshes and assets of a level or vehicle (material versions, duplicates, persistentId, missing or non-power-of-two textures, unused materials/models/textures, dummies, colmeshes, DDS to PNG export, size statistics). Each check runs in a job (extensions.core_jobsystem.create) that updates a progress value and returns its result to the UI via extensions.editor_resourceChecker.jobData(channel, {type, count, ..., isDone}). Several functions modify or delete files (fixPID, removeDummy, removeUnused, textureExporter): use with caution.",
+  "usage": "local ru = extensions.editor_resourceChecker_resourceUtil\nru.verifyVersion('/levels/mon_niveau/')\n-- later, in the UI:\nlocal p = ru.getProgress()\nif p then print(p) end -- 0..100, nil if no job is running",
   "notes": [
-    "Les fonctions de vérification ne renvoient rien : le résultat arrive de façon asynchrone via extensions.editor_resourceChecker.jobData(...). Ce module dépend donc de l'extension editor_resourceChecker.",
-    "isDone vaut 1 en cas de succès et 2 en cas d'erreur (chemin invalide ou nom de niveau absent) dans les données renvoyées.",
-    "Les chemins de matériaux doivent contenir un « / » sinon la fonction journalise une erreur (ensureValidPath).",
-    "Les champs xxxworkJob exportés valent nil au chargement du module (copie de variables locales non encore assignées) : les jobs eux-mêmes sont des locales privées, getProgress et stopProgress sont la seule interface fiable.",
-    "removeUnusedworkJob n'est pas exporté, mais getProgress/stopProgress le gèrent. checkColData accepte un paramètre removal qui n'est pas transmis au job (déduit du code).",
-    "textureExporter : les messages log('E'/'I', 'texte') passent le message comme tag (appel à deux arguments avec un seul message) ; en cas d'échec de convertDDSToPNG, le fichier est tout de même compté et listé.",
-    "Les fonctions qui parsent des fichiers matériaux gèrent materials.cs (TorqueScript, parseur maison) et *materials.json."
+    "The check functions return nothing: the result arrives asynchronously via extensions.editor_resourceChecker.jobData(...). This module therefore depends on the editor_resourceChecker extension.",
+    "isDone is 1 on success and 2 on error (invalid path or missing level name) in the returned data.",
+    "Material paths must contain a \"/\" otherwise the function logs an error (ensureValidPath).",
+    "The exported xxxworkJob fields are nil when the module loads (copy of local variables not yet assigned): the jobs themselves are private locals, getProgress and stopProgress are the only reliable interface.",
+    "removeUnusedworkJob is not exported, but getProgress/stopProgress handle it. checkColData accepts a removal parameter that is not passed to the job (inferred from code).",
+    "textureExporter: the log('E'/'I', 'text') calls pass the message as the tag (two-argument call with a single message); if convertDDSToPNG fails, the file is still counted and listed.",
+    "The functions that parse material files handle materials.cs (TorqueScript, home-made parser) and *materials.json."
   ],
   "fields": {
-    "matstoRemove": {"type": "table", "desc": "Liste des matériaux inutilisés trouvés par checkUnusedMats ; remplacée par M.matstoRemove à la fin du job. Utilisée ensuite par removeUnused (item 1)."},
-    "shapestoRemove": {"type": "table", "desc": "Liste des modèles (shapes) inutilisés trouvés par checkUnusedModels ; utilisée par removeUnused (item 2)."},
-    "textoRemove": {"type": "table", "desc": "Liste des textures inutilisées trouvées par unusedTextures ; utilisée par removeUnused (item 3)."},
-    "checkUnusedMatsworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job checkUnusedMats."},
-    "checkUsedMatsworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job checkUsedMats."},
-    "checkUnusedModelsworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job checkUnusedModels."},
-    "unusedTexturesworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job unusedTextures."},
-    "checkColDataworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job checkColData."},
-    "duplicateDataworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job duplicateData."},
-    "removeDummyworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job removeDummy."},
-    "textureExporterworkJob": {"type": "any", "desc": "Exporté mais nil (voir notes) : handle du job textureExporter."}
+    "matstoRemove": {
+      "type": "table",
+      "desc": "List of unused materials found by checkUnusedMats; replaced by M.matstoRemove at the end of the job. Then used by removeUnused (item 1)."
+    },
+    "shapestoRemove": {
+      "type": "table",
+      "desc": "List of unused models (shapes) found by checkUnusedModels; used by removeUnused (item 2)."
+    },
+    "textoRemove": {
+      "type": "table",
+      "desc": "List of unused textures found by unusedTextures; used by removeUnused (item 3)."
+    },
+    "checkUnusedMatsworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the checkUnusedMats job."
+    },
+    "checkUsedMatsworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the checkUsedMats job."
+    },
+    "checkUnusedModelsworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the checkUnusedModels job."
+    },
+    "unusedTexturesworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the unusedTextures job."
+    },
+    "checkColDataworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the checkColData job."
+    },
+    "duplicateDataworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the duplicateData job."
+    },
+    "removeDummyworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the removeDummy job."
+    },
+    "textureExporterworkJob": {
+      "type": "any",
+      "desc": "Exported but nil (see notes): handle of the textureExporter job."
+    }
   },
   "functions": {
-    "onExtensionLoaded": {"desc": "Hook de chargement de l'extension ; ne fait rien.", "params": {}, "internal": true},
-    "onExtensionUnloaded": {"desc": "Hook de déchargement ; appelle extensions.unload('extensions.editor_resourceChecker_resourceUtil').", "params": {}, "internal": true},
+    "onExtensionLoaded": {
+      "desc": "Extension load hook; does nothing.",
+      "params": {},
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Unload hook; calls extensions.unload('extensions.editor_resourceChecker_resourceUtil').",
+      "params": {},
+      "internal": true
+    },
     "getSimObjects": {
-      "desc": "Parcourt tous les objets de la scène (scenetree.getAllObjects) et renvoie ceux dont getFileName() égale le fichier donné. Sert à retrouver les objets créés en chargeant un fichier de matériaux.",
-      "params": {"fileName": {"type": "string", "desc": "Chemin du fichier source de l'objet (ex. un materials.json)."}},
-      "returns": [{"type": "table", "desc": "Liste d'objets SimObject."}]
+      "desc": "Walks through all scene objects (scenetree.getAllObjects) and returns those whose getFileName() equals the given file. Used to find the objects created by loading a materials file.",
+      "params": {
+        "fileName": {
+          "type": "string",
+          "desc": "Path of the object's source file (e.g. a materials.json)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of SimObjects."
+        }
+      ]
     },
     "resaveMaterial": {
-      "desc": "Recharge un fichier materials.json, vide le persistentId de chaque Material puis le sauvegarde via un PersistenceManager temporaire. Réécrit le fichier.",
-      "params": {"file": {"type": "string", "desc": "Chemin d'un fichier de matériaux existant."}}
+      "desc": "Reloads a materials.json file, clears the persistentId of each Material then saves it via a temporary PersistenceManager. Rewrites the file.",
+      "params": {
+        "file": {
+          "type": "string",
+          "desc": "Path of an existing materials file."
+        }
+      }
     },
     "powerOfTwo": {
-      "desc": "Teste si un nombre est une puissance de deux (utile pour les dimensions de texture).",
-      "params": {"x": {"type": "number", "desc": "Valeur à tester."}},
-      "returns": [{"type": "boolean", "desc": "false si x est nil ou <= 0 ou n'est pas une puissance de deux."}]
+      "desc": "Tests whether a number is a power of two (useful for texture dimensions).",
+      "params": {
+        "x": {
+          "type": "number",
+          "desc": "Value to test."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if x is nil or <= 0 or is not a power of two."
+        }
+      ]
     },
     "removeFromForestJson": {
-      "desc": "Ouvre un fichier JSON de ForestItemData, retire l'entrée dont shapeFile correspond à shape et réécrit le fichier. Journalise un avertissement si introuvable.",
+      "desc": "Opens a ForestItemData JSON file, removes the entry whose shapeFile matches shape and rewrites the file. Logs a warning if not found.",
       "params": {
-        "shape": {"type": "string", "desc": "Valeur de shapeFile à supprimer."},
-        "foresData": {"type": "string", "desc": "Chemin du fichier JSON forest."}
+        "shape": {
+          "type": "string",
+          "desc": "shapeFile value to remove."
+        },
+        "foresData": {
+          "type": "string",
+          "desc": "Path of the forest JSON file."
+        }
       }
     },
     "getMaterialTexFields": {
-      "desc": "Pour un objet Material, renvoie ses champs de type filename non vides, par couche (4 couches pour version 0 ou 1, activeLayers pour 1.5, sinon 1).",
-      "params": {"mat": {"type": "userdata", "desc": "Objet de classe Material."}},
-      "returns": [{"type": "table<string, string>|nil", "desc": "Clés « champ.couche » vers chemin de fichier ; nil (et log E) si ce n'est pas un Material."}]
+      "desc": "For a Material object, returns its non-empty filename-type fields, per layer (4 layers for version 0 or 1, activeLayers for 1.5, otherwise 1).",
+      "params": {
+        "mat": {
+          "type": "userdata",
+          "desc": "Object of class Material."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, string>|nil",
+          "desc": "\"field.layer\" keys to file path; nil (and E log) if it is not a Material."
+        }
+      ]
     },
     "findDuplicates": {
-      "desc": "Détecte les noms de matériaux en double et les mapTo en double (hors unmapped_mat) dans une liste. Le résultat est stocké dans un état interne du module utilisé par verifyDuplicate.",
-      "params": {"duplicatelist": {"type": "table", "desc": "Table de {nom, mapTo, fichier}."}}
+      "desc": "Detects duplicate material names and duplicate mapTo (excluding unmapped_mat) in a list. The result is stored in an internal module state used by verifyDuplicate.",
+      "params": {
+        "duplicatelist": {
+          "type": "table",
+          "desc": "Table of {name, mapTo, file}."
+        }
+      }
     },
     "verifyVersion": {
-      "desc": "Job : compte les matériaux de version < 1.5 (anciens) et ceux en 1.5 (PBR) sous un dossier, et liste les anciens avec leur fichier. Charge réellement les fichiers matériaux dans le jeu. Résultat via jobData(2, {2, nbAnciens, liste, nbPBR, isDone}).",
-      "params": {"convertdata": {"type": "string", "desc": "Dossier à analyser (niveau ou véhicule)."}}
+      "desc": "Job: counts the materials of version < 1.5 (old) and those at 1.5 (PBR) under a folder, and lists the old ones with their file. Actually loads the material files into the game. Result via jobData(2, {2, nbOld, list, nbPBR, isDone}).",
+      "params": {
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder to analyze (level or vehicle)."
+        }
+      }
     },
     "verifyDuplicate": {
-      "desc": "Job : repère les matériaux dont le nom ou le mapTo est en double. Avec skipCommon == false, inclut /vehicles/common, /art et /core. Résultat via jobData(2, {3, nombre, \"dummy\", liste, isDone}).",
+      "desc": "Job: finds materials whose name or mapTo is duplicated. With skipCommon == false, includes /vehicles/common, /art and /core. Result via jobData(2, {3, count, \"dummy\", list, isDone}).",
       "params": {
-        "convertdata": {"type": "string", "desc": "Dossier à analyser."},
-        "skipCommon": {"type": "boolean", "desc": "false pour inclure les dossiers communs."}
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder to analyze."
+        },
+        "skipCommon": {
+          "type": "boolean",
+          "desc": "false to include the common folders."
+        }
       }
     },
     "fixPID": {
-      "desc": "Job : retire les persistentId des matériaux JSON en les resauvegardant (resaveMaterial). Modifie les fichiers. Résultat via jobData(2, {5, nombre, \"\", fichiersModifiés, isDone}).",
+      "desc": "Job: removes persistentIds from JSON materials by re-saving them (resaveMaterial). Modifies files. Result via jobData(2, {5, count, \"\", modifiedFiles, isDone}).",
       "params": {
-        "convertdata": {"type": "string", "desc": "Dossier à traiter."},
-        "skipCommon": {"type": "boolean", "desc": "false pour inclure les dossiers communs."}
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder to process."
+        },
+        "skipCommon": {
+          "type": "boolean",
+          "desc": "false to include the common folders."
+        }
       }
     },
     "checkMatTex": {
-      "desc": "Job : vérifie les textures référencées par les matériaux (fichiers manquants, chemins incorrects). Résultat via jobData(2, {6, ...}).",
-      "params": {"convertdata": {"type": "string", "desc": "Dossier à analyser."}}
+      "desc": "Job: checks the textures referenced by the materials (missing files, incorrect paths). Result via jobData(2, {6, ...}).",
+      "params": {
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder to analyze."
+        }
+      }
     },
     "checkTex": {
-      "desc": "Job : vérifie les fichiers de texture eux-mêmes (par ex. dimensions puissance de deux, voir powerOfTwo). Résultat via jobData(2, {7, ...}).",
-      "params": {"convertdata": {"type": "string", "desc": "Dossier à analyser."}}
+      "desc": "Job: checks the texture files themselves (e.g. power-of-two dimensions, see powerOfTwo). Result via jobData(2, {7, ...}).",
+      "params": {
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder to analyze."
+        }
+      }
     },
     "checkmissingMats": {
-      "desc": "Job : cherche dans les meshes les matériaux référencés mais absents des fichiers de matériaux. Résultat via jobData(2, {8, ...}).",
-      "params": {"convertdata": {"type": "string", "desc": "Dossier à analyser."}}
+      "desc": "Job: looks in the meshes for materials that are referenced but absent from the material files. Result via jobData(2, {8, ...}).",
+      "params": {
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder to analyze."
+        }
+      }
     },
     "checkStatic": {
-      "desc": "Job : liste les shapes utilisées par les TSStatic de la scène. Résultat via jobData(3, {1, ...}).",
+      "desc": "Job: lists the shapes used by the scene's TSStatics. Result via jobData(3, {1, ...}).",
       "params": {}
     },
     "checkForest": {
-      "desc": "Job : liste les ForestItemData de la scène. Résultat via jobData(3, {2, ...}).",
+      "desc": "Job: lists the scene's ForestItemData. Result via jobData(3, {2, ...}).",
       "params": {}
     },
     "checkTerrains": {
-      "desc": "Job : liste les TerrainBlock de la scène. Résultat via jobData(3, {3, ...}).",
+      "desc": "Job: lists the scene's TerrainBlocks. Result via jobData(3, {3, ...}).",
       "params": {}
     },
     "checkUnusedMats": {
-      "desc": "Job : détermine les matériaux d'un niveau qui ne sont utilisés par aucun objet (prefabs, forêt, TSStatic, terrains, GroundPlane, GroundCover, DecalRoad, MeshRoad, DecalData). Stocke le résultat dans matstoRemove. jobData(3, {4, ...}).",
+      "desc": "Job: determines which of a level's materials are not used by any object (prefabs, forest, TSStatic, terrains, GroundPlane, GroundCover, DecalRoad, MeshRoad, DecalData). Stores the result in matstoRemove. jobData(3, {4, ...}).",
       "params": {
-        "levelname": {"type": "string", "desc": "Nom du niveau."},
-        "removal": {"type": "any", "desc": "Option de suppression (déduit du code)."}
+        "levelname": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "removal": {
+          "type": "any",
+          "desc": "Removal option (inferred from code)."
+        }
       }
     },
     "checkUsedMats": {
-      "desc": "Job : même parcours que checkUnusedMats mais pour lister les matériaux utilisés. jobData(3, {8, ...}).",
+      "desc": "Job: same traversal as checkUnusedMats but to list the used materials. jobData(3, {8, ...}).",
       "params": {
-        "levelname": {"type": "string", "desc": "Nom du niveau."},
-        "removal": {"type": "any", "desc": "Option (déduit du code)."}
+        "levelname": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "removal": {
+          "type": "any",
+          "desc": "Option (inferred from code)."
+        }
       }
     },
     "checkColData": {
-      "desc": "Job : cherche les colmeshes (collision) utilisés dans un niveau (prefabs, forêt, TSStatic). jobData(3, {9, ...}).",
+      "desc": "Job: looks for the colmeshes (collision) used in a level (prefabs, forest, TSStatic). jobData(3, {9, ...}).",
       "params": {
-        "levelname": {"type": "string", "desc": "Nom du niveau."},
-        "removal": {"type": "any", "desc": "Non transmis au job (voir notes)."}
+        "levelname": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "removal": {
+          "type": "any",
+          "desc": "Not passed to the job (see notes)."
+        }
       }
     },
     "checkUnusedModels": {
-      "desc": "Job : trouve les modèles (shapes) du niveau non utilisés (prefabs, TSStatic, forêt, GroundCover). Stocke le résultat dans shapestoRemove. jobData(3, {5, ...}).",
+      "desc": "Job: finds the level's unused models (shapes) (prefabs, TSStatic, forest, GroundCover). Stores the result in shapestoRemove. jobData(3, {5, ...}).",
       "params": {
-        "levelname": {"type": "string", "desc": "Nom du niveau."},
-        "removal": {"type": "any", "desc": "Option (déduit du code)."}
+        "levelname": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "removal": {
+          "type": "any",
+          "desc": "Option (inferred from code)."
+        }
       }
     },
     "unusedTextures": {
-      "desc": "Job : trouve les textures non référencées (matériaux, TerrainMaterials, WaterPlane/Block, River, CloudLayer, ScatterSky, Cubemap, Info). Stocke le résultat dans textoRemove. jobData(3, {6, ...}).",
+      "desc": "Job: finds the unreferenced textures (materials, TerrainMaterials, WaterPlane/Block, River, CloudLayer, ScatterSky, Cubemap, Info). Stores the result in textoRemove. jobData(3, {6, ...}).",
       "params": {
-        "levelname": {"type": "string", "desc": "Nom du niveau."},
-        "removal": {"type": "any", "desc": "Option (déduit du code)."}
+        "levelname": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "removal": {
+          "type": "any",
+          "desc": "Option (inferred from code)."
+        }
       }
     },
     "removeUnused": {
-      "desc": "Job : supprime les éléments inutilisés sélectionnés. item 1 retire des matériaux (matstoRemove), 2 des shapes (shapestoRemove, et entrées forest), 3 des textures (textoRemove). Supprime des fichiers : irréversible. jobData(3, {7, ...}).",
+      "desc": "Job: deletes the selected unused items. item 1 removes materials (matstoRemove), 2 shapes (shapestoRemove, and forest entries), 3 textures (textoRemove). Deletes files: irreversible. jobData(3, {7, ...}).",
       "params": {
-        "levelname": {"type": "string", "desc": "Nom du niveau."},
-        "item": {"type": "integer", "desc": "1 matériaux, 2 modèles, 3 textures."},
-        "selected": {"type": "table", "desc": "Table dont les clés sont les entrées sélectionnées à supprimer."}
+        "levelname": {
+          "type": "string",
+          "desc": "Level name."
+        },
+        "item": {
+          "type": "integer",
+          "desc": "1 materials, 2 models, 3 textures."
+        },
+        "selected": {
+          "type": "table",
+          "desc": "Table whose keys are the selected entries to delete."
+        }
       }
     },
     "duplicateData": {
-      "desc": "Job : parcourt les matériaux de /levels, /vehicles, /art et /core pour trouver les doublons d'un matériau donné.",
-      "params": {"material": {"type": "string", "desc": "Matériau à rechercher ; log E si nil."}}
+      "desc": "Job: walks through the materials in /levels, /vehicles, /art and /core to find duplicates of a given material.",
+      "params": {
+        "material": {
+          "type": "string",
+          "desc": "Material to search for; E log if nil."
+        }
+      }
     },
     "removeDummy": {
-      "desc": "Job : supprime des fichiers materials.json les matériaux « dummy » (sans Stages ou Stages[1] vide) et réécrit les fichiers. jobData(2, {9, nombre, \"dummy\", liste, isDone}).",
+      "desc": "Job: removes \"dummy\" materials (without Stages or with empty Stages[1]) from the materials.json files and rewrites the files. jobData(2, {9, count, \"dummy\", list, isDone}).",
       "params": {
-        "convertdata": {"type": "string", "desc": "Dossier à traiter."},
-        "skipCommon": {"type": "boolean", "desc": "false pour inclure les dossiers communs."}
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder to process."
+        },
+        "skipCommon": {
+          "type": "boolean",
+          "desc": "false to include the common folders."
+        }
       }
     },
     "textureExporter": {
-      "desc": "Job : convertit les fichiers .dds trouvés sous un dossier en .png (convertDDSToPNG) pour ceux qui n'ont pas déjà un .png, en écrivant sous exportpath. jobData(2, {10, nombre, \"dummy\", fichiers, isDone}).",
+      "desc": "Job: converts the .dds files found under a folder to .png (convertDDSToPNG) for those that do not already have a .png, writing under exportpath. jobData(2, {10, count, \"dummy\", files, isDone}).",
       "params": {
-        "convertdata": {"type": "string", "desc": "Dossier contenant les .dds."},
-        "exportpath": {"type": "string", "desc": "Préfixe du chemin de sortie des PNG (concaténé avec le dossier et le nom)."}
+        "convertdata": {
+          "type": "string",
+          "desc": "Folder containing the .dds files."
+        },
+        "exportpath": {
+          "type": "string",
+          "desc": "Prefix of the PNG output path (concatenated with the folder and the name)."
+        }
       }
     },
     "assetStats": {
-      "desc": "Job : calcule des statistiques de taille des assets d'un niveau (textures, meshes sources et cache, terrains, audio, datablocks, autres) et la liste des fichiers avec leur taille. jobData(3, {typeId, breakdown, totals, sceneCounts, isDone, {files = ...}}).",
-      "params": {"levelname": {"type": "string", "desc": "Nom du niveau."}}
+      "desc": "Job: computes size statistics of a level's assets (textures, source and cached meshes, terrains, audio, datablocks, others) and the list of files with their size. jobData(3, {typeId, breakdown, totals, sceneCounts, isDone, {files = ...}}).",
+      "params": {
+        "levelname": {
+          "type": "string",
+          "desc": "Level name."
+        }
+      }
     },
     "getProgress": {
-      "desc": "Renvoie la progression du job en cours (parmi tous les jobs du module), ou nil si aucun ne tourne.",
+      "desc": "Returns the progress of the current job (among all the module's jobs), or nil if none is running.",
       "params": {},
-      "returns": [{"type": "number|nil", "desc": "Progression de 0 à 100."}]
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "Progress from 0 to 100."
+        }
+      ]
     },
     "stopProgress": {
-      "desc": "Demande l'arrêt de tous les jobs en cours en mettant job.stop = true ; les jobs s'arrêtent à leur prochain point de contrôle (abort).",
+      "desc": "Requests all running jobs to stop by setting job.stop = true; the jobs stop at their next checkpoint (abort).",
       "params": {}
     }
   }

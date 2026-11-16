@@ -1,18 +1,42 @@
 {
   "path": "lua/ge/extensions/editor/rallyEditor/pacenotes/pacenoteForm.lua",
-  "module": "Formulaire principal d'édition d'un pacenote dans l'éditeur de rallye. Il affiche le nom, les actions (Place Vehicle, TODO, Done, Delete..., fusion avec le précédent/suivant), le statut, puis le sous-formulaire selon le mode audio (structuré via structuredForm, personnalisé via customForm, ou freeform avec champ texte, lecture audio et « Generate from Structured »), les métadonnées de calibration, les mesures, et les options (override du mode audio, type de déclencheur). Une confirmation modale précède la suppression. Le module renvoie un constructeur de classe C.",
+  "module": "Main pacenote editing form in the rally editor. It displays the name, the actions (Place Vehicle, TODO, Done, Delete..., merge with previous/next), the status, then the sub-form depending on the audio mode (structured via structuredForm, custom via customForm, or freeform with a text field, audio playback and \"Generate from Structured\"), the calibration metadata, the measurements, and the options (audio mode override, trigger type). A modal confirmation precedes deletion. The module returns a class C constructor.",
   "notes": [
-    "Aucune fonction exportée : on obtient une instance avec require(...)(pacenoteToolsWindow).",
-    "Une aide « Playback Rules » est définie (variables currLap et maxLap, code Lua libre évalué) ; le champ de saisie correspondant est commenté dans ce fichier."
+    "No exported function: you get an instance with require(...)(pacenoteToolsWindow).",
+    "A \"Playback Rules\" help is defined (variables currLap and maxLap, free evaluated Lua code); the corresponding input field is commented out in this file."
   ],
   "classes": {
     "C": {
-      "desc": "Instance du formulaire de pacenote.",
+      "desc": "Pacenote form instance.",
       "functions": {
-        "init": {"desc": "Constructeur : mémorise la fenêtre d'outils et son état, sans pacenote.", "params": {"pacenoteToolsWindow": {"type": "table", "desc": "Fenêtre d'outils des pacenotes (fournit pacenoteToolsState)."}}, "internal": true},
-        "setPacenote": {"desc": "Définit le pacenote édité et réinitialise StructuredForm, CustomForm et MeasurementsForm.", "params": {"pacenote": {"type": "table|nil", "desc": "Pacenote à éditer, ou nil."}}, "internal": false},
-        "clearState": {"desc": "Remet à zéro l'état d'édition (édition en cours, confirmation de suppression) et retire le pacenote.", "internal": false},
-        "draw": {"desc": "Dessine le formulaire dans une zone enfant imgui, ou « No pacenote selected ».", "internal": true}
+        "init": {
+          "desc": "Constructor: stores the tools window and its state, with no pacenote.",
+          "params": {
+            "pacenoteToolsWindow": {
+              "type": "table",
+              "desc": "Pacenote tools window (provides pacenoteToolsState)."
+            }
+          },
+          "internal": true
+        },
+        "setPacenote": {
+          "desc": "Sets the edited pacenote and resets StructuredForm, CustomForm and MeasurementsForm.",
+          "params": {
+            "pacenote": {
+              "type": "table|nil",
+              "desc": "Pacenote to edit, or nil."
+            }
+          },
+          "internal": false
+        },
+        "clearState": {
+          "desc": "Resets the editing state (ongoing edit, deletion confirmation) and removes the pacenote.",
+          "internal": false
+        },
+        "draw": {
+          "desc": "Draws the form in an imgui child area, or \"No pacenote selected\".",
+          "internal": true
+        }
       }
     }
   }

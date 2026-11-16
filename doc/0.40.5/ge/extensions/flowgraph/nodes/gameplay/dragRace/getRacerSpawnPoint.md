@@ -1,19 +1,19 @@
 # `flowgraph_nodes_gameplay_dragRace_getRacerSpawnPoint`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint.lua` · VM : Game Engine (GE) · 77 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint.lua` · VM: Game Engine (GE) · 77 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Drag Racer Spawn Point » (catégorie repeat_instant). Donne la position et la rotation de spawn de la voie d'un pilote (vehId), généralement utilisé une fois lors de la préparation. Sorties : spawnPos (vec3), spawnRot (quat), lane, available (faux si le pilote, la voie ou le waypoint spawn est introuvable).
+Flowgraph node "Get Drag Racer Spawn Point" (category repeat_instant). Gives the spawn position and rotation of a driver's lane (vehId), generally used once during preparation. Outputs: spawnPos (vec3), spawnRot (quat), lane, available (false if the driver, the lane or the spawn waypoint cannot be found).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide data et dragData. | 25 |
-| `C:work()` | Lit dragData.strip.lanes[lane].waypoints.spawn.transform et écrit les pins utilisés. | 30 |
+| `C:_executionStarted()` | Clears data and dragData. | 25 |
+| `C:work()` | Reads dragData.strip.lanes[lane].waypoints.spawn.transform and writes the used pins. | 30 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/dragRace/getRacerSpawnPoint.lua`.*

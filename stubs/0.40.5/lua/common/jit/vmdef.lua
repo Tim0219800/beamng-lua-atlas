@@ -2,16 +2,16 @@
 -- tim19Atlas stub generated from lua/common/jit/vmdef.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fichier généré (« DO NOT EDIT ») de LuaJIT : tables de noms internes utilisées par les modules jit.dump, jit.bc, jit.v et le profileur pour afficher bytecodes, instructions IR, fonctions rapides (fast functions) et causes d'abandon de trace. Le fichier vérifie au chargement que jit.version == « LuaJIT 2.1.1788767029 », sinon l'assertion échoue (« LuaJIT core/library version mismatch »). Un moddeur n'a normalement aucune raison de l'utiliser.
---- Accès : `require("jit/vmdef")`
+--- Generated file ("DO NOT EDIT") of LuaJIT: tables of internal names used by the jit.dump, jit.bc, jit.v modules and the profiler to display bytecodes, IR instructions, fast functions and trace abort causes. The file checks at load time that jit.version == "LuaJIT 2.1.1788767029", otherwise the assertion fails ("LuaJIT core/library version mismatch"). A modder normally has no reason to use it.
+--- Access: `require("jit/vmdef")`
 ---@class jit_vmdef
----@field bcnames string Noms des opcodes de bytecode LuaJIT concaténés (6 caractères chacun).
----@field ffnames table Noms des fonctions rapides (fast functions) de LuaJIT.
----@field ircall table Noms des fonctions C appelées depuis l'IR.
----@field irfield table Noms des champs de structures pour l'IR (FLOAD/XLOAD).
----@field irfpm table Noms des fonctions math pour FPMATH.
----@field irnames string Noms des opcodes de la représentation intermédiaire (IR) concaténés.
----@field traceerr table Messages d'erreur des traces abandonnées.
+---@field bcnames string Names of the LuaJIT bytecode opcodes concatenated (6 characters each).
+---@field ffnames table Names of LuaJIT's fast functions.
+---@field ircall table Names of the C functions called from the IR.
+---@field irfield table Names of the structure fields for the IR (FLOAD/XLOAD).
+---@field irfpm table Names of the math functions for FPMATH.
+---@field irnames string Names of the intermediate representation (IR) opcodes concatenated.
+---@field traceerr table Error messages of aborted traces.
 local jit_vmdef = {}
 
 return jit_vmdef

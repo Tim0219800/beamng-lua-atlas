@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/ui/cameraDistanceApp.lua",
+  "module": "Application UI de debug « distance caméra ». À chaque frame, mesure la distance entre le véhicule joueur et la caméra, la pousse à l'UI via guihooks.trigger('cameraDistance', distance) et dessine dans le monde une sphère rouge de rayon 0,5 m sur le véhicule avec l'étiquette « camera distance target ».",
+  "notes": [
+    "Sans véhicule joueur, envoie cameraDistance(-1, \"no vehicle\") et ne dessine rien.",
+    "Distance en mètres. Un TODO dans le code prévoit de remplacer le guihooks.trigger par un stream."
+  ],
+  "functions": {
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : dessine la sphère et le texte de debug sur le véhicule joueur et envoie la distance véhicule-caméra à l'UI.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel écoulé (s), inutilisé."},
+        "dtSim": {"type": "number", "desc": "Temps de simulation écoulé (s), inutilisé."},
+        "dtRaw": {"type": "number", "desc": "Temps brut écoulé (s), inutilisé."}
+      },
+      "internal": true
+    }
+  }
+}

@@ -2,69 +2,69 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/api/valueInspector.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Objet inspecteur renvoyé par le constructeur du module (require(...)()). Méthodes d'instance.
+--- Inspector object returned by the module constructor (require(...)()). Instance methods.
 ---@class editor_api_valueInspector
 local editor_api_valueInspector = {}
 
---- Vide le cache des textures d'aperçu utilisées dans le sélecteur de matériaux.
----Source : lua/ge/extensions/editor/api/valueInspector.lua:504
+--- Clears the cache of preview textures used in the material selector.
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:504
 function editor_api_valueInspector:deleteTexObjs() end
 
---- Comme displaySimSetPopupList mais pour les matériaux : popup avec aperçu des textures (cache texObjs) et filtre par nom ou tag.
----Source : lua/ge/extensions/editor/api/valueInspector.lua:299
----@param objectSet table Liste d'objets matériau.
----@param fieldName string Nom du champ.
----@param fieldNameId string Id ImGui du champ.
----@param fieldValue string Valeur actuelle.
----@param selectedIds table Ids des objets sélectionnés.
----@param val any customData transmis au callback (déduit du code).
----@param arrayIndex integer|nil Index dans un champ tableau.
----@param className string|nil Classe (déduit du code).
+--- Like displaySimSetPopupList but for materials: popup with texture previews (texObjs cache) and filtering by name or tag.
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:299
+---@param objectSet table List of material objects.
+---@param fieldName string Field name.
+---@param fieldNameId string ImGui id of the field.
+---@param fieldValue string Current value.
+---@param selectedIds table Ids of the selected objects.
+---@param val any customData passed to the callback (inferred from code).
+---@param arrayIndex integer|nil Index in an array field.
+---@param className string|nil Class (inferred from code).
 function editor_api_valueInspector:displayMaterialPopupList(objectSet, fieldName, fieldNameId, fieldValue, selectedIds, val, arrayIndex, className) end
 
---- Affiche un bouton « ... » et la valeur actuelle, et au clic une popup filtrable listant les objets des SimSet donnés pour en choisir un.
----Source : lua/ge/extensions/editor/api/valueInspector.lua:212
----@param objectSetArray table Liste de SimSet/groupes à parcourir.
----@param fieldName string Nom du champ.
----@param fieldNameId string Id ImGui du champ.
----@param fieldValue string Valeur actuelle.
----@param selectedIds table Ids des objets sélectionnés.
----@param val any customData transmis au callback (déduit du code).
----@param arrayIndex integer|nil Index dans un champ tableau.
----@param className string|nil Classe d'objets à lister (déduit du code).
+--- Displays a "..." button and the current value, and on click a filterable popup listing the objects of the given SimSets so one can be picked.
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:212
+---@param objectSetArray table List of SimSets/groups to browse.
+---@param fieldName string Field name.
+---@param fieldNameId string ImGui id of the field.
+---@param fieldValue string Current value.
+---@param selectedIds table Ids of the selected objects.
+---@param val any customData passed to the callback (inferred from code).
+---@param arrayIndex integer|nil Index in an array field.
+---@param className string|nil Class of objects to list (inferred from code).
 function editor_api_valueInspector:displaySimSetPopupList(objectSetArray, fieldName, fieldNameId, fieldValue, selectedIds, val, arrayIndex, className) end
 
---- Initialise les tampons ImGui (texte, entiers, flottants, booléen, combo) et les champs par défaut. Appelé automatiquement par le constructeur.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/api/valueInspector.lua:426
+--- Initializes the ImGui buffers (text, integers, floats, boolean, combo) and the default fields. Called automatically by the constructor.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:426
 function editor_api_valueInspector:init() end
 
---- Construit (une seule fois, sauf force) les tables globales d'annotations et de datablocks utilisées par les sélecteurs.
----Source : lua/ge/extensions/editor/api/valueInspector.lua:492
----@param force boolean|nil true pour reconstruire même si déjà initialisé.
+--- Builds (only once, unless forced) the global annotation and datablock tables used by the selectors.
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:492
+---@param force boolean|nil true to rebuild even if already initialized.
 function editor_api_valueInspector:initializeTables(force) end
 
---- Marque les tables globales comme à reconstruire au prochain initializeTables.
----Source : lua/ge/extensions/editor/api/valueInspector.lua:488
+--- Marks the global tables as to be rebuilt at the next initializeTables.
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:488
 function editor_api_valueInspector:reinitializeTables() end
 
---- Définit l'id du champ dont la fenêtre popup de sélection SimSet est ouverte (nil pour la fermer).
----Source : lua/ge/extensions/editor/api/valueInspector.lua:500
----@param id string|nil Id du champ (« ##nomChamp »).
+--- Sets the id of the field whose SimSet selection popup window is open (nil to close it).
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:500
+---@param id string|nil Field id ("##fieldName").
 function editor_api_valueInspector:setSimSetWindowFieldId(id) end
 
---- Dessine un champ complet : libellé (avec tooltip fieldDesc, menu copier/coller) et widget d'édition choisi selon fieldTypeName puis fieldType. Appelle un éditeur personnalisé s'il est enregistré pour (classe de sélection, fieldName). Toute modification est envoyée à self.setValueCallback.
----Source : lua/ge/extensions/editor/api/valueInspector.lua:565
----@param fieldName string Nom technique du champ.
----@param fieldValue any Valeur actuelle (chaîne, nombre, table selon le type).
----@param arrayIndex integer|nil Index si champ tableau.
----@param fieldLabel string Libellé affiché.
----@param fieldDesc string|nil Description affichée en tooltip.
----@param fieldType string Type du champ : 'float', 'int', 'bool', 'filename', 'Point3F', 'ColorF', 'string', etc.
----@param fieldTypeName string Nom de type moteur : 'TypeMaterialName', 'TypeShapeFilename', 'TypeCommand', etc.
----@param customData any Données opaques renvoyées au callback.
----@param pasteCallback function|nil pasteCallback(fieldName, value, arrayIndex, customData) appelé lors d'un collage.
----@param contextMenuUI function|nil Contenu additionnel du menu contextuel (déduit du code).
----@param indeterminateFlags integer|nil Drapeaux de valeur indéterminée (0 par défaut).
+--- Draws a complete field: label (with fieldDesc tooltip, copy/paste menu) and an editing widget chosen by fieldTypeName then fieldType. Calls a custom editor if one is registered for (selection class, fieldName). Any change is sent to self.setValueCallback.
+---Source: lua/ge/extensions/editor/api/valueInspector.lua:565
+---@param fieldName string Technical field name.
+---@param fieldValue any Current value (string, number, table depending on the type).
+---@param arrayIndex integer|nil Index if array field.
+---@param fieldLabel string Displayed label.
+---@param fieldDesc string|nil Description displayed as a tooltip.
+---@param fieldType string Field type: 'float', 'int', 'bool', 'filename', 'Point3F', 'ColorF', 'string', etc.
+---@param fieldTypeName string Engine type name: 'TypeMaterialName', 'TypeShapeFilename', 'TypeCommand', etc.
+---@param customData any Opaque data passed back to the callback.
+---@param pasteCallback function|nil pasteCallback(fieldName, value, arrayIndex, customData) called on paste.
+---@param contextMenuUI function|nil Additional context menu content (inferred from code).
+---@param indeterminateFlags integer|nil Indeterminate-value flags (0 by default).
 function editor_api_valueInspector:valueEditorGui(fieldName, fieldValue, arrayIndex, fieldLabel, fieldDesc, fieldType, fieldTypeName, customData, pasteCallback, contextMenuUI, indeterminateFlags) end
 

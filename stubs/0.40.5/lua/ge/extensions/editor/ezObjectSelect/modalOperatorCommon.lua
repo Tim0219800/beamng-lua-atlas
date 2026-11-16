@@ -2,104 +2,104 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fonctions communes aux opérateurs modaux (rotate, scale, translate) de l'outil Easy Select : démarrage d'une session de transformation sur la sélection, gestion des contraintes d'axe X/Y/Z (monde/local, exclusion avec Shift), saisie numérique, validation/annulation (Entrée ou clic gauche dans le viewport = confirm ; Échap ou clic droit = cancel), projection monde vers écran, et dessin du HUD et des indicateurs près de la souris.
---- Accès : extension `editor_ezObjectSelect_modalOperatorCommon` : `extensions.load("editor_ezObjectSelect_modalOperatorCommon")`, puis la globale `editor_ezObjectSelect_modalOperatorCommon`
+--- Functions shared by the modal operators (rotate, scale, translate) of the Easy Select tool: starting a transform session on the selection, handling X/Y/Z axis constraints (world/local, exclusion with Shift), numeric input, confirm/cancel (Enter or left click in the viewport = confirm; Esc or right click = cancel), world-to-screen projection, and drawing the HUD and indicators near the mouse.
+--- Access: extension `editor_ezObjectSelect_modalOperatorCommon`: `extensions.load("editor_ezObjectSelect_modalOperatorCommon")`, then the global `editor_ezObjectSelect_modalOperatorCommon`
 ---@class editor_ezObjectSelect_modalOperatorCommon
 editor_ezObjectSelect_modalOperatorCommon = {}
 
---- Vecteur de l'axe contraint, ou nil sans contrainte.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:117
----@param state table État
+--- Vector of the constrained axis, or nil without constraint.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:117
+---@param state table State
 ---@return vec3|nil
 function editor_ezObjectSelect_modalOperatorCommon.activeAxis(state) end
 
---- Jeu d'axes courant (localAxes si la contrainte est en espace local, sinon worldAxes).
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:112
----@param state table État
----@return table  {x, y, z} de vec3
+--- Current axis set (localAxes if the constraint is in local space, otherwise worldAxes).
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:112
+---@param state table State
+---@return table  {x, y, z} of vec3
 function editor_ezObjectSelect_modalOperatorCommon.axes(state) end
 
---- Ouvre la session de transformation sur la sélection et crée l'état de l'opérateur. Renvoie nil si pas d'ancre, pas de caméra/rayon, ou si transformSession.begin échoue.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:45
----@param options table|nil {historyName = nom de la transaction d'historique, defaultLocal = boolean}
----@return table|nil  état de l'opérateur
+--- Opens the transform session on the selection and creates the operator state. Returns nil if there is no anchor, no camera/ray, or if transformSession.begin fails.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:45
+---@param options table|nil {historyName = history transaction name, defaultLocal = boolean}
+---@return table|nil  operator state
 function editor_ezObjectSelect_modalOperatorCommon.begin(options) end
 
---- Rayon caméra-souris courant (getCameraMouseRay).
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:28
----@return table|nil  {origin = vec3, direction = vec3 normalisé} ou nil
+--- Current camera-mouse ray (getCameraMouseRay).
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:28
+---@return table|nil  {origin = vec3, direction = normalized vec3} or nil
 function editor_ezObjectSelect_modalOperatorCommon.currentRay() end
 
---- Dessine un panneau à deux lignes près de la souris (ligne 1 : préfixe + détails ; ligne 2 : aide), gardé dans le viewport.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:269
----@param prefix string Lettre/titre (ex. "R", "S")
----@param details string Contrainte, espace et valeur
----@param help string Texte d'aide des touches
----@param border integer Couleur U32 imgui de la bordure
+--- Draws a two-line panel near the mouse (line 1: prefix + details; line 2: help), kept within the viewport.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:269
+---@param prefix string Letter/title (e.g. "R", "S")
+---@param details string Constraint, space and value
+---@param help string Key help text
+---@param border integer imgui U32 color of the border
 function editor_ezObjectSelect_modalOperatorCommon.drawHud(prefix, details, help, border) end
 
---- Cache le curseur système et dessine au curseur un point avec des chevrons (rotate : tangents ; scale : radiaux ; translate : 4 directions) et, hors translate, une ligne pointillée du pivot à la souris.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:206
----@param kind string "rotate", "scale" ou "translate"
----@param pivotScreen ImVec2|nil Pivot en coordonnées écran (rien n'est dessiné si nil)
+--- Hides the system cursor and draws at the cursor a dot with chevrons (rotate: tangents; scale: radial; translate: 4 directions) and, except for translate, a dotted line from the pivot to the mouse.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:206
+---@param kind string "rotate", "scale" or "translate"
+---@param pivotScreen ImVec2|nil Pivot in screen coordinates (nothing is drawn if nil)
 function editor_ezObjectSelect_modalOperatorCommon.drawInteractionHint(kind, pivotScreen) end
 
---- Termine la session : confirm appelle transformSession.finish (si rien n'est validé, renvoie "cancel"), sinon transformSession.cancel ; rétablit le curseur.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:137
----@param result string "confirm" ou "cancel"
----@return string  résultat effectif
----@return any  informations de complétion renvoyées par transformSession.finish
+--- Ends the session: confirm calls transformSession.finish (if nothing is committed, returns "cancel"), otherwise transformSession.cancel; restores the cursor.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:137
+---@param result string "confirm" or "cancel"
+---@return string  effective result
+---@return any  completion information returned by transformSession.finish
 function editor_ezObjectSelect_modalOperatorCommon.finish(result) end
 
---- Teste les touches de fin.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:128
----@return string|nil  "cancel" (Échap/clic droit), "confirm" (Entrée, Entrée pavé, clic gauche dans le viewport) ou nil
+--- Tests the end keys.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:128
+---@return string|nil  "cancel" (Esc/right click), "confirm" (Enter, numpad Enter, left click in the viewport) or nil
 function editor_ezObjectSelect_modalOperatorCommon.finishRequested() end
 
---- Normalise un vecteur ; renvoie fallback si sa longueur est <= 0.0001.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:22
----@param vector vec3 Vecteur à normaliser
----@param fallback vec3 Valeur de repli
+--- Normalizes a vector; returns fallback if its length is <= 0.0001.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:22
+---@param vector vec3 Vector to normalize
+---@param fallback vec3 Fallback value
 ---@return vec3
 function editor_ezObjectSelect_modalOperatorCommon.normalized(vector, fallback) end
 
---- Projette un point monde en coordonnées écran. nil si le point est derrière la caméra ou quasi dans son plan (profondeur <= 0.0001).
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:153
----@param camera table Contexte caméra (pos, forward, right, up, halfTan, aspect, viewportX/Y, width, height)
----@param point vec3 Point monde
+--- Projects a world point to screen coordinates. nil if the point is behind the camera or nearly in its plane (depth <= 0.0001).
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:153
+---@param camera table Camera context (pos, forward, right, up, halfTan, aspect, viewportX/Y, width, height)
+---@param point vec3 World point
 ---@return ImVec2|nil
 function editor_ezObjectSelect_modalOperatorCommon.projectToScreen(camera, point) end
 
---- Intersection d'un rayon avec un plan.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:37
+--- Intersection of a ray with a plane.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:37
 ---@param ray table|nil {origin, direction}
----@param planePoint vec3 Point du plan
----@param planeNormal vec3 Normale du plan
----@return vec3|nil  Point d'intersection, nil si rayon parallèle (|denominateur| <= 0.0001) ou sans rayon
+---@param planePoint vec3 Point of the plane
+---@param planeNormal vec3 Plane normal
+---@return vec3|nil  Intersection point, nil if the ray is parallel (|denominator| <= 0.0001) or there is no ray
 function editor_ezObjectSelect_modalOperatorCommon.rayPlanePoint(ray, planePoint, planeNormal) end
 
---- Masque ou ré-affiche le curseur via l'objet Canvas (setCursorVisible).
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:261
----@param hidden boolean true pour masquer
+--- Hides or re-shows the cursor via the Canvas object (setCursorVisible).
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:261
+---@param hidden boolean true to hide
 function editor_ezObjectSelect_modalOperatorCommon.setInteractionCursorHidden(hidden) end
 
---- Définit l'espace local/monde par défaut et l'applique à la contrainte active ; ignore ensuite la touche 4 de la rangée du haut pour la saisie numérique à la prochaine mise à jour.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:104
----@param state table|nil État
+--- Sets the default local/world space and applies it to the active constraint; then ignores the top row key 4 for numeric input on the next update.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:104
+---@param state table|nil State
 ---@param localSpace boolean true = local
----@return boolean  false si state est nil
+---@return boolean  false if state is nil
 function editor_ezObjectSelect_modalOperatorCommon.setLocalSpace(state, localSpace) end
 
---- Lit les touches X/Y/Z et met à jour state.constraint = {axis, exclude, localSpace}.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:83
----@param state table État de l'opérateur
----@param allowExclude boolean Si true, Shift maintenu signifie « exclure cet axe »
----@return boolean  true si la contrainte a changé cette frame
+--- Reads the X/Y/Z keys and updates state.constraint = {axis, exclude, localSpace}.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:83
+---@param state table Operator state
+---@param allowExclude boolean If true, holding Shift means "exclude this axis"
+---@return boolean  true if the constraint changed this frame
 function editor_ezObjectSelect_modalOperatorCommon.updateConstraint(state, allowExclude) end
 
---- Met à jour la saisie numérique (transformNumericInput) et renvoie la valeur saisie.
----Source : lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:122
----@param state table État
----@return number|nil  valeur saisie ou nil
+--- Updates the numeric input (transformNumericInput) and returns the entered value.
+---Source: lua/ge/extensions/editor/ezObjectSelect/modalOperatorCommon.lua:122
+---@param state table State
+---@return number|nil  entered value or nil
 function editor_ezObjectSelect_modalOperatorCommon.updateNumeric(state) end
 

@@ -1,4 +1,4 @@
 {
   "path": "lua/ge/client/lighting/advanced/shadowViz.lua",
-  "module": "Déclare, s'ils n'existent pas, le ShaderData « AL_ShadowVisualizeShader » (dbgShadowVisualizeP.hlsl) et le CustomMaterial « AL_ShadowVisualizeMaterial » qui affiche la shadow map d'une lumière (échantillonneur shadowMap = #AL_ShadowVizTexture). Le reste du fichier, des fonctions TorqueScript de bascule (toggleShadowViz, showShadowVizForLight, lockShadowViz…), est entièrement commenté et donc inactif. Aucune fonction exportée."
+  "module": "Declares, if they do not exist, the ShaderData \"AL_ShadowVisualizeShader\" (dbgShadowVisualizeP.hlsl) and the CustomMaterial \"AL_ShadowVisualizeMaterial\" that displays a light's shadow map (sampler shadowMap = #AL_ShadowVizTexture). The rest of the file, the TorqueScript toggle functions (toggleShadowViz, showShadowVizForLight, lockShadowViz…), is entirely commented out and therefore inactive. No exported function."
 }

@@ -1,57 +1,123 @@
 {
   "path": "lua/ge/extensions/ui/vehicleSelector/tiles.lua",
-  "module": "Construit les tuiles affichées par la grille du sélecteur de véhicules. Il configure un tilesModule (ui/gridSelectorUtils/tilesModule) avec trois « chemins » : allModels (tous les véhicules, groupés puis regroupés en clusters), configsForBrandSubModelOrModel et configsForModel (liste des configs d'un modèle, avec sous-groupes). Il applique filtres, favoris, récents, tri et sélection par défaut, puis les restrictions des tutoriels de première conduite. Il s'appuie sur tileSorting, tileGrouping et tileClustering.",
+  "module": "Builds the tiles displayed by the vehicle selector grid. It configures a tilesModule (ui/gridSelectorUtils/tilesModule) with three \"paths\": allModels (all vehicles, grouped then clustered), configsForBrandSubModelOrModel and configsForModel (list of a model's configs, with subgroups). It applies filters, favorites, recents, sorting and default selection, then the first drive tutorial restrictions. It relies on tileSorting, tileGrouping and tileClustering.",
   "notes": [
-    "La tuile d'une config contient notamment key ('modèle/config'), name, preview, model_key, config_key, configType, showDetails, doubleClickDetails, favouriteIdx, recentIdx, sourceIcons, isAuxiliary, ainsi que Value, Weight, Top Speed, Power, Power/Weight, 0-60 mph et 0-100 km/h.",
-    "getTiles utilise tilesInstance, créé dans onExtensionLoaded : appeler getTiles avant le chargement complet de l'extension provoquerait une erreur.",
-    "Modes d'affichage des favoris et récents : 'hidden', 'reducedClusters', 'completeClusters' et 'unclustered' ; 'completeClusters' enlève les configs individuelles du groupe spécial pour ne garder que les clusters.",
-    "Tri 'Automatic' : récents par recentIdx croissant, favoris par favouriteIdx décroissant, sinon par Value ou Years (selon groupMode) ou par nom. Dans la liste des configs d'un modèle, le tri automatique par défaut est par Value.",
-    "La sélection par défaut est marquée par isDefaultSelected, et forceAutoFocus pour la tuile demandée par overrideDefaultSelectedTile (consommée après le premier getTiles).",
-    "Émet le hook onVehicleSelectorGetTiles(chemin, modelKey, modelSubKey, brandKey, groupMode, groupName) lors de l'affichage des configs d'un modèle.",
-    "Les tuiles du freeroam marquent la sélection courante du configurateur (cornerIcon = 'car') via freeroam_freeroamConfigurator."
+    "A config's tile notably contains key ('model/config'), name, preview, model_key, config_key, configType, showDetails, doubleClickDetails, favouriteIdx, recentIdx, sourceIcons, isAuxiliary, as well as Value, Weight, Top Speed, Power, Power/Weight, 0-60 mph and 0-100 km/h.",
+    "getTiles uses tilesInstance, created in onExtensionLoaded: calling getTiles before the extension is fully loaded would cause an error.",
+    "Display modes of favorites and recents: 'hidden', 'reducedClusters', 'completeClusters' and 'unclustered'; 'completeClusters' removes the individual configs from the special group to keep only the clusters.",
+    "'Automatic' sort: recents by ascending recentIdx, favorites by descending favouriteIdx, otherwise by Value or Years (depending on groupMode) or by name. In a model's config list, the default automatic sort is by Value.",
+    "The default selection is marked by isDefaultSelected, and forceAutoFocus for the tile requested by overrideDefaultSelectedTile (consumed after the first getTiles).",
+    "Emits the hook onVehicleSelectorGetTiles(path, modelKey, modelSubKey, brandKey, groupMode, groupName) when displaying a model's configs.",
+    "The freeroam tiles mark the configurator's current selection (cornerIcon = 'car') via freeroam_freeroamConfigurator."
   ],
   "fields": {
-    "getClusteredItemsFavouriteIconPercent": {"type": "function", "desc": "Alias de tileClustering.getClusteredItemsFavouriteIconPercent."},
-    "getClusteredItemsStats": {"type": "function", "desc": "Alias de tileClustering.getClusteredItemsStats."},
-    "getSources": {"type": "function", "desc": "Alias de tileClustering.getSources."},
-    "groupModeFunctions": {"type": "table", "desc": "Alias de tileGrouping.groupModeFunctions."},
-    "getConfigOrModelPropValue": {"type": "function", "desc": "Alias de tileGrouping.getConfigOrModelPropValue."},
-    "sortByNameButOtherAlwaysLast": {"type": "function", "desc": "Alias du comparateur de tileSorting."},
-    "sortByValue": {"type": "function", "desc": "Alias du comparateur de tileSorting."},
-    "sortByYears": {"type": "function", "desc": "Alias du comparateur de tileSorting."}
+    "getClusteredItemsFavouriteIconPercent": {
+      "type": "function",
+      "desc": "Alias of tileClustering.getClusteredItemsFavouriteIconPercent."
+    },
+    "getClusteredItemsStats": {
+      "type": "function",
+      "desc": "Alias of tileClustering.getClusteredItemsStats."
+    },
+    "getSources": {
+      "type": "function",
+      "desc": "Alias of tileClustering.getSources."
+    },
+    "groupModeFunctions": {
+      "type": "table",
+      "desc": "Alias of tileGrouping.groupModeFunctions."
+    },
+    "getConfigOrModelPropValue": {
+      "type": "function",
+      "desc": "Alias of tileGrouping.getConfigOrModelPropValue."
+    },
+    "sortByNameButOtherAlwaysLast": {
+      "type": "function",
+      "desc": "Alias of the tileSorting comparator."
+    },
+    "sortByValue": {
+      "type": "function",
+      "desc": "Alias of the tileSorting comparator."
+    },
+    "sortByYears": {
+      "type": "function",
+      "desc": "Alias of the tileSorting comparator."
+    }
   },
   "functions": {
     "getTiles": {
-      "desc": "Renvoie les groupes de tuiles pour un chemin de sélecteur (allModels, configsForModel, configsForBrandSubModelOrModel), puis applique les restrictions éventuelles de gameplay_discover_firstDrive_vehicleSelectorRestriction et freeroamTutorial_vehicleSelectorRestriction.",
+      "desc": "Returns the tile groups for a selector path (allModels, configsForModel, configsForBrandSubModelOrModel), then applies any restrictions from gameplay_discover_firstDrive_vehicleSelectorRestriction and freeroamTutorial_vehicleSelectorRestriction.",
       "params": {
-        "path": {"type": "table", "desc": "Chemin {keys = {...}} ; keys[1] est le type de chemin."},
-        "pathChanged": {"type": "boolean|nil", "desc": "Indique que le chemin a changé (transmis à tilesModule)."}
+        "path": {
+          "type": "table",
+          "desc": "Path {keys = {...}}; keys[1] is the path type."
+        },
+        "pathChanged": {
+          "type": "boolean|nil",
+          "desc": "Indicates that the path has changed (passed to tilesModule)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste de groupes {key, label, tiles, ...}."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of groups {key, label, tiles, ...}."
+        }
+      ]
     },
     "configToTile": {
-      "desc": "Convertit une config de véhicule en tuile de la grille.",
+      "desc": "Converts a vehicle config into a grid tile.",
       "params": {
-        "config": {"type": "table", "desc": "Config (avec key et model_key)."},
-        "fullName": {"type": "boolean|nil", "desc": "true pour utiliser le nom complet (Name) plutôt que la Configuration."}
+        "config": {
+          "type": "table",
+          "desc": "Config (with key and model_key)."
+        },
+        "fullName": {
+          "type": "boolean|nil",
+          "desc": "true to use the full name (Name) rather than the Configuration."
+        }
       },
-      "returns": [{"type": "table", "desc": "Tuile."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Tile."
+        }
+      ]
     },
     "clusterItems": {
-      "desc": "Regroupe des configs en clusters selon le clusterMode des options d'affichage (délègue à tileClustering.clusterItems).",
-      "params": {"configs": {"type": "table", "desc": "Configs à regrouper."}},
-      "returns": [{"type": "table", "desc": "Clusters indexés par nom."}]
+      "desc": "Groups configs into clusters according to the clusterMode of the display options (delegates to tileClustering.clusterItems).",
+      "params": {
+        "configs": {
+          "type": "table",
+          "desc": "Configs to group."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Clusters keyed by name."
+        }
+      ]
     },
     "overrideDefaultSelectedTile": {
-      "desc": "Définit la tuile à sélectionner et focaliser par défaut au prochain getTiles (le champ model_key et config_key ou key identifient la config).",
-      "params": {"tile": {"type": "table|nil", "desc": "Tuile cible, ou nil."}}
+      "desc": "Sets the tile to select and focus by default on the next getTiles (the model_key and config_key or key fields identify the config).",
+      "params": {
+        "tile": {
+          "type": "table|nil",
+          "desc": "Target tile, or nil."
+        }
+      }
     },
     "emptyProfiler": {
-      "desc": "Crée un faux profileur sans effet (start, add, finish).",
-      "returns": [{"type": "table", "desc": "Objet {start, add, finish}."}]
+      "desc": "Creates a fake profiler with no effect (start, add, finish).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{start, add, finish} object."
+        }
+      ]
     },
     "onExtensionLoaded": {
-      "desc": "Hook appelé au chargement : crée l'instance tilesModule avec les gestionnaires de chemins, les modules de tri, groupement et clustering, et les fonctions de données et de filtrage de ui_vehicleSelector_general.",
+      "desc": "Hook called on load: creates the tilesModule instance with the path handlers, the sorting, grouping and clustering modules, and the data and filtering functions of ui_vehicleSelector_general.",
       "internal": true
     }
   }

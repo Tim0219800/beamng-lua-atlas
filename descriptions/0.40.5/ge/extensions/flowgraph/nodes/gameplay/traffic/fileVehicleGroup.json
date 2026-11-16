@@ -1,28 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/traffic/fileVehicleGroup.lua",
-  "module": "Nœud flowgraph « File Vehicle Group » (once_p_duration). Charge un fichier .vehGroup.json (jsonReadFile). Si le fichier a un generator ou pas de data, le groupe est généré avec core_multiSpawn.createGroup(amount, generator) (amount par défaut 10). Sortie : group (vehicleGroupData) pour les nœuds de spawn de trafic.",
+  "module": "Flowgraph node \"File Vehicle Group\" (once_p_duration). Loads a .vehGroup.json file (jsonReadFile). If the file has a generator or no data, the group is generated with core_multiSpawn.createGroup(amount, generator) (amount defaults to 10). Output: group (vehicleGroupData) for the traffic spawn nodes.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_executionStopped": {
-          "desc": "Appelé à l'arrêt de l'exécution du projet flowgraph ; libère l'état interne.",
+          "desc": "Called when the flowgraph project execution stops; releases the internal state.",
           "internal": true
         },
         "init": {
-          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "desc": "Initializes the node's internal state at creation (called by the flowgraph engine).",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Appelé lors de la réinitialisation du nœud ; remet son état interne à zéro.",
+          "desc": "Called when the node is reset; resets its internal state.",
           "internal": true
         },
         "postInit": {
-          "desc": "Appelé après la création des pins du nœud ; sert à ajuster les pins (modèles de valeurs, filtres de fichiers, clés dynamiques).",
+          "desc": "Called after the node's pins are created; used to adjust the pins (value templates, file filters, dynamic keys).",
           "internal": true
         },
         "work": {
-          "desc": "Au premier appel, résout le chemin, lit le fichier, génère les données si nécessaire et publie le groupe ; erreur de nœud si le fichier est introuvable.",
+          "desc": "On the first call, resolves the path, reads the file, generates the data if needed and publishes the group; node error if the file is not found.",
           "internal": true
         }
       }

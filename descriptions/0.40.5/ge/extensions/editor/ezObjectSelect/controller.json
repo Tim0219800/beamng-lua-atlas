@@ -1,134 +1,384 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/controller.lua",
-  "module": "Contrôleur de l'outil « Easy Select » de l'éditeur (M.id = \"ezObjectSelect\", label « Easy Select »). Remplace la sélection d'objets classique : découverte des objets sous la souris dans un rayon écran, pile de candidats superposés, filtres par distance/volume/motif de nom, sélection, déplacement (glisser avec projection sur terrain/raycast/écran, snap grille et rotation, placement sur surface), opérateurs modaux G/R/S (transformOperator, rotateOperator, scaleOperator), gizmo natif, mode « fence » (sous-outil de sélection par zone), signets de caméra, caméra orthographique et préréglages pavé numérique. Il centralise la configuration (cfg), l'état (st), les préférences ezObjectSelect.* et la fenêtre de l'espace de travail (onglets Selection, Hints, Fence). Il est piloté par le module editor/ezObjectSelect.lua (mode d'édition) qui appelle activate/deactivate/update/drawWorkspace.",
+  "module": "Controller of the editor's \"Easy Select\" tool (M.id = \"ezObjectSelect\", label \"Easy Select\"). Replaces classic object selection: discovery of objects under the mouse within a screen radius, stack of overlapping candidates, filters by distance/volume/name pattern, selection, moving (drag with projection onto terrain/raycast/screen, grid and rotation snap, placement on surface), modal operators G/R/S (transformOperator, rotateOperator, scaleOperator), native gizmo, \"fence\" mode (area selection sub-tool), camera bookmarks, orthographic camera and numpad presets. It centralizes the configuration (cfg), the state (st), the ezObjectSelect.* preferences and the workspace window (Selection, Hints, Fence tabs). It is driven by the module editor/ezObjectSelect.lua (edit mode) which calls activate/deactivate/update/drawWorkspace.",
   "notes": [
-    "activate() réserve la sélectabilité (selectabilityPresets.beginScope \"staticsAndProps\") ; si elle échoue, renvoie false et l'extension parente revient au mode objectSelect.",
-    "Les raccourcis request*Shortcut (G/R/S) ne font rien tant que la préférence suppressCameraForGrs est désactivée (par défaut false) : dans ce cas, S reste le déplacement caméra.",
-    "requestNumpadPreset n'est pris en compte que si numpadMode == 1 (préférence numpadMode).",
-    "Préférences par défaut notables : discoveryRadius 100 px, maxDiscoveryOutlines 5, maxStackOutlines 5, maxPickDistance 150 m, maxStackDistance 200 m, maxPickVolume 500000 (volume de boîte), selectionGizmoLengthScale 2, selectionGizmoLineWidth 4.",
-    "Les fonctions de prefUi sont les rendus personnalisés des préférences (case à cocher, curseur, liste) ; elles ignorent leurs deux premiers paramètres (cat, subCat), utilisent item.path pour appeler editor.setPreference et dessinent un bouton « valeur par défaut »."
+    "activate() reserves selectability (selectabilityPresets.beginScope \"staticsAndProps\"); if it fails, returns false and the parent extension returns to the objectSelect mode.",
+    "The request*Shortcut shortcuts (G/R/S) do nothing as long as the suppressCameraForGrs preference is disabled (default false): in that case, S remains camera movement.",
+    "requestNumpadPreset is only taken into account if numpadMode == 1 (numpadMode preference).",
+    "Notable default preferences: discoveryRadius 100 px, maxDiscoveryOutlines 5, maxStackOutlines 5, maxPickDistance 150 m, maxStackDistance 200 m, maxPickVolume 500000 (box volume), selectionGizmoLengthScale 2, selectionGizmoLineWidth 4.",
+    "The prefUi functions are the custom renderers of the preferences (checkbox, slider, list); they ignore their first two parameters (cat, subCat), use item.path to call editor.setPreference and draw a \"default value\" button."
   ],
   "fields": {
-    "id": {"type": "string", "desc": "\"ezObjectSelect\""},
-    "label": {"type": "string", "desc": "\"Easy Select\""}
+    "id": {
+      "type": "string",
+      "desc": "\"ezObjectSelect\""
+    },
+    "label": {
+      "type": "string",
+      "desc": "\"Easy Select\""
+    }
   },
   "functions": {
     "activate": {
-      "desc": "Active l'outil : réinitialise l'état, réserve la sélectabilité, active la caméra temporaire de l'éditeur, applique la teinte de sélection et les bindings.",
+      "desc": "Activates the tool: resets the state, reserves selectability, enables the editor's temporary camera, applies the selection tint and the bindings.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si actif (déjà actif ou activation réussie), false si la réservation de sélectabilité échoue"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active (already active or activation succeeded), false if the selectability reservation fails"
+        }
+      ]
     },
     "deactivate": {
-      "desc": "Désactive l'outil : annule fence, opérateurs modaux, session de transformation et gizmo natif, restaure la teinte de sélection selon gizmos.general.highlightSelectedMeshes, rend la caméra et le pavé numérique, quitte l'ortho.",
+      "desc": "Deactivates the tool: cancels fence, modal operators, transform session and native gizmo, restores the selection tint according to gizmos.general.highlightSelectedMeshes, gives back the camera and the numpad, leaves ortho.",
       "params": {}
     },
     "isActive": {
-      "desc": "Indique si l'outil est actif.",
+      "desc": "Indicates whether the tool is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": ""}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": ""
+        }
+      ]
     },
     "update": {
-      "desc": "Mise à jour par frame appelée par le mode d'édition : gère fence, opérateurs modaux, raccourcis, survol/sélection, glisser, gizmo natif, caméra et dessin 3D.",
+      "desc": "Per-frame update called by the edit mode: handles fence, modal operators, shortcuts, hover/selection, drag, native gizmo, camera and 3D drawing.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "false si l'outil est inactif ; sinon indique que l'outil a géré la frame (valeur comparée à true par le mode d'édition)"}],
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if the tool is inactive; otherwise indicates that the tool handled the frame (value compared to true by the edit mode)"
+        }
+      ],
       "internal": true
     },
     "drawWorkspace": {
-      "desc": "Dessine le contenu de la fenêtre « Easy Select » (onglets Selection avec snapping/placement/grille/rotation, Hints, Fence ; signets de caméra).",
+      "desc": "Draws the content of the \"Easy Select\" window (Selection tab with snapping/placement/grid/rotation, Hints, Fence; camera bookmarks).",
       "params": {},
       "internal": true
     },
     "drawScreenDebug": {
-      "desc": "Dessine les labels et diagnostics en overlay écran (anneau de survol, étiquettes, états du glisser). Ne fait rien si l'outil est inactif ou si fence est actif.",
+      "desc": "Draws the labels and diagnostics as a screen overlay (hover ring, labels, drag states). Does nothing if the tool is inactive or if fence is active.",
       "params": {},
       "internal": true
     },
     "invalidateSelectionCache": {
-      "desc": "Invalide le cache du modèle de sélection et le volume en cache des stats, et efface le dernier snapshot.",
-      "params": {"reason": {"type": "string", "desc": "Raison (ex. objectAdded, prefabExploded), transmise au cache"}}
+      "desc": "Invalidates the selection model cache and the cached stats volume, and clears the last snapshot.",
+      "params": {
+        "reason": {
+          "type": "string",
+          "desc": "Reason (e.g. objectAdded, prefabExploded), passed to the cache"
+        }
+      }
     },
     "refreshSelectedTint": {
-      "desc": "Demande de ré-appliquer la teinte des meshes sélectionnés (setAxisGizmoHighlightSelectedMeshes) si l'outil est actif.",
+      "desc": "Requests re-applying the tint of the selected meshes (setAxisGizmoHighlightSelectedMeshes) if the tool is active.",
       "params": {}
     },
     "loadPreferences": {
-      "desc": "Charge toutes les préférences ezObjectSelect.* de l'éditeur dans la configuration locale.",
+      "desc": "Loads all the editor's ezObjectSelect.* preferences into the local configuration.",
       "params": {}
     },
     "resetInputFilters": {
-      "desc": "Débloque molette, mouvement caméra, entrées modales et pavé numérique, retire les action maps (Blender, numpad) et efface les demandes de raccourci.",
+      "desc": "Unblocks wheel, camera movement, modal inputs and numpad, removes the action maps (Blender, numpad) and clears the shortcut requests.",
       "params": {}
     },
     "onAxisGizmoModeChanged": {
-      "desc": "Hook relayé quand le mode du gizmo d'axes change. Pendant un glisser natif, restaure le mode courant ; si le nouveau mode est translate/rotate/scale, bascule la visibilité du gizmo natif (le même mode une 2e fois le masque).",
-      "params": {"mode": {"type": "integer", "desc": "editor.AxisGizmoMode_Translate, _Rotate ou _Scale"}},
+      "desc": "Hook relayed when the axis gizmo mode changes. During a native drag, restores the current mode; if the new mode is translate/rotate/scale, toggles the visibility of the native gizmo (the same mode a second time hides it).",
+      "params": {
+        "mode": {
+          "type": "integer",
+          "desc": "editor.AxisGizmoMode_Translate, _Rotate or _Scale"
+        }
+      },
       "internal": true
     },
     "onAxisGizmoAlignmentChanged": {
-      "desc": "Hook relayé quand l'alignement du gizmo (monde/local) change : synchronise le mode de coordonnées et transmet l'espace aux opérateurs modaux actifs.",
+      "desc": "Hook relayed when the gizmo alignment (world/local) changes: synchronizes the coordinate mode and passes the space to the active modal operators.",
       "params": {},
       "internal": true
     },
     "requestTransformShortcut": {
-      "desc": "Demande l'opérateur de déplacement (G) si suppressCameraForGrs est activé et si aucune opération n'est en cours et que des objets sont sélectionnés.",
+      "desc": "Requests the move operator (G) if suppressCameraForGrs is enabled and no operation is in progress and objects are selected.",
       "params": {}
     },
     "requestRotateShortcut": {
-      "desc": "Demande l'opérateur de rotation (R) sous les mêmes conditions.",
+      "desc": "Requests the rotate operator (R) under the same conditions.",
       "params": {}
     },
     "requestScaleShortcut": {
-      "desc": "Demande l'opérateur d'échelle (S) sous les mêmes conditions.",
+      "desc": "Requests the scale operator (S) under the same conditions.",
       "params": {}
     },
     "requestFocusShortcut": {
-      "desc": "Centre la caméra en douceur sur l'objet survolé, sinon sur la sélection (editor.fitViewToSelectionSmooth). Ignoré pendant une opération.",
+      "desc": "Smoothly centers the camera on the hovered object, otherwise on the selection (editor.fitViewToSelectionSmooth). Ignored during an operation.",
       "params": {}
     },
     "requestNumpadPreset": {
-      "desc": "Mémorise un préréglage de vue du pavé numérique, appliqué à la prochaine mise à jour si numpadMode == 1.",
-      "params": {"preset": {"type": "any", "desc": "Préréglage demandé (valeur transmise telle quelle)"}}
+      "desc": "Stores a numpad view preset, applied on the next update if numpadMode == 1.",
+      "params": {
+        "preset": {
+          "type": "any",
+          "desc": "Requested preset (value forwarded as-is)"
+        }
+      }
     },
     "onEditorPreferenceValueChanged": {
-      "desc": "Hook : recopie la valeur modifiée d'une préférence ezObjectSelect.* dans la configuration locale.",
-      "params": {"path": {"type": "string", "desc": "Chemin de préférence"}, "value": {"type": "any", "desc": "Nouvelle valeur"}},
+      "desc": "Hook: copies the modified value of an ezObjectSelect.* preference into the local configuration.",
+      "params": {
+        "path": {
+          "type": "string",
+          "desc": "Preference path"
+        },
+        "value": {
+          "type": "any",
+          "desc": "New value"
+        }
+      },
       "internal": true
     },
     "onEditorRegisterPreferences": {
-      "desc": "Enregistre la catégorie « ezObjectSelect » (sous-catégories general, selection, etc.) avec valeurs par défaut, bornes et rendus prefUi.",
-      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences"}},
+      "desc": "Registers the \"ezObjectSelect\" category (subcategories general, selection, etc.) with default values, bounds and prefUi renderers.",
+      "params": {
+        "prefsRegistry": {
+          "type": "table",
+          "desc": "Preferences registry"
+        }
+      },
       "internal": true
     }
   },
   "classes": {
     "prefUi": {
-      "desc": "Table locale de fonctions de rendu des préférences dans la fenêtre de préférences de l'éditeur. Chaque fonction a la signature (cat, subCat, item) : cat et subCat sont ignorés, item.path est le chemin de la préférence. Chaque fonction dessine le widget de la valeur correspondante et un bouton de remise par défaut.",
+      "desc": "Local table of preference rendering functions in the editor's preferences window. Each function has the signature (cat, subCat, item): cat and subCat are ignored, item.path is the preference path. Each function draws the widget of the matching value and a reset-to-default button.",
       "functions": {
-        "debug": {"desc": "Case à cocher du mode debug (ezObjectSelect.general.debug).", "params": {"item": {"type": "table", "desc": "Entrée de préférence (path)"}}},
-        "showHoverRing": {"desc": "Case à cocher : anneau de survol et lignes guides.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "discoveryRadius": {"desc": "Entier : rayon écran de découverte des objets (8 à 500 px, défaut 100).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "maxDiscoveryOutlines": {"desc": "Entier : nombre max de contours d'objets proches (0 à 50, défaut 5).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "maxStackOutlines": {"desc": "Entier : nombre max de contours de candidats superposés (1 à 50, défaut 5).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "showDistanceRing": {"desc": "Case à cocher : anneau de distance de sélection maximale.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "maxPickDistance": {"desc": "Flottant : distance max entre le point de focus caméra et un objet sélectionnable (10 à 500, défaut 150).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "showVolumeFilteredObjects": {"desc": "Case à cocher : contour rouge des objets exclus par la limite de volume.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "maxPickVolume": {"desc": "Flottant : volume max de boîte orientée pour être sélectionnable (défaut 500000).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "maxStackDistance": {"desc": "Flottant : au-delà de cette distance caméra, le survol ne résout que le meilleur objet (10 à 1000, défaut 200).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "selectedTintEnabled": {"desc": "Case à cocher : teinter les meshes sélectionnés.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "outlineMode": {"desc": "Liste : mode de contour (Outline ou boîtes remplies).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "boundsDepthTest": {"desc": "Case à cocher : masquer les segments de boîte de survol derrière la géométrie.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "selectedBoundsDepthTest": {"desc": "Case à cocher : idem pour les boîtes des objets sélectionnés.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "dragBoundsDepthTest": {"desc": "Case à cocher : idem pour les boîtes pendant le glisser.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "labelPlacementMode": {"desc": "Liste : placement des étiquettes (par défaut « Follow mouse »).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "showMoveConstraintPlane": {"desc": "Case à cocher : dessiner le plan de déplacement (G libre ou planaire).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "clipMoveConstraintPlane": {"desc": "Case à cocher : masquer les lignes de grille derrière la géométrie (désactivée si le plan n'est pas affiché).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "selectionGizmoLengthScale": {"desc": "Flottant : multiplicateur de longueur des axes d'origine des objets sélectionnés (défaut 2).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "selectionGizmoLineWidth": {"desc": "Flottant : épaisseur de ces axes (défaut 4).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "showOrientationGizmo": {"desc": "Case à cocher : repère d'orientation fixe monde/local dans le viewport.", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "orientationGizmoTopOffset": {"desc": "Entier : décalage vertical en pixels depuis le coin haut-droit (défaut 140).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "orientationGizmoRightOffset": {"desc": "Entier : décalage horizontal en pixels depuis le coin haut-droit (défaut 75).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "suppressCameraForGrs": {"desc": "Case à cocher : réserver G, R, S aux outils modaux Move/Rotate/Scale (supprime le déplacement caméra WASD).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}},
-        "numpadMode": {"desc": "Liste : mode du pavé numérique (standard ou préréglages de vue).", "params": {"item": {"type": "table", "desc": "Entrée de préférence"}}}
+        "debug": {
+          "desc": "Debug mode checkbox (ezObjectSelect.general.debug).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry (path)"
+            }
+          }
+        },
+        "showHoverRing": {
+          "desc": "Checkbox: hover ring and guide lines.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "discoveryRadius": {
+          "desc": "Integer: screen radius for object discovery (8 to 500 px, default 100).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "maxDiscoveryOutlines": {
+          "desc": "Integer: max number of nearby object outlines (0 to 50, default 5).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "maxStackOutlines": {
+          "desc": "Integer: max number of overlapping candidate outlines (1 to 50, default 5).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "showDistanceRing": {
+          "desc": "Checkbox: maximum selection distance ring.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "maxPickDistance": {
+          "desc": "Float: max distance between the camera focus point and a selectable object (10 to 500, default 150).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "showVolumeFilteredObjects": {
+          "desc": "Checkbox: red outline of objects excluded by the volume limit.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "maxPickVolume": {
+          "desc": "Float: max oriented box volume to be selectable (default 500000).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "maxStackDistance": {
+          "desc": "Float: beyond this camera distance, hover only resolves the best object (10 to 1000, default 200).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "selectedTintEnabled": {
+          "desc": "Checkbox: tint the selected meshes.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "outlineMode": {
+          "desc": "List: outline mode (Outline or filled boxes).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "boundsDepthTest": {
+          "desc": "Checkbox: hide the hover box segments behind geometry.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "selectedBoundsDepthTest": {
+          "desc": "Checkbox: same for the boxes of selected objects.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "dragBoundsDepthTest": {
+          "desc": "Checkbox: same for the boxes during drag.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "labelPlacementMode": {
+          "desc": "List: label placement (default \"Follow mouse\").",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "showMoveConstraintPlane": {
+          "desc": "Checkbox: draw the move plane (free or planar G).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "clipMoveConstraintPlane": {
+          "desc": "Checkbox: hide the grid lines behind geometry (disabled if the plane is not displayed).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "selectionGizmoLengthScale": {
+          "desc": "Float: length multiplier of the origin axes of selected objects (default 2).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "selectionGizmoLineWidth": {
+          "desc": "Float: thickness of these axes (default 4).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "showOrientationGizmo": {
+          "desc": "Checkbox: fixed world/local orientation indicator in the viewport.",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "orientationGizmoTopOffset": {
+          "desc": "Integer: vertical offset in pixels from the top-right corner (default 140).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "orientationGizmoRightOffset": {
+          "desc": "Integer: horizontal offset in pixels from the top-right corner (default 75).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "suppressCameraForGrs": {
+          "desc": "Checkbox: reserve G, R, S for the Move/Rotate/Scale modal tools (removes WASD camera movement).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        },
+        "numpadMode": {
+          "desc": "List: numpad mode (standard or view presets).",
+          "params": {
+            "item": {
+              "type": "table",
+              "desc": "Preference entry"
+            }
+          }
+        }
       }
     }
   }

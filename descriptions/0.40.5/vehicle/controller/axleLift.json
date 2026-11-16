@@ -1,65 +1,99 @@
 {
   "path": "lua/vehicle/controller/axleLift.lua",
-  "module": "Contrôleur auxiliaire qui lève ou abaisse des essieux (typiquement les essieux relevables d'un camion) pour gagner de la garde au sol. Il écrit une position cible dans deux valeurs `electrics.values` (avant et arrière) que lit le jbeam. Trois modes : auto (lève sauf si vitesse trop haute, vitesse trop basse, frein à main serré ou accélération latérale trop forte), manual (toujours levé) et off (toujours abaissé).",
+  "module": "Auxiliary controller that raises or lowers axles (typically a truck's liftable axles) to gain ground clearance. It writes a target position into two `electrics.values` (front and rear) that the jbeam reads. Three modes: auto (raises unless speed is too high, speed is too low, the parking brake is applied or lateral acceleration is too strong), manual (always raised) and off (always lowered).",
   "usage": "controller.getControllerSafe(\"axleLift\").setMode(\"manual\", true)\ncontroller.getControllerSafe(\"axleLift\").setParameters({velocityThresholdDisable = 10})",
   "notes": [
-    "Clés jbeam lues par init : `velocityThresholdDisable` (14 m/s, au-dessus l'essieu redescend), `velocityThresholdEnable` (0.1 m/s, en dessous il redescend), `accelerationThreshold` (3 m/s², sur |sensors.gy2|), `frontLoweredPosition`/`rearLoweredPosition` (0), `frontRaisedPosition`/`rearRaisedPosition` (1), `frontAxleLiftElectricsName` (\"strut_F_axleLift\"), `rearAxleLiftElectricsName` (\"strut_R_axleLift\").",
-    "Le mode d'état est sauvegardé sous la clé `<nom du contrôleur>Mode` dans getState/setState.",
-    "Après `reset`, les electrics sont remis à 0 mais le mode n'est pas réinitialisé (init n'est pas rappelé car `reset` existe).",
-    "Le menu radial n'est ajouté qu'une fois (hasBuiltPie)."
+    "Jbeam keys read by init: `velocityThresholdDisable` (14 m/s, above it the axle comes back down), `velocityThresholdEnable` (0.1 m/s, below it it comes back down), `accelerationThreshold` (3 m/s², on |sensors.gy2|), `frontLoweredPosition`/`rearLoweredPosition` (0), `frontRaisedPosition`/`rearRaisedPosition` (1), `frontAxleLiftElectricsName` (\"strut_F_axleLift\"), `rearAxleLiftElectricsName` (\"strut_R_axleLift\").",
+    "The mode state is saved under the key `<controller name>Mode` in getState/setState.",
+    "After `reset`, the electrics are set back to 0 but the mode is not reinitialized (init is not called again because `reset` exists).",
+    "The radial menu is added only once (hasBuiltPie)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
     "updateGFX": {
-      "desc": "Chaque frame : choisit la position levée ou abaissée selon le mode (en auto : vitesse lissée, vitesse de roue, frein à main, accélération latérale) et l'écrit dans les deux electrics d'essieu.",
-      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "desc": "Every frame: chooses the raised or lowered position depending on the mode (in auto: smoothed speed, wheel speed, parking brake, lateral acceleration) and writes it to the two axle electrics.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setMode": {
-      "desc": "Change le mode (\"auto\", \"manual\" ou \"off\"). Un mode inconnu est ignoré. Affiche un message UI sauf si silent.",
+      "desc": "Changes the mode (\"auto\", \"manual\" or \"off\"). An unknown mode is ignored. Displays a UI message unless silent.",
       "params": {
-        "mode": {"type": "string", "desc": "\"auto\", \"manual\" ou \"off\"."},
-        "silent": {"type": "boolean|nil", "desc": "true pour ne pas afficher de message."}
+        "mode": {
+          "type": "string",
+          "desc": "\"auto\", \"manual\" or \"off\"."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true to not display a message."
+        }
       },
       "returns": [],
       "internal": false
     },
     "toggleMode": {
-      "desc": "Passe au mode suivant dans l'ordre auto, manual, off, auto.",
+      "desc": "Switches to the next mode in the order auto, manual, off, auto.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "reset": {
-      "desc": "Remet les deux valeurs electrics d'essieu à 0.",
+      "desc": "Resets the two axle electrics values to 0.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "init": {
-      "desc": "Lit les paramètres jbeam, met les electrics à 0, passe en mode auto et ajoute l'entrée du menu radial.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "desc": "Reads the jbeam parameters, sets the electrics to 0, switches to auto mode and adds the radial menu entry.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
       "returns": [],
       "internal": true
     },
     "setParameters": {
-      "desc": "Modifie à chaud les seuils et le mode ; seuls les champs présents sont appliqués.",
-      "params": {"parameters": {"type": "table", "desc": "Champs facultatifs : mode, accelerationThreshold, velocityThresholdDisable, velocityThresholdEnable."}},
+      "desc": "Modifies the thresholds and the mode on the fly; only the fields present are applied.",
+      "params": {
+        "parameters": {
+          "type": "table",
+          "desc": "Optional fields: mode, accelerationThreshold, velocityThresholdDisable, velocityThresholdEnable."
+        }
+      },
       "returns": [],
       "internal": false
     },
     "getState": {
-      "desc": "Renvoie le mode courant sous la clé `<nom>Mode`.",
+      "desc": "Returns the current mode under the key `<name>Mode`.",
       "params": {},
-      "returns": [{"type": "table<string, string>", "desc": "Table d'état."}],
+      "returns": [
+        {
+          "type": "table<string, string>",
+          "desc": "State table."
+        }
+      ],
       "internal": false
     },
     "setState": {
-      "desc": "Restaure le mode depuis une table d'état (silencieusement) si la valeur est valide.",
-      "params": {"data": {"type": "table|nil", "desc": "Table contenant la clé `<nom>Mode`."}},
+      "desc": "Restores the mode from a state table (silently) if the value is valid.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table containing the key `<name>Mode`."
+        }
+      },
       "returns": [],
       "internal": false
     }

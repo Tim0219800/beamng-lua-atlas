@@ -1,17 +1,38 @@
 {
   "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactBeamstate.lua",
-  "module": "Module de gameplayInterface donnant accès à beamstate : appel à distance d'une fonction sans argument de beamstate par son nom, et lecture du décalage d'un coupleur. Les actions et lookups sont enregistrés auprès de gameplayInterface.",
+  "module": "gameplayInterface module giving access to beamstate: remote call of a beamstate function without arguments by its name, and reading of a coupler's offset. The actions and lookups are registered with gameplayInterface.",
   "usage": "gameplayInterface.executeAction(0, 3, 'interactBeamstate', 'breakAllBreakgroups')",
   "notes": [
-    "Action 'interactBeamstate'(methodName:string) : appelle beamstate[methodName]() sans argument ; renvoie {failReason} si la fonction n'existe pas. N'importe quelle clé de beamstate non nulle est appelée telle quelle (une valeur non-fonction provoquerait une erreur Lua).",
-    "Lookup 'couplerOffset'(couplerTag:string) : renvoie {result = beamstate.getCouplerOffset(couplerTag)}."
+    "Action 'interactBeamstate'(methodName:string): calls beamstate[methodName]() without arguments; returns {failReason} if the function does not exist. Any non-nil beamstate key is called as is (a non-function value would cause a Lua error).",
+    "Lookup 'couplerOffset'(couplerTag:string): returns {result = beamstate.getCouplerOffset(couplerTag)}."
   ],
   "fields": {
-    "moduleActions": {"type": "table<string, function>", "desc": "Actions exposées : interactBeamstate."},
-    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups exposés : couplerOffset."}
+    "moduleActions": {
+      "type": "table<string, function>",
+      "desc": "Exposed actions: interactBeamstate."
+    },
+    "moduleLookups": {
+      "type": "table<string, function>",
+      "desc": "Exposed lookups: couplerOffset."
+    }
   },
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : remplit moduleActions et moduleLookups.", "params": {}, "returns": [], "internal": true},
-    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Called at load: fills moduleActions and moduleLookups.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "requestRegistration": {
+      "desc": "Registers the actions and lookups with gameplayInterface.",
+      "params": {
+        "gi": {
+          "type": "table",
+          "desc": "The gameplayInterface module."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

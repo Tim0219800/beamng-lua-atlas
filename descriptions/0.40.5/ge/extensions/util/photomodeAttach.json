@@ -1,40 +1,70 @@
 {
   "path": "lua/ge/extensions/util/photomodeAttach.lua",
-  "module": "Attache la caméra libre au véhicule du joueur pendant le mode photo : la caméra garde son décalage par rapport au véhicule et le suit à chaque frame (onPreRender). En option, elle suit aussi la rotation du véhicule, uniquement en lacet (yaw), sans tangage ni roulis. Ne fonctionne que si la caméra active est la caméra libre « free ».",
+  "module": "Attaches the free camera to the player's vehicle during photo mode: the camera keeps its offset relative to the vehicle and follows it every frame (onPreRender). Optionally, it also follows the vehicle's rotation, in yaw only, without pitch or roll. Only works if the active camera is the \"free\" free camera.",
   "usage": "extensions.util_photomodeAttach.enable(true, {followRotation = true})",
   "fields": {
-    "enabled": {"type": "boolean", "desc": "true tant que l'attache est active"},
-    "followRotation": {"type": "boolean", "desc": "true si la caméra suit aussi le lacet du véhicule"},
-    "offsetWorld": {"type": "vec3|nil", "desc": "Décalage caméra - véhicule en repère monde (mode sans rotation)"},
-    "offsetLocal": {"type": "vec3|nil", "desc": "Décalage dans le repère du véhicule, lacet seul (mode avec rotation)"},
-    "rotOffset": {"type": "quat|nil", "desc": "Rotation de la caméra relative au lacet du véhicule"}
+    "enabled": {
+      "type": "boolean",
+      "desc": "true while the attachment is active"
+    },
+    "followRotation": {
+      "type": "boolean",
+      "desc": "true if the camera also follows the vehicle's yaw"
+    },
+    "offsetWorld": {
+      "type": "vec3|nil",
+      "desc": "Camera-to-vehicle offset in world frame (no-rotation mode)"
+    },
+    "offsetLocal": {
+      "type": "vec3|nil",
+      "desc": "Offset in the vehicle frame, yaw only (rotation mode)"
+    },
+    "rotOffset": {
+      "type": "quat|nil",
+      "desc": "Camera rotation relative to the vehicle's yaw"
+    }
   },
   "notes": [
-    "enable désactive silencieusement l'attache (M.enabled = false) si la caméra active n'est pas « free », s'il n'y a pas de véhicule joueur ou si sa position/rotation est introuvable.",
-    "La position du véhicule est celle du nœud de référence (getRefNodeAbsPositionXYZ) quand elle existe."
+    "enable silently disables the attachment (M.enabled = false) if the active camera is not \"free\", if there is no player vehicle or if its position/rotation cannot be found.",
+    "The vehicle position is that of the reference node (getRefNodeAbsPositionXYZ) when it exists."
   ],
   "functions": {
     "enable": {
-      "desc": "Active ou désactive l'attache. À l'activation, mémorise le décalage actuel de la caméra libre par rapport au véhicule joueur (et son orientation relative si followRotation).",
+      "desc": "Enables or disables the attachment. On activation, stores the free camera's current offset relative to the player vehicle (and its relative orientation if followRotation).",
       "params": {
-        "en": {"type": "boolean", "desc": "true pour activer, tout autre valeur désactive"},
-        "opts": {"type": "table|nil", "desc": "Options : followRotation (boolean) pour suivre le lacet du véhicule"}
+        "en": {
+          "type": "boolean",
+          "desc": "true to enable, any other value disables"
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "Options: followRotation (boolean) to follow the vehicle's yaw"
+        }
       },
       "returns": [],
       "internal": false
     },
     "syncCameraToVehicle": {
-      "desc": "Applique immédiatement la transformation mémorisée à la caméra (même traitement que celui fait à chaque frame). Sans effet si l'attache est inactive.",
+      "desc": "Immediately applies the stored transform to the camera (same processing as done every frame). No effect if the attachment is inactive.",
       "params": {},
       "returns": [],
       "internal": false
     },
     "onPreRender": {
-      "desc": "Hook appelé chaque frame avant le rendu : replace la caméra par rapport au véhicule.",
+      "desc": "Hook called every frame before rendering: repositions the camera relative to the vehicle.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta de temps réel en secondes (non utilisé)"},
-        "dtSim": {"type": "number", "desc": "Delta de temps de simulation (non utilisé)"},
-        "dtRaw": {"type": "number", "desc": "Delta de temps brut (non utilisé)"}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real-time delta in seconds (unused)"
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (unused)"
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (unused)"
+        }
       },
       "returns": [],
       "internal": true

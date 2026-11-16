@@ -1,22 +1,22 @@
 # `flowgraph_nodes_vehicle_bus_isBus`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/bus/isBus.lua` · VM : Game Engine (GE) · 31 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/bus/isBus.lua` · VM: Game Engine (GE) · 31 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/bus/isBus")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/bus/isBus")` (file under extensions/ but not a regular extension)
 
-Nœud « Is Bus » (catégorie `repeat_instant`). Teste si un véhicule est un bus via `mgr.modules.vehicle:isBus(vehId)`. Pin d'entrée : `vehId`. Sorties : flux `isBus`, flux `isNotBus`, bool `isBusBool`.
+Node "Is Bus" (category `repeat_instant`). Tests whether a vehicle is a bus via `mgr.modules.vehicle:isBus(vehId)`. Input pin: `vehId`. Outputs: flow `isBus`, flow `isNotBus`, bool `isBusBool`.
 
-## Remarques
+## Notes
 
-- La description du pin d'entrée dit « Id of vehicle A » (copier-coller) ; c'est bien le véhicule testé.
+- The description of the input pin says "Id of vehicle A" (copy-paste); it is indeed the tested vehicle.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work(args)` | Remplit `isBus`, `isNotBus` et `isBusBool` selon le résultat de `isBus`. Paramètre `args` non utilisé. | 23 |
+| `C:work(args)` | Fills `isBus`, `isNotBus` and `isBusBool` according to the result of `isBus`. Parameter `args` unused. | 23 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/bus/isBus.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/bus/isBus.lua`.*

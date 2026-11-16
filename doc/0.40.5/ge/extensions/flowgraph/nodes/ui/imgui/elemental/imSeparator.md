@@ -1,21 +1,21 @@
 # `flowgraph_nodes_ui_imgui_elemental_imSeparator`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator.lua` · VM : Game Engine (GE) · 44 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator.lua` · VM: Game Engine (GE) · 44 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « im Separator » (catégorie repeat_instant, tag imgui) : séparateur horizontal dans une fenêtre imgui, avec espace au-dessus et au-dessous réglables (data.aboveSpacing et data.belowSpacing, 5 px par défaut). Aucun pin.
+Flowgraph node "im Separator" (category repeat_instant, tag imgui): horizontal separator in an imgui window, with adjustable space above and below (data.aboveSpacing and data.belowSpacing, 5 px by default). No pins.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide effectif (aucune sortie). | 27 |
-| `C:init()` | Espacements à 5. | 19 |
-| `C:postInit()` | Vide. | 23 |
-| `C:work()` | Dessine espace, séparateur, espace. | 33 |
+| `C:_executionStarted()` | Effectively empty (no outputs). | 27 |
+| `C:init()` | Spacings at 5. | 19 |
+| `C:postInit()` | Empty. | 23 |
+| `C:work()` | Draws space, separator, space. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/imgui/elemental/imSeparator.lua`.*

@@ -1,95 +1,95 @@
 # `editor_dynamicDecals_gizmo`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/gizmo.lua` · VM : Game Engine (GE) · 160 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/gizmo.lua` · VM: Game Engine (GE) · 160 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_gizmo` : `extensions.load("editor_dynamicDecals_gizmo")`, puis la globale `editor_dynamicDecals_gizmo`
+**Access:** extension `editor_dynamicDecals_gizmo`: `extensions.load("editor_dynamicDecals_gizmo")`, then the global `editor_dynamicDecals_gizmo`
 
-Gère le gizmo d'axes (déplacement / rotation / échelle) de l'outil Dynamic Decals. Les autres modules (decal, path, group…) choisissent le mode avec setTransformMode, installent leur callback translateFn / rotateFn / scaleFn, et mettent à jour M.transform. À chaque frame d'édition, editModeUpdate affiche le gizmo, la boîte englobante du decal sélectionné et une sphère de debug.
+Manages the axis gizmo (move / rotate / scale) of the Dynamic Decals tool. Other modules (decal, path, group...) choose the mode with setTransformMode, install their translateFn / rotateFn / scaleFn callback, and update M.transform. On each edit frame, editModeUpdate displays the gizmo, the bounding box of the selected decal and a debug sphere.
 
-## Remarques
+## Notes
 
-- Callbacks translateFn / rotateFn / scaleFn : appelés pendant le drag avec la matrice renvoyée par editor.getAxisGizmoTransform() ; s'ils sont nil, un message « not yet implemented » est écrit dans le log.
-- Le premier appel de gizmoDragging (dragCount == 1) est ignoré.
-- Bug : editModeUpdate teste `data and data.debugObjPos` avec la globale `data` (non définie ici, M.data n'est pas utilisé) ; la sphère de debug ne s'affiche donc jamais, sauf si une globale `data` existe.
-- M.data décrit l'objet manipulé : uid, type (« drag », « rotate »…), objectType (« decal », « group », « path », « path_dataPoint »), dataPointIndex optionnel, objectDataCopy (état au début du drag). Il n'est pas rempli par ce module.
+- Callbacks translateFn / rotateFn / scaleFn: called during the drag with the matrix returned by editor.getAxisGizmoTransform(); if they are nil, a "not yet implemented" message is written to the log.
+- The first call of gizmoDragging (dragCount == 1) is ignored.
+- Bug: editModeUpdate tests `data and data.debugObjPos` with the global `data` (not defined here, M.data is not used); the debug sphere therefore never appears, unless a global `data` exists.
+- M.data describes the manipulated object: uid, type ("drag", "rotate"...), objectType ("decal", "group", "path", "path_dataPoint"), optional dataPointIndex, objectDataCopy (state at the start of the drag). It is not filled by this module.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_gizmo.editModeUpdate(dtReal, dtSim, dtRaw)` | Appelé à chaque frame par le mode d'édition de l'éditeur : met à jour et dessine le gizmo si un mode est actif, dessine la boîte englobante du decal sélectionné, puis la sphère de debug des points de contrôle. *(interne)* | 116 |
-| `editor_dynamicDecals_gizmo.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 112 |
-| `editor_dynamicDecals_gizmo.getDragCount()` | Nombre de mises à jour de drag depuis le début du drag courant. | 54 |
-| `editor_dynamicDecals_gizmo.getTransformMode()` | Renvoie le mode de transformation actuel. | 40 |
-| `editor_dynamicDecals_gizmo.gizmoBeginDrag()` | Callback passé à editor.updateAxisGizmo : appelé quand le drag du gizmo commence. Remet le compteur à 0. *(interne)* | 59 |
-| `editor_dynamicDecals_gizmo.gizmoDragging()` | Callback appelé à chaque mise à jour du drag : incrémente le compteur puis, selon le mode, appelle translateFn / rotateFn / scaleFn avec editor.getAxisGizmoTransform(). *(interne)* | 72 |
-| `editor_dynamicDecals_gizmo.gizmoEndDrag()` | Callback appelé à la fin du drag. Remet le compteur à 0 (aucune action d'annulation n'est ajoutée ici). *(interne)* | 66 |
-| `editor_dynamicDecals_gizmo.registerEditorPreferences(prefsRegistry)` | Enregistre `dynamicDecalsTool.gizmo` : displayBoundingBox (bool, vrai), boundingBoxColor (RGBA {1,0,0,0.75}, avec sélecteur de couleur) et displayDebugObjWhileMovingControlPoints (bool, vrai). *(interne)* | 100 |
-| `editor_dynamicDecals_gizmo.resetTransformFn()` | Remet à nil translateFn, rotateFn et scaleFn. | 48 |
-| `editor_dynamicDecals_gizmo.setTransformMode(value)` | Définit le mode de transformation ; avec none, le gizmo n'est plus affiché. | 44 |
-| `editor_dynamicDecals_gizmo.setup(tool_in)` | Appelé par l'outil : mémorise l'outil et l'API editor_api_dynamicDecals. *(interne)* | 142 |
+| `editor_dynamicDecals_gizmo.editModeUpdate(dtReal, dtSim, dtRaw)` | Called every frame by the editor's edit mode: updates and draws the gizmo if a mode is active, draws the bounding box of the selected decal, then the debug sphere of the control points. *(internal)* | 116 |
+| `editor_dynamicDecals_gizmo.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 112 |
+| `editor_dynamicDecals_gizmo.getDragCount()` | Number of drag updates since the start of the current drag. | 54 |
+| `editor_dynamicDecals_gizmo.getTransformMode()` | Returns the current transform mode. | 40 |
+| `editor_dynamicDecals_gizmo.gizmoBeginDrag()` | Callback passed to editor.updateAxisGizmo: called when the gizmo drag starts. Resets the counter to 0. *(internal)* | 59 |
+| `editor_dynamicDecals_gizmo.gizmoDragging()` | Callback called on every drag update: increments the counter then, depending on the mode, calls translateFn / rotateFn / scaleFn with editor.getAxisGizmoTransform(). *(internal)* | 72 |
+| `editor_dynamicDecals_gizmo.gizmoEndDrag()` | Callback called at the end of the drag. Resets the counter to 0 (no undo action is added here). *(internal)* | 66 |
+| `editor_dynamicDecals_gizmo.registerEditorPreferences(prefsRegistry)` | Registers `dynamicDecalsTool.gizmo`: displayBoundingBox (bool, true), boundingBoxColor (RGBA {1,0,0,0.75}, with color picker) and displayDebugObjWhileMovingControlPoints (bool, true). *(internal)* | 100 |
+| `editor_dynamicDecals_gizmo.resetTransformFn()` | Resets translateFn, rotateFn and scaleFn to nil. | 48 |
+| `editor_dynamicDecals_gizmo.setTransformMode(value)` | Sets the transform mode; with none, the gizmo is no longer displayed. | 44 |
+| `editor_dynamicDecals_gizmo.setup(tool_in)` | Called by the tool: stores the tool and the editor_api_dynamicDecals API. *(internal)* | 142 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_gizmo.editModeUpdate(dtReal, dtSim, dtRaw)`
 
-Appelé à chaque frame par le mode d'édition de l'éditeur : met à jour et dessine le gizmo si un mode est actif, dessine la boîte englobante du decal sélectionné, puis la sphère de debug des points de contrôle.
+Called every frame by the editor's edit mode: updates and draws the gizmo if a mode is active, draws the bounding box of the selected decal, then the debug sphere of the control points.
 
-- `dtReal` (*number*) : Delta temps réel (s).
-- `dtSim` (*number*) : Delta temps simulation (s).
-- `dtRaw` (*number*) : Delta temps brut (s).
+- `dtReal` (*number*) : Real time delta (s).
+- `dtSim` (*number*) : Simulation time delta (s).
+- `dtRaw` (*number*) : Raw time delta (s).
 
 #### `editor_dynamicDecals_gizmo.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_gizmo.getDragCount()`
 
-Nombre de mises à jour de drag depuis le début du drag courant.
+Number of drag updates since the start of the current drag.
 
-- **renvoie** : integer Compteur.
+- **returns**: integer Counter.
 
 #### `editor_dynamicDecals_gizmo.getTransformMode()`
 
-Renvoie le mode de transformation actuel.
+Returns the current transform mode.
 
-- **renvoie** : integer Valeur de transformModes.
+- **returns**: integer Value of transformModes.
 
 #### `editor_dynamicDecals_gizmo.registerEditorPreferences(prefsRegistry)`
 
-Enregistre `dynamicDecalsTool.gizmo` : displayBoundingBox (bool, vrai), boundingBoxColor (RGBA {1,0,0,0.75}, avec sélecteur de couleur) et displayDebugObjWhileMovingControlPoints (bool, vrai).
+Registers `dynamicDecalsTool.gizmo`: displayBoundingBox (bool, true), boundingBoxColor (RGBA {1,0,0,0.75}, with color picker) and displayDebugObjWhileMovingControlPoints (bool, true).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_gizmo.setTransformMode(value)`
 
-Définit le mode de transformation ; avec none, le gizmo n'est plus affiché.
+Sets the transform mode; with none, the gizmo is no longer displayed.
 
-- `value` (*integer*) : Une valeur de transformModes.
+- `value` (*integer*) : A value of transformModes.
 
 #### `editor_dynamicDecals_gizmo.setup(tool_in)`
 
-Appelé par l'outil : mémorise l'outil et l'API editor_api_dynamicDecals.
+Called by the tool: stores the tool and the editor_api_dynamicDecals API.
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `data` | table | Informations sur l'objet en cours de manipulation (uid, type, objectType, dataPointIndex, objectDataCopy), remplies par les modules appelants. |
-| `rotateFn` | function|nil | Callback de rotation. |
-| `scaleFn` | function|nil | Callback d'échelle. |
-| `transform` | MatrixF | Matrice du gizmo (MatrixF(true) au départ). |
+| `data` | table | Information about the object being manipulated (uid, type, objectType, dataPointIndex, objectDataCopy), filled by the calling modules. |
+| `rotateFn` | function|nil | Rotation callback. |
+| `scaleFn` | function|nil | Scale callback. |
+| `transform` | MatrixF | Gizmo matrix (MatrixF(true) initially). |
 | `transformModes` | table<string, integer> | none = 0, translate = 1, rotate = 2, scale = 3. |
-| `translateFn` | function|nil | Callback de translation, reçoit la matrice du gizmo. |
+| `translateFn` | function|nil | Translation callback, receives the gizmo matrix. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/gizmo.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/gizmo.lua`.*

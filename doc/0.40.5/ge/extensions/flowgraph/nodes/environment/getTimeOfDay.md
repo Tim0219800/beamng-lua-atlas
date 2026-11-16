@@ -1,26 +1,26 @@
 # `flowgraph_nodes_environment_getTimeOfDay`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/getTimeOfDay.lua` · VM : Game Engine (GE) · 28 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/getTimeOfDay.lua` · VM: Game Engine (GE) · 28 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/getTimeOfDay")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/getTimeOfDay")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Get Time of Day » (catégorie provider, tags environment/tod). Sort l'heure du jour actuelle (core_environment.getTimeOfDay) : time (0 à 1) et dayLength (durée d'un cycle jour-nuit en secondes réelles).
+Flowgraph node "Get Time of Day" (category provider, tags environment/tod). Outputs the current time of day (core_environment.getTimeOfDay): time (0 to 1) and dayLength (duration of a day-night cycle in real seconds).
 
-## Remarques
+## Notes
 
-- Incohérence de documentation dans le jeu : ce nœud dit « 0/1 est minuit, 0.5 midi », alors que Set Time of Day dit « 0/1 midi, 0.5 minuit » et Random Time of Day « 0.5 minuit ». Les modèles de Set Time of Day (0 = Midday, 0.5 = Midnight) et les conversions de Random Time of Day vont dans le sens 0.5 = minuit.
+- Documentation inconsistency in the game: this node says "0/1 is midnight, 0.5 noon", while Set Time of Day says "0/1 noon, 0.5 midnight" and Random Time of Day "0.5 midnight". The Set Time of Day templates (0 = Midday, 0.5 = Midnight) and the Random Time of Day conversions go in the 0.5 = midnight direction.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Chaque frame, écrit time et dayLength sur les sorties. | 21 |
+| `C:work()` | Every frame, writes time and dayLength to the outputs. | 21 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `core_environment.` `getTimeOfDay`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/getTimeOfDay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/getTimeOfDay.lua`.*

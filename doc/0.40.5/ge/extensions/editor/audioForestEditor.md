@@ -1,45 +1,45 @@
 # `editor_audioForestEditor`
 
-*Fichier : `lua/ge/extensions/editor/audioForestEditor.lua` · VM : Game Engine (GE) · 1022 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/audioForestEditor.lua` · VM: Game Engine (GE) · 1022 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_audioForestEditor` : `extensions.load("editor_audioForestEditor")`, puis la globale `editor_audioForestEditor`
+**Access:** extension `editor_audioForestEditor`: `extensions.load("editor_audioForestEditor")`, then the global `editor_audioForestEditor`
 
-Mode d'édition « Audio Forest Editor » de l'éditeur de niveaux : configure un son d'ambiance de forêt à partir des arbres de l'objet Forest. L'outil construit un graphe de noeuds (espacement minimum 20 m) à partir des instances de forêt incluses, les classe en S/M/L selon le volume de leur boîte englobante, envoie ce nuage au module runtime core/audioForest et lui indique l'événement principal (défaut 'event:>Ambient>Ambiences>Forest_Static') et un éventuel « roomtone » ('event:>Ambient>Ambiences>Roomtone'). La fenêtre permet d'exclure des types d'arbres, de choisir la classe de chaque type, de régler la visualisation des noeuds et de sélectionner un type en cliquant dans la vue. L'état est persisté avec le niveau via onSerialize / onDeserialized.
+"Audio Forest Editor" edit mode of the level editor: configures a forest ambience sound from the trees of the Forest object. The tool builds a node graph (minimum spacing 20 m) from the included forest instances, classifies them as S/M/L according to the volume of their bounding box, sends this cloud to the runtime module core/audioForest and gives it the main event (default 'event:>Ambient>Ambiences>Forest_Static') and an optional "roomtone" ('event:>Ambient>Ambiences>Roomtone'). The window lets you exclude tree types, choose the class of each type, adjust the node visualization and select a type by clicking in the view. The state is persisted with the level through onSerialize / onDeserialized.
 
-## Remarques
+## Notes
 
-- Le fichier ne contient pratiquement que des fonctions locales ; seules 4 fonctions sont exportées (hooks).
-- Dépend des modules core/audioForest, core/audioForest/audioForestCommon et editor/toolUtilities/(render/markup, render/graph, style).
-- Les noeuds sont dessinés dans un rayon de 1000 m par défaut, sphères de 1.5 m.
-- À l'activation du mode, si aucun état persisté n'existe, tous les types de forêt sont inclus.
+- The file contains almost only local functions; only 4 functions are exported (hooks).
+- Depends on the modules core/audioForest, core/audioForest/audioForestCommon and editor/toolUtilities/(render/markup, render/graph, style).
+- Nodes are drawn within a radius of 1000 m by default, as 1.5 m spheres.
+- When the mode is activated, if no persisted state exists, all forest types are included.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_audioForestEditor.onDeserialized(data)` | Reçoit l'état persisté après chargement du niveau ; le garde en attente, marque la liste de forêt comme à rafraîchir et reconstruit le nuage de noeuds si le mode est actif. Ignore les données qui ne sont pas une table. *(interne)* *(hook)* | 1005 |
-| `editor_audioForestEditor.onEditorGui()` | Appelé chaque frame de l'éditeur : si le mode est actif, rafraîchit la liste des types, dessine la fenêtre, gère le survol/sélection des arbres et dessine les noeuds du graphe (et le centroïde de l'émetteur principal). *(interne)* *(hook)* | 918 |
-| `editor_audioForestEditor.onEditorInitialized()` | Enregistre le mode d'édition audioForestEditMode (icône create_forest) et la fenêtre « audioForestEditor » (520x820). *(interne)* *(hook)* | 991 |
-| `editor_audioForestEditor.onSerialize()` | Renvoie l'état de l'outil sous forme de table (version=1, rayons de visualisation, showNodes, mainEvent, roomtoneEnabled/Event/Z, selectedRow, includeByShape, classSelByShape, classOverrideByShape) pour la persistance du niveau et le runtime. *(interne)* *(hook)* | 113 |
+| `editor_audioForestEditor.onDeserialized(data)` | Receives the persisted state after level load; keeps it pending, marks the forest list as to be refreshed and rebuilds the node cloud if the mode is active. Ignores data that is not a table. *(internal)* *(hook)* | 1005 |
+| `editor_audioForestEditor.onEditorGui()` | Called every editor frame: if the mode is active, refreshes the type list, draws the window, handles tree hover/selection and draws the graph nodes (and the centroid of the main emitter). *(internal)* *(hook)* | 918 |
+| `editor_audioForestEditor.onEditorInitialized()` | Registers the audioForestEditMode edit mode (create_forest icon) and the "audioForestEditor" window (520x820). *(internal)* *(hook)* | 991 |
+| `editor_audioForestEditor.onSerialize()` | Returns the tool state as a table (version=1, visualization radii, showNodes, mainEvent, roomtoneEnabled/Event/Z, selectedRow, includeByShape, classSelByShape, classOverrideByShape) for level persistence and the runtime. *(internal)* *(hook)* | 113 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_audioForestEditor.onDeserialized(data)`
 
-Reçoit l'état persisté après chargement du niveau ; le garde en attente, marque la liste de forêt comme à rafraîchir et reconstruit le nuage de noeuds si le mode est actif. Ignore les données qui ne sont pas une table.
+Receives the persisted state after level load; keeps it pending, marks the forest list as to be refreshed and rebuilds the node cloud if the mode is active. Ignores data that is not a table.
 
-- `data` (*table*) : Table renvoyée précédemment par onSerialize.
+- `data` (*table*) : Table previously returned by onSerialize.
 
 #### `editor_audioForestEditor.onSerialize()`
 
-Renvoie l'état de l'outil sous forme de table (version=1, rayons de visualisation, showNodes, mainEvent, roomtoneEnabled/Event/Z, selectedRow, includeByShape, classSelByShape, classOverrideByShape) pour la persistance du niveau et le runtime.
+Returns the tool state as a table (version=1, visualization radii, showNodes, mainEvent, roomtoneEnabled/Event/Z, selectedRow, includeByShape, classSelByShape, classOverrideByShape) for level persistence and the runtime.
 
-- **renvoie** : table État sérialisable de l'éditeur.
+- **returns**: table Serializable editor state.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`
 - `worldEditorCppApi.` `renderForestBBs`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/audioForestEditor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/audioForestEditor.lua`.*

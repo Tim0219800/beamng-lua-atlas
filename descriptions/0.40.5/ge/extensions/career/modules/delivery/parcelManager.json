@@ -1,192 +1,435 @@
 {
   "path": "lua/ge/extensions/career/modules/delivery/parcelManager.lua",
-  "module": "Gestionnaire central des cargaisons (colis et matériaux) de la livraison en mode carrière. Il tient la liste allCargo (chaque cargo a un id, une location, une origin, une destination, des slots, un poids, des modifiers, des rewards…), déplace les cargaisons entre lieux (installation, véhicule, avatar du joueur), gère les « déplacements transitoires » (transientMoves) validés ensuite en bloc, fournit des requêtes de recherche, calcule les récompenses avec détail (retard, loaner, niveau de branche, précision de stationnement), envoie les messages de retard et nettoie les cargaisons périmées.",
+  "module": "Central manager of the cargos (parcels and materials) of delivery in career mode. It holds the allCargo list (each cargo has an id, a location, an origin, a destination, slots, a weight, modifiers, rewards…), moves cargos between locations (facility, vehicle, player avatar), handles \"transient moves\" (transientMoves) that are then validated in bulk, provides lookup queries, computes rewards with a breakdown (lateness, loaner, branch level, parking precision), sends lateness messages and cleans up outdated cargos.",
   "notes": [
-    "Un lieu (location) est une table : {type='facilityParkingspot', facId, psPath}, {type='vehicle', vehId}, {type='playerAvatar'}, {type='multi', destinations={...}} ou {type='delete'} (marque pour suppression).",
-    "sameLocation(a, b) ne compare que les clés présentes dans a : l'ordre des arguments compte (b peut avoir des clés en plus) et plante si b est nil.",
-    "M.addParcelRewards est exporté mais vaut toujours nil (la variable locale addParcelRewards n'existe pas dans le fichier).",
-    "clearTransientFlags et undoTransientCargo sont des restes : ils ne font que logguer une erreur.",
-    "Les fonctions getAllCargo* appellent triggerAllGenerators() du module generator avant de filtrer : elles peuvent donc générer de nouvelles offres comme effet de bord.",
-    "Le temps utilisé (offerExpiresAt, loadedAtTimeStamp) vient de career_modules_delivery_general.time(), pas de l'horloge réelle.",
-    "Multiplicateurs de retard (modifier timed) : à l'heure = x1 (+10 % d'argent, +50 % de réputation), en retard partiel = 0.2 à 0.8 linéaire, en retard = x0.2 (réputation -1.5x).",
-    "Dans getRewardsWithBreakdown, le bonus logistique de précision est calculé sur originalRewards['logistics'] alors que le bonus de compétence utilise la clé logistics-materials ou logistics-delivery.",
-    "Fusion de matériaux (cargo.merge) : le cargo déplacé est mis à location {type='delete'} et son slots est ajouté à l'autre ; la récompense d'argent est alors fixée à cargo.slots."
+    "A location is a table: {type='facilityParkingspot', facId, psPath}, {type='vehicle', vehId}, {type='playerAvatar'}, {type='multi', destinations={...}} or {type='delete'} (marks for deletion).",
+    "sameLocation(a, b) only compares the keys present in a: argument order matters (b may have extra keys) and it crashes if b is nil.",
+    "M.addParcelRewards is exported but is always nil (the local variable addParcelRewards does not exist in the file).",
+    "clearTransientFlags and undoTransientCargo are leftovers: they only log an error.",
+    "The getAllCargo* functions call triggerAllGenerators() of the generator module before filtering: they can therefore generate new offers as a side effect.",
+    "The time used (offerExpiresAt, loadedAtTimeStamp) comes from career_modules_delivery_general.time(), not from the real clock.",
+    "Lateness multipliers (timed modifier): on time = x1 (+10% money, +50% reputation), partially late = 0.2 to 0.8 linear, late = x0.2 (reputation -1.5x).",
+    "In getRewardsWithBreakdown, the logistics precision bonus is computed on originalRewards['logistics'] whereas the skill bonus uses the key logistics-materials or logistics-delivery.",
+    "Material merge (cargo.merge): the moved cargo is set to location {type='delete'} and its slots is added to the other; the money reward is then set to cargo.slots."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : freeroam_facilities."},
-    "addParcelRewards": {"type": "nil", "desc": "Exporté mais toujours nil (référence non définie dans le fichier)."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: freeroam_facilities."
+    },
+    "addParcelRewards": {
+      "type": "nil",
+      "desc": "Exported but always nil (reference not defined in the file)."
+    }
   },
   "functions": {
     "onCareerActivated": {
-      "desc": "Hook appelé à l'activation de la carrière : mémorise les autres extensions de livraison.",
+      "desc": "Hook called on career activation: stores the other delivery extensions.",
       "internal": true
     },
     "addCargo": {
-      "desc": "Ajoute une cargaison à la liste globale et émet le hook onCargoGenerated(cargo) sauf si silent.",
+      "desc": "Adds a cargo to the global list and emits the onCargoGenerated(cargo) hook unless silent.",
       "params": {
-        "cargo": {"type": "table", "desc": "Cargaison complète (id, location, origin, destination, slots…)."},
-        "silent": {"type": "boolean|nil", "desc": "true pour ne pas émettre onCargoGenerated."}
+        "cargo": {
+          "type": "table",
+          "desc": "Complete cargo (id, location, origin, destination, slots…)."
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "true to not emit onCargoGenerated."
+        }
       }
     },
     "changeCargoLocation": {
-      "desc": "Déplace immédiatement la cargaison vers newLocation. Ajuste le stock de matériaux de l'installation (retire à l'ancien lieu, ajoute au nouveau), horodate loadedAtTimeStamp au premier chargement dans un véhicule, et marque cargo.data.delivered = true si le nouveau lieu est la destination.",
+      "desc": "Immediately moves the cargo to newLocation. Adjusts the facility's material stock (removes from the old location, adds to the new one), timestamps loadedAtTimeStamp on the first load into a vehicle, and sets cargo.data.delivered = true if the new location is the destination.",
       "params": {
-        "cargoId": {"type": "integer", "desc": "Identifiant de la cargaison."},
-        "newLocation": {"type": "table", "desc": "Nouveau lieu (une erreur est loguée si nil ou vide)."}
+        "cargoId": {
+          "type": "integer",
+          "desc": "Cargo identifier."
+        },
+        "newLocation": {
+          "type": "table",
+          "desc": "New location (an error is logged if nil or empty)."
+        }
       }
     },
     "addTransientMoveCargo": {
-      "desc": "Enregistre un déplacement en attente pour la cargaison (cargo._transientMove). Refusé avec une erreur loguée si elle en a déjà un.",
+      "desc": "Records a pending move for the cargo (cargo._transientMove). Refused with a logged error if it already has one.",
       "params": {
-        "cargoId": {"type": "integer", "desc": "Identifiant de la cargaison."},
-        "targetLocation": {"type": "table", "desc": "Lieu cible."}
+        "cargoId": {
+          "type": "integer",
+          "desc": "Cargo identifier."
+        },
+        "targetLocation": {
+          "type": "table",
+          "desc": "Target location."
+        }
       }
     },
     "hasUncommittedTransientMoves": {
-      "desc": "Indique si des déplacements transitoires ont été ajoutés mais pas encore appliqués.",
-      "returns": [{"type": "boolean", "desc": "true si en attente."}]
+      "desc": "Indicates whether transient moves have been added but not yet applied.",
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if pending."
+        }
+      ]
     },
     "getTransientMoveCargo": {
-      "desc": "Liste les cargaisons qui ont un déplacement transitoire en attente.",
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "desc": "Lists the cargos that have a pending transient move.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "clearTransientMoveForCargo": {
-      "desc": "Annule le déplacement transitoire d'une cargaison (sans effet si aucun).",
-      "params": {"cargoId": {"type": "integer", "desc": "Identifiant de la cargaison."}}
+      "desc": "Cancels a cargo's transient move (no effect if none).",
+      "params": {
+        "cargoId": {
+          "type": "integer",
+          "desc": "Cargo identifier."
+        }
+      }
     },
     "clearAllTransientMoves": {
-      "desc": "Annule tous les déplacements transitoires et remet le drapeau « non validé » à false."
+      "desc": "Cancels all transient moves and resets the \"unvalidated\" flag to false."
     },
     "applyTransientMoves": {
-      "desc": "Applique les déplacements transitoires dont la cargaison est au lieu currentLocation (ou tous si currentLocation est nil), met à jour les organisations prêteuses (loaner) des véhicules cibles, fusionne les cargaisons mergeables de même matériau au même lieu, et conserve les autres déplacements pour plus tard.",
-      "params": {"currentLocation": {"type": "table|nil", "desc": "Lieu courant ; nil pour tout appliquer."}},
-      "returns": [{"type": "table", "desc": "Cargaisons déplacées."}, {"type": "table", "desc": "Cargaisons dont le déplacement reste en attente."}]
+      "desc": "Applies the transient moves whose cargo is at the location currentLocation (or all if currentLocation is nil), updates the loaner organizations of the target vehicles, merges mergeable cargos of the same material at the same location, and keeps the other moves for later.",
+      "params": {
+        "currentLocation": {
+          "type": "table|nil",
+          "desc": "Current location; nil to apply everything."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Cargos moved."
+        },
+        {
+          "type": "table",
+          "desc": "Cargos whose move remains pending."
+        }
+      ]
     },
     "getTransientMovesForTargetLocationWithCargo": {
-      "desc": "Liste les cargaisons dont le déplacement transitoire cible le lieu donné.",
-      "params": {"targetLocation": {"type": "table", "desc": "Lieu cible."}},
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "desc": "Lists the cargos whose transient move targets the given location.",
+      "params": {
+        "targetLocation": {
+          "type": "table",
+          "desc": "Target location."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "clearTransientFlags": {
-      "desc": "Obsolète : ne fait que loguer une erreur « no longer needed ».",
+      "desc": "Obsolete: only logs a \"no longer needed\" error.",
       "internal": true
     },
     "undoTransientCargo": {
-      "desc": "Obsolète : ne fait que loguer une erreur (code d'annulation commenté, marqué TODO)."
+      "desc": "Obsolete: only logs an error (cancellation code commented out, marked TODO)."
     },
     "sameLocationCargo": {
-      "desc": "Compare la position actuelle d'une cargaison avec un lieu via sameLocation.",
+      "desc": "Compares a cargo's current position with a location via sameLocation.",
       "params": {
-        "cargo": {"type": "table", "desc": "Cargaison."},
-        "otherLoc": {"type": "table", "desc": "Lieu à comparer."}
+        "cargo": {
+          "type": "table",
+          "desc": "Cargo."
+        },
+        "otherLoc": {
+          "type": "table",
+          "desc": "Location to compare."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si identique."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if identical."
+        }
+      ]
     },
     "sameLocation": {
-      "desc": "Teste l'égalité de deux lieux en comparant chaque clé de a avec la même clé de b (comparaison asymétrique).",
+      "desc": "Tests the equality of two locations by comparing each key of a with the same key of b (asymmetric comparison).",
       "params": {
-        "a": {"type": "table", "desc": "Lieu de référence."},
-        "b": {"type": "table", "desc": "Lieu comparé (ne doit pas être nil)."}
+        "a": {
+          "type": "table",
+          "desc": "Reference location."
+        },
+        "b": {
+          "type": "table",
+          "desc": "Compared location (must not be nil)."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si toutes les clés de a valent celles de b."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if all keys of a equal those of b."
+        }
+      ]
     },
     "getAllCargoCustomFilter": {
-      "desc": "Renvoie les cargaisons pour lesquelles filter(cargo, ...) est vrai, après avoir déclenché tous les générateurs.",
+      "desc": "Returns the cargos for which filter(cargo, ...) is true, after triggering all generators.",
       "params": {
-        "filter": {"type": "function", "desc": "fonction(cargo, ...) -> boolean."},
-        "...": {"type": "any", "desc": "Arguments supplémentaires passés à filter."}
+        "filter": {
+          "type": "function",
+          "desc": "function(cargo, ...) -> boolean."
+        },
+        "...": {
+          "type": "any",
+          "desc": "Extra arguments passed to filter."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getAllCargoForLocation": {
-      "desc": "Toutes les cargaisons actuellement à ce lieu (déclenche les générateurs si le lieu est une place d'installation).",
-      "params": {"loc": {"type": "table", "desc": "Lieu."}},
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "desc": "All the cargos currently at this location (triggers the generators if the location is a facility spot).",
+      "params": {
+        "loc": {
+          "type": "table",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getAllCargoForLocationUnexpired": {
-      "desc": "Comme getAllCargoForLocation mais seulement les cargaisons dont l'offre n'a pas expiré (offerExpiresAt > temps de livraison).",
-      "params": {"loc": {"type": "table", "desc": "Lieu."}},
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "desc": "Like getAllCargoForLocation but only the cargos whose offer has not expired (offerExpiresAt > delivery time).",
+      "params": {
+        "loc": {
+          "type": "table",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getAllCargoForLocationUnexpiredUndelivered": {
-      "desc": "Cargaisons à ce lieu, non expirées, qui ne sont pas déjà à leur destination et générées au plus tard à timeGenerated.",
+      "desc": "Cargos at this location, not expired, not already at their destination and generated no later than timeGenerated.",
       "params": {
-        "loc": {"type": "table", "desc": "Lieu."},
-        "timeExpire": {"type": "number|nil", "desc": "Seuil d'expiration ; défaut : temps courant."},
-        "timeGenerated": {"type": "number|nil", "desc": "Horodatage maximal de génération ; défaut : infini."}
+        "loc": {
+          "type": "table",
+          "desc": "Location."
+        },
+        "timeExpire": {
+          "type": "number|nil",
+          "desc": "Expiration threshold; default: current time."
+        },
+        "timeGenerated": {
+          "type": "number|nil",
+          "desc": "Maximum generation timestamp; default: infinity."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getAllCargoForFacilityUnexpiredUndelivered": {
-      "desc": "Même filtre mais sur toutes les places d'une installation (facId).",
+      "desc": "Same filter but over all the spots of a facility (facId).",
       "params": {
-        "facId": {"type": "string", "desc": "Identifiant de l'installation."},
-        "timeExpire": {"type": "number|nil", "desc": "Seuil d'expiration."},
-        "timeGenerated": {"type": "number|nil", "desc": "Horodatage maximal de génération."}
+        "facId": {
+          "type": "string",
+          "desc": "Facility identifier."
+        },
+        "timeExpire": {
+          "type": "number|nil",
+          "desc": "Expiration threshold."
+        },
+        "timeGenerated": {
+          "type": "number|nil",
+          "desc": "Maximum generation timestamp."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getAllCargoForDestinationFacilityStillAtOriginUnexpired": {
-      "desc": "Cargaisons non expirées encore à leur origine et dont la destination est l'installation facId.",
-      "params": {"facId": {"type": "string", "desc": "Installation de destination."}},
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "desc": "Non-expired cargos still at their origin and whose destination is the facility facId.",
+      "params": {
+        "facId": {
+          "type": "string",
+          "desc": "Destination facility."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getAllCargoAtFacilityUnexpired": {
-      "desc": "Cargaisons non expirées encore à leur origine, située dans l'installation facId.",
-      "params": {"facId": {"type": "string", "desc": "Installation d'origine."}},
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "desc": "Non-expired cargos still at their origin, located in the facility facId.",
+      "params": {
+        "facId": {
+          "type": "string",
+          "desc": "Origin facility."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getAllCargoInVehicles": {
-      "desc": "Cargaisons actuellement dans un véhicule, et optionnellement celles ayant un déplacement transitoire en attente.",
-      "params": {"includeTransient": {"type": "boolean|nil", "desc": "Inclure les cargaisons avec _transientMove."}},
-      "returns": [{"type": "table", "desc": "Liste de cargaisons."}]
+      "desc": "Cargos currently in a vehicle, and optionally those with a pending transient move.",
+      "params": {
+        "includeTransient": {
+          "type": "boolean|nil",
+          "desc": "Include the cargos with _transientMove."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of cargos."
+        }
+      ]
     },
     "getLocationLabelShort": {
-      "desc": "Libellé court d'un lieu : nom traduit de l'installation, « Current Vehicle (id) » / « Other Vehicle (id) », « Player Avatar », « N possible locations » (ou le libellé de l'unique destination), « Unknown ». Les textes véhicule/avatar ne sont pas traduits.",
-      "params": {"loc": {"type": "table", "desc": "Lieu."}},
-      "returns": [{"type": "string", "desc": "Libellé."}]
+      "desc": "Short label of a location: translated facility name, \"Current Vehicle (id)\" / \"Other Vehicle (id)\", \"Player Avatar\", \"N possible locations\" (or the label of the single destination), \"Unknown\". The vehicle/avatar texts are not translated.",
+      "params": {
+        "loc": {
+          "type": "table",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Label."
+        }
+      ]
     },
     "getLocationLabelLong": {
-      "desc": "Libellé long : pour une place d'installation, « Installation - nom de la place » si la place a un champ personnalisé name ; sinon comme le libellé court.",
-      "params": {"loc": {"type": "table", "desc": "Lieu."}},
-      "returns": [{"type": "string", "desc": "Libellé."}]
+      "desc": "Long label: for a facility spot, \"Facility - spot name\" if the spot has a custom field name; otherwise same as the short label.",
+      "params": {
+        "loc": {
+          "type": "table",
+          "desc": "Location."
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Label."
+        }
+      ]
     },
     "getCargoById": {
-      "desc": "Cherche une cargaison par id.",
-      "params": {"cargoId": {"type": "integer", "desc": "Identifiant."}},
-      "returns": [{"type": "table|nil", "desc": "Cargaison ou nil."}]
+      "desc": "Looks up a cargo by id.",
+      "params": {
+        "cargoId": {
+          "type": "integer",
+          "desc": "Identifier."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Cargo or nil."
+        }
+      ]
     },
     "getRewardsWithBreakdown": {
-      "desc": "Calcule les récompenses d'une cargaison livrée avec le détail : effet du modificateur timed (à l'heure, retardée, en retard), part des organisations prêteuses de véhicule (loaner), multiplicateur du niveau de la branche logistics, bonus ou pénalité de précision de stationnement. Peut débloquer le succès ON_SCHEDULE.",
-      "params": {"cargo": {"type": "table", "desc": "Cargaison (rewards, modifiers, loadedAtTimeStamp, organization, destination, location…)."}},
+      "desc": "Computes the rewards of a delivered cargo with a breakdown: effect of the timed modifier (on time, delayed, late), share of the vehicle loaner organizations, multiplier of the logistics branch level, parking precision bonus or penalty. Can unlock the ON_SCHEDULE achievement.",
+      "params": {
+        "cargo": {
+          "type": "table",
+          "desc": "Cargo (rewards, modifiers, loadedAtTimeStamp, organization, destination, location…)."
+        }
+      },
       "returns": [
-        {"type": "table", "desc": "originalRewards : copie des récompenses de base."},
-        {"type": "table", "desc": "breakdown : liste d'éléments {label, rewards, simpleBreakdownType}."},
-        {"type": "table", "desc": "adjustedRewards : récompenses finales (base + somme des éléments)."}
+        {
+          "type": "table",
+          "desc": "originalRewards: copy of the base rewards."
+        },
+        {
+          "type": "table",
+          "desc": "breakdown: list of items {label, rewards, simpleBreakdownType}."
+        },
+        {
+          "type": "table",
+          "desc": "adjustedRewards: final rewards (base + sum of the items)."
+        }
       ]
     },
     "addParcelRewardsSummary": {
-      "desc": "Calcule originalRewards/breakdown/adjustedRewards de chaque cargaison, regroupe par groupId et heure de chargement, formate chaque groupe via cargoScreen.formatCargoGroup et trie par plus petit id.",
-      "params": {"cargo": {"type": "table", "desc": "Liste de cargaisons au même lieu actuel."}},
-      "returns": [{"type": "table|nil", "desc": "Liste de groupes formatés pour l'UI (nil si la liste est vide)."}]
+      "desc": "Computes originalRewards/breakdown/adjustedRewards of each cargo, groups by groupId and loading time, formats each group via cargoScreen.formatCargoGroup and sorts by smallest id.",
+      "params": {
+        "cargo": {
+          "type": "table",
+          "desc": "List of cargos at the same current location."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List of groups formatted for the UI (nil if the list is empty)."
+        }
+      ]
     },
     "cleanUpCargo": {
-      "desc": "Supprime les cargaisons de lieu « delete » et celles restées à leur origine, expirées depuis plus de 120 s et sans déplacement transitoire. Remet le minuteur de nettoyage à zéro."
+      "desc": "Deletes the cargos with location 'delete' and those that stayed at their origin, expired for more than 120 s and without a transient move. Resets the cleanup timer to zero."
     },
     "onUpdate": {
-      "desc": "Hook par image : envoie les messages UI « retardé » et « en retard » pour les cargaisons timed dans les véhicules, met à jour le tasklist chaque seconde, relance le tasklist et le nettoyage si des lieux ont changé, et nettoie toutes les 10 s. Inactif hors mode livraison.",
+      "desc": "Per-frame hook: sends the \"delayed\" and \"late\" UI messages for timed cargos in vehicles, updates the tasklist every second, restarts the tasklist and the cleanup if locations changed, and cleans up every 10 s. Inactive outside delivery mode.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
-        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
-        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real time delta (s)."
+        },
+        "dtSim": {
+          "type": "number",
+          "desc": "Simulation time delta (s)."
+        },
+        "dtRaw": {
+          "type": "number",
+          "desc": "Raw time delta (s)."
+        }
       },
       "internal": true
     },
     "onTrailerAttached": {
-      "desc": "Hook appelé quand une remorque est attelée : recalcule les organisations prêteuses des cargaisons situées dans des véhicules.",
+      "desc": "Hook called when a trailer is coupled: recomputes the loaner organizations of the cargos located in vehicles.",
       "params": {
-        "objId1": {"type": "integer", "desc": "Premier véhicule."},
-        "objId2": {"type": "integer", "desc": "Second véhicule."}
+        "objId1": {
+          "type": "integer",
+          "desc": "First vehicle."
+        },
+        "objId2": {
+          "type": "integer",
+          "desc": "Second vehicle."
+        }
       },
       "internal": true
     }

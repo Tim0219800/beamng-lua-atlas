@@ -1,74 +1,142 @@
 {
   "path": "lua/ge/extensions/editor/api/selectabilityPresets.lua",
-  "module": "Gère des préréglages (presets) de « sélectionnabilité » des types d'objets dans l'éditeur du monde : quelles classes d'objets (TSStatic, Prefab, BeamNGVehicle…) peuvent être cliquées/sélectionnées. Préréglages : current, all, staticsAndProps (BeamNGVehicle, Prefab, PrefabInstance, TSStatic), default (masque capturé à la première initialisation). Il lit/écrit via editor.getObjectTypeSelectable / setObjectTypeSelectable et la préférence gizmos.visualization.selectable. Un outil peut prendre temporairement le contrôle du masque avec beginScope/endScope.",
-  "usage": "local sp = extensions.editor_api_selectabilityPresets\nlocal owner = {}\nif sp.beginScope(owner, 'staticsAndProps', 'Mon outil') then\n  -- ... travail ...\n  sp.endScope(owner)\nend",
+  "module": "Manages \"selectability\" presets of object types in the world editor: which object classes (TSStatic, Prefab, BeamNGVehicle...) can be clicked/selected. Presets: current, all, staticsAndProps (BeamNGVehicle, Prefab, PrefabInstance, TSStatic), default (mask captured at the first initialization). It reads/writes via editor.getObjectTypeSelectable / setObjectTypeSelectable and the gizmos.visualization.selectable preference. A tool can temporarily take control of the mask with beginScope/endScope.",
+  "usage": "local sp = extensions.editor_api_selectabilityPresets\nlocal owner = {}\nif sp.beginScope(owner, 'staticsAndProps', 'My tool') then\n  -- ... work ...\n  sp.endScope(owner)\nend",
   "notes": [
-    "Le module utilise la globale editor (non déclarée localement) et worldEditorCppApi.getObjectClassNames() pour la liste des classes.",
-    "Le preset 'current' n'est pas applicable : applyPreset et beginScope renvoient false pour lui.",
-    "Pendant un scope, applyPreset avec un autre owner est refusé, markCurrent et syncActivePresetFromMask renvoient false, et les boutons de drawControls sont désactivés.",
-    "Le preset 'default' est le masque capturé au premier appel de initialize (donc l'état au moment de la première utilisation, pas une valeur fixe)."
+    "The module uses the global editor (not declared locally) and worldEditorCppApi.getObjectClassNames() for the class list.",
+    "The 'current' preset is not applicable: applyPreset and beginScope return false for it.",
+    "During a scope, applyPreset with a different owner is refused, markCurrent and syncActivePresetFromMask return false, and the drawControls buttons are disabled.",
+    "The 'default' preset is the mask captured on the first call of initialize (so the state at the time of first use, not a fixed value)."
   ],
   "functions": {
     "initialize": {
-      "desc": "Capture le masque de sélectionnabilité actuel comme masque « default » s'il n'est pas déjà capturé. Appelé automatiquement par les autres fonctions.",
+      "desc": "Captures the current selectability mask as the \"default\" mask if not already captured. Called automatically by the other functions.",
       "params": {},
       "returns": []
     },
     "applyPreset": {
-      "desc": "Applique un préréglage (all, staticsAndProps ou default) au masque de sélectionnabilité. Si persist est vrai et qu'aucun scope n'est actif, enregistre aussi le masque dans les préférences.",
+      "desc": "Applies a preset (all, staticsAndProps or default) to the selectability mask. If persist is true and no scope is active, also saves the mask in the preferences.",
       "params": {
-        "presetId": {"type": "string", "desc": "'all', 'staticsAndProps' ou 'default' ('current' est refusé)."},
-        "persist": {"type": "boolean|nil", "desc": "Sauvegarder dans la préférence gizmos.visualization.selectable (et sur disque si saveVisualizationSettings est actif)."},
-        "owner": {"type": "table|nil", "desc": "Propriétaire du scope : doit correspondre au propriétaire courant si un scope est actif."}
+        "presetId": {
+          "type": "string",
+          "desc": "'all', 'staticsAndProps' or 'default' ('current' is refused)."
+        },
+        "persist": {
+          "type": "boolean|nil",
+          "desc": "Save to the gizmos.visualization.selectable preference (and to disk if saveVisualizationSettings is active)."
+        },
+        "owner": {
+          "type": "table|nil",
+          "desc": "Scope owner: must match the current owner if a scope is active."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si appliqué, false si preset inconnu/'current' ou scope détenu par un autre."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if applied, false if unknown preset/'current' or scope held by another."
+        }
+      ]
     },
     "beginScope": {
-      "desc": "Prend temporairement le contrôle du masque : sauvegarde le masque et les préférences actuels puis applique le preset, sans le persister. Si le scope existe déjà, renvoie si l'owner est le même.",
+      "desc": "Temporarily takes control of the mask: saves the current mask and preferences then applies the preset, without persisting it. If the scope already exists, returns whether the owner is the same.",
       "params": {
-        "owner": {"type": "table", "desc": "Table identifiant l'appelant (comparée par identité)."},
-        "presetId": {"type": "string", "desc": "'all', 'staticsAndProps' ou 'default'."},
-        "ownerLabel": {"type": "string|nil", "desc": "Nom affiché dans drawControls (« X is temporarily controlling this mask »)."}
+        "owner": {
+          "type": "table",
+          "desc": "Table identifying the caller (compared by identity)."
+        },
+        "presetId": {
+          "type": "string",
+          "desc": "'all', 'staticsAndProps' or 'default'."
+        },
+        "ownerLabel": {
+          "type": "string|nil",
+          "desc": "Name displayed in drawControls (\"X is temporarily controlling this mask\")."
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si le scope est actif pour cet owner."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the scope is active for this owner."
+        }
+      ]
     },
     "endScope": {
-      "desc": "Termine le scope : restaure le masque, les préférences et le preset actif sauvegardés, puis sauvegarde les préférences si saveVisualizationSettings est actif.",
-      "params": {"owner": {"type": "table", "desc": "Doit être le propriétaire du scope."}},
-      "returns": [{"type": "boolean", "desc": "true si restauré, false s'il n'y a pas de scope ou autre owner."}]
+      "desc": "Ends the scope: restores the saved mask, preferences and active preset, then saves the preferences if saveVisualizationSettings is active.",
+      "params": {
+        "owner": {
+          "type": "table",
+          "desc": "Must be the scope owner."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if restored, false if there is no scope or another owner."
+        }
+      ]
     },
     "getScopeOwner": {
-      "desc": "Renvoie le propriétaire du scope actif, ou nil.",
+      "desc": "Returns the owner of the active scope, or nil.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "owner du scope."}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "scope owner."
+        }
+      ]
     },
     "isScoped": {
-      "desc": "Indique si un scope temporaire est actif.",
+      "desc": "Indicates whether a temporary scope is active.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si scope actif."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if a scope is active."
+        }
+      ]
     },
     "markCurrent": {
-      "desc": "Marque le preset actif comme 'current' (masque modifié à la main). Sans effet pendant un scope.",
+      "desc": "Marks the active preset as 'current' (mask modified by hand). No effect during a scope.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "false si un scope est actif, sinon true."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if a scope is active, otherwise true."
+        }
+      ]
     },
     "syncActivePresetFromMask": {
-      "desc": "Compare le masque réel aux presets all, staticsAndProps, default et met activePresetId sur le premier qui correspond, sinon 'current'.",
+      "desc": "Compares the actual mask to the all, staticsAndProps, default presets and sets activePresetId to the first that matches, otherwise 'current'.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "false si un scope est actif, sinon true."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if a scope is active, otherwise true."
+        }
+      ]
     },
     "getActivePresetId": {
-      "desc": "Renvoie l'id du preset actif.",
+      "desc": "Returns the id of the active preset.",
       "params": {},
-      "returns": [{"type": "string", "desc": "'current', 'all', 'staticsAndProps' ou 'default'."}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'current', 'all', 'staticsAndProps' or 'default'."
+        }
+      ]
     },
     "getActivePresetLabel": {
-      "desc": "Renvoie le libellé affichable du preset actif.",
+      "desc": "Returns the displayable label of the active preset.",
       "params": {},
-      "returns": [{"type": "string", "desc": "Ex. 'Statics and Props'."}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "E.g. 'Statics and Props'."
+        }
+      ]
     },
     "drawControls": {
-      "desc": "Dessine en ImGui la ligne de boutons « Presets » : All, Statics and Props, Restore Default (avec persistance). Désactivés pendant un scope, avec un texte indiquant qui contrôle le masque. À appeler depuis une fenêtre d'éditeur.",
+      "desc": "Draws in ImGui the \"Presets\" button row: All, Statics and Props, Restore Default (with persistence). Disabled during a scope, with a text indicating who controls the mask. To be called from an editor window.",
       "params": {},
       "returns": []
     }

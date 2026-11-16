@@ -1,195 +1,195 @@
 # `core_trailerRespawn`
 
-*Fichier : `lua/ge/extensions/core/trailerRespawn.lua` · VM : Game Engine (GE) · 275 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/trailerRespawn.lua` · VM: Game Engine (GE) · 275 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_trailerRespawn` : `extensions.load("core_trailerRespawn")`, puis la globale `core_trailerRespawn`
+**Access:** extension `core_trailerRespawn`: `extensions.load("core_trailerRespawn")`, then the global `core_trailerRespawn`
 
-Extension GE `core_trailerRespawn` : mémorise quels véhicules tractent quelle remorque (registre `trailerReg`) à partir des évènements d'attelage, et replace la remorque derrière le véhicule tracteur quand celui-ci est remis à zéro (reset) ou réactivé. Dépend de core_vehicles (vehsCouplerOffset, vehsCouplerTags, couplerTagsOptions) et de spawn.placeTrailer. Utile pour interroger la composition d'un train routier (getVehicleTrain, getVehicleTrainHead).
+GE extension `core_trailerRespawn`: remembers which vehicles tow which trailer (registry `trailerReg`) from coupling events, and repositions the trailer behind the towing vehicle when the latter is reset or reactivated. Depends on core_vehicles (vehsCouplerOffset, vehsCouplerTags, couplerTagsOptions) and on spawn.placeTrailer. Useful to query the composition of a road train (getVehicleTrain, getVehicleTrainHead).
 
-## Remarques
+## Notes
 
-- trailerReg[idTracteur] = {trailerId, trailerNode, node} : un véhicule ne peut tracter qu'une seule remorque dans ce registre. Les attelages avec un véhicule de type 'Prop' sont ignorés ; les boucles d'attelage sont refusées.
-- Le type d'un véhicule ('Trailer', 'Prop', …) vient du champ aggregates.Type de sa config, sinon du Type du modèle (getConfigType).
-- setEnabled(false) remplace M.onCouplerAttached et M.onCouplerDetached par `nop` : le registre n'est alors plus mis à jour (le moteur appelle les hooks via la table M, donc le changement est pris en compte). onVehicleResetted/onVehicleActiveChanged continuent d'agir sur le registre existant. Incohérence : le paramètre de setEnabled masque la variable locale `enabled` du module, qui n'est donc jamais mise à jour par setEnabled ; getEnabled() renvoie la valeur restaurée par resetData/onDeserialized (true au départ), pas le dernier état demandé.
-- onVehicleResetted est marqué dans le code 'TODO: Remove this when trailer respawn is disabled' : core_vehicles contient une version commentée du même mécanisme.
-- En multijoueur (multiplayer_vehicleSync), le replacement au reset est désactivé et l'état actif des remorques est délégué à multiplayer_vehicleSync.requestTrailerActiveFollow.
+- trailerReg[towVehicleId] = {trailerId, trailerNode, node}: a vehicle can only tow one trailer in this registry. Couplings with a 'Prop' type vehicle are ignored; coupling loops are refused.
+- A vehicle's type ('Trailer', 'Prop', ...) comes from the aggregates.Type field of its config, otherwise from the model's Type (getConfigType).
+- setEnabled(false) replaces M.onCouplerAttached and M.onCouplerDetached with `nop`: the registry is then no longer updated (the engine calls the hooks through the M table, so the change is taken into account). onVehicleResetted/onVehicleActiveChanged keep acting on the existing registry. Inconsistency: the setEnabled parameter shadows the module's local variable `enabled`, which is therefore never updated by setEnabled; getEnabled() returns the value restored by resetData/onDeserialized (true initially), not the last requested state.
+- onVehicleResetted is marked in the code 'TODO: Remove this when trailer respawn is disabled': core_vehicles contains a commented-out version of the same mechanism.
+- In multiplayer (multiplayer_vehicleSync), repositioning on reset is disabled and the trailers' active state is delegated to multiplayer_vehicleSync.requestTrailerActiveFollow.
 
-**Dépendances (chargées avant) :** `core_vehicleBridge`
+**Dependencies (loaded first):** `core_vehicleBridge`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_trailerRespawn.coupleTrailer(vehId)` | Si le tag du coupleur est de type 'autoCouple' (core_vehicles.couplerTagsOptions), lance beamstate.activateAutoCoupling(tag) sur le tracteur. | 187 |
-| `core_trailerRespawn.getAttachedNonTrailer(vehId)` | Remonte les attelages pour trouver le véhicule qui n'est pas une remorque et qui tracte la chaîne contenant vehId. | 103 |
-| `core_trailerRespawn.getConfigType(objId)` | Renvoie le type d'un véhicule ('Car', 'Trailer', 'Prop'…), d'après sa config (aggregates.Type) ou, à défaut, le Type de son modèle. | 88 |
-| `core_trailerRespawn.getEnabled()` | Renvoie la variable `enabled` du module (voir notes : n'est pas mise à jour par setEnabled). | 251 |
-| `core_trailerRespawn.getPreviousAttachedVehicleId(vehId)` | Renvoie le véhicule qui tracte vehId (celui dont la remorque enregistrée est vehId). | 47 |
-| `core_trailerRespawn.getTrailerData()` | Renvoie le registre interne trailerReg (pas une copie). | 31 |
-| `core_trailerRespawn.getVehicleTrain(vehId, res, forward)` | Renvoie tous les véhicules reliés à vehId, vers l'avant et vers l'arrière. | 64 |
-| `core_trailerRespawn.getVehicleTrainHead(vehId)` | Remonte la chaîne d'attelages jusqu'au premier véhicule (tête du train). | 55 |
-| `core_trailerRespawn.isVehicleCoupledToTrailer(vehId, trailerId)` | Indique si trailerId fait partie de la chaîne tractée par vehId. | 243 |
-| `core_trailerRespawn.onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | Hook : un attelage se ferme. Enregistre le sens tracteur/remorque dans trailerReg (le non-remorque tracte), ignore les Props et les boucles, puis émet onTrailerAttached(objId1, objId2). *(interne)* *(hook)* | 130 |
-| `core_trailerRespawn.onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)` | Hook : un attelage s'ouvre. Ne retire l'enregistrement que si breakForce est 0 (détachement volontaire), avec un délai d'une frame (job) pour ne pas empêcher le reset de la remorque. *(interne)* *(hook)* | 148 |
-| `core_trailerRespawn.onDeserialized(data)` | Hook : restaure le registre et réapplique setEnabled. *(interne)* *(hook)* | 19 |
-| `core_trailerRespawn.onSerialize()` | Hook : sauvegarde le registre et l'état activé avant un rechargement Lua. *(interne)* *(hook)* | 12 |
-| `core_trailerRespawn.onVehicleActiveChanged(vehId, active)` | Hook : un véhicule est activé/désactivé. Aligne l'état actif de sa remorque et, à l'activation, la replace derrière lui. *(interne)* *(hook)* | 158 |
-| `core_trailerRespawn.onVehicleDestroyed(vehId)` | Hook : un véhicule est détruit ; efface ses enregistrements d'attelage. *(interne)* *(hook)* | 212 |
-| `core_trailerRespawn.onVehicleResetted(vehId)` | Hook : un véhicule est remis à zéro ; replace sa remorque derrière lui (désactivé en multijoueur). *(interne)* *(hook)* | 203 |
-| `core_trailerRespawn.onVehicleSpawned(vehId)` | Hook : un véhicule apparaît ; efface ses anciens enregistrements d'attelage. *(interne)* *(hook)* | 198 |
-| `core_trailerRespawn.placeTrailer(vehId)` | Replace la remorque enregistrée de vehId derrière lui (spawn.placeTrailer, d'après les décalages de coupleurs). | 178 |
-| `core_trailerRespawn.resetData()` | Vide le registre des remorques et réactive le système. | 25 |
-| `core_trailerRespawn.setEnabled(enabled)` | Active ou désactive l'enregistrement des attelages (remplace onCouplerAttached/onCouplerDetached par la fonction vide nop si false). | 233 |
+| `core_trailerRespawn.coupleTrailer(vehId)` | If the coupler tag is of type 'autoCouple' (core_vehicles.couplerTagsOptions), runs beamstate.activateAutoCoupling(tag) on the tow vehicle. | 187 |
+| `core_trailerRespawn.getAttachedNonTrailer(vehId)` | Walks up the couplings to find the non-trailer vehicle that tows the chain containing vehId. | 103 |
+| `core_trailerRespawn.getConfigType(objId)` | Returns a vehicle's type ('Car', 'Trailer', 'Prop'...), from its config (aggregates.Type) or, failing that, its model's Type. | 88 |
+| `core_trailerRespawn.getEnabled()` | Returns the module's `enabled` variable (see notes: not updated by setEnabled). | 251 |
+| `core_trailerRespawn.getPreviousAttachedVehicleId(vehId)` | Returns the vehicle that tows vehId (the one whose registered trailer is vehId). | 47 |
+| `core_trailerRespawn.getTrailerData()` | Returns the internal registry trailerReg (not a copy). | 31 |
+| `core_trailerRespawn.getVehicleTrain(vehId, res, forward)` | Returns all vehicles connected to vehId, forward and backward. | 64 |
+| `core_trailerRespawn.getVehicleTrainHead(vehId)` | Walks up the coupling chain to the first vehicle (head of the train). | 55 |
+| `core_trailerRespawn.isVehicleCoupledToTrailer(vehId, trailerId)` | Indicates whether trailerId is part of the chain towed by vehId. | 243 |
+| `core_trailerRespawn.onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)` | Hook: a coupling closes. Records the tow/trailer direction in trailerReg (the non-trailer tows), ignores Props and loops, then emits onTrailerAttached(objId1, objId2). *(internal)* *(hook)* | 130 |
+| `core_trailerRespawn.onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)` | Hook: a coupling opens. Only removes the record if breakForce is 0 (voluntary detachment), with a one-frame delay (job) so as not to prevent the trailer's reset. *(internal)* *(hook)* | 148 |
+| `core_trailerRespawn.onDeserialized(data)` | Hook: restores the registry and reapplies setEnabled. *(internal)* *(hook)* | 19 |
+| `core_trailerRespawn.onSerialize()` | Hook: saves the registry and the enabled state before a Lua reload. *(internal)* *(hook)* | 12 |
+| `core_trailerRespawn.onVehicleActiveChanged(vehId, active)` | Hook: a vehicle is activated/deactivated. Aligns the active state of its trailer and, on activation, repositions it behind the vehicle. *(internal)* *(hook)* | 158 |
+| `core_trailerRespawn.onVehicleDestroyed(vehId)` | Hook: a vehicle is destroyed; clears its coupling records. *(internal)* *(hook)* | 212 |
+| `core_trailerRespawn.onVehicleResetted(vehId)` | Hook: a vehicle is reset; repositions its trailer behind it (disabled in multiplayer). *(internal)* *(hook)* | 203 |
+| `core_trailerRespawn.onVehicleSpawned(vehId)` | Hook: a vehicle spawns; clears its old coupling records. *(internal)* *(hook)* | 198 |
+| `core_trailerRespawn.placeTrailer(vehId)` | Repositions the registered trailer of vehId behind it (spawn.placeTrailer, from coupler offsets). | 178 |
+| `core_trailerRespawn.resetData()` | Clears the trailer registry and re-enables the system. | 25 |
+| `core_trailerRespawn.setEnabled(enabled)` | Enables or disables coupling recording (replaces onCouplerAttached/onCouplerDetached with the empty function nop if false). | 233 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_trailerRespawn.coupleTrailer(vehId)`
 
-Si le tag du coupleur est de type 'autoCouple' (core_vehicles.couplerTagsOptions), lance beamstate.activateAutoCoupling(tag) sur le tracteur.
+If the coupler tag is of type 'autoCouple' (core_vehicles.couplerTagsOptions), runs beamstate.activateAutoCoupling(tag) on the tow vehicle.
 
-- `vehId` (*integer*) : tracteur
+- `vehId` (*integer*) : tow vehicle
 
 #### `core_trailerRespawn.getAttachedNonTrailer(vehId)`
 
-Remonte les attelages pour trouver le véhicule qui n'est pas une remorque et qui tracte la chaîne contenant vehId.
+Walks up the couplings to find the non-trailer vehicle that tows the chain containing vehId.
 
-- `vehId` (*integer*) : véhicule de départ
-- **renvoie** : integer|false identifiant du premier véhicule non-remorque, false si la chaîne ne contient que des remorques
+- `vehId` (*integer*) : starting vehicle
+- **returns**: integer|false identifier of the first non-trailer vehicle, false if the chain only contains trailers
 
 #### `core_trailerRespawn.getConfigType(objId)`
 
-Renvoie le type d'un véhicule ('Car', 'Trailer', 'Prop'…), d'après sa config (aggregates.Type) ou, à défaut, le Type de son modèle.
+Returns a vehicle's type ('Car', 'Trailer', 'Prop'...), from its config (aggregates.Type) or, failing that, its model's Type.
 
-- `objId` (*integer*) : identifiant du véhicule
-- **renvoie** : string type
+- `objId` (*integer*) : vehicle identifier
+- **returns**: string type
 
 #### `core_trailerRespawn.getEnabled()`
 
-Renvoie la variable `enabled` du module (voir notes : n'est pas mise à jour par setEnabled).
+Returns the module's `enabled` variable (see notes: not updated by setEnabled).
 
-- **renvoie** : boolean true tant que resetData/onDeserialized ne l'ont pas changé
+- **returns**: boolean true as long as resetData/onDeserialized have not changed it
 
 #### `core_trailerRespawn.getPreviousAttachedVehicleId(vehId)`
 
-Renvoie le véhicule qui tracte vehId (celui dont la remorque enregistrée est vehId).
+Returns the vehicle that tows vehId (the one whose registered trailer is vehId).
 
-- `vehId` (*integer*) : identifiant de la remorque
-- **renvoie** : integer|nil identifiant du tracteur, nil s'il n'y en a pas
+- `vehId` (*integer*) : trailer identifier
+- **returns**: integer|nil tow vehicle identifier, nil if there is none
 
 #### `core_trailerRespawn.getTrailerData()`
 
-Renvoie le registre interne trailerReg (pas une copie).
+Returns the internal registry trailerReg (not a copy).
 
-- **renvoie** : table<integer, {trailerId: integer, trailerNode: integer, node: integer}> [idTracteur] = infos d'attelage
+- **returns**: table<integer, {trailerId: integer, trailerNode: integer, node: integer}> [towVehicleId] = coupling info
 
 #### `core_trailerRespawn.getVehicleTrain(vehId, res, forward)`
 
-Renvoie tous les véhicules reliés à vehId, vers l'avant et vers l'arrière.
+Returns all vehicles connected to vehId, forward and backward.
 
-- `vehId` (*integer*) : véhicule de départ
-- `res` (*table|nil*) : table accumulatrice (usage interne, laisser nil)
-- `forward` (*boolean|nil*) : true : seulement vers le tracteur ; false : seulement vers les remorques ; nil : les deux
-- **renvoie** : table<integer, boolean> ensemble [vehId] = true
+- `vehId` (*integer*) : starting vehicle
+- `res` (*table|nil*) : accumulator table (internal use, leave nil)
+- `forward` (*boolean|nil*) : true: only toward the tow vehicle; false: only toward the trailers; nil: both
+- **returns**: table<integer, boolean> set [vehId] = true
 
 #### `core_trailerRespawn.getVehicleTrainHead(vehId)`
 
-Remonte la chaîne d'attelages jusqu'au premier véhicule (tête du train).
+Walks up the coupling chain to the first vehicle (head of the train).
 
-- `vehId` (*integer*) : véhicule de départ
-- **renvoie** : integer identifiant de la tête de train (vehId lui-même s'il n'est pas tracté)
+- `vehId` (*integer*) : starting vehicle
+- **returns**: integer train head identifier (vehId itself if it is not towed)
 
 #### `core_trailerRespawn.isVehicleCoupledToTrailer(vehId, trailerId)`
 
-Indique si trailerId fait partie de la chaîne tractée par vehId.
+Indicates whether trailerId is part of the chain towed by vehId.
 
-- `vehId` (*integer*) : tracteur
-- `trailerId` (*integer*) : remorque recherchée
-- **renvoie** : boolean true si relié (directement ou en chaîne)
+- `vehId` (*integer*) : tow vehicle
+- `trailerId` (*integer*) : trailer searched for
+- **returns**: boolean true if connected (directly or through a chain)
 
 #### `core_trailerRespawn.onCouplerAttached(objId1, objId2, nodeId, obj2nodeId)`
 
-Hook : un attelage se ferme. Enregistre le sens tracteur/remorque dans trailerReg (le non-remorque tracte), ignore les Props et les boucles, puis émet onTrailerAttached(objId1, objId2).
+Hook: a coupling closes. Records the tow/trailer direction in trailerReg (the non-trailer tows), ignores Props and loops, then emits onTrailerAttached(objId1, objId2).
 
-- `objId1` (*integer*) : premier véhicule
-- `objId2` (*integer*) : second véhicule
-- `nodeId` (*integer*) : noeud du premier
-- `obj2nodeId` (*integer*) : noeud du second
+- `objId1` (*integer*) : first vehicle
+- `objId2` (*integer*) : second vehicle
+- `nodeId` (*integer*) : node of the first
+- `obj2nodeId` (*integer*) : node of the second
 
 #### `core_trailerRespawn.onCouplerDetached(objId1, objId2, nodeId, obj2nodeId, breakForce)`
 
-Hook : un attelage s'ouvre. Ne retire l'enregistrement que si breakForce est 0 (détachement volontaire), avec un délai d'une frame (job) pour ne pas empêcher le reset de la remorque.
+Hook: a coupling opens. Only removes the record if breakForce is 0 (voluntary detachment), with a one-frame delay (job) so as not to prevent the trailer's reset.
 
-- `objId1` (*integer*) : premier véhicule
-- `objId2` (*integer*) : second véhicule
-- `nodeId` (*integer*) : noeud du premier
-- `obj2nodeId` (*integer*) : noeud du second
-- `breakForce` (*number|nil*) : force de rupture ; ignoré si nil ou > 0
+- `objId1` (*integer*) : first vehicle
+- `objId2` (*integer*) : second vehicle
+- `nodeId` (*integer*) : node of the first
+- `obj2nodeId` (*integer*) : node of the second
+- `breakForce` (*number|nil*) : break force; ignored if nil or > 0
 
 #### `core_trailerRespawn.onDeserialized(data)`
 
-Hook : restaure le registre et réapplique setEnabled.
+Hook: restores the registry and reapplies setEnabled.
 
-- `data` (*table*) : données de onSerialize
+- `data` (*table*) : data from onSerialize
 
 #### `core_trailerRespawn.onSerialize()`
 
-Hook : sauvegarde le registre et l'état activé avant un rechargement Lua.
+Hook: saves the registry and the enabled state before a Lua reload.
 
-- **renvoie** : table {trailerReg, enabled}
+- **returns**: table {trailerReg, enabled}
 
 #### `core_trailerRespawn.onVehicleActiveChanged(vehId, active)`
 
-Hook : un véhicule est activé/désactivé. Aligne l'état actif de sa remorque et, à l'activation, la replace derrière lui.
+Hook: a vehicle is activated/deactivated. Aligns the active state of its trailer and, on activation, repositions it behind the vehicle.
 
-- `vehId` (*integer*) : véhicule
-- `active` (*boolean*) : nouvel état
+- `vehId` (*integer*) : vehicle
+- `active` (*boolean*) : new state
 
 #### `core_trailerRespawn.onVehicleDestroyed(vehId)`
 
-Hook : un véhicule est détruit ; efface ses enregistrements d'attelage.
+Hook: a vehicle is destroyed; clears its coupling records.
 
-- `vehId` (*integer*) : véhicule
+- `vehId` (*integer*) : vehicle
 
 #### `core_trailerRespawn.onVehicleResetted(vehId)`
 
-Hook : un véhicule est remis à zéro ; replace sa remorque derrière lui (désactivé en multijoueur).
+Hook: a vehicle is reset; repositions its trailer behind it (disabled in multiplayer).
 
-- `vehId` (*integer*) : véhicule
+- `vehId` (*integer*) : vehicle
 
 #### `core_trailerRespawn.onVehicleSpawned(vehId)`
 
-Hook : un véhicule apparaît ; efface ses anciens enregistrements d'attelage.
+Hook: a vehicle spawns; clears its old coupling records.
 
-- `vehId` (*integer*) : véhicule
+- `vehId` (*integer*) : vehicle
 
 #### `core_trailerRespawn.placeTrailer(vehId)`
 
-Replace la remorque enregistrée de vehId derrière lui (spawn.placeTrailer, d'après les décalages de coupleurs).
+Repositions the registered trailer of vehId behind it (spawn.placeTrailer, from coupler offsets).
 
-- `vehId` (*integer*) : tracteur
+- `vehId` (*integer*) : tow vehicle
 
 #### `core_trailerRespawn.setEnabled(enabled)`
 
-Active ou désactive l'enregistrement des attelages (remplace onCouplerAttached/onCouplerDetached par la fonction vide nop si false).
+Enables or disables coupling recording (replaces onCouplerAttached/onCouplerDetached with the empty function nop if false).
 
-- `enabled` (*boolean*) : état voulu
+- `enabled` (*boolean*) : desired state
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `debugEnabled` | boolean | false par défaut ; l'affichage debug des noeuds d'attelage (debugUpdate) n'est pas branché (M.onPreRender est commenté). |
+| `debugEnabled` | boolean | false by default; the debug display of coupling nodes (debugUpdate) is not hooked up (M.onPreRender is commented out). |
 | `dependencies` | string[] | {'core_vehicleBridge'} |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onTrailerAttached` — écouté par 2 module(s)
+- `onTrailerAttached` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/trailerRespawn.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/trailerRespawn.lua`.*

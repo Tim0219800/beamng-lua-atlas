@@ -1,25 +1,25 @@
 # `flowgraph_nodes_career_onMissionRunstateChanged`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.lua` · VM : Game Engine (GE) · 46 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.lua` · VM: Game Engine (GE) · 46 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/career/onMissionRunstateChanged")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/career/onMissionRunstateChanged")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On Mission Start/Stop » (catégorie repeat_instant, couleur/icône ui). Détecte quand le joueur démarre (hook onMissionStartWithFade) ou arrête (onAnyMissionChanged avec l'état 'stopped') une mission. Sorties en impulsion : started et stopped.
+Flowgraph node "On Mission Start/Stop" (category repeat_instant, ui color/icon). Detects when the player starts (onMissionStartWithFade hook) or stops (onAnyMissionChanged with the 'stopped' state) a mission. Impulse outputs: started and stopped.
 
-## Remarques
+## Notes
 
-- work() remet à faux seulement started ; stopped n'est jamais remis à faux explicitement après avoir été levé (probable oubli). Une sortie « abandoned » est commentée.
+- work() sets back to false only started; stopped is never explicitly set back to false after being raised (probably an oversight). An "abandoned" output is commented out.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Crée la table de drapeaux. | 22 |
-| `C:onAnyMissionChanged(newState, mission)` | Hook : lève stopped quand le nouvel état est 'stopped'. | 39 |
-| `C:onMissionStartWithFade(data)` | Hook : lève started. | 35 |
-| `C:work(args)` | Chaque frame : started à faux, applique puis efface les drapeaux. | 27 |
+| `C:init()` | Creates the flag table. | 22 |
+| `C:onAnyMissionChanged(newState, mission)` | Hook: raises stopped when the new state is 'stopped'. | 39 |
+| `C:onMissionStartWithFade(data)` | Hook: raises started. | 35 |
+| `C:work(args)` | Every frame: started to false, applies then clears the flags. | 27 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/career/onMissionRunstateChanged.lua`.*

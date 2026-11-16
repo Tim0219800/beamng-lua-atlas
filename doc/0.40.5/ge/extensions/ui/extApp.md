@@ -1,27 +1,27 @@
 # `ui_extApp`
 
-*Fichier : `lua/ge/extensions/ui/extApp.lua` · VM : Game Engine (GE) · 72 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/extApp.lua` · VM: Game Engine (GE) · 72 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_extApp` : `extensions.load("ui_extApp")`, puis la globale `ui_extApp`
+**Access:** extension `ui_extApp`: `extensions.load("ui_extApp")`, then the global `ui_extApp`
 
-Serveur web/WebSocket pour afficher l'interface du jeu sur un appareil externe (téléphone). Au chargement, il démarre via utils/wsUtils un serveur sur le port 8084 (protocole 'bng-ext-app-v1', page /ui/entrypoints/main/index.html), en HTTPS/WSS pour que les capteurs de mouvement du téléphone soient accessibles, et publie l'URL à l'UI par guihooks.trigger('externalUIURL', url). Usage : extensions.load('ui_extApp').
+Web/WebSocket server to display the game's interface on an external device (phone). On load, it starts via utils/wsUtils a server on port 8084 (protocol 'bng-ext-app-v1', page /ui/entrypoints/main/index.html), over HTTPS/WSS so that the phone's motion sensors are accessible, and publishes the URL to the UI via guihooks.trigger('externalUIURL', url). Usage: extensions.load('ui_extApp').
 
-## Remarques
+## Notes
 
-- Les données de flux sont gérées côté C++ ; _handleData ne fait que journaliser une erreur « unknown command » pour tout message JSON reçu.
-- Le serveur écoute sur toutes les adresses ('any') ; l'adresse annoncée est celle choisie par wsUtils.createOrGetWS.
-- Au déchargement, externalUIURL est émis sans argument pour effacer l'URL côté UI.
+- Stream data is handled on the C++ side; _handleData only logs an "unknown command" error for any JSON message received.
+- The server listens on all addresses ('any'); the announced address is the one chosen by wsUtils.createOrGetWS.
+- On unload, externalUIURL is emitted with no argument to clear the URL on the UI side.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_extApp.onExtensionLoaded()` | Hook de chargement : crée ou récupère le serveur WebSocket/HTTPS, journalise l'URL et la publie à l'UI. *(interne)* *(hook)* | 26 |
-| `ui_extApp.onExtensionUnloaded()` | Hook de déchargement : détruit le serveur (BNGWebWSServer.destroy) et efface l'URL côté UI. *(interne)* *(hook)* | 32 |
-| `ui_extApp.onUpdate()` | Hook par frame : lit les évènements des pairs WebSocket, décode les messages JSON de type 'D' et les passe à _handleData (qui journalise une erreur car tout est géré en C++). *(interne)* *(hook)* | 45 |
-| `ui_extApp.requestUIData()` | Renvoie à l'UI l'URL du serveur (guihooks.trigger('externalUIURL', url)). Alias de updateUIData. | 21 |
+| `ui_extApp.onExtensionLoaded()` | Load hook: creates or gets the WebSocket/HTTPS server, logs the URL and publishes it to the UI. *(internal)* *(hook)* | 26 |
+| `ui_extApp.onExtensionUnloaded()` | Unload hook: destroys the server (BNGWebWSServer.destroy) and clears the URL on the UI side. *(internal)* *(hook)* | 32 |
+| `ui_extApp.onUpdate()` | Per-frame hook: reads the events from the WebSocket peers, decodes the JSON messages of type 'D' and passes them to _handleData (which logs an error because everything is handled in C++). *(internal)* *(hook)* | 45 |
+| `ui_extApp.requestUIData()` | Sends the server URL back to the UI (guihooks.trigger('externalUIURL', url)). Alias of updateUIData. | 21 |
 
-**Évènements UI (guihooks.trigger) :** `externalUIURL`
+**UI events (guihooks.trigger):** `externalUIURL`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/extApp.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/extApp.lua`.*

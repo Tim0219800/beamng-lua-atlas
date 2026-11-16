@@ -2,67 +2,67 @@
 -- tim19Atlas stub generated from lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Outil de debug « Vehicle > Cargo Containers ». Interroge tous les véhicules actifs (core_vehicleBridge.requestValue 'getCargoContainers'), affiche leurs conteneurs de cargaison (volume, densité, capacité, cluster de nœuds) et permet d'y envoyer volume/densité ou de les remplir à un débit réglable (flow rate). Peut être ouvert hors carrière.
---- Accès : extension `career_modules_debug_cargoContainerDebug` : `extensions.load("career_modules_debug_cargoContainerDebug")`, puis la globale `career_modules_debug_cargoContainerDebug`
+--- "Vehicle > Cargo Containers" debug tool. Queries all active vehicles (core_vehicleBridge.requestValue 'getCargoContainers'), shows their cargo containers (volume, density, capacity, node cluster) and lets you send volume/density to them or fill them at an adjustable flow rate. Can be opened outside career.
+--- Access: extension `career_modules_debug_cargoContainerDebug`: `extensions.load("career_modules_debug_cargoContainerDebug")`, then the global `career_modules_debug_cargoContainerDebug`
 ---@class career_modules_debug_cargoContainerDebug
 ---@field debugName string 'Vehicle > Cargo Containers'.
----@field debugOrder number Ordre de tri dans la fenêtre de debug (11).
----@field vehCargoData table[] Liste, triée par vehId, des véhicules avec leurs conteneurs : {vehId, name, containers, vehPos, clusterGeneration…}.
+---@field debugOrder number Sort order in the debug window (11).
+---@field vehCargoData table[] List of vehicles with their containers, sorted by vehId: {vehId, name, containers, vehPos, clusterGeneration…}.
 career_modules_debug_cargoContainerDebug = {}
 
---- Dessine la fenêtre 'Cargo Container Debug' : bouton de rafraîchissement, flow rate, et pour chaque véhicule updateVehicle puis drawVehicle (supprime ceux qui n'existent plus).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:320
----@param dt number Delta de temps.
+--- Draws the 'Cargo Container Debug' window: refresh button, flow rate, and for each vehicle updateVehicle then drawVehicle (removes those that no longer exist).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:320
+---@param dt number Time delta.
 function career_modules_debug_cargoContainerDebug.drawDebugMenu(dt) end
 
---- Dessine les curseurs Flow Rate (0..1) et Max Fill Rate (L/s), la case d'actionMap 'Refueling', et applique le remplissage aux conteneurs marqués.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:279
----@param dt number Delta de temps en secondes.
+--- Draws the Flow Rate (0..1) and Max Fill Rate (L/s) sliders, the 'Refueling' actionMap checkbox, and applies filling to the marked containers.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:279
+---@param dt number Time delta in seconds.
 function career_modules_debug_cargoContainerDebug.drawFlowRate(dt) end
 
---- Dessine en ImGui le tableau d'un véhicule et de ses conteneurs avec champs de saisie volume/densité et case de remplissage au débit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:101
----@param data table Entrée de vehCargoData.
+--- Draws in ImGui the table of a vehicle and its containers with volume/density input fields and a checkbox to fill at the flow rate.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:101
+---@param data table Entry of vehCargoData.
 function career_modules_debug_cargoContainerDebug.drawVehicle(data) end
 
---- Demande à chaque véhicule actif la liste de ses conteneurs et remplit M.vehCargoData quand tous ont répondu (asynchrone). Renvoie une table vide si core_vehicleBridge est absent.
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:19
----@return table|nil  {} si core_vehicleBridge est absent, sinon rien.
+--- Asks each active vehicle for its list of containers and fills M.vehCargoData when all have replied (asynchronous). Returns an empty table if core_vehicleBridge is missing.
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:19
+---@return table|nil  {} if core_vehicleBridge is missing, otherwise nothing.
 function career_modules_debug_cargoContainerDebug.getData() end
 
---- Hook (ex. action d'entrée) qui fixe le flow rate, borné à [0, 1].
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:315
----@param factor number Nouveau facteur de débit.
+--- Hook (e.g. input action) that sets the flow rate, clamped to [0, 1].
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:315
+---@param factor number New flow factor.
 function career_modules_debug_cargoContainerDebug.onChangeFlowRate(factor) end
 
---- Hook : même traitement que onVehicleDestroyed.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:364
----@param id integer Id du véhicule.
+--- Hook: same handling as onVehicleDestroyed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:364
+---@param id integer Vehicle id.
 function career_modules_debug_cargoContainerDebug.onInstabilityDetected(id) end
 
---- Hook : retire les données du véhicule détruit.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:364
----@param id integer Id du véhicule.
+--- Hook: removes the data of the destroyed vehicle.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:364
+---@param id integer Vehicle id.
 function career_modules_debug_cargoContainerDebug.onVehicleDestroyed(id) end
 
---- Hook : retire les données du véhicule réinitialisé et force un nouveau getData.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:357
----@param id integer Id du véhicule.
+--- Hook: removes the data of the reset vehicle and forces a new getData.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:357
+---@param id integer Vehicle id.
 function career_modules_debug_cargoContainerDebug.onVehicleResetted(id) end
 
---- Ouvre l'outil hors carrière : branche drawDebugMenu sur onUpdate (hookUpdate) et lance getData.
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:351
+--- Opens the tool outside career: hooks drawDebugMenu onto onUpdate (hookUpdate) and calls getData.
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:351
 function career_modules_debug_cargoContainerDebug.show() end
 
---- Rafraîchit les données d'un véhicule : cluster de nœuds (si la génération a changé), position du véhicule et de chaque conteneur. Renvoie false si le véhicule n'existe plus.
----Source : lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:75
----@param data table Entrée de vehCargoData.
----@return boolean  false si le véhicule est introuvable.
+--- Refreshes a vehicle's data: node cluster (if the generation changed), position of the vehicle and of each container. Returns false if the vehicle no longer exists.
+---Source: lua/ge/extensions/career/modules/debug/cargoContainerDebug.lua:75
+---@param data table Entry of vehCargoData.
+---@return boolean  false if the vehicle cannot be found.
 function career_modules_debug_cargoContainerDebug.updateVehicle(data) end
 

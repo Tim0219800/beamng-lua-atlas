@@ -1,23 +1,23 @@
 # `ui_quickraceSelector_general`
 
-*Fichier : `lua/ge/extensions/ui/quickraceSelector/general.lua` · VM : Game Engine (GE) · 21 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/quickraceSelector/general.lua` · VM: Game Engine (GE) · 21 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_quickraceSelector_general` : `extensions.load("ui_quickraceSelector_general")`, puis la globale `ui_quickraceSelector_general`
+**Access:** extension `ui_quickraceSelector_general`: `extensions.load("ui_quickraceSelector_general")`, then the global `ui_quickraceSelector_general`
 
-Backend du sélecteur en grille de l'assistant Vue « Quickrace » : expose la liste des niveaux et, pour chaque niveau, sa liste de pistes. Le module ne contient aucune logique propre : il crée un backend avec ui/oneshotRaceSelector/core à partir du descripteur partagé quickRaceTrackDescriptor (identifiant "quickraceSelector") puis recopie toutes ses fonctions dans M.
+Backend of the grid selector of the "Quickrace" Vue wizard: exposes the list of levels and, for each level, its list of tracks. The module contains no logic of its own: it creates a backend with ui/oneshotRaceSelector/core from the shared descriptor quickRaceTrackDescriptor (identifier "quickraceSelector") then copies all its functions into M.
 
-## Remarques
+## Notes
 
-- Dépend de scenario_quickRaceLoader, chargé avant.
-- Les fonctions réellement exposées sont celles de createBackend (définies dans ui/oneshotRaceSelector/core.lua) ; elles ne sont pas visibles dans ce fichier.
+- Depends on scenario_quickRaceLoader, loaded beforehand.
+- The functions actually exposed are those of createBackend (defined in ui/oneshotRaceSelector/core.lua); they are not visible in this file.
 
-**Dépendances (chargées avant) :** `scenario_quickRaceLoader`
+**Dependencies (loaded first):** `scenario_quickRaceLoader`
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions à charger avant : {"scenario_quickRaceLoader"}. |
+| `dependencies` | table<integer, string> | Extensions to load beforehand: {"scenario_quickRaceLoader"}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/quickraceSelector/general.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/quickraceSelector/general.lua`.*

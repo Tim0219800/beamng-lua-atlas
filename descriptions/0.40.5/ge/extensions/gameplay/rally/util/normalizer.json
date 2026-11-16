@@ -1,17 +1,28 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/util/normalizer.lua",
-  "module": "Petit utilitaire de normalisation de texte pour les notes du rallye : applique successivement une liste de remplacements (motif, remplacement) à une chaîne.",
+  "module": "Small text normalization utility for rally notes: successively applies a list of replacements (pattern, replacement) to a string.",
   "notes": [
-    "Les motifs `from` sont passés à string.gsub : ce sont des motifs Lua (pas des chaînes littérales), les caractères spéciaux comme `-`, `%` ou `.` doivent être échappés."
+    "The `from` patterns are passed to string.gsub: they are Lua patterns (not literal strings), special characters such as `-`, `%` or `.` must be escaped."
   ],
   "functions": {
     "replaceWords": {
-      "desc": "Applique dans l'ordre chaque paire {from, to} de word_map à la note via gsub et renvoie la note transformée. Si note vaut nil, la renvoie telle quelle.",
+      "desc": "Applies in order each {from, to} pair of word_map to the note via gsub and returns the transformed note. If note is nil, returns it as is.",
       "params": {
-        "word_map": {"type": "table<integer, string[]>", "desc": "Liste de paires {motif, remplacement}."},
-        "note": {"type": "string|nil", "desc": "Texte à normaliser."}
+        "word_map": {
+          "type": "table<integer, string[]>",
+          "desc": "List of {pattern, replacement} pairs."
+        },
+        "note": {
+          "type": "string|nil",
+          "desc": "Text to normalize."
+        }
       },
-      "returns": [{"type": "string|nil", "desc": "Texte après remplacements, ou nil si note était nil."}]
+      "returns": [
+        {
+          "type": "string|nil",
+          "desc": "Text after replacements, or nil if note was nil."
+        }
+      ]
     }
   }
 }

@@ -1,55 +1,55 @@
 # `editor_util_vehicleSelectUtil`
 
-*Fichier : `lua/ge/extensions/editor/util/vehicleSelectUtil.lua` · VM : Game Engine (GE) · 491 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/util/vehicleSelectUtil.lua` · VM: Game Engine (GE) · 491 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/util/vehicleSelectUtil")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/util/vehicleSelectUtil")` (file under extensions/ but not a regular extension)
 
-Classe utilitaire imgui de l'éditeur : un sélecteur de véhicule en cascade Type > Modèle > Config, avec en option jusqu'à 3 peintures (paintNameKeys paintName/paintName2/paintName3) et un fichier de config personnalisé (.pc). Le module renvoie un constructeur : `require('editor/util/vehicleSelectUtil')(name, data)`. Utilisé par exemple par le nœud flowgraph imVehicleSelect, multiSpawnManager, trafficManager et le mission editor.
+Editor imgui utility class: a cascading vehicle selector Type > Model > Config, optionally with up to 3 paints (paintNameKeys paintName/paintName2/paintName3) and a custom config file (.pc). The module returns a constructor: `require('editor/util/vehicleSelectUtil')(name, data)`. Used for example by the imVehicleSelect flowgraph node, multiSpawnManager, trafficManager and the mission editor.
 
-## Exemple
+## Example
 
 ```lua
 local sel = require('editor/util/vehicleSelectUtil')('Mon véhicule')
 sel:setOptions({enablePaints = true, paintLayers = 2})
--- dans un callback imgui :
+-- in an imgui callback:
 local reason = sel:widget() -- 'type' | 'model' | 'config' | 'paintName' | 'customConfig' | nil
 if reason then print(sel.model, sel.config, sel.configPath) end
 ```
 
-## Remarques
+## Notes
 
-- widget() renvoie la raison du changement (updateReason) ou nil : 'type', 'model', 'config', 'paintName'/'paintName2'/'paintName3' (clé du champ) ou 'customConfig'.
-- Résultat lu dans les champs de l'instance : model (clé), config (clé), configPath ('vehicles/<model>/<config>.pc' ou chemin custom), paintName, paintName2, paintName3, vehType, customConfigActive.
-- Types autorisés par défaut : Car, Truck, Automation, Trailer, Prop, Utility, Traffic, Unknown, Any ; si allowedTypes n'a qu'un élément, le combo Type est désactivé. Sous-types de config autorisés : PropTraffic, PropParked.
-- Si un seul modèle (ou une seule config) est disponible, il est sélectionné automatiquement et le combo est grisé.
-- setModelListByField et setConfigListByField sont des stubs vides (marqués TODO) : ils ne font rien.
-- fetchData met self.modelName = dumps(Name), donc le nom contient des guillemets tant qu'il est issu de ce chemin.
-- Dans la boucle des modèles, si un modèle n'a pas de Name, `label` vaut nil et la concaténation lève une erreur.
+- widget() returns the reason for the change (updateReason) or nil: 'type', 'model', 'config', 'paintName'/'paintName2'/'paintName3' (field key) or 'customConfig'.
+- Result read from the instance fields: model (key), config (key), configPath ('vehicles/<model>/<config>.pc' or custom path), paintName, paintName2, paintName3, vehType, customConfigActive.
+- Default allowed types: Car, Truck, Automation, Trailer, Prop, Utility, Traffic, Unknown, Any; if allowedTypes has only one element, the Type combo is disabled. Allowed config subtypes: PropTraffic, PropParked.
+- If only one model (or one config) is available, it is selected automatically and the combo is grayed out.
+- setModelListByField and setConfigListByField are empty stubs (marked TODO): they do nothing.
+- fetchData sets self.modelName = dumps(Name), so the name contains quotes as long as it comes from this path.
+- In the model loop, if a model has no Name, `label` is nil and the concatenation raises an error.
 
-## Classe `C`
+## Class `C`
 
-Instance du sélecteur. Champs d'options : allowedTypes, allowedSubtypes, modelBlacklist (table clé->true), configBlacklist (model -> {configKey = true}), enableConfigs (true), enablePaints (false), enableCustomConfig (false), paintLayers (3), columnWidth (80 par défaut, multiplié par im.uiscale).
+Selector instance. Option fields: allowedTypes, allowedSubtypes, modelBlacklist (table key->true), configBlacklist (model -> {configKey = true}), enableConfigs (true), enablePaints (false), enableCustomConfig (false), paintLayers (3), columnWidth (80 by default, multiplied by im.uiscale).
 
-Le module renvoie un constructeur : `local obj = require("editor_util_vehicleSelectUtil")(options)`.
+The module returns a constructor: `local obj = require("editor_util_vehicleSelectUtil")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:fetchData()` | Charge si nécessaire les listes de modèles (filtrés par type et blacklist, triés par nom), de configs (filtrées par blacklist et sous-types) et de peintures du modèle courant. | 155 |
-| `C:getPaintPtr(paintTbl)` | Convertit une peinture (table {r,g,b,a}, ou table avec baseColor en tableau ou en x/y/z/w) en tableau flottant imgui à 4 composantes ; blanc par défaut. | 135 |
-| `C:init(name, data)` | Constructeur : crée un id unique, réinitialise sélections et options, puis applique `data` s'il est donné. | 19 |
-| `C:onActivate()` | Callback d'edit mode vide. | 479 |
-| `C:onDeactivate()` | Callback d'edit mode vide. | 482 |
-| `C:resetConfig()` | Efface les configs, la config choisie et la config personnalisée. | 89 |
-| `C:resetModel()` | Efface la liste des modèles et le modèle choisi. | 83 |
-| `C:resetOptions()` | Remet les options par défaut (types autorisés, blacklists vides, enableConfigs vrai, enablePaints faux, 3 couches de peinture). | 115 |
-| `C:resetPaint()` | Efface les peintures disponibles et choisies. | 99 |
-| `C:resetSelections()` | Efface type, modèle, config et peintures. | 107 |
-| `C:setConfig(config)` | Définit directement la config par sa clé (le modèle doit déjà être défini) ; calcule configName et configPath. Remet config à nil si la config n'existe pas. | 55 |
-| `C:setConfigListByField(model, key, value, disallow)` | Stub (TODO) : devrait filtrer les configs d'un modèle par champ/valeur ; ne fait rien. | 131 |
-| `C:setModel(model)` | Définit directement le modèle par sa clé ; renseigne vehType et modelName depuis core_vehicles.getModel, ou remet model à nil si inconnu. | 42 |
-| `C:setModelListByField(key, value, disallow)` | Stub (TODO) : devrait filtrer les modèles par champ/valeur ; ne fait rien. | 127 |
-| `C:setOptions(data)` | Copie les options enableConfigs, enablePaints, enableCustomConfig, paintLayers et columnWidth présentes (truthy) dans data vers l'instance. | 73 |
-| `C:widget()` | Dessine l'interface (combos Type, Model, Config, Paint 1-3, champ de config personnalisée) et applique les remises à zéro en cascade. | 206 |
+| `C:fetchData()` | Loads if needed the lists of models (filtered by type and blacklist, sorted by name), configs (filtered by blacklist and subtypes) and paints of the current model. | 155 |
+| `C:getPaintPtr(paintTbl)` | Converts a paint (table {r,g,b,a}, or table with baseColor as an array or as x/y/z/w) into a 4-component imgui float array; white by default. | 135 |
+| `C:init(name, data)` | Constructor: creates a unique id, resets selections and options, then applies `data` if given. | 19 |
+| `C:onActivate()` | Empty edit mode callback. | 479 |
+| `C:onDeactivate()` | Empty edit mode callback. | 482 |
+| `C:resetConfig()` | Clears the configs, the chosen config and the custom config. | 89 |
+| `C:resetModel()` | Clears the model list and the chosen model. | 83 |
+| `C:resetOptions()` | Resets the options to default (allowed types, empty blacklists, enableConfigs true, enablePaints false, 3 paint layers). | 115 |
+| `C:resetPaint()` | Clears the available and chosen paints. | 99 |
+| `C:resetSelections()` | Clears type, model, config and paints. | 107 |
+| `C:setConfig(config)` | Directly sets the config by its key (the model must already be set); computes configName and configPath. Sets config back to nil if the config does not exist. | 55 |
+| `C:setConfigListByField(model, key, value, disallow)` | Stub (TODO): should filter the configs of a model by field/value; does nothing. | 131 |
+| `C:setModel(model)` | Directly sets the model by its key; fills vehType and modelName from core_vehicles.getModel, or sets model back to nil if unknown. | 42 |
+| `C:setModelListByField(key, value, disallow)` | Stub (TODO): should filter models by field/value; does nothing. | 127 |
+| `C:setOptions(data)` | Copies the options enableConfigs, enablePaints, enableCustomConfig, paintLayers and columnWidth present (truthy) in data to the instance. | 73 |
+| `C:widget()` | Draws the interface (combos Type, Model, Config, Paint 1-3, custom config field) and applies the cascading resets. | 206 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/util/vehicleSelectUtil.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/util/vehicleSelectUtil.lua`.*

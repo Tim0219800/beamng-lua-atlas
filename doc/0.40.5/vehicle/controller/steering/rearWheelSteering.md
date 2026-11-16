@@ -1,46 +1,46 @@
 # `controller_steering_rearWheelSteering`
 
-*Fichier : `lua/vehicle/controller/steering/rearWheelSteering.lua` · VM : Véhicule · 64 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/steering/rearWheelSteering.lua` · VM: Vehicle · 64 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `steering/rearWheelSteering` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `steering/rearWheelSteering` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire de direction des roues arrière. En mode feedForward, il calcule une sortie de braquage arrière à partir d'une carte (vitesse des roues, braquage avant) et la publie dans electrics.values.rws (nom configurable) pour qu'un contrôle de direction jbeam l'utilise. Le mode closedLoop n'est pas implémenté.
+Auxiliary rear wheel steering controller. In feedForward mode, it computes a rear steering output from a map (wheel speed, front steering) and publishes it in electrics.values.rws (configurable name) for a jbeam steering control to use. The closedLoop mode is not implemented.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : mode ("feedForward" ou "closedLoop", défaut feedForward), rearSteeringOutputElectricsName ("rws"), feedForwardMapData (données d'interpolatedMap : x = vitesse en m/s, y = braquage avant electrics steering_input -> sortie), obligatoire en feedForward.
-- Lit electrics.values.steering_input et wheelspeed.
-- closedLoop : log W « not implemented » et updateGFX ne fait rien.
-- Mode invalide : log E mais M.updateGFX reçoit nil.
-- Sans feedForwardMapData : log E, init retourne, la carte reste nil et updateGFX (déjà affecté) échouera à l'appel de feedForwardMap:get.
+- jbeam keys read: mode ("feedForward" or "closedLoop", default feedForward), rearSteeringOutputElectricsName ("rws"), feedForwardMapData (interpolatedMap data: x = speed in m/s, y = front steering electrics steering_input -> output), required in feedForward.
+- Reads electrics.values.steering_input and wheelspeed.
+- closedLoop: log W "not implemented" and updateGFX does nothing.
+- Invalid mode: log E but M.updateGFX receives nil.
+- Without feedForwardMapData: log E, init returns, the map stays nil and updateGFX (already assigned) will fail on the call to feedForwardMap:get.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_steering_rearWheelSteering.init(jbeamData)` | Choisit la fonction de mise à jour selon le mode et charge la carte feedForward. *(interne)* | 35 |
-| `controller_steering_rearWheelSteering.reset(jbeamData)` | Remet l'electric de sortie à 0. *(interne)* | 31 |
+| `controller_steering_rearWheelSteering.init(jbeamData)` | Chooses the update function depending on the mode and loads the feedForward map. *(internal)* | 35 |
+| `controller_steering_rearWheelSteering.reset(jbeamData)` | Resets the output electric to 0. *(internal)* | 31 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_steering_rearWheelSteering.init(jbeamData)`
 
-Choisit la fonction de mise à jour selon le mode et charge la carte feedForward.
+Chooses the update function depending on the mode and loads the feedForward map.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_steering_rearWheelSteering.reset(jbeamData)`
 
-Remet l'electric de sortie à 0.
+Resets the output electric to 0.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
-| `updateGFX` | function|nil | Affecté dans init selon le mode. |
+| `updateGFX` | function|nil | Assigned in init depending on the mode. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/steering/rearWheelSteering.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/steering/rearWheelSteering.lua`.*

@@ -1,60 +1,60 @@
 # `telemetry_clientFacts`
 
-*Fichier : `lua/ge/extensions/telemetry/clientFacts.lua` · VM : Game Engine (GE) · 163 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/clientFacts.lua` · VM: Game Engine (GE) · 163 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_clientFacts` : `extensions.load("telemetry_clientFacts")`, puis la globale `telemetry_clientFacts`
+**Access:** extension `telemetry_clientFacts`: `extensions.load("telemetry_clientFacts")`, then the global `telemetry_clientFacts`
 
-Module (chargé par require, pas une extension) qui rassemble les « faits client » de la télémétrie : version du jeu, plateforme, type de build, OS, CPU, GPU préféré, mémoire, batterie, VR, mode headless, fournisseur d'intégration continue, licence tech, etc. configManager l'envoie au serveur lors de la récupération de la configuration de télémétrie. Les valeurs inconnues ou invalides sont omises (nil).
+Module (loaded by require, not an extension) that gathers the telemetry's "client facts": game version, platform, build type, OS, CPU, preferred GPU, memory, battery, VR, headless mode, continuous integration provider, tech license, etc. configManager sends it to the server when fetching the telemetry configuration. Unknown or invalid values are omitted (nil).
 
-## Remarques
+## Notes
 
-- Les valeurs textuelles 'unknown' ou vides, les nombres <= 0 (ou < 0 selon le champ) et les booléens non booléens sont remplacés par nil.
-- deviceType vaut 'steamdeck', 'laptop' ou 'desktop' (selon la présence d'une batterie, sur PC), sinon 'unknown'.
-- osVersion est de la forme 'majeur.mineur.build' et n'est renseigné que si les trois nombres sont valides.
+- The text values 'unknown' or empty, the numbers <= 0 (or < 0 depending on the field) and the booleans that are not booleans are replaced by nil.
+- deviceType is 'steamdeck', 'laptop' or 'desktop' (depending on the presence of a battery, on PC), otherwise 'unknown'.
+- osVersion has the form 'major.minor.build' and is only set if the three numbers are valid.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_clientFacts.collect(version)` | Construit la table de faits client en interrogeant Engine.Platform (OS, CPU, mémoire, alimentation, GPU), Engine.Render (type d'adaptateur), les globales beamng_* , headless_mode, OnlineServiceProvider.branch, ResearchVerifier.isTechLicenseVerified() et render_openxr.state. Tolère l'absence de ces API. | 101 |
-| `telemetry_clientFacts.detectCiProvider(getEnvironment)` | Détecte un exécuteur d'intégration continue via les variables d'environnement. Ordre de priorité : jenkins (JENKINS_URL, JENKINS_HOME), gitlab (GITLAB_CI), github-actions, azure-pipelines (TF_BUILD), teamcity, buildkite, circleci, travis, appveyor, puis 'generic' si CI est défini. Une valeur '', '0' ou 'false' (insensible à la casse) compte comme non définie. | 47 |
-| `telemetry_clientFacts.normalizePlatform(platform)` | Normalise le nom de plateforme : la chaîne vide (PC) devient 'pc', 'unknown' ou une valeur non textuelle devient nil, le reste est conservé. | 62 |
-| `telemetry_clientFacts.selectPreferredGPU(adapters)` | Choisit l'adaptateur graphique : le premier de type 'dedicated', sinon le premier de la liste ; nil si la liste est absente ou vide. | 67 |
+| `telemetry_clientFacts.collect(version)` | Builds the client facts table by querying Engine.Platform (OS, CPU, memory, power, GPU), Engine.Render (adapter type), the beamng_* globals, headless_mode, OnlineServiceProvider.branch, ResearchVerifier.isTechLicenseVerified() and render_openxr.state. Tolerates the absence of these APIs. | 101 |
+| `telemetry_clientFacts.detectCiProvider(getEnvironment)` | Detects a continuous integration runner via environment variables. Priority order: jenkins (JENKINS_URL, JENKINS_HOME), gitlab (GITLAB_CI), github-actions, azure-pipelines (TF_BUILD), teamcity, buildkite, circleci, travis, appveyor, then 'generic' if CI is defined. A value of '', '0' or 'false' (case-insensitive) counts as undefined. | 47 |
+| `telemetry_clientFacts.normalizePlatform(platform)` | Normalizes the platform name: the empty string (PC) becomes 'pc', 'unknown' or a non-text value becomes nil, the rest is kept. | 62 |
+| `telemetry_clientFacts.selectPreferredGPU(adapters)` | Chooses the graphics adapter: the first of type 'dedicated', otherwise the first in the list; nil if the list is absent or empty. | 67 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_clientFacts.collect(version)`
 
-Construit la table de faits client en interrogeant Engine.Platform (OS, CPU, mémoire, alimentation, GPU), Engine.Render (type d'adaptateur), les globales beamng_* , headless_mode, OnlineServiceProvider.branch, ResearchVerifier.isTechLicenseVerified() et render_openxr.state. Tolère l'absence de ces API.
+Builds the client facts table by querying Engine.Platform (OS, CPU, memory, power, GPU), Engine.Render (adapter type), the beamng_* globals, headless_mode, OnlineServiceProvider.branch, ResearchVerifier.isTechLicenseVerified() and render_openxr.state. Tolerates the absence of these APIs.
 
-- `version` (*string*) : Version du schéma de télémétrie (telemetryVersion de configManager).
-- **renvoie** : table Champs : version, product, productVersion, platform, buildType, buildNumber, arch, isCiRunner, ciProvider, osType, osBits, osVersion*, deviceType, systemMemoryBytes, cpu*, gpu*, gfxAdapterType, headless, distributionBranch, techLicense, batteryPresent, vrAvailable.
+- `version` (*string*) : Telemetry schema version (telemetryVersion from configManager).
+- **returns**: table Fields: version, product, productVersion, platform, buildType, buildNumber, arch, isCiRunner, ciProvider, osType, osBits, osVersion*, deviceType, systemMemoryBytes, cpu*, gpu*, gfxAdapterType, headless, distributionBranch, techLicense, batteryPresent, vrAvailable.
 
 #### `telemetry_clientFacts.detectCiProvider(getEnvironment)`
 
-Détecte un exécuteur d'intégration continue via les variables d'environnement. Ordre de priorité : jenkins (JENKINS_URL, JENKINS_HOME), gitlab (GITLAB_CI), github-actions, azure-pipelines (TF_BUILD), teamcity, buildkite, circleci, travis, appveyor, puis 'generic' si CI est défini. Une valeur '', '0' ou 'false' (insensible à la casse) compte comme non définie.
+Detects a continuous integration runner via environment variables. Priority order: jenkins (JENKINS_URL, JENKINS_HOME), gitlab (GITLAB_CI), github-actions, azure-pipelines (TF_BUILD), teamcity, buildkite, circleci, travis, appveyor, then 'generic' if CI is defined. A value of '', '0' or 'false' (case-insensitive) counts as undefined.
 
-- `getEnvironment` (*function|nil*) : Fonction nom -> valeur ; os.getenv par défaut (injectable pour les tests).
-- **renvoie** : boolean true si un exécuteur CI est détecté.
-- **renvoie** : string|nil Nom du fournisseur.
+- `getEnvironment` (*function|nil*) : Function name -> value; os.getenv by default (injectable for tests).
+- **returns**: boolean true if a CI runner is detected.
+- **returns**: string|nil Provider name.
 
 #### `telemetry_clientFacts.normalizePlatform(platform)`
 
-Normalise le nom de plateforme : la chaîne vide (PC) devient 'pc', 'unknown' ou une valeur non textuelle devient nil, le reste est conservé.
+Normalizes the platform name: the empty string (PC) becomes 'pc', 'unknown' or a non-text value becomes nil, the rest is kept.
 
-- `platform` (*string|nil*) : Valeur brute de Engine.Platform.getPlatform().
-- **renvoie** : string|nil Plateforme normalisée.
+- `platform` (*string|nil*) : Raw value of Engine.Platform.getPlatform().
+- **returns**: string|nil Normalized platform.
 
 #### `telemetry_clientFacts.selectPreferredGPU(adapters)`
 
-Choisit l'adaptateur graphique : le premier de type 'dedicated', sinon le premier de la liste ; nil si la liste est absente ou vide.
+Chooses the graphics adapter: the first of type 'dedicated', otherwise the first in the list; nil if the list is absent or empty.
 
-- `adapters` (*table[]|nil*) : Liste issue de Engine.Platform.getGPUAdaptersInfo().
-- **renvoie** : table|nil Adaptateur choisi.
+- `adapters` (*table[]|nil*) : List from Engine.Platform.getGPUAdaptersInfo().
+- **returns**: table|nil Chosen adapter.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `ResearchVerifier.` `isTechLicenseVerified`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/clientFacts.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/clientFacts.lua`.*

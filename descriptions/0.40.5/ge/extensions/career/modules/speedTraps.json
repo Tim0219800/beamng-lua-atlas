@@ -1,41 +1,64 @@
 {
   "path": "lua/ge/extensions/career/modules/speedTraps.lua",
-  "module": "Réaction de la carrière aux radars (gameplay_speedTraps) : amendes pour excès de vitesse et feu rouge, messages UI, son du flash, et enregistrement dans les classements de radars (gameplay_speedTrapLeaderboards) sauvegardés dans <save>/career/speedTrapLeaderboards/. Seul le véhicule du joueur (index 0) est concerné.",
+  "module": "Career reaction to speed traps (gameplay_speedTraps): fines for speeding and running red lights, UI messages, flash sound, and recording into the speed trap leaderboards (gameplay_speedTrapLeaderboards) saved in <save>/career/speedTrapLeaderboards/. Only the player's vehicle (index 0) is concerned.",
   "notes": [
-    "Amende d'excès de vitesse (overSpeed en m/s) : <= 6.7056 m/s (15 mph) 35 ; <= 11.176 m/s (25 mph) 70 ; au-delà 100. Elle est payée avec canBeNegative = true (le solde peut devenir négatif).",
-    "Type de pénalité : véhicule hors inventaire ou possédé avec plaque (partie dont le nom contient \"licenseplate\") = amende normale ; sans plaque = message sans amende ; véhicule prêté de type \"work\" avec plaque = perte de 10 points de réputation de l'organisation propriétaire. Un véhicule non possédé et non « work » avec plaque ne reçoit aucune pénalité (penaltyType nil).",
-    "Feu rouge : amende fixe de 500 si le véhicule est hors inventaire ou a une plaque ; sinon seulement un message.",
-    "Quel que soit le résultat, onSpeedTrapTriggered ajoute un record au classement et affiche un message (nouveau record, record sans ancien, ou pas de nouveau record)."
+    "Speeding fine (overSpeed in m/s): <= 6.7056 m/s (15 mph) 35; <= 11.176 m/s (25 mph) 70; beyond that 100. It is paid with canBeNegative = true (the balance can become negative).",
+    "Penalty type: vehicle outside the inventory or owned with a plate (part whose name contains \"licenseplate\") = normal fine; without a plate = message without a fine; loaned \"work\" type vehicle with a plate = loss of 10 reputation points of the owning organization. A non-owned, non-\"work\" vehicle with a plate receives no penalty (penaltyType nil).",
+    "Red light: fixed fine of 500 if the vehicle is outside the inventory or has a plate; otherwise only a message.",
+    "Whatever the outcome, onSpeedTrapTriggered adds a record to the leaderboard and displays a message (new record, record with no previous one, or no new record)."
   ],
   "fields": {
-    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : career_career, gameplay_speedTraps."}
+    "dependencies": {
+      "type": "table<integer, string>",
+      "desc": "Extensions loaded before: career_career, gameplay_speedTraps."
+    }
   },
   "functions": {
     "onSpeedTrapTriggered": {
-      "desc": "Hook appelé quand un radar de vitesse se déclenche : applique l'amende ou la pénalité selon la plaque et le type de véhicule, puis met à jour le classement du radar.",
+      "desc": "Hook called when a speed trap triggers: applies the fine or penalty depending on the plate and vehicle type, then updates the speed trap's leaderboard.",
       "params": {
-        "speedTrapData": {"type": "table", "desc": "Données du radar (speedLimit, subjectID...)."},
-        "playerSpeed": {"type": "number", "desc": "Vitesse enregistrée en m/s."},
-        "overSpeed": {"type": "number", "desc": "Dépassement de la limite en m/s."}
+        "speedTrapData": {
+          "type": "table",
+          "desc": "Speed trap data (speedLimit, subjectID...)."
+        },
+        "playerSpeed": {
+          "type": "number",
+          "desc": "Recorded speed in m/s."
+        },
+        "overSpeed": {
+          "type": "number",
+          "desc": "Excess over the limit in m/s."
+        }
       },
       "internal": true
     },
     "onRedLightCamTriggered": {
-      "desc": "Hook appelé quand une caméra de feu rouge se déclenche : amende de 500 avec message et son si le véhicule du joueur est identifiable par une plaque.",
+      "desc": "Hook called when a red light camera triggers: fine of 500 with message and sound if the player's vehicle is identifiable by a plate.",
       "params": {
-        "speedTrapData": {"type": "table", "desc": "Données de la caméra (subjectID)."},
-        "playerSpeed": {"type": "number", "desc": "Vitesse enregistrée (non utilisée ici)."}
+        "speedTrapData": {
+          "type": "table",
+          "desc": "Camera data (subjectID)."
+        },
+        "playerSpeed": {
+          "type": "number",
+          "desc": "Recorded speed (not used here)."
+        }
       },
       "internal": true
     },
     "onExtensionLoaded": {
-      "desc": "Hook : charge les classements de radars du profil si la carrière est active (renvoie false sinon).",
+      "desc": "Hook: loads the profile's speed trap leaderboards if the career is active (returns false otherwise).",
       "params": {},
       "internal": true
     },
     "onSaveCurrentProfile": {
-      "desc": "Hook de sauvegarde : écrit les classements de radars dans career/speedTrapLeaderboards/.",
-      "params": {"currentSavePath": {"type": "string", "desc": "Dossier de sauvegarde."}},
+      "desc": "Save hook: writes the speed trap leaderboards to career/speedTrapLeaderboards/.",
+      "params": {
+        "currentSavePath": {
+          "type": "string",
+          "desc": "Save folder."
+        }
+      },
       "internal": true
     }
   }

@@ -1,12 +1,12 @@
 # `core_vehicle_configTarget`
 
-*Fichier : `lua/ge/extensions/core/vehicle/configTarget.lua` · VM : Game Engine (GE) · 143 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/vehicle/configTarget.lua` · VM: Game Engine (GE) · 143 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_vehicle_configTarget` : `extensions.load("core_vehicle_configTarget")`, puis la globale `core_vehicle_configTarget`
+**Access:** extension `core_vehicle_configTarget`: `extensions.load("core_vehicle_configTarget")`, then the global `core_vehicle_configTarget`
 
-Extension GE `core_vehicle_configTarget` : mémorise quel véhicule (et quel joueur) est la cible du menu de configuration du véhicule, pour que partmgmt, colors, mirror, thumbnail, etc. n'agissent pas toujours sur le véhicule du joueur 0. Sert aussi de résolveur : resolveVehicleId prend un id explicite, sinon la cible, sinon le véhicule du joueur 0. Émet onVehicleConfigTargetChanged à chaque changement.
+GE extension `core_vehicle_configTarget`: remembers which vehicle (and which player) is the target of the vehicle configuration menu, so that partmgmt, colors, mirror, thumbnail, etc. do not always act on player 0's vehicle. Also serves as a resolver: resolveVehicleId takes an explicit id, otherwise the target, otherwise player 0's vehicle. Emits onVehicleConfigTargetChanged on every change.
 
-## Exemple
+## Example
 
 ```lua
 core_vehicle_configTarget.begin(vehId, {playerId = 0, returnRoute = 'pause.vehicle'})
@@ -14,135 +14,135 @@ local id = core_vehicle_configTarget.resolveVehicleId()   -- vehId
 core_vehicle_configTarget.clear('done')
 ```
 
-## Remarques
+## Notes
 
-- returnRoute n'est accepté que parmi 'pause' et 'pause.vehicle' (sinon 'pause.vehicle').
-- La cible est effacée automatiquement une frame après la destruction du véhicule si celui-ci n'a pas été recréé entre-temps (spawn du même id), à la fin du niveau ou au déchargement de l'extension.
-- Les fonctions de lecture (get) renvoient une copie ; le hook onVehicleConfigTargetChanged reçoit (cibleActuelle, cibleAvant, raison) en copies : raison = 'begin', 'clear' ou la raison passée à clear ('vehicleDestroyed', 'missionEnded', 'extensionUnloaded').
+- returnRoute is only accepted among 'pause' and 'pause.vehicle' (otherwise 'pause.vehicle').
+- The target is cleared automatically one frame after the vehicle is destroyed if it was not recreated in the meantime (spawn of the same id), at the end of the level or on extension unload.
+- The read functions (get) return a copy; the onVehicleConfigTargetChanged hook receives (currentTarget, previousTarget, reason) as copies: reason = 'begin', 'clear' or the reason passed to clear ('vehicleDestroyed', 'missionEnded', 'extensionUnloaded').
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_vehicle_configTarget.begin(vehId, context)` | Définit le véhicule cible. Refuse un id invalide ou un véhicule inexistant. Émet onVehicleConfigTargetChanged(courant, précédent, 'begin'). | 25 |
-| `core_vehicle_configTarget.clear(reason)` | Efface la cible et émet onVehicleConfigTargetChanged. | 42 |
-| `core_vehicle_configTarget.get()` | Copie de la cible courante. | 55 |
-| `core_vehicle_configTarget.getReturnRoute()` | Route d'interface où revenir après la configuration. | 67 |
-| `core_vehicle_configTarget.getTargetPlayerId()` | Index du joueur qui configure. | 63 |
-| `core_vehicle_configTarget.getTargetVehicleId()` | Id du véhicule cible. | 59 |
-| `core_vehicle_configTarget.isActive()` | Indique si une cible est définie. | 51 |
-| `core_vehicle_configTarget.onClientEndMission()` | Hook : fin du niveau ; efface la cible ('missionEnded'). *(interne)* *(hook)* | 118 |
-| `core_vehicle_configTarget.onDeserialized(data)` | Hook : restaure la cible si son véhicule existe encore. *(interne)* *(hook)* | 132 |
-| `core_vehicle_configTarget.onExtensionUnloaded()` | Hook : extension déchargée ; efface la cible ('extensionUnloaded'). *(interne)* *(hook)* | 122 |
-| `core_vehicle_configTarget.onSerialize()` | Hook : sauvegarde la cible avant rechargement Lua. *(interne)* *(hook)* | 126 |
-| `core_vehicle_configTarget.onUpdate()` | Hook par frame : efface la cible si le véhicule détruit n'existe toujours pas. *(interne)* *(hook)* | 109 |
-| `core_vehicle_configTarget.onVehicleDestroyed(vehId)` | Hook : si le véhicule cible est détruit, note qu'il faudra effacer la cible à la prochaine frame. *(interne)* *(hook)* | 97 |
-| `core_vehicle_configTarget.onVehicleSpawned(vehId)` | Hook : annule l'effacement prévu si le même id est recréé (remplacement de véhicule). *(interne)* *(hook)* | 103 |
-| `core_vehicle_configTarget.resolveVehicle(explicitVehicleId)` | Comme resolveVehicleId mais renvoie l'objet véhicule. | 86 |
-| `core_vehicle_configTarget.resolveVehicleData(explicitVehicleId)` | Comme resolveVehicleId mais renvoie les données de core_vehicle_manager.getVehicleData. | 91 |
-| `core_vehicle_configTarget.resolveVehicleId(explicitVehicleId)` | Détermine l'id du véhicule à utiliser : l'id explicite s'il est donné et valide, sinon la cible, sinon le véhicule du joueur 0. Renvoie nil si l'objet n'existe pas. | 71 |
+| `core_vehicle_configTarget.begin(vehId, context)` | Sets the target vehicle. Refuses an invalid id or a nonexistent vehicle. Emits onVehicleConfigTargetChanged(current, previous, 'begin'). | 25 |
+| `core_vehicle_configTarget.clear(reason)` | Clears the target and emits onVehicleConfigTargetChanged. | 42 |
+| `core_vehicle_configTarget.get()` | Copy of the current target. | 55 |
+| `core_vehicle_configTarget.getReturnRoute()` | UI route to return to after configuration. | 67 |
+| `core_vehicle_configTarget.getTargetPlayerId()` | Index of the configuring player. | 63 |
+| `core_vehicle_configTarget.getTargetVehicleId()` | Id of the target vehicle. | 59 |
+| `core_vehicle_configTarget.isActive()` | Indicates whether a target is set. | 51 |
+| `core_vehicle_configTarget.onClientEndMission()` | Hook: end of the level; clears the target ('missionEnded'). *(internal)* *(hook)* | 118 |
+| `core_vehicle_configTarget.onDeserialized(data)` | Hook: restores the target if its vehicle still exists. *(internal)* *(hook)* | 132 |
+| `core_vehicle_configTarget.onExtensionUnloaded()` | Hook: extension unloaded; clears the target ('extensionUnloaded'). *(internal)* *(hook)* | 122 |
+| `core_vehicle_configTarget.onSerialize()` | Hook: saves the target before a Lua reload. *(internal)* *(hook)* | 126 |
+| `core_vehicle_configTarget.onUpdate()` | Per-frame hook: clears the target if the destroyed vehicle still does not exist. *(internal)* *(hook)* | 109 |
+| `core_vehicle_configTarget.onVehicleDestroyed(vehId)` | Hook: if the target vehicle is destroyed, notes that the target must be cleared on the next frame. *(internal)* *(hook)* | 97 |
+| `core_vehicle_configTarget.onVehicleSpawned(vehId)` | Hook: cancels the planned clearing if the same id is recreated (vehicle replacement). *(internal)* *(hook)* | 103 |
+| `core_vehicle_configTarget.resolveVehicle(explicitVehicleId)` | Like resolveVehicleId but returns the vehicle object. | 86 |
+| `core_vehicle_configTarget.resolveVehicleData(explicitVehicleId)` | Like resolveVehicleId but returns the data from core_vehicle_manager.getVehicleData. | 91 |
+| `core_vehicle_configTarget.resolveVehicleId(explicitVehicleId)` | Determines the vehicle id to use: the explicit id if given and valid, otherwise the target, otherwise player 0's vehicle. Returns nil if the object does not exist. | 71 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_vehicle_configTarget.begin(vehId, context)`
 
-Définit le véhicule cible. Refuse un id invalide ou un véhicule inexistant. Émet onVehicleConfigTargetChanged(courant, précédent, 'begin').
+Sets the target vehicle. Refuses an invalid id or a nonexistent vehicle. Emits onVehicleConfigTargetChanged(current, previous, 'begin').
 
-- `vehId` (*integer*) : id du véhicule (>= 0)
+- `vehId` (*integer*) : vehicle id (>= 0)
 - `context` (*table|nil*) : {playerId?, returnRoute?}
-- **renvoie** : boolean true si la cible a été définie
+- **returns**: boolean true if the target was set
 
 #### `core_vehicle_configTarget.clear(reason)`
 
-Efface la cible et émet onVehicleConfigTargetChanged.
+Clears the target and emits onVehicleConfigTargetChanged.
 
-- `reason` (*string|nil*) : raison transmise au hook, défaut 'clear'
-- **renvoie** : boolean false s'il n'y avait pas de cible
+- `reason` (*string|nil*) : reason passed to the hook, default 'clear'
+- **returns**: boolean false if there was no target
 
 #### `core_vehicle_configTarget.get()`
 
-Copie de la cible courante.
+Copy of the current target.
 
-- **renvoie** : table|nil {vehId, playerId, returnRoute} ou nil
+- **returns**: table|nil {vehId, playerId, returnRoute} or nil
 
 #### `core_vehicle_configTarget.getReturnRoute()`
 
-Route d'interface où revenir après la configuration.
+UI route to return to after configuration.
 
-- **renvoie** : string 'pause' ou 'pause.vehicle' (défaut)
+- **returns**: string 'pause' or 'pause.vehicle' (default)
 
 #### `core_vehicle_configTarget.getTargetPlayerId()`
 
-Index du joueur qui configure.
+Index of the configuring player.
 
-- **renvoie** : integer|nil playerId ou nil
+- **returns**: integer|nil playerId or nil
 
 #### `core_vehicle_configTarget.getTargetVehicleId()`
 
-Id du véhicule cible.
+Id of the target vehicle.
 
-- **renvoie** : integer|nil vehId ou nil
+- **returns**: integer|nil vehId or nil
 
 #### `core_vehicle_configTarget.isActive()`
 
-Indique si une cible est définie.
+Indicates whether a target is set.
 
-- **renvoie** : boolean true si active
+- **returns**: boolean true if active
 
 #### `core_vehicle_configTarget.onDeserialized(data)`
 
-Hook : restaure la cible si son véhicule existe encore.
+Hook: restores the target if its vehicle still exists.
 
-- `data` (*table*) : données de onSerialize
+- `data` (*table*) : data from onSerialize
 
 #### `core_vehicle_configTarget.onSerialize()`
 
-Hook : sauvegarde la cible avant rechargement Lua.
+Hook: saves the target before a Lua reload.
 
-- **renvoie** : table {target}
+- **returns**: table {target}
 
 #### `core_vehicle_configTarget.onVehicleDestroyed(vehId)`
 
-Hook : si le véhicule cible est détruit, note qu'il faudra effacer la cible à la prochaine frame.
+Hook: if the target vehicle is destroyed, notes that the target must be cleared on the next frame.
 
-- `vehId` (*integer*) : véhicule
+- `vehId` (*integer*) : vehicle
 
 #### `core_vehicle_configTarget.onVehicleSpawned(vehId)`
 
-Hook : annule l'effacement prévu si le même id est recréé (remplacement de véhicule).
+Hook: cancels the planned clearing if the same id is recreated (vehicle replacement).
 
-- `vehId` (*integer*) : véhicule
+- `vehId` (*integer*) : vehicle
 
 #### `core_vehicle_configTarget.resolveVehicle(explicitVehicleId)`
 
-Comme resolveVehicleId mais renvoie l'objet véhicule.
+Like resolveVehicleId but returns the vehicle object.
 
-- `explicitVehicleId` (*integer|nil*) : id imposé
-- **renvoie** : userdata|nil objet véhicule
+- `explicitVehicleId` (*integer|nil*) : imposed id
+- **returns**: userdata|nil vehicle object
 
 #### `core_vehicle_configTarget.resolveVehicleData(explicitVehicleId)`
 
-Comme resolveVehicleId mais renvoie les données de core_vehicle_manager.getVehicleData.
+Like resolveVehicleId but returns the data from core_vehicle_manager.getVehicleData.
 
-- `explicitVehicleId` (*integer|nil*) : id imposé
-- **renvoie** : table|nil données du véhicule (vdata, config, vehicleDirectory, ioCtx…)
+- `explicitVehicleId` (*integer|nil*) : imposed id
+- **returns**: table|nil vehicle data (vdata, config, vehicleDirectory, ioCtx...)
 
 #### `core_vehicle_configTarget.resolveVehicleId(explicitVehicleId)`
 
-Détermine l'id du véhicule à utiliser : l'id explicite s'il est donné et valide, sinon la cible, sinon le véhicule du joueur 0. Renvoie nil si l'objet n'existe pas.
+Determines the vehicle id to use: the explicit id if given and valid, otherwise the target, otherwise player 0's vehicle. Returns nil if the object does not exist.
 
-- `explicitVehicleId` (*integer|nil*) : id imposé par l'appelant (nil = automatique ; un id invalide donne nil, sans repli)
-- **renvoie** : integer|nil id du véhicule
+- `explicitVehicleId` (*integer|nil*) : id imposed by the caller (nil = automatic; an invalid id gives nil, with no fallback)
+- **returns**: integer|nil vehicle id
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onVehicleConfigTargetChanged` — écouté par 4 module(s)
+- `onVehicleConfigTargetChanged` — listened to by 4 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/vehicle/configTarget.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/vehicle/configTarget.lua`.*

@@ -1,22 +1,22 @@
 # `flowgraph_nodes_ui_onBigmapStateChange`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.lua` · VM : Game Engine (GE) · 54 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.lua` · VM: Game Engine (GE) · 54 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/ui/onBigmapStateChange")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/ui/onBigmapStateChange")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « On Bigmap State Change » (catégorie repeat_instant) : détecte l'ouverture et la fermeture de la grande carte. Sorties impulsions : « enteredStart », « enteredEnd », « exitedStart », « exitedEnd » (début/fin de transition).
+Flowgraph node "On Bigmap State Change" (category repeat_instant): detects the opening and closing of the big map. Pulse outputs: "enteredStart", "enteredEnd", "exitedStart", "exitedEnd" (start/end of transition).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+Flowgraph node class (returned by _flowgraph_createNode(C)).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init()` | Initialise les drapeaux. | 24 |
-| `C:onActivateBigMapCallback()` | Hook : fin de l'ouverture de la carte. | 45 |
-| `C:onBigmapStartTransition(activate, esc)` | Hook : début de transition ; activate vrai = entrée, faux = sortie. | 40 |
-| `C:onDeactivateBigMapCallback()` | Hook : fin de la fermeture de la carte. | 48 |
-| `C:work(args)` | Remet les impulsions à false et applique les drapeaux reçus. | 29 |
+| `C:init()` | Initializes the flags. | 24 |
+| `C:onActivateBigMapCallback()` | Hook: end of the map opening. | 45 |
+| `C:onBigmapStartTransition(activate, esc)` | Hook: start of transition; activate true = enter, false = exit. | 40 |
+| `C:onDeactivateBigMapCallback()` | Hook: end of the map closing. | 48 |
+| `C:work(args)` | Resets the pulses to false and applies the received flags. | 29 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/ui/onBigmapStateChange.lua`.*

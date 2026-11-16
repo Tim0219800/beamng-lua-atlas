@@ -2,396 +2,396 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/rallyEditor.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre principale « Rally Editor » de l'éditeur de monde (menu Gameplay > Rally Editor, mode d'édition « Rally Editor » / notebookEditMode, action map « rallyEditor »). Elle édite un carnet de notes de rallye (notebook : *.notebook.json dans le dossier d'une mission, sous rallyUtil.notebooksPath) à travers des onglets : notebookInfo, missionTab, voicepacksTab, pacenotes, drivelineTab, systemPacenotesTab, measurementsTab, aiCompetitorsTab, et testTab uniquement si un fichier dev.txt existe à la racine. Elle gère la mission courante (currentMissionDir/Name/Id), le choix de voicepack (pick), un « ghost notebook » de comparaison, des fenêtres annexes (DevTools, RallyToolbox, calibration, chargeur de spéciale) et les préférences rallyEditor.* (editing, view, waypoints, ui). Les autres modules (onglets) appellent ses getters (getPref*, getCurrentPath…).
---- Accès : extension `editor_rallyEditor` : `extensions.load("editor_rallyEditor")`, puis la globale `editor_rallyEditor`
+--- Main "Rally Editor" window of the world editor (menu Gameplay > Rally Editor, edit mode "Rally Editor" / notebookEditMode, action map "rallyEditor"). It edits a rally notebook (notebook: *.notebook.json in a mission folder, under rallyUtil.notebooksPath) through tabs: notebookInfo, missionTab, voicepacksTab, pacenotes, drivelineTab, systemPacenotesTab, measurementsTab, aiCompetitorsTab, and testTab only if a dev.txt file exists at the root. It manages the current mission (currentMissionDir/Name/Id), voicepack selection (pick), a comparison "ghost notebook", auxiliary windows (DevTools, RallyToolbox, calibration, stage loader) and the rallyEditor.* preferences (editing, view, waypoints, ui). The other modules (tabs) call its getters (getPref*, getCurrentPath...).
+--- Access: extension `editor_rallyEditor`: `extensions.load("editor_rallyEditor")`, then the global `editor_rallyEditor`
 ---@class editor_rallyEditor
----@field dependencies table<integer, string> Extensions requises : {'gameplay_missions_missions'}.
----@field devToolsWindowOpen ImBoolPtr Indicateur d'ouverture de la fenêtre DevTools (remplacé à la désérialisation).
----@field notebookBasenamesForPick function Alias de voicepack.notebookBasenamesForPick (liste des noms de carnets candidats pour un pick de voicepack).
----@field picksMatch function Alias de voicepack.picksMatch (compatibilité avec les appelants externes).
----@field rallyToolboxWindowOpen ImBoolPtr Indicateur d'ouverture de la fenêtre RallyToolbox (remplacé à la désérialisation).
+---@field dependencies table<integer, string> Required extensions: {'gameplay_missions_missions'}.
+---@field devToolsWindowOpen ImBoolPtr Flag for whether the DevTools window is open (replaced on deserialization).
+---@field notebookBasenamesForPick function Alias of voicepack.notebookBasenamesForPick (list of candidate notebook names for a voicepack pick).
+---@field picksMatch function Alias of voicepack.picksMatch (compatibility with external callers).
+---@field rallyToolboxWindowOpen ImBoolPtr Flag for whether the RallyToolbox window is open (replaced on deserialization).
 editor_rallyEditor = {}
 
---- Indique si le gizmo est autorisé : vrai quand le mode d'édition courant est « Rally Editor ».
----Source : lua/ge/extensions/editor/rallyEditor.lua:1439
----@return boolean  true en mode Rally Editor.
+--- Returns whether the gizmo is allowed: true when the current edit mode is "Rally Editor".
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1439
+---@return boolean  true in Rally Editor mode.
 function editor_rallyEditor.allowGizmo() end
 
---- Construit la liste des voicepacks proposés pour une mission (voicepack.buildPickerEntries avec suffixe « (mission) » pour les voicepacks de mission).
----Source : lua/ge/extensions/editor/rallyEditor.lua:1450
----@param missionDir string Dossier de la mission.
----@return table<integer, table>  Entrées contenant notamment un champ pick.
+--- Builds the list of voicepacks offered for a mission (voicepack.buildPickerEntries with suffix "(mission)" for mission voicepacks).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1450
+---@param missionDir string Mission folder.
+---@return table<integer, table>  Entries containing in particular a pick field.
 function editor_rallyEditor.buildVoicepackPickerEntries(missionDir) end
 
---- Lance/arrête la lecture du chemin de caméra de l'onglet Pacenotes ; sans effet si un autre onglet est actif.
----Source : lua/ge/extensions/editor/rallyEditor.lua:302
+--- Starts/stops playback of the Pacenotes tab's camera path; no effect if another tab is active.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:302
 function editor_rallyEditor.cameraPathPlay() end
 
---- Change l'opacité du dessin de debug par pas de 0.2, bornée entre 0.1 et 1.0 : val = 0 diminue, val = 1.0 augmente.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1377
----@param val number 0 pour diminuer, 1.0 pour augmenter.
+--- Changes the debug draw opacity in steps of 0.2, clamped between 0.1 and 1.0: val = 0 decreases, val = 1.0 increases.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1377
+---@param val number 0 to decrease, 1.0 to increase.
 function editor_rallyEditor.changeDebugDrawOpacity(val) end
 
---- Efface le carnet « fantôme » de comparaison s'il existe.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1295
+--- Clears the comparison "ghost" notebook if it exists.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1295
 function editor_rallyEditor.clearGhostNotebook() end
 
---- Désélectionne dans l'onglet Pacenotes (ignoré hors de cet onglet).
----Source : lua/ge/extensions/editor/rallyEditor.lua:247
+--- Deselects in the Pacenotes tab (ignored outside this tab).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:247
 function editor_rallyEditor.deselect() end
 
---- Choisit le carnet à charger pour une mission : résolution par voicepack, sinon premier carnet existant, sinon « structured.notebook.json » à créer.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1323
----@param missionDir string Dossier de la mission.
----@return string  Chemin complet du fichier de carnet.
+--- Chooses the notebook to load for a mission: resolution by voicepack, otherwise first existing notebook, otherwise "structured.notebook.json" to create.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1323
+---@param missionDir string Mission folder.
+---@return string  Full path of the notebook file.
 function editor_rallyEditor.detectNotebookToLoad(missionDir) end
 
---- Dessine la fenêtre modale de chargement de spéciale (StageLoaderModal).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:612
+--- Draws the stage loading modal window (StageLoaderModal).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:612
 function editor_rallyEditor.drawStageLoaderModal() end
 
---- Dessine dans la barre d'outils le texte « mission | carnet | voicepack » (en cyan) avec une infobulle ; ne fait rien si aucune mission courante.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:616
----@param pathObj table|nil Carnet courant (basenameNoExt() pour le nom).
+--- Draws the text "mission | notebook | voicepack" (in cyan) in the toolbar with a tooltip; does nothing if there is no current mission.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:616
+---@param pathObj table|nil Current notebook (basenameNoExt() for the name).
 function editor_rallyEditor.drawToolbarMissionContext(pathObj) end
 
---- Renvoie le chemin du fichier du carnet courant.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1369
----@return string|nil  currentPath.fname ou nil si aucun carnet.
+--- Returns the file path of the current notebook.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1369
+---@return string|nil  currentPath.fname or nil if no notebook.
 function editor_rallyEditor.getCurrentFilename() end
 
---- Renvoie le dossier de la mission courante.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1443
----@return string|nil  Chemin absolu.
+--- Returns the current mission's folder.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1443
+---@return string|nil  Absolute path.
 function editor_rallyEditor.getCurrentMissionDir() end
 
---- Renvoie l'identifiant de la mission courante (ex. « italy/rallyStage/001-ss-fastello-norte », extrait après « /missions/ »).
----Source : lua/ge/extensions/editor/rallyEditor.lua:1445
----@return string|nil  Identifiant ou nil.
+--- Returns the current mission's identifier (e.g. "italy/rallyStage/001-ss-fastello-norte", extracted after "/missions/").
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1445
+---@return string|nil  Identifier or nil.
 function editor_rallyEditor.getCurrentMissionId() end
 
---- Renvoie le nom lisible de la mission (info.json name traduit, sinon dernier segment du chemin).
----Source : lua/ge/extensions/editor/rallyEditor.lua:1444
----@return string|nil  Nom.
+--- Returns the mission's readable name (translated info.json name, otherwise last path segment).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1444
+---@return string|nil  Name.
 function editor_rallyEditor.getCurrentMissionName() end
 
---- Renvoie le carnet (notebook) en cours d'édition.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1442
----@return table|nil  Objet carnet ou nil.
+--- Returns the notebook being edited.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1442
+---@return table|nil  Notebook object or nil.
 function editor_rallyEditor.getCurrentPath() end
 
---- Renvoie le choix de voicepack courant : {type='voicepack', scope='global'|'mission', dirname=...}.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1446
----@return table|nil  Pick courant.
+--- Returns the current voicepack choice: {type='voicepack', scope='global'|'mission', dirname=...}.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1446
+---@return table|nil  Current pick.
 function editor_rallyEditor.getCurrentVoicepackPick() end
 
---- Renvoie l'erreur du dernier chargement du carnet fantôme.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1313
----@return string|nil  Message d'erreur.
+--- Returns the error from the last ghost notebook load.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1313
+---@return string|nil  Error message.
 function editor_rallyEditor.getGhostNotebookError() end
 
---- Renvoie l'étiquette du carnet fantôme correspondant à une pacenote.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1317
----@param pacenote table Pacenote du carnet courant.
----@return string|nil  Étiquette.
+--- Returns the label of the ghost notebook corresponding to a pacenote.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1317
+---@param pacenote table Pacenote of the current notebook.
+---@return string|nil  Label.
 function editor_rallyEditor.getGhostNotebookLabelForPacenote(pacenote) end
 
---- Renvoie le carnet fantôme chargé.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1301
----@return table|nil  Carnet fantôme.
+--- Returns the loaded ghost notebook.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1301
+---@return table|nil  Ghost notebook.
 function editor_rallyEditor.getGhostNotebookPath() end
 
---- Renvoie le nom de fichier du carnet fantôme sélectionné.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1305
----@return string|nil  Chemin du fichier.
+--- Returns the file name of the selected ghost notebook.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1305
+---@return string|nil  File path.
 function editor_rallyEditor.getGhostNotebookSelectedFname() end
 
---- Renvoie l'étiquette du carnet fantôme sélectionné.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1309
----@return string  Étiquette, ou « (none) ».
+--- Returns the label of the selected ghost notebook.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1309
+---@return string  Label, or "(none)".
 function editor_rallyEditor.getGhostNotebookSelectedLabel() end
 
---- Renvoie le dossier de mission du carnet courant (currentPath:getMissionDir()).
----Source : lua/ge/extensions/editor/rallyEditor.lua:1517
----@return string|nil  Dossier ou nil.
+--- Returns the current notebook's mission folder (currentPath:getMissionDir()).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1517
+---@return string|nil  Folder or nil.
 function editor_rallyEditor.getMissionDir() end
 
---- Renvoie l'identifiant de mission du carnet courant (currentPath:getMissionId()).
----Source : lua/ge/extensions/editor/rallyEditor.lua:1518
----@return string|nil  Identifiant ou nil.
+--- Returns the current notebook's mission identifier (currentPath:getMissionId()).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1518
+---@return string|nil  Identifier or nil.
 function editor_rallyEditor.getMissionId() end
 
---- Renvoie l'onglet Pacenotes.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1516
----@return table|nil  Instance de l'onglet.
+--- Returns the Pacenotes tab.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1516
+---@return table|nil  Tab instance.
 function editor_rallyEditor.getPacenotesWindow() end
 
---- Préférence rallyEditor.waypoints.defaultRadius : rayon d'affichage des waypoints.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1246
----@return integer  Rayon (8 par défaut).
+--- Preference rallyEditor.waypoints.defaultRadius: display radius of waypoints.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1246
+---@return integer  Radius (8 by default).
 function editor_rallyEditor.getPrefDefaultRadius() end
 
---- Largeur du prisme (largeur de véhicule) servant à dessiner la spline de driveline.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1242
----@return number  Largeur en mètres, bornée à 0.5-5 (1.945 par défaut).
+--- Prism width (vehicle width) used to draw the driveline spline.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1242
+---@return number  Width in meters, clamped to 0.5-5 (1.945 by default).
 function editor_rallyEditor.getPrefDrivelineSplinePrismWidth() end
 
---- Préférence rallyEditor.editing.lockWaypoints : verrouille la position des waypoints.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1254
----@return boolean  false par défaut.
+--- Preference rallyEditor.editing.lockWaypoints: locks the waypoint position.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1254
+---@return boolean  false by default.
 function editor_rallyEditor.getPrefLockWaypoints() end
 
---- Distance caméra à partir de laquelle l'aperçu sans sélection passe en vue d'ensemble arc-en-ciel.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1226
----@return number  Distance en mètres, bornée à 100-1500 (650 par défaut).
+--- Camera distance beyond which the preview with no selection switches to the rainbow overview.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1226
+---@return number  Distance in meters, clamped to 100-1500 (650 by default).
 function editor_rallyEditor.getPrefPacenoteLabelDistance() end
 
---- Mode d'affichage des étiquettes d'aperçu de pacenotes.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1222
----@return string  « all » ou « distance » (par défaut).
+--- Display mode for pacenote preview labels.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1222
+---@return string  "all" or "distance" (default).
 function editor_rallyEditor.getPrefPacenoteLabelMode() end
 
---- Nombre de pacenotes avant et après le pivot de la caméra qui affichent leur étiquette.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1230
----@return integer  0 à 10 (3 par défaut).
+--- Number of pacenotes before and after the camera pivot that display their label.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1230
+---@return integer  0 to 10 (3 by default).
 function editor_rallyEditor.getPrefPacenoteLabelNearCameraCount() end
 
---- Indique si les textes d'aperçu des pacenotes précédente et suivante sont affichés.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1234
----@return boolean  true par défaut.
+--- Returns whether the preview texts of the previous and next pacenotes are displayed.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1234
+---@return boolean  true by default.
 function editor_rallyEditor.getPrefShowAdjacentPacenoteText() end
 
---- Vrai si le mode d'étiquettes est « all ».
----Source : lua/ge/extensions/editor/rallyEditor.lua:1218
----@return boolean  true si toutes les étiquettes sont affichées.
+--- True if the label mode is "all".
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1218
+---@return boolean  true if all labels are displayed.
 function editor_rallyEditor.getPrefShowAllPacenoteLabels() end
 
---- Affiche aussi la pacenote suivante quand une pacenote est sélectionnée.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1214
----@return boolean  true par défaut.
+--- Also displays the next pacenote when a pacenote is selected.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1214
+---@return boolean  true by default.
 function editor_rallyEditor.getPrefShowNextPacenote() end
 
---- Affiche aussi la pacenote précédente quand une pacenote est sélectionnée.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1210
----@return boolean  true par défaut.
+--- Also displays the previous pacenote when a pacenote is selected.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1210
+---@return boolean  true by default.
 function editor_rallyEditor.getPrefShowPreviousPacenote() end
 
---- Indique si la fenêtre flottante d'utilitaire de la pacenote sélectionnée est affichée.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1238
----@return boolean  false par défaut.
+--- Returns whether the floating utility window of the selected pacenote is displayed.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1238
+---@return boolean  false by default.
 function editor_rallyEditor.getPrefShowSelectedPacenoteUtility() end
 
---- Largeur du champ notes.note.freeform d'une pacenote.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1250
----@return integer  Largeur (300 par défaut, de 1 à 1000).
+--- Width of a pacenote's notes.note.freeform field.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1250
+---@return integer  Width (300 by default, from 1 to 1000).
 function editor_rallyEditor.getPrefUiPacenoteNoteFieldWidth() end
 
---- Méthode de recalage en Z lors du glisser d'un waypoint, avant de chercher le point de snaproad le plus proche.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1258
----@return string  Valeur valide de zSnap (zSnap.defaultMethod sinon).
+--- Z snapping method when dragging a waypoint, before looking for the nearest snaproad point.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1258
+---@return string  Valid zSnap value (zSnap.defaultMethod otherwise).
 function editor_rallyEditor.getPrefWaypointSnapMethod() end
 
---- Indique si le chemin du snaproad est dessiné au premier plan (option de vue éphémère, remise à false à la désactivation du mode).
----Source : lua/ge/extensions/editor/rallyEditor.lua:1459
----@return boolean  Valeur courante.
+--- Returns whether the snaproad path is drawn in the foreground (ephemeral view option, reset to false when the mode is deactivated).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1459
+---@return boolean  Current value.
 function editor_rallyEditor.getViewSnaproadPathOnTop() end
 
---- Censée renvoyer les préférences volatiles ; renvoie la variable non définie volatilePreferences, donc nil (voir notes).
----Source : lua/ge/extensions/editor/rallyEditor.lua:1514
----@return nil  Toujours nil.
+--- Supposed to return the volatile preferences; returns the undefined variable volatilePreferences, so nil (see notes).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1514
+---@return nil  Always nil.
 function editor_rallyEditor.getVolatilePreferences() end
 
---- Active le mode d'insertion de l'onglet Pacenotes (ignoré hors de cet onglet).
----Source : lua/ge/extensions/editor/rallyEditor.lua:233
+--- Activates the Pacenotes tab's insert mode (ignored outside this tab).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:233
 function editor_rallyEditor.insertMode() end
 
---- Indique si la fenêtre de calibration est ouverte.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1510
----@return boolean  État de la fenêtre.
+--- Returns whether the calibration window is open.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1510
+---@return boolean  Window state.
 function editor_rallyEditor.isCalibrationWindowOpen() end
 
---- Vrai si DevTools est ouvert et que sa section d'outils de pacenotes est dépliée.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1520
----@return boolean  État de la section.
+--- True if DevTools is open and its pacenote tools section is expanded.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1520
+---@return boolean  Section state.
 function editor_rallyEditor.isPacenotesToolsSectionExpanded() end
 
---- Vrai si la fenêtre RallyToolbox ou DevTools est ouverte.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1425
----@return boolean  true si l'une des deux est ouverte.
+--- True if the RallyToolbox or DevTools window is open.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1425
+---@return boolean  true if either is open.
 function editor_rallyEditor.isToolboxOpen() end
 
---- Indique si la fenêtre « rallyEditor » est affichée.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1452
----@return boolean  Visibilité.
+--- Returns whether the "rallyEditor" window is displayed.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1452
+---@return boolean  Visibility.
 function editor_rallyEditor.isVisible() end
 
---- Liste les carnets proposés comme carnet fantôme.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1285
----@return table  Choix (liste vide si le module fantôme n'est pas prêt).
+--- Lists the notebooks offered as ghost notebook.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1285
+---@return table  Choices (empty list if the ghost module is not ready).
 function editor_rallyEditor.listGhostNotebookChoices() end
 
---- Liste, triés, les fichiers *.notebook.json (recherche récursive) sous le dossier des carnets d'une mission.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1267
----@param folder string|nil Dossier de la mission ; par défaut celui du carnet courant (erreur si aucun carnet chargé).
----@return table<integer, string>  Chemins complets triés.
+--- Lists, sorted, the *.notebook.json files (recursive search) under a mission's notebooks folder.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1267
+---@param folder string|nil Mission folder; by default the current notebook's (error if no notebook loaded).
+---@return table<integer, string>  Sorted full paths.
 function editor_rallyEditor.listNotebooks(folder) end
 
---- Définit la mission courante, construit la liste des voicepacks et applique le premier (ce qui charge son premier carnet) ; sinon efface le carnet.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1345
----@param missionDir string Dossier de la mission.
+--- Sets the current mission, builds the voicepack list and applies the first one (which loads its first notebook); otherwise clears the notebook.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1345
+---@param missionDir string Mission folder.
 function editor_rallyEditor.loadForMissionEditor(missionDir) end
 
---- Charge un carnet existant (rallyUtil.loadNotebook), le définit comme courant, met à jour tous les onglets et recalcule les notes structurées. Journalise une erreur si le chargement échoue.
----Source : lua/ge/extensions/editor/rallyEditor.lua:416
----@param fullFilename string Chemin complet du fichier .notebook.json.
+--- Loads an existing notebook (rallyUtil.loadNotebook), sets it as current, updates all tabs and recomputes the structured notes. Logs an error if loading fails.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:416
+---@param fullFilename string Full path of the .notebook.json file.
 function editor_rallyEditor.loadNotebook(fullFilename) end
 
---- Définit la mission courante, retire le pick de voicepack, détecte le carnet (detectNotebookToLoad) et le charge ou le crée.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1357
----@param missionDir string Dossier de la mission.
+--- Sets the current mission, removes the voicepack pick, detects the notebook (detectNotebookToLoad) and loads or creates it.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1357
+---@param missionDir string Mission folder.
 function editor_rallyEditor.loadOrCreateForMissionEditor(missionDir) end
 
---- Charge le carnet ou, s'il est introuvable, en crée un nouveau (rallyUtil.createNotebook), puis met à jour les onglets et recalcule les notes structurées.
----Source : lua/ge/extensions/editor/rallyEditor.lua:400
----@param fullFilename string Chemin complet du fichier .notebook.json.
+--- Loads the notebook or, if not found, creates a new one (rallyUtil.createNotebook), then updates the tabs and recomputes the structured notes.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:400
+---@param fullFilename string Full path of the .notebook.json file.
 function editor_rallyEditor.loadOrCreateNotebook(fullFilename) end
 
---- Zoom de la caméra « pacenoteOrbit » à la molette : val = 0 zoome de 0.4, val = 1.0 dézoome de 0.4. Sans effet avec une autre caméra.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1389
----@param val number 0 ou 1.0.
+--- Zoom of the "pacenoteOrbit" camera with the mouse wheel: val = 0 zooms in by 0.4, val = 1.0 zooms out by 0.4. No effect with another camera.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1389
+---@param val number 0 or 1.0.
 function editor_rallyEditor.mouseWheelZoom(val) end
 
---- Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'arrière (répété avec anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:292
----@param v number 0 relâché, 1 appuyé.
+--- Called directly by the input action: requests moving the selected waypoint backward (repeated with a 0.25 s debounce). Pacenotes tab only.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:292
+---@param v number 0 released, 1 pressed.
 function editor_rallyEditor.moveSelectedWaypointBackward(v) end
 
---- Appelé directement par l'action d'entrée : demande le déplacement du waypoint sélectionné vers l'avant (anti-rebond de 0.25 s). Seulement dans l'onglet Pacenotes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:282
----@param v number 0 relâché, 1 appuyé.
+--- Called directly by the input action: requests moving the selected waypoint forward (0.25 s debounce). Pacenotes tab only.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:282
+---@param v number 0 released, 1 pressed.
 function editor_rallyEditor.moveSelectedWaypointForward(v) end
 
---- Appelé après un rechargement Lua avec l'état sauvegardé : restaure la mission, le pick de voicepack (les picks « custom » hérités sont ignorés), le carnet (ou le premier carnet du pick si le fichier n'existe plus) et l'état des fenêtres Toolbox/DevTools.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1133
----@param data table|nil Table de onSerialize.
+--- Called after a Lua reload with the saved state: restores the mission, the voicepack pick (legacy "custom" picks are ignored), the notebook (or the pick's first notebook if the file no longer exists) and the state of the Toolbox/DevTools windows.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1133
+---@param data table|nil onSerialize table.
 function editor_rallyEditor.onDeserialized(data) end
 
---- Appelé à chaque frame par l'éditeur : dessine la fenêtre (menus File, View, Tools, onglets, entrées clavier et souris, fenêtres annexes).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:979
----@param dtReal number Delta temps réel.
----@param dtSim number Delta temps de simulation.
----@param dtRaw number Delta temps brut.
+--- Called every frame by the editor: draws the window (File, View, Tools menus, tabs, keyboard and mouse inputs, auxiliary windows).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:979
+---@param dtReal number Real-time delta.
+---@param dtSim number Simulation time delta.
+---@param dtRaw number Raw time delta.
 function editor_rallyEditor.onEditorGui(dtReal, dtSim, dtRaw) end
 
---- Appelé à l'initialisation de l'éditeur, y compris après un rechargement Lua (Ctrl+L) : réinitialise les références, crée le ghost notebook, déclare le mode d'édition notebookEditMode, enregistre la fenêtre et le menu Gameplay > Rally Editor, instancie les onglets et sélectionne Pacenotes (ou le premier onglet utile s'il n'y a pas de carnet).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1037
+--- Called at editor initialization, including after a Lua reload (Ctrl+L): resets references, creates the ghost notebook, declares the notebookEditMode edit mode, registers the window and the Gameplay > Rally Editor menu, instantiates the tabs and selects Pacenotes (or the first useful tab if there is no notebook).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1037
 function editor_rallyEditor.onEditorInitialized() end
 
---- Déclare la catégorie de préférences rallyEditor (editing, view, waypoints, ui).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1167
----@param prefsRegistry table Registre de préférences de l'éditeur.
+--- Declares the rallyEditor preferences category (editing, view, waypoints, ui).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1167
+---@param prefsRegistry table Editor preferences registry.
 function editor_rallyEditor.onEditorRegisterPreferences(prefsRegistry) end
 
---- Si la fenêtre masquée est rallyEditor, repasse en mode objectSelect.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1110
----@param windowName string Nom de la fenêtre.
+--- If the hidden window is rallyEditor, switches back to objectSelect mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1110
+---@param windowName string Window name.
 function editor_rallyEditor.onEditorToolWindowHide(windowName) end
 
---- Appelé avant un rechargement Lua ; sauvegarde mission, pick de voicepack, fichier du carnet courant et état d'ouverture de RallyToolbox et DevTools.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1122
+--- Called before a Lua reload; saves the mission, voicepack pick, current notebook file and the open state of RallyToolbox and DevTools.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1122
 ---@return table  {currentMissionDir, currentVoicepackPick, currentNotebookFname, rallyToolboxWindowOpen, devToolsWindowOpen}.
 function editor_rallyEditor.onSerialize() end
 
---- Hook appelé à la réinitialisation d'un véhicule : transmis à DevTools s'il est ouvert.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1429
+--- Hook called on vehicle reset: forwarded to DevTools if it is open.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1429
 function editor_rallyEditor.onVehicleResetted() end
 
---- Si la fenêtre qui prend le focus est rallyEditor, active le mode d'édition notebookEditMode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1116
----@param windowName string Nom de la fenêtre.
+--- If the window gaining focus is rallyEditor, activates the notebookEditMode edit mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1116
+---@param windowName string Window name.
 function editor_rallyEditor.onWindowGotFocus(windowName) end
 
---- Ouvre la fenêtre modale « Open Rally Stage... ».
----Source : lua/ge/extensions/editor/rallyEditor.lua:608
+--- Opens the "Open Rally Stage..." modal window.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:608
 function editor_rallyEditor.openStageLoaderModal() end
 
---- Enregistre le carnet courant (currentPath:save()). Journalise un avertissement s'il n'y a aucun carnet chargé.
----Source : lua/ge/extensions/editor/rallyEditor.lua:212
+--- Saves the current notebook (currentPath:save()). Logs a warning if no notebook is loaded.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:212
 function editor_rallyEditor.saveNotebook() end
 
---- Sélectionne un carnet fantôme de comparaison par nom de fichier.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1290
----@param fname string Chemin du carnet.
----@return boolean  Résultat de la sélection ; false si le module fantôme n'est pas prêt.
+--- Selects a comparison ghost notebook by file name.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1290
+---@param fname string Notebook path.
+---@return boolean  Selection result; false if the ghost module is not ready.
 function editor_rallyEditor.selectGhostNotebook(fname) end
 
---- Sélectionne la pacenote suivante dans l'onglet Pacenotes (ignoré ailleurs).
----Source : lua/ge/extensions/editor/rallyEditor.lua:228
+--- Selects the next pacenote in the Pacenotes tab (ignored elsewhere).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:228
 function editor_rallyEditor.selectNextPacenote() end
 
---- Sélectionne le waypoint suivant dans l'onglet Pacenotes (ignoré ailleurs).
----Source : lua/ge/extensions/editor/rallyEditor.lua:252
+--- Selects the next waypoint in the Pacenotes tab (ignored elsewhere).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:252
 function editor_rallyEditor.selectNextWaypoint() end
 
---- Sélectionne la pacenote précédente dans l'onglet Pacenotes (ignoré ailleurs).
----Source : lua/ge/extensions/editor/rallyEditor.lua:223
+--- Selects the previous pacenote in the Pacenotes tab (ignored elsewhere).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:223
 function editor_rallyEditor.selectPrevPacenote() end
 
---- Passe à la caméra libre de l'éditeur en conservant la position et la rotation de la caméra actuelle.
----Source : lua/ge/extensions/editor/rallyEditor.lua:238
+--- Switches to the editor's free camera, keeping the current camera's position and rotation.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:238
 function editor_rallyEditor.setFreeCam() end
 
---- Écrit la préférence rallyEditor.editing.lockWaypoints.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1263
----@param val boolean true pour verrouiller.
+--- Writes the rallyEditor.editing.lockWaypoints preference.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1263
+---@param val boolean true to lock.
 function editor_rallyEditor.setPrefLockWaypoints(val) end
 
---- Définit le pick de voicepack actif et charge automatiquement le premier carnet candidat ; si le pick n'a aucun carnet résolvable, efface le carnet chargé.
----Source : lua/ge/extensions/editor/rallyEditor.lua:445
----@param pick table {type='voicepack', scope='global'|'mission', dirname=<dossier du voicepack>}.
+--- Sets the active voicepack pick and automatically loads the first candidate notebook; if the pick has no resolvable notebook, clears the loaded notebook.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:445
+---@param pick table {type='voicepack', scope='global'|'mission', dirname=<voicepack folder>}.
 function editor_rallyEditor.setVoicepackPick(pick) end
 
---- Vide la sélection, affiche la fenêtre Rally Editor et active le mode d'édition notebookEditMode.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1000
+--- Clears the selection, shows the Rally Editor window and activates the notebookEditMode edit mode.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1000
 function editor_rallyEditor.show() end
 
---- Sélectionne l'onglet Pacenotes (sélection programmatique).
----Source : lua/ge/extensions/editor/rallyEditor.lua:983
+--- Selects the Pacenotes tab (programmatic selection).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:983
 function editor_rallyEditor.showPacenotesTab() end
 
---- Affiche la fenêtre (ou lui donne le focus), ouvre l'onglet Pacenotes et active le mode d'édition notebookEditMode.
----Source : lua/ge/extensions/editor/rallyEditor.lua:988
+--- Shows the window (or gives it focus), opens the Pacenotes tab and activates the notebookEditMode edit mode.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:988
 function editor_rallyEditor.showRallyTool() end
 
---- Ouvre ou ferme la fenêtre de calibration.
----Source : lua/ge/extensions/editor/rallyEditor.lua:1511
+--- Opens or closes the calibration window.
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1511
 function editor_rallyEditor.toggleCalibrationWindow() end
 
---- Active/désactive les annonces de virages dans l'onglet Pacenotes (ignoré ailleurs).
----Source : lua/ge/extensions/editor/rallyEditor.lua:307
+--- Enables/disables corner calls in the Pacenotes tab (ignored elsewhere).
+---Source: lua/ge/extensions/editor/rallyEditor.lua:307
 function editor_rallyEditor.toggleCornerCalls() end
 
---- Appelé directement par l'action d'entrée : zoom avant continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1400
----@param val number 0 relâché, 1 appuyé.
+--- Called directly by the input action: continuous zoom in (0.05 s debounce) of the "pacenoteOrbit" camera. No effect with another camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1400
+---@param val number 0 released, 1 pressed.
 function editor_rallyEditor.zoomIn(val) end
 
---- Appelé directement par l'action d'entrée : zoom arrière continu (anti-rebond 0.05 s) de la caméra « pacenoteOrbit ». Sans effet avec une autre caméra.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/rallyEditor.lua:1413
----@param val number 0 relâché, 1 appuyé.
+--- Called directly by the input action: continuous zoom out (0.05 s debounce) of the "pacenoteOrbit" camera. No effect with another camera.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/rallyEditor.lua:1413
+---@param val number 0 released, 1 pressed.
 function editor_rallyEditor.zoomOut(val) end
 

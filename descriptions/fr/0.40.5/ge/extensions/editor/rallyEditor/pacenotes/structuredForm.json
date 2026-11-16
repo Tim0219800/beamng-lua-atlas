@@ -1,0 +1,12 @@
+{
+  "path": "lua/ge/extensions/editor/rallyEditor/pacenotes/structuredForm.lua",
+  "module": "Formulaire d'édition « structuré » d'un pacenote dans l'éditeur de rallye. Il affiche un aperçu du texte et des fichiers audio, puis les sections Caution, Modifiers Before (preMod1/preMod2), Corner (descripteur d'intensité, direction, forme, pas signés, mode de longueur, type de relâchement des virages lents), Modifiers After (postMod1/postMod2) et Distance. Les modifieurs se choisissent par menu ou par recherche textuelle, avec liste des derniers utilisés (10 max). Les options viennent de la configuration du compositeur de texte du notebook. Utilisé par pacenoteForm.",
+  "notes": [
+    "La configuration (types, modifieurs, formes, descripteurs) est chargée au premier draw après un clear().",
+    "Appeler clear() quand le pacenote affiché change, sinon le formulaire garde les données de l'ancien."
+  ],
+  "functions": {
+    "draw": {"desc": "Dessine tout le formulaire structuré pour le pacenote donné (charge la configuration si besoin).", "params": {"pacenote": {"type": "table", "desc": "Pacenote en cours d'édition."}, "pacenoteToolsWindow": {"type": "table", "desc": "Fenêtre d'outils des pacenotes, mémorisée pour les rafraîchissements."}}, "internal": false},
+    "clear": {"desc": "Réinitialise l'état interne du formulaire (configuration, options, états de recherche, fenêtre active).", "internal": false}
+  }
+}

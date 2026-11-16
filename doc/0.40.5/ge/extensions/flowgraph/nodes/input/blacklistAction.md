@@ -1,27 +1,27 @@
 # `flowgraph_nodes_input_blacklistAction`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/input/blacklistAction.lua` · VM : Game Engine (GE) · 301 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/input/blacklistAction.lua` · VM: Game Engine (GE) · 301 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/input/blacklistAction")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/input/blacklistAction")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Set Input Actions » (once_instant, dépend de core_input_actionFilter). Bloque ou autorise une liste d'actions d'entrée, comme le fait un scénario. La liste (self.list) se choisit dans les propriétés (préréglages Empty/Scenario, recherche, catégories). Pins : block (défaut true : bloque, sinon autorise), ignoreUnrestriced (ignore le nœud si « restrictScenarios » est désactivé dans les réglages), id d'entrée (réutiliser une liste existante) et id de sortie (identifiant de la liste, pour l'annuler plus tard).
+Flowgraph node "Set Input Actions" (once_instant, depends on core_input_actionFilter). Blocks or allows a list of input actions, as a scenario does. The list (self.list) is chosen in the properties (Empty/Scenario presets, search, categories). Pins: block (default true: blocks, otherwise allows), ignoreUnrestriced (ignores the node if "restrictScenarios" is disabled in the settings), input id (reuse an existing list) and output id (identifier of the list, to cancel it later).
 
-**Dépendances (chargées avant) :** `core_input_actionFilter`
+**Dependencies (loaded first):** `core_input_actionFilter`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(data)` | Restaure les réglages propres au nœud à partir des données sauvegardées. | 264 |
-| `C:_onSerialize(res)` | Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe. | 260 |
-| `C:drawCustomProperties()` | Dessine l'éditeur de liste d'actions (préréglages, ajout par recherche ou catégorie, liste courante). | 113 |
-| `C:drawMiddle(builder, style)` | Affiche le nombre d'actions et renomme le nœud en Block/Allow Input Actions si block est codé en dur. | 271 |
-| `C:drawSearchInput()` | Dessine le champ de recherche d'actions et met à jour les résultats. | 60 |
-| `C:highlightText(label, highlightText)` | Dessine `label` en surlignant les occurrences de `highlightText`. | 87 |
-| `C:init()` | Initialise la liste avec le préréglage Scénario et le moteur de recherche. | 31 |
-| `C:workOnce()` | Enregistre la liste dans le module action du flowgraph (registerList) si pas déjà fait, puis appelle blockActions(id) ou allowActions(id). | 282 |
+| `C:_onDeserialized(data)` | Restores the node's own settings from the saved data. | 264 |
+| `C:_onSerialize(res)` | Adds the node's own settings to the `res` table when saving the graph. | 260 |
+| `C:drawCustomProperties()` | Draws the action list editor (presets, add by search or category, current list). | 113 |
+| `C:drawMiddle(builder, style)` | Displays the number of actions and renames the node to Block/Allow Input Actions if block is hard-coded. | 271 |
+| `C:drawSearchInput()` | Draws the action search field and updates the results. | 60 |
+| `C:highlightText(label, highlightText)` | Draws `label`, highlighting the occurrences of `highlightText`. | 87 |
+| `C:init()` | Initializes the list with the Scenario preset and the search engine. | 31 |
+| `C:workOnce()` | Registers the list in the flowgraph action module (registerList) if not already done, then calls blockActions(id) or allowActions(id). | 282 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/input/blacklistAction.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/input/blacklistAction.lua`.*

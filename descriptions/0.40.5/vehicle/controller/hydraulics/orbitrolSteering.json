@@ -1,9 +1,9 @@
 {
   "path": "lua/vehicle/controller/hydraulics/orbitrolSteering.lua",
-  "module": "Régulateur de direction hydraulique de type orbitrol (type \"auxiliary\"). Un PID compare la position moyenne des vérins de direction (normalisée -1..1) à l'entrée de direction (electrics.values.steering_input par défaut) et écrit la commande de vanne dans electrics.values.",
+  "module": "Orbitrol-type hydraulic steering regulator (type \"auxiliary\"). A PID compares the average position of the steering cylinders (normalized -1..1) to the steering input (electrics.values.steering_input by default) and writes the valve command into electrics.values.",
   "notes": [
-    "Clés jbeam (défaut) : steeringPositionCylinders (liste de noms de vérins), inputElectricsName (\"steering_input\"), steeringValveElectricsName (\"steerCylinder\"), steeringPositionMin (0), steeringPositionMax (1), steeringPIDKp (0.5), steeringPIDKi (0.3), steeringPIDKd (0.01).",
-    "La position de chaque vérin est multipliée par cylinder.direction avant la moyenne."
+    "jbeam keys (default): steeringPositionCylinders (list of cylinder names), inputElectricsName (\"steering_input\"), steeringValveElectricsName (\"steerCylinder\"), steeringPositionMin (0), steeringPositionMax (1), steeringPIDKp (0.5), steeringPIDKi (0.3), steeringPIDKd (0.01).",
+    "Each cylinder's position is multiplied by cylinder.direction before averaging."
   ],
   "fields": {
     "type": {
@@ -13,33 +13,33 @@
   },
   "functions": {
     "init": {
-      "desc": "Crée le PID et retrouve les vérins.",
+      "desc": "Creates the PID and finds the cylinders.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam du contrôleur."
+          "desc": "Controller jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "reset": {
-      "desc": "Remet la vanne et le PID à zéro.",
+      "desc": "Resets the valve and the PID to zero.",
       "params": {
         "jbeamData": {
           "type": "table",
-          "desc": "Données jbeam."
+          "desc": "Jbeam data."
         }
       },
       "returns": [],
       "internal": true
     },
     "updateFixedStep": {
-      "desc": "Calcule et écrit la commande de vanne de direction.",
+      "desc": "Computes and writes the steering valve command.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],

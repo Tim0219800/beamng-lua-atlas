@@ -1,44 +1,44 @@
 # `gameplayInterfaceModules_interactPowertrain`
 
-*Fichier : `lua/vehicle/extensions/gameplayInterfaceModules/interactPowertrain.lua` · VM : Véhicule · 34 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayInterfaceModules/interactPowertrain.lua` · VM: Vehicle · 34 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayInterfaceModules_interactPowertrain` : `extensions.load (VM véhicule)("gameplayInterfaceModules_interactPowertrain")`, puis la globale `gameplayInterfaceModules_interactPowertrain`
+**Access:** extension `gameplayInterfaceModules_interactPowertrain`: `extensions.load (vehicle VM)("gameplayInterfaceModules_interactPowertrain")`, then the global `gameplayInterfaceModules_interactPowertrain`
 
-Module de gameplayInterface pour powertrain : lecture d'une propriété d'un périphérique du groupe motopropulseur par son nom.
+gameplayInterface module for powertrain: reads a property of a powertrain device by its name.
 
-## Exemple
+## Example
 
 ```lua
 gameplayInterface.getSystemData(0, 18, 'powertrainDevice', 'mainEngine', 'outputAV1')
 ```
 
-## Remarques
+## Notes
 
-- Lookup 'powertrainDevice'(deviceName:string, property:string) : renvoie {result = powertrain.getDevice(deviceName)[property]}.
-- Anomalie : si le périphérique n'existe pas, powertrain.getDevice renvoie nil et l'indexation lève une erreur Lua (pas de {failReason}).
-- Ce module n'expose aucune action.
+- Lookup 'powertrainDevice'(deviceName:string, property:string): returns {result = powertrain.getDevice(deviceName)[property]}.
+- Anomaly: if the device does not exist, powertrain.getDevice returns nil and the indexing raises a Lua error (no {failReason}).
+- This module exposes no action.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayInterfaceModules_interactPowertrain.onExtensionLoaded()` | Appelé au chargement : enregistre le lookup. *(interne)* *(hook)* | 26 |
-| `gameplayInterfaceModules_interactPowertrain.requestRegistration(gi)` | Enregistre les actions et lookups auprès de gameplayInterface. *(interne)* | 22 |
+| `gameplayInterfaceModules_interactPowertrain.onExtensionLoaded()` | Called on load: registers the lookup. *(internal)* *(hook)* | 26 |
+| `gameplayInterfaceModules_interactPowertrain.requestRegistration(gi)` | Registers the actions and lookups with gameplayInterface. *(internal)* | 22 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayInterfaceModules_interactPowertrain.requestRegistration(gi)`
 
-Enregistre les actions et lookups auprès de gameplayInterface.
+Registers the actions and lookups with gameplayInterface.
 
-- `gi` (*table*) : Le module gameplayInterface.
+- `gi` (*table*) : The gameplayInterface module.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `moduleActions` | table<string, function> | Vide. |
-| `moduleLookups` | table<string, function> | Lookups : powertrainDevice. |
+| `moduleActions` | table<string, function> | Empty. |
+| `moduleLookups` | table<string, function> | Lookups: powertrainDevice. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayInterfaceModules/interactPowertrain.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayInterfaceModules/interactPowertrain.lua`.*

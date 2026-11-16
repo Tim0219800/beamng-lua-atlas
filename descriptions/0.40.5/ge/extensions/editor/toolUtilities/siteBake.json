@@ -1,130 +1,309 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/siteBake.lua",
-  "module": "Transforme ce qu'un éditeur vient de construire dans le monde en ce que porte un manifeste de site. Un site est conçu à un endroit de la carte et placé ailleurs : toutes les cuissons soustraient donc leur origine (ox, oy, oz) à tout avant d'écrire (géométrie, transformations du kit, lampes, plantations, plan du sol). L'origine choisie importe peu au placeur (il se recale sur les bornes lues) mais doit être la MÊME pour toutes les listes d'un manifeste. Les coordonnées de plan sont arrondies au millimètre.",
+  "module": "Transforms what an editor has just built in the world into what a site manifest carries. A site is designed at one place on the map and placed elsewhere: all bakes therefore subtract their origin (ox, oy, oz) from everything before writing (geometry, kit transforms, lamps, plantings, ground plan). The chosen origin matters little to the placer (it realigns on the bounds read) but must be the SAME for all lists of a manifest. Plan coordinates are rounded to the millimeter.",
   "notes": [
-    "Un « plan » de sol est composé de polygones ou de polylignes {x,y} ; une « feature » de terraform est soit un QUAD gradué (4 coins avec leurs hauteurs), soit des RINGS à hauteur commune ; mode par défaut 'carve'.",
-    "Les anneaux de feature sortent plats (un seul z par feature) ; le lecteur doit les refaire en vec3.",
-    "groupInstances regroupe par forme + couleur (glow) + indicateur street (pièce posée sur le trottoir) + stand (poteau sur la ligne de sol, hauteur étirée par le placeur). Chaque instance occupe 12 nombres dans xf : position (3), axe avant (3), axe haut (3), échelle (3).",
-    "Les lampes sortent { x, y, z, r (rayon), b (luminosité), col, street } et, pour un projecteur, dir et cone.",
-    "localPaint exige que extensions.editor_terrainEditor.getTerrainBlock() existe, et nomme les couches de peinture par nom (un indice n'est valable que pour un seul terrain).",
-    "Les plantes voyagent en ancres (items déjà dispersés, ou points + espèces + graine déjà calculée) car la forêt appartient au niveau et non au site."
+    "A ground \"plan\" is made of {x,y} polygons or polylines; a terraform \"feature\" is either a graded QUAD (4 corners with their heights), or RINGS at a common height; default mode 'carve'.",
+    "The feature rings come out flat (a single z per feature); the reader must rebuild them as vec3.",
+    "groupInstances groups by shape + color (glow) + street flag (piece placed on the sidewalk) + stand (post on the ground line, height stretched by the placer). Each instance takes 12 numbers in xf: position (3), forward axis (3), up axis (3), scale (3).",
+    "Lamps come out { x, y, z, r (radius), b (brightness), col, street } and, for a spotlight, dir and cone.",
+    "localPaint requires extensions.editor_terrainEditor.getTerrainBlock() to exist, and names the paint layers by name (an index is only valid for a single terrain).",
+    "Plants travel as anchors (items already scattered, or points + species + an already computed seed) because the forest belongs to the level and not to the site."
   ],
   "functions": {
     "localRing": {
-      "desc": "Un polygone de plan, local à l'origine de cuisson, arrondi au millimètre. Renvoie nil si moins de 3 points, pour qu'un appelant puisse collecter le retour directement dans une liste.",
+      "desc": "A plan polygon, local to the bake origin, rounded to the millimeter. Returns nil if fewer than 3 points, so that a caller can collect the return directly into a list.",
       "params": {
-        "ring": {"type": "table|nil", "desc": "Liste de points {x,y}."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."}
+        "ring": {
+          "type": "table|nil",
+          "desc": "List of {x,y} points."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Anneau local."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Local ring."
+        }
+      ],
       "internal": false
     },
     "localPts": {
-      "desc": "Une polyligne de la même façon (sans minimum de points). Sert aussi pour des normales unitaires avec une origine nulle.",
+      "desc": "A polyline in the same way (no minimum number of points). Also used for unit normals with a null origin.",
       "params": {
-        "pts": {"type": "table|nil", "desc": "Liste de points {x,y}."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."}
+        "pts": {
+          "type": "table|nil",
+          "desc": "List of {x,y} points."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        }
       },
-      "returns": [{"type": "table", "desc": "Polyligne locale."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Local polyline."
+        }
+      ],
       "internal": false
     },
     "localRings": {
-      "desc": "Une liste d'anneaux locaux ; nil si aucun n'était un polygone (une clé absente du manifeste signifie « ce site n'en a pas »).",
+      "desc": "A list of local rings; nil if none was a polygon (a key absent from the manifest means \"this site has none\").",
       "params": {
-        "rings": {"type": "table|nil", "desc": "Liste d'anneaux."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."}
+        "rings": {
+          "type": "table|nil",
+          "desc": "List of rings."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Liste d'anneaux locaux."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List of local rings."
+        }
+      ],
       "internal": false
     },
     "localFeatures": {
-      "desc": "Les formes auxquelles le site demande que le sol soit taillé, dans son repère. Chaque feature devient { quad = 4 coins {x,y,z locaux}, mode, band } ou { rings, z, mode, band }. Ignore tout ce à quoi sert la feature (palier, rampe, mur de soutènement).",
+      "desc": "The shapes the site asks the ground to be carved to, in its frame. Each feature becomes { quad = 4 corners {local x,y,z}, mode, band } or { rings, z, mode, band }. Ignores what the feature is used for (landing, ramp, retaining wall).",
       "params": {
-        "features": {"type": "table|nil", "desc": "Liste de features { quad } ou { rings, z }, avec mode ('carve' par défaut) et band."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."},
-        "oz": {"type": "number", "desc": "z de l'origine."}
+        "features": {
+          "type": "table|nil",
+          "desc": "List of features { quad } or { rings, z }, with mode ('carve' by default) and band."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        },
+        "oz": {
+          "type": "number",
+          "desc": "z of the origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Liste de features locales, nil s'il n'y en a pas."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List of local features, nil if there are none."
+        }
+      ],
       "internal": false
     },
     "localPaint": {
-      "desc": "La peinture de terrain qu'un site pose, dans son repère. Chaque couche { m, ring } ou { m, xs, ys } (cellule par cellule) sort nommée par couche de matériau du terrain.",
+      "desc": "The terrain paint a site lays, in its frame. Each layer { m, ring } or { m, xs, ys } (cell by cell) comes out named by terrain material layer.",
       "params": {
-        "coats": {"type": "table|nil", "desc": "Liste de couches : m = indice de matériau, ring ou xs/ys."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."}
+        "coats": {
+          "type": "table|nil",
+          "desc": "List of layers: m = material index, ring or xs/ys."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Liste { layer, ring } ou { layer, cells = {x1,y1,x2,y2,...} } ; nil si aucun bloc de terrain ou rien à peindre."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List { layer, ring } or { layer, cells = {x1,y1,x2,y2,...} }; nil if no terrain block or nothing to paint."
+        }
+      ],
       "internal": false
     },
     "groupInstances": {
-      "desc": "Regroupe les placements du kit par forme. Un groupe par maillage distinct devient un seul dessin instancié à l'arrivée : une place avec deux cents bornes identiques coûte une forme et deux cents transformations.",
+      "desc": "Groups the kit's placements by shape. One group per distinct mesh becomes a single instanced draw on arrival: a square with two hundred identical bollards costs one shape and two hundred transforms.",
       "params": {
-        "instances": {"type": "table|nil", "desc": "Liste d'instances { shape, px, py, pz, ax, ay, az, ux, uy, uz, scl, glow, street, stand }."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."},
-        "oz": {"type": "number", "desc": "z de l'origine."}
+        "instances": {
+          "type": "table|nil",
+          "desc": "List of instances { shape, px, py, pz, ax, ay, az, ux, uy, uz, scl, glow, street, stand }."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        },
+        "oz": {
+          "type": "number",
+          "desc": "z of the origin."
+        }
       },
-      "returns": [{"type": "table", "desc": "Liste de groupes { shape, xf (12 nombres par instance), glow, street, stand }."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "List of groups { shape, xf (12 numbers per instance), glow, street, stand }."
+        }
+      ],
       "internal": false
     },
     "harvestKit": {
-      "desc": "Relit les repères de pièces du kit déjà posées dans la scène et les ajoute à out comme des enregistrements d'instance acceptés par groupInstances. Accepte indifféremment des entrées de kit (champ obj) ou les objets eux-mêmes ; les objets disparus ou sans shapeName sont ignorés ; la lueur nocturne (nightEmissive) est relue.",
+      "desc": "Rereads the frames of kit pieces already placed in the scene and adds them to out as instance records accepted by groupInstances. Accepts either kit entries (obj field) or the objects themselves; vanished objects or those without shapeName are skipped; the night glow (nightEmissive) is reread.",
       "params": {
-        "list": {"type": "table|nil", "desc": "Liste d'entrées { obj } ou d'objets de scène."},
-        "out": {"type": "table|nil", "desc": "Liste à compléter (créée si nil)."}
+        "list": {
+          "type": "table|nil",
+          "desc": "List of { obj } entries or scene objects."
+        },
+        "out": {
+          "type": "table|nil",
+          "desc": "List to complete (created if nil)."
+        }
       },
-      "returns": [{"type": "table", "desc": "Enregistrements { shape, glow, px, py, pz, ax.., ux.., scl = {x,y,z} }."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Records { shape, glow, px, py, pz, ax.., ux.., scl = {x,y,z} }."
+        }
+      ],
       "internal": false
     },
     "instanceCount": {
-      "desc": "Nombre de pièces que dresse une liste de groupes (taille de xf divisée par 12), pour un affichage avant écriture.",
-      "params": {"groups": {"type": "table|nil", "desc": "Groupes renvoyés par groupInstances."}},
-      "returns": [{"type": "number", "desc": "Nombre de pièces."}],
+      "desc": "Number of pieces that a list of groups stands up (size of xf divided by 12), for display before writing.",
+      "params": {
+        "groups": {
+          "type": "table|nil",
+          "desc": "Groups returned by groupInstances."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Number of pieces."
+        }
+      ],
       "internal": false
     },
     "localLamps": {
-      "desc": "Les lampes qui accompagnent les pièces, dans le repère du site. La couleur vient de glow ou de col (blanc par défaut). Un projecteur (dx présent) sort avec dir et cone ; une ampoule non.",
+      "desc": "The lamps that accompany the pieces, in the site's frame. The color comes from glow or col (white by default). A spotlight (dx present) comes out with dir and cone; a bulb does not.",
       "params": {
-        "lights": {"type": "table|nil", "desc": "Liste d'enregistrements de lumière { px, py, pz, radius, brightness, glow|col, street, dx, dy, dz, cone }."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."},
-        "oz": {"type": "number", "desc": "z de l'origine."}
+        "lights": {
+          "type": "table|nil",
+          "desc": "List of light records { px, py, pz, radius, brightness, glow|col, street, dx, dy, dz, cone }."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        },
+        "oz": {
+          "type": "number",
+          "desc": "z of the origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Liste de lampes locales, nil si vide."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List of local lamps, nil if empty."
+        }
+      ],
       "internal": false
     },
     "localPlants": {
-      "desc": "Plantation sous forme d'ancres : { items } pour des plantes déjà dispersées (x, y, sp, s, a), ou { points, species, speciesWeights, size, vary, seed, drape, street } pour une dispersion à refaire (la graine est déjà calculée, pour obtenir les mêmes plantes aux mêmes endroits).",
+      "desc": "Planting as anchors: { items } for already scattered plants (x, y, sp, s, a), or { points, species, speciesWeights, size, vary, seed, drape, street } for a scatter to redo (the seed is already computed, to obtain the same plants at the same places).",
       "params": {
-        "anchors": {"type": "table|nil", "desc": "Ancres de l'éditeur."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."},
-        "oz": {"type": "number", "desc": "z de l'origine."}
+        "anchors": {
+          "type": "table|nil",
+          "desc": "Editor anchors."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        },
+        "oz": {
+          "type": "number",
+          "desc": "z of the origin."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "Liste d'ancres locales, nil si vide."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "List of local anchors, nil if empty."
+        }
+      ],
       "internal": false
     },
     "plantCount": {
-      "desc": "Nombre de plantes qu'une cuisson porterait, sur toutes les ancres (items ou points). Uniquement pour un affichage.",
-      "params": {"anchors": {"type": "table|nil", "desc": "Ancres de plantation."}},
-      "returns": [{"type": "integer", "desc": "Nombre de plantes."}],
+      "desc": "Number of plants that a bake would carry, over all anchors (items or points). For display only.",
+      "params": {
+        "anchors": {
+          "type": "table|nil",
+          "desc": "Planting anchors."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of plants."
+        }
+      ],
       "internal": false
     },
     "bounds": {
-      "desc": "L'étendue de tout ce que la cuisson place (sommets des parts et positions des instances, relatifs à l'origine), pour que le placeur cadre un site, le choisisse sous le curseur et sache la place qu'il lui faut avant de charger un maillage. Renvoie deux coins nuls si rien.",
+      "desc": "The extent of everything the bake places (part vertices and instance positions, relative to the origin), so that the placer can frame a site, pick it under the cursor and know the room it needs before loading a mesh. Returns two null corners if nothing.",
       "params": {
-        "parts": {"type": "table|nil", "desc": "Parts de maillage avec verts."},
-        "instances": {"type": "table|nil", "desc": "Instances avec px, py, pz."},
-        "ox": {"type": "number", "desc": "x de l'origine."},
-        "oy": {"type": "number", "desc": "y de l'origine."},
-        "oz": {"type": "number", "desc": "z de l'origine."}
+        "parts": {
+          "type": "table|nil",
+          "desc": "Mesh parts with verts."
+        },
+        "instances": {
+          "type": "table|nil",
+          "desc": "Instances with px, py, pz."
+        },
+        "ox": {
+          "type": "number",
+          "desc": "x of the origin."
+        },
+        "oy": {
+          "type": "number",
+          "desc": "y of the origin."
+        },
+        "oz": {
+          "type": "number",
+          "desc": "z of the origin."
+        }
       },
-      "returns": [{"type": "table", "desc": "Coin minimal {x,y,z}."}, {"type": "table", "desc": "Coin maximal {x,y,z}."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Minimum corner {x,y,z}."
+        },
+        {
+          "type": "table",
+          "desc": "Maximum corner {x,y,z}."
+        }
+      ],
       "internal": false
     }
   }

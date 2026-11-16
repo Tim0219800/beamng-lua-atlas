@@ -1,70 +1,70 @@
 {
   "path": "lua/ge/extensions/editor/sitesEditor/tags.lua",
-  "module": "Onglet 'Tags' de l'éditeur de sites (Location Tags, Zone Tags, Parking Spot Tags selon la clé). Le module renvoie un constructeur de classe C. Il liste tous les tags présents dans sites[key] et, pour le tag choisi, affiche deux colonnes (éléments qui l'ont / qui ne l'ont pas) avec des boutons pour déplacer un ou tous les éléments d'un côté à l'autre, ce qui appelle customFields:addTag / removeTag. Les éléments sont surlignés dans le monde au survol.",
+  "module": "'Tags' tab of the sites editor (Location Tags, Zone Tags, Parking Spot Tags depending on the key). The module returns a class constructor C. It lists all the tags present in sites[key] and, for the chosen tag, displays two columns (elements that have it / that do not) with buttons to move one or all elements from one side to the other, which calls customFields:addTag / removeTag. Elements are highlighted in the world on hover.",
   "notes": [
-    "Le bouton '>' retire le tag de tous les éléments qui l'ont ; '<' l'ajoute à tous les autres."
+    "The '>' button removes the tag from all the elements that have it; '<' adds it to all the others."
   ],
   "classes": {
     "C": {
-      "desc": "Objet renvoyé par le constructeur. Champs : sitesEditor, key, sites, tag, tags, sortedTags, hasTag, noTag.",
+      "desc": "Object returned by the constructor. Fields: sitesEditor, key, sites, tag, tags, sortedTags, hasTag, noTag.",
       "functions": {
         "init": {
-          "desc": "Constructeur (appelé par le module).",
+          "desc": "Constructor (called by the module).",
           "params": {
             "sitesEditor": {
               "type": "table",
-              "desc": "Module editor_sitesEditor."
+              "desc": "editor_sitesEditor module."
             },
             "key": {
               "type": "string",
-              "desc": "'locations', 'zones' ou 'parkingSpots'."
+              "desc": "'locations', 'zones' or 'parkingSpots'."
             }
           },
           "returns": [],
           "internal": true
         },
         "setSites": {
-          "desc": "Définit les sites édités.",
+          "desc": "Sets the edited sites.",
           "params": {
             "sites": {
               "type": "table",
-              "desc": "Objet sites."
+              "desc": "Sites object."
             }
           },
           "returns": [],
           "internal": false
         },
         "selected": {
-          "desc": "Appelé quand l'onglet devient actif : relit et trie tous les tags des éléments.",
+          "desc": "Called when the tab becomes active: rereads and sorts all the tags of the elements.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "unselect": {
-          "desc": "Appelé quand l'onglet est quitté ; ne fait rien.",
+          "desc": "Called when the tab is left; does nothing.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "draw": {
-          "desc": "Dessine l'onglet (appelle drawGeneralInfo). Appelée avec mouseInfo par sitesEditor mais la méthode l'ignore.",
+          "desc": "Draws the tab (calls drawGeneralInfo). Called with mouseInfo by sitesEditor but the method ignores it.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "selectTag": {
-          "desc": "Choisit un tag et répartit les éléments en hasTag et noTag.",
+          "desc": "Chooses a tag and splits the elements into hasTag and noTag.",
           "params": {
             "tag": {
               "type": "string",
-              "desc": "Nom du tag."
+              "desc": "Tag name."
             }
           },
           "returns": [],
           "internal": false
         },
         "drawGeneralInfo": {
-          "desc": "Dessine la liste des tags et les deux colonnes de gestion du tag choisi.",
+          "desc": "Draws the tag list and the two management columns of the chosen tag.",
           "params": {},
           "returns": [],
           "internal": false

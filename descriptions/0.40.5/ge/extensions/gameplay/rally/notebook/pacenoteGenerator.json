@@ -1,24 +1,38 @@
 {
   "path": "lua/ge/extensions/gameplay/rally/notebook/pacenoteGenerator.lua",
-  "module": "Générateur simple de pacenotes : à partir d'une liste de points de la ligne de conduite (driveline), il détecte les virages gauche/droite en calculant, pour chaque point, le cercle passant par trois points (le point et ceux situés `lookAheadContext` indices avant/après, en 2D). Les zones quasi droites sont filtrées, puis les segments consécutifs de même direction sont fusionnés. Sert à l'outil de génération de l'éditeur de rallye.",
+  "module": "Simple pacenote generator: from a list of driveline points, it detects left/right corners by computing, for each point, the circle through three points (the point and those `lookAheadContext` indices before/after, in 2D). Nearly straight areas are filtered out, then consecutive segments of the same direction are merged. Used by the rally editor's generation tool.",
   "usage": "local gen = require('gameplay_rally_notebook_pacenoteGenerator')\nlocal res = gen.detectCorners(drivelinePoints, { straightThreshold = 8 })\nfor _, c in ipairs(res.corners) do print(c.direction, c.angle, c.length) end",
   "notes": [
-    "Direction : \" right\" ou \" left\" (avec espace initial) pour un virage, \"\" pour un tronçon droit. Angle en degrés : positif = droite, négatif = gauche.",
-    "detectCorners complète la table params passée en argument (elle est modifiée en place avec les valeurs par défaut).",
-    "Les deux premiers/derniers points ne reçoivent aucune donnée de direction ; la découpe en virages s'arrête 3 points avant la fin de la liste.",
-    "Si pointList est nil ou a moins de 3 points : log 'E' et résultat { sections = {}, corners = {} }."
+    "Direction: \" right\" or \" left\" (with a leading space) for a corner, \"\" for a straight section. Angle in degrees: positive = right, negative = left.",
+    "detectCorners fills in the params table passed as an argument (it is modified in place with the default values).",
+    "The first/last two points receive no direction data; the split into corners stops 3 points before the end of the list.",
+    "If pointList is nil or has fewer than 3 points: 'E' log and result { sections = {}, corners = {} }."
   ],
   "fields": {
-    "defaultParams": {"type": "table", "desc": "Paramètres par défaut : lookAheadContext = 7 (nombre de points avant/après pour le cercle), straightThreshold = 5.0 (angle en degrés sous lequel un tronçon est considéré droit), mergeDistanceThreshold = 0.2 (m, distance à la droite pour fusionner des tronçons droits), maxSimplifyIterations = 10."}
+    "defaultParams": {
+      "type": "table",
+      "desc": "Default parameters: lookAheadContext = 7 (number of points before/after for the circle), straightThreshold = 5.0 (angle in degrees below which a section is considered straight), mergeDistanceThreshold = 0.2 (m, distance to the line for merging straight sections), maxSimplifyIterations = 10."
+    }
   },
   "functions": {
     "detectCorners": {
-      "desc": "Détecte les virages le long d'une ligne de conduite. Renvoie `sections` (tous les tronçons, droits inclus, pour le dessin de débogage) et `corners` (seulement ceux ayant une direction, candidats à une pacenote). Chaque section contient pos, posEnd, direction, angle, length et nodes.",
+      "desc": "Detects corners along a driveline. Returns `sections` (all sections, straights included, for debug drawing) and `corners` (only those with a direction, pacenote candidates). Each section contains pos, posEnd, direction, angle, length and nodes.",
       "params": {
-        "pointList": {"type": "table", "desc": "Liste de points : tables avec un champ .pos, ou directement des vec3."},
-        "params": {"type": "table|nil", "desc": "Surcharge de defaultParams (lookAheadContext, straightThreshold, mergeDistanceThreshold, maxSimplifyIterations)."}
+        "pointList": {
+          "type": "table",
+          "desc": "List of points: tables with a .pos field, or vec3s directly."
+        },
+        "params": {
+          "type": "table|nil",
+          "desc": "Override of defaultParams (lookAheadContext, straightThreshold, mergeDistanceThreshold, maxSimplifyIterations)."
+        }
       },
-      "returns": [{"type": "table", "desc": "{ sections = table[], corners = table[] }."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{ sections = table[], corners = table[] }."
+        }
+      ],
       "internal": false
     }
   }

@@ -1,31 +1,31 @@
 # `flowgraph_nodes_mission_stageLightsDragRace`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua` · VM : Game Engine (GE) · 76 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua` · VM: Game Engine (GE) · 76 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/mission/stageLightsDragRace")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/mission/stageLightsDragRace")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Set Stage Lights' (categorie repeat_instant). Allume la lumiere Pre Stage ou Stage de l'arbre de Noel du drag race (objets scene Prestagelight_l/r et Stagelight_l/r) du cote 'side' ('l' ou 'r', defaut 'l'). 'light' vaut 'preStage' (defaut) ou 'stage'. L'impulsion 'reset' cache toutes ces lumieres.
+Flowgraph node 'Set Stage Lights' (repeat_instant category). Turns on the Pre Stage or Stage light of the drag race Christmas tree (scene objects Prestagelight_l/r and Stagelight_l/r) on side 'side' ('l' or 'r', default 'l'). 'light' is 'preStage' (default) or 'stage'. The 'reset' impulse hides all these lights.
 
-## Remarques
+## Notes
 
-- La sortie flow n'est jamais ecrite, et le pin d'entree flow n'est pas teste.
-- Sans reset prealable, self.lights est vide et work plante a l'acces des lumieres.
+- The flow output is never written, and the flow input pin is not tested.
+- Without a prior reset, self.lights is empty and work crashes when accessing the lights.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Vide la table lights. | 43 |
-| `C:init()` | Vide la table lights. | 47 |
-| `C:initLights()` | Recherche les quatre objets lumineux dans la scene. | 32 |
-| `C:postInit()` | Definit les valeurs proposees des pins side (left/right) et light (Pre Stage/Stage). | 21 |
-| `C:work()` | Sur reset : retrouve les lumieres et les cache. Sinon rend visible la lumiere choisie. | 51 |
+| `C:_executionStarted()` | Empties the lights table. | 43 |
+| `C:init()` | Empties the lights table. | 47 |
+| `C:initLights()` | Searches the scene for the four light objects. | 32 |
+| `C:postInit()` | Defines the offered values of the pins side (left/right) and light (Pre Stage/Stage). | 21 |
+| `C:work()` | On reset: finds the lights again and hides them. Otherwise makes the chosen light visible. | 51 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/mission/stageLightsDragRace.lua`.*

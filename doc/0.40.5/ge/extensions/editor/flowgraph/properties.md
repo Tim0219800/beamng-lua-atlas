@@ -1,46 +1,46 @@
 # `editor_flowgraph_properties`
 
-*Fichier : `lua/ge/extensions/editor/flowgraph/properties.lua` · VM : Game Engine (GE) · 1325 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/flowgraph/properties.lua` · VM: Game Engine (GE) · 1325 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/flowgraph/properties")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/flowgraph/properties")` (file under extensions/ but not a regular extension)
 
-Fenêtre « Properties » (fg_properties) de l'éditeur Flowgraph : inspecteur du nœud sélectionné (ou du graphe courant). Elle affiche un en-tête coloré avec renommage/couleurs personnalisés, les propriétés spécifiques du nœud (node:drawCustomProperties), sa table data, ses pins d'entrée (valeur codée en dur, modèles, visibilité) et de sortie (valeur courante _value), et les propriétés du graphe (nom, tags de macro…). Chaque changement ajoute une entrée d'historique via fgEditor.addHistory.
+"Properties" window (fg_properties) of the Flowgraph editor: inspector of the selected node (or the current graph). It displays a colored header with custom renaming/colors, the node's specific properties (node:drawCustomProperties), its data table, its input pins (hardcoded value, templates, visibility) and output pins (current _value), and the graph properties (name, macro tags...). Each change adds a history entry via fgEditor.addHistory.
 
-## Remarques
+## Notes
 
-- _drawInputField gère number (float/int, input ou slider selon pin.numericSetup, bornes min/max appliquées), string et autres types ; les valeurs ImGui sont mises en cache dans item._cdata.
-- La variable locale `previousNode` (upvalue du fichier) sert à appeler showProperties/hideProperties sur le nœud précédemment sélectionné ; self.previousNode (init) n'est pas utilisé ensuite.
-- Seul le cas « un seul nœud sélectionné » affiche les propriétés du nœud.
-- Les entrées sont désactivées (BeginDisabled) quand mgr.allowEditing est faux.
-- Dans _drawDataTable avec keysEditable, le callback de renommage de clé appelle saveCallback avec v[k] déjà mis à nil (valeur nil).
+- _drawInputField handles number (float/int, input or slider depending on pin.numericSetup, min/max bounds applied), string and other types; the ImGui values are cached in item._cdata.
+- The local variable `previousNode` (file upvalue) is used to call showProperties/hideProperties on the previously selected node; self.previousNode (init) is not used afterwards.
+- Only the "single selected node" case displays the node properties.
+- The inputs are disabled (BeginDisabled) when mgr.allowEditing is false.
+- In _drawDataTable with keysEditable, the key rename callback calls saveCallback with v[k] already set to nil (nil value).
 
-## Classe `C`
+## Class `C`
 
-Classe de la fenêtre (windowName 'fg_properties', windowDescription 'Properties').
+Window class (windowName 'fg_properties', windowDescription 'Properties').
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_drawDataTable(path, cdata, v, savePath, saveCallback, keysEditable)` | Dessine une table de données en deux colonnes clé/valeur (clés triées), ou une seule ligne si la seule clé est 'value'. | 158 |
-| `C:_drawInputField(path, cdata, type, v, savePath, saveCallback, enterOnly, padRight, pin)` | Dessine un champ d'édition adapté au type de valeur et appelle saveCallback quand la saisie est validée. | 24 |
-| `C:customPropertyColor(item, customName, cdata)` | Dessine un sélecteur de couleur RGBA pour une propriété personnalisée et l'écrit dans item[customName] à la fin de l'édition. | 199 |
-| `C:draw(dt)` | Dessine la fenêtre : surligne les liens des nœuds sélectionnés, gère le changement de sélection, affiche le nœud sélectionné ou les propriétés du graphe. | 1020 |
-| `C:drawCustomInPins(item)` | Dessine la section « Input Pins » éditable pour les nœuds à pins d'entrée personnalisés (allowCustomInPins). | 397 |
-| `C:drawCustomOutPins(item)` | Dessine la section de pins de sortie éditable (allowCustomOutPins). | 610 |
-| `C:drawGraphProperties(graph)` | Dessine les propriétés d'un graphe (nom, avec mise à jour du nœud intégré pour une macro, etc.). | 1156 |
-| `C:drawHardTemplates(pin, item)` | Dessine le combo « ... » proposant des modèles de valeur codée en dur pour un pin (sélection de fichier si pin.allowFiles, chemin relatif au dossier du projet). | 745 |
-| `C:drawInPins(item)` | Dessine la section « Input Pins » : visibilité, icône de type, nom, valeur codée en dur ou lien. | 804 |
-| `C:drawItemHeader(item)` | Dessine l'en-tête coloré de l'élément avec son nom et le bouton de modification (mode_edit) du nom et des couleurs. | 231 |
-| `C:drawItemProperties(itemType, item)` | Dessine la table data de l'élément puis ses pins d'entrée et de sortie (éditables ou non). | 976 |
-| `C:drawOutPins(item)` | Dessine la section « Output Pins » : visibilité (masquable si non lié), type, nom et valeur courante (pin._value). | 934 |
-| `C:getFirstAllowedType(types)` | Renvoie le premier type (ordre alphabétique) autorisé d'une table de types ; 'number' si types est nil, 'bool' si aucun. | 388 |
-| `C:init()` | Enregistre la fenêtre (visible par défaut) et charge la texture d'en-tête art/imgui_node_header.png. | 18 |
-| `C:initCustomProperties(item)` | Prépare les champs d'édition du nom et des couleurs (customColor/color, iconColor) d'un élément. | 211 |
-| `C:showAvailableMacroTags()` | Liste les tags de macro du projet (mgr.macroTags) avec renommage et suppression. | 1133 |
-| `C:unselect()` | Appelle hideProperties sur le nœud précédemment affiché et réinitialise les états d'édition. Appelée à la fermeture de la fenêtre. | 1124 |
+| `C:_drawDataTable(path, cdata, v, savePath, saveCallback, keysEditable)` | Draws a data table in two key/value columns (sorted keys), or a single row if the only key is 'value'. | 158 |
+| `C:_drawInputField(path, cdata, type, v, savePath, saveCallback, enterOnly, padRight, pin)` | Draws an edit field suited to the value type and calls saveCallback when the input is validated. | 24 |
+| `C:customPropertyColor(item, customName, cdata)` | Draws an RGBA color picker for a custom property and writes it to item[customName] at the end of the edit. | 199 |
+| `C:draw(dt)` | Draws the window: highlights the links of the selected nodes, handles selection changes, displays the selected node or the graph properties. | 1020 |
+| `C:drawCustomInPins(item)` | Draws the editable "Input Pins" section for nodes with custom input pins (allowCustomInPins). | 397 |
+| `C:drawCustomOutPins(item)` | Draws the editable output pins section (allowCustomOutPins). | 610 |
+| `C:drawGraphProperties(graph)` | Draws the properties of a graph (name, with update of the integrated node for a macro, etc.). | 1156 |
+| `C:drawHardTemplates(pin, item)` | Draws the "..." combo offering hardcoded value templates for a pin (file selection if pin.allowFiles, path relative to the project folder). | 745 |
+| `C:drawInPins(item)` | Draws the "Input Pins" section: visibility, type icon, name, hardcoded value or link. | 804 |
+| `C:drawItemHeader(item)` | Draws the item's colored header with its name and the edit button (mode_edit) for the name and colors. | 231 |
+| `C:drawItemProperties(itemType, item)` | Draws the item's data table then its input and output pins (editable or not). | 976 |
+| `C:drawOutPins(item)` | Draws the "Output Pins" section: visibility (can be hidden if not linked), type, name and current value (pin._value). | 934 |
+| `C:getFirstAllowedType(types)` | Returns the first allowed type (alphabetical order) of a types table; 'number' if types is nil, 'bool' if none. | 388 |
+| `C:init()` | Registers the window (visible by default) and loads the header texture art/imgui_node_header.png. | 18 |
+| `C:initCustomProperties(item)` | Prepares the name and color (customColor/color, iconColor) edit fields of an item. | 211 |
+| `C:showAvailableMacroTags()` | Lists the project's macro tags (mgr.macroTags) with renaming and deletion. | 1133 |
+| `C:unselect()` | Calls hideProperties on the previously displayed node and resets the edit states. Called when the window closes. | 1124 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/flowgraph/properties.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/flowgraph/properties.lua`.*

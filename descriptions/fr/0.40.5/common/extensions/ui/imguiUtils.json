@@ -1,0 +1,189 @@
+{
+  "path": "lua/common/extensions/ui/imguiUtils.lua",
+  "module": "Boîte à outils ImGui de haut niveau (ui_imguiUtils) : changement d'échelle d'UI, chargement de textures, boutons-menus déroulants (DropdownButton/Selectable/Select), affichage récursif d'une table Lua en arbre ou en colonnes clé/valeur, petite appli clé/valeur, et affichage d'un flottant échantillonné avec min/max (SampleFloatDisplay). Utile pour les outils de debug en ImGui d'un moddeur. Tout passe par ui_imgui ; certaines fonctions supposent la présence de l'éditeur (editor.uiIconImageButton).",
+  "usage": "local iu = ui_imguiUtils\n-- dans un callback ImGui :\niu.SampleFloatDisplay('rpm', electrics.values.rpm, 0.5, 1)\niu.addRecursiveTreeTable(maTable, '/ma', false)",
+  "notes": [
+    "DropdownButton, DropdownSelectable et DropdownSelect appellent editor.uiIconImageButton quand une icône est fournie : cela exige que l'éditeur (global editor) soit chargé.",
+    "DropdownSelectable utilise imgui.tooltip, défini dans imgui_custom_luaintf.",
+    "SampleFloatDisplay mémorise un état par id ImGui (GetID1) dans sampleFloatDisplayState et alimente dataTbl à chaque appel sans jamais le vider : fuite mémoire lente si utilisé en continu.",
+    "CreateSampleFloatDisplay : le graphique PlotLines est commenté ; seul le texte est affiché. Clic droit = reset, PageUp/PageDown = intervalle ±0.05 s (survol uniquement).",
+    "addRecursiveTreeTable : les sous-tables de plus de 3 éléments à profondeur > 2 sont repliées dans un CollapsingHeader. Les userdata float3 sont affichés en float3(x,y,z), les fonctions listent leurs variables locales.",
+    "renderSubTree utilise la variable globale noColumns (non définie dans la portée locale, donc nil) : l'option noColumns n'est pas propagée aux sous-niveaux.",
+    "keyValueTable appelle imgui.Columns(2, tostring(k)) avec une variable k non définie à ce stade (nil) : l'identifiant de colonnes est donc « nil ».",
+    "IsWindowHovered attend windowSize comme pointeur ImVec2 (windowSize[0].x), pas comme ImVec2 simple.",
+    "changeUIScale multiplie l'échelle par GetWindowDpiScale() sauf si l'éditeur est présent avec la préférence ui.general.dpiAware à faux ; il écrit imgui.uiscale[0] et FontGlobalScale.",
+    "Les fonctions locales pointToLine, getlocal, testTableRecursive etc. ne sont pas exportées."
+  ],
+  "fields": {
+    "sampleFloatDisplayState": {"type": "table", "desc": "États des affichages échantillonnés, indexés par id ImGui."}
+  },
+  "functions": {
+    "changeUIScale": {
+      "desc": "Définit l'échelle d'interface ImGui (imgui.uiscale[0]) et la FontGlobalScale de l'IO, en tenant compte de la mise à l'échelle DPI de la fenêtre selon la préférence de l'éditeur.",
+      "params": {"uiscale": {"type": "number", "desc": "Échelle souhaitée (1 = 100 %)."}},
+      "returns": []
+    },
+    "drawCursorPos": {
+      "desc": "Dessine une petite croix rouge (8 px) à une position d'écran, par défaut la position actuelle du curseur ImGui ; sert à déboguer le placement.",
+      "params": {
+        "posX": {"type": "number|nil", "desc": "X écran ; défaut : position de fenêtre + curseur X."},
+        "posY": {"type": "number|nil", "desc": "Y écran ; défaut : position de fenêtre + curseur Y."}
+      },
+      "returns": []
+    },
+    "texObj": {
+      "desc": "Charge une texture via ImTextureHandler et renvoie une table utilisable avec ImGui.",
+      "params": {"path": {"type": "string", "desc": "Chemin de l'image, ex. '/ui/...png'."}},
+      "returns": [{"type": "table", "desc": "{file = nom du fichier, path, tex = ImTextureHandler, texId (hérité, ne pas utiliser), size = taille}."}]
+    },
+    "DropdownItem": {
+      "desc": "Crée un élément pour DropdownButton.",
+      "params": {
+        "label": {"type": "string", "desc": "Texte."},
+        "icon": {"type": "any|nil", "desc": "Icône."},
+        "func": {"type": "function", "desc": "Callback appelé à la sélection."},
+        "tooltip": {"type": "string|nil", "desc": "Infobulle."}
+      },
+      "returns": [{"type": "table", "desc": "{label, icon, func, tooltip}."}]
+    },
+    "DropdownSelectableItem": {
+      "desc": "Crée un élément pour DropdownSelectable.",
+      "params": {
+        "label": {"type": "string", "desc": "Texte."},
+        "active": {"type": "boolean", "desc": "État sélectionné."},
+        "func": {"type": "function", "desc": "Callback appelé à la sélection."},
+        "tooltip": {"type": "string|nil", "desc": "Infobulle."}
+      },
+      "returns": [{"type": "table", "desc": "{label, active, func, tooltip}."}]
+    },
+    "DropdownButton": {
+      "desc": "Affiche un bouton (texte ou icône) qui ouvre un popup listant des items DropdownItem, à placer sous le bouton ou à sa droite (horizontal).",
+      "params": {
+        "label": {"type": "string", "desc": "Texte du bouton."},
+        "size": {"type": "ImVec2|nil", "desc": "Taille du bouton."},
+        "items": {"type": "table", "desc": "Liste d'items DropdownItem."},
+        "icon": {"type": "any|nil", "desc": "Icône ; sinon bouton texte."},
+        "horizontal": {"type": "boolean|nil", "desc": "Popup à droite plutôt qu'en dessous, items sur une ligne."}
+      },
+      "returns": [{"type": "boolean", "desc": "Voir le code : renvoie false dans les chemins observés."}]
+    },
+    "DropdownSelectable": {
+      "desc": "Bouton ouvrant un popup d'items à cocher (DropdownSelectableItem) ; le clic droit peut ouvrir un second menu (itemsRMB).",
+      "params": {
+        "label": {"type": "string", "desc": "Texte du bouton."},
+        "items": {"type": "table", "desc": "Items DropdownSelectableItem."},
+        "icon": {"type": "any|nil", "desc": "Icône, sinon SmallButton."},
+        "iconSize": {"type": "ImVec2|nil", "desc": "Taille d'icône avant échelle UI, 32x32 par défaut."},
+        "popupWidth": {"type": "number|nil", "desc": "Largeur du popup."},
+        "onChangeFunc": {"type": "function|nil", "desc": "Callback de changement."},
+        "tooltip": {"type": "string|nil", "desc": "Infobulle."},
+        "itemsRMB": {"type": "table|nil", "desc": "Items du menu clic droit."}
+      },
+      "returns": [{"type": "boolean", "desc": "false dans les chemins observés."}]
+    },
+    "DropdownSelect": {
+      "desc": "Liste déroulante : le bouton affiche l'item courant items[selectedItem[0]] ; le popup permet d'en choisir un autre.",
+      "params": {
+        "label": {"type": "string", "desc": "Identifiant ImGui (ajouté après ##)."},
+        "size": {"type": "ImVec2|nil", "desc": "Taille du bouton."},
+        "selectedItem": {"type": "table", "desc": "Pointeur entier (IntPtr), indice [0] = item sélectionné."},
+        "items": {"type": "table", "desc": "Liste d'items avec label et icon."},
+        "horizontal": {"type": "boolean|nil", "desc": "Popup à droite."},
+        "excludeCurrent": {"type": "boolean|nil", "desc": "Masque l'item courant dans la liste (déduit du nom)."}
+      },
+      "returns": [{"type": "boolean", "desc": "Voir le code ; false par défaut."}]
+    },
+    "IsWindowHovered": {
+      "desc": "Teste si la souris est dans un rectangle de fenêtre donné (position + taille).",
+      "params": {
+        "windowPos": {"type": "ImVec2", "desc": "Position, ex. im.GetWindowPos()."},
+        "windowSize": {"type": "table", "desc": "Taille sous forme de pointeur : windowSize[0].x / .y utilisés."}
+      },
+      "returns": [{"type": "boolean", "desc": "Vrai si la souris est strictement à l'intérieur."}]
+    },
+    "displayKeyValues": {
+      "desc": "Affiche les paires clé : valeur d'une table Lua ; les sous-tables deviennent des TreeNode récursifs.",
+      "params": {"tbl": {"type": "table|nil", "desc": "Table à afficher."}},
+      "returns": []
+    },
+    "CreateKeyValApp": {
+      "desc": "Crée une fenêtre ImGui simple avec un TreeNode qui affiche une table Lua clé/valeur.",
+      "params": {
+        "window": {"type": "string", "desc": "Titre de la fenêtre."},
+        "section": {"type": "string", "desc": "Titre du TreeNode."},
+        "tbl": {"type": "table", "desc": "Table à afficher."},
+        "callback": {"type": "function|nil", "desc": "Appelé quand le TreeNode est ouvert, avant l'affichage."}
+      },
+      "returns": []
+    },
+    "keyValueTable": {
+      "desc": "Affiche une table en deux colonnes (clés triées / valeurs récursives).",
+      "params": {
+        "data": {"type": "table", "desc": "Table."},
+        "fullpath": {"type": "string", "desc": "Chemin courant (ex. '/root'), utilisé pour les ids ImGui."},
+        "highlightCallback": {"type": "function|nil", "desc": "Appelé (path, key, value) quand un élément est survolé."},
+        "itemCallback": {"type": "function|nil", "desc": "Appelé (begin, path, key, value) avant (true) puis après (false) chaque entrée ; le retour de l'appel begin décide si l'entrée est affichée."}
+      },
+      "returns": []
+    },
+    "addRecursiveTreeTable": {
+      "desc": "Affiche n'importe quelle valeur Lua : tables en arbre ou en colonnes, booléens/nombres/chaînes colorés, float3, fonctions (noms des variables locales), autres types avec tostring.",
+      "params": {
+        "data": {"type": "any", "desc": "Valeur à afficher."},
+        "fullpath": {"type": "string", "desc": "Chemin courant ; le nombre de « / » donne la profondeur."},
+        "noColumns": {"type": "boolean|nil", "desc": "Force l'arbre plutôt que les colonnes."},
+        "highlightCallback": {"type": "function|nil", "desc": "Callback de survol."},
+        "itemCallback": {"type": "function|nil", "desc": "Callback begin/end par entrée."}
+      },
+      "returns": []
+    },
+    "cell": {
+      "desc": "Affiche deux textes dans deux cellules de colonne (Text puis NextColumn deux fois).",
+      "params": {
+        "a": {"type": "string", "desc": "Texte colonne 1."},
+        "b": {"type": "string", "desc": "Texte colonne 2."}
+      },
+      "returns": []
+    },
+    "CreateSampleFloatDisplay": {
+      "desc": "Crée un afficheur de flottant échantillonné : l'objet renvoyé a une méthode draw(newValue) qui montre la valeur échantillonnée toutes les sampleTime secondes, avec infobulle (dernière, échantillonnée, min, max).",
+      "params": {
+        "sampleTimeInSeconds": {"type": "number|nil", "desc": "Intervalle d'échantillonnage, 1 par défaut."},
+        "startingValue": {"type": "number|nil", "desc": "Valeur initiale, 0 par défaut."},
+        "precision": {"type": "integer|nil", "desc": "Décimales, 6 par défaut."}
+      },
+      "returns": [{"type": "table", "desc": "ValueSampler avec precision et draw."}]
+    },
+    "SampleFloatDisplay": {
+      "desc": "Version à une seule ligne de CreateSampleFloatDisplay : crée l'afficheur à la première utilisation (clé = imgui.GetID1(id)), puis le dessine avec value.",
+      "params": {
+        "id": {"type": "string", "desc": "Identifiant unique de l'affichage."},
+        "value": {"type": "number", "desc": "Valeur courante."},
+        "sampleTimeInSeconds": {"type": "number|nil", "desc": "Intervalle (première création)."},
+        "precision": {"type": "integer|nil", "desc": "Décimales (première création)."}
+      },
+      "returns": []
+    }
+  },
+  "classes": {
+    "ValueSampler": {
+      "desc": "Objet interne renvoyé par CreateSampleFloatDisplay : mesure le temps, mémorise la valeur échantillonnée st et le min/max observés.",
+      "functions": {
+        "get": {
+          "desc": "Ajoute le temps écoulé, met à jour min/max avec l'échantillon, et renvoie la valeur échantillonnée.",
+          "params": {"sample": {"type": "number", "desc": "Valeur courante."}},
+          "returns": [
+            {"type": "number", "desc": "Valeur échantillonnée (mise à jour toutes les sampleTime secondes)."},
+            {"type": "number", "desc": "Minimum observé."},
+            {"type": "number", "desc": "Maximum observé."}
+          ]
+        },
+        "reset": {
+          "desc": "Remet min/max, valeur échantillonnée et temps à zéro.",
+          "params": {},
+          "returns": []
+        }
+      }
+    }
+  }
+}

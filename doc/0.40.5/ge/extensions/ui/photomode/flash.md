@@ -1,98 +1,98 @@
 # `ui_photomode_flash`
 
-*Fichier : `lua/ge/extensions/ui/photomode/flash.lua` · VM : Game Engine (GE) · 164 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/flash.lua` · VM: Game Engine (GE) · 164 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_flash` : `extensions.load("ui_photomode_flash")`, puis la globale `ui_photomode_flash`
+**Access:** extension `ui_photomode_flash`: `extensions.load("ui_photomode_flash")`, then the global `ui_photomode_flash`
 
-Réglages du flash du mode photo. Garde en mémoire l'état du flash (activé, tir à la capture, intensité, angle, teinte, saturation) et le transmet à l'extension util/photomodeFlash, qu'il charge à la demande. Sert de façade au panneau UI du mode photo et au module de capture (ui_photomode_capture) qui déclenche les captures avec flash.
+Photo mode flash settings. Keeps the flash state in memory (enabled, fire on capture, intensity, angle, hue, saturation) and passes it to the util/photomodeFlash extension, which it loads on demand. Acts as a facade for the photo mode UI panel and for the capture module (ui_photomode_capture) which triggers captures with flash.
 
-## Exemple
+## Example
 
 ```lua
 ui_photomode_flash.applyStatePatch({enabled = true, intensity = 30000})
 ui_photomode_flash.applyRuntimeSettings()
 ```
 
-## Remarques
+## Notes
 
-- Valeurs par défaut : enabled=false, fireOnCapture=false, intensity=25000, outerAngle=55, hue=0, saturation=0.
-- applyStatePatch ne modifie que l'état Lua ; il faut appeler applyRuntimeSettings (ou applyPresetState) pour que util/photomodeFlash soit réellement mis à jour. Les valeurs numériques ne sont pas validées.
-- Les fonctions qui échouent renvoient false plus une raison : extensions_unavailable, flash_unavailable, flash_apply_failed, screenshot_request_failed.
-- getCaptureUiHoldFrames vaut 5 seulement si le flash est activé et tire à la capture, sinon 0.
+- Default values: enabled=false, fireOnCapture=false, intensity=25000, outerAngle=55, hue=0, saturation=0.
+- applyStatePatch only changes the Lua state; applyRuntimeSettings (or applyPresetState) must be called for util/photomodeFlash to actually be updated. Numeric values are not validated.
+- Functions that fail return false plus a reason: extensions_unavailable, flash_unavailable, flash_apply_failed, screenshot_request_failed.
+- getCaptureUiHoldFrames is 5 only if the flash is enabled and fires on capture, otherwise 0.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_flash.applyPresetState(flashState)` | Applique un état de preset (fusion puis applyRuntimeSettings). Ne fait rien si l'argument n'est pas une table. | 95 |
-| `ui_photomode_flash.applyRuntimeSettings()` | Si le flash est désactivé, coupe util/photomodeFlash (enable(false)). Sinon charge cette extension et appelle applyFromUi avec les réglages courants. | 103 |
-| `ui_photomode_flash.applyStatePatch(partialState)` | Fusionne dans l'état les champs présents de partialState (enabled et fireOnCapture convertis en booléens). N'agit pas sur le moteur de rendu. | 82 |
-| `ui_photomode_flash.buildState()` | Renvoie une copie de l'état du flash : enabled, fireOnCapture, intensity, outerAngle, hue, saturation. | 63 |
-| `ui_photomode_flash.captureDefaultPresetState()` | Renvoie un état de flash aux valeurs par défaut, sans modifier l'état courant. | 78 |
-| `ui_photomode_flash.capturePresetState()` | État du flash à enregistrer dans un preset (identique à buildState). | 74 |
-| `ui_photomode_flash.getCaptureUiHoldFrames()` | Nombre d'images pendant lesquelles garder l'UI masquée/figée lors d'une capture avec flash : 5 si flash activé et fireOnCapture, sinon 0. | 147 |
-| `ui_photomode_flash.resetSettings()` | Coupe le flash côté moteur puis remet les réglages Lua aux valeurs par défaut. | 154 |
-| `ui_photomode_flash.restoreRuntimeState()` | Coupe le flash côté moteur (util/photomodeFlash.enable(false)) s'il est chargé, sans toucher aux réglages Lua. | 159 |
-| `ui_photomode_flash.runCapture(kind, ...)` | Délègue une capture à util/photomodeFlash.runCapture(kind, ...) en protégeant l'appel par pcall. | 130 |
+| `ui_photomode_flash.applyPresetState(flashState)` | Applies a preset state (merge then applyRuntimeSettings). Does nothing if the argument is not a table. | 95 |
+| `ui_photomode_flash.applyRuntimeSettings()` | If the flash is disabled, turns off util/photomodeFlash (enable(false)). Otherwise loads this extension and calls applyFromUi with the current settings. | 103 |
+| `ui_photomode_flash.applyStatePatch(partialState)` | Merges into the state the fields present in partialState (enabled and fireOnCapture converted to booleans). Does not act on the render engine. | 82 |
+| `ui_photomode_flash.buildState()` | Returns a copy of the flash state: enabled, fireOnCapture, intensity, outerAngle, hue, saturation. | 63 |
+| `ui_photomode_flash.captureDefaultPresetState()` | Returns a flash state with default values, without modifying the current state. | 78 |
+| `ui_photomode_flash.capturePresetState()` | Flash state to save in a preset (same as buildState). | 74 |
+| `ui_photomode_flash.getCaptureUiHoldFrames()` | Number of frames during which to keep the UI hidden/frozen during a capture with flash: 5 if flash enabled and fireOnCapture, otherwise 0. | 147 |
+| `ui_photomode_flash.resetSettings()` | Turns off the flash on the engine side then resets the Lua settings to default values. | 154 |
+| `ui_photomode_flash.restoreRuntimeState()` | Turns off the flash on the engine side (util/photomodeFlash.enable(false)) if it is loaded, without touching the Lua settings. | 159 |
+| `ui_photomode_flash.runCapture(kind, ...)` | Delegates a capture to util/photomodeFlash.runCapture(kind, ...) with the call protected by pcall. | 130 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_flash.applyPresetState(flashState)`
 
-Applique un état de preset (fusion puis applyRuntimeSettings). Ne fait rien si l'argument n'est pas une table.
+Applies a preset state (merge then applyRuntimeSettings). Does nothing if the argument is not a table.
 
-- `flashState` (*table*) : État du flash issu d'un preset
-- **renvoie** : boolean succès
-- **renvoie** : string|nil raison de l'échec
+- `flashState` (*table*) : Flash state from a preset
+- **returns**: boolean success
+- **returns**: string|nil failure reason
 
 #### `ui_photomode_flash.applyRuntimeSettings()`
 
-Si le flash est désactivé, coupe util/photomodeFlash (enable(false)). Sinon charge cette extension et appelle applyFromUi avec les réglages courants.
+If the flash is disabled, turns off util/photomodeFlash (enable(false)). Otherwise loads this extension and calls applyFromUi with the current settings.
 
-- **renvoie** : boolean succès
-- **renvoie** : string|nil raison de l'échec (flash_unavailable, flash_apply_failed…)
+- **returns**: boolean success
+- **returns**: string|nil failure reason (flash_unavailable, flash_apply_failed...)
 
 #### `ui_photomode_flash.applyStatePatch(partialState)`
 
-Fusionne dans l'état les champs présents de partialState (enabled et fireOnCapture convertis en booléens). N'agit pas sur le moteur de rendu.
+Merges into the state the fields present in partialState (enabled and fireOnCapture converted to booleans). Does not act on the render engine.
 
-- `partialState` (*table*) : Champs à modifier ; tout autre type est ignoré
-- **renvoie** : boolean toujours true
+- `partialState` (*table*) : Fields to change; any other type is ignored
+- **returns**: boolean always true
 
 #### `ui_photomode_flash.buildState()`
 
-Renvoie une copie de l'état du flash : enabled, fireOnCapture, intensity, outerAngle, hue, saturation.
+Returns a copy of the flash state: enabled, fireOnCapture, intensity, outerAngle, hue, saturation.
 
-- **renvoie** : table État sérialisable du flash
+- **returns**: table Serializable flash state
 
 #### `ui_photomode_flash.captureDefaultPresetState()`
 
-Renvoie un état de flash aux valeurs par défaut, sans modifier l'état courant.
+Returns a flash state with default values, without modifying the current state.
 
-- **renvoie** : table Valeurs par défaut
+- **returns**: table Default values
 
 #### `ui_photomode_flash.capturePresetState()`
 
-État du flash à enregistrer dans un preset (identique à buildState).
+Flash state to save in a preset (same as buildState).
 
-- **renvoie** : table État courant
+- **returns**: table Current state
 
 #### `ui_photomode_flash.getCaptureUiHoldFrames()`
 
-Nombre d'images pendant lesquelles garder l'UI masquée/figée lors d'une capture avec flash : 5 si flash activé et fireOnCapture, sinon 0.
+Number of frames during which to keep the UI hidden/frozen during a capture with flash: 5 if flash enabled and fireOnCapture, otherwise 0.
 
-- **renvoie** : integer 0 ou 5
+- **returns**: integer 0 or 5
 
 #### `ui_photomode_flash.runCapture(kind, ...)`
 
-Délègue une capture à util/photomodeFlash.runCapture(kind, ...) en protégeant l'appel par pcall.
+Delegates a capture to util/photomodeFlash.runCapture(kind, ...) with the call protected by pcall.
 
-- `kind` (*any*) : Type de capture transmis tel quel à util/photomodeFlash (déduit du code)
-- `...` (*any*) : Arguments supplémentaires transmis tels quels
-- **renvoie** : boolean true si la capture a été demandée
-- **renvoie** : string|nil raison de l'échec (screenshot_request_failed par défaut)
+- `kind` (*any*) : Capture type passed as is to util/photomodeFlash (inferred from code)
+- `...` (*any*) : Additional arguments passed as is
+- **returns**: boolean true if the capture was requested
+- **returns**: string|nil failure reason (screenshot_request_failed by default)
 
-**Charge les extensions :** `util/photomodeFlash`
+**Loads extensions:** `util/photomodeFlash`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/flash.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/flash.lua`.*

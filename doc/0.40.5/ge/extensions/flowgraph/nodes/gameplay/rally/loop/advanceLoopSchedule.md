@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_rally_loop_advanceLoopSchedule`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule.lua` · VM : Game Engine (GE) · 42 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule.lua` · VM: Game Engine (GE) · 42 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Advance Loop Schedule » (catégorie once_instant, tag rally, sans pin). Demande au gestionnaire de la boucle rally (gameplay_rallyLoop.getManager()) de passer à la mission suivante du planning via rm:getNextMissionId(), et logge le résultat (D si une mission suivante existe, W sinon, E si le gestionnaire est introuvable ou l'extension non chargée).
+Flowgraph node "Rally Advance Loop Schedule" (category once_instant, tag rally, no pin). Asks the rally loop manager (gameplay_rallyLoop.getManager()) to move to the next mission in the schedule via rm:getNextMissionId(), and logs the result (D if a next mission exists, W otherwise, E if the manager cannot be found or the extension is not loaded).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle rm:getNextMissionId() (qui avance le planning) et logge l'id obtenu. | 26 |
+| `C:workOnce()` | Calls rm:getNextMissionId() (which advances the schedule) and logs the id obtained. | 26 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/advanceLoopSchedule.lua`.*

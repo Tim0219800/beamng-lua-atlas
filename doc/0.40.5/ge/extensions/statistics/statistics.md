@@ -1,204 +1,204 @@
 # `statistics_statistics`
 
-*Fichier : `lua/ge/extensions/statistics/statistics.lua` · VM : Game Engine (GE) · 949 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/statistics/statistics.lua` · VM: Game Engine (GE) · 949 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `statistics_statistics` : `extensions.load("statistics_statistics")`, puis la globale `statistics_statistics`
+**Access:** extension `statistics_statistics`: `extensions.load("statistics_statistics")`, then the global `statistics_statistics`
 
-Extension GE qui suit les statistiques d'un scénario (distance parcourue, altitude, vitesse max, dégâts, temps, objectifs) pour chaque véhicule, calcule les points obtenus et attribue la médaille finale (wood/bronze/silver/gold). Les paramètres viennent de scenario.statistics (maxValue, maxPoints, best/worst, target, source, required, alias, overall avec goldCutoff/silverCutoff/bronzeCutoff). Un moddeur s'en sert pour lire les résultats d'un scénario (getVehicleStat, getScenarioOverallStat) ou pour y ajouter ses propres statistiques (initialiseArbitraryStat, setStatProgress).
+GE extension that tracks a scenario's statistics (distance traveled, altitude, max speed, damage, time, goals) for each vehicle, computes the points earned and awards the final medal (wood/bronze/silver/gold). The parameters come from scenario.statistics (maxValue, maxPoints, best/worst, target, source, required, alias, overall with goldCutoff/silverCutoff/bronzeCutoff). A modder uses it to read a scenario's results (getVehicleStat, getScenarioOverallStat) or to add their own statistics (initialiseArbitraryStat, setStatProgress).
 
-## Exemple
+## Example
 
 ```lua
 local stats = statistics_statistics.getVehicleStat(be:getPlayerVehicleID(0))
 for _, s in ipairs(stats or {}) do print(s.label, s.value, s.points, s.maxPoints) end
 ```
 
-## Remarques
+## Notes
 
-- Les tables internes sont indexées par id de véhicule puis par clé 'stat_<nom>' ou 'goal_<nom>' ; chaque entrée contient des 'instances' (une par source/véhicule suivi).
-- Unités : distance et altitude en mètres ; si le total est < 1609.34 m (1 mile) l'unité affichée est 'm', sinon l'unité utilisateur 'distance'. La vitesse (max) est la norme de map.objects[id].vel en m/s.
-- Points d'une stat : (value / maxValue) * maxPoints, ou, pour le temps, interpolation linéaire entre best (points max) et worst (0). Les points sont bornés à ±maxPoints puis arrondis par math.floor.
-- Médaille : wood si le scénario est échoué ; gold si score >= goldCutoff (défaut 90 %) ou maxPoints == 0 ; silver >= silverCutoff (70) ; bronze >= bronzeCutoff (0).
-- Bug probable : dans initialiseTimeStat, quand scenario.statistics.time est un tableau, maxPoints/best/worst sont lus sur le tableau (timeProperties) et non sur l'entrée courante (entry), donc ils valent nil.
-- Bug probable : getSummaryStats additionne data.points / data.maxPoints sans test de nil (erreur si le nom n'existe pas dans scenarioStats).
-- DEBUG_generateScoreForMedal fait clamp(percent, 0, 100) alors que percent est déjà une fraction 0..1 ; le jeu logge des erreurs en build shipping car la fonction devrait être retirée.
-- enableStatisticTracking appelle vehicle:getPosition() sans tester vehicle nil et écrit initialZPos/initialPos sur statEntry (et non sur l'instance) alors que onUpdate lit instance.initialPos/initialZPos.
+- The internal tables are keyed by vehicle id then by key 'stat_<name>' or 'goal_<name>'; each entry contains 'instances' (one per source/tracked vehicle).
+- Units: distance and altitude in meters; if the total is < 1609.34 m (1 mile) the displayed unit is 'm', otherwise the user's 'distance' unit. Speed (max) is the norm of map.objects[id].vel in m/s.
+- Points of a stat: (value / maxValue) * maxPoints, or, for time, linear interpolation between best (max points) and worst (0). Points are clamped to ±maxPoints then rounded with math.floor.
+- Medal: wood if the scenario is failed; gold if score >= goldCutoff (default 90%) or maxPoints == 0; silver >= silverCutoff (70); bronze >= bronzeCutoff (0).
+- Probable BUG: in initialiseTimeStat, when scenario.statistics.time is an array, maxPoints/best/worst are read from the array (timeProperties) and not from the current entry (entry), so they are nil.
+- Probable BUG: getSummaryStats adds data.points / data.maxPoints without a nil check (error if the name does not exist in scenarioStats).
+- DEBUG_generateScoreForMedal does clamp(percent, 0, 100) while percent is already a fraction 0..1; the game logs errors in shipping builds because the function should be removed.
+- enableStatisticTracking calls vehicle:getPosition() without testing vehicle for nil and writes initialZPos/initialPos on statEntry (and not on the instance) while onUpdate reads instance.initialPos/initialZPos.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `statistics_statistics.DEBUG_generateScoreForMedal(medalString)` | Fonction de debug : force le score du joueur à un pourcentage juste au-dessus du seuil de la médaille demandée et remplit le résumé du scénario courant. | 884 |
-| `statistics_statistics.disableStatisticTracking(vehicleID, statisticName)` | Désactive le suivi d'une statistique pour un véhicule (enabled = false). Les valeurs déjà mesurées sont conservées. | 65 |
-| `statistics_statistics.enableStatisticTracking(vehicleID, statisticName)` | Active le suivi d'une statistique pour un véhicule (enabled = true) et mémorise la position de départ pour 'altitude' (initialZPos) ou 'distance' (initialPos). Ne fait rien si la statistique n'existe pas pour ce véhicule. | 33 |
-| `statistics_statistics.getMedalRanking(medalString)` | Convertit un nom de médaille en rang : wood 0, bronze 1, silver 2, gold 3 ; -1 si inconnu. | 590 |
-| `statistics_statistics.getScenarioOverallStat(scenario)` | Renvoie le résumé global d'un scénario (label, points, maxPoints, failed, medal…), ou une table vide s'il n'y en a pas. | 105 |
-| `statistics_statistics.getSummaryStats(statsOrder)` | Renvoie, dans l'ordre donné, les résumés de plusieurs scénarios (avec relativePoints en %) ainsi que le total des points obtenus et le total des points max. Utilisé pour un récapitulatif de campagne. | 191 |
-| `statistics_statistics.getVehicleStat(vehicleID)` | Construit la liste des statistiques d'un véhicule pour l'interface de fin de scénario : une entrée par stat/objectif avec label, decimals, unit, predefinedUnit, required, failed, value, points, maxPoints et relativePoints (en %). Agrège les instances (somme des valeurs et des points). Pour une unité '%', la valeur est ramenée à value/maxValue*100. | 114 |
-| `statistics_statistics.initialiseArbitraryStat(statName, statLabel, vehicle, vehicleName, maxPoints, maxValue)` | Ajoute une statistique personnalisée (value = 0, decimals = 2, enabled) à un véhicule ; la source est vehicleName. | 400 |
-| `statistics_statistics.onDeserialized(data)` | Hook de rechargement : restaure statsTable (noms reconvertis en ids) et scenarioStats. *(interne)* *(hook)* | 862 |
-| `statistics_statistics.onRaceGoalsInitilised(scenario)` | Hook : appelé quand les objectifs de course sont initialisés. Recrée les tables de stats (initialiseTables). Le nom contient la faute 'Initilised'. *(interne)* *(hook)* | 692 |
-| `statistics_statistics.onRaceInit()` | Hook : appelé à l'initialisation de la course ; relève la position de départ (initialPos, initialZPos) des stats distance et altitude. *(interne)* *(hook)* | 797 |
-| `statistics_statistics.onRaceResult(status)` | Hook : appelé à la fin de la course ; enregistre status.finalTime dans la stat 'time'. *(interne)* *(hook)* | 848 |
-| `statistics_statistics.onRaceTick(raceTickTime, timer)` | Hook : appelé à chaque tick de course ; enregistre le chrono courant dans la stat 'time'. *(interne)* *(hook)* | 844 |
-| `statistics_statistics.onResumeCampaign(campaignInProgress, data)` | Hook de reprise de campagne : restaure statsTable et scenarioStats depuis data. *(interne)* *(hook)* | 878 |
-| `statistics_statistics.onSaveCampaign(saveCallback)` | Hook de sauvegarde de campagne : passe les mêmes données que onSerialize à saveCallback. *(interne)* *(hook)* | 871 |
-| `statistics_statistics.onScenarioChange(scenario)` | Hook : appelé à chaque changement d'état du scénario. À l'état 'post', capture les dégâts finaux de chaque véhicule (map.objects[id].damage). *(interne)* *(hook)* | 714 |
-| `statistics_statistics.onScenarioRestarted(scenario)` | Hook : appelé au redémarrage du scénario ; recrée les tables de stats. *(interne)* *(hook)* | 687 |
-| `statistics_statistics.onSerialize()` | Hook de sauvegarde de l'extension : renvoie statsTable (clés id converties en noms de véhicule) et scenarioStats. *(interne)* *(hook)* | 852 |
-| `statistics_statistics.onUpdate()` | Hook appelé à chaque frame. Tant que scenario.raceState == 'racing' (et état ≠ 'post'), met à jour distance (norme du déplacement depuis initialPos), altitude (écart absolu en Z) et vitesse maximale pour chaque véhicule suivi. *(interne)* *(hook)* | 732 |
-| `statistics_statistics.reset()` | Vide scenarioStats (résumés par scénario). Ne touche pas à statsTable. | 15 |
-| `statistics_statistics.setGoalProgress(vehicleID, goalName, instanceId, goalData)` | Crée ou met à jour la progression d'un objectif (clé 'goal_<nom>', required = true) pour un véhicule : enregistre points et maxPoints de l'instance et failed si goalData.status == 'failed'. Ne fait rien si le véhicule n'a pas encore de table de stats. | 210 |
-| `statistics_statistics.setStatProgress(vehicleID, statName, instanceId, statData)` | Crée ou met à jour une statistique pour un véhicule. Les champs decimals, enabled, label, predefinedUnit, unit et isGoal sont stockés au niveau de la stat ; tous les autres champs de statData (value, maxValue, maxPoints, source…) sont copiés dans l'instance instanceId. Ignoré si instanceId ou statData manque ou n'est pas une table. | 238 |
-| `statistics_statistics.stopStatsGathering(scenario)` | Fin de collecte : choisit l'unité de distance/altitude (m si < 1609.34 m, sinon unité 'distance'), calcule les points du véhicule joueur et remplit le résumé du scénario (points, maxPoints, failed, medal). | 648 |
+| `statistics_statistics.DEBUG_generateScoreForMedal(medalString)` | Debug function: forces the player's score to a percentage just above the requested medal's threshold and fills the current scenario's summary. | 884 |
+| `statistics_statistics.disableStatisticTracking(vehicleID, statisticName)` | Disables tracking of a statistic for a vehicle (enabled = false). Values already measured are kept. | 65 |
+| `statistics_statistics.enableStatisticTracking(vehicleID, statisticName)` | Enables tracking of a statistic for a vehicle (enabled = true) and stores the starting position for 'altitude' (initialZPos) or 'distance' (initialPos). Does nothing if the statistic does not exist for this vehicle. | 33 |
+| `statistics_statistics.getMedalRanking(medalString)` | Converts a medal name to a rank: wood 0, bronze 1, silver 2, gold 3; -1 if unknown. | 590 |
+| `statistics_statistics.getScenarioOverallStat(scenario)` | Returns the overall summary of a scenario (label, points, maxPoints, failed, medal...), or an empty table if there is none. | 105 |
+| `statistics_statistics.getSummaryStats(statsOrder)` | Returns, in the given order, the summaries of several scenarios (with relativePoints in %) as well as the total points earned and the total max points. Used for a campaign recap. | 191 |
+| `statistics_statistics.getVehicleStat(vehicleID)` | Builds the list of a vehicle's statistics for the end-of-scenario interface: one entry per stat/goal with label, decimals, unit, predefinedUnit, required, failed, value, points, maxPoints and relativePoints (in %). Aggregates the instances (sum of values and points). For a '%' unit, the value is brought back to value/maxValue*100. | 114 |
+| `statistics_statistics.initialiseArbitraryStat(statName, statLabel, vehicle, vehicleName, maxPoints, maxValue)` | Adds a custom statistic (value = 0, decimals = 2, enabled) to a vehicle; the source is vehicleName. | 400 |
+| `statistics_statistics.onDeserialized(data)` | Reload hook: restores statsTable (names converted back to ids) and scenarioStats. *(internal)* *(hook)* | 862 |
+| `statistics_statistics.onRaceGoalsInitilised(scenario)` | Hook: called when the race goals are initialized. Recreates the stats tables (initialiseTables). The name contains the typo 'Initilised'. *(internal)* *(hook)* | 692 |
+| `statistics_statistics.onRaceInit()` | Hook: called when the race is initialized; records the starting position (initialPos, initialZPos) of the distance and altitude stats. *(internal)* *(hook)* | 797 |
+| `statistics_statistics.onRaceResult(status)` | Hook: called at the end of the race; records status.finalTime in the 'time' stat. *(internal)* *(hook)* | 848 |
+| `statistics_statistics.onRaceTick(raceTickTime, timer)` | Hook: called on each race tick; records the current timer in the 'time' stat. *(internal)* *(hook)* | 844 |
+| `statistics_statistics.onResumeCampaign(campaignInProgress, data)` | Campaign resume hook: restores statsTable and scenarioStats from data. *(internal)* *(hook)* | 878 |
+| `statistics_statistics.onSaveCampaign(saveCallback)` | Campaign save hook: passes the same data as onSerialize to saveCallback. *(internal)* *(hook)* | 871 |
+| `statistics_statistics.onScenarioChange(scenario)` | Hook: called on each scenario state change. In the 'post' state, captures the final damage of each vehicle (map.objects[id].damage). *(internal)* *(hook)* | 714 |
+| `statistics_statistics.onScenarioRestarted(scenario)` | Hook: called when the scenario restarts; recreates the stats tables. *(internal)* *(hook)* | 687 |
+| `statistics_statistics.onSerialize()` | Extension save hook: returns statsTable (id keys converted to vehicle names) and scenarioStats. *(internal)* *(hook)* | 852 |
+| `statistics_statistics.onUpdate()` | Hook called every frame. While scenario.raceState == 'racing' (and state ≠ 'post'), updates distance (norm of the displacement since initialPos), altitude (absolute Z difference) and max speed for each tracked vehicle. *(internal)* *(hook)* | 732 |
+| `statistics_statistics.reset()` | Clears scenarioStats (per-scenario summaries). Does not touch statsTable. | 15 |
+| `statistics_statistics.setGoalProgress(vehicleID, goalName, instanceId, goalData)` | Creates or updates the progress of a goal (key 'goal_<name>', required = true) for a vehicle: records the instance's points and maxPoints and failed if goalData.status == 'failed'. Does nothing if the vehicle does not yet have a stats table. | 210 |
+| `statistics_statistics.setStatProgress(vehicleID, statName, instanceId, statData)` | Creates or updates a statistic for a vehicle. The fields decimals, enabled, label, predefinedUnit, unit and isGoal are stored at the stat level; all other statData fields (value, maxValue, maxPoints, source...) are copied into the instance instanceId. Ignored if instanceId or statData is missing or not a table. | 238 |
+| `statistics_statistics.stopStatsGathering(scenario)` | End of collection: chooses the distance/altitude unit (m if < 1609.34 m, otherwise 'distance' unit), computes the player vehicle's points and fills the scenario summary (points, maxPoints, failed, medal). | 648 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `statistics_statistics.DEBUG_generateScoreForMedal(medalString)`
 
-Fonction de debug : force le score du joueur à un pourcentage juste au-dessus du seuil de la médaille demandée et remplit le résumé du scénario courant.
+Debug function: forces the player's score to a percentage just above the requested medal's threshold and fills the current scenario's summary.
 
-- `medalString` (*string*) : 'bronze', 'silver' ou 'gold'.
+- `medalString` (*string*) : 'bronze', 'silver' or 'gold'.
 
 #### `statistics_statistics.disableStatisticTracking(vehicleID, statisticName)`
 
-Désactive le suivi d'une statistique pour un véhicule (enabled = false). Les valeurs déjà mesurées sont conservées.
+Disables tracking of a statistic for a vehicle (enabled = false). Values already measured are kept.
 
-- `vehicleID` (*integer*) : Id du véhicule.
-- `statisticName` (*string*) : Nom de la stat sans préfixe.
+- `vehicleID` (*integer*) : Vehicle id.
+- `statisticName` (*string*) : Stat name without prefix.
 
 #### `statistics_statistics.enableStatisticTracking(vehicleID, statisticName)`
 
-Active le suivi d'une statistique pour un véhicule (enabled = true) et mémorise la position de départ pour 'altitude' (initialZPos) ou 'distance' (initialPos). Ne fait rien si la statistique n'existe pas pour ce véhicule.
+Enables tracking of a statistic for a vehicle (enabled = true) and stores the starting position for 'altitude' (initialZPos) or 'distance' (initialPos). Does nothing if the statistic does not exist for this vehicle.
 
-- `vehicleID` (*integer*) : Id du véhicule.
-- `statisticName` (*string*) : Nom de la stat sans préfixe : 'distance', 'altitude', 'speed', 'damage', 'time'…
+- `vehicleID` (*integer*) : Vehicle id.
+- `statisticName` (*string*) : Stat name without prefix: 'distance', 'altitude', 'speed', 'damage', 'time'...
 
 #### `statistics_statistics.getMedalRanking(medalString)`
 
-Convertit un nom de médaille en rang : wood 0, bronze 1, silver 2, gold 3 ; -1 si inconnu.
+Converts a medal name to a rank: wood 0, bronze 1, silver 2, gold 3; -1 if unknown.
 
-- `medalString` (*string*) : 'wood', 'bronze', 'silver' ou 'gold'.
-- **renvoie** : integer Rang de 0 à 3, ou -1.
+- `medalString` (*string*) : 'wood', 'bronze', 'silver' or 'gold'.
+- **returns**: integer Rank from 0 to 3, or -1.
 
 #### `statistics_statistics.getScenarioOverallStat(scenario)`
 
-Renvoie le résumé global d'un scénario (label, points, maxPoints, failed, medal…), ou une table vide s'il n'y en a pas.
+Returns the overall summary of a scenario (label, points, maxPoints, failed, medal...), or an empty table if there is none.
 
-- `scenario` (*table*) : Table du scénario (seul scenario.name est utilisé).
-- **renvoie** : table Entrée de scenarioStats[scenario.name] ou {}.
+- `scenario` (*table*) : Scenario table (only scenario.name is used).
+- **returns**: table Entry of scenarioStats[scenario.name] or {}.
 
 #### `statistics_statistics.getSummaryStats(statsOrder)`
 
-Renvoie, dans l'ordre donné, les résumés de plusieurs scénarios (avec relativePoints en %) ainsi que le total des points obtenus et le total des points max. Utilisé pour un récapitulatif de campagne.
+Returns, in the given order, the summaries of several scenarios (with relativePoints in %) as well as the total points earned and the total max points. Used for a campaign recap.
 
-- `statsOrder` (*string[]*) : Noms de scénarios (clés de scenarioStats).
-- **renvoie** : table[] Résumés par scénario.
-- **renvoie** : number Somme des points du joueur.
-- **renvoie** : number Somme des points max.
+- `statsOrder` (*string[]*) : Scenario names (keys of scenarioStats).
+- **returns**: table[] Summaries per scenario.
+- **returns**: number Sum of the player's points.
+- **returns**: number Sum of the max points.
 
 #### `statistics_statistics.getVehicleStat(vehicleID)`
 
-Construit la liste des statistiques d'un véhicule pour l'interface de fin de scénario : une entrée par stat/objectif avec label, decimals, unit, predefinedUnit, required, failed, value, points, maxPoints et relativePoints (en %). Agrège les instances (somme des valeurs et des points). Pour une unité '%', la valeur est ramenée à value/maxValue*100.
+Builds the list of a vehicle's statistics for the end-of-scenario interface: one entry per stat/goal with label, decimals, unit, predefinedUnit, required, failed, value, points, maxPoints and relativePoints (in %). Aggregates the instances (sum of values and points). For a '%' unit, the value is brought back to value/maxValue*100.
 
-- `vehicleID` (*integer*) : Id du véhicule.
-- **renvoie** : table[]|nil Liste d'entrées, ou nil si le véhicule n'a pas de stats.
+- `vehicleID` (*integer*) : Vehicle id.
+- **returns**: table[]|nil List of entries, or nil if the vehicle has no stats.
 
 #### `statistics_statistics.initialiseArbitraryStat(statName, statLabel, vehicle, vehicleName, maxPoints, maxValue)`
 
-Ajoute une statistique personnalisée (value = 0, decimals = 2, enabled) à un véhicule ; la source est vehicleName.
+Adds a custom statistic (value = 0, decimals = 2, enabled) to a vehicle; the source is vehicleName.
 
-- `statName` (*string*) : Nom de la stat.
-- `statLabel` (*string*) : Libellé (clé de traduction ou texte).
-- `vehicle` (*userdata*) : Objet véhicule (getID() est appelé).
-- `vehicleName` (*string*) : Nom du véhicule, utilisé comme source et id d'instance.
-- `maxPoints` (*number|nil*) : Points maximum de la stat.
-- `maxValue` (*number|nil*) : Valeur donnant les points max.
+- `statName` (*string*) : Stat name.
+- `statLabel` (*string*) : Label (translation key or text).
+- `vehicle` (*userdata*) : Vehicle object (getID() is called).
+- `vehicleName` (*string*) : Vehicle name, used as source and instance id.
+- `maxPoints` (*number|nil*) : Max points of the stat.
+- `maxValue` (*number|nil*) : Value giving the max points.
 
 #### `statistics_statistics.onDeserialized(data)`
 
-Hook de rechargement : restaure statsTable (noms reconvertis en ids) et scenarioStats.
+Reload hook: restores statsTable (names converted back to ids) and scenarioStats.
 
-- `data` (*table*) : Données produites par onSerialize.
+- `data` (*table*) : Data produced by onSerialize.
 
 #### `statistics_statistics.onRaceGoalsInitilised(scenario)`
 
-Hook : appelé quand les objectifs de course sont initialisés. Recrée les tables de stats (initialiseTables). Le nom contient la faute 'Initilised'.
+Hook: called when the race goals are initialized. Recreates the stats tables (initialiseTables). The name contains the typo 'Initilised'.
 
-- `scenario` (*table*) : Scénario courant.
+- `scenario` (*table*) : Current scenario.
 
 #### `statistics_statistics.onRaceResult(status)`
 
-Hook : appelé à la fin de la course ; enregistre status.finalTime dans la stat 'time'.
+Hook: called at the end of the race; records status.finalTime in the 'time' stat.
 
-- `status` (*table*) : Résultat de course (finalTime).
+- `status` (*table*) : Race result (finalTime).
 
 #### `statistics_statistics.onRaceTick(raceTickTime, timer)`
 
-Hook : appelé à chaque tick de course ; enregistre le chrono courant dans la stat 'time'.
+Hook: called on each race tick; records the current timer in the 'time' stat.
 
-- `raceTickTime` (*number*) : Non utilisé.
-- `timer` (*number*) : Temps de course en secondes.
+- `raceTickTime` (*number*) : Not used.
+- `timer` (*number*) : Race time in seconds.
 
 #### `statistics_statistics.onResumeCampaign(campaignInProgress, data)`
 
-Hook de reprise de campagne : restaure statsTable et scenarioStats depuis data.
+Campaign resume hook: restores statsTable and scenarioStats from data.
 
-- `campaignInProgress` (*any*) : Non utilisé.
-- `data` (*table*) : Données sauvegardées par onSaveCampaign.
+- `campaignInProgress` (*any*) : Not used.
+- `data` (*table*) : Data saved by onSaveCampaign.
 
 #### `statistics_statistics.onSaveCampaign(saveCallback)`
 
-Hook de sauvegarde de campagne : passe les mêmes données que onSerialize à saveCallback.
+Campaign save hook: passes the same data as onSerialize to saveCallback.
 
-- `saveCallback` (*function*) : Appelée avec (alias global du module, données).
+- `saveCallback` (*function*) : Called with (module global alias, data).
 
 #### `statistics_statistics.onScenarioChange(scenario)`
 
-Hook : appelé à chaque changement d'état du scénario. À l'état 'post', capture les dégâts finaux de chaque véhicule (map.objects[id].damage).
+Hook: called on each scenario state change. In the 'post' state, captures the final damage of each vehicle (map.objects[id].damage).
 
-- `scenario` (*table|nil*) : Scénario courant.
+- `scenario` (*table|nil*) : Current scenario.
 
 #### `statistics_statistics.onScenarioRestarted(scenario)`
 
-Hook : appelé au redémarrage du scénario ; recrée les tables de stats.
+Hook: called when the scenario restarts; recreates the stats tables.
 
-- `scenario` (*table*) : Scénario courant.
+- `scenario` (*table*) : Current scenario.
 
 #### `statistics_statistics.onSerialize()`
 
-Hook de sauvegarde de l'extension : renvoie statsTable (clés id converties en noms de véhicule) et scenarioStats.
+Extension save hook: returns statsTable (id keys converted to vehicle names) and scenarioStats.
 
-- **renvoie** : table {statsTable, scenarioStats}
+- **returns**: table {statsTable, scenarioStats}
 
 #### `statistics_statistics.setGoalProgress(vehicleID, goalName, instanceId, goalData)`
 
-Crée ou met à jour la progression d'un objectif (clé 'goal_<nom>', required = true) pour un véhicule : enregistre points et maxPoints de l'instance et failed si goalData.status == 'failed'. Ne fait rien si le véhicule n'a pas encore de table de stats.
+Creates or updates the progress of a goal (key 'goal_<name>', required = true) for a vehicle: records the instance's points and maxPoints and failed if goalData.status == 'failed'. Does nothing if the vehicle does not yet have a stats table.
 
-- `vehicleID` (*integer*) : Id du véhicule.
-- `goalName` (*string*) : Identifiant de l'objectif (nomove, timeLimit, speed…).
-- `instanceId` (*any*) : Identifiant de l'instance (souvent l'id du véhicule cible de l'objectif).
-- `goalData` (*table*) : Champs points, maxPoints, status ('init', 'failed'…).
+- `vehicleID` (*integer*) : Vehicle id.
+- `goalName` (*string*) : Goal identifier (nomove, timeLimit, speed...).
+- `instanceId` (*any*) : Instance identifier (often the id of the goal's target vehicle).
+- `goalData` (*table*) : Fields points, maxPoints, status ('init', 'failed'...).
 
 #### `statistics_statistics.setStatProgress(vehicleID, statName, instanceId, statData)`
 
-Crée ou met à jour une statistique pour un véhicule. Les champs decimals, enabled, label, predefinedUnit, unit et isGoal sont stockés au niveau de la stat ; tous les autres champs de statData (value, maxValue, maxPoints, source…) sont copiés dans l'instance instanceId. Ignoré si instanceId ou statData manque ou n'est pas une table.
+Creates or updates a statistic for a vehicle. The fields decimals, enabled, label, predefinedUnit, unit and isGoal are stored at the stat level; all other statData fields (value, maxValue, maxPoints, source...) are copied into the instance instanceId. Ignored if instanceId or statData is missing or not a table.
 
-- `vehicleID` (*integer*) : Id du véhicule.
-- `statName` (*string*) : Nom de la stat (clé interne 'stat_<nom>').
-- `instanceId` (*any*) : Identifiant de l'instance (souvent le nom de la source).
-- `statData` (*table*) : Données de la stat.
+- `vehicleID` (*integer*) : Vehicle id.
+- `statName` (*string*) : Stat name (internal key 'stat_<name>').
+- `instanceId` (*any*) : Instance identifier (often the source name).
+- `statData` (*table*) : Stat data.
 
 #### `statistics_statistics.stopStatsGathering(scenario)`
 
-Fin de collecte : choisit l'unité de distance/altitude (m si < 1609.34 m, sinon unité 'distance'), calcule les points du véhicule joueur et remplit le résumé du scénario (points, maxPoints, failed, medal).
+End of collection: chooses the distance/altitude unit (m if < 1609.34 m, otherwise 'distance' unit), computes the player vehicle's points and fills the scenario summary (points, maxPoints, failed, medal).
 
-- `scenario` (*table*) : Scénario terminé (scenario.name, scenario.result.failed).
+- `scenario` (*table*) : Finished scenario (scenario.name, scenario.result.failed).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/statistics/statistics.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/statistics/statistics.lua`.*

@@ -1,45 +1,45 @@
 # `ui_pause_camera`
 
-*Fichier : `lua/ge/extensions/ui/pause/camera.lua` · VM : Game Engine (GE) · 219 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/pause/camera.lua` · VM: Game Engine (GE) · 219 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_pause_camera` : `extensions.load("ui_pause_camera")`, puis la globale `ui_pause_camera`
+**Access:** extension `ui_pause_camera`: `extensions.load("ui_pause_camera")`, then the global `ui_pause_camera`
 
-Caméra orbitale automatique du menu pause : prévue pour passer la caméra du joueur en mode orbit et la faire tourner lentement autour du véhicule pendant la pause, puis restaurer la caméra et l'état d'orbite d'origine. Elle s'arrête si le joueur tourne la caméra à la main. Dans 0.40.5, cette fonctionnalité est désactivée dans le code.
+Automatic orbit camera of the pause menu: intended to switch the player's camera to orbit mode and make it rotate slowly around the vehicle during the pause, then restore the original camera and orbit state. It stops if the player rotates the camera by hand. In 0.40.5, this feature is disabled in the code.
 
-## Remarques
+## Notes
 
-- Désactivée : start, stop, beginPauseSession et endPauseSession commencent par `if true then return end`, donc elles ne font rien et renvoient nil (le code après ce return est mort). La variable locale beginPauseSession n'est jamais exécutée non plus.
-- onUpdate ne fait rien tant que state.active est faux, ce qui est toujours le cas ici.
-- Si le code était actif : vitesse d'orbite de -5,5 degrés/s sur l'axe x de camRot (lacet, normalisé dans [-180, 180]) ; arrêt si core_camera.timeSinceLastRotation diminue (rotation manuelle) ou si la caméra active n'est plus "orbit".
+- Disabled: start, stop, beginPauseSession and endPauseSession begin with `if true then return end`, so they do nothing and return nil (the code after this return is dead). The local variable beginPauseSession is never executed either.
+- onUpdate does nothing while state.active is false, which is always the case here.
+- If the code were active: orbit speed of -5.5 degrees/s on the x axis of camRot (yaw, normalized in [-180, 180]); stops if core_camera.timeSinceLastRotation decreases (manual rotation) or if the active camera is no longer "orbit".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_pause_camera.beginPauseSession()` | Prévu pour mémoriser caméra, véhicule et état d'orbite au début de la pause. Sans effet dans 0.40.5 (return immédiat). | 155 |
-| `ui_pause_camera.debugState()` | Renvoie une copie profonde de l'état interne (pauseSessionActive, active, orbiting, stoppedByManualInput, previousCameraName, etc.) pour le débogage. | 214 |
-| `ui_pause_camera.endPauseSession()` | Prévu pour arrêter l'orbite et restaurer la caméra et l'état d'orbite d'avant la pause. Sans effet dans 0.40.5 (return immédiat). | 160 |
-| `ui_pause_camera.onUpdate(dtReal)` | Hook appelé à chaque frame ; fait tourner la caméra orbit autour du véhicule joueur si la session est active. Sans effet tant que start est désactivée. *(interne)* *(hook)* | 181 |
-| `ui_pause_camera.start()` | Prévu pour passer la caméra du joueur en orbit et lancer la rotation automatique. Sans effet dans 0.40.5 (return immédiat). | 114 |
-| `ui_pause_camera.stop()` | Prévu pour arrêter la rotation automatique et revenir à la caméra précédente. Sans effet dans 0.40.5 (return immédiat). | 136 |
+| `ui_pause_camera.beginPauseSession()` | Intended to store the camera, vehicle and orbit state at the start of the pause. No effect in 0.40.5 (immediate return). | 155 |
+| `ui_pause_camera.debugState()` | Returns a deep copy of the internal state (pauseSessionActive, active, orbiting, stoppedByManualInput, previousCameraName, etc.) for debugging. | 214 |
+| `ui_pause_camera.endPauseSession()` | Intended to stop the orbit and restore the camera and orbit state from before the pause. No effect in 0.40.5 (immediate return). | 160 |
+| `ui_pause_camera.onUpdate(dtReal)` | Hook called every frame; rotates the orbit camera around the player vehicle if the session is active. No effect while start is disabled. *(internal)* *(hook)* | 181 |
+| `ui_pause_camera.start()` | Intended to switch the player's camera to orbit and start the automatic rotation. No effect in 0.40.5 (immediate return). | 114 |
+| `ui_pause_camera.stop()` | Intended to stop the automatic rotation and return to the previous camera. No effect in 0.40.5 (immediate return). | 136 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_pause_camera.debugState()`
 
-Renvoie une copie profonde de l'état interne (pauseSessionActive, active, orbiting, stoppedByManualInput, previousCameraName, etc.) pour le débogage.
+Returns a deep copy of the internal state (pauseSessionActive, active, orbiting, stoppedByManualInput, previousCameraName, etc.) for debugging.
 
-- **renvoie** : table Copie de l'état.
+- **returns**: table Copy of the state.
 
 #### `ui_pause_camera.onUpdate(dtReal)`
 
-Hook appelé à chaque frame ; fait tourner la caméra orbit autour du véhicule joueur si la session est active. Sans effet tant que start est désactivée.
+Hook called every frame; rotates the orbit camera around the player vehicle if the session is active. No effect while start is disabled.
 
-- `dtReal` (*number*) : Temps réel écoulé depuis la frame précédente, en secondes.
+- `dtReal` (*number*) : Real time elapsed since the previous frame, in seconds.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/pause/camera.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/pause/camera.lua`.*

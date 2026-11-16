@@ -1,127 +1,127 @@
 # `mcp_tools_vehicle`
 
-*Fichier : `lua/ge/extensions/mcp/tools/vehicle.lua` · VM : Game Engine (GE) · 165 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/mcp/tools/vehicle.lua` · VM: Game Engine (GE) · 165 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `mcp_tools_vehicle` : `extensions.load("mcp_tools_vehicle")`, puis la globale `mcp_tools_vehicle`
+**Access:** extension `mcp_tools_vehicle`: `extensions.load("mcp_tools_vehicle")`, then the global `mcp_tools_vehicle`
 
-Outils MCP véhicules : lister, détailler, fichiers JBeam et arbre de parts, journal d'instabilité physique, reset/rechargement du véhicule joueur, lecture et écriture de la pose (position + rotation).
+MCP vehicle tools: list, detail, JBeam files and part tree, physics instability log, reset/reload of the player vehicle, reading and writing the pose (position + rotation).
 
-## Remarques
+## Notes
 
-- get_instability vide le tampon après lecture, sauf si clear=false ; le journal garde 50 événements maximum ({time, vid, jbeam}).
-- get_position/set_position utilisent la rotation en quaternion {x,y,z,w} calculée avec quatFromDir(direction, haut) ; set_position passe par spawn.safeTeleport (téléporte et répare).
-- reset_vehicle et reload_vehicle ne concernent que le véhicule joueur 0 (pas d'argument id).
+- get_instability clears the buffer after reading, unless clear=false; the log keeps 50 events maximum ({time, vid, jbeam}).
+- get_position/set_position use the rotation as a quaternion {x,y,z,w} computed with quatFromDir(direction, up); set_position goes through spawn.safeTeleport (teleports and repairs).
+- reset_vehicle and reload_vehicle only concern player 0's vehicle (no id argument).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `mcp_tools_vehicle.get_instability(args)` | Renvoie les instabilités physiques journalisées et vide le tampon par défaut. | 86 |
-| `mcp_tools_vehicle.get_part_tree(args)` | Config de parts sous forme de table chemin de slot -> nom de part choisie (config.partsTree aplati). | 72 |
-| `mcp_tools_vehicle.get_player_vehicle_id()` | Id du véhicule joueur 0 (be:getPlayerVehicleID(0)) sous forme de texte. | 33 |
-| `mcp_tools_vehicle.get_position(args)` | Pose d'un véhicule : pos {x,y,z} et rot quaternion {x,y,z,w}. | 107 |
-| `mcp_tools_vehicle.get_vehicle(args)` | Détails : id, jbeam, name, configKey, pcFile, position, speed (m/s). | 37 |
-| `mcp_tools_vehicle.get_vehicle_files(args)` | Fichiers utilisés : vehicleDirectory, directoriesLoaded, pcFile et liste triée des fichiers JBeam des parts actives (jbeam/io getPart). | 55 |
-| `mcp_tools_vehicle.get_vehicles()` | Liste les véhicules spawnés : id, jbeam, nom d'affichage (marque + nom). | 18 |
-| `mcp_tools_vehicle.onInstabilityDetected(vid, returnData)` | Hook moteur (relayé par mcp_tools) appelé quand la physique détecte un véhicule instable : ajoute {time, vid, jbeam} à shared.instabilityLog (50 max). *(interne)* *(hook)* | 11 |
-| `mcp_tools_vehicle.reload_vehicle()` | Recharge le véhicule joueur depuis le disque (core_vehicle_manager.reloadVehicle(0)), ce qui relit ses JBeam. | 99 |
-| `mcp_tools_vehicle.reset_vehicle()` | Réinitialise/répare sur place le véhicule joueur (be:resetVehicle(0)). | 92 |
-| `mcp_tools_vehicle.set_position(args)` | Téléporte un véhicule à une pose via spawn.safeTeleport ; rot facultatif (garde le cap actuel). | 117 |
+| `mcp_tools_vehicle.get_instability(args)` | Returns the logged physics instabilities and clears the buffer by default. | 86 |
+| `mcp_tools_vehicle.get_part_tree(args)` | Parts config as a table slot path -> chosen part name (flattened config.partsTree). | 72 |
+| `mcp_tools_vehicle.get_player_vehicle_id()` | Player 0's vehicle id (be:getPlayerVehicleID(0)) as text. | 33 |
+| `mcp_tools_vehicle.get_position(args)` | Pose of a vehicle: pos {x,y,z} and quaternion rot {x,y,z,w}. | 107 |
+| `mcp_tools_vehicle.get_vehicle(args)` | Details: id, jbeam, name, configKey, pcFile, position, speed (m/s). | 37 |
+| `mcp_tools_vehicle.get_vehicle_files(args)` | Files used: vehicleDirectory, directoriesLoaded, pcFile and sorted list of the JBeam files of the active parts (jbeam/io getPart). | 55 |
+| `mcp_tools_vehicle.get_vehicles()` | Lists the spawned vehicles: id, jbeam, display name (brand + name). | 18 |
+| `mcp_tools_vehicle.onInstabilityDetected(vid, returnData)` | Engine hook (relayed by mcp_tools) called when the physics detects an unstable vehicle: appends {time, vid, jbeam} to shared.instabilityLog (50 max). *(internal)* *(hook)* | 11 |
+| `mcp_tools_vehicle.reload_vehicle()` | Reloads the player vehicle from disk (core_vehicle_manager.reloadVehicle(0)), which re-reads its JBeam. | 99 |
+| `mcp_tools_vehicle.reset_vehicle()` | Resets/repairs the player vehicle in place (be:resetVehicle(0)). | 92 |
+| `mcp_tools_vehicle.set_position(args)` | Teleports a vehicle to a pose via spawn.safeTeleport; rot optional (keeps the current heading). | 117 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `mcp_tools_vehicle.get_instability(args)`
 
-Renvoie les instabilités physiques journalisées et vide le tampon par défaut.
+Returns the logged physics instabilities and clears the buffer by default.
 
-- `args` (*table|nil*) : {clear?: boolean} false pour conserver.
-- **renvoie** : string JSON {count, events}.
-- **renvoie** : boolean false.
+- `args` (*table|nil*) : {clear?: boolean} false to keep.
+- **returns**: string JSON {count, events}.
+- **returns**: boolean false.
 
 #### `mcp_tools_vehicle.get_part_tree(args)`
 
-Config de parts sous forme de table chemin de slot -> nom de part choisie (config.partsTree aplati).
+Parts config as a table slot path -> chosen part name (flattened config.partsTree).
 
 - `args` (*table|nil*) : {id?: integer}
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si pas d'arbre.
+- **returns**: string JSON.
+- **returns**: boolean true if no tree.
 
 #### `mcp_tools_vehicle.get_player_vehicle_id()`
 
-Id du véhicule joueur 0 (be:getPlayerVehicleID(0)) sous forme de texte.
+Player 0's vehicle id (be:getPlayerVehicleID(0)) as text.
 
-- **renvoie** : string Id.
-- **renvoie** : boolean false.
+- **returns**: string Id.
+- **returns**: boolean false.
 
 #### `mcp_tools_vehicle.get_position(args)`
 
-Pose d'un véhicule : pos {x,y,z} et rot quaternion {x,y,z,w}.
+Pose of a vehicle: pos {x,y,z} and quaternion rot {x,y,z,w}.
 
 - `args` (*table|nil*) : {id?: integer}
-- **renvoie** : string JSON {id, pos, rot}.
-- **renvoie** : boolean true si le véhicule n'existe pas.
+- **returns**: string JSON {id, pos, rot}.
+- **returns**: boolean true if the vehicle does not exist.
 
 #### `mcp_tools_vehicle.get_vehicle(args)`
 
-Détails : id, jbeam, name, configKey, pcFile, position, speed (m/s).
+Details: id, jbeam, name, configKey, pcFile, position, speed (m/s).
 
 - `args` (*table|nil*) : {id?: integer}
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si le véhicule n'existe pas.
+- **returns**: string JSON.
+- **returns**: boolean true if the vehicle does not exist.
 
 #### `mcp_tools_vehicle.get_vehicle_files(args)`
 
-Fichiers utilisés : vehicleDirectory, directoriesLoaded, pcFile et liste triée des fichiers JBeam des parts actives (jbeam/io getPart).
+Files used: vehicleDirectory, directoriesLoaded, pcFile and sorted list of the JBeam files of the active parts (jbeam/io getPart).
 
 - `args` (*table|nil*) : {id?: integer}
-- **renvoie** : string JSON.
-- **renvoie** : boolean true si aucune donnée véhicule.
+- **returns**: string JSON.
+- **returns**: boolean true if no vehicle data.
 
 #### `mcp_tools_vehicle.get_vehicles()`
 
-Liste les véhicules spawnés : id, jbeam, nom d'affichage (marque + nom).
+Lists the spawned vehicles: id, jbeam, display name (brand + name).
 
-- **renvoie** : string JSON.
-- **renvoie** : boolean false.
+- **returns**: string JSON.
+- **returns**: boolean false.
 
 #### `mcp_tools_vehicle.onInstabilityDetected(vid, returnData)`
 
-Hook moteur (relayé par mcp_tools) appelé quand la physique détecte un véhicule instable : ajoute {time, vid, jbeam} à shared.instabilityLog (50 max).
+Engine hook (relayed by mcp_tools) called when the physics detects an unstable vehicle: appends {time, vid, jbeam} to shared.instabilityLog (50 max).
 
-- `vid` (*integer*) : Id du véhicule.
-- `returnData` (*any*) : Fourni par le moteur, non utilisé.
+- `vid` (*integer*) : Vehicle id.
+- `returnData` (*any*) : Provided by the engine, unused.
 
 #### `mcp_tools_vehicle.reload_vehicle()`
 
-Recharge le véhicule joueur depuis le disque (core_vehicle_manager.reloadVehicle(0)), ce qui relit ses JBeam.
+Reloads the player vehicle from disk (core_vehicle_manager.reloadVehicle(0)), which re-reads its JBeam.
 
-- **renvoie** : string Message.
-- **renvoie** : boolean true s'il n'y a pas de véhicule joueur.
+- **returns**: string Message.
+- **returns**: boolean true if there is no player vehicle.
 
 #### `mcp_tools_vehicle.reset_vehicle()`
 
-Réinitialise/répare sur place le véhicule joueur (be:resetVehicle(0)).
+Resets/repairs the player vehicle in place (be:resetVehicle(0)).
 
-- **renvoie** : string Message.
-- **renvoie** : boolean true s'il n'y a pas de véhicule joueur.
+- **returns**: string Message.
+- **returns**: boolean true if there is no player vehicle.
 
 #### `mcp_tools_vehicle.set_position(args)`
 
-Téléporte un véhicule à une pose via spawn.safeTeleport ; rot facultatif (garde le cap actuel).
+Teleports a vehicle to a pose via spawn.safeTeleport; rot optional (keeps the current heading).
 
 - `args` (*table*) : {pos: {x,y,z}, rot?: {x,y,z,w}, id?: integer}
-- **renvoie** : string Message.
-- **renvoie** : boolean true en cas d'erreur.
+- **returns**: string Message.
+- **returns**: boolean true on error.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `schemas` | table<string, table> | Schémas des outils véhicule. |
+| `schemas` | table<string, table> | Schemas of the vehicle tools. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`, `getPlayerVehicleID`, `resetVehicle`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/mcp/tools/vehicle.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/mcp/tools/vehicle.lua`.*

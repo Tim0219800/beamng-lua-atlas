@@ -1,140 +1,140 @@
 # `gameplay_tutorial_damageTracker`
 
-*Fichier : `lua/ge/extensions/gameplay/tutorial/damageTracker.lua` · VM : Game Engine (GE) · 393 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/tutorial/damageTracker.lua` · VM: Game Engine (GE) · 393 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_tutorial_damageTracker` : `extensions.load("gameplay_tutorial_damageTracker")`, puis la globale `gameplay_tutorial_damageTracker`
+**Access:** extension `gameplay_tutorial_damageTracker`: `extensions.load("gameplay_tutorial_damageTracker")`, then the global `gameplay_tutorial_damageTracker`
 
-Suit les dégâts du véhicule pendant le tutoriel de carrière (et le time trial). Il s'appuie sur gameplay_util_crashDetection pour détecter la fin d'un crash, attend que le véhicule ralentisse (ou un délai maximum), puis affiche une fenêtre d'information (career_modules_tutorialPopups) et une tâche « réparer » ou « redémarrer » dans la liste de tâches. La tâche disparaît quand le véhicule est réparé ou réinitialisé.
+Tracks the vehicle's damage during the career tutorial (and the time trial). It relies on gameplay_util_crashDetection to detect the end of a crash, waits for the vehicle to slow down (or a maximum delay), then displays an information window (career_modules_tutorialPopups) and a "repair" or "restart" task in the task list. The task disappears when the vehicle is repaired or reset.
 
-## Exemple
+## Example
 
 ```lua
 gameplay_tutorial_damageTracker.setTrackedVehicleId(vehId)
 gameplay_tutorial_damageTracker.setEnabled(true)
 ```
 
-## Remarques
+## Notes
 
-- Dépend de gameplay_util_crashDetection (M.dependencies).
-- Attente avant la fenêtre : jusqu'à 5 s (1,5 s en time trial) ou dès que la vitesse <= 3 km/h.
-- Après une sortie de limites (onCareerTutorialOutOfBoundsStarted), les dégâts sont ignorés pendant 8 s.
-- Identifiants de fenêtre : 'v2/damagedVehicleTimeTrial', 'v2/damagedVehicle' (tutoriel actif), 'v2/damagedVehicleCareer' ; chacune ne s'affiche qu'une fois par session du module.
-- BUG : onVehicleResetted est défini deux fois ; la seconde définition (plus simple, sans cas time trial) écrase la première, donc la gestion time trial de la première n'est jamais exécutée.
-- Le module ne détecte les crashs que pour le véhicule suivi (trackedVehId) ; en time trial, il suit automatiquement le véhicule du joueur.
+- Depends on gameplay_util_crashDetection (M.dependencies).
+- Wait before the window: up to 5 s (1.5 s in time trial) or as soon as the speed <= 3 km/h.
+- After going out of bounds (onCareerTutorialOutOfBoundsStarted), damage is ignored for 8 s.
+- Window identifiers: 'v2/damagedVehicleTimeTrial', 'v2/damagedVehicle' (tutorial active), 'v2/damagedVehicleCareer'; each is displayed only once per module session.
+- BUG: onVehicleResetted is defined twice; the second definition (simpler, without the time trial case) overwrites the first, so the first one's time trial handling is never executed.
+- The module only detects crashes for the tracked vehicle (trackedVehId); in time trial, it automatically tracks the player's vehicle.
 
-**Dépendances (chargées avant) :** `gameplay_util_crashDetection`
+**Dependencies (loaded first):** `gameplay_util_crashDetection`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_tutorial_damageTracker.claimNextDamagePopup()` | Marque un crash comme déjà pris en charge par l'appelant : la prochaine fenêtre de dégâts sera sautée, mais la tâche de réparation restera due. | 162 |
-| `gameplay_tutorial_damageTracker.cleanup()` | Désactive le suivi et remet à zéro tout l'état du module (véhicule configuré, tâche, handler, drapeaux de fenêtres déjà affichées). | 202 |
-| `gameplay_tutorial_damageTracker.debugTriggerCrash()` | Simule un crash (debug) : marque hadCrash et déclenche l'attente de la fenêtre de dégâts. | 195 |
-| `gameplay_tutorial_damageTracker.getHadCrash()` | Indique si un crash a été détecté depuis la dernière remise à zéro. | 388 |
-| `gameplay_tutorial_damageTracker.onCareerTutorialOutOfBoundsEnded()` | Hook appelé au retour dans les limites : hors time trial, si le véhicule suivi a des dégâts, réaffiche la tâche de réparation. *(interne)* *(hook)* | 315 |
-| `gameplay_tutorial_damageTracker.onCareerTutorialOutOfBoundsStarted()` | Hook appelé quand le joueur sort des limites : ignore les dégâts pendant 8 s, annule crash en attente et tâche de réparation. *(interne)* *(hook)* | 307 |
-| `gameplay_tutorial_damageTracker.onClientStartMission(levelPath)` | Hook de début de mission : assure que le véhicule suivi est à jour si le suivi est actif. *(interne)* *(hook)* | 347 |
-| `gameplay_tutorial_damageTracker.onRecoveryPromptButtonPressed(buttonId)` | Hook de la fenêtre de récupération : si le bouton 'restartMission' est pressé en time trial après un crash, marque comme réparé et retire les tâches. *(interne)* *(hook)* | 368 |
-| `gameplay_tutorial_damageTracker.onRecoveryPromptRepairHereUsed(invVehId)` | Hook appelé quand le joueur choisit de réparer sur place : marque le véhicule comme réparé et retire les tâches. *(interne)* *(hook)* | 353 |
-| `gameplay_tutorial_damageTracker.onUpdate(dtReal, dtSim, dtRaw)` | Hook de mise à jour : s'assure que le bon véhicule est suivi, puis, si une fenêtre de dégâts est en attente, l'affiche quand le véhicule est quasi arrêté ou après le délai maximum. *(interne)* *(hook)* | 278 |
-| `gameplay_tutorial_damageTracker.onVehicleCrashEnded(crashData)` | Hook de crashDetection appelé à la fin d'un crash. Si le véhicule suivi est concerné (et que les dégâts ne sont pas supprimés), programme l'affichage de la fenêtre de dégâts. *(interne)* *(hook)* | 294 |
-| `gameplay_tutorial_damageTracker.onVehicleRepaired(invVehId)` | Hook appelé après réparation d'un véhicule : si un crash avait eu lieu, retire les tâches de réparation. *(interne)* *(hook)* | 360 |
-| `gameplay_tutorial_damageTracker.onVehicleResetted(vehicleId)` | Hook appelé quand un véhicule est réinitialisé : si c'est le véhicule suivi et que le suivi est actif, marque comme réparé et retire les tâches. (Définition effective : la seconde du fichier, qui écrase la première.) *(interne)* *(hook)* | 379 |
-| `gameplay_tutorial_damageTracker.setDamagePopupHandler(handler)` | Remplace l'ouverture de la fenêtre de dégâts de carrière par un handler personnalisé, appelé avec l'id de la fenêtre. Une valeur non fonctionnelle retire le handler. | 86 |
-| `gameplay_tutorial_damageTracker.setDefaultRepairGoal()` | Restaure la tâche de réparation par défaut (id 'tutorial_repairVehicleGoal', action toggleRadialMenuMulti). | 85 |
-| `gameplay_tutorial_damageTracker.setEnabled(value)` | Active ou désactive le suivi des dégâts. À la désactivation : arrête le suivi du véhicule et retire toutes les tâches ; à l'activation : suit le véhicule et affiche la tâche si nécessaire. | 181 |
-| `gameplay_tutorial_damageTracker.setRepairGoal(goal)` | Définit la tâche « réparer » affichée après un crash (table de tâche pour la liste de tâches). nil restaure la tâche par défaut. | 84 |
-| `gameplay_tutorial_damageTracker.setTrackedVehicleId(vehicleId)` | Fixe l'id du véhicule à suivre (pris en compte au prochain ensureTrackedVehicle, par exemple dans onUpdate). | 158 |
-| `gameplay_tutorial_damageTracker.showRepairTask()` | Affiche la tâche de réparation (ou de redémarrage en time trial) si le suivi est actif, qu'un crash a eu lieu et que le véhicule n'a pas encore été réparé. | 169 |
+| `gameplay_tutorial_damageTracker.claimNextDamagePopup()` | Marks a crash as already handled by the caller: the next damage window will be skipped, but the repair task will remain due. | 162 |
+| `gameplay_tutorial_damageTracker.cleanup()` | Disables tracking and resets the whole module state (configured vehicle, task, handler, already-displayed window flags). | 202 |
+| `gameplay_tutorial_damageTracker.debugTriggerCrash()` | Simulates a crash (debug): sets hadCrash and triggers the wait for the damage window. | 195 |
+| `gameplay_tutorial_damageTracker.getHadCrash()` | Indicates whether a crash has been detected since the last reset. | 388 |
+| `gameplay_tutorial_damageTracker.onCareerTutorialOutOfBoundsEnded()` | Hook called when returning within bounds: outside time trial, if the tracked vehicle has damage, displays the repair task again. *(internal)* *(hook)* | 315 |
+| `gameplay_tutorial_damageTracker.onCareerTutorialOutOfBoundsStarted()` | Hook called when the player goes out of bounds: ignores damage for 8 s, cancels the pending crash and the repair task. *(internal)* *(hook)* | 307 |
+| `gameplay_tutorial_damageTracker.onClientStartMission(levelPath)` | Mission start hook: ensures the tracked vehicle is up to date if tracking is active. *(internal)* *(hook)* | 347 |
+| `gameplay_tutorial_damageTracker.onRecoveryPromptButtonPressed(buttonId)` | Recovery window hook: if the 'restartMission' button is pressed in time trial after a crash, marks as repaired and removes the tasks. *(internal)* *(hook)* | 368 |
+| `gameplay_tutorial_damageTracker.onRecoveryPromptRepairHereUsed(invVehId)` | Hook called when the player chooses to repair on the spot: marks the vehicle as repaired and removes the tasks. *(internal)* *(hook)* | 353 |
+| `gameplay_tutorial_damageTracker.onUpdate(dtReal, dtSim, dtRaw)` | Update hook: ensures the right vehicle is tracked, then, if a damage window is pending, displays it when the vehicle is almost stopped or after the maximum delay. *(internal)* *(hook)* | 278 |
+| `gameplay_tutorial_damageTracker.onVehicleCrashEnded(crashData)` | crashDetection hook called at the end of a crash. If the tracked vehicle is concerned (and damage is not suppressed), schedules the display of the damage window. *(internal)* *(hook)* | 294 |
+| `gameplay_tutorial_damageTracker.onVehicleRepaired(invVehId)` | Hook called after a vehicle is repaired: if a crash had occurred, removes the repair tasks. *(internal)* *(hook)* | 360 |
+| `gameplay_tutorial_damageTracker.onVehicleResetted(vehicleId)` | Hook called when a vehicle is reset: if it is the tracked vehicle and tracking is active, marks as repaired and removes the tasks. (Effective definition: the file's second one, which overwrites the first.) *(internal)* *(hook)* | 379 |
+| `gameplay_tutorial_damageTracker.setDamagePopupHandler(handler)` | Replaces the opening of the career damage window with a custom handler, called with the window id. A non-function value removes the handler. | 86 |
+| `gameplay_tutorial_damageTracker.setDefaultRepairGoal()` | Restores the default repair task (id 'tutorial_repairVehicleGoal', action toggleRadialMenuMulti). | 85 |
+| `gameplay_tutorial_damageTracker.setEnabled(value)` | Enables or disables damage tracking. On disabling: stops tracking the vehicle and removes all tasks; on enabling: tracks the vehicle and displays the task if needed. | 181 |
+| `gameplay_tutorial_damageTracker.setRepairGoal(goal)` | Sets the "repair" task displayed after a crash (task table for the task list). nil restores the default task. | 84 |
+| `gameplay_tutorial_damageTracker.setTrackedVehicleId(vehicleId)` | Sets the id of the vehicle to track (taken into account at the next ensureTrackedVehicle, for example in onUpdate). | 158 |
+| `gameplay_tutorial_damageTracker.showRepairTask()` | Displays the repair task (or restart task in time trial) if tracking is active, a crash occurred and the vehicle has not been repaired yet. | 169 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_tutorial_damageTracker.getHadCrash()`
 
-Indique si un crash a été détecté depuis la dernière remise à zéro.
+Indicates whether a crash has been detected since the last reset.
 
-- **renvoie** : boolean true si un crash a eu lieu.
+- **returns**: boolean true if a crash occurred.
 
 #### `gameplay_tutorial_damageTracker.onClientStartMission(levelPath)`
 
-Hook de début de mission : assure que le véhicule suivi est à jour si le suivi est actif.
+Mission start hook: ensures the tracked vehicle is up to date if tracking is active.
 
-- `levelPath` (*string*) : Chemin du niveau (non utilisé).
+- `levelPath` (*string*) : Level path (unused).
 
 #### `gameplay_tutorial_damageTracker.onRecoveryPromptButtonPressed(buttonId)`
 
-Hook de la fenêtre de récupération : si le bouton 'restartMission' est pressé en time trial après un crash, marque comme réparé et retire les tâches.
+Recovery window hook: if the 'restartMission' button is pressed in time trial after a crash, marks as repaired and removes the tasks.
 
-- `buttonId` (*string*) : Identifiant du bouton pressé.
+- `buttonId` (*string*) : Identifier of the button pressed.
 
 #### `gameplay_tutorial_damageTracker.onRecoveryPromptRepairHereUsed(invVehId)`
 
-Hook appelé quand le joueur choisit de réparer sur place : marque le véhicule comme réparé et retire les tâches.
+Hook called when the player chooses to repair on the spot: marks the vehicle as repaired and removes the tasks.
 
-- `invVehId` (*integer*) : Id du véhicule d'inventaire (non utilisé).
+- `invVehId` (*integer*) : Inventory vehicle id (not used).
 
 #### `gameplay_tutorial_damageTracker.onUpdate(dtReal, dtSim, dtRaw)`
 
-Hook de mise à jour : s'assure que le bon véhicule est suivi, puis, si une fenêtre de dégâts est en attente, l'affiche quand le véhicule est quasi arrêté ou après le délai maximum.
+Update hook: ensures the right vehicle is tracked, then, if a damage window is pending, displays it when the vehicle is almost stopped or after the maximum delay.
 
-- `dtReal` (*number*) : Delta temps réel.
-- `dtSim` (*number*) : Delta temps de simulation.
-- `dtRaw` (*number*) : Delta temps brut (utilisé pour le délai d'attente).
+- `dtReal` (*number*) : Real-time delta.
+- `dtSim` (*number*) : Simulation time delta.
+- `dtRaw` (*number*) : Raw delta time (used for the wait delay).
 
 #### `gameplay_tutorial_damageTracker.onVehicleCrashEnded(crashData)`
 
-Hook de crashDetection appelé à la fin d'un crash. Si le véhicule suivi est concerné (et que les dégâts ne sont pas supprimés), programme l'affichage de la fenêtre de dégâts.
+crashDetection hook called at the end of a crash. If the tracked vehicle is concerned (and damage is not suppressed), schedules the display of the damage window.
 
-- `crashData` (*table*) : Données du crash ; crashData.vehId = véhicule concerné.
+- `crashData` (*table*) : Crash data; crashData.vehId = vehicle concerned.
 
 #### `gameplay_tutorial_damageTracker.onVehicleRepaired(invVehId)`
 
-Hook appelé après réparation d'un véhicule : si un crash avait eu lieu, retire les tâches de réparation.
+Hook called after a vehicle is repaired: if a crash had occurred, removes the repair tasks.
 
-- `invVehId` (*integer*) : Id du véhicule d'inventaire (non utilisé).
+- `invVehId` (*integer*) : Inventory vehicle id (not used).
 
 #### `gameplay_tutorial_damageTracker.onVehicleResetted(vehicleId)`
 
-Hook appelé quand un véhicule est réinitialisé : si c'est le véhicule suivi et que le suivi est actif, marque comme réparé et retire les tâches. (Définition effective : la seconde du fichier, qui écrase la première.)
+Hook called when a vehicle is reset: if it is the tracked vehicle and tracking is active, marks as repaired and removes the tasks. (Effective definition: the file's second one, which overwrites the first.)
 
-- `vehicleId` (*integer*) : Id du véhicule réinitialisé.
+- `vehicleId` (*integer*) : Id of the reset vehicle.
 
 #### `gameplay_tutorial_damageTracker.setDamagePopupHandler(handler)`
 
-Remplace l'ouverture de la fenêtre de dégâts de carrière par un handler personnalisé, appelé avec l'id de la fenêtre. Une valeur non fonctionnelle retire le handler.
+Replaces the opening of the career damage window with a custom handler, called with the window id. A non-function value removes the handler.
 
-- `handler` (*function|nil*) : function(popupId) appelée à la place de career_modules_tutorialPopups.introPopup.
+- `handler` (*function|nil*) : function(popupId) called instead of career_modules_tutorialPopups.introPopup.
 
 #### `gameplay_tutorial_damageTracker.setEnabled(value)`
 
-Active ou désactive le suivi des dégâts. À la désactivation : arrête le suivi du véhicule et retire toutes les tâches ; à l'activation : suit le véhicule et affiche la tâche si nécessaire.
+Enables or disables damage tracking. On disabling: stops tracking the vehicle and removes all tasks; on enabling: tracks the vehicle and displays the task if needed.
 
-- `value` (*boolean*) : true pour activer.
+- `value` (*boolean*) : true to enable.
 
 #### `gameplay_tutorial_damageTracker.setRepairGoal(goal)`
 
-Définit la tâche « réparer » affichée après un crash (table de tâche pour la liste de tâches). nil restaure la tâche par défaut.
+Sets the "repair" task displayed after a crash (task table for the task list). nil restores the default task.
 
-- `goal` (*table|nil*) : Table de tâche ({id, type, label, subtext, actionItems, done}).
+- `goal` (*table|nil*) : Task table ({id, type, label, subtext, actionItems, done}).
 
 #### `gameplay_tutorial_damageTracker.setTrackedVehicleId(vehicleId)`
 
-Fixe l'id du véhicule à suivre (pris en compte au prochain ensureTrackedVehicle, par exemple dans onUpdate).
+Sets the id of the vehicle to track (taken into account at the next ensureTrackedVehicle, for example in onUpdate).
 
-- `vehicleId` (*integer|nil*) : Id du véhicule, nil pour ne rien suivre.
+- `vehicleId` (*integer|nil*) : Vehicle id, nil to track nothing.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci : { 'gameplay_util_crashDetection' }. |
+| `dependencies` | string[] | Extensions loaded before this one: { 'gameplay_util_crashDetection' }. |
 
-**Évènements UI (guihooks.trigger) :** `DiscardTasklistItem`, `SetTasklistTask`
+**UI events (guihooks.trigger):** `DiscardTasklistItem`, `SetTasklistTask`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/tutorial/damageTracker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/tutorial/damageTracker.lua`.*

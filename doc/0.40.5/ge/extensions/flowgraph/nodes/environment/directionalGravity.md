@@ -1,35 +1,35 @@
 # `flowgraph_nodes_environment_directionalGravity`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/environment/directionalGravity.lua` · VM : Game Engine (GE) · 115 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/environment/directionalGravity.lua` · VM: Game Engine (GE) · 115 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/environment/directionalGravity")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/environment/directionalGravity")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Directional Gravity » (catégorie dynamic_p_duration, couleur/icône vehicle). Donne à un véhicule une gravité directionnelle en simulant une planète énorme et très lointaine : place une « planète » de rayon 1 000 000 m à 1 000 000 m du véhicule dans la direction donnée, avec la masse qui produit l'accélération voulue (masse = magnitude * rayon² / G), via obj:setPlanets côté véhicule. Entrées : vehId (number, sinon véhicule du joueur), direction (vec3, normalisé par le nœud, défaut {0,0,-1}), magnitude (m/s², défaut 1). À l'arrêt du graphe les planètes du véhicule sont supprimées (obj:setPlanets({})). En mode 'repeat', recalculée à chaque frame (utile car l'origine suit le véhicule).
+Flowgraph node "Directional Gravity" (category dynamic_p_duration, vehicle color/icon). Gives a vehicle directional gravity by simulating a huge, very distant planet: places a "planet" of radius 1,000,000 m at 1,000,000 m from the vehicle in the given direction, with the mass that produces the desired acceleration (mass = magnitude * radius² / G), via obj:setPlanets on the vehicle side. Inputs: vehId (number, otherwise player vehicle), direction (vec3, normalized by the node, default {0,0,-1}), magnitude (m/s², default 1). When the graph stops, the vehicle's planets are removed (obj:setPlanets({})). In 'repeat' mode, recomputed every frame (useful because the origin follows the vehicle).
 
-## Remarques
+## Notes
 
-- Bug (éditeur) : drawMiddle lit self.pinIn.mass et self.pinIn.radius qui n'existent pas sur ce nœud (copié de Planet) : provoque une erreur d'indexation d'un nil lors du dessin.
-- data.showDebug (true par défaut) dessine une ligne et la force de gravité (texte) dans le monde depuis drawMiddle.
-- Ancien pin renommé : vehID -> vehId.
-- Constante C.gConst = 6.6742e-11 (m³ s⁻² kg⁻¹).
+- Bug (editor): drawMiddle reads self.pinIn.mass and self.pinIn.radius which do not exist on this node (copied from Planet): causes a nil indexing error when drawing.
+- data.showDebug (true by default) draws a line and the gravity force (text) in the world from drawMiddle.
+- Old pin renamed: vehID -> vehId.
+- Constant C.gConst = 6.6742e-11 (m³ s⁻² kg⁻¹).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStopped()` | Supprime les planètes du véhicule (obj:setPlanets({})). | 37 |
-| `C:drawMiddle(builder, style)` | Éditeur : affichage de debug (ligne, force) et gravité de surface. | 82 |
-| `C:init()` | Active showDebug et crée la table planet. | 31 |
-| `C:setDirectionalGravity()` | Calcule origine, rayon et masse de la planète et envoie obj:setPlanets au véhicule. Ne fait rien si direction ou magnitude est nil. | 55 |
-| `C:work()` | Si dynamicMode vaut 'repeat', réapplique la gravité à chaque frame. | 49 |
-| `C:workOnce()` | Applique la gravité directionnelle une fois. | 45 |
+| `C:_executionStopped()` | Removes the vehicle's planets (obj:setPlanets({})). | 37 |
+| `C:drawMiddle(builder, style)` | Editor: debug display (line, force) and surface gravity. | 82 |
+| `C:init()` | Enables showDebug and creates the planet table. | 31 |
+| `C:setDirectionalGravity()` | Computes the planet's origin, radius and mass and sends obj:setPlanets to the vehicle. Does nothing if direction or magnitude is nil. | 55 |
+| `C:work()` | If dynamicMode is 'repeat', reapplies the gravity every frame. | 49 |
+| `C:workOnce()` | Applies the directional gravity once. | 45 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawLine`, `drawText`
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/environment/directionalGravity.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/environment/directionalGravity.lua`.*

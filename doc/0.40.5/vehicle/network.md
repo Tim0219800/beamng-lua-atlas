@@ -1,14 +1,14 @@
 # `network`
 
-*Fichier : `lua/vehicle/network.lua` · VM : Véhicule · 4 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/network.lua` · VM: Vehicle · 4 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("network")`
+**Access:** `require("network")`
 
-Fichier vide en 0.40.5 (seulement l'en-tête de licence, aucun code). Un require('network') ne renvoie donc pas de table (renvoie true selon la sémantique de require pour un module sans valeur de retour). Il n'expose ni fonction ni champ.
+Empty file in 0.40.5 (only the license header, no code). A require('network') therefore does not return a table (returns true per the require semantics for a module with no return value). It exposes no function or field.
 
-## Remarques
+## Notes
 
-- Ne rien attendre de ce module ; probable reliquat d'une ancienne API réseau.
+- Expect nothing from this module; probably a leftover of an old network API.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/network.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/network.lua`.*

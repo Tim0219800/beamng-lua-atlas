@@ -1,14 +1,25 @@
 {
   "path": "lua/ge/extensions/editor/ezObjectSelect/selectionLabels.lua",
-  "module": "Petit utilitaire de l'outil Easy Select : calcule le texte affiché pour nommer un objet de la scène. Priorité : nom de l'objet, nom interne, nom du fichier d'asset (champ shapeName ou getModelFile), sinon « Classe #id ». Un préfixe indique le type : [p] Prefab/PrefabInstance, [s] TSStatic, [v] BeamNGVehicle.",
+  "module": "Small utility of the Easy Select tool: computes the text displayed to name a scene object. Priority: object name, internal name, asset file name (field shapeName or getModelFile), otherwise \"Class #id\". A prefix indicates the type: [p] Prefab/PrefabInstance, [s] TSStatic, [v] BeamNGVehicle.",
   "functions": {
     "objectName": {
-      "desc": "Renvoie le libellé d'un objet. Si objectId est fourni, l'objet est retrouvé via scenetree.findObjectById ; s'il n'existe plus, renvoie « deleted #id » (ou « missing » si aucun id).",
+      "desc": "Returns an object's label. If objectId is provided, the object is retrieved via scenetree.findObjectById; if it no longer exists, returns \"deleted #id\" (or \"missing\" if no id).",
       "params": {
-        "obj": {"type": "userdata|nil", "desc": "Objet de la scène (ignoré si objectId est donné)"},
-        "objectId": {"type": "integer|nil", "desc": "Id de l'objet à retrouver dans scenetree"}
+        "obj": {
+          "type": "userdata|nil",
+          "desc": "Scene object (ignored if objectId is given)"
+        },
+        "objectId": {
+          "type": "integer|nil",
+          "desc": "Id of the object to retrieve in scenetree"
+        }
       },
-      "returns": [{"type": "string", "desc": "Libellé, éventuellement préfixé par [p], [s] ou [v]"}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "Label, possibly prefixed by [p], [s] or [v]"
+        }
+      ]
     }
   }
 }

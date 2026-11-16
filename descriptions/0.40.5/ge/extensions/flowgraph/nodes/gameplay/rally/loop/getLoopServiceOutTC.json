@@ -1,11 +1,14 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/getLoopServiceOutTC.lua",
-  "module": "Nœud flowgraph « Rally Loop Get Service Out TC » (catégorie once_instant, tag rally). Renvoie la position (pos, vec3) et la rotation (rot, quat) du contrôle horaire (TC) de sortie de parc d'assistance, via rm:getServiceOutTCPos() et rm:getServiceOutTCRot() du gestionnaire de la boucle rally.",
+  "module": "Flowgraph node \"Rally Loop Get Service Out TC\" (category once_instant, tag rally). Returns the position (pos, vec3) and rotation (rot, quat) of the service park exit time control (TC), via rm:getServiceOutTCPos() and rm:getServiceOutTCRot() of the rally loop manager.",
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Écrit pos et rot depuis le gestionnaire de boucle rally (rien si absent, erreur loggée).", "internal": true}
+        "workOnce": {
+          "desc": "Writes pos and rot from the rally loop manager (nothing if absent, error logged).",
+          "internal": true
+        }
       }
     }
   }

@@ -1,12 +1,12 @@
 # `gameplay_sites_parkingSpot`
 
-*Fichier : `lua/ge/extensions/gameplay/sites/parkingSpot.lua` · VM : Game Engine (GE) · 479 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/sites/parkingSpot.lua` · VM: Game Engine (GE) · 479 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/sites/parkingSpot")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/sites/parkingSpot")` (file under extensions/ but not a regular extension)
 
-Classe « ParkingSpot » d'un jeu de sites : un rectangle orienté (position, rotation, dimensions scl = largeur X, longueur Y, hauteur Z) représentant une place de parking. Permet de tester si un véhicule y rentre, s'il y est garé, si elle est occupée, et d'y téléporter un véhicule. Peut générer plusieurs places côte à côte (« multi-spot »). Le module renvoie un constructeur.
+"ParkingSpot" class of a sites set: an oriented rectangle (position, rotation, dimensions scl = width X, length Y, height Z) representing a parking spot. Allows testing whether a vehicle fits in it, whether it is parked in it, whether it is occupied, and teleporting a vehicle into it. Can generate several side-by-side spots ("multi-spot"). The module returns a constructor.
 
-## Exemple
+## Example
 
 ```lua
 local ok, corners = spot:checkParking(vehId, 0.8, 5, 1)
@@ -15,42 +15,42 @@ if spot:vehicleFits(vehId) and not spot:hasAnyVehicles(vehId) then
 end
 ```
 
-## Remarques
+## Notes
 
-- Axes locaux : X = largeur, Y = direction de la place (avant), Z = hauteur ; scl contient les dimensions totales.
-- Les places multiples (isMultiSpot) sont étendues par generateMultiSpots lors de finalizeSites : les copies sont marquées isProcedural et n'ont pas de dessin debug propre.
-- multiSpotData.spotDirection vaut 'Left', 'Right', 'Front' ou 'Back'. Si une autre valeur est donnée, le décalage reste celui du dernier calcul (variable temporaire partagée).
-- checkParking : les vitesses sont comparées au carré de la norme de la vitesse (m/s). Par défaut drivingSpeed 5 m/s, parkingSpeed 1 m/s, precision 0,8.
-- moveResetVehicleTo en mode non safeTeleport multiplie toujours le quaternion final par backwardsQuat (rotation de 180° autour de Z), même si backwards est faux ; le quaternion renvoyé est modifié en place par cette multiplication.
+- Local axes: X = width, Y = direction of the spot (front), Z = height; scl holds the total dimensions.
+- Multiple spots (isMultiSpot) are expanded by generateMultiSpots during finalizeSites: the copies are marked isProcedural and have no debug drawing of their own.
+- multiSpotData.spotDirection is 'Left', 'Right', 'Front' or 'Back'. If another value is given, the offset stays that of the last computation (shared temporary variable).
+- checkParking: speeds are compared to the square of the speed norm (m/s). Defaults: drivingSpeed 5 m/s, parkingSpeed 1 m/s, precision 0.8.
+- moveResetVehicleTo in non-safeTeleport mode always multiplies the final quaternion by backwardsQuat (180° rotation around Z), even if backwards is false; the returned quaternion is modified in place by this multiplication.
 
-## Classe `C`
+## Class `C`
 
-Objet place de parking. Champs : sites, id, name, color, vertices (4 coins 2D), pos, rot, scl, isMultiSpot, multiSpotData {spotAmount, spotOffset, spotDirection, spotRotation}, wasGenerated, isProcedural, customFields.
+Parking spot object. Fields: sites, id, name, color, vertices (4 2D corners), pos, rot, scl, isMultiSpot, multiSpotData {spotAmount, spotOffset, spotDirection, spotRotation}, wasGenerated, isProcedural, customFields.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_sites_parkingSpot")(options)`.
+The module returns a constructor: `local obj = require("gameplay_sites_parkingSpot")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:boxFits(extentsX, extentsY, extentsZ)` | Teste si une boîte de dimensions données rentre dans les dimensions de la place (comparaison par axe, sans rotation). | 347 |
-| `C:calcVerts()` | Recalcule les 4 coins 2D (vertices) à partir de pos, rot et scl. | 244 |
-| `C:checkParking(vehId, precision, drivingSpeed, parkingSpeed)` | Vérifie si un véhicule est correctement garé : vitesse faible, orienté dans l'axe de la place (\|cos\| >= 0,707) et coins de sa boîte englobante à l'intérieur. Avec precision <= 0, seul le centre du véhicule est testé. | 294 |
-| `C:containsPoint(pos)` | Teste si un point est dans le volume de la place (boîte orientée, avec contrôle rapide par rayon). | 257 |
-| `C:drawDebug(drawMode, clr, customHeight, drawDirection)` | Dessine la place en debug (surface, direction, nom selon le mode). Ignore les places procédurales. | 87 |
-| `C:drawSide(a, b, z, clrI)` | Dessine un côté vertical de la place entre deux points (aide au debug). | 176 |
-| `C:generateMultiSpots(parkingSpotList, skipSort)` | Pour une place multi-spot, crée les places supplémentaires (nom « <nom>.<n> ») décalées selon spotDirection/spotOffset, avec la rotation spotRotation, et copie tags et champs personnalisés. N'agit qu'une fois (wasGenerated). | 198 |
-| `C:getPath()` | Identifiant textuel de la place : dossier + fichier du jeu de sites + « # » + nom. | 83 |
-| `C:hasAnyVehicles(playerId)` | Indique si un véhicule actif occupe la place (centre de la boîte englobante dedans ; pour les véhicules suivis par map, test des arêtes aussi). | 359 |
-| `C:init(sites, name, forceId)` | Constructeur. Nom par défaut « Parking <id> ». | 17 |
-| `C:moveResetVehicleTo(vehId, lowPrecision, backwards, addedOffsetPos, addedOffsetRot, useSafeTeleport, removeTraffic, resetVehicleInSafeTeleport, options)` | Place un véhicule sur la place, aligné sur sa rotation. Avec useSafeTeleport, passe par spawn.safeTeleport ; sinon calcule le décalage de la boîte englobante, positionne le véhicule, réinitialise le flexmesh et appelle autoplace. | 399 |
-| `C:onDeserialized(data)` | Restaure la place depuis les données et recalcule les coins. | 55 |
-| `C:onSerialize()` | Sérialise la place (position, rotation d'origine, dimensions, paramètres multi-spot, couleur, champs personnalisés). | 35 |
-| `C:set(pos, rot, scl)` | Modifie position, rotation et/ou dimensions (valeurs nil ignorées) et recalcule les coins. | 70 |
-| `C:vehicleFits(vehId)` | Teste si le véhicule rentre (boîte englobante initiale des noeuds, initialNodePosBB). | 351 |
+| `C:boxFits(extentsX, extentsY, extentsZ)` | Tests whether a box of given dimensions fits in the spot's dimensions (per-axis comparison, no rotation). | 347 |
+| `C:calcVerts()` | Recalculates the 4 2D corners (vertices) from pos, rot and scl. | 244 |
+| `C:checkParking(vehId, precision, drivingSpeed, parkingSpeed)` | Checks whether a vehicle is correctly parked: low speed, aligned with the spot's axis (\|cos\| >= 0.707) and the corners of its bounding box inside. With precision <= 0, only the vehicle's center is tested. | 294 |
+| `C:containsPoint(pos)` | Tests whether a point is inside the spot's volume (oriented box, with a quick radius check). | 257 |
+| `C:drawDebug(drawMode, clr, customHeight, drawDirection)` | Draws the spot in debug (surface, direction, name depending on the mode). Ignores procedural spots. | 87 |
+| `C:drawSide(a, b, z, clrI)` | Draws a vertical side of the spot between two points (debug aid). | 176 |
+| `C:generateMultiSpots(parkingSpotList, skipSort)` | For a multi-spot, creates the additional spots (name "<name>.<n>") offset according to spotDirection/spotOffset, with the spotRotation rotation, and copies tags and custom fields. Acts only once (wasGenerated). | 198 |
+| `C:getPath()` | Text identifier of the spot: folder + file of the sites set + "#" + name. | 83 |
+| `C:hasAnyVehicles(playerId)` | Indicates whether an active vehicle occupies the spot (bounding box center inside it; for vehicles tracked by map, edges are also tested). | 359 |
+| `C:init(sites, name, forceId)` | Constructor. Default name "Parking <id>". | 17 |
+| `C:moveResetVehicleTo(vehId, lowPrecision, backwards, addedOffsetPos, addedOffsetRot, useSafeTeleport, removeTraffic, resetVehicleInSafeTeleport, options)` | Places a vehicle on the spot, aligned to its rotation. With useSafeTeleport, goes through spawn.safeTeleport; otherwise computes the bounding box offset, positions the vehicle, resets the flexmesh and calls autoplace. | 399 |
+| `C:onDeserialized(data)` | Restores the spot from the data and recalculates the corners. | 55 |
+| `C:onSerialize()` | Serializes the spot (position, original rotation, dimensions, multi-spot parameters, color, custom fields). | 35 |
+| `C:set(pos, rot, scl)` | Changes position, rotation and/or dimensions (nil values ignored) and recalculates the corners. | 70 |
+| `C:vehicleFits(vehId)` | Tests whether the vehicle fits (initial node bounding box, initialNodePosBB). | 351 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getObjectOOBBCenterXYZ`, `getObjectOOBBHalfAxisXYZ`
 - `debugDrawer:` `drawTextAdvanced`, `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/sites/parkingSpot.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/sites/parkingSpot.lua`.*

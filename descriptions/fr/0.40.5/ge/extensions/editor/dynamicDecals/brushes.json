@@ -1,0 +1,55 @@
+{
+  "path": "lua/ge/extensions/editor/dynamicDecals/brushes.lua",
+  "module": "Gestion des brosses (brushes) de l'outil Dynamic Decals : un preset enregistre l'état courant des propriétés de decal (textures color/alpha/metallic/normal/roughness, couleur, dégradé, rotation, échelle, skew, UV, masque alpha, SDF, miroir, intensités, wrap…). Les brosses sont stockées dans /art/dynamicDecals/brushes/brushes.json, listées dans l'onglet « Brushes » du navigateur (ordre 30) et inspectables (Use / Delete / Save). Un moddeur s'en sert pour sauvegarder ou recharger un réglage de decal.",
+  "notes": [
+    "Le fichier brushes.json est lu à setup s'il existe, sinon la liste est vide (aucun fichier n'est créé avant le premier enregistrement).",
+    "saveBrush sans nom utilise le nom de fichier (sans extension) de la texture couleur courante. Chaque appel ajoute une nouvelle entrée, sans test de doublon.",
+    "Les propriétés SDF (sdfThickness, sdfSoftness, sdfOutline*) ne sont enregistrées que si la texture couleur est compatible SDF (decal.isTexturesSdfCompatible).",
+    "loadBrush applique chaque propriété via getValueOrDefault, qui retombe sur la valeur par défaut de api.propertiesMap pour une valeur absente. Les lignes d'alphaMaskInvert et decalUseGradientColor sont commentées : ces deux propriétés enregistrées ne sont pas restaurées au chargement (et les setters supposés n'existent pas sous ce nom).",
+    "deleteBrush remet à nil le champ id de toutes les brosses avant d'écrire le fichier."
+  ],
+  "functions": {
+    "saveBrush": {
+      "desc": "Crée une brosse à partir de l'état courant de l'API (api.get*), l'ajoute à la liste et écrit brushes.json.",
+      "params": {"name": {"type": "string|nil", "desc": "Nom de la brosse ; par défaut le nom de la texture couleur."}},
+      "returns": [],
+      "internal": false
+    },
+    "loadBrush": {
+      "desc": "Applique à l'API (api.set*) toutes les propriétés d'une brosse : masque alpha, blend mode, couleur, textures, rotation, échelle, skew, dégradé, UV, SDF, etc.",
+      "params": {"brush": {"type": "table", "desc": "Brosse (entrée de brushes.json, voir saveBrush pour les champs)."}},
+      "returns": [],
+      "internal": false
+    },
+    "inspectorGui": {
+      "desc": "Dessine l'inspecteur d'une brosse sélectionnée : boutons Use (loadBrush), Delete et Save (visible seulement si brush.dirty), puis l'aperçu et les propriétés.",
+      "params": {"brush": {"type": "table", "desc": "Brosse sélectionnée (editor.selection[\"dynamicDecalBrush\"])."}},
+      "returns": [],
+      "internal": true
+    },
+    "getBrushes": {
+      "desc": "Renvoie la liste des brosses chargées en mémoire.",
+      "params": {},
+      "returns": [{"type": "table[]", "desc": "Liste des brosses (la table interne, pas une copie)."}],
+      "internal": false
+    },
+    "registerEditorPreferences": {
+      "desc": "Ne déclare aucune préférence (corps commenté).",
+      "params": {"prefsRegistry": {"type": "table", "desc": "Registre de préférences de l'éditeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "editorPreferenceValueChanged": {
+      "desc": "Hook appelé quand une préférence change. Ne fait rien ici.",
+      "params": {"path": {"type": "string", "desc": "Chemin de la préférence."}, "value": {"type": "any", "desc": "Nouvelle valeur."}},
+      "returns": [],
+      "internal": true
+    },
+    "setup": {
+      "desc": "Appelé par l'outil : récupère API, browser, selection et layerTypes_decal, charge brushes.json si présent, enregistre l'onglet « Brushes » du navigateur.",
+      "params": {"tool_in": {"type": "table", "desc": "Référence à l'outil editor_dynamicDecalsTool."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

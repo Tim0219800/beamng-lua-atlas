@@ -1,0 +1,16 @@
+{
+  "path": "lua/vehicle/extensions/core/booster.lua",
+  "module": "Extension expérimentale de 'poussée' : simule une force sur le véhicule en plaçant des 'planètes' à masse négative très éloignées (obj:setPlanets), ce qui repousse le véhicule dans une direction donnée pendant une durée limitée. Un appel à boost(force, dt) ajoute une poussée qui dure dt secondes.",
+  "usage": "extensions.core_booster.boost(vec3(0, 1, 0), 2)  -- pousse pendant 2 s",
+  "notes": [
+    "Pour chaque poussée, une planète est placée à (position du véhicule - force * 1000) avec rayon 10 et masse -1e18 ; obj:setPlanets reçoit la liste complète à chaque frame.",
+    "BUG : dans updateGFX, `table.remove(boosts, i)` utilise une variable `i` qui n'existe pas (ipairs est écrit `_, boost`). À l'expiration d'une poussée, l'appel reçoit nil et lève une erreur Lua ; en outre la suppression pendant l'itération saute un élément.",
+    "updateGFX affiche (print) la liste des planètes à chaque frame tant qu'il y a au moins une poussée : bruit dans le log.",
+    "Quand la liste est vide, obj:setPlanets({}) est quand même appelé chaque frame."
+  ],
+  "fields": {},
+  "functions": {
+    "boost": {"desc": "Ajoute une poussée : la direction/force est donnée par un vecteur, dt est sa durée.", "params": {"force": {"type": "vec3|table", "desc": "Vecteur de poussée (converti en vec3) ; il est multiplié par 1000 pour placer la planète."}, "dt": {"type": "number", "desc": "Durée de la poussée en secondes."}}, "returns": [], "internal": false},
+    "updateGFX": {"desc": "Appelé chaque frame : met à jour les durées de vie, construit la liste des planètes et l'applique avec obj:setPlanets.", "params": {"dtSim": {"type": "number", "desc": "Pas de temps de simulation en secondes."}}, "returns": [], "internal": true}
+  }
+}

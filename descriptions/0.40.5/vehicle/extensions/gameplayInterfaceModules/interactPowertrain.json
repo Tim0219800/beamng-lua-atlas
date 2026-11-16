@@ -1,18 +1,39 @@
 {
   "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactPowertrain.lua",
-  "module": "Module de gameplayInterface pour powertrain : lecture d'une propriété d'un périphérique du groupe motopropulseur par son nom.",
+  "module": "gameplayInterface module for powertrain: reads a property of a powertrain device by its name.",
   "usage": "gameplayInterface.getSystemData(0, 18, 'powertrainDevice', 'mainEngine', 'outputAV1')",
   "notes": [
-    "Lookup 'powertrainDevice'(deviceName:string, property:string) : renvoie {result = powertrain.getDevice(deviceName)[property]}.",
-    "Anomalie : si le périphérique n'existe pas, powertrain.getDevice renvoie nil et l'indexation lève une erreur Lua (pas de {failReason}).",
-    "Ce module n'expose aucune action."
+    "Lookup 'powertrainDevice'(deviceName:string, property:string): returns {result = powertrain.getDevice(deviceName)[property]}.",
+    "Anomaly: if the device does not exist, powertrain.getDevice returns nil and the indexing raises a Lua error (no {failReason}).",
+    "This module exposes no action."
   ],
   "fields": {
-    "moduleActions": {"type": "table<string, function>", "desc": "Vide."},
-    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : powertrainDevice."}
+    "moduleActions": {
+      "type": "table<string, function>",
+      "desc": "Empty."
+    },
+    "moduleLookups": {
+      "type": "table<string, function>",
+      "desc": "Lookups: powertrainDevice."
+    }
   },
   "functions": {
-    "onExtensionLoaded": {"desc": "Appelé au chargement : enregistre le lookup.", "params": {}, "returns": [], "internal": true},
-    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+    "onExtensionLoaded": {
+      "desc": "Called on load: registers the lookup.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "requestRegistration": {
+      "desc": "Registers the actions and lookups with gameplayInterface.",
+      "params": {
+        "gi": {
+          "type": "table",
+          "desc": "The gameplayInterface module."
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

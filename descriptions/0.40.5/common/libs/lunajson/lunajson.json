@@ -1,16 +1,28 @@
 {
   "path": "lua/common/libs/lunajson/lunajson.lua",
-  "module": "Bibliothèque tierce lunajson (décodeur/encodeur JSON pur Lua, rapide). Ce fichier est le point d'entrée : il crée un décodeur et un encodeur par défaut et expose aussi l'analyseur SAX (événementiel). Pour avoir plusieurs contextes indépendants, on peut requérir directement lunajson/decoder ou lunajson/encoder. Le jeu fournit par ailleurs ses propres fonctions jsonEncode/jsonDecode ; ceci est la bibliothèque brute.",
+  "module": "Third-party library lunajson (fast pure-Lua JSON decoder/encoder). This file is the entry point: it creates a default decoder and encoder and also exposes the SAX (event-driven) parser. To have several independent contexts, you can require lunajson/decoder or lunajson/encoder directly. The game also provides its own jsonEncode/jsonDecode functions; this is the raw library.",
   "usage": "local lunajson = require('libs/lunajson/lunajson')\nlocal t = lunajson.decode('{\"a\":[1,2,3]}')\nlocal s = lunajson.encode(t)",
   "notes": [
-    "Le fichier fait `require 'libs/lunajson/lunajson.decoder'` (séparateur point) ; les sous-modules sont des fichiers `lunajson/decoder.lua`, `encoder.lua` et `sax.lua`.",
-    "`decode(json, pos?, nullv?, arraylen?)` : si `pos` est donné, renvoie aussi la position où le décodage s'est arrêté (et n'exige pas la fin de la chaîne) ; `nullv` remplace le null JSON (nil par défaut) ; si `arraylen` est vrai, la longueur de chaque tableau décodé est stockée à l'indice 0 (`ary[0]`).",
-    "`encode(valeur, nullv?)` : les clés non-chaînes dans un objet et les références circulaires provoquent une erreur."
+    "The file does `require 'libs/lunajson/lunajson.decoder'` (dot separator); the submodules are the files `lunajson/decoder.lua`, `encoder.lua` and `sax.lua`.",
+    "`decode(json, pos?, nullv?, arraylen?)`: if `pos` is given, also returns the position where decoding stopped (and does not require the end of the string); `nullv` replaces the JSON null (nil by default); if `arraylen` is true, the length of each decoded array is stored at index 0 (`ary[0]`).",
+    "`encode(value, nullv?)`: non-string keys in an object and circular references cause an error."
   ],
   "fields": {
-    "decode": {"type": "function", "desc": "Décode une chaîne JSON en valeur Lua (voir lunajson/decoder)."},
-    "encode": {"type": "function", "desc": "Encode une valeur Lua en chaîne JSON (voir lunajson/encoder)."},
-    "newparser": {"type": "function", "desc": "Crée un analyseur SAX sur une chaîne ou une fonction source (voir lunajson/sax)."},
-    "newfileparser": {"type": "function", "desc": "Crée un analyseur SAX lisant un fichier par blocs de 8192 octets (voir lunajson/sax)."}
+    "decode": {
+      "type": "function",
+      "desc": "Decodes a JSON string into a Lua value (see lunajson/decoder)."
+    },
+    "encode": {
+      "type": "function",
+      "desc": "Encodes a Lua value into a JSON string (see lunajson/encoder)."
+    },
+    "newparser": {
+      "type": "function",
+      "desc": "Creates a SAX parser on a string or a source function (see lunajson/sax)."
+    },
+    "newfileparser": {
+      "type": "function",
+      "desc": "Creates a SAX parser reading a file in 8192-byte blocks (see lunajson/sax)."
+    }
   }
 }

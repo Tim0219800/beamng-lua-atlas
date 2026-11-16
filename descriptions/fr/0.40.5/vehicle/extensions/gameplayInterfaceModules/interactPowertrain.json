@@ -1,0 +1,18 @@
+{
+  "path": "lua/vehicle/extensions/gameplayInterfaceModules/interactPowertrain.lua",
+  "module": "Module de gameplayInterface pour powertrain : lecture d'une propriété d'un périphérique du groupe motopropulseur par son nom.",
+  "usage": "gameplayInterface.getSystemData(0, 18, 'powertrainDevice', 'mainEngine', 'outputAV1')",
+  "notes": [
+    "Lookup 'powertrainDevice'(deviceName:string, property:string) : renvoie {result = powertrain.getDevice(deviceName)[property]}.",
+    "Anomalie : si le périphérique n'existe pas, powertrain.getDevice renvoie nil et l'indexation lève une erreur Lua (pas de {failReason}).",
+    "Ce module n'expose aucune action."
+  ],
+  "fields": {
+    "moduleActions": {"type": "table<string, function>", "desc": "Vide."},
+    "moduleLookups": {"type": "table<string, function>", "desc": "Lookups : powertrainDevice."}
+  },
+  "functions": {
+    "onExtensionLoaded": {"desc": "Appelé au chargement : enregistre le lookup.", "params": {}, "returns": [], "internal": true},
+    "requestRegistration": {"desc": "Enregistre les actions et lookups auprès de gameplayInterface.", "params": {"gi": {"type": "table", "desc": "Le module gameplayInterface."}}, "returns": [], "internal": true}
+  }
+}

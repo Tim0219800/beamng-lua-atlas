@@ -1,107 +1,107 @@
 # `ui_firstDrive_moveOff`
 
-*Fichier : `lua/ge/extensions/ui/firstDrive/moveOff.lua` · VM : Game Engine (GE) · 665 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/firstDrive/moveOff.lua` · VM: Game Engine (GE) · 665 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_firstDrive_moveOff` : `extensions.load("ui_firstDrive_moveOff")`, puis la globale `ui_firstDrive_moveOff`
+**Access:** extension `ui_firstDrive_moveOff`: `extensions.load("ui_firstDrive_moveOff")`, then the global `ui_firstDrive_moveOff`
 
-Didacticiel « démarrer et rouler » de l'expérience First Drive. Une fois activé, il suit le véhicule du joueur 0 (accélérateur, frein, embrayage, rapport, moteur, régime, vitesse des roues, lus via core_vehicleBridge) et affiche dans l'application « moveOff » du conteneur « topCenter » les touches à utiliser pour chaque étape : allumer le moteur, démarrer, s'arrêter, faire marche arrière, couper le moteur. Les instructions dépendent du mode de boîte : arcade, manuelle réaliste avec embrayage automatique, ou manuelle réaliste.
+"Start and drive off" tutorial of the First Drive experience. Once enabled, it follows player 0's vehicle (throttle, brake, clutch, gear, engine, RPM, wheel speed, read via core_vehicleBridge) and shows in the "moveOff" application of the "topCenter" container the keys to use for each step: turn the engine on, drive off, stop, reverse, turn the engine off. The instructions depend on the gearbox mode: arcade, realistic manual with automatic clutch, or realistic manual.
 
-## Exemple
+## Example
 
 ```lua
 ui_firstDrive_moveOff.setEnabled(true)
--- l'interface reçoit l'évènement FirstDriveMoveOffState à chaque changement d'instruction
+-- the interface receives the FirstDriveMoveOffState event on each instruction change
 local state = ui_firstDrive_moveOff.getState()
 ```
 
-## Remarques
+## Notes
 
-- Évènement UI : FirstDriveMoveOffState, avec { label, steps, sectionIndex, sectionCount, active }. Chaque step contient action, actionLabel, inputType (« press », « hold » ou « release »), status (« complete », « current » ou « upcoming ») et éventuellement separator (« or »). À la désactivation, { active = false } est envoyé.
-- Le nombre de sections est 5 en arcade et en embrayage automatique, 6 en manuel réaliste (étape supplémentaire pour passer au point mort avant de démarrer).
-- Le hook onFirstDriveMoveOffSectionCompleted est émis (une fois, avec le nom de la section : engineOn, moveOff, stopping, reverse ou engineOff) après la mise à jour de l'état qui a terminé la section.
-- Seuils utilisés : vitesse de roues 0,5 m/s pour « en mouvement », 1,5 m/s pour valider la marche arrière, 1500 tr/min avant de relâcher l'embrayage, frein 0,2, embrayage tenu à partir de 0,8 et relâché sous 0,15. Une pause de 2 s sépare chaque section et 0,3 s est attendue après chaque changement de véhicule pour laisser les valeurs se rafraîchir.
-- Le mode (arcade, realisticAutoClutch, realisticManual) est déterminé par la valeur gearboxMode du mainController du véhicule (repli : réglage defaultGearboxBehavior, « arcade »), puis par le réglage autoClutch.
-- L'extension se désactive seule à onExtensionUnloaded et onClientEndMission ; un changement de réglages relance le suivi du véhicule après 0,1 s.
-- Seul le joueur 0 est suivi : onVehicleSwitched ignore les autres joueurs.
+- UI event: FirstDriveMoveOffState, with { label, steps, sectionIndex, sectionCount, active }. Each step contains action, actionLabel, inputType ("press", "hold" or "release"), status ("complete", "current" or "upcoming") and possibly separator ("or"). On deactivation, { active = false } is sent.
+- The number of sections is 5 in arcade and in automatic clutch, 6 in realistic manual (extra step to shift to neutral before driving off).
+- The hook onFirstDriveMoveOffSectionCompleted is emitted (once, with the section name: engineOn, moveOff, stopping, reverse or engineOff) after the state update that completed the section.
+- Thresholds used: wheel speed 0.5 m/s for "moving", 1.5 m/s to validate reversing, 1500 RPM before releasing the clutch, brake 0.2, clutch held from 0.8 and released below 0.15. A 2 s pause separates each section and 0.3 s is waited after each vehicle change to let the values refresh.
+- The mode (arcade, realisticAutoClutch, realisticManual) is determined by the gearboxMode value of the vehicle's mainController (fallback: setting defaultGearboxBehavior, "arcade"), then by the autoClutch setting.
+- The extension disables itself on onExtensionUnloaded and onClientEndMission; a settings change restarts the vehicle tracking after 0.1 s.
+- Only player 0 is tracked: onVehicleSwitched ignores the other players.
 
-**Dépendances (chargées avant) :** `ui_appContainers`
+**Dependencies (loaded first):** `ui_appContainers`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_firstDrive_moveOff.getEnabled()` | Indique si le didacticiel est actif. | 654 |
-| `ui_firstDrive_moveOff.getState()` | Renvoie la dernière instruction publiée (label, steps, sectionIndex, sectionCount, active), ou nil si rien n'est affiché. | 588 |
-| `ui_firstDrive_moveOff.onClientEndMission()` | Hook appelé à la fin du niveau : désactive le didacticiel. *(interne)* *(hook)* | 649 |
-| `ui_firstDrive_moveOff.onExtensionUnloaded()` | Hook appelé au déchargement de l'extension : désactive le didacticiel. *(interne)* *(hook)* | 645 |
-| `ui_firstDrive_moveOff.onSettingsChanged()` | Hook appelé quand les réglages changent. Si actif, relance le suivi du véhicule après 0,1 s, ce qui relit le mode de boîte. *(interne)* *(hook)* | 636 |
-| `ui_firstDrive_moveOff.onUpdate(dtReal)` | Hook appelé à chaque image avec dtReal (secondes réelles). Reconfigure le suivi si le véhicule du joueur change, attend la fin des délais, calcule l'instruction courante, la publie à l'interface si elle a changé et émet onFirstDriveMoveOffSectionCompleted quand une section vient d'être validée. *(interne)* *(hook)* | 592 |
-| `ui_firstDrive_moveOff.onVehicleDestroyed(vehicleId)` | Hook appelé quand un véhicule est détruit : arrête le suivi si c'est le véhicule suivi. *(interne)* *(hook)* | 632 |
-| `ui_firstDrive_moveOff.onVehicleReplaced(vehicleId)` | Hook appelé quand un véhicule est remplacé ; même traitement que onVehicleDestroyed. *(interne)* *(hook)* | 632 |
-| `ui_firstDrive_moveOff.onVehicleSwitched(_, newVehicleId, player)` | Hook appelé quand le véhicule du joueur change. Relance le suivi sur le nouveau véhicule (ignoré si inactif ou si player n'est pas 0). *(interne)* *(hook)* | 627 |
-| `ui_firstDrive_moveOff.setEnabled(value)` | Active ou désactive le didacticiel. À l'activation, commence à suivre le véhicule du joueur 0 (abonnements aux valeurs throttle_input, brake_input, clutch_input, gearIndex, engineRunning, rpm, wheelspeed) ; à la désactivation, désabonne, cache l'application et envoie { active = false }. Sans effet si l'état ne change pas. | 576 |
+| `ui_firstDrive_moveOff.getEnabled()` | Indicates whether the tutorial is active. | 654 |
+| `ui_firstDrive_moveOff.getState()` | Returns the last published instruction (label, steps, sectionIndex, sectionCount, active), or nil if nothing is displayed. | 588 |
+| `ui_firstDrive_moveOff.onClientEndMission()` | Hook called at the end of the level: disables the tutorial. *(internal)* *(hook)* | 649 |
+| `ui_firstDrive_moveOff.onExtensionUnloaded()` | Hook called when the extension is unloaded: disables the tutorial. *(internal)* *(hook)* | 645 |
+| `ui_firstDrive_moveOff.onSettingsChanged()` | Hook called when the settings change. If active, restarts the vehicle tracking after 0.1 s, which rereads the gearbox mode. *(internal)* *(hook)* | 636 |
+| `ui_firstDrive_moveOff.onUpdate(dtReal)` | Hook called every frame with dtReal (real seconds). Reconfigures the tracking if the player's vehicle changes, waits for the delays to end, computes the current instruction, publishes it to the interface if it has changed and emits onFirstDriveMoveOffSectionCompleted when a section has just been validated. *(internal)* *(hook)* | 592 |
+| `ui_firstDrive_moveOff.onVehicleDestroyed(vehicleId)` | Hook called when a vehicle is destroyed: stops the tracking if it is the tracked vehicle. *(internal)* *(hook)* | 632 |
+| `ui_firstDrive_moveOff.onVehicleReplaced(vehicleId)` | Hook called when a vehicle is replaced; same handling as onVehicleDestroyed. *(internal)* *(hook)* | 632 |
+| `ui_firstDrive_moveOff.onVehicleSwitched(_, newVehicleId, player)` | Hook called when the player's vehicle changes. Restarts the tracking on the new vehicle (ignored if inactive or if player is not 0). *(internal)* *(hook)* | 627 |
+| `ui_firstDrive_moveOff.setEnabled(value)` | Enables or disables the tutorial. On enable, starts following player 0's vehicle (subscriptions to the values throttle_input, brake_input, clutch_input, gearIndex, engineRunning, rpm, wheelspeed); on disable, unsubscribes, hides the application and sends { active = false }. No effect if the state does not change. | 576 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_firstDrive_moveOff.getEnabled()`
 
-Indique si le didacticiel est actif.
+Indicates whether the tutorial is active.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `ui_firstDrive_moveOff.getState()`
 
-Renvoie la dernière instruction publiée (label, steps, sectionIndex, sectionCount, active), ou nil si rien n'est affiché.
+Returns the last published instruction (label, steps, sectionIndex, sectionCount, active), or nil if nothing is displayed.
 
-- **renvoie** : table|nil Dernier état envoyé à l'interface.
+- **returns**: table|nil Last state sent to the interface.
 
 #### `ui_firstDrive_moveOff.onUpdate(dtReal)`
 
-Hook appelé à chaque image avec dtReal (secondes réelles). Reconfigure le suivi si le véhicule du joueur change, attend la fin des délais, calcule l'instruction courante, la publie à l'interface si elle a changé et émet onFirstDriveMoveOffSectionCompleted quand une section vient d'être validée.
+Hook called every frame with dtReal (real seconds). Reconfigures the tracking if the player's vehicle changes, waits for the delays to end, computes the current instruction, publishes it to the interface if it has changed and emits onFirstDriveMoveOffSectionCompleted when a section has just been validated.
 
-- `dtReal` (*number*) : Durée réelle de l'image en secondes.
+- `dtReal` (*number*) : Real frame duration in seconds.
 
 #### `ui_firstDrive_moveOff.onVehicleDestroyed(vehicleId)`
 
-Hook appelé quand un véhicule est détruit : arrête le suivi si c'est le véhicule suivi.
+Hook called when a vehicle is destroyed: stops the tracking if it is the tracked vehicle.
 
-- `vehicleId` (*integer*) : Identifiant du véhicule détruit.
+- `vehicleId` (*integer*) : Identifier of the destroyed vehicle.
 
 #### `ui_firstDrive_moveOff.onVehicleReplaced(vehicleId)`
 
-Hook appelé quand un véhicule est remplacé ; même traitement que onVehicleDestroyed.
+Hook called when a vehicle is replaced; same handling as onVehicleDestroyed.
 
-- `vehicleId` (*integer*) : Identifiant du véhicule remplacé.
+- `vehicleId` (*integer*) : Identifier of the replaced vehicle.
 
 #### `ui_firstDrive_moveOff.onVehicleSwitched(_, newVehicleId, player)`
 
-Hook appelé quand le véhicule du joueur change. Relance le suivi sur le nouveau véhicule (ignoré si inactif ou si player n'est pas 0).
+Hook called when the player's vehicle changes. Restarts the tracking on the new vehicle (ignored if inactive or if player is not 0).
 
-- `_` (*any*) : Identifiant de l'ancien véhicule (non utilisé).
-- `newVehicleId` (*integer|nil*) : Identifiant du nouveau véhicule.
-- `player` (*integer|nil*) : Indice du joueur concerné.
+- `_` (*any*) : Identifier of the old vehicle (not used).
+- `newVehicleId` (*integer|nil*) : Identifier of the new vehicle.
+- `player` (*integer|nil*) : Index of the player concerned.
 
 #### `ui_firstDrive_moveOff.setEnabled(value)`
 
-Active ou désactive le didacticiel. À l'activation, commence à suivre le véhicule du joueur 0 (abonnements aux valeurs throttle_input, brake_input, clutch_input, gearIndex, engineRunning, rpm, wheelspeed) ; à la désactivation, désabonne, cache l'application et envoie { active = false }. Sans effet si l'état ne change pas.
+Enables or disables the tutorial. On enable, starts following player 0's vehicle (subscriptions to the values throttle_input, brake_input, clutch_input, gearIndex, engineRunning, rpm, wheelspeed); on disable, unsubscribes, hides the application and sends { active = false }. No effect if the state does not change.
 
-- `value` (*boolean*) : Seul true active ; toute autre valeur désactive.
+- `value` (*boolean*) : Only true enables; any other value disables.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant celle-ci : ui_appContainers. |
+| `dependencies` | string[] | Extensions loaded before this one: ui_appContainers. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
 - `onFirstDriveMoveOffSectionCompleted`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicle`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/firstDrive/moveOff.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/firstDrive/moveOff.lua`.*

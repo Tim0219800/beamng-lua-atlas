@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/hideLoadingScreen.lua",
+  "module": "Nœud « Hide Loading Screen » (once_instant). Cache l'écran de chargement après le chargement d'un niveau (utile avec « Load Level » en mode customLoadingScreen). Sans effet si aucun niveau n'est en chargement. Sortie : finished (flow).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Désactive clearOutPinsOnStart.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Met finished à false, appelle modules.level:finishedLevelLoading() et server.fadeoutLoadingScreen(true).",
+          "internal": true
+        },
+        "work": {
+          "desc": "Met finished à true dès que modules.level n'est plus en chargement de niveau.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

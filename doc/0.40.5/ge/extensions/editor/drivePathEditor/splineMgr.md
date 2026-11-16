@@ -1,243 +1,243 @@
 # `editor_drivePathEditor_splineMgr`
 
-*Fichier : `lua/ge/extensions/editor/drivePathEditor/splineMgr.lua` · VM : Game Engine (GE) · 1048 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/drivePathEditor/splineMgr.lua` · VM: Game Engine (GE) · 1048 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_drivePathEditor_splineMgr` : `extensions.load("editor_drivePathEditor_splineMgr")`, puis la globale `editor_drivePathEditor_splineMgr`
+**Access:** extension `editor_drivePathEditor_splineMgr`: `extensions.load("editor_drivePathEditor_splineMgr")`, then the global `editor_drivePathEditor_splineMgr`
 
-Gestionnaire des splines du Drive Path Editor (préfixe « Drive Path Spline », mode d'édition drivePathSplineEditMode). Une spline de chemin décrit un trajet pour une IA : nœuds, largeurs, normales, vitesses (vels) et limites de vitesse (velLimits) en mode libre, ou liste de nœuds du navgraph (graphNodes/graphPath) en mode graphe. Le module tient la liste des splines et la table id vers index, gère création, suppression, coupe, jonction, inversion, undo/redo, sérialisation, liens spline-véhicule (qui replacent le véhicule au départ) et le cache du navgraph de la carte (map.getGraphpath()).
+Spline manager of the Drive Path Editor (prefix "Drive Path Spline", edit mode drivePathSplineEditMode). A path spline describes a route for an AI: nodes, widths, normals, speeds (vels) and speed limits (velLimits) in free mode, or a list of navgraph nodes (graphNodes/graphPath) in graph mode. The module holds the list of splines and the id-to-index table, handles creation, deletion, splitting, joining, reversing, undo/redo, serialization, spline-vehicle links (which move the vehicle back to the start) and the map's navgraph cache (map.getGraphpath()).
 
-## Remarques
+## Notes
 
-- Paramètres par défaut d'une spline : isFreeMode true, delayTime 0 s, aggression 0.3, numLaps 1, routeSpeed 31.3 (m/s), routeSpeedMode 'off', isAvoidCars true, isDriveInLane true, isLoop false, startingNode 1, speedProfileMode 0 (0 aucun, 1 vitesses cibles, 2 limites de vitesse, script libre seulement).
-- Constantes : subdivisions minimales 10 ; écart à la coupe 1.0 m ; taille minimale d'import 10 m ; décalage vertical des véhicules 0.3 m (vehShiftZ) ; points de ruban relevés par raycast avec zExtra 3.0 et zFloat 0.15.
-- Un véhicule de scène est une table {vid, veh, name, isLink, linkSplineId} ; une spline liée a isVehicleLink et linkVehId. linkSpline replace immédiatement le véhicule au départ et mémorise sa pose d'origine ; unlinkSpline la restaure.
-- Les splines sont recalculées par updateDirtyDrivePathSplines quand isDirty est vrai. En mode graphe, une spline reste dirty tant que le navgraph n'est pas disponible.
-- getNavGraph renvoie nil tant que map.getGraphpath() n'existe pas ; sinon il met en cache {graph, nodes (positions), widths (radius), lines} pour toutes les arêtes (une fois par arête).
-- convertPathsToDrivePathSplines crée une spline par chemin même trop petit (elle reste vide) et son log compte #paths - #drivePathSplines (inexact s'il existait déjà des splines).
+- Default spline parameters: isFreeMode true, delayTime 0 s, aggression 0.3, numLaps 1, routeSpeed 31.3 (m/s), routeSpeedMode 'off', isAvoidCars true, isDriveInLane true, isLoop false, startingNode 1, speedProfileMode 0 (0 none, 1 target speeds, 2 speed limits, free script only).
+- Constants: minimum subdivisions 10; gap at split 1.0 m; minimum import size 10 m; vehicle vertical offset 0.3 m (vehShiftZ); ribbon points sampled by raycast with zExtra 3.0 and zFloat 0.15.
+- A scene vehicle is a table {vid, veh, name, isLink, linkSplineId}; a linked spline has isVehicleLink and linkVehId. linkSpline immediately moves the vehicle to the start and stores its original pose; unlinkSpline restores it.
+- Splines are recomputed by updateDirtyDrivePathSplines when isDirty is true. In graph mode, a spline stays dirty as long as the navgraph is not available.
+- getNavGraph returns nil until map.getGraphpath() exists; otherwise it caches {graph, nodes (positions), widths (radius), lines} for all edges (once per edge).
+- convertPathsToDrivePathSplines creates one spline per path even if too small (it stays empty) and its log counts #paths - #drivePathSplines (inexact if splines already existed).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_drivePathEditor_splineMgr.addNewDrivePathSpline()` | Ajoute à la fin une nouvelle spline vide avec un nom unique, un UUID Engine.generateUUID() et les paramètres par défaut. | 202 |
-| `editor_drivePathEditor_splineMgr.computeActiveVehicles()` | Reconstruit la liste des véhicules actifs de la scène (activeVehiclesIterator) avec vid, veh, name et liens remis à zéro. | 84 |
-| `editor_drivePathEditor_splineMgr.convertPathsToDrivePathSplines(paths)` | Convertit des tracés issus d'une image en splines (voir notes pour les cas des tracés trop petits). | 967 |
-| `editor_drivePathEditor_splineMgr.deepCopyDrivePathSpline(spline)` | Copie profonde d'une spline (pour l'historique). | 283 |
-| `editor_drivePathEditor_splineMgr.deepCopyDrivePathSplineState()` | Copie profonde de toutes les splines. | 350 |
-| `editor_drivePathEditor_splineMgr.deserializeDrivePathSpline(data)` | Reconstruit une spline depuis une table sérialisée. | 811 |
-| `editor_drivePathEditor_splineMgr.flipSpline(spline)` | Inverse le sens d'une spline : nœuds, largeurs, normales, vitesses et limites de vitesse sont renversés. | 577 |
-| `editor_drivePathEditor_splineMgr.getActiveVehicles(isForce)` | Renvoie la liste des véhicules actifs ; la recalcule si elle est vide ou si isForce est vrai. | 94 |
-| `editor_drivePathEditor_splineMgr.getDefaultSliderParams()` | Renvoie les valeurs par défaut des paramètres de spline. | 183 |
-| `editor_drivePathEditor_splineMgr.getDrivePathSplines()` | Renvoie la table des splines (référence). | 65 |
-| `editor_drivePathEditor_splineMgr.getEditModeKey()` | Renvoie la clé du mode d'édition (« drivePathSplineEditMode »). | 62 |
-| `editor_drivePathEditor_splineMgr.getNavGraph()` | Renvoie les données du navgraph de la carte (cache), les calcule au premier appel si possible. | 141 |
-| `editor_drivePathEditor_splineMgr.getSplineMap()` | Renvoie la table id de spline vers index. | 68 |
-| `editor_drivePathEditor_splineMgr.getToolPrefixStr()` | Renvoie le préfixe de l'outil (« Drive Path Spline »). | 59 |
-| `editor_drivePathEditor_splineMgr.getVehicleById(vid)` | Cherche un véhicule dans la liste déjà calculée (sans la recalculer). | 102 |
-| `editor_drivePathEditor_splineMgr.joinDrivePathSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joint deux splines non bouclées : la première reçoit la géométrie concaténée, la seconde est supprimée. | 486 |
-| `editor_drivePathEditor_splineMgr.linkSpline(spline, vehicle)` | Lie une spline à un véhicule (isVehicleLink, linkVehId, linkSplineId) et replace le véhicule au départ. | 635 |
-| `editor_drivePathEditor_splineMgr.relinkAllVehiclesToSplines()` | Relie toutes les splines à leur véhicule (via linkVehId) en cherchant dans la liste des véhicules calculée. | 673 |
-| `editor_drivePathEditor_splineMgr.removeAllDrivePathSplines(isIncludeDisabled)` | Supprime les splines. Avec isIncludeDisabled vrai, toutes ; sinon seulement celles activées. | 264 |
-| `editor_drivePathEditor_splineMgr.removeDrivePathSpline(idx)` | Supprime la spline d'index donné et met à jour la table d'index. | 256 |
-| `editor_drivePathEditor_splineMgr.resetGeometry(spline)` | Vide toute la géométrie d'une spline (nodes, widths, nmls, vels, velLimits, graphNodes, graphPath) et la marque isDirty. | 186 |
-| `editor_drivePathEditor_splineMgr.resetVehiclePose(spline, vehicle)` | Place le véhicule au nœud de départ (startingNode) de la spline, orienté selon les nœuds voisins, avec 0.3 m de décalage vertical. Mémorise une seule fois sa pose d'origine. En mode graphe, utilise les nœuds du navgraph (nécessite le cache). | 602 |
-| `editor_drivePathEditor_splineMgr.serializeDrivePathSpline(spline)` | Sérialise une spline en table. | 756 |
-| `editor_drivePathEditor_splineMgr.setDrivePathSpline(spline, idx)` | Place une spline à un index et la marque isDirty. | 71 |
-| `editor_drivePathEditor_splineMgr.setDrivePathSplines(splines)` | Place toutes les splines d'un tableau (chacune marquée isDirty). | 77 |
-| `editor_drivePathEditor_splineMgr.singleSplineEditRedo(drivePathSplineData)` | Rétablit une édition de spline unique à partir de drivePathSplineData.new. *(interne)* | 724 |
-| `editor_drivePathEditor_splineMgr.singleSplineEditUndo(drivePathSplineData)` | Annule une édition de spline unique à partir de drivePathSplineData.old, puis relie à nouveau les véhicules. *(interne)* | 716 |
-| `editor_drivePathEditor_splineMgr.splitDrivePathSpline(selectedSplineIdx, selectedNodeIdx)` | Coupe une spline en deux au nœud donné (écart de 1.0 m entre les deux parties). | 360 |
-| `editor_drivePathEditor_splineMgr.transSplineEditRedo(data)` | Rétablit une édition globale avec data.new. *(interne)* | 744 |
-| `editor_drivePathEditor_splineMgr.transSplineEditUndo(data)` | Annule une édition globale (toutes les splines) avec data.old. *(interne)* | 732 |
-| `editor_drivePathEditor_splineMgr.unlinkSpline(spline, vehicle)` | Supprime le lien spline-véhicule et rend au véhicule sa pose d'origine mémorisée. | 646 |
-| `editor_drivePathEditor_splineMgr.updateDirtyDrivePathSplines()` | Recalcule la géométrie des splines isDirty (raycasts terrain, barres de vitesse, ruban en mode libre ; chemin de graphe en mode navgraph). Appelée chaque frame par onEditorGui. *(interne)* | 913 |
+| `editor_drivePathEditor_splineMgr.addNewDrivePathSpline()` | Appends a new empty spline with a unique name, an Engine.generateUUID() UUID and the default parameters. | 202 |
+| `editor_drivePathEditor_splineMgr.computeActiveVehicles()` | Rebuilds the list of active scene vehicles (activeVehiclesIterator) with vid, veh, name and links reset. | 84 |
+| `editor_drivePathEditor_splineMgr.convertPathsToDrivePathSplines(paths)` | Converts paths from an image into splines (see notes for the cases of paths that are too small). | 967 |
+| `editor_drivePathEditor_splineMgr.deepCopyDrivePathSpline(spline)` | Deep copy of a spline (for history). | 283 |
+| `editor_drivePathEditor_splineMgr.deepCopyDrivePathSplineState()` | Deep copy of all splines. | 350 |
+| `editor_drivePathEditor_splineMgr.deserializeDrivePathSpline(data)` | Rebuilds a spline from a serialized table. | 811 |
+| `editor_drivePathEditor_splineMgr.flipSpline(spline)` | Reverses the direction of a spline: nodes, widths, normals, speeds and speed limits are reversed. | 577 |
+| `editor_drivePathEditor_splineMgr.getActiveVehicles(isForce)` | Returns the list of active vehicles; recomputes it if it is empty or if isForce is true. | 94 |
+| `editor_drivePathEditor_splineMgr.getDefaultSliderParams()` | Returns the default values of the spline parameters. | 183 |
+| `editor_drivePathEditor_splineMgr.getDrivePathSplines()` | Returns the splines table (reference). | 65 |
+| `editor_drivePathEditor_splineMgr.getEditModeKey()` | Returns the edit mode key ("drivePathSplineEditMode"). | 62 |
+| `editor_drivePathEditor_splineMgr.getNavGraph()` | Returns the map's navgraph data (cache), computing it on the first call if possible. | 141 |
+| `editor_drivePathEditor_splineMgr.getSplineMap()` | Returns the spline id to index table. | 68 |
+| `editor_drivePathEditor_splineMgr.getToolPrefixStr()` | Returns the tool prefix ("Drive Path Spline"). | 59 |
+| `editor_drivePathEditor_splineMgr.getVehicleById(vid)` | Looks for a vehicle in the already computed list (without recomputing it). | 102 |
+| `editor_drivePathEditor_splineMgr.joinDrivePathSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joins two non-looped splines: the first receives the concatenated geometry, the second is removed. | 486 |
+| `editor_drivePathEditor_splineMgr.linkSpline(spline, vehicle)` | Links a spline to a vehicle (isVehicleLink, linkVehId, linkSplineId) and moves the vehicle back to the start. | 635 |
+| `editor_drivePathEditor_splineMgr.relinkAllVehiclesToSplines()` | Relinks all splines to their vehicle (via linkVehId) by searching the computed vehicle list. | 673 |
+| `editor_drivePathEditor_splineMgr.removeAllDrivePathSplines(isIncludeDisabled)` | Removes splines. With isIncludeDisabled true, all of them; otherwise only the enabled ones. | 264 |
+| `editor_drivePathEditor_splineMgr.removeDrivePathSpline(idx)` | Removes the spline at the given index and updates the index table. | 256 |
+| `editor_drivePathEditor_splineMgr.resetGeometry(spline)` | Clears all the geometry of a spline (nodes, widths, nmls, vels, velLimits, graphNodes, graphPath) and marks it isDirty. | 186 |
+| `editor_drivePathEditor_splineMgr.resetVehiclePose(spline, vehicle)` | Places the vehicle at the spline's start node (startingNode), oriented along the neighboring nodes, with a 0.3 m vertical offset. Stores its original pose only once. In graph mode, uses the navgraph nodes (requires the cache). | 602 |
+| `editor_drivePathEditor_splineMgr.serializeDrivePathSpline(spline)` | Serializes a spline into a table. | 756 |
+| `editor_drivePathEditor_splineMgr.setDrivePathSpline(spline, idx)` | Places a spline at an index and marks it isDirty. | 71 |
+| `editor_drivePathEditor_splineMgr.setDrivePathSplines(splines)` | Places all splines of an array (each marked isDirty). | 77 |
+| `editor_drivePathEditor_splineMgr.singleSplineEditRedo(drivePathSplineData)` | Redoes a single spline edit from drivePathSplineData.new. *(internal)* | 724 |
+| `editor_drivePathEditor_splineMgr.singleSplineEditUndo(drivePathSplineData)` | Undoes a single spline edit from drivePathSplineData.old, then relinks the vehicles. *(internal)* | 716 |
+| `editor_drivePathEditor_splineMgr.splitDrivePathSpline(selectedSplineIdx, selectedNodeIdx)` | Splits a spline in two at the given node (1.0 m gap between the two parts). | 360 |
+| `editor_drivePathEditor_splineMgr.transSplineEditRedo(data)` | Redoes a global edit with data.new. *(internal)* | 744 |
+| `editor_drivePathEditor_splineMgr.transSplineEditUndo(data)` | Undoes a global edit (all splines) with data.old. *(internal)* | 732 |
+| `editor_drivePathEditor_splineMgr.unlinkSpline(spline, vehicle)` | Removes the spline-vehicle link and gives the vehicle back its stored original pose. | 646 |
+| `editor_drivePathEditor_splineMgr.updateDirtyDrivePathSplines()` | Recomputes the geometry of isDirty splines (terrain raycasts, speed bars, ribbon in free mode; graph path in navgraph mode). Called every frame by onEditorGui. *(internal)* | 913 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_drivePathEditor_splineMgr.convertPathsToDrivePathSplines(paths)`
 
-Convertit des tracés issus d'une image en splines (voir notes pour les cas des tracés trop petits).
+Converts paths from an image into splines (see notes for the cases of paths that are too small).
 
-- `paths` (*table*) : tableau de {points, widths}
+- `paths` (*table*) : array of {points, widths}
 
 #### `editor_drivePathEditor_splineMgr.deepCopyDrivePathSpline(spline)`
 
-Copie profonde d'une spline (pour l'historique).
+Deep copy of a spline (for history).
 
 - `spline` (*table*) : spline
-- **renvoie** : table copie
+- **returns**: table copy
 
 #### `editor_drivePathEditor_splineMgr.deepCopyDrivePathSplineState()`
 
-Copie profonde de toutes les splines.
+Deep copy of all splines.
 
-- **renvoie** : table tableau de copies
+- **returns**: table array of copies
 
 #### `editor_drivePathEditor_splineMgr.deserializeDrivePathSpline(data)`
 
-Reconstruit une spline depuis une table sérialisée.
+Rebuilds a spline from a serialized table.
 
-- `data` (*table*) : table issue de serializeDrivePathSpline
-- **renvoie** : table spline
+- `data` (*table*) : table produced by serializeDrivePathSpline
+- **returns**: table spline
 
 #### `editor_drivePathEditor_splineMgr.flipSpline(spline)`
 
-Inverse le sens d'une spline : nœuds, largeurs, normales, vitesses et limites de vitesse sont renversés.
+Reverses the direction of a spline: nodes, widths, normals, speeds and speed limits are reversed.
 
 - `spline` (*table*) : spline
 
 #### `editor_drivePathEditor_splineMgr.getActiveVehicles(isForce)`
 
-Renvoie la liste des véhicules actifs ; la recalcule si elle est vide ou si isForce est vrai.
+Returns the list of active vehicles; recomputes it if it is empty or if isForce is true.
 
-- `isForce` (*boolean|nil*) : forcer le recalcul
-- **renvoie** : table tableau de {vid, veh, name, isLink, linkSplineId}
+- `isForce` (*boolean|nil*) : force recomputation
+- **returns**: table array of {vid, veh, name, isLink, linkSplineId}
 
 #### `editor_drivePathEditor_splineMgr.getDefaultSliderParams()`
 
-Renvoie les valeurs par défaut des paramètres de spline.
+Returns the default values of the spline parameters.
 
-- **renvoie** : table paramètres par défaut
+- **returns**: table default parameters
 
 #### `editor_drivePathEditor_splineMgr.getDrivePathSplines()`
 
-Renvoie la table des splines (référence).
+Returns the splines table (reference).
 
-- **renvoie** : table tableau de splines
+- **returns**: table array of splines
 
 #### `editor_drivePathEditor_splineMgr.getEditModeKey()`
 
-Renvoie la clé du mode d'édition (« drivePathSplineEditMode »).
+Returns the edit mode key ("drivePathSplineEditMode").
 
-- **renvoie** : string clé
+- **returns**: string key
 
 #### `editor_drivePathEditor_splineMgr.getNavGraph()`
 
-Renvoie les données du navgraph de la carte (cache), les calcule au premier appel si possible.
+Returns the map's navgraph data (cache), computing it on the first call if possible.
 
-- **renvoie** : table|nil {graph, nodes, widths, lines} ou nil si le graphe n'est pas encore disponible
+- **returns**: table|nil {graph, nodes, widths, lines} or nil if the graph is not yet available
 
 #### `editor_drivePathEditor_splineMgr.getSplineMap()`
 
-Renvoie la table id de spline vers index.
+Returns the spline id to index table.
 
-- **renvoie** : table<string, integer> id vers index
+- **returns**: table<string, integer> id to index
 
 #### `editor_drivePathEditor_splineMgr.getToolPrefixStr()`
 
-Renvoie le préfixe de l'outil (« Drive Path Spline »).
+Returns the tool prefix ("Drive Path Spline").
 
-- **renvoie** : string préfixe
+- **returns**: string prefix
 
 #### `editor_drivePathEditor_splineMgr.getVehicleById(vid)`
 
-Cherche un véhicule dans la liste déjà calculée (sans la recalculer).
+Looks for a vehicle in the already computed list (without recomputing it).
 
-- `vid` (*integer*) : id du véhicule
-- **renvoie** : table|nil entrée de véhicule
+- `vid` (*integer*) : vehicle id
+- **returns**: table|nil vehicle entry
 
 #### `editor_drivePathEditor_splineMgr.joinDrivePathSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)`
 
-Joint deux splines non bouclées : la première reçoit la géométrie concaténée, la seconde est supprimée.
+Joins two non-looped splines: the first receives the concatenated geometry, the second is removed.
 
-- `splineIdx1` (*integer*) : spline conservée
-- `nodeIdx1` (*integer*) : nœud d'extrémité de la première
-- `splineIdx2` (*integer*) : spline supprimée
-- `nodeIdx2` (*integer*) : nœud d'extrémité de la seconde
+- `splineIdx1` (*integer*) : spline kept
+- `nodeIdx1` (*integer*) : end node of the first
+- `splineIdx2` (*integer*) : spline removed
+- `nodeIdx2` (*integer*) : end node of the second
 
 #### `editor_drivePathEditor_splineMgr.linkSpline(spline, vehicle)`
 
-Lie une spline à un véhicule (isVehicleLink, linkVehId, linkSplineId) et replace le véhicule au départ.
+Links a spline to a vehicle (isVehicleLink, linkVehId, linkSplineId) and moves the vehicle back to the start.
 
 - `spline` (*table*) : spline
-- `vehicle` (*table*) : entrée de véhicule
+- `vehicle` (*table*) : vehicle entry
 
 #### `editor_drivePathEditor_splineMgr.removeAllDrivePathSplines(isIncludeDisabled)`
 
-Supprime les splines. Avec isIncludeDisabled vrai, toutes ; sinon seulement celles activées.
+Removes splines. With isIncludeDisabled true, all of them; otherwise only the enabled ones.
 
-- `isIncludeDisabled` (*boolean*) : inclure les splines désactivées
+- `isIncludeDisabled` (*boolean*) : include disabled splines
 
 #### `editor_drivePathEditor_splineMgr.removeDrivePathSpline(idx)`
 
-Supprime la spline d'index donné et met à jour la table d'index.
+Removes the spline at the given index and updates the index table.
 
-- `idx` (*integer*) : index (base 1)
+- `idx` (*integer*) : index (1-based)
 
 #### `editor_drivePathEditor_splineMgr.resetGeometry(spline)`
 
-Vide toute la géométrie d'une spline (nodes, widths, nmls, vels, velLimits, graphNodes, graphPath) et la marque isDirty.
+Clears all the geometry of a spline (nodes, widths, nmls, vels, velLimits, graphNodes, graphPath) and marks it isDirty.
 
 - `spline` (*table|nil*) : spline
 
 #### `editor_drivePathEditor_splineMgr.resetVehiclePose(spline, vehicle)`
 
-Place le véhicule au nœud de départ (startingNode) de la spline, orienté selon les nœuds voisins, avec 0.3 m de décalage vertical. Mémorise une seule fois sa pose d'origine. En mode graphe, utilise les nœuds du navgraph (nécessite le cache).
+Places the vehicle at the spline's start node (startingNode), oriented along the neighboring nodes, with a 0.3 m vertical offset. Stores its original pose only once. In graph mode, uses the navgraph nodes (requires the cache).
 
 - `spline` (*table*) : spline
-- `vehicle` (*table*) : entrée de véhicule {vid, veh…}
+- `vehicle` (*table*) : vehicle entry {vid, veh...}
 
 #### `editor_drivePathEditor_splineMgr.serializeDrivePathSpline(spline)`
 
-Sérialise une spline en table.
+Serializes a spline into a table.
 
 - `spline` (*table*) : spline
-- **renvoie** : table données sérialisées
+- **returns**: table serialized data
 
 #### `editor_drivePathEditor_splineMgr.setDrivePathSpline(spline, idx)`
 
-Place une spline à un index et la marque isDirty.
+Places a spline at an index and marks it isDirty.
 
 - `spline` (*table*) : spline
-- `idx` (*integer*) : index (base 1)
+- `idx` (*integer*) : index (1-based)
 
 #### `editor_drivePathEditor_splineMgr.setDrivePathSplines(splines)`
 
-Place toutes les splines d'un tableau (chacune marquée isDirty).
+Places all splines of an array (each marked isDirty).
 
-- `splines` (*table*) : tableau de splines
+- `splines` (*table*) : array of splines
 
 #### `editor_drivePathEditor_splineMgr.singleSplineEditRedo(drivePathSplineData)`
 
-Rétablit une édition de spline unique à partir de drivePathSplineData.new.
+Redoes a single spline edit from drivePathSplineData.new.
 
 - `drivePathSplineData` (*table*) : {old, new}
 
 #### `editor_drivePathEditor_splineMgr.singleSplineEditUndo(drivePathSplineData)`
 
-Annule une édition de spline unique à partir de drivePathSplineData.old, puis relie à nouveau les véhicules.
+Undoes a single spline edit from drivePathSplineData.old, then relinks the vehicles.
 
 - `drivePathSplineData` (*table*) : {old, new}
 
 #### `editor_drivePathEditor_splineMgr.splitDrivePathSpline(selectedSplineIdx, selectedNodeIdx)`
 
-Coupe une spline en deux au nœud donné (écart de 1.0 m entre les deux parties).
+Splits a spline in two at the given node (1.0 m gap between the two parts).
 
-- `selectedSplineIdx` (*integer*) : index de la spline
-- `selectedNodeIdx` (*integer*) : index du nœud de coupe
+- `selectedSplineIdx` (*integer*) : spline index
+- `selectedNodeIdx` (*integer*) : index of the split node
 
 #### `editor_drivePathEditor_splineMgr.transSplineEditRedo(data)`
 
-Rétablit une édition globale avec data.new.
+Redoes a global edit with data.new.
 
 - `data` (*table*) : {old, new}
 
 #### `editor_drivePathEditor_splineMgr.transSplineEditUndo(data)`
 
-Annule une édition globale (toutes les splines) avec data.old.
+Undoes a global edit (all splines) with data.old.
 
 - `data` (*table*) : {old, new}
 
 #### `editor_drivePathEditor_splineMgr.unlinkSpline(spline, vehicle)`
 
-Supprime le lien spline-véhicule et rend au véhicule sa pose d'origine mémorisée.
+Removes the spline-vehicle link and gives the vehicle back its stored original pose.
 
 - `spline` (*table*) : spline
-- `vehicle` (*table*) : entrée de véhicule
+- `vehicle` (*table*) : vehicle entry
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/drivePathEditor/splineMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/drivePathEditor/splineMgr.lua`.*

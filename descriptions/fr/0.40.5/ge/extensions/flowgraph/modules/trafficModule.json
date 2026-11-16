@@ -1,0 +1,20 @@
+{
+  "path": "lua/ge/extensions/flowgraph/modules/trafficModule.lua",
+  "module": "Module flowgraph (moduleOrder 0) qui enveloppe gameplay_traffic et gameplay_parking pour les nœuds de trafic. Il retient si le flowgraph a lui-même activé le trafic (trafficActive) ou les voitures garées (parkedCarsActive) afin de ne les désactiver à l'arrêt que si c'est lui qui les a activés, sauf si keepTrafficState est vrai.",
+  "notes": [
+    "À l'arrêt (sans keepTrafficState), si le trafic était actif, il réinitialise les variables de trafic et de poursuite (setTrafficVars, setPursuitVars) et celles de stationnement, puis désactive trafic et voitures garées.",
+    "keepTrafficState est remis à false à chaque arrêt."
+  ],
+  "functions": {
+    "init": {"desc": "Appelé à la création du module : trafficActive, parkedCarsActive et keepTrafficState valent false.", "internal": true},
+    "updateTrafficState": {"desc": "Met à jour trafficActive d'après gameplay_traffic.getTrafficData(). À n'utiliser que si le flowgraph a modifié l'état du trafic.", "params": {}},
+    "updateParkedCarsState": {"desc": "Met à jour parkedCarsActive d'après gameplay_parking.getParkedCarsData().", "params": {}},
+    "insertTraffic": {"desc": "Ajoute un véhicule au trafic (gameplay_traffic.insertTraffic) et met à jour l'état.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}},
+    "removeTraffic": {"desc": "Retire un véhicule du trafic (gameplay_traffic.removeTraffic) et met à jour l'état.", "params": {"id": {"type": "integer", "desc": "id du véhicule"}}},
+    "activateTraffic": {"desc": "Active le trafic (gameplay_traffic.activate) avec une liste de véhicules.", "params": {"vehList": {"type": "integer[]|nil", "desc": "ids des véhicules (déduit du code)"}}},
+    "deactivateTraffic": {"desc": "Désactive le trafic (gameplay_traffic.deactivate), seulement s'il a été activé par le flowgraph.", "params": {}},
+    "activateParkedCars": {"desc": "Active les voitures garées (gameplay_parking.processVehicles(vehList)).", "params": {"vehList": {"type": "integer[]|nil", "desc": "ids des véhicules (déduit du code)"}}},
+    "deactivateParkedCars": {"desc": "Désactive les voitures garées (processVehicles sans argument), seulement si activées par le flowgraph.", "params": {}},
+    "executionStopped": {"desc": "Appelé à l'arrêt du projet : remet à zéro les variables de trafic, poursuite et stationnement puis désactive trafic et voitures garées, sauf si keepTrafficState est vrai.", "internal": true}
+  }
+}

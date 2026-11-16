@@ -1,153 +1,153 @@
 # `career_modules_logbook`
 
-*Fichier : `lua/ge/extensions/career/modules/logbook.lua` · VM : Game Engine (GE) · 257 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/logbook.lua` · VM: Game Engine (GE) · 257 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_logbook` : `extensions.load("career_modules_logbook")`, puis la globale `career_modules_logbook`
+**Access:** extension `career_modules_logbook`: `extensions.load("career_modules_logbook")`, then the global `career_modules_logbook`
 
-Journal de bord de la carrière (logbook.json dans le dossier career de la sauvegarde). Stocke les entrées affichées dans l'UI : déblocage de missions, d'installations de livraison, de points d'apparition, et pages d'aide/tutoriel. Au premier lancement (logbook vide), il crée les entrées d'introduction (welcome, logbook, driving, delivery…) à partir de ui/modules/careerLogbook/pages/<id>/.
+Career logbook (logbook.json in the save's career folder). Stores the entries displayed in the UI: unlocking of missions, delivery facilities, spawn points, and help/tutorial pages. On first launch (empty logbook), it creates the introduction entries (welcome, logbook, driving, delivery…) from ui/modules/careerLogbook/pages/<id>/.
 
-## Exemple
+## Example
 
 ```lua
 career_modules_logbook.genericInfoUnlocked("Titre", "Texte", "/ui/cover.jpg")
 ```
 
-## Remarques
+## Notes
 
-- Chaque entrée reçoit time = os.time(), entryId (compteur croissant) et isNew = true.
-- getLogbook déclenche le hook onLogbookGetEntries(ret) pour que d'autres extensions ajoutent des entrées, puis trie par temps décroissant (à égalité, par entryId décroissant).
-- setLogbookEntryRead ne modifie que isNew (not read) ; getPopups et getLogbookMostRecentUnread lisent le champ read : ces deux champs ne sont jamais synchronisés dans ce fichier (incohérence probable).
-- missionUnlocked lit mission.name avant de tester id : plante si id est nil ou inconnu (mission nil).
-- logbookEntry lit le fichier content.html avec readFile sans vérifier qu'il existe.
+- Each entry receives time = os.time(), entryId (increasing counter) and isNew = true.
+- getLogbook fires the onLogbookGetEntries(ret) hook so that other extensions add entries, then sorts by descending time (on a tie, by descending entryId).
+- setLogbookEntryRead only modifies isNew (not read); getPopups and getLogbookMostRecentUnread read the read field: these two fields are never synchronized in this file (probable inconsistency).
+- missionUnlocked reads mission.name before testing id: crashes if id is nil or unknown (mission nil).
+- logbookEntry reads the content.html file with readFile without checking that it exists.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_logbook.addNewLogbookEntry(entry, skipSave)` | Crée l'entrée réelle : fixe time, entryId, isNew, l'insère en tête de liste (sauf skipSave) et, si entry.showMessage et hors tutoriel, affiche un message UI (guihooks Message, 15 s). | 84 |
-| `career_modules_logbook.deliveryFacilityUnlocked(id)` | Appelé quand une installation de livraison est débloquée : crée une entrée progress (nom et aperçu de l'installation). Ne fait rien si l'installation est introuvable. | 120 |
-| `career_modules_logbook.genericInfoUnlocked(title, text, cover, ratio, flavour, type)` | Entrée « normale » d'information/tutoriel ; joue le son UI_Checkpoint (une seule fois par frame, jamais pendant le tutoriel). | 148 |
-| `career_modules_logbook.genericLogbookEntry(title, text, cover, coverText)` | Entrée générique de type info, sans son ni particularité. | 170 |
-| `career_modules_logbook.getLogbook()` | Renvoie une copie de la liste des entrées, enrichie par le hook onLogbookGetEntries et triée de la plus récente à la plus ancienne. | 23 |
-| `career_modules_logbook.getLogbookMostRecentUnread(limit)` | Renvoie jusqu'à `limit` entrées récentes (hideInRecent exclu) en plaçant d'abord les non lues, puis les lues. | 46 |
-| `career_modules_logbook.getPopups()` | Renvoie les entrées non lues (read faux) marquées isPopup. | 35 |
-| `career_modules_logbook.logbookEntry(id)` | Crée une entrée d'aide depuis l'id d'une page : titre ui.introPopup.<id>.title, contenu de ui/modules/careerLogbook/pages/<id>/content.html (sauts de ligne retirés) et image header.jpg. | 203 |
-| `career_modules_logbook.missionUnlocked(id)` | Appelé quand une mission est débloquée : crée une entrée de type progress avec nom et image de la mission. | 106 |
-| `career_modules_logbook.onCareerActive(active)` | Hook : charge logbook.json ; si vide, crée les entrées d'introduction dans l'ordre inverse de la liste interne. *(interne)* *(hook)* | 221 |
-| `career_modules_logbook.onSaveCurrentProfile(currentSavePath)` | Hook de sauvegarde : écrit {logbook = ...} dans <save>/career/logbook.json. *(interne)* *(hook)* | 232 |
-| `career_modules_logbook.onUpdate()` | Hook appelé chaque frame : réinitialise le garde-fou du son (un son max par frame). *(interne)* *(hook)* | 239 |
-| `career_modules_logbook.setLogbookEntryRead(entryId, read)` | Met isNew = not read sur l'entrée d'identifiant entryId. Ignore entryId == -1. | 72 |
-| `career_modules_logbook.spawnPointUnlocked(spawnPoint)` | Appelé quand un point d'apparition est découvert : crée une entrée progress avec showMessage = true. | 134 |
+| `career_modules_logbook.addNewLogbookEntry(entry, skipSave)` | Creates the actual entry: sets time, entryId, isNew, inserts it at the head of the list (unless skipSave) and, if entry.showMessage and outside the tutorial, displays a UI message (guihooks Message, 15 s). | 84 |
+| `career_modules_logbook.deliveryFacilityUnlocked(id)` | Called when a delivery facility is unlocked: creates a progress entry (facility name and preview). Does nothing if the facility is not found. | 120 |
+| `career_modules_logbook.genericInfoUnlocked(title, text, cover, ratio, flavour, type)` | "Normal" information/tutorial entry; plays the UI_Checkpoint sound (only once per frame, never during the tutorial). | 148 |
+| `career_modules_logbook.genericLogbookEntry(title, text, cover, coverText)` | Generic info-type entry, with no sound or special behavior. | 170 |
+| `career_modules_logbook.getLogbook()` | Returns a copy of the entries list, enriched by the onLogbookGetEntries hook and sorted from most recent to oldest. | 23 |
+| `career_modules_logbook.getLogbookMostRecentUnread(limit)` | Returns up to `limit` recent entries (hideInRecent excluded), placing unread ones first, then read ones. | 46 |
+| `career_modules_logbook.getPopups()` | Returns the unread entries (read false) marked isPopup. | 35 |
+| `career_modules_logbook.logbookEntry(id)` | Creates a help entry from a page id: title ui.introPopup.<id>.title, content from ui/modules/careerLogbook/pages/<id>/content.html (line breaks removed) and header.jpg image. | 203 |
+| `career_modules_logbook.missionUnlocked(id)` | Called when a mission is unlocked: creates a progress entry with the mission name and image. | 106 |
+| `career_modules_logbook.onCareerActive(active)` | Hook: loads logbook.json; if empty, creates the introduction entries in reverse order of the internal list. *(internal)* *(hook)* | 221 |
+| `career_modules_logbook.onSaveCurrentProfile(currentSavePath)` | Save hook: writes {logbook = ...} to <save>/career/logbook.json. *(internal)* *(hook)* | 232 |
+| `career_modules_logbook.onUpdate()` | Hook called every frame: resets the sound guard (one sound max per frame). *(internal)* *(hook)* | 239 |
+| `career_modules_logbook.setLogbookEntryRead(entryId, read)` | Sets isNew = not read on the entry with identifier entryId. Ignores entryId == -1. | 72 |
+| `career_modules_logbook.spawnPointUnlocked(spawnPoint)` | Called when a spawn point is discovered: creates a progress entry with showMessage = true. | 134 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_logbook.addNewLogbookEntry(entry, skipSave)`
 
-Crée l'entrée réelle : fixe time, entryId, isNew, l'insère en tête de liste (sauf skipSave) et, si entry.showMessage et hors tutoriel, affiche un message UI (guihooks Message, 15 s).
+Creates the actual entry: sets time, entryId, isNew, inserts it at the head of the list (unless skipSave) and, if entry.showMessage and outside the tutorial, displays a UI message (guihooks Message, 15 s).
 
-- `entry` (*table|nil*) : Données de l'entrée (type, title, text, cover…).
-- `skipSave` (*boolean|nil*) : Si vrai, l'entrée est renvoyée mais pas stockée.
-- **renvoie** : table L'entrée complétée.
+- `entry` (*table|nil*) : Entry data (type, title, text, cover...).
+- `skipSave` (*boolean|nil*) : If true, the entry is returned but not stored.
+- **returns**: table The completed entry.
 
 #### `career_modules_logbook.deliveryFacilityUnlocked(id)`
 
-Appelé quand une installation de livraison est débloquée : crée une entrée progress (nom et aperçu de l'installation). Ne fait rien si l'installation est introuvable.
+Called when a delivery facility is unlocked: creates a progress entry (facility name and preview). Does nothing if the facility is not found.
 
-- `id` (*string*) : Identifiant de l'installation.
+- `id` (*string*) : Facility identifier.
 
 #### `career_modules_logbook.genericInfoUnlocked(title, text, cover, ratio, flavour, type)`
 
-Entrée « normale » d'information/tutoriel ; joue le son UI_Checkpoint (une seule fois par frame, jamais pendant le tutoriel).
+"Normal" information/tutorial entry; plays the UI_Checkpoint sound (only once per frame, never during the tutorial).
 
-- `title` (*string|table*) : Titre ou clé de traduction.
-- `text` (*string|table*) : Contenu.
-- `cover` (*string|nil*) : Image de couverture.
-- `ratio` (*string|nil*) : Ratio d'image, "16x9" par défaut.
-- `flavour` (*any*) : Non utilisé dans le code.
-- `type` (*string|nil*) : Type d'entrée, "info" par défaut.
-- **renvoie** : table L'entrée créée.
+- `title` (*string|table*) : Title or translation key.
+- `text` (*string|table*) : Content.
+- `cover` (*string|nil*) : Cover image.
+- `ratio` (*string|nil*) : Image ratio, "16x9" by default.
+- `flavour` (*any*) : Not used in the code.
+- `type` (*string|nil*) : Entry type, "info" by default.
+- **returns**: table The created entry.
 
 #### `career_modules_logbook.genericLogbookEntry(title, text, cover, coverText)`
 
-Entrée générique de type info, sans son ni particularité.
+Generic info-type entry, with no sound or special behavior.
 
-- `title` (*string|table*) : Titre.
-- `text` (*string|table*) : Contenu.
-- `cover` (*string|nil*) : Image de couverture.
-- `coverText` (*string|nil*) : Texte sur la couverture.
-- **renvoie** : table L'entrée créée.
+- `title` (*string|table*) : Title.
+- `text` (*string|table*) : Content.
+- `cover` (*string|nil*) : Cover image.
+- `coverText` (*string|nil*) : Text on the cover.
+- **returns**: table The created entry.
 
 #### `career_modules_logbook.getLogbook()`
 
-Renvoie une copie de la liste des entrées, enrichie par le hook onLogbookGetEntries et triée de la plus récente à la plus ancienne.
+Returns a copy of the entries list, enriched by the onLogbookGetEntries hook and sorted from most recent to oldest.
 
-- **renvoie** : table[] Entrées du journal.
+- **returns**: table[] Logbook entries.
 
 #### `career_modules_logbook.getLogbookMostRecentUnread(limit)`
 
-Renvoie jusqu'à `limit` entrées récentes (hideInRecent exclu) en plaçant d'abord les non lues, puis les lues.
+Returns up to `limit` recent entries (hideInRecent excluded), placing unread ones first, then read ones.
 
-- `limit` (*integer|nil*) : Nombre maximal d'entrées, 3 par défaut.
-- **renvoie** : table[] Entrées sélectionnées.
+- `limit` (*integer|nil*) : Maximum number of entries, 3 by default.
+- **returns**: table[] Selected entries.
 
 #### `career_modules_logbook.getPopups()`
 
-Renvoie les entrées non lues (read faux) marquées isPopup.
+Returns the unread entries (read false) marked isPopup.
 
-- **renvoie** : table[] Entrées à afficher en popup.
+- **returns**: table[] Entries to display in a popup.
 
 #### `career_modules_logbook.logbookEntry(id)`
 
-Crée une entrée d'aide depuis l'id d'une page : titre ui.introPopup.<id>.title, contenu de ui/modules/careerLogbook/pages/<id>/content.html (sauts de ligne retirés) et image header.jpg.
+Creates a help entry from a page id: title ui.introPopup.<id>.title, content from ui/modules/careerLogbook/pages/<id>/content.html (line breaks removed) and header.jpg image.
 
-- `id` (*string*) : Nom de la page (ex. welcome, driving).
+- `id` (*string*) : Page name (e.g. welcome, driving).
 
 #### `career_modules_logbook.missionUnlocked(id)`
 
-Appelé quand une mission est débloquée : crée une entrée de type progress avec nom et image de la mission.
+Called when a mission is unlocked: creates a progress entry with the mission name and image.
 
-- `id` (*string*) : Identifiant de la mission.
+- `id` (*string*) : Mission identifier.
 
 #### `career_modules_logbook.onCareerActive(active)`
 
-Hook : charge logbook.json ; si vide, crée les entrées d'introduction dans l'ordre inverse de la liste interne.
+Hook: loads logbook.json; if empty, creates the introduction entries in reverse order of the internal list.
 
-- `active` (*boolean*) : Rien si false.
+- `active` (*boolean*) : Nothing if false.
 
 #### `career_modules_logbook.onSaveCurrentProfile(currentSavePath)`
 
-Hook de sauvegarde : écrit {logbook = ...} dans <save>/career/logbook.json.
+Save hook: writes {logbook = ...} to <save>/career/logbook.json.
 
-- `currentSavePath` (*string*) : Dossier de sauvegarde.
+- `currentSavePath` (*string*) : Save folder.
 
 #### `career_modules_logbook.setLogbookEntryRead(entryId, read)`
 
-Met isNew = not read sur l'entrée d'identifiant entryId. Ignore entryId == -1.
+Sets isNew = not read on the entry with identifier entryId. Ignores entryId == -1.
 
-- `entryId` (*integer*) : Identifiant de l'entrée.
-- `read` (*boolean*) : true pour la marquer lue.
+- `entryId` (*integer*) : Entry identifier.
+- `read` (*boolean*) : true to mark it as read.
 
 #### `career_modules_logbook.spawnPointUnlocked(spawnPoint)`
 
-Appelé quand un point d'apparition est découvert : crée une entrée progress avec showMessage = true.
+Called when a spawn point is discovered: creates a progress entry with showMessage = true.
 
-- `spawnPoint` (*table*) : Point d'apparition (translationId, previews, logbookEntry).
+- `spawnPoint` (*table*) : Spawn point (translationId, previews, logbookEntry).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | table<integer, string> | Extensions chargées avant : career_career. |
+| `dependencies` | table<integer, string> | Extensions loaded before: career_career. |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onLogbookGetEntries` — écouté par 1 module(s)
+- `onLogbookGetEntries` — listened to by 1 module(s)
 
-**Évènements UI (guihooks.trigger) :** `Message`
+**UI events (guihooks.trigger):** `Message`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/logbook.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/logbook.lua`.*

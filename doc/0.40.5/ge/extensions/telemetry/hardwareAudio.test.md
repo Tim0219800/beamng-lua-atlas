@@ -1,45 +1,45 @@
 # `telemetry_hardwareAudio.test`
 
-*Fichier : `lua/ge/extensions/telemetry/hardwareAudio.test.lua` · VM : Game Engine (GE) · 55 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/telemetry/hardwareAudio.test.lua` · VM: Game Engine (GE) · 55 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `telemetry_hardwareAudio.test` : `extensions.load("telemetry_hardwareAudio.test")`, puis la globale `telemetry_hardwareAudio.test`
+**Access:** extension `telemetry_hardwareAudio.test`: `extensions.load("telemetry_hardwareAudio.test")`, then the global `telemetry_hardwareAudio.test`
 
-Tests unitaires de telemetry/hardwareAudio (runTestFiles("hardwareAudio")).
+Unit tests of telemetry/hardwareAudio (runTestFiles("hardwareAudio")).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `telemetry_hardwareAudio.test.testClassifiesKnownOutputTypes(ctx)` | Vérifie la classification casque, écran/TV, haut-parleurs et périphérique virtuel à partir de noms types. *(interne)* | 25 |
-| `telemetry_hardwareAudio.test.testMissingDeviceIsNotReported(ctx)` | Vérifie que fromDeviceInfo(nil) renvoie nil. *(interne)* | 50 |
-| `telemetry_hardwareAudio.test.testRawDeviceNameIsRemoved(ctx)` | Vérifie que le nom brut et les champs de diagnostic n'entrent pas dans la télémétrie, alors que sampleRateHz, speakerMode et channels sont conservés. *(interne)* | 36 |
-| `telemetry_hardwareAudio.test.testUnknownNamesStayUnknown(ctx)` | Vérifie qu'un nom sans mot-clé (ex. 'WH-1000XM5') donne la catégorie 'unknown'. *(interne)* | 32 |
+| `telemetry_hardwareAudio.test.testClassifiesKnownOutputTypes(ctx)` | Checks the classification of headphones, display/TV, speakers and virtual device from typical names. *(internal)* | 25 |
+| `telemetry_hardwareAudio.test.testMissingDeviceIsNotReported(ctx)` | Checks that fromDeviceInfo(nil) returns nil. *(internal)* | 50 |
+| `telemetry_hardwareAudio.test.testRawDeviceNameIsRemoved(ctx)` | Checks that the raw name and the diagnostic fields do not enter the telemetry, while sampleRateHz, speakerMode and channels are kept. *(internal)* | 36 |
+| `telemetry_hardwareAudio.test.testUnknownNamesStayUnknown(ctx)` | Checks that a name without a keyword (e.g. 'WH-1000XM5') gives the category 'unknown'. *(internal)* | 32 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `telemetry_hardwareAudio.test.testClassifiesKnownOutputTypes(ctx)`
 
-Vérifie la classification casque, écran/TV, haut-parleurs et périphérique virtuel à partir de noms types.
+Checks the classification of headphones, display/TV, speakers and virtual device from typical names.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareAudio.test.testMissingDeviceIsNotReported(ctx)`
 
-Vérifie que fromDeviceInfo(nil) renvoie nil.
+Checks that fromDeviceInfo(nil) returns nil.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareAudio.test.testRawDeviceNameIsRemoved(ctx)`
 
-Vérifie que le nom brut et les champs de diagnostic n'entrent pas dans la télémétrie, alors que sampleRateHz, speakerMode et channels sont conservés.
+Checks that the raw name and the diagnostic fields do not enter the telemetry, while sampleRateHz, speakerMode and channels are kept.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 #### `telemetry_hardwareAudio.test.testUnknownNamesStayUnknown(ctx)`
 
-Vérifie qu'un nom sans mot-clé (ex. 'WH-1000XM5') donne la catégorie 'unknown'.
+Checks that a name without a keyword (e.g. 'WH-1000XM5') gives the category 'unknown'.
 
-- `ctx` (*table*) : Contexte du framework de test.
+- `ctx` (*table*) : Test framework context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/telemetry/hardwareAudio.test.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/telemetry/hardwareAudio.test.lua`.*

@@ -1,157 +1,157 @@
 # `editor_roadArchitect_groups`
 
-*Fichier : `lua/ge/extensions/editor/roadArchitect/groups.lua` · VM : Game Engine (GE) · 473 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roadArchitect/groups.lua` · VM: Game Engine (GE) · 473 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_roadArchitect_groups` : `extensions.load("editor_roadArchitect_groups")`, puis la globale `editor_roadArchitect_groups`
+**Access:** extension `editor_roadArchitect_groups`: `extensions.load("editor_roadArchitect_groups")`, then the global `editor_roadArchitect_groups`
 
-Gestion des groupes de Road Architect (éditeur GE). Deux notions coexistent : les groupes prefab (modèles de routes réutilisables, comme carrefours ou ronds-points, chargés depuis des fichiers JSON ou créés par l'utilisateur) et les groupes placés (ensembles de nœuds de routes déjà présents dans la session). Le module sait auditionner un prefab (caméra en rotation à 1000 m d'altitude), le placer dans la session, créer un groupe à partir d'un polygone, sérialiser, sauvegarder, charger et déplacer la caméra sur un groupe.
+Road Architect group management (GE editor). Two notions coexist: prefab groups (reusable road templates, such as intersections or roundabouts, loaded from JSON files or created by the user) and placed groups (sets of road nodes already present in the session). The module can audition a prefab (rotating camera at 1000 m altitude), place it in the session, create a group from a polygon, serialize, save, load and move the camera to a group.
 
-## Exemple
+## Example
 
 ```lua
 local g = extensions.editor_roadArchitect_groups
 g.getDefaultGroups()
-local noms = g.addGroupToRoadsPlace(1, false) -- renvoie les noms (UUID) des routes ajoutées
+local noms = g.addGroupToRoadsPlace(1, false) -- returns the names (UUIDs) of the added roads
 ```
 
-## Remarques
+## Notes
 
-- Les données par défaut sont lues via jsonReadFile dans roadArchitect/groups/*.json (12 prefabs : Urban Block, Staggered Junction, Double Roundabout, RIRO Intersection, etc.) ; getDefaultGroups ne fait rien si groups contient déjà des éléments.
-- importGroup (création d'un prefab à partir de routes) est local et n'est pas exporté ; on y accède via load() ou getDefaultGroups().
-- Les noms de groupes placés sont des tampons imgui (im.ArrayChar(32, nom)), pas des strings Lua ; copyPlacedGroup les convertit avec ffi.string.
-- Les routes d'audition sont déplacées de -centre et élevées de 1000 m (auditionHeight) et restent cachées (isHidden = true).
-- Le fichier groupe sauvegardé a la forme { data = { group = {name, roads} } }.
-- save(idx) et load() manipulent un seul groupe à la fois malgré leur description (« collection ») : save écrit groups[idx], load ajoute un groupe.
-- createGroup modifie gPolygon en place (z mis à 0) et ignore les routes de jonction (isJctRoad) et les ponts (isBridge).
+- The default data is read via jsonReadFile from roadArchitect/groups/*.json (12 prefabs: Urban Block, Staggered Junction, Double Roundabout, RIRO Intersection, etc.); getDefaultGroups does nothing if groups already contains elements.
+- importGroup (creating a prefab from roads) is local and not exported; it is reached via load() or getDefaultGroups().
+- Placed group names are imgui buffers (im.ArrayChar(32, name)), not Lua strings; copyPlacedGroup converts them with ffi.string.
+- The audition roads are shifted by -center and raised by 1000 m (auditionHeight) and stay hidden (isHidden = true).
+- The saved group file has the form { data = { group = {name, roads} } }.
+- save(idx) and load() handle a single group at a time despite their description ("collection"): save writes groups[idx], load adds one group.
+- createGroup modifies gPolygon in place (z set to 0) and ignores junction roads (isJctRoad) and bridges (isBridge).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_roadArchitect_groups.addGroupToRoadsAudition(gIdx)` | Copie les routes du groupe prefab gIdx dans roadMgr.roads pour l'audition : routes centrées sur l'origine, élevées à la pose d'audition (+1000 m) et cachées. Recalcule la carte des routes, et recadre la caméra si on est déjà en vue de groupe. | 117 |
-| `editor_roadArchitect_groups.addGroupToRoadsPlace(gIdx, isConformGroupToTerrain)` | Place le groupe prefab gIdx dans la session : copie ses routes avec des noms UUID uniques (Engine.generateUUID), visibles, enregistre un groupe placé (nom 32 caractères, liste des nœuds) puis supprime les routes cachées. | 158 |
-| `editor_roadArchitect_groups.copyPlacedGroup(pg)` | Copie profonde d'un groupe placé, avec le nom converti du tampon imgui en string. | 240 |
-| `editor_roadArchitect_groups.createGroup(gPolygon, roads)` | Crée un groupe placé à partir des nœuds de routes situés dans un polygone 2D (le polygone est aplati à z = 0 en place). Les routes de jonction et les ponts sont ignorés. Ne crée rien si aucun nœud n'est dans le polygone ; le groupe est nommé « New Group ». | 207 |
-| `editor_roadArchitect_groups.createPrefabGroup(g)` | Transforme un groupe placé en groupe prefab : copie chaque route concernée (une fois) avec un nouveau nom UUID et ajoute à groups un élément nommé « User N ». | 247 |
-| `editor_roadArchitect_groups.deserialiseGroup(gSer)` | Reconstruit un groupe prefab à partir d'un groupe sérialisé via roadMgr.deserialiseRoad. | 315 |
-| `editor_roadArchitect_groups.getDefaultGroups()` | Charge les 12 groupes prefab par défaut depuis les fichiers JSON roadArchitect/groups/. Ne fait rien si groups n'est pas vide. | 351 |
-| `editor_roadArchitect_groups.getPlacedGroups()` | Renvoie la collection des groupes placés de la session. | 380 |
-| `editor_roadArchitect_groups.goToGroupView(gIdx, timer, time)` | Place la caméra en vue d'audition du groupe si on n'y est pas déjà : mémorise la pose de caméra actuelle, remet le chrono à zéro et appelle la mise à jour de pose. Renvoie le temps ajusté. | 105 |
-| `editor_roadArchitect_groups.goToOldView()` | Rend la caméra à la pose mémorisée avant la vue de groupe et quitte l'état de vue de groupe. | 297 |
-| `editor_roadArchitect_groups.goToPlacedGroup(idx)` | Met la caméra libre à la verticale du groupe placé, regardant vers le bas, à une hauteur calculée d'après le champ de vision pour tout cadrer. Ne fait rien si l'emprise est inférieure à 0,1 m en x et y. | 405 |
-| `editor_roadArchitect_groups.load()` | Ouvre une boîte de dialogue d'ouverture JSON, lit le groupe (data.group), le désérialise et l'ajoute à groups via importGroup. | 338 |
-| `editor_roadArchitect_groups.manageRotateCam()` | Fait tourner la caméra d'audition d'un pas de pi/500 autour du centre d'audition (appelé à chaque frame par l'interface). *(interne)* | 198 |
-| `editor_roadArchitect_groups.removePlacedGroupHard(groupIdx)` | Retire un groupe placé et supprime ses routes, sauf celles qui appartiennent encore à un autre groupe. Appelle ensuite updateGroupsAfterRoadRemove. | 389 |
-| `editor_roadArchitect_groups.removePlacedGroupSoft(groupIdx)` | Retire un groupe placé de la collection sans toucher aux routes qu'il contient. | 386 |
-| `editor_roadArchitect_groups.save(idx)` | Ouvre une boîte de dialogue d'enregistrement JSON et écrit groups[idx] (sérialisé) dans le fichier choisi, sous la forme { data = { group = ... } }. | 325 |
-| `editor_roadArchitect_groups.serialiseGroup(g)` | Sérialise un groupe prefab en table { name, roads } via roadMgr.serialiseRoad. | 305 |
-| `editor_roadArchitect_groups.setPlacedGroups(pg)` | Remplace la collection des groupes placés. | 383 |
-| `editor_roadArchitect_groups.updateGroupsAfterRoadRemove()` | Parcourt les groupes placés et supprime ceux dont au moins une route n'existe plus dans roadMgr. | 364 |
+| `editor_roadArchitect_groups.addGroupToRoadsAudition(gIdx)` | Copies the roads of prefab group gIdx into roadMgr.roads for auditioning: roads centered on the origin, raised to the audition pose (+1000 m) and hidden. Recomputes the road map, and reframes the camera if already in group view. | 117 |
+| `editor_roadArchitect_groups.addGroupToRoadsPlace(gIdx, isConformGroupToTerrain)` | Places prefab group gIdx in the session: copies its roads with unique UUID names (Engine.generateUUID), visible, registers a placed group (32-character name, node list) then deletes the hidden roads. | 158 |
+| `editor_roadArchitect_groups.copyPlacedGroup(pg)` | Deep copy of a placed group, with the name converted from the imgui buffer to a string. | 240 |
+| `editor_roadArchitect_groups.createGroup(gPolygon, roads)` | Creates a placed group from the road nodes located inside a 2D polygon (the polygon is flattened to z = 0 in place). Junction roads and bridges are ignored. Creates nothing if no node is in the polygon; the group is named "New Group". | 207 |
+| `editor_roadArchitect_groups.createPrefabGroup(g)` | Turns a placed group into a prefab group: copies each concerned road (once) with a new UUID name and adds to groups an element named "User N". | 247 |
+| `editor_roadArchitect_groups.deserialiseGroup(gSer)` | Rebuilds a prefab group from a serialized group via roadMgr.deserialiseRoad. | 315 |
+| `editor_roadArchitect_groups.getDefaultGroups()` | Loads the 12 default prefab groups from the roadArchitect/groups/ JSON files. Does nothing if groups is not empty. | 351 |
+| `editor_roadArchitect_groups.getPlacedGroups()` | Returns the collection of placed groups of the session. | 380 |
+| `editor_roadArchitect_groups.goToGroupView(gIdx, timer, time)` | Puts the camera in the group's audition view if not already there: stores the current camera pose, resets the timer and calls the pose update. Returns the adjusted time. | 105 |
+| `editor_roadArchitect_groups.goToOldView()` | Returns the camera to the pose stored before group view and leaves the group view state. | 297 |
+| `editor_roadArchitect_groups.goToPlacedGroup(idx)` | Puts the free camera directly above the placed group, looking down, at a height computed from the field of view to frame everything. Does nothing if the extent is less than 0.1 m in x and y. | 405 |
+| `editor_roadArchitect_groups.load()` | Opens a JSON open dialog, reads the group (data.group), deserializes it and adds it to groups via importGroup. | 338 |
+| `editor_roadArchitect_groups.manageRotateCam()` | Rotates the audition camera by a step of pi/500 around the audition center (called every frame by the UI). *(internal)* | 198 |
+| `editor_roadArchitect_groups.removePlacedGroupHard(groupIdx)` | Removes a placed group and deletes its roads, except those still belonging to another group. Then calls updateGroupsAfterRoadRemove. | 389 |
+| `editor_roadArchitect_groups.removePlacedGroupSoft(groupIdx)` | Removes a placed group from the collection without touching the roads it contains. | 386 |
+| `editor_roadArchitect_groups.save(idx)` | Opens a JSON save dialog and writes groups[idx] (serialized) to the chosen file, in the form { data = { group = ... } }. | 325 |
+| `editor_roadArchitect_groups.serialiseGroup(g)` | Serializes a prefab group into a { name, roads } table via roadMgr.serialiseRoad. | 305 |
+| `editor_roadArchitect_groups.setPlacedGroups(pg)` | Replaces the collection of placed groups. | 383 |
+| `editor_roadArchitect_groups.updateGroupsAfterRoadRemove()` | Iterates over the placed groups and removes those for which at least one road no longer exists in roadMgr. | 364 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_roadArchitect_groups.addGroupToRoadsAudition(gIdx)`
 
-Copie les routes du groupe prefab gIdx dans roadMgr.roads pour l'audition : routes centrées sur l'origine, élevées à la pose d'audition (+1000 m) et cachées. Recalcule la carte des routes, et recadre la caméra si on est déjà en vue de groupe.
+Copies the roads of prefab group gIdx into roadMgr.roads for auditioning: roads centered on the origin, raised to the audition pose (+1000 m) and hidden. Recomputes the road map, and reframes the camera if already in group view.
 
-- `gIdx` (*integer*) : Indice du groupe dans groups.
+- `gIdx` (*integer*) : Index of the group in groups.
 
 #### `editor_roadArchitect_groups.addGroupToRoadsPlace(gIdx, isConformGroupToTerrain)`
 
-Place le groupe prefab gIdx dans la session : copie ses routes avec des noms UUID uniques (Engine.generateUUID), visibles, enregistre un groupe placé (nom 32 caractères, liste des nœuds) puis supprime les routes cachées.
+Places prefab group gIdx in the session: copies its roads with unique UUID names (Engine.generateUUID), visible, registers a placed group (32-character name, node list) then deletes the hidden roads.
 
-- `gIdx` (*integer*) : Indice du groupe dans groups.
-- `isConformGroupToTerrain` (*boolean*) : Si vrai, les routes copiées sont plaquées au terrain.
-- **renvoie** : string[] Noms (UUID) des routes ajoutées.
+- `gIdx` (*integer*) : Index of the group in groups.
+- `isConformGroupToTerrain` (*boolean*) : If true, the copied roads are conformed to the terrain.
+- **returns**: string[] Names (UUIDs) of the added roads.
 
 #### `editor_roadArchitect_groups.copyPlacedGroup(pg)`
 
-Copie profonde d'un groupe placé, avec le nom converti du tampon imgui en string.
+Deep copy of a placed group, with the name converted from the imgui buffer to a string.
 
-- `pg` (*table*) : Groupe placé { name = tampon imgui, list = {{r = nom de route, n = indice de nœud}} }.
-- **renvoie** : table { name = string, list = table }.
+- `pg` (*table*) : Placed group { name = imgui buffer, list = {{r = road name, n = node index}} }.
+- **returns**: table { name = string, list = table }.
 
 #### `editor_roadArchitect_groups.createGroup(gPolygon, roads)`
 
-Crée un groupe placé à partir des nœuds de routes situés dans un polygone 2D (le polygone est aplati à z = 0 en place). Les routes de jonction et les ponts sont ignorés. Ne crée rien si aucun nœud n'est dans le polygone ; le groupe est nommé « New Group ».
+Creates a placed group from the road nodes located inside a 2D polygon (the polygon is flattened to z = 0 in place). Junction roads and bridges are ignored. Creates nothing if no node is in the polygon; the group is named "New Group".
 
-- `gPolygon` (*vec3[]*) : Sommets du polygone ; modifiés en place (z = 0).
-- `roads` (*table[]*) : Routes à tester.
+- `gPolygon` (*vec3[]*) : Polygon vertices; modified in place (z = 0).
+- `roads` (*table[]*) : Roads to test.
 
 #### `editor_roadArchitect_groups.createPrefabGroup(g)`
 
-Transforme un groupe placé en groupe prefab : copie chaque route concernée (une fois) avec un nouveau nom UUID et ajoute à groups un élément nommé « User N ».
+Turns a placed group into a prefab group: copies each concerned road (once) with a new UUID name and adds to groups an element named "User N".
 
-- `g` (*table*) : Groupe placé (champ list de {r, n}).
+- `g` (*table*) : Placed group (list field of {r, n}).
 
 #### `editor_roadArchitect_groups.deserialiseGroup(gSer)`
 
-Reconstruit un groupe prefab à partir d'un groupe sérialisé via roadMgr.deserialiseRoad.
+Rebuilds a prefab group from a serialized group via roadMgr.deserialiseRoad.
 
-- `gSer` (*table*) : Groupe sérialisé { name, roads }.
-- **renvoie** : table Groupe { name, roads }.
+- `gSer` (*table*) : Serialized group { name, roads }.
+- **returns**: table Group { name, roads }.
 
 #### `editor_roadArchitect_groups.getPlacedGroups()`
 
-Renvoie la collection des groupes placés de la session.
+Returns the collection of placed groups of the session.
 
-- **renvoie** : table[] Groupes placés.
+- **returns**: table[] Placed groups.
 
 #### `editor_roadArchitect_groups.goToGroupView(gIdx, timer, time)`
 
-Place la caméra en vue d'audition du groupe si on n'y est pas déjà : mémorise la pose de caméra actuelle, remet le chrono à zéro et appelle la mise à jour de pose. Renvoie le temps ajusté.
+Puts the camera in the group's audition view if not already there: stores the current camera pose, resets the timer and calls the pose update. Returns the adjusted time.
 
-- `gIdx` (*integer*) : Indice du groupe à auditionner.
-- `timer` (*table*) : Chronomètre ; appelle timer:stopAndReset() à l'entrée en vue de groupe.
-- `time` (*number*) : Temps courant ; remplacé par 0 lors du premier appel.
-- **renvoie** : number 0.0 si la vue vient d'être activée, sinon time inchangé.
+- `gIdx` (*integer*) : Index of the group to audition.
+- `timer` (*table*) : Timer; calls timer:stopAndReset() on entering group view.
+- `time` (*number*) : Current time; replaced by 0 on the first call.
+- **returns**: number 0.0 if the view has just been activated, otherwise time unchanged.
 
 #### `editor_roadArchitect_groups.goToPlacedGroup(idx)`
 
-Met la caméra libre à la verticale du groupe placé, regardant vers le bas, à une hauteur calculée d'après le champ de vision pour tout cadrer. Ne fait rien si l'emprise est inférieure à 0,1 m en x et y.
+Puts the free camera directly above the placed group, looking down, at a height computed from the field of view to frame everything. Does nothing if the extent is less than 0.1 m in x and y.
 
-- `idx` (*integer*) : Indice du groupe placé.
+- `idx` (*integer*) : Index of the placed group.
 
 #### `editor_roadArchitect_groups.removePlacedGroupHard(groupIdx)`
 
-Retire un groupe placé et supprime ses routes, sauf celles qui appartiennent encore à un autre groupe. Appelle ensuite updateGroupsAfterRoadRemove.
+Removes a placed group and deletes its roads, except those still belonging to another group. Then calls updateGroupsAfterRoadRemove.
 
-- `groupIdx` (*integer*) : Indice du groupe placé.
+- `groupIdx` (*integer*) : Index of the placed group.
 
 #### `editor_roadArchitect_groups.removePlacedGroupSoft(groupIdx)`
 
-Retire un groupe placé de la collection sans toucher aux routes qu'il contient.
+Removes a placed group from the collection without touching the roads it contains.
 
-- `groupIdx` (*integer*) : Indice du groupe placé.
+- `groupIdx` (*integer*) : Index of the placed group.
 
 #### `editor_roadArchitect_groups.save(idx)`
 
-Ouvre une boîte de dialogue d'enregistrement JSON et écrit groups[idx] (sérialisé) dans le fichier choisi, sous la forme { data = { group = ... } }.
+Opens a JSON save dialog and writes groups[idx] (serialized) to the chosen file, in the form { data = { group = ... } }.
 
-- `idx` (*integer*) : Indice du groupe à sauvegarder.
+- `idx` (*integer*) : Index of the group to save.
 
 #### `editor_roadArchitect_groups.serialiseGroup(g)`
 
-Sérialise un groupe prefab en table { name, roads } via roadMgr.serialiseRoad.
+Serializes a prefab group into a { name, roads } table via roadMgr.serialiseRoad.
 
-- `g` (*table*) : Groupe prefab { name, roads }.
-- **renvoie** : table Groupe sérialisé, utilisable par jsonWriteFile.
+- `g` (*table*) : Prefab group { name, roads }.
+- **returns**: table Serialized group, usable by jsonWriteFile.
 
 #### `editor_roadArchitect_groups.setPlacedGroups(pg)`
 
-Remplace la collection des groupes placés.
+Replaces the collection of placed groups.
 
-- `pg` (*table[]*) : Nouvelle collection.
+- `pg` (*table[]*) : New collection.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `groups` | table | Tableau des modèles de groupes prefab disponibles, chaque élément ayant la forme { name = string, roads = table[] }. C'est la même table que celle remplie par getDefaultGroups, createPrefabGroup et load. |
+| `groups` | table | Array of available prefab group templates, each element having the form { name = string, roads = table[] }. It is the same table as the one filled by getDefaultGroups, createPrefabGroup and load. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roadArchitect/groups.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roadArchitect/groups.lua`.*

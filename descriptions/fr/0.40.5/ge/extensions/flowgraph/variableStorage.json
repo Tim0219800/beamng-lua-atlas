@@ -1,0 +1,400 @@
+{
+  "path": "lua/ge/extensions/flowgraph/variableStorage.lua",
+  "module": "Stockage des variables d'un projet flowgraph (variables globales du projet lues/écrites par les nœuds getVariable/setVariable). Le module renvoie un constructeur : `require('flowgraph_variableStorage')(mgr)`. Chaque variable a un nom, un type (string, number, bool, vec3, quat, color), une valeur de base, une valeur courante, une stratégie de fusion (voir `flowgraph_utils`) et des options (typage fixe, non supprimable, surveillée, conservée après arrêt). Les écritures de la frame passent par `change` puis sont fusionnées par `finalizeChanges`.",
+  "usage": "local vs = mgr.variables\nvs:addVariable('score', 0, 'number', 'sum')\nvs:change('score', 10)\nvs:finalizeChanges()\nlocal v, ok = vs:get('score')",
+  "notes": [
+    "Trois façons d'écrire : `changeBase` (valeur de départ + courante, avec test de type), `changeInstant` (valeur courante seulement, sans fusion) et `change` (passe par la stratégie de fusion, effective après `finalizeChanges`).",
+    "À l'arrêt (`_executionStopped`), chaque variable revient à sa `baseValue`, sauf celles marquées `keepAfterStop` dont la valeur courante devient la nouvelle base.",
+    "Les stratégies par défaut si celle demandée est invalide : `last`, `max` pour un number, `or_` pour un bool.",
+    "`updateType` remet la valeur à un défaut du type (false, 0, '', {0,0,0}…) et ne fonctionne pas si `fixedType`.",
+    "Bug probable : `renameVariable` ne met pas à jour le champ `name` de la variable renommée et appelle `table.insert(customVariableOrder, nil, newName)` si l'ancien nom n'était pas dans l'ordre personnalisé.",
+    "Bug probable : `_onDeserialized` fait `self.customVariableOrder = self.customVariableOrder or data.customVariableOrder` ; comme `customVariableOrder` existe toujours (table), l'ordre sauvegardé est ignoré (l'ordre est reconstruit par `addVariable`).",
+    "`changeCustomVariableOrder` plante si le nom n'est pas dans `customVariableOrder` (`oldIdx` nil)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Instance de stockage de variables. Champs : mgr, id, variables (nom -> {name, baseValue, value, index, type, fixedType, undeletable, mergeStrat, mergeFuns, monitored, keepAfterStop}), variableChanges, sortedVariableNames, customVariableOrder, types.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : prend un id unique du manager, crée les tables et complète la liste des types avec couleur et icône de l'éditeur.",
+          "params": {
+            "mgr": {
+              "type": "table",
+              "desc": "Manager de flowgraph."
+            }
+          },
+          "internal": true
+        },
+        "getName": {
+          "desc": "Renvoie « (nom du manager / id du manager) » pour les logs.",
+          "returns": [
+            {
+              "type": "string",
+              "desc": "Nom d'affichage."
+            }
+          ]
+        },
+        "getTypes": {
+          "desc": "Liste des types de variables supportés (string, number, bool, vec3, quat, color) avec couleur et icône.",
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "Types."
+            }
+          ]
+        },
+        "getMergeStrats": {
+          "desc": "Renvoie les stratégies de fusion triées proposées pour un type (voir `sortedMergeFuns`).",
+          "params": {
+            "type": {
+              "type": "string",
+              "desc": "Type de variable (ou 'any', 'all')."
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "Liste {name, desc, num}, vide si inconnu."
+            }
+          ]
+        },
+        "variableExists": {
+          "desc": "Dit si une variable existe.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Nom."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true si elle existe."
+            }
+          ]
+        },
+        "get": {
+          "desc": "Lit la valeur courante d'une variable. Log une erreur si elle n'existe pas.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Nom."
+            }
+          },
+          "returns": [
+            {
+              "type": "any",
+              "desc": "Valeur ou nil."
+            },
+            {
+              "type": "boolean",
+              "desc": "true si la variable existe."
+            }
+          ]
+        },
+        "getFull": {
+          "desc": "Renvoie la table complète de la variable (valeur, type, stratégie…).",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Nom."
+            }
+          },
+          "returns": [
+            {
+              "type": "table|nil",
+              "desc": "Variable."
+            },
+            {
+              "type": "boolean",
+              "desc": "true si elle existe."
+            }
+          ]
+        },
+        "clear": {
+          "desc": "Supprime toutes les variables et les changements en attente.",
+          "internal": false
+        },
+        "refreshSortedVariableNames": {
+          "desc": "Reconstruit `sortedVariableNames`, noms triés par `index`.",
+          "internal": true
+        },
+        "changeCustomVariableOrder": {
+          "desc": "Déplace une variable dans `customVariableOrder` pour qu'elle soit placée avant/après l'index `newIdx` (relatif à l'ordre d'origine).",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable à déplacer."
+            },
+            "newIdx": {
+              "type": "integer",
+              "desc": "Nouvel index."
+            }
+          }
+        },
+        "getMaxSortIndex": {
+          "desc": "Plus grand `index` de tri parmi les variables (0 si aucune).",
+          "returns": [
+            {
+              "type": "integer",
+              "desc": "Index max."
+            }
+          ]
+        },
+        "addVariable": {
+          "desc": "Ajoute une variable. Renvoie false (et log une erreur) si elle existe déjà.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Nom."
+            },
+            "value": {
+              "type": "any",
+              "desc": "Valeur de départ."
+            },
+            "type": {
+              "type": "string",
+              "desc": "Type."
+            },
+            "mergeStrat": {
+              "type": "string",
+              "desc": "Nom de stratégie de fusion."
+            },
+            "fixedType": {
+              "type": "boolean|nil",
+              "desc": "Interdit le changement de type."
+            },
+            "undeletable": {
+              "type": "boolean|nil",
+              "desc": "Interdit la suppression."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true si ajoutée."
+            }
+          ]
+        },
+        "setMergeStrat": {
+          "desc": "Fixe la stratégie de fusion et l'initialise. Une stratégie invalide est remplacée par une valeur par défaut selon le type.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "strat": {
+              "type": "string",
+              "desc": "Stratégie."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si la variable n'existe pas."
+            }
+          ]
+        },
+        "updateType": {
+          "desc": "Change le type d'une variable (valeurs remises à un défaut du type), repasse en stratégie `last` et prévient les nœuds getVariable/setVariable.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "type": {
+              "type": "string",
+              "desc": "Nouveau type."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante ou type fixe."
+            }
+          ]
+        },
+        "setFixedType": {
+          "desc": "Active/désactive le typage fixe.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "fixedType": {
+              "type": "boolean|nil",
+              "desc": "true pour fixer."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante."
+            }
+          ]
+        },
+        "setMonitor": {
+          "desc": "Marque la variable comme surveillée (affichage dans l'éditeur).",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "monitor": {
+              "type": "boolean|nil",
+              "desc": "true pour surveiller."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante."
+            }
+          ]
+        },
+        "setKeepAfterStop": {
+          "desc": "Si true, la valeur courante devient la valeur de base à l'arrêt du projet (conservée).",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "keep": {
+              "type": "boolean|nil",
+              "desc": "true pour conserver."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante."
+            }
+          ]
+        },
+        "removeVariable": {
+          "desc": "Supprime une variable (sauf `undeletable`) et la retire de l'ordre personnalisé.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante ou non supprimable."
+            }
+          ]
+        },
+        "renameVariable": {
+          "desc": "Renomme une variable et prévient les nœuds getVariable/setVariable de tous les graphes et macros.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Ancien nom."
+            },
+            "newName": {
+              "type": "string",
+              "desc": "Nouveau nom."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si `newName` existe déjà."
+            }
+          ]
+        },
+        "changeBase": {
+          "desc": "Change la valeur de base et la valeur courante, après test de compatibilité de type.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "value": {
+              "type": "any",
+              "desc": "Nouvelle valeur."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante ou type incompatible."
+            }
+          ]
+        },
+        "changeInstant": {
+          "desc": "Change immédiatement la valeur courante, sans fusion ni test de type.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "value": {
+              "type": "any",
+              "desc": "Nouvelle valeur."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante."
+            }
+          ]
+        },
+        "change": {
+          "desc": "Soumet une valeur à la stratégie de fusion de la variable ; effective après `finalizeChanges`. Refuse nil.",
+          "params": {
+            "name": {
+              "type": "string",
+              "desc": "Variable."
+            },
+            "value": {
+              "type": "any",
+              "desc": "Valeur."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false si inexistante ou valeur nil."
+            }
+          ]
+        },
+        "finalizeChanges": {
+          "desc": "Finalise les fusions de toutes les variables modifiées (`finalize`, puis `init`) et vide la liste des changements. Appelé par le manager en fin de frame (déduit du code).",
+          "internal": true
+        },
+        "_onClear": {
+          "desc": "Appelé quand le projet est vidé ; équivaut à `_executionStopped`.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelé à l'arrêt : vide les changements en attente et remet chaque variable à sa valeur de base (ou conserve sa valeur si `keepAfterStop`).",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sérialise les variables : {list = [{name, value=baseValue, index, type, mergeStrat, fixedType, undeletable, monitored, keep}], customVariableOrder}.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Données de sauvegarde."
+            }
+          ],
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Recharge les variables depuis les données de sauvegarde (accepte l'ancien format sans `list`), triées par index puis nom.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Données sauvegardées."
+            }
+          },
+          "internal": true
+        }
+      }
+    }
+  }
+}

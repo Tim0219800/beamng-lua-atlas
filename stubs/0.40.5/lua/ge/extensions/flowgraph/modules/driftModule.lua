@@ -2,108 +2,108 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/modules/driftModule.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module flowgraph (moduleOrder 0, dépend de gameplay_drift_general) qui relaie les évènements du gameplay de drift vers les nœuds flowgraph. Il écoute les hooks onDriftSpinout, onDriftCrash, onDonutDriftScored, onTightDriftScored et onDriftCompletedScored, et conserve chaque évènement dans une table de callbacks avec une durée de vie (ttl) de 2 ticks que les nœuds peuvent lire.
---- Accès : `require("extensions/flowgraph/modules/driftModule")` (fichier sous extensions/ mais pas une extension classique)
+--- Flowgraph module (moduleOrder 0, depends on gameplay_drift_general) that relays drift gameplay events to flowgraph nodes. It listens to the hooks onDriftSpinout, onDriftCrash, onDonutDriftScored, onTightDriftScored and onDriftCompletedScored, and keeps each event in a callbacks table with a lifetime (ttl) of 2 ticks that nodes can read.
+--- Access: `require("extensions/flowgraph/modules/driftModule")` (file under extensions/ but not a regular extension)
 ---@class flowgraph_modules_driftModule
 flowgraph_modules_driftModule = {}
 
---- Enregistre (ou remplace) un évènement avec ttl = 2 et des données. (assignée dynamiquement)
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
----@param name string nom de l'évènement (tight, donut, spinout, crash, scored…)
----@param data table|nil données associées
+--- Registers (or replaces) an event with ttl = 2 and some data. (dynamically assigned)
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+---@param name string event name (tight, donut, spinout, crash, scored...)
+---@param data table|nil associated data
 function flowgraph_modules_driftModule.addCallback(name, data) end
 
---- Renvoie la table des callbacks (clé = nom, valeur = {ttl, data}). (assignée dynamiquement)
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
----@return table<string, table>  callbacks par nom
+--- Returns the callbacks table (key = name, value = {ttl, data}). (dynamically assigned)
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+---@return table<string, table>  callbacks by name
 function flowgraph_modules_driftModule.getCallBacks() end
 
---- Appelé à la création du module : appelle resetModule(). (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+--- Called when the module is created: calls resetModule(). (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
 function flowgraph_modules_driftModule.init() end
 
---- Hook : donut marqué ; enregistre 'donut' avec {score}. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
----@param score number score obtenu
+--- Hook: donut scored; registers 'donut' with {score}. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+---@param score number score obtained
 function flowgraph_modules_driftModule.onDonutDriftScored(score) end
 
---- Relaie vers gameplay_drift_drift.onDonutZoneReactivated(). (assignée dynamiquement)
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+--- Relays to gameplay_drift_drift.onDonutZoneReactivated(). (dynamically assigned)
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
 function flowgraph_modules_driftModule.onDonutZoneReactivated() end
 
---- Hook : drift terminé et compté ; enregistre 'scored' avec addedScore, cachedScore et combo. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
----@param data table champs addedScore, cachedScore, combo
+--- Hook: drift completed and counted; registers 'scored' with addedScore, cachedScore and combo. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+---@param data table fields addedScore, cachedScore, combo
 function flowgraph_modules_driftModule.onDriftCompletedScored(data) end
 
---- Hook : crash en drift ; enregistre 'crash'. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+--- Hook: drift crash; registers 'crash'. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
 function flowgraph_modules_driftModule.onDriftCrash() end
 
---- Hook : le joueur a fait un tête-à-queue ; enregistre 'spinout'. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+--- Hook: the player spun out; registers 'spinout'. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
 function flowgraph_modules_driftModule.onDriftSpinout() end
 
---- Hook : drift serré marqué ; enregistre 'tight' avec {score}. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
----@param score number score obtenu
+--- Hook: tight drift scored; registers 'tight' with {score}. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+---@param score number score obtained
 function flowgraph_modules_driftModule.onTightDriftScored(score) end
 
---- Appelé à chaque mise à jour du manager : décrémente le ttl de chaque callback positif. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+--- Called on every manager update: decrements the ttl of each positive callback. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
 function flowgraph_modules_driftModule.onUpdate() end
 
---- Recrée la table callbacks avec tous les évènements à ttl = 0. (assignée dynamiquement)
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
+--- Recreates the callbacks table with all events at ttl = 0. (dynamically assigned)
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:dyn
 function flowgraph_modules_driftModule.resetModule() end
 
---- Classe locale `C` de lua/ge/extensions/flowgraph/modules/driftModule.lua
+--- Local class `C` of lua/ge/extensions/flowgraph/modules/driftModule.lua
 ---@class flowgraph_modules_driftModule_C
 local flowgraph_modules_driftModule_C = {}
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:38
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:38
 ---@param name any
 ---@param data any
 function flowgraph_modules_driftModule_C:addCallback(name, data) end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:34
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:34
 function flowgraph_modules_driftModule_C:getCallBacks() end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:21
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:21
 function flowgraph_modules_driftModule_C:init() end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:57
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:57
 ---@param score any
 function flowgraph_modules_driftModule_C:onDonutDriftScored(score) end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:65
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:65
 function flowgraph_modules_driftModule_C:onDonutZoneReactivated() end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:61
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:61
 ---@param data any
 function flowgraph_modules_driftModule_C:onDriftCompletedScored(data) end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:49
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:49
 function flowgraph_modules_driftModule_C:onDriftCrash() end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:45
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:45
 function flowgraph_modules_driftModule_C:onDriftSpinout() end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:53
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:53
 ---@param score any
 function flowgraph_modules_driftModule_C:onTightDriftScored(score) end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:25
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:25
 function flowgraph_modules_driftModule_C:onUpdate() end
 
----Source : lua/ge/extensions/flowgraph/modules/driftModule.lua:10
+---Source: lua/ge/extensions/flowgraph/modules/driftModule.lua:10
 function flowgraph_modules_driftModule_C:resetModule() end
 

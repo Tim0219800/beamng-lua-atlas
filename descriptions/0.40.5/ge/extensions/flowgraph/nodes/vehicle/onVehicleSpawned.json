@@ -1,34 +1,34 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleSpawned.lua",
-  "module": "Nœud événement « On Vehicle Spawned » (catégorie `logic`). Émet une impulsion sur `flow` et l'id `vehId` quand un véhicule est créé (hook `onVehicleSpawned`).",
+  "module": "Event node \"On Vehicle Spawned\" (category `logic`). Emits a pulse on `flow` and the id `vehId` when a vehicle is created (hook `onVehicleSpawned`).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "desc": "Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.",
       "functions": {
         "_afterTrigger": {
-          "desc": "Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false.",
+          "desc": "Called by the manager after the node is triggered; resets the event flag to false.",
           "internal": true
         },
         "_executionStarted": {
-          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "desc": "Called by the manager when the flowgraph project execution starts; resets the internal state to zero.",
           "internal": true
         },
         "init": {
-          "desc": "Constructeur vide.",
+          "desc": "Empty constructor.",
           "internal": true
         },
         "onVehicleSpawned": {
-          "desc": "Hook appelé à la création d'un véhicule ; mémorise `id` et lève le drapeau.",
+          "desc": "Hook called when a vehicle is created; stores `id` and raises the flag.",
           "internal": true,
           "params": {
             "id": {
               "type": "integer",
-              "desc": "Id du véhicule créé."
+              "desc": "Id of the created vehicle."
             }
           }
         },
         "work": {
-          "desc": "Si le drapeau est levé, remplit `vehId` et met `flow` à true une frame, sinon false.",
+          "desc": "If the flag is raised, fills `vehId` and sets `flow` to true for one frame, otherwise false.",
           "internal": true
         }
       }

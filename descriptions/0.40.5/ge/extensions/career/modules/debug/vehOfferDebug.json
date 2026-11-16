@@ -1,26 +1,35 @@
 {
   "path": "lua/ge/extensions/career/modules/debug/vehOfferDebug.lua",
-  "module": "Onglet de debug carrière « Delivery > Veh Offers ». Fenêtre 'Vehicle Offer Debug' listant, par facilité de livraison, les offres de véhicules/remorques non expirées (career_modules_delivery_vehicleOfferManager). L'entrée '> Available vehicle/trailer per facility' imprime le nombre d'offres par niveau de déblocage (1 à 5) via isVehicleTagUnlocked.",
-  "notes": ["Outil de développement ; debugOrder = 11.", "Réutilise career_modules_debug_parcelDebug.drawFacilityHeader."],
+  "module": "\"Delivery > Veh Offers\" career debug tab. 'Vehicle Offer Debug' window listing, per delivery facility, the non-expired vehicle/trailer offers (career_modules_delivery_vehicleOfferManager). The entry '> Available vehicle/trailer per facility' prints the number of offers per unlock level (1 to 5) via isVehicleTagUnlocked.",
+  "notes": [
+    "Development tool; debugOrder = 11.",
+    "Reuses career_modules_debug_parcelDebug.drawFacilityHeader."
+  ],
   "fields": {
-    "debugOrder": {"type": "number", "desc": "Ordre de tri (11)."},
-    "debugName": {"type": "string", "desc": "'Delivery > Veh Offers'."}
+    "debugOrder": {
+      "type": "number",
+      "desc": "Sort order (11)."
+    },
+    "debugName": {
+      "type": "string",
+      "desc": "'Delivery > Veh Offers'."
+    }
   },
   "functions": {
     "onCareerActivated": {
-      "desc": "Hook : mémorise les modules delivery et parcelDebug.",
+      "desc": "Hook: stores the delivery modules and parcelDebug.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "drawDebugFunctions": {
-      "desc": "Entrées '> Available vehicle per facility' et '> Available trailer per facility' : comptent les offres non expirées par niveau et impriment le résultat trié.",
+      "desc": "Entries '> Available vehicle per facility' and '> Available trailer per facility': count the non-expired offers per level and print the sorted result.",
       "params": {},
       "returns": [],
       "internal": true
     },
     "drawDebugMenu": {
-      "desc": "Dessine la fenêtre 'Vehicle Offer Debug' : temps de livraison, choix de facilité (all, auto ou id) et tableaux d'offres.",
+      "desc": "Draws the 'Vehicle Offer Debug' window: delivery time, facility choice (all, auto or id) and offer tables.",
       "params": {},
       "returns": [],
       "internal": true

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_scene_reloadNavGraph`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/reloadNavGraph.lua` · VM : Game Engine (GE) · 24 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/reloadNavGraph.lua` · VM: Game Engine (GE) · 24 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/reloadNavGraph")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/reloadNavGraph")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Reload Nav Graph » (once_instant). Recharge le graphe de navigation (la map) une seule fois via map.reset(). Aucun pin.
+Flowgraph node "Reload Nav Graph" (once_instant). Reloads the navigation graph (the map) once via map.reset(). No pins.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle map.reset(). | 19 |
+| `C:workOnce()` | Calls map.reset(). | 19 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/reloadNavGraph.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/reloadNavGraph.lua`.*

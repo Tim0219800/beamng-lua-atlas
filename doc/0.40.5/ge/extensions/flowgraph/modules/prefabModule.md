@@ -1,112 +1,112 @@
 # `flowgraph_modules_prefabModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/prefabModule.lua` · VM : Game Engine (GE) · 340 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/prefabModule.lua` · VM: Game Engine (GE) · 340 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/prefabModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/prefabModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 50) qui fait apparaître, suit et supprime des prefabs (groupes d'objets de scène .prefab.json) pendant un projet. À l'ajout d'un prefab, il recense tous les objets enfants par classe, mémorise les transformations des véhicules, détecte si des colliders ou des waypoints / routes (navgraph) sont contenus, puis recharge la collision (be:reloadCollision) et le navgraph (map.reset) au bon moment. À l'arrêt, il supprime tous les prefabs non marqués dontDelete.
+Flowgraph module (moduleOrder 50) that spawns, tracks and deletes prefabs (groups of scene objects, .prefab.json) during a project. When a prefab is added, it lists all child objects by class, stores the vehicles' transforms, detects whether colliders or waypoints / roads (navgraph) are contained, then reloads the collision (be:reloadCollision) and the navgraph (map.reset) at the right time. On stop, it deletes all prefabs not marked dontDelete.
 
-## Remarques
+## Notes
 
-- spawnPrefab résout <nom>/<nom>.prefab.json relativement au projet, place le prefab en (0,0,0), canSave = false, dans MissionGroup.
-- Pendant un chargement de niveau, les rechargements passent par mgr.modules.level:delayOrInstantFunction ; sinon ils sont faits dans afterTrigger via des drapeaux.
-- Si un BeamNGGameplayArea fait partie du prefab, collision et navgraph sont rechargés immédiatement (contournement 'hacky' commenté dans le code).
-- Les objets non-véhicule portant un Name génèrent un avertissement : utiliser Internal Name. Les véhicules nommés 'clone...' aussi.
-- moreData accepte skipCollisionReload et skipNavgraphReload.
+- spawnPrefab resolves <name>/<name>.prefab.json relative to the project, places the prefab at (0,0,0), canSave = false, in MissionGroup.
+- During level loading, reloads go through mgr.modules.level:delayOrInstantFunction; otherwise they are done in afterTrigger via flags.
+- If a BeamNGGameplayArea is part of the prefab, collision and navgraph are reloaded immediately ('hacky' workaround commented in the code).
+- Non-vehicle objects with a Name generate a warning: use Internal Name. Vehicles named 'clone...' too.
+- moreData accepts skipCollisionReload and skipNavgraphReload.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_prefabModule.addPrefab(id, moreData)` | Suit un prefab existant de la scène : recense ses enfants, ses véhicules, détecte colliders et navgraph et programme les rechargements nécessaires. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.afterTrigger()` | Appelé après le tick du graphe : recharge la collision et reconstruit le navgraph (map.reset, sauf pendant un chargement) si les drapeaux sont levés. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_prefabModule.clear()` | Vide prefabs, flags et sortedIds. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_prefabModule.deletePrefab(id, force)` | Supprime le prefab (sauf dontDelete sans force), le retire du suivi et programme un rechargement de collision s'il en contenait. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.executionStopped()` | Appelé à l'arrêt du projet : supprime tous les prefabs suivis non marqués dontDelete, recharge collision et navgraph si nécessaire, puis appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_prefabModule.getPrefab(id)` | Renvoie les données du prefab suivi, ou une table vide. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.getVehicleIdsForPrefab(id)` | Renvoie les ids de véhicules contenus dans le prefab, triés. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.init()` | Crée les tables prefabs, sortedIds, flags puis appelle clear(). (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_prefabModule.originalVehicleTransforms(data)` | Calcule {pos, rot, up} de chaque véhicule (BeamNGVehicle) du prefab et les ajoute au module vehicle du manager. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.restoreVehiclePositions(id)` | Replace les véhicules du prefab à leur position et rotation d'origine et réinitialise la physique et les déformations. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.setKeepPrefab(id, keep)` | Marque le prefab comme à conserver à l'arrêt du projet (dontDelete). Avertit si le prefab n'est pas suivi. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.setUnpackVehiclesBeforeDeletion(id, set)` | Indique si les véhicules doivent être extraits avant la suppression du prefab. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.spawnPrefab(fileName)` | Crée un prefab depuis <nom>.prefab.json (chemin relatif au projet), l'ajoute à MissionGroup et le suit via addPrefab. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_prefabModule.unpackPrefabAndDelete(id, obj)` | Éclate le prefab (obj:explode), supprime le prefab puis réinsère ses véhicules dans MissionGroup à leur position courante avant de supprimer le groupe restant. (assignée dynamiquement) | dyn |
+| `flowgraph_modules_prefabModule.addPrefab(id, moreData)` | Tracks an existing prefab in the scene: lists its children, its vehicles, detects colliders and navgraph and schedules the necessary reloads. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.afterTrigger()` | Called after the graph tick: reloads the collision and rebuilds the navgraph (map.reset, except during loading) if the flags are raised. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_prefabModule.clear()` | Clears prefabs, flags and sortedIds. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_prefabModule.deletePrefab(id, force)` | Deletes the prefab (except dontDelete without force), removes it from tracking and schedules a collision reload if it contained any. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.executionStopped()` | Called when the project stops: deletes all tracked prefabs not marked dontDelete, reloads collision and navgraph if needed, then calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_prefabModule.getPrefab(id)` | Returns the data of the tracked prefab, or an empty table. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.getVehicleIdsForPrefab(id)` | Returns the ids of the vehicles contained in the prefab, sorted. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.init()` | Creates the tables prefabs, sortedIds, flags then calls clear(). (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_prefabModule.originalVehicleTransforms(data)` | Computes {pos, rot, up} for each vehicle (BeamNGVehicle) of the prefab and adds them to the manager's vehicle module. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.restoreVehiclePositions(id)` | Puts the prefab's vehicles back at their original position and rotation and resets the physics and the deformations. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.setKeepPrefab(id, keep)` | Marks the prefab as to be kept when the project stops (dontDelete). Warns if the prefab is not tracked. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.setUnpackVehiclesBeforeDeletion(id, set)` | Indicates whether the vehicles must be extracted before the prefab is deleted. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.spawnPrefab(fileName)` | Creates a prefab from <name>.prefab.json (path relative to the project), adds it to MissionGroup and tracks it via addPrefab. (dynamically assigned) | dyn |
+| `flowgraph_modules_prefabModule.unpackPrefabAndDelete(id, obj)` | Explodes the prefab (obj:explode), deletes the prefab then reinserts its vehicles into MissionGroup at their current position before deleting the remaining group. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_prefabModule.addPrefab(id, moreData)`
 
-Suit un prefab existant de la scène : recense ses enfants, ses véhicules, détecte colliders et navgraph et programme les rechargements nécessaires. (assignée dynamiquement)
+Tracks an existing prefab in the scene: lists its children, its vehicles, detects colliders and navgraph and schedules the necessary reloads. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab dans la scène
-- `moreData` (*table|nil*) : champs copiés dans les données ; skipCollisionReload, skipNavgraphReload
+- `id` (*integer*) : prefab id in the scene
+- `moreData` (*table|nil*) : fields copied into the data; skipCollisionReload, skipNavgraphReload
 
 #### `flowgraph_modules_prefabModule.deletePrefab(id, force)`
 
-Supprime le prefab (sauf dontDelete sans force), le retire du suivi et programme un rechargement de collision s'il en contenait. (assignée dynamiquement)
+Deletes the prefab (except dontDelete without force), removes it from tracking and schedules a collision reload if it contained any. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab
-- `force` (*boolean|nil*) : ignorer dontDelete
+- `id` (*integer*) : prefab id
+- `force` (*boolean|nil*) : ignore dontDelete
 
 #### `flowgraph_modules_prefabModule.getPrefab(id)`
 
-Renvoie les données du prefab suivi, ou une table vide. (assignée dynamiquement)
+Returns the data of the tracked prefab, or an empty table. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab
-- **renvoie** : table données du prefab
+- `id` (*integer*) : prefab id
+- **returns**: table prefab data
 
 #### `flowgraph_modules_prefabModule.getVehicleIdsForPrefab(id)`
 
-Renvoie les ids de véhicules contenus dans le prefab, triés. (assignée dynamiquement)
+Returns the ids of the vehicles contained in the prefab, sorted. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab
-- **renvoie** : integer[] ids
+- `id` (*integer*) : prefab id
+- **returns**: integer[] ids
 
 #### `flowgraph_modules_prefabModule.originalVehicleTransforms(data)`
 
-Calcule {pos, rot, up} de chaque véhicule (BeamNGVehicle) du prefab et les ajoute au module vehicle du manager. (assignée dynamiquement)
+Computes {pos, rot, up} for each vehicle (BeamNGVehicle) of the prefab and adds them to the manager's vehicle module. (dynamically assigned)
 
-- `data` (*table*) : données du prefab, avec allChildrenIds
-- **renvoie** : table<integer, table> transformations par id de véhicule
+- `data` (*table*) : prefab data, with allChildrenIds
+- **returns**: table<integer, table> transforms by vehicle id
 
 #### `flowgraph_modules_prefabModule.restoreVehiclePositions(id)`
 
-Replace les véhicules du prefab à leur position et rotation d'origine et réinitialise la physique et les déformations. (assignée dynamiquement)
+Puts the prefab's vehicles back at their original position and rotation and resets the physics and the deformations. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab
+- `id` (*integer*) : prefab id
 
 #### `flowgraph_modules_prefabModule.setKeepPrefab(id, keep)`
 
-Marque le prefab comme à conserver à l'arrêt du projet (dontDelete). Avertit si le prefab n'est pas suivi. (assignée dynamiquement)
+Marks the prefab as to be kept when the project stops (dontDelete). Warns if the prefab is not tracked. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab
-- `keep` (*boolean*) : conserver
+- `id` (*integer*) : prefab id
+- `keep` (*boolean*) : keep
 
 #### `flowgraph_modules_prefabModule.setUnpackVehiclesBeforeDeletion(id, set)`
 
-Indique si les véhicules doivent être extraits avant la suppression du prefab. (assignée dynamiquement)
+Indicates whether the vehicles must be extracted before the prefab is deleted. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab
-- `set` (*boolean*) : extraire les véhicules
+- `id` (*integer*) : prefab id
+- `set` (*boolean*) : extract the vehicles
 
 #### `flowgraph_modules_prefabModule.spawnPrefab(fileName)`
 
-Crée un prefab depuis <nom>.prefab.json (chemin relatif au projet), l'ajoute à MissionGroup et le suit via addPrefab. (assignée dynamiquement)
+Creates a prefab from <name>.prefab.json (path relative to the project), adds it to MissionGroup and tracks it via addPrefab. (dynamically assigned)
 
-- `fileName` (*string*) : nom du prefab (sans extension)
-- **renvoie** : integer id de l'objet prefab
+- `fileName` (*string*) : prefab name (without extension)
+- **returns**: integer prefab object id
 
 #### `flowgraph_modules_prefabModule.unpackPrefabAndDelete(id, obj)`
 
-Éclate le prefab (obj:explode), supprime le prefab puis réinsère ses véhicules dans MissionGroup à leur position courante avant de supprimer le groupe restant. (assignée dynamiquement)
+Explodes the prefab (obj:explode), deletes the prefab then reinserts its vehicles into MissionGroup at their current position before deleting the remaining group. (dynamically assigned)
 
-- `id` (*integer*) : id du prefab
-- `obj` (*userdata*) : objet prefab de la scène
+- `id` (*integer*) : prefab id
+- `obj` (*userdata*) : prefab object in the scene
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:addPrefab(id, moreData)` |  | 152 |
 | `C:afterTrigger()` |  | 20 |
@@ -123,7 +123,7 @@ Crée un prefab depuis <nom>.prefab.json (chemin relatif au projet), l'ajoute à
 | `C:spawnPrefab(fileName)` |  | 139 |
 | `C:unpackPrefabAndDelete(id, obj)` |  | 248 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Sim.` `upcast`
 - `be:` `reloadCollision`
@@ -131,4 +131,4 @@ Crée un prefab depuis <nom>.prefab.json (chemin relatif au projet), l'ajoute à
 - `scenetree.` `findClassObjects`, `findObject`, `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/prefabModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/prefabModule.lua`.*

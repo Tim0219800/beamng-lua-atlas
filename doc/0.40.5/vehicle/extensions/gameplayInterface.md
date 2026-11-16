@@ -1,126 +1,126 @@
 # `gameplayInterface`
 
-*Fichier : `lua/vehicle/extensions/gameplayInterface.lua` · VM : Véhicule · 241 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/extensions/gameplayInterface.lua` · VM: Vehicle · 241 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplayInterface` : `extensions.load (VM véhicule)("gameplayInterface")`, puis la globale `gameplayInterface`
+**Access:** extension `gameplayInterface`: `extensions.load (vehicle VM)("gameplayInterface")`, then the global `gameplayInterface`
 
-Passerelle générique entre le code gameplay (VM GE Lua, via core_vehicleBridge) ou d'autres extensions véhicule et le VM véhicule. Elle charge à l'init tous les modules du dossier gameplayInterfaceModules, leur fait déclarer leurs 'actions' (commandes sans retour direct) et leurs 'lookups' (lectures de données), puis exécute les requêtes numérotées et renvoie le résultat par un callback enregistré. Gère aussi les notifications de changement de valeur d'une clé d'electrics. Un moddeur l'utilise pour piloter un véhicule à distance ou pour ajouter son propre module (fichier gameplayInterfaceModules/<nom>.lua).
+Generic gateway between gameplay code (GE Lua VM, via core_vehicleBridge) or other vehicle extensions and the vehicle VM. At init it loads all modules from the gameplayInterfaceModules folder, has them declare their 'actions' (commands with no direct return) and their 'lookups' (data reads), then runs numbered requests and returns the result through a registered callback. Also handles change notifications of an electrics key value. A modder uses it to drive a vehicle remotely or to add their own module (file gameplayInterfaceModules/<name>.lua).
 
-## Exemple
+## Example
 
 ```lua
--- Dans un module gameplayInterfaceModules/monModule.lua
-M.moduleActions.monAction = function(params) ... end
-M.moduleLookups.maLecture = function(params) return {result = 42} end
-function M.requestRegistration(gi) gi.registerModule('monModule', M.moduleActions, M.moduleLookups) end
--- Appel côté véhicule
+-- In a gameplayInterfaceModules/myModule.lua module
+M.moduleActions.myAction = function(params) ... end
+M.moduleLookups.myLookup = function(params) return {result = 42} end
+function M.requestRegistration(gi) gi.registerModule('myModule', M.moduleActions, M.moduleLookups) end
+-- Call on the vehicle side
 gameplayInterface.getSystemData(0, 1, 'electricsValue', 'rpm')
 ```
 
-## Remarques
+## Notes
 
-- Protocole : chaque requête a un identifiant de callback (callbackId), un id de requête (id) et le nom du système (lookup) ou de l'action. Le résultat est envoyé via triggerCallback(callbackId, id, result). Si une action ne renvoie rien (nil), aucun callback n'est émis.
-- Les paramètres sont passés au module sous forme d'une table `params` (arguments variadiques). Les modules vérifient les types avec checkTableDataTypes et renvoient {failReason = ...} en cas d'erreur.
-- Callbacks : l'id 0 est réservé à GE Lua (extensions.core_vehicleBridge.callbackFromVlua), l'id 1 à debugCallback (print + dump). registerCallback ajoute un callback ({vm = 'gelua'|'vlua', callback = nom ou fonction}) et renvoie son id au demandeur par la requête -1 ({callbackId = ...}). Les notifications de changement de valeur utilisent l'id de requête -2. Pour vm = 'gelua', callback est le nom d'une fonction GE Lua appelée avec (objectId, requestId, données encodées lpack).
-- Les modules sont chargés (si besoin) à la volée à la première requête les concernant (ensureExtensionModuleLoaded) ; au démarrage, ils sont chargés puis déchargés juste après requestRegistration pour enregistrer leurs noms d'actions/lookups.
-- Les noms d'actions et de lookups doivent être uniques entre modules ; un doublon écrit un message 'duplicate action/lookup' et le dernier module enregistré gagne.
-- Notifications de changement de valeur : registerValueChangeNotification surveille electrics.values[cléElectrics] et déclenche le callback dès que la valeur change (valeur nil ignorée). Remise à zéro de la dernière valeur à onReset.
-- Anomalie : getSystemData/executeAction construisent leurs messages d'erreur avec string.format('%d', id) ; si id est nil l'appel lève une erreur Lua au lieu de renvoyer failReason.
-- Anomalie : onExtensionLoaded réinitialise la table callbacks avec les index 0 et 1 ; les callbacks enregistrés avant ce moment seraient perdus.
+- Protocol: each request has a callback identifier (callbackId), a request id (id) and the name of the system (lookup) or of the action. The result is sent via triggerCallback(callbackId, id, result). If an action returns nothing (nil), no callback is emitted.
+- Parameters are passed to the module as a `params` table (variadic arguments). Modules check types with checkTableDataTypes and return {failReason = ...} on error.
+- Callbacks: id 0 is reserved for GE Lua (extensions.core_vehicleBridge.callbackFromVlua), id 1 for debugCallback (print + dump). registerCallback adds a callback ({vm = 'gelua'|'vlua', callback = name or function}) and returns its id to the requester via request -1 ({callbackId = ...}). Value change notifications use request id -2. For vm = 'gelua', callback is the name of a GE Lua function called with (objectId, requestId, lpack-encoded data).
+- Modules are loaded (if needed) on the fly at the first request concerning them (ensureExtensionModuleLoaded); at startup, they are loaded then unloaded right after requestRegistration to register their action/lookup names.
+- Action and lookup names must be unique across modules; a duplicate writes a 'duplicate action/lookup' message and the last registered module wins.
+- Value change notifications: registerValueChangeNotification watches electrics.values[electricsKey] and triggers the callback as soon as the value changes (nil value ignored). The last value is reset at onReset.
+- Anomaly: getSystemData/executeAction build their error messages with string.format('%d', id); if id is nil the call raises a Lua error instead of returning failReason.
+- Anomaly: onExtensionLoaded reinitializes the callbacks table with indices 0 and 1; callbacks registered before that moment would be lost.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplayInterface.debugCallback(requestId, data)` | Callback de débogage (id 1) : affiche les données reçues via print/dump. | 18 |
-| `gameplayInterface.executeAction(callbackId, id, action, ...)` | Exécute une action enregistrée par un module ; renvoie un résultat au callback seulement si l'action retourne une valeur (ex. {failReason}). | 102 |
-| `gameplayInterface.getSystemData(callbackId, id, system, ...)` | Exécute un lookup (lecture) enregistré par un module et envoie le résultat au callback. Si le système est inconnu ou les paramètres invalides, envoie {failReason}. | 70 |
-| `gameplayInterface.onExtensionLoaded()` | Appelé au chargement de l'extension : parcourt lua/vehicle/extensions/gameplayInterfaceModules, charge chaque module, appelle requestRegistration(M) puis le décharge s'il n'était pas déjà chargé ; réinitialise la table des callbacks (id 0 = GE Lua, id 1 = debug). *(interne)* *(hook)* | 195 |
-| `gameplayInterface.onInit()` | Hook d'initialisation du véhicule ; vide. *(interne)* *(hook)* | 192 |
-| `gameplayInterface.onReset()` | Appelé au reset du véhicule : oublie la dernière valeur connue des notifications de changement. *(interne)* *(hook)* | 186 |
-| `gameplayInterface.registerCallback(vm, callback)` | Enregistre un callback de réponse et renvoie immédiatement son identifiant au demandeur (requête -1 avec {callbackId}). | 165 |
-| `gameplayInterface.registerModule(name, actions, lookups)` | Enregistre un module : associe chaque nom d'action et de lookup au nom du module, avec détection des doublons. Appelé par module.requestRegistration(gi). | 171 |
-| `gameplayInterface.registerValueChangeNotification(callbackId, id, electricsKey)` | Demande d'être notifié (via callbackId, id de requête -2, données {[clé] = valeur}) à chaque changement de electrics.values[electricsKey]. Confirme par {registerResult = true}. | 133 |
-| `gameplayInterface.triggerValueChangeNotification(valueChangeNotificationId, data)` | Déclenche manuellement une notification de changement enregistrée (par son index) avec des données quelconques : le callback reçoit {data, valueChangeNotificationId}. | 159 |
-| `gameplayInterface.unregisterValueChangeNotification(callbackId, electricsKey)` | Retire la première notification correspondant à (callbackId, electricsKey) ; arrête la surveillance quand il n'en reste plus. | 141 |
-| `gameplayInterface.updateGFX(dt)` | Appelé chaque frame : exécute la vérification des notifications de changement de valeur si au moins une est enregistrée. *(interne)* | 60 |
+| `gameplayInterface.debugCallback(requestId, data)` | Debug callback (id 1): displays the received data via print/dump. | 18 |
+| `gameplayInterface.executeAction(callbackId, id, action, ...)` | Runs an action registered by a module; returns a result to the callback only if the action returns a value (e.g. {failReason}). | 102 |
+| `gameplayInterface.getSystemData(callbackId, id, system, ...)` | Runs a lookup (read) registered by a module and sends the result to the callback. If the system is unknown or the parameters invalid, sends {failReason}. | 70 |
+| `gameplayInterface.onExtensionLoaded()` | Called when the extension loads: walks through lua/vehicle/extensions/gameplayInterfaceModules, loads each module, calls requestRegistration(M) then unloads it if it was not already loaded; reinitializes the callbacks table (id 0 = GE Lua, id 1 = debug). *(internal)* *(hook)* | 195 |
+| `gameplayInterface.onInit()` | Vehicle initialization hook; empty. *(internal)* *(hook)* | 192 |
+| `gameplayInterface.onReset()` | Called at vehicle reset: forgets the last known value of the change notifications. *(internal)* *(hook)* | 186 |
+| `gameplayInterface.registerCallback(vm, callback)` | Registers a response callback and immediately returns its identifier to the requester (request -1 with {callbackId}). | 165 |
+| `gameplayInterface.registerModule(name, actions, lookups)` | Registers a module: associates each action and lookup name with the module name, with duplicate detection. Called by module.requestRegistration(gi). | 171 |
+| `gameplayInterface.registerValueChangeNotification(callbackId, id, electricsKey)` | Asks to be notified (via callbackId, request id -2, data {[key] = value}) at each change of electrics.values[electricsKey]. Confirms with {registerResult = true}. | 133 |
+| `gameplayInterface.triggerValueChangeNotification(valueChangeNotificationId, data)` | Manually triggers a registered change notification (by its index) with arbitrary data: the callback receives {data, valueChangeNotificationId}. | 159 |
+| `gameplayInterface.unregisterValueChangeNotification(callbackId, electricsKey)` | Removes the first notification matching (callbackId, electricsKey); stops watching when none remain. | 141 |
+| `gameplayInterface.updateGFX(dt)` | Called every frame: runs the value change notification check if at least one is registered. *(internal)* | 60 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplayInterface.debugCallback(requestId, data)`
 
-Callback de débogage (id 1) : affiche les données reçues via print/dump.
+Debug callback (id 1): displays the received data via print/dump.
 
-- `requestId` (*integer*) : Identifiant de requête.
-- `data` (*any*) : Données reçues.
+- `requestId` (*integer*) : Request identifier.
+- `data` (*any*) : Received data.
 
 #### `gameplayInterface.executeAction(callbackId, id, action, ...)`
 
-Exécute une action enregistrée par un module ; renvoie un résultat au callback seulement si l'action retourne une valeur (ex. {failReason}).
+Runs an action registered by a module; returns a result to the callback only if the action returns a value (e.g. {failReason}).
 
-- `callbackId` (*integer*) : Callback qui recevra le résultat.
-- `id` (*integer*) : Identifiant de requête.
-- `action` (*string*) : Nom de l'action (ex. 'setIgnitionLevel').
-- `...` (*any*) : Paramètres passés à l'action sous forme de table.
+- `callbackId` (*integer*) : Callback that will receive the result.
+- `id` (*integer*) : Request identifier.
+- `action` (*string*) : Action name (e.g. 'setIgnitionLevel').
+- `...` (*any*) : Parameters passed to the action as a table.
 
 #### `gameplayInterface.getSystemData(callbackId, id, system, ...)`
 
-Exécute un lookup (lecture) enregistré par un module et envoie le résultat au callback. Si le système est inconnu ou les paramètres invalides, envoie {failReason}.
+Runs a lookup (read) registered by a module and sends the result to the callback. If the system is unknown or the parameters invalid, sends {failReason}.
 
-- `callbackId` (*integer*) : Callback qui recevra le résultat.
-- `id` (*integer*) : Identifiant de requête (renvoyé tel quel).
-- `system` (*string*) : Nom du lookup (ex. 'electricsValue').
-- `...` (*any*) : Paramètres passés au lookup sous forme de table.
+- `callbackId` (*integer*) : Callback that will receive the result.
+- `id` (*integer*) : Request identifier (returned as is).
+- `system` (*string*) : Lookup name (e.g. 'electricsValue').
+- `...` (*any*) : Parameters passed to the lookup as a table.
 
 #### `gameplayInterface.registerCallback(vm, callback)`
 
-Enregistre un callback de réponse et renvoie immédiatement son identifiant au demandeur (requête -1 avec {callbackId}).
+Registers a response callback and immediately returns its identifier to the requester (request -1 with {callbackId}).
 
-- `vm` (*string*) : 'gelua' (callback = nom de fonction GE Lua sous forme de texte) ou 'vlua' (callback = fonction locale).
-- `callback` (*string|function*) : Nom de fonction GE ou fonction(requestId, data) selon vm.
+- `vm` (*string*) : 'gelua' (callback = GE Lua function name as text) or 'vlua' (callback = local function).
+- `callback` (*string|function*) : GE function name or function(requestId, data) depending on vm.
 
 #### `gameplayInterface.registerModule(name, actions, lookups)`
 
-Enregistre un module : associe chaque nom d'action et de lookup au nom du module, avec détection des doublons. Appelé par module.requestRegistration(gi).
+Registers a module: associates each action and lookup name with the module name, with duplicate detection. Called by module.requestRegistration(gi).
 
-- `name` (*string*) : Nom du module (nom du fichier sans extension).
-- `actions` (*table<string, function>*) : Table moduleActions du module.
-- `lookups` (*table<string, function>*) : Table moduleLookups du module.
+- `name` (*string*) : Module name (file name without extension).
+- `actions` (*table<string, function>*) : moduleActions table of the module.
+- `lookups` (*table<string, function>*) : moduleLookups table of the module.
 
 #### `gameplayInterface.registerValueChangeNotification(callbackId, id, electricsKey)`
 
-Demande d'être notifié (via callbackId, id de requête -2, données {[clé] = valeur}) à chaque changement de electrics.values[electricsKey]. Confirme par {registerResult = true}.
+Asks to be notified (via callbackId, request id -2, data {[key] = value}) at each change of electrics.values[electricsKey]. Confirms with {registerResult = true}.
 
-- `callbackId` (*integer*) : Callback à appeler.
-- `id` (*integer*) : Identifiant de la requête d'inscription.
-- `electricsKey` (*string*) : Clé de electrics.values à surveiller.
+- `callbackId` (*integer*) : Callback to call.
+- `id` (*integer*) : Identifier of the registration request.
+- `electricsKey` (*string*) : Key of electrics.values to watch.
 
 #### `gameplayInterface.triggerValueChangeNotification(valueChangeNotificationId, data)`
 
-Déclenche manuellement une notification de changement enregistrée (par son index) avec des données quelconques : le callback reçoit {data, valueChangeNotificationId}.
+Manually triggers a registered change notification (by its index) with arbitrary data: the callback receives {data, valueChangeNotificationId}.
 
-- `valueChangeNotificationId` (*integer*) : Index dans la liste des notifications enregistrées.
-- `data` (*any*) : Données à transmettre.
+- `valueChangeNotificationId` (*integer*) : Index in the list of registered notifications.
+- `data` (*any*) : Data to pass on.
 
 #### `gameplayInterface.unregisterValueChangeNotification(callbackId, electricsKey)`
 
-Retire la première notification correspondant à (callbackId, electricsKey) ; arrête la surveillance quand il n'en reste plus.
+Removes the first notification matching (callbackId, electricsKey); stops watching when none remain.
 
-- `callbackId` (*integer*) : Callback inscrit.
-- `electricsKey` (*string*) : Clé surveillée.
+- `callbackId` (*integer*) : Registered callback.
+- `electricsKey` (*string*) : Watched key.
 
 #### `gameplayInterface.updateGFX(dt)`
 
-Appelé chaque frame : exécute la vérification des notifications de changement de valeur si au moins une est enregistrée.
+Called every frame: runs the value change notification check if at least one is registered.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 - `obj:` `queueGameEngineLua`
 
-**Charge les extensions :** `gameplayInterfaceModules/`
+**Loads extensions:** `gameplayInterfaceModules/`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/extensions/gameplayInterface.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/extensions/gameplayInterface.lua`.*

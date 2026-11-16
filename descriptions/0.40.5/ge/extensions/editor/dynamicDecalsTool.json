@@ -1,151 +1,387 @@
 {
   "path": "lua/ge/extensions/editor/dynamicDecalsTool.lua",
-  "module": "Fenêtre principale de l'outil Dynamic Decals de l'éditeur (peinture de décalcomanies sur le véhicule). Charge ses 33 sous-modules via M.dependencies (api editor_api_dynamicDecals, widgets, layerStack, inspector, brushes, gizmo, vehicleColorPalette, loadSave, layerTypes_*, etc.) et sert de hub : les sous-modules s'enregistrent auprès de lui par setup(tool) avec registerSection, registerToolbarToolItem, registerToolbarActionItem, registerEditorOnUpdateFn et registerOnEditorGuiFn. Expose aussi l'interface publique appelée par les actions clavier/souris (applyDecal, undo/redo, changeDecalSize/Rotation, verrouillage profondeur/normale, mode pinceau, calque chemin).",
+  "module": "Main window of the editor's Dynamic Decals tool (painting decals on the vehicle). Loads its 33 submodules via M.dependencies (editor_api_dynamicDecals API, widgets, layerStack, inspector, brushes, gizmo, vehicleColorPalette, loadSave, layerTypes_*, etc.) and acts as a hub: submodules register with it through setup(tool) using registerSection, registerToolbarToolItem, registerToolbarActionItem, registerEditorOnUpdateFn and registerOnEditorGuiFn. Also exposes the public interface called by keyboard/mouse actions (applyDecal, undo/redo, changeDecalSize/Rotation, depth/normal locking, brush mode, path layer).",
   "notes": [
-    "Les hooks onEditorGui, onEditorInitialized, onEditorActivated, etc. sont commentés dans le code (« DISABLED, SPAMS LOG, DEPENDENCIES NOT FOUND ») : ils ne sont pas exportés par ce module.",
-    "applyDecal(value) attend 1 à l'appui et autre valeur au relâchement. Priorité : édition de masque (currentMaskEditingLayerUid), calque chemin actif, mode brushStroke, sinon décalque simple (ajoute aussi la couleur à l'historique de couleurs).",
-    "Les sections ayant un order >= 1000 sont rangées dans la section « Advanced ».",
-    "M.toolModes = {none = 0, decal = 1, brushStroke = 2, path = 3} ; toolMode vaut decal au départ. M.version = {1,1,0}. M.directoryPath = \"/art/dynamicDecals/\".",
-    "changeDecalSize/Rotation multiplient les pas des préférences dynamicDecalsTool.decalProperties.scaleStep et rotationStep (degrés convertis en radians) par mod."
+    "The hooks onEditorGui, onEditorInitialized, onEditorActivated, etc. are commented out in the code (\"DISABLED, SPAMS LOG, DEPENDENCIES NOT FOUND\"): they are not exported by this module.",
+    "applyDecal(value) expects 1 on press and another value on release. Priority: mask editing (currentMaskEditingLayerUid), active path layer, brushStroke mode, otherwise a simple decal (also adds the color to the color history).",
+    "Sections with an order >= 1000 are placed in the \"Advanced\" section.",
+    "M.toolModes = {none = 0, decal = 1, brushStroke = 2, path = 3}; toolMode is decal initially. M.version = {1,1,0}. M.directoryPath = \"/art/dynamicDecals/\".",
+    "changeDecalSize/Rotation multiply the steps of the preferences dynamicDecalsTool.decalProperties.scaleStep and rotationStep (degrees converted to radians) by mod."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "Liste des extensions chargées avant ce module."},
-    "version": {"type": "integer[]", "desc": "Version {1,1,0} de l'outil."},
-    "toolModes": {"type": "table<string, integer>", "desc": "none=0, decal=1, brushStroke=2, path=3."},
-    "toolMode": {"type": "integer", "desc": "Mode courant (decal par défaut)."},
-    "doApiUpdate": {"type": "boolean", "desc": "Si true (défaut), l'outil appelle la mise à jour de l'API chaque frame ; modifiable par une case de debug."},
-    "directoryPath": {"type": "string", "desc": "Dossier des données : \"/art/dynamicDecals/\"."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "List of extensions loaded before this module."
+    },
+    "version": {
+      "type": "integer[]",
+      "desc": "Tool version {1,1,0}."
+    },
+    "toolModes": {
+      "type": "table<string, integer>",
+      "desc": "none=0, decal=1, brushStroke=2, path=3."
+    },
+    "toolMode": {
+      "type": "integer",
+      "desc": "Current mode (decal by default)."
+    },
+    "doApiUpdate": {
+      "type": "boolean",
+      "desc": "If true (default), the tool calls the API update every frame; can be changed via a debug checkbox."
+    },
+    "directoryPath": {
+      "type": "string",
+      "desc": "Data folder: \"/art/dynamicDecals/\"."
+    }
   },
   "functions": {
     "applyDecal": {
-      "desc": "Interface publique du pinceau : pose un décalque, un point de chemin, un trait de pinceau ou un décalque de masque selon le mode courant.",
-      "params": {"value": {"type": "integer", "desc": "1 à l'appui, autre (0) au relâchement"}}
+      "desc": "Public brush interface: places a decal, a path point, a brush stroke or a mask decal depending on the current mode.",
+      "params": {
+        "value": {
+          "type": "integer",
+          "desc": "1 on press, other (0) on release"
+        }
+      }
     },
     "changeDecalSize": {
-      "desc": "Agrandit ou réduit le décalque courant.",
-      "params": {"increase": {"type": "boolean", "desc": "true pour agrandir"}, "mod": {"type": "number|nil", "desc": "Multiplicateur du pas (défaut 1)"}}
+      "desc": "Enlarges or shrinks the current decal.",
+      "params": {
+        "increase": {
+          "type": "boolean",
+          "desc": "true to enlarge"
+        },
+        "mod": {
+          "type": "number|nil",
+          "desc": "Step multiplier (default 1)"
+        }
+      }
     },
     "changeDecalRotation": {
-      "desc": "Fait tourner le décalque courant.",
-      "params": {"clockwise": {"type": "boolean", "desc": "Sens horaire"}, "mod": {"type": "number|nil", "desc": "Multiplicateur du pas (défaut 1)"}}
+      "desc": "Rotates the current decal.",
+      "params": {
+        "clockwise": {
+          "type": "boolean",
+          "desc": "Clockwise"
+        },
+        "mod": {
+          "type": "number|nil",
+          "desc": "Step multiplier (default 1)"
+        }
+      }
     },
     "undo": {
-      "desc": "Annule la dernière action de l'API dynamicDecals, puis rafraîchit les calques sélectionnés dans editor.selection.dynamicDecalLayer.",
+      "desc": "Undoes the last action of the dynamicDecals API, then refreshes the layers selected in editor.selection.dynamicDecalLayer.",
       "params": {}
     },
     "redo": {
-      "desc": "Rétablit l'action annulée et rafraîchit les calques sélectionnés.",
+      "desc": "Redoes the undone action and refreshes the selected layers.",
       "params": {}
     },
     "dynamicDecals_onLayerUpdated": {
-      "desc": "Hook de l'API : quand un calque est modifié, recopie ses données dans la sélection de l'inspecteur s'il y est affiché.",
-      "params": {"layerUid": {"type": "string|integer", "desc": "Identifiant du calque modifié (type déduit du code)"}},
+      "desc": "API hook: when a layer is modified, copies its data into the inspector selection if it is displayed there.",
+      "params": {
+        "layerUid": {
+          "type": "string|integer",
+          "desc": "Identifier of the modified layer (type inferred from code)"
+        }
+      },
       "internal": true
     },
     "dynamicDecals_moveLayer": {
-      "desc": "Hook de l'API appelé quand un calque est déplacé : rafraîchit le calque parent de destination s'il est sélectionné.",
+      "desc": "API hook called when a layer is moved: refreshes the destination parent layer if it is selected.",
       "params": {
-        "from": {"type": "integer", "desc": "Position d'origine"},
-        "fromParentUid": {"type": "any", "desc": "Parent d'origine"},
-        "to": {"type": "integer", "desc": "Position de destination"},
-        "toParentUid": {"type": "any", "desc": "Parent de destination"}
+        "from": {
+          "type": "integer",
+          "desc": "Original position"
+        },
+        "fromParentUid": {
+          "type": "any",
+          "desc": "Original parent"
+        },
+        "to": {
+          "type": "integer",
+          "desc": "Destination position"
+        },
+        "toParentUid": {
+          "type": "any",
+          "desc": "Destination parent"
+        }
       },
       "internal": true
     },
     "lockDepth": {
-      "desc": "Verrouille ou libère la profondeur de projection du décalque.",
-      "params": {"value": {"type": "integer", "desc": "1 pour verrouiller"}}
+      "desc": "Locks or releases the decal projection depth.",
+      "params": {
+        "value": {
+          "type": "integer",
+          "desc": "1 to lock"
+        }
+      }
     },
     "lockSurfaceNormal": {
-      "desc": "Verrouille ou libère la normale de surface utilisée pour la projection.",
-      "params": {"value": {"type": "integer", "desc": "1 pour verrouiller"}}
+      "desc": "Locks or releases the surface normal used for projection.",
+      "params": {
+        "value": {
+          "type": "integer",
+          "desc": "1 to lock"
+        }
+      }
     },
     "enableBrushStroke": {
-      "desc": "Active/désactive le trait de pinceau ; à la désactivation, ajoute un calque de trait (api.addBrushStrokeLayer).",
-      "params": {"value": {"type": "integer", "desc": "1 pour activer"}}
+      "desc": "Enables/disables the brush stroke; on disabling, adds a stroke layer (api.addBrushStrokeLayer).",
+      "params": {
+        "value": {
+          "type": "integer",
+          "desc": "1 to enable"
+        }
+      }
     },
     "enablePathLayer": {
-      "desc": "Active/désactive le mode calque chemin.",
-      "params": {"value": {"type": "integer", "desc": "1 pour activer"}}
-    },
-    "finishPathLayer": {"desc": "Termine le calque chemin en cours.", "params": {}},
-    "removeLastPathLayerPoint": {"desc": "Supprime le dernier point du chemin en cours.", "params": {}},
-    "registerSection": {
-      "desc": "Enregistre une section de l'interface (et éventuellement une fenêtre dédiée). Les sections sont triées par order ; celles >= 1000 vont dans « Advanced ».",
+      "desc": "Enables/disables the path layer mode.",
       "params": {
-        "name": {"type": "string", "desc": "Nom de la section"},
-        "guiFn": {"type": "function", "desc": "Fonction de dessin, appelée avec un guiId (dans la section comme dans la fenêtre)"},
-        "order": {"type": "number|nil", "desc": "Position (plus petit = plus haut), défaut 1000"},
-        "defaultOpen": {"type": "boolean|nil", "desc": "Ouverte par défaut"},
-        "window": {"type": "table|nil", "desc": "{windowSize = ImVec2} pour créer une fenêtre dédiée avec bouton d'ouverture"},
-        "buttons": {"type": "table|nil", "desc": "Boutons d'en-tête {icon, tooltip, fn}"}
+        "value": {
+          "type": "integer",
+          "desc": "1 to enable"
+        }
+      }
+    },
+    "finishPathLayer": {
+      "desc": "Finishes the current path layer.",
+      "params": {}
+    },
+    "removeLastPathLayerPoint": {
+      "desc": "Removes the last point of the current path.",
+      "params": {}
+    },
+    "registerSection": {
+      "desc": "Registers a UI section (and optionally a dedicated window). Sections are sorted by order; those >= 1000 go into \"Advanced\".",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Section name"
+        },
+        "guiFn": {
+          "type": "function",
+          "desc": "Draw function, called with a guiId (both in the section and in the window)"
+        },
+        "order": {
+          "type": "number|nil",
+          "desc": "Position (smaller = higher), default 1000"
+        },
+        "defaultOpen": {
+          "type": "boolean|nil",
+          "desc": "Open by default"
+        },
+        "window": {
+          "type": "table|nil",
+          "desc": "{windowSize = ImVec2} to create a dedicated window with an open button"
+        },
+        "buttons": {
+          "type": "table|nil",
+          "desc": "Header buttons {icon, tooltip, fn}"
+        }
       }
     },
     "setSectionOpenState": {
-      "desc": "Ouvre ou ferme une section par son nom (ouvrir une section avancée ouvre aussi « Advanced »).",
+      "desc": "Opens or closes a section by its name (opening an advanced section also opens \"Advanced\").",
       "params": {
-        "name": {"type": "string", "desc": "Nom de la section"},
-        "newState": {"type": "boolean", "desc": "Ouvert ou fermé"},
-        "setScroll": {"type": "boolean|nil", "desc": "Fait défiler jusqu'à la section"}
+        "name": {
+          "type": "string",
+          "desc": "Section name"
+        },
+        "newState": {
+          "type": "boolean",
+          "desc": "Open or closed"
+        },
+        "setScroll": {
+          "type": "boolean|nil",
+          "desc": "Scrolls to the section"
+        }
       }
     },
     "getSectionOpenState": {
-      "desc": "État ouvert d'une section (ou de « Advanced »).",
-      "params": {"name": {"type": "string", "desc": "Nom de la section"}},
-      "returns": [{"type": "boolean|nil", "desc": "nil si la section est inconnue"}]
+      "desc": "Open state of a section (or of \"Advanced\").",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Section name"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean|nil",
+          "desc": "nil if the section is unknown"
+        }
+      ]
     },
     "getSectionWindowName": {
-      "desc": "Nom de la fenêtre imgui d'une section : « Dynamic Decals Tool - <section.windowName> ».",
-      "params": {"section": {"type": "table", "desc": "Section avec windowName"}},
-      "returns": [{"type": "string", "desc": ""}]
+      "desc": "ImGui window name of a section: \"Dynamic Decals Tool - <section.windowName>\".",
+      "params": {
+        "section": {
+          "type": "table",
+          "desc": "Section with windowName"
+        }
+      },
+      "returns": [
+        {
+          "type": "string",
+          "desc": ""
+        }
+      ]
     },
     "registerToolbarToolItem": {
-      "desc": "Ajoute un élément à la barre d'outils (partie outils), trié par order.",
-      "params": {"name": {"type": "string", "desc": ""}, "guiFn": {"type": "function", "desc": "Fonction de dessin"}, "order": {"type": "number|nil", "desc": "Défaut 1000"}}
+      "desc": "Adds an item to the toolbar (tools part), sorted by order.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": ""
+        },
+        "guiFn": {
+          "type": "function",
+          "desc": "Draw function"
+        },
+        "order": {
+          "type": "number|nil",
+          "desc": "Default 1000"
+        }
+      }
     },
     "registerToolbarActionItem": {
-      "desc": "Ajoute un élément à la barre d'outils (partie actions), trié par order.",
-      "params": {"name": {"type": "string", "desc": ""}, "guiFn": {"type": "function", "desc": "Fonction de dessin"}, "order": {"type": "number|nil", "desc": "Défaut 1000"}}
+      "desc": "Adds an item to the toolbar (actions part), sorted by order.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": ""
+        },
+        "guiFn": {
+          "type": "function",
+          "desc": "Draw function"
+        },
+        "order": {
+          "type": "number|nil",
+          "desc": "Default 1000"
+        }
+      }
     },
     "registerEditorOnUpdateFn": {
-      "desc": "Enregistre une fonction de mise à jour appelée chaque frame par l'outil (clé = name).",
-      "params": {"name": {"type": "string", "desc": "Clé unique"}, "onUpdateFn": {"type": "function", "desc": "Appelée avec (dtReal, dtSim, dtRaw)"}}
+      "desc": "Registers an update function called every frame by the tool (key = name).",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Unique key"
+        },
+        "onUpdateFn": {
+          "type": "function",
+          "desc": "Called with (dtReal, dtSim, dtRaw)"
+        }
+      }
     },
     "unregisterEditorOnUpdateFn": {
-      "desc": "Retire une fonction de mise à jour enregistrée.",
-      "params": {"name": {"type": "string", "desc": "Clé"}}
+      "desc": "Removes a registered update function.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Key"
+        }
+      }
     },
     "registerOnEditorGuiFn": {
-      "desc": "Enregistre une fonction de dessin supplémentaire exécutée avec l'interface de l'éditeur.",
-      "params": {"name": {"type": "string", "desc": "Clé unique"}, "guiFn": {"type": "function", "desc": "Fonction de dessin"}}
+      "desc": "Registers an additional draw function executed with the editor UI.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Unique key"
+        },
+        "guiFn": {
+          "type": "function",
+          "desc": "Draw function"
+        }
+      }
     },
     "unregisterOnEditorGuiFn": {
-      "desc": "Retire une fonction de dessin enregistrée.",
-      "params": {"name": {"type": "string", "desc": "Clé"}}
+      "desc": "Removes a registered draw function.",
+      "params": {
+        "name": {
+          "type": "string",
+          "desc": "Key"
+        }
+      }
     },
     "onSerialize": {
-      "desc": "Hook de sérialisation du rechargement Lua : renvoie une table vide.",
+      "desc": "Lua reload serialization hook: returns an empty table.",
       "params": {},
-      "returns": [{"type": "table", "desc": "{}"}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook de désérialisation : ne fait rien.",
-      "params": {"data": {"type": "table", "desc": "Données"}},
+      "desc": "Deserialization hook: does nothing.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Data"
+        }
+      },
       "internal": true
     },
     "onVehicleSwitched": {
-      "desc": "Hook appelé au changement de véhicule : met à jour les matériaux (settings.updateMaterials).",
+      "desc": "Hook called on vehicle switch: updates the materials (settings.updateMaterials).",
       "params": {},
       "internal": true
     },
-    "getIconSize": {"desc": "Taille d'icône (entier, 20 par défaut).", "params": {}, "returns": [{"type": "number", "desc": ""}]},
-    "getIconSizeVec2": {"desc": "Taille d'icône sous forme d'ImVec2.", "params": {}, "returns": [{"type": "ImVec2", "desc": ""}]},
-    "getMainScrollY": {"desc": "Défilement vertical courant de la fenêtre principale.", "params": {}, "returns": [{"type": "number", "desc": ""}]},
-    "setCurrentMaskEditingLayerUid": {
-      "desc": "Définit le calque dont le masque est en cours d'édition (nil pour quitter ce mode).",
-      "params": {"uid": {"type": "any|nil", "desc": "Uid du calque"}}
+    "getIconSize": {
+      "desc": "Icon size (integer, 20 by default).",
+      "params": {},
+      "returns": [
+        {
+          "type": "number",
+          "desc": ""
+        }
+      ]
     },
-    "getCurrentMaskEditingLayerUid": {"desc": "Uid du calque dont le masque est édité, ou nil.", "params": {}, "returns": [{"type": "any|nil", "desc": ""}]}
+    "getIconSizeVec2": {
+      "desc": "Icon size as an ImVec2.",
+      "params": {},
+      "returns": [
+        {
+          "type": "ImVec2",
+          "desc": ""
+        }
+      ]
+    },
+    "getMainScrollY": {
+      "desc": "Current vertical scroll of the main window.",
+      "params": {},
+      "returns": [
+        {
+          "type": "number",
+          "desc": ""
+        }
+      ]
+    },
+    "setCurrentMaskEditingLayerUid": {
+      "desc": "Sets the layer whose mask is being edited (nil to leave this mode).",
+      "params": {
+        "uid": {
+          "type": "any|nil",
+          "desc": "Layer uid"
+        }
+      }
+    },
+    "getCurrentMaskEditingLayerUid": {
+      "desc": "Uid of the layer whose mask is being edited, or nil.",
+      "params": {},
+      "returns": [
+        {
+          "type": "any|nil",
+          "desc": ""
+        }
+      ]
+    }
   }
 }

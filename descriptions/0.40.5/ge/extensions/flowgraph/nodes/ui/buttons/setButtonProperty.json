@@ -1,18 +1,18 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/buttons/setButtonProperty.lua",
-  "module": "Nœud flowgraph « Set Button Property » (catégorie repeat_instant) : modifie les propriétés d'un bouton existant. Entrées : « buttonId », « label », « active », « order », « style ». Seules les propriétés dont le pin a une valeur non nil sont appliquées (module button:set).",
+  "module": "Flowgraph node \"Set Button Property\" (category repeat_instant): modifies the properties of an existing button. Inputs: \"buttonId\", \"label\", \"active\", \"order\", \"style\". Only the properties whose pin has a non-nil value are applied (module button:set).",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "postInit": {
-          "desc": "Définit le modèle de valeur du pin style.",
+          "desc": "Defines the value template of the style pin.",
           "internal": true
         },
         "work": {
-          "desc": "Si le bouton existe, applique active/order/style/label dont les pins ne sont pas nil.",
+          "desc": "If the button exists, applies active/order/style/label whose pins are not nil.",
           "internal": true
         }
       }

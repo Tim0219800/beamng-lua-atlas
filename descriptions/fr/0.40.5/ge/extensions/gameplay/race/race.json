@@ -1,0 +1,306 @@
+{
+  "path": "lua/ge/extensions/gameplay/race/race.lua",
+  "module": "Classe du moteur de course : fait courir un ou plusieurs véhicules sur un chemin de course (gameplay/race/path). À chaque image elle suit les coins des roues de chaque véhicule, détecte l'entrée dans les segments, le franchissement des pathnodes, les tours, l'arrivée, les départs lancés, les annonces de copilote (pacenotes) et les récupérations (recovery), calcule les temps, le classement et l'état « sur la route ». Elle pilote aussi les véhicules IA le long du chemin et alimente les applications Hotlapping et LapTimes. Le module renvoie une fabrique : require('/lua/ge/extensions/gameplay/race/race')(). Elle sert aux missions de course, au mode rallye et au flowgraph.",
+  "usage": "local race = require('/lua/ge/extensions/gameplay/race/race')()\nrace:setPathFile('/levels/west_coast_usa/race/test.race.json')\nrace.lapCount = 3\nrace:setVehicleIds({be:getPlayerVehicleID(0)})\nrace:startRace()\n-- puis appeler race:onUpdate(dtSim) à chaque image",
+  "notes": [
+    "Options de la table race (à régler avant startRace) : lapCount (1), useHotlappingApp (false), useLapTimesApp (true), useDebugDraw (false), useWaypointAudio (true), alwaysAdvanceTime (false), autoAiMode (démarre l'IA des véhicules non pilotés), recoverAffectsTotalTime, logRaceInfo (écrit raceRecord/<date>/ à l'arrivée), saveFileSuffix, suspended.",
+    "États par véhicule (self.states[id]) : active, complete, currentLap (0 pour le premier tour), currentSegments, currentTimes, historicTimes, bestLapTime, nextPathnodes, overNextPathnodes, placement, startTime, endTime, events, eventLog, isOnRoad, aiPathIdx, recoveriesUsed, timeDifferenceToFirst (en millisecondes).",
+    "Événements (state.events, vidés à chaque image si le temps est > 0) : raceStarted, rollingStarted, pathnodeReached (+ pathnodeReachedId), lapComplete, lapSkipped, raceComplete, raceAborted, recovered, recoveredTo, recoveryReached, pacenoteReached (+ pacenoteIdReached).",
+    "Hooks émis par digestEvents / updateVehicle : onRaceStarted({race, time}), onRacePathnodeReached({race, time, pathnode}), onRaceComplete({race, time}), onRaceAborted({race, time}). Pour un pathnode non visible, onRacePathnodeReached est émis sans champ time.",
+    "Bug probable : onUpdate et findNextPathnodes testent self.path.branching (toujours nil) au lieu de self.path.config.branching ; getTrackedData tourne donc aussi pour les chemins branchés, où linearCPIndex est nil.",
+    "Bug probable : handleRecover utilise #self.recoveryStates (nombre d'entrées indexées par ids de véhicules, souvent 0) au lieu de #self.recoveryStates[id] pour events.recovered.",
+    "updateVehicle contient un print(string.format('T: ...')) de débogage à chaque pathnode visible atteint.",
+    "timeDifferenceToFirst est stocké en millisecondes alors que formatTimeDifference le traite comme des secondes (mm:ss.ms) : l'écart affiché est faux d'un facteur 1000.",
+    "isDebug = true dans le fichier : detectOffTrack dumpe et dessine ses données, mais son appel est commenté (« temporarily disabled until errors get resolved »).",
+    "state.reverse = self.path.config.reverse : champ jamais défini dans autoConfig (nil).",
+    "Les distances de getDistOnNav sont en mètres ; les temps en secondes de simulation.",
+    "Les fonctions in* (inDrawEventlog, inDrawTimes…) sont des utilitaires ImGui de debug ; leur appel est commenté dans onUpdate."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Course en cours. Champs : path, vehIds, states (par id de véhicule), recoveryStates (instantanés de récupération par id), time (temps de course en s), lapCount, finishCount, started, suspended, checkpointTimes ('<tour>_<segment>' -> temps), aiPath, aiDetailedPath, sortPlacements (comparateur de classement : tour décroissant, puis index de point de contrôle décroissant, puis distance croissante au prochain point).",
+      "functions": {
+        "init": {
+          "desc": "Constructeur : valeurs par défaut et comparateur de classement.",
+          "params": {},
+          "returns": [],
+          "internal": true
+        },
+        "setPathFile": {
+          "desc": "Charge un chemin de course depuis un fichier JSON (désérialisé dans un nouveau chemin) puis l'applique avec setPath. Logue une erreur si le fichier est introuvable.",
+          "params": {"file": {"type": "string|nil", "desc": "Chemin du fichier .race.json / .path.json."}},
+          "returns": [],
+          "internal": false
+        },
+        "calcAIPath": {
+          "desc": "Calcule le chemin IA (aiPath, aiDetailedPath) à partir du chemin de course.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "setPath": {
+          "desc": "Définit le chemin de course, lance autoConfig et calcule le chemin IA.",
+          "params": {"path": {"type": "table", "desc": "Chemin (gameplay/race/path)."}},
+          "returns": [],
+          "internal": false
+        },
+        "setVehicleIds": {
+          "desc": "Définit la liste des véhicules participants et réinitialise leurs états.",
+          "params": {"ids": {"type": "integer[]", "desc": "Ids de véhicules."}},
+          "returns": [],
+          "internal": false
+        },
+        "getDistOnNav": {
+          "desc": "Calcule, pour une portion hors route, la distance qu'il aurait fallu parcourir le long du chemin de navigation et la distance coupée à vol d'oiseau.",
+          "params": {
+            "pointA": {"type": "vec3", "desc": "Point de sortie de route."},
+            "pointB": {"type": "vec3", "desc": "Point de retour sur la route."},
+            "inNextAiPathIdx": {"type": "integer", "desc": "Index du point suivant du chemin IA à la sortie."},
+            "inPrevAiPathIdx": {"type": "integer", "desc": "Index du point précédent à la sortie."},
+            "outNextAiPathIdx": {"type": "integer", "desc": "Index du point suivant au retour."},
+            "outPrevAiPathIdx": {"type": "integer", "desc": "Index du point précédent au retour."}
+          },
+          "returns": [
+            {"type": "number", "desc": "Distance le long du chemin (m)."},
+            {"type": "number", "desc": "Distance coupée entre A et B (m)."}
+          ],
+          "internal": false
+        },
+        "debugDraw": {
+          "desc": "Dessine des sphères pour les données hors piste d'un véhicule (chemin hors piste, points de sortie, de retour et de coupe maximale).",
+          "params": {"data": {"type": "table", "desc": "État du véhicule contenant offTrackData."}},
+          "returns": [],
+          "internal": true
+        },
+        "detectOffTrack": {
+          "desc": "Détecte les sorties et retours de piste d'un véhicule, enregistre sa trajectoire hors piste et calcule la profondeur de coupe et la distance parcourue hors piste (données de debug). Son appel est actuellement désactivé dans getTrackedData.",
+          "params": {
+            "data": {"type": "table", "desc": "État du véhicule."},
+            "dt": {"type": "number", "desc": "Delta temps (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "getTrackedData": {
+          "desc": "Met à jour pour chaque véhicule en course la position de l'avant, l'index sur le chemin IA, l'état isOnRoad, puis calcule le classement (placement), en comptant les véhicules déjà arrivés.",
+          "params": {"dt": {"type": "number", "desc": "Delta temps (s)."}},
+          "returns": [],
+          "internal": true
+        },
+        "onUpdate": {
+          "desc": "À appeler à chaque image : pour chaque véhicule, vide les événements, gère les récupérations demandées, met à jour la position sur le parcours (updateVehicle), le dessin de debug et digère les événements ; puis met à jour le classement, l'application LapTimes et avance le temps de course. Ne fait rien tant que la course n'est pas démarrée.",
+          "params": {"dt": {"type": "number", "desc": "Delta temps simulé (s)."}},
+          "returns": [],
+          "internal": false
+        },
+        "doSuspend": {
+          "desc": "Suspend ou reprend la course (le temps et le suivi s'arrêtent) et prévient les applications Hotlapping et LapTimes.",
+          "params": {"sus": {"type": "boolean", "desc": "true pour suspendre."}},
+          "returns": [],
+          "internal": false
+        },
+        "skipLap": {
+          "desc": "Invalide le tour en cours d'un véhicule (circuits fermés uniquement). Sans keepLapProgress, saute aussi la progression : le prochain pathnode devient la ligne d'arrivée du tour.",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "keepLapProgress": {"type": "boolean|nil", "desc": "true pour garder la progression du tour."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "changeRaceVehicle": {
+          "desc": "Remplace un véhicule de course par un autre (transfère états et récupérations, recalcule les coins des roues).",
+          "params": {
+            "lastId": {"type": "integer", "desc": "Ancien véhicule."},
+            "newId": {"type": "integer", "desc": "Nouveau véhicule."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "startAiVehicle": {
+          "desc": "Lance l'IA d'un véhicule sur le chemin de course (ai.driveUsingPath) : boucle jusqu'à un tour de plus pour un circuit fermé, ou chemin prolongé de 250 m après l'arrivée sinon. Sans agressivité donnée, l'estime d'après la classe de performance du véhicule (S 1, A 0.9, B 0.8, C 0.7, D 0.6, autre 0.85).",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "aggression": {"type": "number|nil", "desc": "Agressivité de 0 à 1."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "stopAiVehicle": {
+          "desc": "Arrête l'IA d'un véhicule (mode 'stop').",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [],
+          "internal": false
+        },
+        "startRace": {
+          "desc": "Démarre la course : charge si besoin core_hotlapping / core_lapTimes, remet le temps à 0, crée l'état de chaque véhicule (segments de départ, coins des roues, IA si autoAiMode) et calcule les prochains pathnodes. L'événement raceStarted est levé pour chaque véhicule.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "stopRace": {
+          "desc": "Arrête la course : prévient Hotlapping et LapTimes et arrête les véhicules IA.",
+          "params": {},
+          "returns": [],
+          "internal": false
+        },
+        "getVehiclePosition": {
+          "desc": "Position d'un véhicule : objet de scène, sinon map.objects ; renvoie vec3() avec un log d'erreur si introuvable.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [{"type": "vec3", "desc": "Position."}],
+          "internal": false
+        },
+        "abortRace": {
+          "desc": "Abandonne la course d'un véhicule (ignoré s'il a fini ou n'est pas actif) : événement raceAborted, IA arrêtée.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [],
+          "internal": false
+        },
+        "createRecoveryPoint": {
+          "desc": "Enregistre un instantané de l'état du véhicule avec le temps de course et la position de récupération associée.",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "recovery": {"type": "table", "desc": "startPosition de récupération."}
+          },
+          "returns": [],
+          "internal": false
+        },
+        "hasRecoveryPosition": {
+          "desc": "Indique s'il existe au moins un point de récupération pour ce véhicule.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [{"type": "boolean", "desc": "true s'il existe."}],
+          "internal": false
+        },
+        "requestRecover": {
+          "desc": "Demande la récupération du véhicule au dernier point de récupération ; effective à la prochaine mise à jour.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [{"type": "boolean", "desc": "true seulement si un état de récupération existe."}],
+          "internal": false
+        },
+        "handleRecover": {
+          "desc": "Restaure l'état du dernier instantané, le temps de course si recoverAffectsTotalTime, et replace le véhicule sur la position de récupération sans réparation (moveResetVehicleTo avec repair false), puis réinitialise la caméra.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [],
+          "internal": true
+        },
+        "completeLap": {
+          "desc": "Termine le tour d'un véhicule : enregistre les temps du tour (lap, beginTime, endTime, lapTime, segmentTimes). S'il reste des tours, repart sur les segments de départ (événement lapComplete) ; sinon marque la course terminée (placement, raceComplete, IA à l'agressivité 0.5) et écrit éventuellement l'historique dans raceRecord/ si logRaceInfo.",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "endTime": {"type": "number", "desc": "Temps de fin du tour (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "findNextPathnodes": {
+          "desc": "Recalcule pour un véhicule les prochains pathnodes visibles (nextPathnodes), ceux d'après (overNextPathnodes) et la liste décalée sans branchement, avec un type par pathnode : 'branch', 'final', 'lap', 'start', 'recovery' ou 'default'.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [],
+          "internal": true
+        },
+        "detectRollingStart": {
+          "desc": "En attente d'un départ lancé : teste si le véhicule est entré dans un des segments de départ, calcule alors l'heure exacte de départ (interpolée) et lève rollingStarted.",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "dt": {"type": "number", "desc": "Delta temps (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "updateVehicle": {
+          "desc": "Avance les coins des roues du véhicule, gère le départ lancé, les annonces, un éventuel tour invalidé, puis teste si un segment est terminé ou un suivant atteint. Enregistre le temps du segment (interpolé avec l'instant de franchissement), applique l'agressivité IA des champs personnalisés (aiAggression, tag aiCoef), termine le tour si besoin, met à jour les prochains pathnodes et signale un point de récupération atteint.",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "dt": {"type": "number", "desc": "Delta temps (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "handlePacenotes": {
+          "desc": "Détecte si le véhicule traverse une annonce non encore déclenchée dans ses segments courants ; lève pacenoteReached et pacenoteIdReached (une seule par image).",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [],
+          "internal": true
+        },
+        "digestEvents": {
+          "desc": "Traite les événements d'un véhicule : notifie Hotlapping et LapTimes (pour le véhicule du joueur), remplit le journal d'événements, émet les hooks onRaceStarted, onRacePathnodeReached, onRaceComplete, onRaceAborted, enregistre les points de récupération et joue le son de point de passage.",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "dt": {"type": "number", "desc": "Delta temps (s)."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "clearEvents": {
+          "desc": "Vide la table d'événements d'un véhicule.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [],
+          "internal": false
+        },
+        "drawDebug": {
+          "desc": "Dessine les prochains pathnodes (rouge), les suivants (orange) et les annonces restantes d'un véhicule.",
+          "params": {"id": {"type": "integer", "desc": "Véhicule."}},
+          "returns": [],
+          "internal": false
+        },
+        "inDrawEventlog": {
+          "desc": "Affiche en ImGui le journal d'événements d'un véhicule (colonnes Time et Event).",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "im": {"type": "table", "desc": "Module ui_imgui."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "inDrawTimes": {
+          "desc": "Affiche en ImGui les temps d'un véhicule (tour courant, total, tours précédents, segments si detail).",
+          "params": {
+            "id": {"type": "integer", "desc": "Véhicule."},
+            "im": {"type": "table", "desc": "Module ui_imgui."},
+            "detail": {"type": "boolean|nil", "desc": "true pour afficher les temps de segments."}
+          },
+          "returns": [{"type": "boolean", "desc": "true si l'icône de détail a été cliquée."}],
+          "internal": true
+        },
+        "inDrawSegmentTimes": {
+          "desc": "Affiche en ImGui la liste des temps de segments (du plus récent au plus ancien).",
+          "params": {
+            "sTimes": {"type": "table[]", "desc": "Temps de segments."},
+            "im": {"type": "table", "desc": "Module ui_imgui."},
+            "mode": {"type": "string|nil", "desc": "'index' (défaut), 'names' ou 'id'."},
+            "prefix": {"type": "string|nil", "desc": "Préfixe du libellé."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "inDrawLapTimes": {
+          "desc": "Affiche en ImGui un tour et ses temps de segments.",
+          "params": {
+            "lTimes": {"type": "table", "desc": "Entrée de historicTimes."},
+            "im": {"type": "table", "desc": "Module ui_imgui."}
+          },
+          "returns": [],
+          "internal": true
+        },
+        "raceTime": {
+          "desc": "Formate un temps en secondes au format MM:SS.mmm.",
+          "params": {"time": {"type": "number", "desc": "Temps en secondes."}},
+          "returns": [{"type": "string", "desc": "Texte formaté."}],
+          "internal": false
+        },
+        "formatTimeDifference": {
+          "desc": "Formate un écart de temps avec signe au format +MM:SS.mmm ; renvoie 'N/A' si nil. Attend des secondes (voir notes pour l'incohérence avec timeDifferenceToFirst).",
+          "params": {"timeDiff": {"type": "number|nil", "desc": "Écart en secondes."}},
+          "returns": [{"type": "string", "desc": "Texte formaté."}],
+          "internal": false
+        },
+        "getTimeDifferencesToFirst": {
+          "desc": "Pour chaque véhicule ayant un timeDifferenceToFirst, renvoie l'écart avec le premier à avoir franchi le même point, son texte formaté et le classement.",
+          "params": {},
+          "returns": [{"type": "table<integer, table>", "desc": "id -> {timeDifference, timeDifferenceFormatted, placement}"}],
+          "internal": false
+        }
+      }
+    }
+  }
+}

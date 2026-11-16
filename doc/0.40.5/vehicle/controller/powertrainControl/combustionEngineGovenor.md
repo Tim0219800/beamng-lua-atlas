@@ -1,45 +1,45 @@
 # `controller_powertrainControl_combustionEngineGovenor`
 
-*Fichier : `lua/vehicle/controller/powertrainControl/combustionEngineGovenor.lua` · VM : Véhicule · 56 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/powertrainControl/combustionEngineGovenor.lua` · VM: Vehicle · 56 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `powertrainControl/combustionEngineGovenor` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `powertrainControl/combustionEngineGovenor` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire « régulateur de régime » d'un moteur thermique (le nom du fichier contient la faute « Govenor »). Un PID calcule une commande de gaz pour que le régime du moteur suive une consigne qui varie linéairement de rpmTarget0 à rpmTarget1 selon l'entrée d'accélérateur ; la commande est publiée dans electrics.values.throttleGoverned (ou nom jbeam).
+Auxiliary "speed governor" controller of a combustion engine (the file name contains the typo "Govenor"). A PID computes a throttle command so that the engine speed follows a target that varies linearly from rpmTarget0 to rpmTarget1 according to the throttle input; the command is published in electrics.values.throttleGoverned (or jbeam name).
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : controlledEngineName ("mainEngine"), rpmPIDp (0.5), rpmPIDi (0.1), rpmPIDd (0.05), rpmTarget0 (ralenti du moteur), rpmTarget1 (régime max du moteur), throttleCommandElectricsName ("throttleGoverned"), throttleInputElectricsName ("throttle").
-- Le moteur introuvable laisse M.updateFixedStep à nil (log E « throttleGovenor »).
-- updateFixedStep est nil à la déclaration et affecté seulement après une init réussie.
-- Le contrôleur n'écrit que l'electric de commande : c'est à un autre élément (jbeam/électrique) de l'utiliser pour piloter le moteur.
+- jbeam keys read: controlledEngineName ("mainEngine"), rpmPIDp (0.5), rpmPIDi (0.1), rpmPIDd (0.05), rpmTarget0 (engine idle), rpmTarget1 (engine max RPM), throttleCommandElectricsName ("throttleGoverned"), throttleInputElectricsName ("throttle").
+- A missing engine leaves M.updateFixedStep at nil (log E "throttleGovenor").
+- updateFixedStep is nil at declaration and only assigned after a successful init.
+- The controller only writes the command electrics value: it is up to another element (jbeam/electrics) to use it to drive the engine.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_powertrainControl_combustionEngineGovenor.init(jbeamData)` | Récupère le moteur, crée le PID, calcule les consignes de vitesse angulaire et les noms d'electrics. *(interne)* | 33 |
-| `controller_powertrainControl_combustionEngineGovenor.reset(jbeamData)` | Réinitialise le PID si le moteur existe. *(interne)* | 27 |
+| `controller_powertrainControl_combustionEngineGovenor.init(jbeamData)` | Gets the engine, creates the PID, computes the angular speed targets and the electrics names. *(internal)* | 33 |
+| `controller_powertrainControl_combustionEngineGovenor.reset(jbeamData)` | Resets the PID if the engine exists. *(internal)* | 27 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_powertrainControl_combustionEngineGovenor.init(jbeamData)`
 
-Récupère le moteur, crée le PID, calcule les consignes de vitesse angulaire et les noms d'electrics.
+Gets the engine, creates the PID, computes the angular speed targets and the electrics names.
 
-- `jbeamData` (*table*) : Données jbeam du contrôleur.
+- `jbeamData` (*table*) : Controller jbeam data.
 
 #### `controller_powertrainControl_combustionEngineGovenor.reset(jbeamData)`
 
-Réinitialise le PID si le moteur existe.
+Resets the PID if the engine exists.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `type` | string | "auxiliary". |
-| `updateFixedStep` | function|nil | Boucle PID, affectée dans init si le moteur est trouvé. |
+| `updateFixedStep` | function|nil | PID loop, assigned in init if the engine is found. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/powertrainControl/combustionEngineGovenor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/powertrainControl/combustionEngineGovenor.lua`.*

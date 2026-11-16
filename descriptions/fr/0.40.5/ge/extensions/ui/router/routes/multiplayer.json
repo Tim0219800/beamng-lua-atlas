@@ -1,0 +1,23 @@
+{
+  "path": "lua/ge/extensions/ui/router/routes/multiplayer.lua",
+  "module": "Routes multijoueur : host-options, settings et playerList (écrans de pause avec hooks ui_pause_routeLifecycleCallbacks) et spectator (Vue, hooks multiplayer_gamemodes_utils_spectator.onSpectatorViewEnter/Leave). Inclus par menu.lua et pause.lua.",
+  "notes": [
+    "Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = \"<nom>\" }`.",
+    "Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.",
+    "`ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change."
+  ],
+  "fields": {
+    "Root": {
+      "type": "table",
+      "desc": "{} (racine vide)"
+    },
+    "Children": {
+      "type": "table<string, table>",
+      "desc": "host-options (screenId multiplayer.host-options), settings (screenId pause.multiplayer.settings), playerList (pause.multiplayer.playerList), spectator (uiApps visibles, barres masquées)."
+    },
+    "ModuleName": {
+      "type": "string",
+      "desc": "Nom du module de routes (premier segment du nom pointé)."
+    }
+  }
+}

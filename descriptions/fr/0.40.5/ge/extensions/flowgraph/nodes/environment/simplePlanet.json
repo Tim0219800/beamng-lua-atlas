@@ -1,0 +1,16 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/environment/simplePlanet.lua",
+  "module": "Nœud flowgraph « Simple Planet » (catégorie once_p_duration). Crée une source de gravité sphérique pour un véhicule en envoyant obj:setPlanets({x,y,z,rayon,masse}) à sa VM. Pins d'entrée : vehId (défaut : véhicule joueur 0), position (vec3), radius, mass. Exécuté une seule fois ; le reset du nœud ou l'arrêt du graphe vide les planètes (obj:setPlanets({})).",
+  "notes": ["Si position, mass ou radius est nil, le nœud ne fait rien.", "Si vehId ne correspond à aucun objet, self.vehicle est nil et queueLuaCommand plante (non protégé).", "Ancien pin vehID renommé vehId (legacyPins). La description du pin vehId parle de gravité mais il désigne le véhicule cible."],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud.",
+      "functions": {
+        "init": {"desc": "Initialise self.vehicle à nil.", "internal": true},
+        "onNodeReset": {"desc": "Si un véhicule a été ciblé, lui envoie obj:setPlanets({}) et oublie la référence.", "internal": true},
+        "workOnce": {"desc": "Construit la commande obj:setPlanets({x,y,z,radius,mass}) et l'envoie au véhicule ciblé."},
+        "_executionStopped": {"desc": "Appelle onNodeReset.", "internal": true}
+      }
+    }
+  }
+}

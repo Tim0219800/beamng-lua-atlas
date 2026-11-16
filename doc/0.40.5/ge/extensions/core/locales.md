@@ -1,12 +1,12 @@
 # `core_locales`
 
-*Fichier : `lua/ge/extensions/core/locales.lua` · VM : Game Engine (GE) · 478 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/locales.lua` · VM: Game Engine (GE) · 478 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `core_locales` : `extensions.load("core_locales")`, puis la globale `core_locales`
+**Access:** extension `core_locales`: `extensions.load("core_locales")`, then the global `core_locales`
 
-Extension GE `core_locales` : traduction des textes côté Lua. Elle charge les fichiers *.translation(s).json du dossier /locales/translations/<langue>/ (anglais en-US toujours chargé comme langue de repli), traduit des clés comme 'ui.radialmenu2.Save', gère les sous-traductions imbriquées ({{ 'clé' | translate }}), les variables de contexte, et le séparateur entre nombre et unité (selon /locales/unit_spacing_policies.json). Un moddeur s'en sert pour afficher des textes traduits ; l'alias global `_tr` pointe sur translate.
+GE extension `core_locales`: translation of texts on the Lua side. It loads the *.translation(s).json files from the /locales/translations/<language>/ folder (English en-US is always loaded as the fallback language), translates keys like 'ui.radialmenu2.Save', handles nested sub-translations ({{ 'key' | translate }}), context variables, and the separator between number and unit (according to /locales/unit_spacing_policies.json). A modder uses it to display translated texts; the global alias `_tr` points to translate.
 
-## Exemple
+## Example
 
 ```lua
 local txt = core_locales.translate('ui.common.default', 'Default')
@@ -14,169 +14,169 @@ local t2 = core_locales.contextTranslate('ui.some.key', { name = 'Bob' })
 local s = core_locales.withUnit('120', 'km/h')
 ```
 
-## Remarques
+## Notes
 
-- Au chargement (onExtensionLoaded), le module charge l'anglais (en-US), définit le global `_tr = translate` et appelle dump(parseArgs) : ce dump est un reste de débogage qui écrit les arguments de démarrage dans le log.
-- Ordre de recherche d'une clé : langue courante (tous ses fichiers, dans l'ordre alphabétique), puis en-US, puis le paramètre fallback, puis la clé elle-même. translate met le résultat en cache (clearTranslateCache le vide, ce que font aussi un changement de langue et le rechargement des fichiers).
-- Pour un même id de langue, getLocale fusionne les fichiers du dernier au premier : les fichiers dont le nom est alphabétiquement plus tôt l'emportent. Si aucun fichier *.translation.json / *.translations.json n'est trouvé, le fichier ancien <id>/<id>.json est utilisé.
-- Le mode 'scramble debug' (argument de démarrage translationScrambleDebug ou setScrambleTranslationDebugEnabled) remplace les premières lettres de chaque mot par des lettres aléatoires et ajoute '✓', pour repérer les textes non traduits. Il est mémorisé à travers un rechargement Lua. Les textes déjà mis en cache côté Lua demandent un rechargement Lua pour être mis à jour.
-- Les anciens noms de variables {{ nom }} dans contextTranslate : les filtres ' | translate' et ' | contextTranslate' sont retirés, un nom entre apostrophes est traduit comme une clé s'il n'est pas dans varsTable ; une variable absente donne une chaîne vide.
-- translateWithOrWithoutContext accepte une chaîne (clé) ou une table { txt, prefix, ctx|context } et renvoie '' si data est nil/faux. Avec prefix, la clé prefix..txt est essayée d'abord.
-- Les langues disponibles sont les sous-dossiers de /locales/translations/. La langue courante vient de Lua:getSelectedLanguage() (réglage utilisateur), sinon en-US.
-- Incohérence mineure : onUpdate et reloadChangedFiles utilisent un délai de 0.1 s (temps réel) pour regrouper les changements de fichiers de traduction (rechargement à chaud).
+- On load (onExtensionLoaded), the module loads English (en-US), defines the global `_tr = translate` and calls dump(parseArgs): this dump is leftover debugging that writes the startup arguments to the log.
+- Search order for a key: current language (all its files, in alphabetical order), then en-US, then the fallback parameter, then the key itself. translate caches the result (clearTranslateCache empties it, which a language change and the reloading of the files also do).
+- For a given language id, getLocale merges the files from last to first: files whose name is alphabetically earlier win. If no *.translation.json / *.translations.json file is found, the old file <id>/<id>.json is used.
+- The 'scramble debug' mode (startup argument translationScrambleDebug or setScrambleTranslationDebugEnabled) replaces the first letters of each word with random letters and adds '✓', to spot untranslated texts. It is kept across a Lua reload. Texts already cached on the Lua side require a Lua reload to be updated.
+- The old variable names {{ name }} in contextTranslate: the ' | translate' and ' | contextTranslate' filters are removed, a name between apostrophes is translated as a key if it is not in varsTable; a missing variable gives an empty string.
+- translateWithOrWithoutContext accepts a string (key) or a table { txt, prefix, ctx|context } and returns '' if data is nil/false. With prefix, the key prefix..txt is tried first.
+- The available languages are the subfolders of /locales/translations/. The current language comes from Lua:getSelectedLanguage() (user setting), otherwise en-US.
+- Minor inconsistency: onUpdate and reloadChangedFiles use a 0.1 s delay (real time) to group translation file changes (hot reload).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `core_locales.clearTranslateCache()` | Vide le cache des traductions. | 330 |
-| `core_locales.contextTranslate(key, varsTable)` | Traduit une clé contenant des variables {{nom}} et les remplace par les valeurs de varsTable (traduites elles-mêmes). Une valeur table { txt, prefix, ctx\|context } est traduite récursivement. | 151 |
-| `core_locales.getAvailableLanguages()` | Liste les langues disponibles (sous-dossiers de /locales/translations/), triées par clé. | 274 |
-| `core_locales.getLanguage()` | Renvoie la langue courante : celle mémorisée, sinon celle du réglage utilisateur, sinon en-US. | 292 |
-| `core_locales.getLocale(id)` | Renvoie toutes les traductions d'une langue fusionnées en une seule table clé -> texte (charge la langue si besoin). | 260 |
-| `core_locales.getScrambleTranslationDebugEnabled()` | Indique si le mode de débogage 'scramble' des traductions est actif. | 334 |
-| `core_locales.getUnitSeparator(unit, locale)` | Renvoie le séparateur à mettre entre un nombre et son unité selon la politique de la langue : espace, espace insécable (U+00A0) ou rien. | 319 |
-| `core_locales.onDeserialized(data)` | Après un rechargement Lua : restaure le mode scramble. *(interne)* *(hook)* | 472 |
-| `core_locales.onExtensionLoaded()` | Hook de chargement : lit l'argument de démarrage translationScrambleDebug, charge en-US et définit le global _tr. *(interne)* *(hook)* | 351 |
-| `core_locales.onFilesChanged(files)` | Hook de changement de fichiers : invalide les politiques d'unités si leur fichier change, et planifie (délai 0.1 s) le rechargement des fichiers .json de /locales/translations/ modifiés. *(interne)* *(hook)* | 399 |
-| `core_locales.onSerialize()` | Avant un rechargement Lua : mémorise l'état du mode scramble. *(interne)* *(hook)* | 467 |
-| `core_locales.onSettingsChanged()` | Hook appelé quand les réglages changent : charge la nouvelle langue ; si elle a changé, vide le cache et émet le hook onLanguageChanged. *(interne)* *(hook)* | 423 |
-| `core_locales.onUpdate(_, _, dtRaw)` | Hook par frame : décompte le délai de rechargement à chaud des fichiers de traduction puis les recharge (émet onReloadLocales et onTranslationsReloaded). *(interne)* *(hook)* | 412 |
-| `core_locales.selfTest(lang)` | Outil de test interne : lance extensions.test_locales_run.run(lang) si le fichier de test existe, puis le décharge. | 433 |
-| `core_locales.setScrambleTranslationDebugEnabled(enabled)` | Active ou désactive le mode scramble, vide le cache et prévient l'interface (onTranslationsReloaded). | 338 |
-| `core_locales.translate(key, fallback)` | Traduit une clé dans la langue courante (avec repli en-US), résout les traductions imbriquées et met le résultat en cache. | 120 |
-| `core_locales.translateWithOrWithoutContext(data)` | Traduit une chaîne ou une table { txt, prefix, ctx\|context } en choisissant la bonne fonction. | 182 |
-| `core_locales.translateWithPrefixFallback(name, prefix)` | Essaie la clé prefix..name ; si elle n'existe pas (résultat vide), traduit name seul. | 143 |
-| `core_locales.withUnit(formattedValue, unit, locale)` | Colle une valeur déjà formatée et son unité avec le bon séparateur. | 326 |
+| `core_locales.clearTranslateCache()` | Clears the translation cache. | 330 |
+| `core_locales.contextTranslate(key, varsTable)` | Translates a key containing variables {{name}} and replaces them with the values of varsTable (themselves translated). A table value { txt, prefix, ctx\|context } is translated recursively. | 151 |
+| `core_locales.getAvailableLanguages()` | Lists the available languages (subfolders of /locales/translations/), sorted by key. | 274 |
+| `core_locales.getLanguage()` | Returns the current language: the stored one, otherwise that of the user setting, otherwise en-US. | 292 |
+| `core_locales.getLocale(id)` | Returns all the translations of a language merged into a single table key -> text (loads the language if needed). | 260 |
+| `core_locales.getScrambleTranslationDebugEnabled()` | Indicates whether the translation 'scramble' debug mode is active. | 334 |
+| `core_locales.getUnitSeparator(unit, locale)` | Returns the separator to put between a number and its unit according to the language's policy: space, non-breaking space (U+00A0) or nothing. | 319 |
+| `core_locales.onDeserialized(data)` | After a Lua reload: restores the scramble mode. *(internal)* *(hook)* | 472 |
+| `core_locales.onExtensionLoaded()` | Load hook: reads the startup argument translationScrambleDebug, loads en-US and defines the global _tr. *(internal)* *(hook)* | 351 |
+| `core_locales.onFilesChanged(files)` | File change hook: invalidates the unit policies if their file changes, and schedules (0.1 s delay) the reload of the modified .json files of /locales/translations/. *(internal)* *(hook)* | 399 |
+| `core_locales.onSerialize()` | Before a Lua reload: stores the scramble mode state. *(internal)* *(hook)* | 467 |
+| `core_locales.onSettingsChanged()` | Hook called when the settings change: loads the new language; if it changed, clears the cache and emits the onLanguageChanged hook. *(internal)* *(hook)* | 423 |
+| `core_locales.onUpdate(_, _, dtRaw)` | Per-frame hook: counts down the hot reload delay of the translation files then reloads them (emits onReloadLocales and onTranslationsReloaded). *(internal)* *(hook)* | 412 |
+| `core_locales.selfTest(lang)` | Internal test tool: runs extensions.test_locales_run.run(lang) if the test file exists, then unloads it. | 433 |
+| `core_locales.setScrambleTranslationDebugEnabled(enabled)` | Enables or disables the scramble mode, clears the cache and notifies the interface (onTranslationsReloaded). | 338 |
+| `core_locales.translate(key, fallback)` | Translates a key in the current language (with en-US fallback), resolves nested translations and caches the result. | 120 |
+| `core_locales.translateWithOrWithoutContext(data)` | Translates a string or a table { txt, prefix, ctx\|context } by choosing the right function. | 182 |
+| `core_locales.translateWithPrefixFallback(name, prefix)` | Tries the key prefix..name; if it does not exist (empty result), translates name alone. | 143 |
+| `core_locales.withUnit(formattedValue, unit, locale)` | Joins an already formatted value and its unit with the right separator. | 326 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `core_locales.contextTranslate(key, varsTable)`
 
-Traduit une clé contenant des variables {{nom}} et les remplace par les valeurs de varsTable (traduites elles-mêmes). Une valeur table { txt, prefix, ctx|context } est traduite récursivement.
+Translates a key containing variables {{name}} and replaces them with the values of varsTable (themselves translated). A table value { txt, prefix, ctx|context } is translated recursively.
 
-- `key` (*string*) : Clé de traduction.
-- `varsTable` (*table|nil*) : Variables nom -> valeur.
-- **renvoie** : string Texte traduit avec variables.
+- `key` (*string*) : Translation key.
+- `varsTable` (*table|nil*) : Variables name -> value.
+- **returns**: string Translated text with variables.
 
 #### `core_locales.getAvailableLanguages()`
 
-Liste les langues disponibles (sous-dossiers de /locales/translations/), triées par clé.
+Lists the available languages (subfolders of /locales/translations/), sorted by key.
 
-- **renvoie** : table[] Éléments { key, path }.
+- **returns**: table[] Elements { key, path }.
 
 #### `core_locales.getLanguage()`
 
-Renvoie la langue courante : celle mémorisée, sinon celle du réglage utilisateur, sinon en-US.
+Returns the current language: the stored one, otherwise that of the user setting, otherwise en-US.
 
-- **renvoie** : string Identifiant de langue.
+- **returns**: string Language identifier.
 
 #### `core_locales.getLocale(id)`
 
-Renvoie toutes les traductions d'une langue fusionnées en une seule table clé -> texte (charge la langue si besoin).
+Returns all the translations of a language merged into a single table key -> text (loads the language if needed).
 
-- `id` (*string*) : Identifiant de langue, ex. 'fr-FR'.
-- **renvoie** : table<string, string> Table fusionnée ; {} si id n'est pas une chaîne.
+- `id` (*string*) : Language identifier, e.g. 'fr-FR'.
+- **returns**: table<string, string> Merged table; {} if id is not a string.
 
 #### `core_locales.getScrambleTranslationDebugEnabled()`
 
-Indique si le mode de débogage 'scramble' des traductions est actif.
+Indicates whether the translation 'scramble' debug mode is active.
 
-- **renvoie** : boolean true si actif.
+- **returns**: boolean true if active.
 
 #### `core_locales.getUnitSeparator(unit, locale)`
 
-Renvoie le séparateur à mettre entre un nombre et son unité selon la politique de la langue : espace, espace insécable (U+00A0) ou rien.
+Returns the separator to put between a number and its unit according to the language's policy: space, non-breaking space (U+00A0) or nothing.
 
-- `unit` (*string*) : Unité, ex. 'km/h'.
-- `locale` (*string|nil*) : Langue ; défaut la langue courante.
-- **renvoie** : string ' ', espace insécable ou ''.
+- `unit` (*string*) : Unit, e.g. 'km/h'.
+- `locale` (*string|nil*) : Language; default the current language.
+- **returns**: string ' ', non-breaking space or ''.
 
 #### `core_locales.onDeserialized(data)`
 
-Après un rechargement Lua : restaure le mode scramble.
+After a Lua reload: restores the scramble mode.
 
-- `data` (*table|nil*) : Table renvoyée par onSerialize.
+- `data` (*table|nil*) : Table returned by onSerialize.
 
 #### `core_locales.onFilesChanged(files)`
 
-Hook de changement de fichiers : invalide les politiques d'unités si leur fichier change, et planifie (délai 0.1 s) le rechargement des fichiers .json de /locales/translations/ modifiés.
+File change hook: invalidates the unit policies if their file changes, and schedules (0.1 s delay) the reload of the modified .json files of /locales/translations/.
 
-- `files` (*table[]*) : Éléments avec un champ filename.
+- `files` (*table[]*) : Elements with a filename field.
 
 #### `core_locales.onSerialize()`
 
-Avant un rechargement Lua : mémorise l'état du mode scramble.
+Before a Lua reload: stores the scramble mode state.
 
-- **renvoie** : table { scrambleTranslationDebugEnabled }
+- **returns**: table { scrambleTranslationDebugEnabled }
 
 #### `core_locales.onUpdate(_, _, dtRaw)`
 
-Hook par frame : décompte le délai de rechargement à chaud des fichiers de traduction puis les recharge (émet onReloadLocales et onTranslationsReloaded).
+Per-frame hook: counts down the hot reload delay of the translation files then reloads them (emits onReloadLocales and onTranslationsReloaded).
 
-- `_` (*number*) : dtReal, non utilisé.
-- `_` (*number*) : dtReal, non utilisé.
-- `dtRaw` (*number*) : Temps brut écoulé en secondes.
+- `_` (*number*) : dtReal, unused.
+- `_` (*number*) : dtReal, unused.
+- `dtRaw` (*number*) : Raw elapsed time in seconds.
 
 #### `core_locales.selfTest(lang)`
 
-Outil de test interne : lance extensions.test_locales_run.run(lang) si le fichier de test existe, puis le décharge.
+Internal test tool: runs extensions.test_locales_run.run(lang) if the test file exists, then unloads it.
 
-- `lang` (*string|boolean|nil*) : Langue à tester, ou true pour toutes ; nil ne fait rien.
-- **renvoie** : any Résultat du test, nil en cas d'échec ou si le test est absent.
+- `lang` (*string|boolean|nil*) : Language to test, or true for all; nil does nothing.
+- **returns**: any Test result, nil on failure or if the test is absent.
 
 #### `core_locales.setScrambleTranslationDebugEnabled(enabled)`
 
-Active ou désactive le mode scramble, vide le cache et prévient l'interface (onTranslationsReloaded).
+Enables or disables the scramble mode, clears the cache and notifies the interface (onTranslationsReloaded).
 
-- `enabled` (*boolean*) : true pour activer (toute autre valeur désactive).
-- **renvoie** : boolean Nouvel état.
+- `enabled` (*boolean*) : true to enable (any other value disables).
+- **returns**: boolean New state.
 
 #### `core_locales.translate(key, fallback)`
 
-Traduit une clé dans la langue courante (avec repli en-US), résout les traductions imbriquées et met le résultat en cache.
+Translates a key in the current language (with en-US fallback), resolves nested translations and caches the result.
 
-- `key` (*string*) : Clé de traduction. Une valeur non chaîne est renvoyée telle quelle (ou 'Missing Translation Key!' si nil).
-- `fallback` (*string|nil*) : Texte renvoyé si la clé est introuvable (sinon la clé).
-- **renvoie** : string Texte traduit.
+- `key` (*string*) : Translation key. A non-string value is returned as is (or 'Missing Translation Key!' if nil).
+- `fallback` (*string|nil*) : Text returned if the key is not found (otherwise the key).
+- **returns**: string Translated text.
 
 #### `core_locales.translateWithOrWithoutContext(data)`
 
-Traduit une chaîne ou une table { txt, prefix, ctx|context } en choisissant la bonne fonction.
+Translates a string or a table { txt, prefix, ctx|context } by choosing the right function.
 
-- `data` (*string|table|nil*) : Clé ou table de description.
-- **renvoie** : string Texte traduit, '' si data est vide.
+- `data` (*string|table|nil*) : Key or description table.
+- **returns**: string Translated text, '' if data is empty.
 
 #### `core_locales.translateWithPrefixFallback(name, prefix)`
 
-Essaie la clé prefix..name ; si elle n'existe pas (résultat vide), traduit name seul.
+Tries the key prefix..name; if it does not exist (empty result), translates name alone.
 
-- `name` (*string*) : Clé de base.
-- `prefix` (*string|nil*) : Préfixe à essayer en premier.
-- **renvoie** : string Texte traduit.
+- `name` (*string*) : Base key.
+- `prefix` (*string|nil*) : Prefix to try first.
+- **returns**: string Translated text.
 
 #### `core_locales.withUnit(formattedValue, unit, locale)`
 
-Colle une valeur déjà formatée et son unité avec le bon séparateur.
+Joins an already formatted value and its unit with the right separator.
 
-- `formattedValue` (*string*) : Nombre formaté.
-- `unit` (*string*) : Unité.
-- `locale` (*string|nil*) : Langue ; défaut la langue courante.
-- **renvoie** : string Valeur + séparateur + unité.
+- `formattedValue` (*string*) : Formatted number.
+- `unit` (*string*) : Unit.
+- `locale` (*string|nil*) : Language; default the current language.
+- **returns**: string Value + separator + unit.
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onLanguageChanged` — écouté par 9 module(s)
-- `onReloadLocales` — écouté par 2 module(s)
+- `onLanguageChanged` — listened to by 9 module(s)
+- `onReloadLocales` — listened to by 2 module(s)
 
-**Évènements UI (guihooks.trigger) :** `onTranslationsReloaded`
+**UI events (guihooks.trigger):** `onTranslationsReloaded`
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryExists`, `directoryList`, `fileExists`, `findFiles`
 - `Lua:` `getSelectedLanguage`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/locales.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/locales.lua`.*

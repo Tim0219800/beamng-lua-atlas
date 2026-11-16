@@ -1,29 +1,118 @@
 {
   "path": "lua/vehicle/controller/twoStepLaunch.lua",
-  "module": "Contrôleur auxiliaire de « two-step » (limiteur de régime de départ arrêté). Une fois activé, il s'arme quand le véhicule est quasi à l'arrêt avec gaz ET frein enfoncés, puis impose au moteur un limiteur de régime temporaire (engine:setTempRevLimiter) à tempRevLimiterRPM. Relâcher frein ou gaz le désarme. Un moddeur l'active par toggleTwoStep/setTwoStep ou via le menu radial qu'il enregistre. Publie electrics.values.twoStep (nom jbeam electricsName).",
+  "module": "Auxiliary \"two-step\" controller (standing-start rev limiter). Once enabled, it arms when the vehicle is almost stopped with throttle AND brake pressed, then imposes a temporary rev limiter on the engine (engine:setTempRevLimiter) at tempRevLimiterRPM. Releasing brake or throttle disarms it. A modder enables it through toggleTwoStep/setTwoStep or via the radial menu it registers. Publishes electrics.values.twoStep (jbeam name electricsName).",
   "usage": "local ts = controller.getController(\"twoStepLaunch\")\nts.setParameters({isEnabled = true, launchRPM = 4500})",
   "notes": [
-    "Clés jbeam lues dans init : engineName (\"mainEngine\"), electricsName (\"twoStep\"), rpmLimit (2000 tr/min).",
-    "États internes : deactivated -> idle -> armed. Armement au clavier : vitesse <= 2 m/s, gaz >= 0.2, frein >= 0.2 ; sinon (manette/volant) : vitesse <= 0.5 m/s, gaz >= 0.8, frein >= 0.8.",
-    "Sans moteur, updateGFX est nop et les fonctions de commande ne font rien.",
-    "init enregistre (une seule fois) des entrées de menu rapide « Two-Step » (bascule, RPM +/-100) via core_quickAccess ; l'appel suppose que core_quickAccess existe dans la VM de jeu (pas de test nil).",
-    "M.updateGFX vaut nop à la déclaration puis est réaffecté dans init (nop est un global moteur non défini dans ce fichier)."
+    "jbeam keys read in init: engineName (\"mainEngine\"), electricsName (\"twoStep\"), rpmLimit (2000 RPM).",
+    "Internal states: deactivated -> idle -> armed. Arming with keyboard: speed <= 2 m/s, throttle >= 0.2, brake >= 0.2; otherwise (gamepad/wheel): speed <= 0.5 m/s, throttle >= 0.8, brake >= 0.8.",
+    "Without an engine, updateGFX is nop and the command functions do nothing.",
+    "init registers (only once) \"Two-Step\" quick menu entries (toggle, RPM +/-100) via core_quickAccess; the call assumes core_quickAccess exists in the game VM (no nil check).",
+    "M.updateGFX is nop at declaration then reassigned in init (nop is an engine global not defined in this file)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."},
-    "updateGFX": {"type": "function", "desc": "nop au chargement, puis updateGFX interne si un moteur est trouvé."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    },
+    "updateGFX": {
+      "type": "function",
+      "desc": "nop at load, then internal updateGFX if an engine is found."
+    }
   },
   "functions": {
-    "init": {"desc": "Lit les clés jbeam, récupère le moteur, fixe la limite de régime et enregistre les entrées du menu rapide.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
-    "reset": {"desc": "Réinitialise le limiteur temporaire du moteur et repasse l'état en idle s'il était actif.", "internal": true},
-    "setTwoStep": {"desc": "Active (état idle) ou désactive le two-step (réinitialise le limiteur temporaire) et affiche un message sauf si silent.", "params": {"enabled": {"type": "boolean", "desc": "Activer ?"}, "silent": {"type": "boolean|nil", "desc": "Ne pas afficher de message."}}},
-    "toggleTwoStep": {"desc": "Bascule l'activation du two-step."},
-    "changeTwoStepRPM": {"desc": "Ajoute une valeur à la limite de régime du two-step et affiche un message.", "params": {"amount": {"type": "number", "desc": "Variation en tr/min."}}},
-    "setParameters": {"desc": "Applique des paramètres externes : isEnabled (booléen) et launchRPM (tr/min).", "params": {"parameters": {"type": "table", "desc": "Table {isEnabled?, launchRPM?}."}}},
-    "serialize": {"desc": "Renvoie {state, rpm} pour la sauvegarde.", "returns": [{"type": "table", "desc": "État courant."}]},
-    "deserialize": {"desc": "Restaure l'état et le régime depuis la table de serialize.", "params": {"data": {"type": "table", "desc": "Table {state, rpm}."}}},
-    "getState": {"desc": "État synchronisable : <nom>_enabled (booléen) et <nom>_rpm.", "returns": [{"type": "table", "desc": "Table d'état."}]},
-    "setState": {"desc": "Restaure activation et régime depuis la table de getState (silencieux).", "params": {"data": {"type": "table|nil", "desc": "Table produite par getState."}}},
-    "updateGFX": {"desc": "Chaque frame : fait avancer l'état (idle -> armed) et applique/enlève le limiteur temporaire, publie l'electric.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+    "init": {
+      "desc": "Reads the jbeam keys, gets the engine, sets the rev limit and registers the quick menu entries.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the engine's temporary limiter and sets the state back to idle if it was active.",
+      "internal": true
+    },
+    "setTwoStep": {
+      "desc": "Enables (idle state) or disables the two-step (resets the temporary limiter) and displays a message unless silent.",
+      "params": {
+        "enabled": {
+          "type": "boolean",
+          "desc": "Enable?"
+        },
+        "silent": {
+          "type": "boolean|nil",
+          "desc": "Do not display a message."
+        }
+      }
+    },
+    "toggleTwoStep": {
+      "desc": "Toggles the two-step activation."
+    },
+    "changeTwoStepRPM": {
+      "desc": "Adds a value to the two-step rev limit and displays a message.",
+      "params": {
+        "amount": {
+          "type": "number",
+          "desc": "Change in RPM."
+        }
+      }
+    },
+    "setParameters": {
+      "desc": "Applies external parameters: isEnabled (boolean) and launchRPM (RPM).",
+      "params": {
+        "parameters": {
+          "type": "table",
+          "desc": "Table {isEnabled?, launchRPM?}."
+        }
+      }
+    },
+    "serialize": {
+      "desc": "Returns {state, rpm} for saving.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Current state."
+        }
+      ]
+    },
+    "deserialize": {
+      "desc": "Restores the state and RPM from the serialize table.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "Table {state, rpm}."
+        }
+      }
+    },
+    "getState": {
+      "desc": "Synchronizable state: <name>_enabled (boolean) and <name>_rpm.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State table."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restores activation and RPM from the getState table (silent).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table produced by getState."
+        }
+      }
+    },
+    "updateGFX": {
+      "desc": "Every frame: advances the state (idle -> armed) and applies/removes the temporary limiter, publishes the electric.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    }
   }
 }

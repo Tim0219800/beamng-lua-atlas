@@ -1,0 +1,47 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/getElectricsValue.lua",
+  "module": "Nœud « Get Electrics Value » (catégorie `once_f_duration`). Lit une valeur d'`electrics` du véhicule : s'abonne avec `core_vehicleBridge.registerValueChangeNotification(veh, key)` puis lit le cache `getCachedVehicleData`. Pins : entrées `vehId`, `key` (string, avec modèles prédéfinis : throttle, throttle_input, rpm, brake, brake_input, parkingbrake, parkingbrake_input, gear, clutch…) ; sortie `value` (any). Utilise l'état de durée (inactive, started, finished).",
+  "notes": [
+    "La liste de modèles de `key` est dans `postInit` (extrait ici, plus longue dans le code).",
+    "Le nœud passe à `finished` dès qu'une valeur non nil est reçue ; la notification est retirée au reset/arrêt."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.",
+      "functions": {
+        "_executionStarted": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro.",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelé par le gestionnaire quand l'exécution du projet s'arrête ; nettoie l'état interne.",
+          "internal": true
+        },
+        "clearNotification": {
+          "desc": "Se désabonne de la notification de changement de valeur (`unregisterValueChangeNotification`) et vide `_setupData`.",
+          "internal": true
+        },
+        "init": {
+          "desc": "Constructeur du nœud, appelé à sa création par l'éditeur/gestionnaire de flowgraph ; initialise l'état interne.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Passe en durée `inactive` et supprime la notification.",
+          "internal": true
+        },
+        "postInit": {
+          "desc": "Définit `hardTemplates` du pin `key` : liste de clés electrics courantes proposées dans l'éditeur.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Lit la valeur en cache ; si elle existe, l'écrit dans `value` et passe en `finished`.",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "S'abonne à la valeur `key` du véhicule et passe en durée `started`.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

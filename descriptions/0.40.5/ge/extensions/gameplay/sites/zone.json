@@ -1,146 +1,318 @@
 {
   "path": "lua/ge/extensions/gameplay/sites/zone.lua",
-  "module": "Classe « Zone » d'un jeu de sites : un polygone 2D (liste de sommets en coordonnées monde) délimitant une région de la carte, avec en option deux plans (haut et bas) qui bornent la zone en hauteur. Sert à tester si un point ou un véhicule est dans la zone (limites de ville, zones de trafic, de mission) et à la dessiner en debug. Le module renvoie un constructeur.",
-  "usage": "local zone = sites.zones.objects[id]\nif zone:containsPoint2D(veh:getPosition()) then print('dans', zone.name) end\nprint(zone:zoneArea())",
+  "module": "\"Zone\" class of a sites set: a 2D polygon (list of vertices in world coordinates) delimiting a map region, optionally with two planes (top and bottom) bounding the zone in height. Used to test whether a point or vehicle is inside the zone (city limits, traffic zones, mission zones) and to draw it in debug. The module returns a constructor.",
+  "usage": "local zone = sites.zones.objects[id]\nif zone:containsPoint2D(veh:getPosition()) then print('inside', zone.name) end\nprint(zone:zoneArea())",
   "notes": [
-    "Le test d'appartenance est 2D (algorithme par parité sur x/y) : la hauteur n'intervient que via les plans top/bot actifs (pointBetweenPlanes) ; sans plan actif, la zone est infinie en z.",
-    "processVertices fixe v.radius = 5 pour chaque sommet et chaîne les sommets en boucle (v.next / v.prev). Il faut l'appeler après toute modification manuelle de self.vertices ; addVertex, removeVertex et autoPlanes le font.",
-    "Une zone sans sommet est marquée aabb.invalid = true et journalise une erreur.",
-    "rayIntersectsZone suppose que tous les sommets ont un champ next (donc processVertices déjà appelé).",
-    "makeHighResolutionFence remplace les sommets par des points intermédiaires (pas max 3 m par défaut), recalés sur le terrain si core_terrain existe.",
-    "drawFence modifie le champ a du ColorI passé en argument."
+    "The containment test is 2D (parity algorithm on x/y): height only matters through the active top/bot planes (pointBetweenPlanes); with no active plane, the zone is infinite in z.",
+    "processVertices sets v.radius = 5 for each vertex and chains the vertices in a loop (v.next / v.prev). It must be called after any manual modification of self.vertices; addVertex, removeVertex and autoPlanes do so.",
+    "A zone with no vertices is marked aabb.invalid = true and logs an error.",
+    "rayIntersectsZone assumes all vertices have a next field (so processVertices has already been called).",
+    "makeHighResolutionFence replaces the vertices with intermediate points (max step 3 m by default), snapped to the terrain if core_terrain exists.",
+    "drawFence modifies the a field of the ColorI passed as an argument."
   ],
   "classes": {
     "C": {
-      "desc": "Objet zone. Champs : sites, id, name, color, vertices (liste de {pos, radius, index, next, prev}), center, labelPos, aabb {xMin..zMax, invalid}, top / bot ({pos, normal, active}), fenceDown, fenceHeight, usePlanes, customFields, locations et parkingSpots (remplis par finalizeSites).",
+      "desc": "Zone object. Fields: sites, id, name, color, vertices (list of {pos, radius, index, next, prev}), center, labelPos, aabb {xMin..zMax, invalid}, top / bot ({pos, normal, active}), fenceDown, fenceHeight, usePlanes, customFields, locations and parkingSpots (filled by finalizeSites).",
       "functions": {
         "init": {
-          "desc": "Constructeur. sites peut être nil (identifiant -1). Valeurs par défaut : fenceDown 0, fenceHeight 5, plans inactifs.",
+          "desc": "Constructor. sites may be nil (identifier -1). Default values: fenceDown 0, fenceHeight 5, planes inactive.",
           "params": {
-            "sites": {"type": "table|nil", "desc": "Objet sites parent."},
-            "name": {"type": "string|nil", "desc": "Nom ; défaut « Zone <id> »."},
-            "forceId": {"type": "integer|nil", "desc": "Identifiant imposé."}
+            "sites": {
+              "type": "table|nil",
+              "desc": "Parent sites object."
+            },
+            "name": {
+              "type": "string|nil",
+              "desc": "Name; default \"Zone <id>\"."
+            },
+            "forceId": {
+              "type": "integer|nil",
+              "desc": "Imposed identifier."
+            }
           },
           "internal": true
         },
         "onSerialize": {
-          "desc": "Sérialise nom, sommets, couleur, champs personnalisés et plans top/bot.",
-          "returns": [{"type": "table", "desc": "Données JSON-compatibles."}]
+          "desc": "Serializes name, vertices, color, custom fields and top/bot planes.",
+          "returns": [
+            {
+              "type": "table",
+              "desc": "JSON-compatible data."
+            }
+          ]
         },
         "onDeserialized": {
-          "desc": "Restaure la zone depuis les données et appelle processVertices.",
-          "params": {"data": {"type": "table", "desc": "Données de onSerialize."}}
+          "desc": "Restores the zone from the data and calls processVertices.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data from onSerialize."
+            }
+          }
         },
         "addVertex": {
-          "desc": "Insère un sommet (à la fin ou à l'index donné) et recalcule les données dérivées.",
+          "desc": "Inserts a vertex (at the end or at the given index) and recalculates the derived data.",
           "params": {
-            "pos": {"type": "vec3", "desc": "Position du sommet."},
-            "index": {"type": "integer|nil", "desc": "Position d'insertion (défaut : à la fin)."}
+            "pos": {
+              "type": "vec3",
+              "desc": "Vertex position."
+            },
+            "index": {
+              "type": "integer|nil",
+              "desc": "Insertion position (default: at the end)."
+            }
           }
         },
         "removeVertex": {
-          "desc": "Supprime le sommet d'index donné et recalcule.",
-          "params": {"index": {"type": "integer", "desc": "Index du sommet."}}
+          "desc": "Removes the vertex at the given index and recalculates.",
+          "params": {
+            "index": {
+              "type": "integer",
+              "desc": "Vertex index."
+            }
+          }
         },
         "processVertices": {
-          "desc": "Précalculs : boîte englobante (aabb), centre, position du libellé, chaînage des sommets, extension de l'aabb par les plans. Si un plan n'est pas actif, la borne z correspondante est infinie."
+          "desc": "Precomputations: bounding box (aabb), center, label position, vertex chaining, aabb extension by the planes. If a plane is not active, the corresponding z bound is infinite."
         },
-        "changedPlanes": {"desc": "À appeler après modification des plans top/bot ; relance processVertices."},
+        "changedPlanes": {
+          "desc": "To call after modifying the top/bot planes; reruns processVertices."
+        },
         "validPlanes": {
-          "desc": "Teste que les deux plans sont actifs et que leurs normales pointent respectivement vers le haut (top) et vers le bas (bot).",
-          "returns": [{"type": "boolean", "desc": "true si valides."}]
+          "desc": "Tests that both planes are active and that their normals point up (top) and down (bot) respectively.",
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if valid."
+            }
+          ]
         },
         "autoPlanes": {
-          "desc": "Crée automatiquement des plans horizontaux 5 m au-dessus du sommet le plus haut et 5 m en dessous du plus bas, centrés sur la zone.",
+          "desc": "Automatically creates horizontal planes 5 m above the highest vertex and 5 m below the lowest, centered on the zone.",
           "params": {
-            "ignoreTop": {"type": "boolean|nil", "desc": "Ne pas créer le plan haut."},
-            "ignoreBot": {"type": "boolean|nil", "desc": "Ne pas créer le plan bas."}
+            "ignoreTop": {
+              "type": "boolean|nil",
+              "desc": "Do not create the top plane."
+            },
+            "ignoreBot": {
+              "type": "boolean|nil",
+              "desc": "Do not create the bottom plane."
+            }
           }
         },
         "pointBetweenPlanes": {
-          "desc": "Indique si un point se trouve entre les plans actifs (un plan inactif est ignoré).",
-          "params": {"point": {"type": "vec3", "desc": "Point à tester."}},
-          "returns": [{"type": "boolean", "desc": "true si entre les plans."}]
+          "desc": "Indicates whether a point is between the active planes (an inactive plane is ignored).",
+          "params": {
+            "point": {
+              "type": "vec3",
+              "desc": "Point to test."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if between the planes."
+            }
+          ]
         },
         "vertexPlaneIntersection": {
-          "desc": "Projette verticalement (axe z) un sommet sur un plan. Renvoie le sommet inchangé si le plan est inactif ou aligné avec l'axe z (erreur journalisée).",
+          "desc": "Vertically projects (z axis) a vertex onto a plane. Returns the vertex unchanged if the plane is inactive or aligned with the z axis (error logged).",
           "params": {
-            "vertex": {"type": "vec3", "desc": "Point à projeter."},
-            "plane": {"type": "table", "desc": "Plan {pos, normal, active}."}
+            "vertex": {
+              "type": "vec3",
+              "desc": "Point to project."
+            },
+            "plane": {
+              "type": "table",
+              "desc": "Plane {pos, normal, active}."
+            }
           },
-          "returns": [{"type": "vec3", "desc": "Point d'intersection."}]
+          "returns": [
+            {
+              "type": "vec3",
+              "desc": "Intersection point."
+            }
+          ]
         },
         "aabbCheck": {
-          "desc": "Test rapide x/y contre la boîte englobante (z ignoré).",
-          "params": {"point": {"type": "vec3", "desc": "Point à tester."}},
-          "returns": [{"type": "boolean", "desc": "false si hors boîte ou aabb invalide."}]
+          "desc": "Quick x/y test against the bounding box (z ignored).",
+          "params": {
+            "point": {
+              "type": "vec3",
+              "desc": "Point to test."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "false if outside the box or aabb invalid."
+            }
+          ]
         },
         "rayIntersectsZone": {
-          "desc": "Distance d'intersection d'un rayon avec la « clôture » (murs verticaux le long du contour, bornés par fenceDown/fenceHeight ou par les plans).",
+          "desc": "Intersection distance of a ray with the \"fence\" (vertical walls along the outline, bounded by fenceDown/fenceHeight or by the planes).",
           "params": {
-            "rayPos": {"type": "vec3", "desc": "Origine du rayon."},
-            "rayDir": {"type": "vec3", "desc": "Direction du rayon."}
+            "rayPos": {
+              "type": "vec3",
+              "desc": "Ray origin."
+            },
+            "rayDir": {
+              "type": "vec3",
+              "desc": "Ray direction."
+            }
           },
-          "returns": [{"type": "number", "desc": "Distance du plus proche impact, math.huge si aucun."}]
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Distance of the nearest hit, math.huge if none."
+            }
+          ]
         },
         "containsPoint2D": {
-          "desc": "Teste si un point est dans le polygone (x/y) et entre les plans.",
-          "params": {"point": {"type": "vec3", "desc": "Point à tester."}},
-          "returns": [{"type": "boolean", "desc": "true si dans la zone."}]
+          "desc": "Tests whether a point is inside the polygon (x/y) and between the planes.",
+          "params": {
+            "point": {
+              "type": "vec3",
+              "desc": "Point to test."
+            }
+          },
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if inside the zone."
+            }
+          ]
         },
         "containsVehicle": {
-          "desc": "Teste si un véhicule est dans la zone, d'après sa boîte englobante de spawn : centre seul en mode basic, sinon les quatre coins du bas/haut utilisés (points 0, 3, 4 et 7) doivent tous être dans la zone.",
+          "desc": "Tests whether a vehicle is inside the zone, based on its spawn bounding box: center only in basic mode, otherwise the four bottom/top corners used (points 0, 3, 4 and 7) must all be inside the zone.",
           "params": {
-            "veh": {"type": "userdata", "desc": "Objet véhicule (getSpawnWorldOOBB)."},
-            "basic": {"type": "boolean|nil", "desc": "Tester seulement le centre."}
+            "veh": {
+              "type": "userdata",
+              "desc": "Vehicle object (getSpawnWorldOOBB)."
+            },
+            "basic": {
+              "type": "boolean|nil",
+              "desc": "Test only the center."
+            }
           },
-          "returns": [{"type": "boolean", "desc": "true si contenu."}]
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "true if contained."
+            }
+          ]
         },
         "drawDebug": {
-          "desc": "Dessine la zone en debug (clôture translucide, nom, plans selon le mode). Ne dessine que si la caméra est assez proche.",
+          "desc": "Draws the zone in debug (translucent fence, name, planes depending on the mode). Only draws if the camera is close enough.",
           "params": {
-            "drawMode": {"type": "string|nil", "desc": "'none', 'faded', 'normal' ou 'highlight'."},
-            "clr": {"type": "table|nil", "desc": "Couleur {r,g,b}."},
-            "customHeight": {"type": "number|nil", "desc": "Hauteur de clôture personnalisée."},
-            "customDown": {"type": "number|nil", "desc": "Profondeur de clôture personnalisée."},
-            "nearCam": {"type": "boolean|nil", "desc": "Ne dessiner que les segments proches de la caméra."},
-            "drawDistance": {"type": "number|nil", "desc": "Distance de dessin."}
+            "drawMode": {
+              "type": "string|nil",
+              "desc": "'none', 'faded', 'normal' or 'highlight'."
+            },
+            "clr": {
+              "type": "table|nil",
+              "desc": "Color {r,g,b}."
+            },
+            "customHeight": {
+              "type": "number|nil",
+              "desc": "Custom fence height."
+            },
+            "customDown": {
+              "type": "number|nil",
+              "desc": "Custom fence depth."
+            },
+            "nearCam": {
+              "type": "boolean|nil",
+              "desc": "Only draw the segments close to the camera."
+            },
+            "drawDistance": {
+              "type": "number|nil",
+              "desc": "Draw distance."
+            }
           }
         },
         "drawFence": {
-          "desc": "Dessine un panneau de clôture (deux triangles, double face) entre deux points.",
+          "desc": "Draws a fence panel (two triangles, double-sided) between two points.",
           "params": {
-            "from": {"type": "vec3", "desc": "Début du segment."},
-            "to": {"type": "vec3", "desc": "Fin du segment."},
-            "clrI": {"type": "table", "desc": "ColorI (son champ a est écrasé)."},
-            "down": {"type": "number|nil", "desc": "Décalage vers le bas (défaut 0)."},
-            "up": {"type": "number|nil", "desc": "Hauteur (défaut 5)."},
-            "usePlanes": {"type": "boolean|nil", "desc": "Borner la clôture par les plans actifs."},
-            "nearCam": {"type": "boolean|nil", "desc": "Limiter à la proximité de la caméra avec fondu."},
-            "drawDistance": {"type": "number|nil", "desc": "Distance de dessin (défaut 30)."},
-            "shapeAlpha": {"type": "number|nil", "desc": "Opacité 0..1 (défaut 0,5)."}
+            "from": {
+              "type": "vec3",
+              "desc": "Segment start."
+            },
+            "to": {
+              "type": "vec3",
+              "desc": "Segment end."
+            },
+            "clrI": {
+              "type": "table",
+              "desc": "ColorI (its a field is overwritten)."
+            },
+            "down": {
+              "type": "number|nil",
+              "desc": "Downward offset (default 0)."
+            },
+            "up": {
+              "type": "number|nil",
+              "desc": "Height (default 5)."
+            },
+            "usePlanes": {
+              "type": "boolean|nil",
+              "desc": "Bound the fence by the active planes."
+            },
+            "nearCam": {
+              "type": "boolean|nil",
+              "desc": "Limit to camera proximity with fade."
+            },
+            "drawDistance": {
+              "type": "number|nil",
+              "desc": "Draw distance (default 30)."
+            },
+            "shapeAlpha": {
+              "type": "number|nil",
+              "desc": "Opacity 0..1 (default 0.5)."
+            }
           },
           "internal": true
         },
         "drawPlane": {
-          "desc": "Dessine un plan (haut ou bas) par des lignes reliant son point d'ancrage aux sommets projetés, et sa normale.",
+          "desc": "Draws a plane (top or bottom) with lines linking its anchor point to the projected vertices, and its normal.",
           "params": {
-            "plane": {"type": "table", "desc": "Plan {pos, normal, active}."},
-            "clrF": {"type": "any", "desc": "Couleur ColorF."}
+            "plane": {
+              "type": "table",
+              "desc": "Plane {pos, normal, active}."
+            },
+            "clrF": {
+              "type": "any",
+              "desc": "ColorF color."
+            }
           },
           "internal": true
         },
         "drawMinimap": {
-          "desc": "Dessine le contour de la zone sur la minimap de l'interface (lignes blanches).",
-          "params": {"td": {"type": "any", "desc": "Objet de dessin de la minimap (méthode line), déduit du code."}}
+          "desc": "Draws the zone outline on the UI minimap (white lines).",
+          "params": {
+            "td": {
+              "type": "any",
+              "desc": "Minimap drawing object (line method), inferred from code."
+            }
+          }
         },
         "makeHighResolutionFence": {
-          "desc": "Remplace les sommets par une version échantillonnée tous les maxStep mètres (au minimum 1), recalée sur la hauteur du terrain.",
-          "params": {"maxStep": {"type": "number|nil", "desc": "Pas maximal en mètres ; défaut 3, plancher 1."}}
+          "desc": "Replaces the vertices with a version sampled every maxStep meters (at least 1), snapped to the terrain height.",
+          "params": {
+            "maxStep": {
+              "type": "number|nil",
+              "desc": "Maximum step in meters; default 3, floor 1."
+            }
+          }
         },
         "zoneArea": {
-          "desc": "Aire du polygone en m² (formule du lacet, x/y). 0 si moins de 3 sommets.",
-          "returns": [{"type": "number", "desc": "Aire en m²."}]
+          "desc": "Polygon area in m² (shoelace formula, x/y). 0 if fewer than 3 vertices.",
+          "returns": [
+            {
+              "type": "number",
+              "desc": "Area in m²."
+            }
+          ]
         }
       }
     }

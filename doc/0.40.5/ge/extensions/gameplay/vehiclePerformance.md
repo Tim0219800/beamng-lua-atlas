@@ -1,105 +1,105 @@
 # `gameplay_vehiclePerformance`
 
-*Fichier : `lua/ge/extensions/gameplay/vehiclePerformance.lua` · VM : Game Engine (GE) · 189 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/vehiclePerformance.lua` · VM: Game Engine (GE) · 189 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_vehiclePerformance` : `extensions.load("gameplay_vehiclePerformance")`, puis la globale `gameplay_vehiclePerformance`
+**Access:** extension `gameplay_vehiclePerformance`: `extensions.load("gameplay_vehiclePerformance")`, then the global `gameplay_vehiclePerformance`
 
-Calcule l'indice de performance (PI) et la classe (X, S, A, B, C, D) d'un véhicule à partir de ses résultats de test automatique (temps 0-60, 1/8 et 1/4 de mile, vitesses de passage, freinage en g, etc.). Fournit aussi les scores agrégés comparés à un véhicule de référence, des utilitaires de classes pour l'interface (exigence de classe minimale) et le choix du véhicule par défaut d'une mission. Les données viennent des configs de véhicule (« Performance Data », « Drag Times », « Power », « Weight »).
+Computes a vehicle's performance index (PI) and class (X, S, A, B, C, D) from its automatic test results (0-60 time, 1/8 and 1/4 mile, trap speeds, braking in g, etc.). Also provides aggregate scores compared to a reference vehicle, class utilities for the UI (minimum class requirement) and selection of a mission's default vehicle. The data comes from vehicle configs ("Performance Data", "Drag Times", "Power", "Weight").
 
-## Exemple
+## Example
 
 ```lua
 local res = gameplay_vehiclePerformance.getClassFromConfig("sunburst2", "base")
 if res then print(res.class.name, res.performanceIndex) end
 ```
 
-## Remarques
+## Notes
 
-- Classes (PI minimal) : X 101, S 86, A 66, B 41, C 21, D 0.
-- Le PI est la somme de neuf termes bias + multiplier * mesure, chacun borné à 0 par le bas ; une mesure absente compte pour 0.
-- getClassFromData ne renvoie jamais nil à cause du PI (toujours un nombre) ; il renvoie nil seulement si testData est nil (erreur) ou si le PI est inférieur au plus petit seuil, ce qui ne peut pas arriver avec D à 0.
-- getClassFromConfigTable modifie la table 'Drag Times' reçue : elle y ajoute power et weight.
-- getAggregateScores divise par testData.time_60, time_1_4, velAt_1_4/velAt_1_8 sans test : des valeurs absentes ou nulles provoquent une erreur ou une division par zéro. Si time_0_60 vaut 0 (60 mph non atteint), il est remis à nil dans testData et le score vaut 0.
-- Références du véhicule de certification : puissance 1 395 241 W, poids 1280 kg, 0-60 mph 2,37 s, freinage 1,417 g (valeurs du code).
+- Classes (minimum PI): X 101, S 86, A 66, B 41, C 21, D 0.
+- The PI is the sum of nine terms bias + multiplier * measurement, each floored at 0; a missing measurement counts as 0.
+- getClassFromData never returns nil because of the PI (always a number); it returns nil only if testData is nil (error) or if the PI is below the lowest threshold, which cannot happen with D at 0.
+- getClassFromConfigTable modifies the received 'Drag Times' table: it adds power and weight to it.
+- getAggregateScores divides by testData.time_60, time_1_4, velAt_1_4/velAt_1_8 without checking: missing or zero values cause an error or a division by zero. If time_0_60 is 0 (60 mph not reached), it is reset to nil in testData and the score is 0.
+- Certification vehicle references: power 1 395 241 W, weight 1280 kg, 0-60 mph 2.37 s, braking 1.417 g (values from the code).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_vehiclePerformance.buildClassRequirement(name)` | Construit une table au format du badge d'indice de performance pour une exigence de classe seule ; isThreshold = true indique à l'interface d'afficher un seuil minimal (>=). | 150 |
-| `gameplay_vehiclePerformance.getAggregateScores(testData)` | Calcule des scores agrégés (puissance, rapport puissance/poids, 0-60 mph, 60 ft, quart de mile, progression de vitesse, freinage) en pourcentage du véhicule de référence. | 48 |
-| `gameplay_vehiclePerformance.getClassByName(name)` | Renvoie la ligne de classe correspondant à la lettre donnée. | 131 |
-| `gameplay_vehiclePerformance.getClassFromConfig(model, configName)` | Classe d'une config de véhicule identifiée par modèle et nom de config (core_vehicles.getConfig). | 123 |
-| `gameplay_vehiclePerformance.getClassFromConfigTable(configTable)` | Lit la classe et le PI déjà enregistrés par le test automatique (config["Performance Data"]) ; à défaut, les recalcule depuis config["Drag Times"], config["Power"] et config["Weight"]. | 99 |
-| `gameplay_vehiclePerformance.getClassFromData(testData)` | Calcule le PI à partir des données de test et renvoie la première classe dont le PI minimal est atteint. | 85 |
-| `gameplay_vehiclePerformance.getClassFromVehId(vehId)` | Classe d'un véhicule présent dans le jeu, via core_vehicles.getVehicleDetails(vehId).configs. | 116 |
-| `gameplay_vehiclePerformance.getClassNames()` | Liste les noms de classes, de la plus haute à la plus basse. | 139 |
-| `gameplay_vehiclePerformance.getDefaultMissionVehicleSpec(setupModule)` | Détermine le véhicule par défaut impliqué par le bloc setupModules.vehicles d'une mission (celui que l'interface de réglages présélectionne) : le véhicule du joueur, le premier préréglage, ou rien. | 166 |
+| `gameplay_vehiclePerformance.buildClassRequirement(name)` | Builds a table in the performance index badge format for a class requirement alone; isThreshold = true tells the UI to display a minimum threshold (>=). | 150 |
+| `gameplay_vehiclePerformance.getAggregateScores(testData)` | Computes aggregate scores (power, power-to-weight ratio, 0-60 mph, 60 ft, quarter mile, speed progression, braking) as a percentage of the reference vehicle. | 48 |
+| `gameplay_vehiclePerformance.getClassByName(name)` | Returns the class row matching the given letter. | 131 |
+| `gameplay_vehiclePerformance.getClassFromConfig(model, configName)` | Class of a vehicle config identified by model and config name (core_vehicles.getConfig). | 123 |
+| `gameplay_vehiclePerformance.getClassFromConfigTable(configTable)` | Reads the class and PI already recorded by the automatic test (config["Performance Data"]); otherwise recomputes them from config["Drag Times"], config["Power"] and config["Weight"]. | 99 |
+| `gameplay_vehiclePerformance.getClassFromData(testData)` | Computes the PI from the test data and returns the first class whose minimum PI is reached. | 85 |
+| `gameplay_vehiclePerformance.getClassFromVehId(vehId)` | Class of a vehicle present in the game, via core_vehicles.getVehicleDetails(vehId).configs. | 116 |
+| `gameplay_vehiclePerformance.getClassNames()` | Lists the class names, from highest to lowest. | 139 |
+| `gameplay_vehiclePerformance.getDefaultMissionVehicleSpec(setupModule)` | Determines the default vehicle implied by a mission's setupModules.vehicles block (the one the settings UI preselects): the player's vehicle, the first preset, or nothing. | 166 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_vehiclePerformance.buildClassRequirement(name)`
 
-Construit une table au format du badge d'indice de performance pour une exigence de classe seule ; isThreshold = true indique à l'interface d'afficher un seuil minimal (>=).
+Builds a table in the performance index badge format for a class requirement alone; isThreshold = true tells the UI to display a minimum threshold (>=).
 
-- `name` (*string*) : Lettre de classe.
-- **renvoie** : table|nil {class = {name, description, minPI}, performanceIndex = minPI, isThreshold = true} ou nil si classe inconnue.
+- `name` (*string*) : Class letter.
+- **returns**: table|nil {class = {name, description, minPI}, performanceIndex = minPI, isThreshold = true} or nil if the class is unknown.
 
 #### `gameplay_vehiclePerformance.getAggregateScores(testData)`
 
-Calcule des scores agrégés (puissance, rapport puissance/poids, 0-60 mph, 60 ft, quart de mile, progression de vitesse, freinage) en pourcentage du véhicule de référence.
+Computes aggregate scores (power, power-to-weight ratio, 0-60 mph, 60 ft, quarter mile, speed progression, braking) as a percentage of the reference vehicle.
 
-- `testData` (*table|nil*) : Données de test : time_60, time_1_4, time_0_60, velAt_1_8, velAt_1_4, brakingG, power ({propulsionPowerCombined}), weight.
-- **renvoie** : table|nil {powerScore, powerToWeightScore, timeTo60Score, quarterMileScore, speedProgressionScore, brakingGForceScore, time0To60Score}
+- `testData` (*table|nil*) : Test data: time_60, time_1_4, time_0_60, velAt_1_8, velAt_1_4, brakingG, power ({propulsionPowerCombined}), weight.
+- **returns**: table|nil {powerScore, powerToWeightScore, timeTo60Score, quarterMileScore, speedProgressionScore, brakingGForceScore, time0To60Score}
 
 #### `gameplay_vehiclePerformance.getClassByName(name)`
 
-Renvoie la ligne de classe correspondant à la lettre donnée.
+Returns the class row matching the given letter.
 
-- `name` (*string|nil*) : Lettre de classe (X, S, A, B, C, D).
-- **renvoie** : table|nil {name, minPI, description} ou nil.
+- `name` (*string|nil*) : Class letter (X, S, A, B, C, D).
+- **returns**: table|nil {name, minPI, description} or nil.
 
 #### `gameplay_vehiclePerformance.getClassFromConfig(model, configName)`
 
-Classe d'une config de véhicule identifiée par modèle et nom de config (core_vehicles.getConfig).
+Class of a vehicle config identified by model and config name (core_vehicles.getConfig).
 
-- `model` (*string*) : Modèle de véhicule.
-- `configName` (*string*) : Nom de la config.
-- **renvoie** : table|nil {class, performanceIndex} ou nil.
+- `model` (*string*) : Vehicle model.
+- `configName` (*string*) : Config name.
+- **returns**: table|nil {class, performanceIndex} or nil.
 
 #### `gameplay_vehiclePerformance.getClassFromConfigTable(configTable)`
 
-Lit la classe et le PI déjà enregistrés par le test automatique (config["Performance Data"]) ; à défaut, les recalcule depuis config["Drag Times"], config["Power"] et config["Weight"].
+Reads the class and PI already recorded by the automatic test (config["Performance Data"]); otherwise recomputes them from config["Drag Times"], config["Power"] and config["Weight"].
 
-- `configTable` (*table|nil*) : Table de config de véhicule.
-- **renvoie** : table|nil {class, performanceIndex} ou nil si aucune donnée.
+- `configTable` (*table|nil*) : Vehicle config table.
+- **returns**: table|nil {class, performanceIndex} or nil if no data.
 
 #### `gameplay_vehiclePerformance.getClassFromData(testData)`
 
-Calcule le PI à partir des données de test et renvoie la première classe dont le PI minimal est atteint.
+Computes the PI from the test data and returns the first class whose minimum PI is reached.
 
-- `testData` (*table*) : Données de test (time_60, time_330, time_1000, time_1_8, time_1_4, time_0_60, velAt_1_8, velAt_1_4, brakingG).
-- **renvoie** : table|nil {class = {name, description, minPI}, performanceIndex}
+- `testData` (*table*) : Test data (time_60, time_330, time_1000, time_1_8, time_1_4, time_0_60, velAt_1_8, velAt_1_4, brakingG).
+- **returns**: table|nil {class = {name, description, minPI}, performanceIndex}
 
 #### `gameplay_vehiclePerformance.getClassFromVehId(vehId)`
 
-Classe d'un véhicule présent dans le jeu, via core_vehicles.getVehicleDetails(vehId).configs.
+Class of a vehicle present in the game, via core_vehicles.getVehicleDetails(vehId).configs.
 
-- `vehId` (*integer*) : Id du véhicule.
-- **renvoie** : table|nil {class, performanceIndex} ou nil.
+- `vehId` (*integer*) : Vehicle id.
+- **returns**: table|nil {class, performanceIndex} or nil.
 
 #### `gameplay_vehiclePerformance.getClassNames()`
 
-Liste les noms de classes, de la plus haute à la plus basse.
+Lists the class names, from highest to lowest.
 
-- **renvoie** : string[] {"X","S","A","B","C","D"}
+- **returns**: string[] {"X","S","A","B","C","D"}
 
 #### `gameplay_vehiclePerformance.getDefaultMissionVehicleSpec(setupModule)`
 
-Détermine le véhicule par défaut impliqué par le bloc setupModules.vehicles d'une mission (celui que l'interface de réglages présélectionne) : le véhicule du joueur, le premier préréglage, ou rien.
+Determines the default vehicle implied by a mission's setupModules.vehicles block (the one the settings UI preselects): the player's vehicle, the first preset, or nothing.
 
-- `setupModule` (*table|nil*) : Module de setup : enabled, includePlayerVehicle, prioritizePlayerVehicle, vehicles ({model, config}).
-- **renvoie** : table|nil {kind = "player"} ou {kind = "preset", model, config} ou nil.
+- `setupModule` (*table|nil*) : Setup module: enabled, includePlayerVehicle, prioritizePlayerVehicle, vehicles ({model, config}).
+- **returns**: table|nil {kind = "player"} or {kind = "preset", model, config} or nil.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/vehiclePerformance.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/vehiclePerformance.lua`.*

@@ -1,0 +1,21 @@
+{
+  "path": "lua/common/jsonPrettyEncoderCustom.lua",
+  "module": "Encodeur JSON 'joli' personnalisable : trie les clés par poids (tableWeights), et laisse un callback décider quelles tables sont repliées sur une seule ligne et lesquelles sont indentées. Sert à écrire des fichiers de configuration lisibles (ex. fichiers de contrôles/bindings).",
+  "usage": "local exampleTable = {control = 5, bindings = {{1,2}, {4,5,6,7}}}\nlocal function foldingCallback(item, lvl, path)\n  return path:sub(1,10) == '/bindings/' and tableSize(item) < 4\nend\nlocal tblWeights = {control = 10, bindings = 99} -- 1 = premier, 99 = dernier, défaut 50\nlocal json = require('jsonPrettyEncoderCustom').encode(exampleTable, nil, nil, tblWeights, foldingCallback)",
+  "notes": [
+    "Sans foldingCallback, fold vaut true : TOUTES les tables sont écrites sur une seule ligne ('{\"a\":1, ...}' / '[1, 2]'). Pour obtenir l'indentation, le callback doit renvoyer false pour la table concernée.",
+    "Les clés de tableWeights doivent être en MINUSCULES (le code cherche weights[tostring(clé):lower()]). Clé absente = poids 50. À poids égal, tri par type puis par valeur.",
+    "Le chemin passé au callback est de la forme '/clé/sousclé/3' (indices de tableau inclus) ; lvl est la profondeur (1 pour la racine).",
+    "Les tableaux sont détectés par next(v) == 1 et next(v, #v) == nil (tableau séquentiel sans trous). Un tableau vide est écrit '{}'. Les NaN et infinis deviennent 9e999 / -9e999. numberPrecision (si non nil) formate les non-entiers en %<n>.<n>f (le même entier n sert de largeur et de précision) et les entiers en %d. Les vec3/quat (cdata) sont écrits {\"x\":..,\"y\":..,\"z\":..[,\"w\":..]}. Les autres types (fonction, userdata) donnent null.",
+    "Dépend de require('utils') (tableKeys)."
+  ],
+  "fields": {},
+  "functions": {
+    "encode": {
+      "desc": "Encode v en texte JSON avec clés triées par poids et repliement piloté par foldingCallback. Les trois derniers arguments sont facultatifs ; _levelPath est interne (récursion).",
+      "params": {"v": {"type": "any", "desc": "valeur à encoder (nil -> 'null')"}, "lvl": {"type": "integer|nil", "desc": "niveau d'indentation de départ, défaut 1"}, "numberPrecision": {"type": "integer|nil", "desc": "nombre de décimales des non-entiers ; nil = %.10g"}, "tableWeights": {"type": "table<string, number>|nil", "desc": "poids de tri des clés (minuscules), défaut 50 ; la valeur nil provoque une erreur dans le tri car weights est indexé (fournir au moins {})"}, "foldingCallback": {"type": "fun(item: table, lvl: integer, path: string): boolean|nil", "desc": "renvoie true pour replier la table sur une ligne, false pour l'indenter"}, "_levelPath": {"type": "string|nil", "desc": "interne : chemin courant"}},
+      "returns": [{"type": "string", "desc": "texte JSON"}],
+      "internal": false
+    }
+  }
+}

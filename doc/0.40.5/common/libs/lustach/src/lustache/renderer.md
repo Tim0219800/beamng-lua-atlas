@@ -1,119 +1,119 @@
 # `renderer`
 
-*Fichier : `lua/common/libs/lustach/src/lustache/renderer.lua` · VM : Commun (GE + véhicule) · 389 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/libs/lustach/src/lustache/renderer.lua` · VM: Common (GE + vehicle) · 389 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** globale `renderer`
+**Access:** global `renderer`
 
-Bibliothèque tierce lustache : cœur du moteur Mustache. Le renderer analyse un gabarit (`parse`) en arbre de jetons (texte, variables, sections `#`, sections inversées `^`, partiels `>`, accolades triples `{`/`&`, changement de délimiteurs `=`), le compile en fonction (`compile`) et le rend avec une vue (`render`). Les gabarits compilés sont mis en cache. Les valeurs `{{x}}` sont échappées en HTML ; `{{{x}}}` et `{{&x}}` ne le sont pas.
+Third-party library lustache: core of the Mustache engine. The renderer parses a template (`parse`) into a token tree (text, variables, `#` sections, `^` inverted sections, `>` partials, triple braces `{`/`&`, delimiter change `=`), compiles it into a function (`compile`) and renders it with a view (`render`). Compiled templates are cached. `{{x}}` values are HTML-escaped; `{{{x}}}` and `{{&x}}` are not.
 
-## Exemple
+## Example
 
 ```lua
 local renderer = require('common/libs/lustach/src/lustache/renderer'):new()
 print(renderer:render('{{#items}}<{{.}}>{{/items}}', {items = {1, 2, 3}}))  -- <1><2><3>
 ```
 
-## Remarques
+## Notes
 
-- Le fichier renvoie la table `renderer` (variable locale) ; la page auto indique « globale renderer » mais le code n'en crée pas de globale. On obtient une instance par `renderer:new()` (champs cache, partial_cache, tags = {"{{","}}"}).
-- Sections : une table tableau (indices 1..n contigus) est itérée ; une autre table devient le contexte ; une fonction reçoit (texte_brut_de_la_section, fonction_de_rendu) ; toute autre valeur truthy rend la section telle quelle.
-- Bug : dans nest_tokens, le test `not section.value == token.value` est évalué comme `(not section.value) == token.value` ; une fermeture de section ne correspondant pas à l'ouverture n'est donc pas détectée (seuls les cas « Unopened section » et « Unclosed section » le sont).
-- Échappement HTML : & < > " ' / sont remplacés par &amp; &lt; &gt; &quot; &#39; &#x2F;.
-- `_partial` lit `self.partials[name]` et compile le partiel ; les partiels sont mémorisés par nom dans partial_cache (le cache n'est pas invalidé si on change la table partials sans appeler clear_cache).
-- Les méthodes se préfixent par `_` (_section, _inverted, _partial, _name) sont internes, appelées par le code compilé.
+- The file returns the `renderer` table (local variable); the auto page says "global renderer" but the code does not create a global. An instance is obtained with `renderer:new()` (fields cache, partial_cache, tags = {"{{","}}"}).
+- Sections: an array table (contiguous indices 1..n) is iterated; another table becomes the context; a function receives (raw_section_text, render_function); any other truthy value renders the section as is.
+- Bug: in nest_tokens, the test `not section.value == token.value` is evaluated as `(not section.value) == token.value`; a section close that does not match the open is therefore not detected (only the "Unopened section" and "Unclosed section" cases are).
+- HTML escaping: & < > " ' / are replaced by &amp; &lt; &gt; &quot; &#39; &#x2F;.
+- `_partial` reads `self.partials[name]` and compiles the partial; partials are memoized by name in partial_cache (the cache is not invalidated if the partials table is changed without calling clear_cache).
+- Methods prefixed with `_` (_section, _inverted, _partial, _name) are internal, called by the compiled code.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `renderer._inverted(self, name, context, callback)` | Rend une section inversée `{{^nom}}` seulement si la valeur est nil, false ou un tableau vide. Interne. *(interne)* | 238 |
-| `renderer._name(self, name, context, escape)` | Rend une variable : résout le nom (appelle la valeur si c'est une fonction, avec la vue), convertit en chaîne (nil devient "") et échappe le HTML si `escape` est vrai. Interne. *(interne)* | 270 |
-| `renderer._partial(self, name, context, originalTemplate)` | Rend le partiel `{{>nom}}` à partir de self.partials (compilé puis mis en cache) ; "" si le partiel est absent. Interne. *(interne)* | 252 |
-| `renderer._section(self, token, context, callback, originalTemplate)` | Rend une section `{{#nom}}...{{/nom}}` selon la valeur du nom (tableau : itération ; table : sous-contexte ; fonction : appel avec le texte brut ; sinon valeur truthy). Interne. *(interne)* | 206 |
-| `renderer.clear_cache(self)` | Vide le cache des gabarits compilés et celui des partiels. | 163 |
-| `renderer.compile(self, tokens, tags, originalTemplate)` | Compile un gabarit (chaîne) ou une liste de jetons en fonction `function(view) -> string`. | 168 |
-| `renderer.new(self)` | Crée une instance de renderer (caches vides, délimiteurs {{ }}). | 379 |
-| `renderer.parse(self, template, tags)` | Découpe le gabarit en arbre de jetons. `tags` est un tableau de deux chaînes (délimiteur ouvrant et fermant, par défaut mustaches). Lève une erreur « Unclosed tag at <pos> », « Unopened section » ou « Unclosed section ». | 291 |
-| `renderer.render(self, template, view, partials)` | Rend le gabarit `template` avec `view`. Compile et met en cache le gabarit au premier appel. Si `partials` est fourni, il est mémorisé comme table de partiels. Renvoie "" si `template` est nil. Erreur si appelé avec un point (`self` est une chaîne). | 181 |
+| `renderer._inverted(self, name, context, callback)` | Renders an inverted section `{{^name}}` only if the value is nil, false or an empty array. Internal. *(internal)* | 238 |
+| `renderer._name(self, name, context, escape)` | Renders a variable: resolves the name (calls the value if it is a function, with the view), converts to string (nil becomes "") and HTML-escapes if `escape` is true. Internal. *(internal)* | 270 |
+| `renderer._partial(self, name, context, originalTemplate)` | Renders the partial `{{>name}}` from self.partials (compiled then cached); "" if the partial is absent. Internal. *(internal)* | 252 |
+| `renderer._section(self, token, context, callback, originalTemplate)` | Renders a section `{{#name}}...{{/name}}` according to the value of the name (array: iteration; table: sub-context; function: call with the raw text; otherwise truthy value). Internal. *(internal)* | 206 |
+| `renderer.clear_cache(self)` | Clears the cache of compiled templates and that of partials. | 163 |
+| `renderer.compile(self, tokens, tags, originalTemplate)` | Compiles a template (string) or a list of tokens into a function `function(view) -> string`. | 168 |
+| `renderer.new(self)` | Creates a renderer instance (empty caches, {{ }} delimiters). | 379 |
+| `renderer.parse(self, template, tags)` | Splits the template into a token tree. `tags` is an array of two strings (opening and closing delimiter, mustaches by default). Raises an error "Unclosed tag at <pos>", "Unopened section" or "Unclosed section". | 291 |
+| `renderer.render(self, template, view, partials)` | Renders the template `template` with `view`. Compiles and caches the template on the first call. If `partials` is provided, it is stored as the partials table. Returns "" if `template` is nil. Error if called with a dot (`self` is a string). | 181 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `renderer._inverted(self, name, context, callback)`
 
-Rend une section inversée `{{^nom}}` seulement si la valeur est nil, false ou un tableau vide. Interne.
+Renders an inverted section `{{^name}}` only if the value is nil, false or an empty array. Internal.
 
 - `self` (*any*) : 
-- `name` (*string*) : Nom testé.
-- `context` (*table*) : Contexte courant.
-- `callback` (*function*) : Rendu du contenu.
-- **renvoie** : string Texte rendu ou "".
+- `name` (*string*) : Name tested.
+- `context` (*table*) : Current context.
+- `callback` (*function*) : Rendering of the content.
+- **returns**: string Rendered text or "".
 
 #### `renderer._name(self, name, context, escape)`
 
-Rend une variable : résout le nom (appelle la valeur si c'est une fonction, avec la vue), convertit en chaîne (nil devient "") et échappe le HTML si `escape` est vrai. Interne.
+Renders a variable: resolves the name (calls the value if it is a function, with the view), converts to string (nil becomes "") and HTML-escapes if `escape` is true. Internal.
 
 - `self` (*any*) : 
-- `name` (*string*) : Nom de la variable.
-- `context` (*table*) : Contexte courant.
-- `escape` (*boolean*) : true pour {{x}}, false pour {{{x}}} et {{&x}}.
-- **renvoie** : string Texte (avec, quand escape est vrai, un second retour : le nombre de remplacements de gsub).
+- `name` (*string*) : Variable name.
+- `context` (*table*) : Current context.
+- `escape` (*boolean*) : true for {{x}}, false for {{{x}}} and {{&x}}.
+- **returns**: string Text (with, when escape is true, a second return value: the number of gsub replacements).
 
 #### `renderer._partial(self, name, context, originalTemplate)`
 
-Rend le partiel `{{>nom}}` à partir de self.partials (compilé puis mis en cache) ; "" si le partiel est absent. Interne.
+Renders the partial `{{>name}}` from self.partials (compiled then cached); "" if the partial is absent. Internal.
 
 - `self` (*any*) : 
-- `name` (*string*) : Nom du partiel.
-- `context` (*table*) : Contexte courant.
-- `originalTemplate` (*string*) : Gabarit d'origine.
-- **renvoie** : string Texte rendu.
+- `name` (*string*) : Partial name.
+- `context` (*table*) : Current context.
+- `originalTemplate` (*string*) : Original template.
+- **returns**: string Rendered text.
 
 #### `renderer._section(self, token, context, callback, originalTemplate)`
 
-Rend une section `{{#nom}}...{{/nom}}` selon la valeur du nom (tableau : itération ; table : sous-contexte ; fonction : appel avec le texte brut ; sinon valeur truthy). Interne.
+Renders a section `{{#name}}...{{/name}}` according to the value of the name (array: iteration; table: sub-context; function: call with the raw text; otherwise truthy value). Internal.
 
 - `self` (*any*) : 
-- `token` (*table*) : Jeton de section.
-- `context` (*table*) : Contexte courant.
-- `callback` (*function*) : Rendu du contenu de la section.
-- `originalTemplate` (*string*) : Gabarit d'origine.
-- **renvoie** : string Texte rendu.
+- `token` (*table*) : Section token.
+- `context` (*table*) : Current context.
+- `callback` (*function*) : Rendering of the section content.
+- `originalTemplate` (*string*) : Original template.
+- **returns**: string Rendered text.
 
 #### `renderer.compile(self, tokens, tags, originalTemplate)`
 
-Compile un gabarit (chaîne) ou une liste de jetons en fonction `function(view) -> string`.
+Compiles a template (string) or a list of tokens into a function `function(view) -> string`.
 
 - `self` (*any*) : 
-- `tokens` (*string|table*) : Gabarit brut (analysé par parse) ou arbre de jetons.
-- `tags` (*string[]|nil*) : Délimiteurs {ouvrant, fermant} ; défaut self.tags.
-- `originalTemplate` (*string|nil*) : Texte d'origine, nécessaire pour extraire le texte brut des sections-fonctions.
-- **renvoie** : function Fonction de rendu prenant la vue.
+- `tokens` (*string|table*) : Raw template (parsed by parse) or token tree.
+- `tags` (*string[]|nil*) : Delimiters {opening, closing}; default self.tags.
+- `originalTemplate` (*string|nil*) : Original text, needed to extract the raw text of function sections.
+- **returns**: function Render function taking the view.
 
 #### `renderer.new(self)`
 
-Crée une instance de renderer (caches vides, délimiteurs {{ }}).
+Creates a renderer instance (empty caches, {{ }} delimiters).
 
-- `self` (*table*) : Classe renderer (appel avec les deux-points).
-- **renvoie** : table Instance.
+- `self` (*table*) : Renderer class (call with a colon).
+- **returns**: table Instance.
 
 #### `renderer.parse(self, template, tags)`
 
-Découpe le gabarit en arbre de jetons. `tags` est un tableau de deux chaînes (délimiteur ouvrant et fermant, par défaut mustaches). Lève une erreur « Unclosed tag at <pos> », « Unopened section » ou « Unclosed section ».
+Splits the template into a token tree. `tags` is an array of two strings (opening and closing delimiter, mustaches by default). Raises an error "Unclosed tag at <pos>", "Unopened section" or "Unclosed section".
 
 - `self` (*any*) : 
-- `template` (*string*) : Texte du gabarit.
-- `tags` (*string[]|nil*) : Délimiteurs personnalisés.
-- **renvoie** : table Arbre de jetons {type, value, startIndex, endIndex, tokens?}.
+- `template` (*string*) : Template text.
+- `tags` (*string[]|nil*) : Custom delimiters.
+- **returns**: table Token tree {type, value, startIndex, endIndex, tokens?}.
 
 #### `renderer.render(self, template, view, partials)`
 
-Rend le gabarit `template` avec `view`. Compile et met en cache le gabarit au premier appel. Si `partials` est fourni, il est mémorisé comme table de partiels. Renvoie "" si `template` est nil. Erreur si appelé avec un point (`self` est une chaîne).
+Renders the template `template` with `view`. Compiles and caches the template on the first call. If `partials` is provided, it is stored as the partials table. Returns "" if `template` is nil. Error if called with a dot (`self` is a string).
 
 - `self` (*any*) : 
-- `template` (*string|nil*) : Texte du gabarit.
-- `view` (*table|Context|nil*) : Données ; une table est enveloppée dans un Context.
-- `partials` (*table<string, string>|nil*) : Partiels : nom -> texte du gabarit.
-- **renvoie** : string Texte rendu.
+- `template` (*string|nil*) : Template text.
+- `view` (*table|Context|nil*) : Data; a table is wrapped in a Context.
+- `partials` (*table<string, string>|nil*) : Partials: name -> template text.
+- **returns**: string Rendered text.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/libs/lustach/src/lustache/renderer.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/libs/lustach/src/lustache/renderer.lua`.*

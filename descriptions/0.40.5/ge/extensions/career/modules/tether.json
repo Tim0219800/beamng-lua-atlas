@@ -1,108 +1,256 @@
 {
   "path": "lua/ge/extensions/career/modules/tether.lua",
-  "module": "Système de « laisses » (tethers) du mode carrière : une zone (boîte, sphère, capsule, porte ou véhicule) autour de laquelle le joueur doit rester. Quand le joueur (véhicule joueur 0, ou unicycle à pied) sort de la zone, le callback est appelé une fois et la laisse est retirée. Le hook onUpdate de l'extension n'est branché que tant qu'au moins une laisse est active.",
-  "usage": "local t = career_modules_tether.startSphereTether(vec3(100,200,50), 30, function(tether) log('I','','trop loin') end)\n-- plus tard, pour annuler sans déclencher le callback :\ncareer_modules_tether.removeTether(t)",
+  "module": "Career mode \"tether\" system: a zone (box, sphere, capsule, gate or vehicle) the player must stay around. When the player (player vehicle 0, or unicycle on foot) leaves the zone, the callback is called once and the tether is removed. The extension's onUpdate hook is wired only while at least one tether is active.",
+  "usage": "local t = career_modules_tether.startSphereTether(vec3(100,200,50), 30, function(tether) log('I','','too far') end)\n-- later, to cancel without triggering the callback:\ncareer_modules_tether.removeTether(t)",
   "notes": [
-    "Distances en mètres. Les laisses sont testées à chaque onUpdate ; le callback reçoit la table de la laisse.",
-    "Bug : startCapsuleTetherBetweenStaticAndVehicle utilise checkfun = checkWalkawayCapsuleTether, qui n'est pas défini dans le fichier (nil) ; la fonction checkCapsuleTetherWithVeh, qui semble prévue pour cet usage, n'est jamais utilisée. Une telle laisse provoquerait une erreur dans onUpdate.",
-    "Bug mineur : startVehicleTether lit une variable globale `data` inexistante (data = data or {}) : data vaut toujours {} ; le paramètre callback est bien utilisé mais aucun paramètre data n'existe.",
-    "Si le véhicule cible d'une laisse véhicule n'existe plus, la laisse se déclenche (callback appelé).",
-    "Les fonctions check* retournent nil (pas de déclenchement) si aucun véhicule joueur n'existe."
+    "Distances in meters. Tethers are tested on each onUpdate; the callback receives the tether table.",
+    "Bug: startCapsuleTetherBetweenStaticAndVehicle uses checkfun = checkWalkawayCapsuleTether, which is not defined in the file (nil); the checkCapsuleTetherWithVeh function, which seems intended for this use, is never used. Such a tether would cause an error in onUpdate.",
+    "Minor bug: startVehicleTether reads a nonexistent global variable `data` (data = data or {}): data is always {}; the callback parameter is used correctly but no data parameter exists.",
+    "If the target vehicle of a vehicle tether no longer exists, the tether triggers (callback called).",
+    "The check* functions return nil (no trigger) if no player vehicle exists."
   ],
   "fields": {
-    "onUpdate": {"type": "function", "desc": "Vaut nop au départ ; remplacé par la vraie boucle de vérification dès qu'une laisse est ajoutée, remis à nil quand la dernière est retirée (avec extensions.hookUpdate pour (dés)enregistrer le hook)."}
+    "onUpdate": {
+      "type": "function",
+      "desc": "Is nop at the start; replaced by the real checking loop as soon as a tether is added, set back to nil when the last one is removed (with extensions.hookUpdate to (un)register the hook)."
+    }
   },
   "functions": {
     "startBoxTether": {
-      "desc": "Crée une laisse en boîte orientée : se déclenche quand le joueur sort de la boîte définie par le coin p1 et les vecteurs d'arêtes x1, y1, z1.",
+      "desc": "Creates an oriented box tether: triggers when the player leaves the box defined by corner p1 and edge vectors x1, y1, z1.",
       "params": {
-        "p1": {"type": "vec3", "desc": "Coin de la boîte."},
-        "x1": {"type": "vec3", "desc": "Vecteur d'arête X."},
-        "y1": {"type": "vec3", "desc": "Vecteur d'arête Y."},
-        "z1": {"type": "vec3", "desc": "Vecteur d'arête Z."},
-        "callback": {"type": "function", "desc": "Appelé avec la laisse quand le joueur est sorti."},
-        "data": {"type": "any", "desc": "Données libres conservées dans la laisse (t.data)."}
+        "p1": {
+          "type": "vec3",
+          "desc": "Corner of the box."
+        },
+        "x1": {
+          "type": "vec3",
+          "desc": "X edge vector."
+        },
+        "y1": {
+          "type": "vec3",
+          "desc": "Y edge vector."
+        },
+        "z1": {
+          "type": "vec3",
+          "desc": "Z edge vector."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Called with the tether when the player has left."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Free-form data kept in the tether (t.data)."
+        }
       },
-      "returns": [{"type": "table", "desc": "La table de la laisse (à passer à removeTether)."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The tether table (to pass to removeTether)."
+        }
+      ],
       "internal": false
     },
     "startDoorTether": {
-      "desc": "Crée une laisse en boîte à partir d'un objet de zone de la scène (door[1] = nom de l'objet), agrandie de bufferLength mètres sur chaque axe. Ne retourne rien si l'objet n'est pas trouvé.",
+      "desc": "Creates a box tether from a zone object in the scene (door[1] = object name), enlarged by bufferLength meters on each axis. Returns nothing if the object is not found.",
       "params": {
-        "door": {"type": "table", "desc": "Table dont le premier élément est le nom de l'objet de la scène."},
-        "bufferLength": {"type": "number|nil", "desc": "Marge ajoutée à chaque axe, défaut 1."},
-        "callback": {"type": "function", "desc": "Appelé quand le joueur sort."},
-        "data": {"type": "any", "desc": "Données libres."}
+        "door": {
+          "type": "table",
+          "desc": "Table whose first element is the scene object name."
+        },
+        "bufferLength": {
+          "type": "number|nil",
+          "desc": "Margin added to each axis, default 1."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Called when the player leaves."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Free-form data."
+        }
       },
-      "returns": [{"type": "table|nil", "desc": "La laisse, ou nil si l'objet est introuvable."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "The tether, or nil if the object is not found."
+        }
+      ],
       "internal": false
     },
     "startSphereTether": {
-      "desc": "Crée une laisse sphérique : se déclenche quand le véhicule du joueur est à plus de r1 mètres de p1.",
+      "desc": "Creates a spherical tether: triggers when the player's vehicle is more than r1 meters from p1.",
       "params": {
-        "p1": {"type": "vec3", "desc": "Centre."},
-        "r1": {"type": "number", "desc": "Rayon en mètres."},
-        "callback": {"type": "function", "desc": "Appelé quand le joueur sort."},
-        "data": {"type": "any", "desc": "Données libres."}
+        "p1": {
+          "type": "vec3",
+          "desc": "Center."
+        },
+        "r1": {
+          "type": "number",
+          "desc": "Radius in meters."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Called when the player leaves."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Free-form data."
+        }
       },
-      "returns": [{"type": "table", "desc": "La laisse."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The tether."
+        }
+      ],
       "internal": false
     },
     "startCapsuleTetherBetweenStatics": {
-      "desc": "Crée une laisse en capsule conique entre deux points fixes, le rayon variant linéairement de r1 à r2 le long du segment.",
+      "desc": "Creates a conical capsule tether between two fixed points, with the radius varying linearly from r1 to r2 along the segment.",
       "params": {
-        "p1": {"type": "vec3", "desc": "Premier point."},
-        "r1": {"type": "number", "desc": "Rayon au premier point."},
-        "p2": {"type": "vec3", "desc": "Second point."},
-        "r2": {"type": "number", "desc": "Rayon au second point."},
-        "callback": {"type": "function", "desc": "Appelé quand le joueur sort."},
-        "data": {"type": "any", "desc": "Données libres."}
+        "p1": {
+          "type": "vec3",
+          "desc": "First point."
+        },
+        "r1": {
+          "type": "number",
+          "desc": "Radius at the first point."
+        },
+        "p2": {
+          "type": "vec3",
+          "desc": "Second point."
+        },
+        "r2": {
+          "type": "number",
+          "desc": "Radius at the second point."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Called when the player leaves."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Free-form data."
+        }
       },
-      "returns": [{"type": "table", "desc": "La laisse."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The tether."
+        }
+      ],
       "internal": false
     },
     "startCapsuleTetherBetweenStaticAndVehicle": {
-      "desc": "Prévue pour une capsule entre un point fixe et un véhicule (p2 suit le véhicule). Voir notes : checkfun référence une fonction non définie.",
+      "desc": "Intended for a capsule between a fixed point and a vehicle (p2 follows the vehicle). See notes: checkfun references an undefined function.",
       "params": {
-        "p1": {"type": "vec3", "desc": "Point fixe."},
-        "r1": {"type": "number", "desc": "Rayon au point fixe."},
-        "vehId": {"type": "integer", "desc": "Id du véhicule."},
-        "r2": {"type": "number", "desc": "Rayon côté véhicule."},
-        "callback": {"type": "function", "desc": "Appelé quand le joueur sort."},
-        "data": {"type": "any", "desc": "Données libres."}
+        "p1": {
+          "type": "vec3",
+          "desc": "Fixed point."
+        },
+        "r1": {
+          "type": "number",
+          "desc": "Radius at the fixed point."
+        },
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        },
+        "r2": {
+          "type": "number",
+          "desc": "Radius on the vehicle side."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Called when the player leaves."
+        },
+        "data": {
+          "type": "any",
+          "desc": "Free-form data."
+        }
       },
-      "returns": [{"type": "table", "desc": "La laisse."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The tether."
+        }
+      ],
       "internal": false
     },
     "startVehicleTether": {
-      "desc": "Crée une laisse autour d'un véhicule : se déclenche quand le joueur est à plus de radius mètres du véhicule, ou, si inverse est vrai, quand il est à moins de radius mètres.",
+      "desc": "Creates a tether around a vehicle: triggers when the player is more than radius meters from the vehicle, or, if inverse is true, when they are less than radius meters away.",
       "params": {
-        "vehId": {"type": "integer", "desc": "Id du véhicule suivi."},
-        "radius": {"type": "number", "desc": "Rayon en mètres."},
-        "inverse": {"type": "boolean|nil", "desc": "Si vrai, déclenche à l'approche plutôt qu'à l'éloignement."},
-        "callback": {"type": "function", "desc": "Appelé au déclenchement."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Id of the tracked vehicle."
+        },
+        "radius": {
+          "type": "number",
+          "desc": "Radius in meters."
+        },
+        "inverse": {
+          "type": "boolean|nil",
+          "desc": "If true, triggers on approach rather than on moving away."
+        },
+        "callback": {
+          "type": "function",
+          "desc": "Called on trigger."
+        }
       },
-      "returns": [{"type": "table", "desc": "La laisse."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The tether."
+        }
+      ],
       "internal": false
     },
     "addTether": {
-      "desc": "Ajoute une table de laisse (avec checkfun et callback) à la liste active et active le hook onUpdate si c'est la première.",
-      "params": {"t": {"type": "table", "desc": "Laisse avec checkfun(t) et callback(t)."}},
+      "desc": "Adds a tether table (with checkfun and callback) to the active list and enables the onUpdate hook if it is the first.",
+      "params": {
+        "t": {
+          "type": "table",
+          "desc": "Tether with checkfun(t) and callback(t)."
+        }
+      },
       "internal": false
     },
     "removeTether": {
-      "desc": "Retire une laisse de la liste sans appeler son callback. Sans effet si t est nil ou absente.",
-      "params": {"t": {"type": "table|nil", "desc": "Laisse retournée par un start*Tether."}},
+      "desc": "Removes a tether from the list without calling its callback. No effect if t is nil or absent.",
+      "params": {
+        "t": {
+          "type": "table|nil",
+          "desc": "Tether returned by a start*Tether."
+        }
+      },
       "internal": false
     },
     "drawAxisBox": {
-      "desc": "Dessine une boîte translucide avec debugDrawer (faces en triangles, arêtes noires), utile pour visualiser une laisse en boîte.",
+      "desc": "Draws a translucent box with debugDrawer (faces as triangles, black edges), useful to visualize a box tether.",
       "params": {
-        "corner": {"type": "vec3", "desc": "Coin de la boîte."},
-        "x": {"type": "vec3", "desc": "Vecteur d'arête X."},
-        "y": {"type": "vec3", "desc": "Vecteur d'arête Y."},
-        "z": {"type": "vec3", "desc": "Vecteur d'arête Z."},
-        "clr": {"type": "any", "desc": "Couleur des faces, défaut color(128,64,64,32)."}
+        "corner": {
+          "type": "vec3",
+          "desc": "Corner of the box."
+        },
+        "x": {
+          "type": "vec3",
+          "desc": "X edge vector."
+        },
+        "y": {
+          "type": "vec3",
+          "desc": "Y edge vector."
+        },
+        "z": {
+          "type": "vec3",
+          "desc": "Z edge vector."
+        },
+        "clr": {
+          "type": "any",
+          "desc": "Face color, default color(128,64,64,32)."
+        }
       },
       "internal": false
     }

@@ -1,0 +1,124 @@
+{
+  "path": "lua/ge/extensions/editor/sceneTree.lua",
+  "module": "Fenêtre « Scene Tree » de l'éditeur de niveaux : affiche la hiérarchie des objets de la scène (MissionGroup, SimGroups, objets) sous forme d'arbre ImGui avec défilement virtuel, recherche (par nom, ID, ID persistant, classe ou tout), sélection multiple, glisser-déposer, renommage, tri, suppression, création d'objets et menus contextuels. Il met en cache l'arbre côté Lua (nœuds) et le synchronise avec le moteur via les transactions de SimSet. Il installe aussi des fonctions dans la table editor (voir classe « editor »). Un moddeur s'en sert surtout pour ajouter des entrées au menu contextuel et rafraîchir l'arbre après avoir créé/supprimé des objets par script.",
+  "usage": "-- ajouter une entrée au menu contextuel d'un objet\neditor.addExtendedSceneTreeObjectMenuItem({\n  title = 'Mon action',\n  extendedSceneTreeObjectMenuItems = function(node) log('I','', 'noeud '..node.id) end,\n  validator = function(node) return true end\n})\n-- rafraichir l'arbre\neditor.refreshSceneTreeWindow()",
+  "notes": [
+    "Le commentaire du code cite un champ onExtendedSceneTreeObjectMenuItemSelected, mais c'est bien le champ extendedSceneTreeObjectMenuItems (fonction appelée avec le nœud) que lit le menu contextuel. Le validator est facultatif et n'est pas vérifié par addExtendedSceneTreeObjectMenuItem.",
+    "Une seule instance de fenêtre est permise : openSceneTree ne fait rien si une instance existe déjà.",
+    "Les fonctions de la table editor ne sont installées qu'à partir de onExtensionLoaded / onEditorInitialized (par ex. editor.addExtendedSceneTreeObjectMenuItem existe seulement après le chargement de cette extension).",
+    "Avant la sauvegarde du niveau (onEditorBeforeSaveLevel), l'ordre de tous les objets sous MissionGroup est stocké dans editor.orderTable (liste d'ids, parcours en profondeur).",
+    "Le focus d'un groupe (focus lock) fait de ce groupe la racine de l'arbre ; il est levé à l'ouverture d'un niveau et à la désactivation de l'éditeur."
+  ],
+  "functions": {
+    "openSceneTree": {"desc": "Ouvre une fenêtre Scene Tree si aucune n'existe encore (une seule instance autorisée).", "params": {}, "returns": [], "internal": false},
+    "closeAllInstances": {"desc": "Ferme et désenregistre toutes les fenêtres Scene Tree.", "params": {}, "returns": [], "internal": false},
+    "recacheAllNodes": {
+      "desc": "Reconstruit entièrement le cache de nœuds de toutes les instances depuis la scène Sim. Avec keepOpenStatus, l'état ouvert/fermé des groupes est conservé.",
+      "params": {"keepOpenStatus": {"type": "boolean|nil", "desc": "true pour garder les groupes ouverts dans leur état actuel."}},
+      "returns": [],
+      "internal": false
+    },
+    "refreshAllNodes": {
+      "desc": "Met à jour le cache des groupes de chaque instance (à partir de sa racine) puis invalide le cache de taille ; version plus légère que recacheAllNodes.",
+      "params": {"incomingObjectIds": {"type": "table|nil", "desc": "Ids des objets entrants à intégrer (déduit du code)."}},
+      "returns": [],
+      "internal": false
+    },
+    "refreshNodeNames": {
+      "desc": "Recalcule le nom et le nom affiché des nœuds dont l'id est dans la liste. Ne fait rien si objectIds est nil.",
+      "params": {"objectIds": {"type": "integer[]|nil", "desc": "Ids d'objets renommés."}},
+      "returns": [],
+      "internal": false
+    },
+    "moveSelectionIndex": {
+      "desc": "Déplace la sélection d'une ligne dans l'instance qui a le focus (utilisé par les flèches de l'action map « SceneTree »).",
+      "params": {"up": {"type": "boolean", "desc": "true pour monter, false pour descendre."}},
+      "returns": [],
+      "internal": false
+    },
+    "debugNode": {
+      "desc": "Journalise (log niveau I) le nœud de cache correspondant à l'objet donné, dans chaque instance qui le contient.",
+      "params": {
+        "id": {"type": "integer", "desc": "Id de l'objet."},
+        "level": {"type": "integer|nil", "desc": "Profondeur passée à dumpsz."}
+      },
+      "returns": [],
+      "internal": false
+    },
+    "onExtensionLoaded": {
+      "desc": "Appelé au chargement de l'extension : prépare la liste des modes de recherche et installe editor.addExtendedSceneTreeObjectMenuItem.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Appelé à l'initialisation de l'éditeur : récupère les icônes de classes (worldEditorCppApi.getObjectClassIcons), met en cache l'arbre, installe les fonctions editor.* (removeObjectFromSet, submitTransactions, getSelectedSceneTreeNodes, getSceneTreeSelectedGroup, refreshSceneTreeWindow, hideAll/showAllSceneTreeInstances) et ajoute l'entrée de menu « Scene Tree ».",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {"desc": "Appelé à chaque image : dessine chaque instance de fenêtre Scene Tree (arbre virtualisé, barre de recherche, menus, glisser-déposer).", "params": {}, "returns": [], "internal": true},
+    "onEditorActivated": {"desc": "Appelé à l'activation de l'éditeur : resynchronise la sélection de l'arbre.", "params": {}, "returns": [], "internal": true},
+    "onEditorDeactivated": {"desc": "Appelé à la désactivation de l'éditeur : lève le focus lock s'il est actif.", "params": {}, "returns": [], "internal": true},
+    "onEditorAfterOpenLevel": {"desc": "Appelé après l'ouverture d'un niveau dans l'éditeur : lève le focus lock, reconstruit le cache, vide la sélection et le filtre.", "params": {}, "returns": [], "internal": true},
+    "onEditorBeforeSaveLevel": {"desc": "Appelé avant la sauvegarde du niveau : remplit editor.orderTable avec les ids de tous les objets sous MissionGroup (parcours en profondeur).", "params": {}, "returns": [], "internal": true},
+    "onEditorFocusLockChanged": {"desc": "Appelé quand le focus lock change : ré-enracine toutes les instances sur le groupe verrouillé (ou la racine) en gardant l'état ouvert, et force la racine ouverte.", "params": {}, "returns": [], "internal": true},
+    "onEditorObjectAdded": {"desc": "Appelé quand un objet est ajouté dans l'éditeur : reconstruit le cache (en gardant les groupes ouverts) et rafraîchit le cache de nœuds.", "params": {}, "returns": [], "internal": true},
+    "onEditorObjectSelectionChanged": {"desc": "Appelé quand la sélection d'objets de l'éditeur change : met à jour les nœuds sélectionnés de chaque instance.", "params": {}, "returns": [], "internal": true},
+    "onEditorInspectorFieldChanged": {
+      "desc": "Appelé quand un champ est modifié dans l'inspecteur : rafraîchit les noms des nœuds et, pour les objets contenus dans une instance de prefab, met à jour le décalage de transformation de l'enfant.",
+      "params": {"selectedIds": {"type": "integer[]", "desc": "Ids des objets modifiés."}},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorLoadGuiInstancerState": {
+      "desc": "Restaure les instances de fenêtre Scene Tree depuis l'état sauvegardé de la disposition de l'éditeur.",
+      "params": {"state": {"type": "table", "desc": "État global du guiInstancer."}},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorSaveGuiInstancerState": {
+      "desc": "Sauvegarde les instances de fenêtre (sans sélection, cache ni filtre) dans l'état de disposition de l'éditeur.",
+      "params": {"state": {"type": "table", "desc": "État global à remplir."}},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorToolWindowGotFocus": {
+      "desc": "Appelé quand une fenêtre d'outil prend le focus : si c'est un Scene Tree, marque l'instance comme focalisée et pousse l'action map « SceneTree ».",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre."}},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorToolWindowLostFocus": {
+      "desc": "Appelé quand une fenêtre d'outil perd le focus : retire le focus de l'instance et dépile l'action map « SceneTree » quand plus aucune instance n'est focalisée.",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre."}},
+      "returns": [],
+      "internal": true
+    }
+  },
+  "classes": {
+    "editor": {
+      "desc": "Fonctions ajoutées à la table globale `editor` par cette extension (et non un objet instancié). Elles sont disponibles une fois l'extension et l'éditeur initialisés. Autres ajouts non listés ici : addExtendedSceneTreeObjectMenuItem, getSelectedSceneTreeNodes, refreshSceneTreeWindow, hideAllSceneTreeInstances, showAllSceneTreeInstances.",
+      "functions": {
+        "getSceneTreeSelectedGroup": {
+          "desc": "Renvoie le groupe de la scène dans lequel ajouter de nouveaux objets : le groupe focus-locké s'il y en a un, sinon le groupe sélectionné (ou le parent du premier nœud sélectionné), sinon MissionGroup.",
+          "params": {"instance": {"type": "table|nil", "desc": "Instance de Scene Tree dont on lit la sélection."}},
+          "returns": [{"type": "userdata", "desc": "Objet SimGroup."}]
+        },
+        "removeObjectFromSet": {
+          "desc": "Retire l'objet des nœuds de toutes les instances et rafraîchit l'arbre (appelé quand un objet quitte un SimSet).",
+          "params": {
+            "object": {"type": "userdata", "desc": "Objet retiré."},
+            "simset": {"type": "userdata", "desc": "SimSet d'origine (non utilisé dans le code)."}
+          },
+          "returns": []
+        },
+        "submitTransactions": {
+          "desc": "Traite le lot d'opérations de SimSet envoyé par le moteur : tableau plat de triplets (type, objId, groupId) pour ClearSet, AddObject, RemoveObject, AssignObjectName, ReorderObject, et met à jour l'arbre en conséquence (par lots).",
+          "params": {"transactions": {"type": "integer[]", "desc": "Tableau plat de triplets d'entiers."}},
+          "returns": []
+        }
+      }
+    }
+  }
+}

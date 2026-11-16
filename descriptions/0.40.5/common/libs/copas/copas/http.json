@@ -1,35 +1,80 @@
 {
   "path": "lua/common/libs/copas/copas/http.lua",
-  "module": "Sous-module HTTP de la bibliothèque tierce Copas : copie complète du client HTTP/1.1 de LuaSocket (Diego Nehab) modifiée pour gérer https, les redirections http/https et les sockets Copas asynchrones. Définit copas.http ; copas.http.request(url[, body]) renvoie corps, code, en-têtes, statut. À appeler depuis une coroutine Copas.",
+  "module": "HTTP submodule of the third-party Copas library: full copy of LuaSocket's HTTP/1.1 client (Diego Nehab) modified to handle https, http/https redirects and asynchronous Copas sockets. Defines copas.http; copas.http.request(url[, body]) returns body, code, headers, status. To be called from a Copas coroutine.",
   "usage": "copas.addthread(function()\n  local body, code = copas.http.request(\"http://example.org/\")\nend)",
   "notes": [
-    "Avec une URL en chaîne : GET (ou POST si body est donné, content-type application/x-www-form-urlencoded) ; renvoie body, code, headers, status, ou nil + erreur.",
-    "Avec une table, la requête avancée accepte url, method, headers, source, sink, create, etc. (comme LuaSocket).",
-    "Le premier parseRequest définit target (table recevant les morceaux du corps) et sink."
+    "With a string URL: GET (or POST if body is given, content-type application/x-www-form-urlencoded); returns body, code, headers, status, or nil + error.",
+    "With a table, the advanced request accepts url, method, headers, source, sink, create, etc. (as in LuaSocket).",
+    "The first parseRequest defines target (table receiving the body chunks) and sink."
   ],
   "fields": {
-    "TIMEOUT": {"type": "number", "desc": "Timeout de connexion, 60 s."},
-    "PORT": {"type": "integer", "desc": "Port par défaut HTTP, 80."},
-    "USERAGENT": {"type": "string", "desc": "Champ User-Agent envoyé, valeur de socket._VERSION."},
-    "SSLPORT": {"type": "integer", "desc": "Port par défaut HTTPS, 443."},
-    "SSLPROTOCOL": {"type": "string", "desc": "Protocole SSL par défaut, \"tlsv1_2\"."},
-    "SSLOPTIONS": {"type": "string", "desc": "Options SSL par défaut, \"all\"."},
-    "SSLVERIFY": {"type": "string", "desc": "Vérification des certificats, \"none\" par défaut (non vérifiés)."},
-    "request": {"type": "function", "desc": "request(url_ou_table, body) : envoie une requête HTTP/HTTPS (protégée par socket.protect)."}
+    "TIMEOUT": {
+      "type": "number",
+      "desc": "Connection timeout, 60 s."
+    },
+    "PORT": {
+      "type": "integer",
+      "desc": "Default HTTP port, 80."
+    },
+    "USERAGENT": {
+      "type": "string",
+      "desc": "User-Agent field sent, value of socket._VERSION."
+    },
+    "SSLPORT": {
+      "type": "integer",
+      "desc": "Default HTTPS port, 443."
+    },
+    "SSLPROTOCOL": {
+      "type": "string",
+      "desc": "Default SSL protocol, \"tlsv1_2\"."
+    },
+    "SSLOPTIONS": {
+      "type": "string",
+      "desc": "Default SSL options, \"all\"."
+    },
+    "SSLVERIFY": {
+      "type": "string",
+      "desc": "Certificate verification, \"none\" by default (not verified)."
+    },
+    "request": {
+      "type": "function",
+      "desc": "request(url_or_table, body): sends an HTTP/HTTPS request (protected by socket.protect)."
+    }
   },
   "functions": {
     "open": {
-      "desc": "API bas niveau : crée le socket (reqt:create()), fixe le timeout, se connecte à reqt.host:reqt.port et renvoie un objet de connexion HTTP.",
-      "params": {"reqt": {"type": "table", "desc": "Requête avec host, port, create"}},
-      "returns": [{"type": "table", "desc": "Objet de connexion"}]
+      "desc": "Low-level API: creates the socket (reqt:create()), sets the timeout, connects to reqt.host:reqt.port and returns an HTTP connection object.",
+      "params": {
+        "reqt": {
+          "type": "table",
+          "desc": "Request with host, port, create"
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Connection object"
+        }
+      ]
     },
     "parseRequest": {
-      "desc": "Convertit la forme abrégée en table de requête avancée avec champ target (résultats) ; si un corps est donné : méthode POST, en-têtes content-length et content-type.",
+      "desc": "Converts the short form into an advanced request table with a target field (results); if a body is given: POST method, content-length and content-type headers.",
       "params": {
-        "u": {"type": "string", "desc": "URL"},
-        "b": {"type": "string|nil", "desc": "Corps POST"}
+        "u": {
+          "type": "string",
+          "desc": "URL"
+        },
+        "b": {
+          "type": "string|nil",
+          "desc": "POST body"
+        }
       },
-      "returns": [{"type": "table", "desc": "Table de requête"}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Request table"
+        }
+      ]
     }
   }
 }

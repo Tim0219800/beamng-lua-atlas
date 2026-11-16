@@ -1,104 +1,104 @@
 # `controller_drivingDynamics_actuators_activeDiffLock`
 
-*Fichier : `lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua` · VM : Véhicule · 245 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua` · VM: Vehicle · 245 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `drivingDynamics/actuators/activeDiffLock` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `drivingDynamics/actuators/activeDiffLock` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Actionneur de la Driving Dynamics Suite : verrouillage actif d'un différentiel d'essieu. À 100 Hz (updateFixedStep) il compare les vitesses des deux sorties corrigées du rayon de braquage (`CMU.vehicleData.turningCircleSpeedRatios`) ; sous accélérateur, un PID règle un coefficient de verrouillage 0..1 qui monte quand l'écart de vitesse dépasse `avDiffThreshold`. Le coefficient est écrit dans `relevantDifferential.activeLockCoef`. Les superviseurs peuvent le borner par `overrideMin`/`overrideMax`. Ordre d'appel : `defaultOrder = 80`.
+Driving Dynamics Suite actuator: active locking of an axle differential. At 100 Hz (updateFixedStep) it compares the speeds of the two outputs corrected for the turning radius (`CMU.vehicleData.turningCircleSpeedRatios`); under throttle, a PID sets a locking coefficient 0..1 that rises when the speed difference exceeds `avDiffThreshold`. The coefficient is written to `relevantDifferential.activeLockCoef`. Supervisors can bound it with `overrideMin`/`overrideMax`. Call order: `defaultOrder = 80`.
 
-## Remarques
+## Notes
 
-- Clés jbeam lues par init : `avDiffThreshold` (3 rad/s), `lockingPIDkP` (0.5), `lockingPIDkI` (0.5), `lockingPIDkD` (0), `name`. Lue par initSecondStage : `differentialName`.
-- Sans accélérateur (`electrics.values.throttle` <= 0), le verrouillage est 0 et le PID et le lisseur sont remis à zéro.
-- Une vitesse de sortie de signe opposé à l'entrée est mise à 0 avant le calcul de l'écart.
-- Nécessite `CMU.vehicleData` ; sans CMU enregistré, initSecondStage appelle shutdown.
-- `reset` ne remet pas `overrideMin`/`overrideMax` (appeler resetOverride) ni le coefficient interne.
-- `shutdown` met isActive/isActing à false et retire updateGFX et updateFixedStep.
+- jbeam keys read by init: `avDiffThreshold` (3 rad/s), `lockingPIDkP` (0.5), `lockingPIDkI` (0.5), `lockingPIDkD` (0), `name`. Read by initSecondStage: `differentialName`.
+- Without throttle (`electrics.values.throttle` <= 0), the locking is 0 and the PID and the smoother are reset to zero.
+- An output speed with the opposite sign to the input is set to 0 before computing the difference.
+- Requires `CMU.vehicleData`; without a registered CMU, initSecondStage calls shutdown.
+- `reset` does not reset `overrideMin`/`overrideMax` (call resetOverride) nor the internal coefficient.
+- `shutdown` sets isActive/isActing to false and removes updateGFX and updateFixedStep.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_drivingDynamics_actuators_activeDiffLock.getConfig()` | Renvoie une copie des paramètres. | 217 |
-| `controller_drivingDynamics_actuators_activeDiffLock.init(jbeamData)` | Lit les paramètres jbeam et crée le PID. *(interne)* | 132 |
-| `controller_drivingDynamics_actuators_activeDiffLock.initSecondStage(jbeamData)` | Retrouve le différentiel (`differentialName`) et les roues de chaque sortie ; active le système. *(interne)* | 154 |
-| `controller_drivingDynamics_actuators_activeDiffLock.registerCMU(cmu)` | Appelée par le CMU pour donner une référence vers lui. *(interne)* | 192 |
-| `controller_drivingDynamics_actuators_activeDiffLock.reset()` | Remet isActing à false. *(interne)* | 128 |
-| `controller_drivingDynamics_actuators_activeDiffLock.resetOverride()` | Remet les bornes d'override à 0 et 1. | 46 |
-| `controller_drivingDynamics_actuators_activeDiffLock.sendConfigData()` | Envoie les paramètres au CMU dans un paquet de debug config. *(interne)* | 221 |
-| `controller_drivingDynamics_actuators_activeDiffLock.setConfig(configTable)` | Remplace toute la table de paramètres. *(interne)* | 213 |
-| `controller_drivingDynamics_actuators_activeDiffLock.setDebugMode(debugEnabled)` | Active ou désactive l'envoi de paquets de debug. *(interne)* | 186 |
-| `controller_drivingDynamics_actuators_activeDiffLock.setParameters(parameters)` | Modifie à chaud avDiffThreshold, isEnabled et lockingPIDkP/kI/kD (via CMU.applyParameter). | 196 |
-| `controller_drivingDynamics_actuators_activeDiffLock.shutdown()` | Arrête l'actionneur. *(interne)* | 121 |
-| `controller_drivingDynamics_actuators_activeDiffLock.updateFixedStep(dt)` | Pas fixe (100 Hz) : calcule l'écart de vitesse corrigé, le coefficient de verrouillage (PID lissé, borné par l'override) et l'écrit dans `activeLockCoef` du différentiel. *(interne)* | 51 |
-| `controller_drivingDynamics_actuators_activeDiffLock.updateGFX(dt)` | Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU. *(interne)* | 93 |
+| `controller_drivingDynamics_actuators_activeDiffLock.getConfig()` | Returns a copy of the parameters. | 217 |
+| `controller_drivingDynamics_actuators_activeDiffLock.init(jbeamData)` | Reads the jbeam parameters and creates the PID. *(internal)* | 132 |
+| `controller_drivingDynamics_actuators_activeDiffLock.initSecondStage(jbeamData)` | Finds the differential (`differentialName`) and the wheels of each output; enables the system. *(internal)* | 154 |
+| `controller_drivingDynamics_actuators_activeDiffLock.registerCMU(cmu)` | Called by the CMU to give it a reference to itself. *(internal)* | 192 |
+| `controller_drivingDynamics_actuators_activeDiffLock.reset()` | Sets isActing to false. *(internal)* | 128 |
+| `controller_drivingDynamics_actuators_activeDiffLock.resetOverride()` | Resets the override bounds to 0 and 1. | 46 |
+| `controller_drivingDynamics_actuators_activeDiffLock.sendConfigData()` | Sends the parameters to the CMU in a config debug packet. *(internal)* | 221 |
+| `controller_drivingDynamics_actuators_activeDiffLock.setConfig(configTable)` | Replaces the whole parameter table. *(internal)* | 213 |
+| `controller_drivingDynamics_actuators_activeDiffLock.setDebugMode(debugEnabled)` | Enables or disables sending debug packets. *(internal)* | 186 |
+| `controller_drivingDynamics_actuators_activeDiffLock.setParameters(parameters)` | Changes avDiffThreshold, isEnabled and lockingPIDkP/kI/kD at runtime (via CMU.applyParameter). | 196 |
+| `controller_drivingDynamics_actuators_activeDiffLock.shutdown()` | Stops the actuator. *(internal)* | 121 |
+| `controller_drivingDynamics_actuators_activeDiffLock.updateFixedStep(dt)` | Fixed step (100 Hz): computes the corrected speed difference and the locking coefficient (smoothed PID, bounded by the override) and writes it to the differential's `activeLockCoef`. *(internal)* | 51 |
+| `controller_drivingDynamics_actuators_activeDiffLock.updateGFX(dt)` | Every frame: nothing useful. Debug variant: sends the values to the CMU. *(internal)* | 93 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.getConfig()`
 
-Renvoie une copie des paramètres.
+Returns a copy of the parameters.
 
-- **renvoie** : table Copie profonde.
+- **returns**: table Deep copy.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.init(jbeamData)`
 
-Lit les paramètres jbeam et crée le PID.
+Reads the jbeam parameters and creates the PID.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.initSecondStage(jbeamData)`
 
-Retrouve le différentiel (`differentialName`) et les roues de chaque sortie ; active le système.
+Finds the differential (`differentialName`) and the wheels of each output; enables the system.
 
-- `jbeamData` (*table*) : Données jbeam.
+- `jbeamData` (*table*) : Jbeam data.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.registerCMU(cmu)`
 
-Appelée par le CMU pour donner une référence vers lui.
+Called by the CMU to give it a reference to itself.
 
-- `cmu` (*table*) : Module CMU.
+- `cmu` (*table*) : CMU module.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.setConfig(configTable)`
 
-Remplace toute la table de paramètres.
+Replaces the whole parameter table.
 
-- `configTable` (*table*) : Nouveaux paramètres.
+- `configTable` (*table*) : New parameters.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.setDebugMode(debugEnabled)`
 
-Active ou désactive l'envoi de paquets de debug.
+Enables or disables sending debug packets.
 
-- `debugEnabled` (*boolean*) : true pour envoyer.
+- `debugEnabled` (*boolean*) : true to send.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.setParameters(parameters)`
 
-Modifie à chaud avDiffThreshold, isEnabled et lockingPIDkP/kI/kD (via CMU.applyParameter).
+Changes avDiffThreshold, isEnabled and lockingPIDkP/kI/kD at runtime (via CMU.applyParameter).
 
-- `parameters` (*table*) : Table des paramètres à changer.
+- `parameters` (*table*) : Table of parameters to change.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.updateFixedStep(dt)`
 
-Pas fixe (100 Hz) : calcule l'écart de vitesse corrigé, le coefficient de verrouillage (PID lissé, borné par l'override) et l'écrit dans `activeLockCoef` du différentiel.
+Fixed step (100 Hz): computes the corrected speed difference and the locking coefficient (smoothed PID, bounded by the override) and writes it to the differential's `activeLockCoef`.
 
-- `dt` (*number*) : Pas en secondes.
+- `dt` (*number*) : Step in seconds.
 
 #### `controller_drivingDynamics_actuators_activeDiffLock.updateGFX(dt)`
 
-Chaque frame : rien d'utile. Variante debug : envoie les valeurs au CMU.
+Every frame: nothing useful. Debug variant: sends the values to the CMU.
 
-- `dt` (*number*) : Pas de temps en secondes.
+- `dt` (*number*) : Time step in seconds.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `defaultOrder` | number | 80. |
-| `isActing` | boolean | true si le coefficient de verrouillage est > 0. |
-| `isActive` | boolean | true si le différentiel et ses roues ont été trouvés. |
-| `overrideMax` | number | Borne haute du verrouillage (1 par défaut). |
-| `overrideMin` | number | Borne basse du verrouillage (0 par défaut). |
+| `isActing` | boolean | true if the locking coefficient is > 0. |
+| `isActive` | boolean | true if the differential and its wheels were found. |
+| `overrideMax` | number | Upper bound of the locking (1 by default). |
+| `overrideMin` | number | Lower bound of the locking (0 by default). |
 | `type` | string | "auxiliary". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/drivingDynamics/actuators/activeDiffLock.lua`.*

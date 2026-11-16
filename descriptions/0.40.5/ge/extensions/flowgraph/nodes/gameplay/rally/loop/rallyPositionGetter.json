@@ -1,13 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyPositionGetter.lua",
-  "module": "Nœud flowgraph « Rally Position Getter » (catégorie repeat_instant, tag rally). Cherche dans un pathData la position de départ portant le nom donné (pathData:findStartPositionByName) et renvoie sa position (pos) et sa rotation (rot). La sortie flow vaut true quand la position est trouvée.",
-  "notes": ["Malgré la description (« from the current rally loop manager »), le nœud n'utilise pas le gestionnaire de boucle : seul pathData compte.", "pos et rot sont renvoyés tels quels (vec3 et quat du chemin, pas des tables)."],
+  "module": "Flowgraph node \"Rally Position Getter\" (category repeat_instant, tag rally). Looks in a pathData for the start position with the given name (pathData:findStartPositionByName) and returns its position (pos) and rotation (rot). The flow output is true when the position is found.",
+  "notes": [
+    "Despite the description (\"from the current rally loop manager\"), the node does not use the loop manager: only pathData matters.",
+    "pos and rot are returned as is (vec3 and quat of the path, not tables)."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "_executionStarted": {"desc": "Met la sortie flow à false au démarrage.", "internal": true},
-        "work": {"desc": "Cherche la position nommée et renseigne pos, rot et flow.", "internal": true}
+        "_executionStarted": {
+          "desc": "Sets the flow output to false at start.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Looks for the named position and fills pos, rot and flow.",
+          "internal": true
+        }
       }
     }
   }

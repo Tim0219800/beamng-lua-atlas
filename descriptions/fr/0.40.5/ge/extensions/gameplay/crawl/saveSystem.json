@@ -1,0 +1,211 @@
+{
+  "path": "lua/ge/extensions/gameplay/crawl/saveSystem.lua",
+  "module": "Système de fichiers du mode crawl. Il lit et écrit les quatre types de fichiers JSON d'un niveau, dans /levels/<niveau>/crawls/ : *.trail.json (parcours), *.boundary.json (zone limite, objet gameplay/sites/zone), *.path.json (noeuds du chemin) et *.startingPosition.json (position de départ). Chaque objet est chargé à la demande puis mis en cache, avec _filePath, _fileName, _dir et _ext ajoutés ; l'id d'un objet est son chemin de fichier. Il gère aussi les scores du joueur par parcours (meilleur temps, meilleurs points de pénalité, tentatives), stockés dans settings/cloud/crawlTrails/ en freeroam ou dans le profil de carrière (/career/crawlTrails/).",
+  "usage": "local trails = gameplay_crawl_saveSystem.getAllTrails()\nlocal stats = gameplay_crawl_saveSystem.getPlayerTrailStats(trails[1]._filePath)",
+  "notes": [
+    "Un id de trail/boundary/path/startingPosition est le chemin complet du fichier ; son extension doit être .trail.json, .boundary.json, .path.json ou .startingPosition.json, sinon loadFromFile refuse.",
+    "Dans un chemin, les positions sont des tableaux {x,y,z} dans le JSON (champ position) et des vec3 en mémoire (champ pos) ; les rotations sont des quaternions {x,y,z,w}.",
+    "Plus petit = meilleur : bestPenaltyPoints et bestTime valent math.huge tant qu'aucun score n'est enregistré (à tester avec < math.huge).",
+    "Les fonctions getAllBoundaries, getAllPaths et getAllStartingPositions ne prennent pas de levelPath et listent toujours le niveau courant ; getAllTrails accepte un levelPath.",
+    "getStartingPositionById(id, trail) retourne nil si trail.isFromMission est vrai ou si l'id est vide.",
+    "En carrière, les scores sont sauvegardés par onSaveCurrentProfile (si marqués _dirty) ; hors carrière ils sont écrits immédiatement.",
+    "Incohérence : saveCrawlData n'enregistre que les trails ayant un champ id, alors que les parcours chargés utilisent _filePath comme identifiant (le champ id n'est pas posé par deserializeTrail).",
+    "Le cache n'est jamais invalidé automatiquement par un changement de fichier ; utiliser clearCache.",
+    "Les constantes savePathFreeroam/savePathCareer en tête de fichier sont commentées (réservées à un usage futur)."
+  ],
+  "functions": {
+    "getCurrentLevelCrawlPath": {
+      "desc": "Retourne le dossier des fichiers crawl du niveau courant.",
+      "returns": [{"type": "string|nil", "desc": "'/levels/<niveau>/crawls/', ou nil si aucun niveau n'est chargé."}],
+      "internal": false
+    },
+    "clearCache": {
+      "desc": "Vide le cache d'un type ('trails', 'boundaries', 'paths' ou 'startingPositions') ou de tous.",
+      "params": {"type": {"type": "string|nil", "desc": "Clé du cache ; tous les caches si nil."}},
+      "internal": false
+    },
+    "saveTrail": {
+      "desc": "Sérialise un parcours et l'écrit en JSON (création du dossier si besoin), puis le met en cache.",
+      "params": {
+        "trail": {"type": "table", "desc": "Parcours (name, description, pathId, boundaryId, startingPositionId, rules, prefabs…)."},
+        "filePath": {"type": "string", "desc": "Chemin du fichier .trail.json."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si écrit."}],
+      "internal": false
+    },
+    "saveBoundary": {
+      "desc": "Écrit une zone limite en JSON (via boundary:onSerialize()) et la met en cache.",
+      "params": {
+        "boundary": {"type": "table", "desc": "Zone (objet gameplay/sites/zone)."},
+        "filePath": {"type": "string", "desc": "Chemin du fichier .boundary.json."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si écrit."}],
+      "internal": false
+    },
+    "savePath": {
+      "desc": "Écrit un chemin (liste de noeuds : name, position, rotation, radius 4.0 par défaut, flags) en JSON et le met en cache.",
+      "params": {
+        "path": {"type": "table", "desc": "Chemin {name, description, nodes}."},
+        "filePath": {"type": "string", "desc": "Chemin du fichier .path.json."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si écrit."}],
+      "internal": false
+    },
+    "saveStartingPosition": {
+      "desc": "Écrit une position de départ (transform position/rotation/radius 10.0 par défaut, iconPosition, metadata) en JSON et la met en cache.",
+      "params": {
+        "startingPosition": {"type": "table", "desc": "Position de départ."},
+        "filePath": {"type": "string", "desc": "Chemin du fichier .startingPosition.json."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si écrit."}],
+      "internal": false
+    },
+    "loadCrawlData": {
+      "desc": "Charge un fichier de données crawl (name, description, icon, metadata, liste d'ids de trails) et résout chaque trail via getTrailById.",
+      "params": {"filename": {"type": "string", "desc": "Fichier JSON à lire."}},
+      "returns": [{"type": "table|nil", "desc": "{name, description, icon ('rockCrawling01' par défaut), metadata, trails}."}],
+      "internal": false
+    },
+    "saveCrawlData": {
+      "desc": "Écrit un fichier de données crawl : métadonnées et ids des trails (voir notes sur le champ id).",
+      "params": {
+        "saveData": {"type": "table", "desc": "{name, description, icon, metadata, trails}."},
+        "filepath": {"type": "string", "desc": "Fichier de sortie."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si écrit."}],
+      "internal": false
+    },
+    "getTrailById": {
+      "desc": "Charge (avec cache) un parcours à partir de son chemin de fichier.",
+      "params": {"trailId": {"type": "string", "desc": "Chemin du fichier .trail.json."}},
+      "returns": [{"type": "table|nil", "desc": "Parcours, avec _filePath, _fileName, _dir, _ext."}],
+      "internal": false
+    },
+    "getBoundaryById": {
+      "desc": "Charge (avec cache) une zone limite, créée comme objet zone puis désérialisée.",
+      "params": {"boundaryId": {"type": "string", "desc": "Chemin du fichier .boundary.json."}},
+      "returns": [{"type": "table|nil", "desc": "Zone."}],
+      "internal": false
+    },
+    "getPathById": {
+      "desc": "Charge (avec cache) un chemin ; les noeuds ont pos (vec3), rotation (quat), radius, flags, name.",
+      "params": {"pathId": {"type": "string", "desc": "Chemin du fichier .path.json."}},
+      "returns": [{"type": "table|nil", "desc": "Chemin {name, description, nodes, id}."}],
+      "internal": false
+    },
+    "getStartingPositionById": {
+      "desc": "Charge (avec cache) une position de départ. Retourne nil pour un parcours issu d'une mission ou un id vide.",
+      "params": {
+        "startingPositionId": {"type": "string|nil", "desc": "Chemin du fichier .startingPosition.json."},
+        "trail": {"type": "table|nil", "desc": "Parcours ; ignoré si isFromMission."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Position de départ {transform, iconPosition, …}."}],
+      "internal": false
+    },
+    "getAllTrailFiles": {
+      "desc": "Liste les chemins des fichiers *.trail.json d'un dossier (non récursif).",
+      "params": {"levelPath": {"type": "string|nil", "desc": "Dossier ; dossier crawl du niveau courant si nil."}},
+      "returns": [{"type": "string[]", "desc": "Chemins de fichiers."}],
+      "internal": false
+    },
+    "getAllBoundaryFiles": {
+      "desc": "Liste les fichiers *.boundary.json.",
+      "params": {"levelPath": {"type": "string|nil", "desc": "Dossier ; niveau courant si nil."}},
+      "returns": [{"type": "string[]", "desc": "Chemins de fichiers."}],
+      "internal": false
+    },
+    "getAllPathFiles": {
+      "desc": "Liste les fichiers *.path.json.",
+      "params": {"levelPath": {"type": "string|nil", "desc": "Dossier ; niveau courant si nil."}},
+      "returns": [{"type": "string[]", "desc": "Chemins de fichiers."}],
+      "internal": false
+    },
+    "getAllStartingPositionFiles": {
+      "desc": "Liste les fichiers *.startingPosition.json.",
+      "params": {"levelPath": {"type": "string|nil", "desc": "Dossier ; niveau courant si nil."}},
+      "returns": [{"type": "string[]", "desc": "Chemins de fichiers."}],
+      "internal": false
+    },
+    "getAllTrails": {
+      "desc": "Charge tous les parcours d'un dossier.",
+      "params": {"levelPath": {"type": "string|nil", "desc": "Dossier ; niveau courant si nil."}},
+      "returns": [{"type": "table[]", "desc": "Parcours."}],
+      "internal": false
+    },
+    "getAllBoundaries": {
+      "desc": "Charge toutes les zones limites du niveau courant.",
+      "returns": [{"type": "table[]", "desc": "Zones."}],
+      "internal": false
+    },
+    "getAllPaths": {
+      "desc": "Charge tous les chemins du niveau courant.",
+      "returns": [{"type": "table[]", "desc": "Chemins."}],
+      "internal": false
+    },
+    "getAllStartingPositions": {
+      "desc": "Charge toutes les positions de départ du niveau courant.",
+      "returns": [{"type": "table[]", "desc": "Positions de départ."}],
+      "internal": false
+    },
+    "ensurePlayerSaveDirectories": {
+      "desc": "Crée le dossier de sauvegarde freeroam settings/cloud/crawlTrails/ s'il n'existe pas.",
+      "internal": false
+    },
+    "onCareerActive": {
+      "desc": "Hook appelé quand la carrière change d'état : oublie les scores chargés pour les relire depuis le bon dossier.",
+      "internal": true
+    },
+    "onSaveCurrentProfile": {
+      "desc": "Hook appelé lors de la sauvegarde du profil de carrière : écrit les scores de parcours modifiés (_dirty).",
+      "params": {"currentSavePath": {"type": "string", "desc": "Dossier du profil courant."}},
+      "internal": true
+    },
+    "getPlayerCrawlTrailsById": {
+      "desc": "Charge (une fois) les scores du joueur pour tous les parcours du niveau courant, depuis le dossier freeroam ou le profil de carrière.",
+      "returns": [{"type": "table<string, table>", "desc": "Dictionnaire id -> {id, trail, saveData{bestTime, bestPenaltyPoints, bestTimeDate, bestPenaltyPointsDate, attempts}}."}],
+      "internal": false
+    },
+    "getPlayerCrawlTrailById": {
+      "desc": "Retourne les données de score d'un parcours.",
+      "params": {"trailId": {"type": "string", "desc": "Id (chemin de fichier) du parcours."}},
+      "returns": [{"type": "table|nil", "desc": "{id, trail, saveData}."}],
+      "internal": false
+    },
+    "savePlayerCrawlTrailScoresForTrailById": {
+      "desc": "Marque les scores du parcours comme modifiés ; hors carrière, les écrit tout de suite dans settings/cloud/crawlTrails/.",
+      "params": {"trailId": {"type": "string", "desc": "Id du parcours."}},
+      "internal": false
+    },
+    "addNewPlayerScore": {
+      "desc": "Enregistre une tentative : met à jour le meilleur temps (si > 0 et meilleur), les meilleurs points de pénalité (si >= 0 et plus bas) et incrémente le nombre de tentatives, puis sauvegarde.",
+      "params": {
+        "trailId": {"type": "string", "desc": "Id du parcours."},
+        "time": {"type": "number|nil", "desc": "Temps en secondes."},
+        "penaltyPoints": {"type": "number|nil", "desc": "Points de pénalité."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{isNewBestTime, isNewBestPenaltyPoints, bestTime, bestPenaltyPoints} ; nil si le parcours est inconnu (parcours de mission)."}],
+      "internal": false
+    },
+    "resetPlayerTrailScores": {
+      "desc": "Remet à zéro (math.huge, dates 0, tentatives 0) les scores d'un parcours et les sauvegarde.",
+      "params": {"trailId": {"type": "string", "desc": "Id du parcours."}},
+      "internal": false
+    },
+    "getPlayerTrailStats": {
+      "desc": "Retourne les statistiques du joueur sur un parcours.",
+      "params": {"trailId": {"type": "string", "desc": "Id du parcours."}},
+      "returns": [{"type": "table|nil", "desc": "{bestTime, bestPenaltyPoints, attempts} ; nil si inconnu."}],
+      "internal": false
+    },
+    "cleanup": {
+      "desc": "Vide tous les caches.",
+      "internal": false
+    },
+    "isTrailFromMission": {
+      "desc": "Indique si un parcours est issu d'une mission (isFromMission).",
+      "params": {"trail": {"type": "table|nil", "desc": "Parcours."}},
+      "returns": [{"type": "boolean", "desc": "true si isFromMission est vrai."}],
+      "internal": false
+    }
+  }
+}

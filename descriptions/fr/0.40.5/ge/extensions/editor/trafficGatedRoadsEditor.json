@@ -1,0 +1,69 @@
+{
+  "path": "lua/ge/extensions/editor/trafficGatedRoadsEditor.lua",
+  "module": "Éditeur « Traffic Gated Roads » (menu Traffic) : place des sphères (affichées comme des cylindres verticaux de 20 m de haut, rayon réglable) dans le monde et les enregistre dans un JSON, par défaut /gameplay/trafficGatedRoads.json. Chaque sphère a id, name, pos {x,y,z}, quat {x,y,z,w} et radius (10 par défaut). Ctrl+clic ajoute une sphère, Maj+clic duplique la sélection, clic sélectionne, Suppr supprime ; un gizmo déplace, tourne ou redimensionne. Le rôle de ces données dans le trafic n'est pas défini dans ce fichier.",
+  "notes": [
+    "Le bouton SAVE et le menu Save sont désactivés tant que le chemin est celui par défaut : il faut passer par Save As.",
+    "Le déplacement avec « Snap to Terrain » lance un raycast statique vers le bas depuis 50 m au-dessus du point.",
+    "L'état (data, filePath, sélection, nextId) est conservé lors d'un rechargement Lua via onSerialize / onDeserialized.",
+    "Quitter la fenêtre rebascule l'éditeur en mode objectSelect ; reprendre le focus réactive le mode d'édition.",
+    "M.allowGizmo renvoie false (et non nil) hors mode d'édition, alors que la fonction locale du même nom peut renvoyer nil."
+  ],
+  "functions": {
+    "allowGizmo": {
+      "desc": "Vrai quand le mode d'édition courant est « Edit Traffic Gated Roads » : le gizmo n'est alors autorisé.",
+      "params": {},
+      "returns": [{"type": "boolean", "desc": "Mode d'édition actif."}]
+    },
+    "loadData": {
+      "desc": "Charge un fichier JSON de sphères (jsonReadFile). En cas d'échec, logue une erreur et ne change rien. Sinon remplace les données, mémorise le chemin, efface la sélection et recalcule nextId.",
+      "params": {"fp": {"type": "string|nil", "desc": "Chemin du fichier ; sans effet si nil."}},
+      "returns": []
+    },
+    "saveData": {
+      "desc": "Écrit les données dans un fichier JSON (jsonWriteFile, mise en forme lisible) et mémorise le chemin.",
+      "params": {"fp": {"type": "string|nil", "desc": "Chemin ; par défaut le chemin courant."}},
+      "returns": []
+    },
+    "show": {
+      "desc": "Efface la sélection d'objets, affiche la fenêtre et passe en mode d'édition trafficGatedRoadsEditMode.",
+      "params": {},
+      "returns": []
+    },
+    "onEditorInitialized": {
+      "desc": "Hook de l'éditeur : crée le mode d'édition trafficGatedRoadsEditMode (clic gauche = Select), enregistre la fenêtre (400x500) et l'entrée de menu Traffic.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé chaque frame d'interface : dessine la fenêtre (menu File, SAVE, liste de sphères, nom, position, rayon, case Snap to Terrain), traite la souris, dessine les cylindres avec debugDrawer:drawCylinder et le gizmo (déplacement, rotation, échelle).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorToolWindowHide": {
+      "desc": "Hook appelé quand une fenêtre d'outil est masquée : si c'est celle-ci, revient au mode objectSelect.",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre masquée."}},
+      "returns": [],
+      "internal": true
+    },
+    "onWindowGotFocus": {
+      "desc": "Hook appelé quand une fenêtre prend le focus : si c'est celle-ci, réactive le mode d'édition.",
+      "params": {"windowName": {"type": "string", "desc": "Nom de la fenêtre."}},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua : renvoie l'état à conserver.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{ data, filePath, selectedIdx, nextId }."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook appelé après un rechargement Lua : restaure l'état renvoyé par onSerialize.",
+      "params": {"d": {"type": "table|nil", "desc": "État sérialisé."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

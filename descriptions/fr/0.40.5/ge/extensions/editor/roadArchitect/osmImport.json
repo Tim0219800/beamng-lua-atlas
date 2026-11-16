@@ -1,0 +1,8 @@
+{
+  "path": "lua/ge/extensions/editor/roadArchitect/osmImport.lua",
+  "module": "Petit module d'alias de Road Architect : il charge editor/roadArchitect/networkImport et réexporte sa fonction importOsmFromFile sous le nom importFromFile. Il sert de point d'entrée pour importer un fichier OpenStreetMap (.osm) dans l'éditeur Road Architect.",
+  "usage": "editor_roadArchitect_osmImport.importFromFile('C:/data/ville.osm', {placeMode = 3})",
+  "fields": {
+    "importFromFile": {"type": "function", "desc": "Alias de networkImport.importOsmFromFile(filePath, options) : importe un fichier .osm et renvoie un résumé { success, importedRoadCount, skippedRoadCount, warnings, … }."}
+  }
+}

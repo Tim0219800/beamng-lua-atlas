@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/editor/ezObjectSelect/objectBoxAnchors.lua",
+  "module": "Calcule des points d'ancrage sur le bas de la boîte englobante d'un objet pour l'outil Easy Select. Trois motifs sont produits : shortEdge (milieu du petit côté, à z min), longEdge (milieu du grand côté) et shortEdgeOrigin (comme shortEdge mais à z = 0 local, au niveau de l'origine). Le « long » axe est X si l'étendue mise à l'échelle en X >= celle en Y. Sert à décrire des arêtes de référence pour le déplacement/aimantation.",
+  "functions": {
+    "describeBox": {
+      "desc": "Décrit une boîte locale (méthodes getCenter/getExtents et minExtents/maxExtents). Renvoie nil si la boîte n'est pas valide.",
+      "params": {
+        "box": {"type": "table", "desc": "Boîte englobante locale"},
+        "scale": {"type": "vec3|nil", "desc": "Échelle de l'objet (défaut 1,1,1)"}
+      },
+      "returns": [{"type": "table|nil", "desc": "{isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin}, chaque arête ayant firstLocal/secondLocal"}]
+    },
+    "describeMeshBox": {
+      "desc": "Idem describeBox pour une boîte de mesh simple {minExtents, maxExtents, center, extents}. nil si un champ manque.",
+      "params": {
+        "meshBox": {"type": "table", "desc": "Boîte de mesh"},
+        "scale": {"type": "vec3|nil", "desc": "Échelle (défaut 1,1,1)"}
+      },
+      "returns": [{"type": "table|nil", "desc": "Même structure que describeBox"}]
+    },
+    "describeObject": {
+      "desc": "Décrit un objet de la scène en coordonnées monde. Utilise getObjBox + getTransform + getScale si possible ; sinon retombe sur la boîte monde getWorldBox. Chaque motif contient first, second, firstOffset, secondOffset, centerOffset (offsets relatifs à la position de l'objet).",
+      "params": {"obj": {"type": "userdata", "desc": "Objet de la scène (doit avoir getPosition)"}},
+      "returns": [{"type": "table|nil", "desc": "{isLongX, scaledX, scaledY, shortEdge, longEdge, shortEdgeOrigin} ou nil si aucune boîte valide"}]
+    }
+  }
+}

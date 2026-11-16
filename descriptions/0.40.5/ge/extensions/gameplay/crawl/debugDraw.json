@@ -1,33 +1,50 @@
 {
   "path": "lua/ge/extensions/gameplay/crawl/debugDraw.lua",
-  "module": "Visualisation de debug en lecture seule des parcours du mode crawl, via debugDrawer : points de passage (sphères, flèches de direction, étiquettes) et segments, zone limite, position de départ. Partagé par l'éditeur de crawl et l'overlay de dev en jeu pour garder un rendu cohérent. À appeler à chaque image de rendu.",
+  "module": "Read-only debug visualization of crawl mode trails, via debugDrawer: waypoints (spheres, direction arrows, labels) and segments, boundary zone, start position. Shared by the crawl editor and the in-game dev overlay to keep a consistent rendering. To be called every render frame.",
   "usage": "gameplay_crawl_debugDraw.drawPath(path.nodes, {maxDist = 200, showSegmentDistance = true})",
   "notes": [
-    "Couleurs : noeud normal blanc, point de récupération jaune, bonus violet, dernier noeud bleu ; flèche verte ; segments bleu clair.",
-    "Les noeuds et segments au-delà de maxDist (400 m par défaut) de la caméra ne sont pas dessinés.",
-    "Le rayon de sphère d'un noeud est node.radius (4.0 m par défaut) ; celui de la position de départ est transform.radius (10.0 m par défaut).",
-    "Cette page n'exporte pas d'autres fonctions ; dessiner ne modifie aucune donnée."
+    "Colors: normal node white, recovery point yellow, bonus purple, last node blue; green arrow; light blue segments.",
+    "Nodes and segments beyond maxDist (400 m by default) from the camera are not drawn.",
+    "A node's sphere radius is node.radius (4.0 m by default); that of the start position is transform.radius (10.0 m by default).",
+    "This page exports no other functions; drawing does not modify any data."
   ],
   "functions": {
     "drawPath": {
-      "desc": "Dessine chaque noeud (sphère, flèche selon sa rotation, étiquette « indice: nom [REC]/[BONUS] ») et les cylindres entre noeuds consécutifs, avec éventuellement la distance cumulée.",
+      "desc": "Draws each node (sphere, arrow according to its rotation, label \"index: name [REC]/[BONUS]\") and the cylinders between consecutive nodes, optionally with the cumulative distance.",
       "params": {
-        "nodes": {"type": "table<integer, table>", "desc": "Noeuds : pos (vec3), radius, rotation (quat), name, flags (isRecoveryCheckpoint, isBonusCheckpoint)."},
-        "opts": {"type": "table|nil", "desc": "{maxDist = number (m, 400 par défaut), showSegmentDistance = boolean, showLabels = boolean (vrai par défaut)}."}
+        "nodes": {
+          "type": "table<integer, table>",
+          "desc": "Nodes: pos (vec3), radius, rotation (quat), name, flags (isRecoveryCheckpoint, isBonusCheckpoint)."
+        },
+        "opts": {
+          "type": "table|nil",
+          "desc": "{maxDist = number (m, 400 by default), showSegmentDistance = boolean, showLabels = boolean (true by default)}."
+        }
       },
       "internal": false
     },
     "drawBoundary": {
-      "desc": "Dessine la zone limite en appelant boundary:drawDebug(drawMode) (le culling caméra est fait par la zone).",
+      "desc": "Draws the boundary zone by calling boundary:drawDebug(drawMode) (camera culling is done by the zone).",
       "params": {
-        "boundary": {"type": "table|nil", "desc": "Zone avec la méthode drawDebug."},
-        "drawMode": {"type": "any", "desc": "Mode de dessin transmis tel quel à drawDebug."}
+        "boundary": {
+          "type": "table|nil",
+          "desc": "Zone with the drawDebug method."
+        },
+        "drawMode": {
+          "type": "any",
+          "desc": "Draw mode passed as is to drawDebug."
+        }
       },
       "internal": false
     },
     "drawStartingPosition": {
-      "desc": "Dessine la sphère de la zone de départ, une flèche de direction et, si présent, une petite sphère à iconPosition.",
-      "params": {"startingPosition": {"type": "table|nil", "desc": "Position de départ : transform (position, rotation, radius) et iconPosition."}},
+      "desc": "Draws the start zone's sphere, a direction arrow and, if present, a small sphere at iconPosition.",
+      "params": {
+        "startingPosition": {
+          "type": "table|nil",
+          "desc": "Start position: transform (position, rotation, radius) and iconPosition."
+        }
+      },
       "internal": false
     }
   }

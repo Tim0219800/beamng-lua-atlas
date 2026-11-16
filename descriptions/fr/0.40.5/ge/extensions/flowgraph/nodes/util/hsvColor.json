@@ -1,0 +1,37 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/hsvColor.lua",
+  "module": "Nœud « Color HSV » (catégorie simple). Crée une couleur à partir de teinte, saturation, valeur (0 à 1) et alpha. Sortie : color = table {r, g, b, a}. Valeurs par défaut si l'entrée est vide : h=0, s=1, v=1, a=1.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Ne fait rien.",
+          "internal": true
+        },
+        "HSVtoRGB": {
+          "desc": "Convertit HSV en table {r, g, b} via la fonction globale HSVtoRGB ; la teinte est ramenée dans [0,1[ et s, v sont bornés à [0,1].",
+          "params": {
+            "h": {
+              "type": "number",
+              "desc": "Teinte."
+            },
+            "s": {
+              "type": "number",
+              "desc": "Saturation."
+            },
+            "v": {
+              "type": "number",
+              "desc": "Valeur (luminosité)."
+            }
+          },
+          "internal": false
+        },
+        "work": {
+          "desc": "Calcule la couleur et écrit {r, g, b, alpha} dans color.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

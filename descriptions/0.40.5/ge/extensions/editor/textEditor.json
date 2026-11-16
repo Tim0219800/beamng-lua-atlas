@@ -1,30 +1,40 @@
 {
   "path": "lua/ge/extensions/editor/textEditor.lua",
-  "module": "Extension de l'éditeur qui fournit une fenêtre « Text Editor » multiligne pour modifier le contenu texte d'un champ d'objet de la scène (ex. un champ long d'un objet). Elle s'enregistre en exposant editor.newTextEditorInstance(objIds, fieldName). Le bouton Ok applique la valeur via objectHistoryActions.changeObjectFieldWithUndo (annulable), Cancel ferme sans rien changer.",
+  "module": "Editor extension that provides a multiline 'Text Editor' window to modify the text content of a scene object field (e.g. a long field of an object). It registers by exposing editor.newTextEditorInstance(objIds, fieldName). The Ok button applies the value via objectHistoryActions.changeObjectFieldWithUndo (undoable), Cancel closes without changing anything.",
   "usage": "editor.newTextEditorInstance({ obj:getID() }, \"myField\")",
   "notes": [
-    "Taille maximale du texte : 16384 caractères (textInputSize).",
-    "Si plusieurs objets sont passés, le champ de départ est vide (le texte n'est prérempli que pour un seul objet) ; la valeur saisie est ensuite appliquée à tous les ids.",
-    "Une nouvelle instance supprime toute instance existante qui partage un id d'objet.",
-    "Le logTag déclaré est 'editor_scene_tree' (copié d'un autre module, sans effet visible)."
+    "Maximum text size: 16384 characters (textInputSize).",
+    "If several objects are passed, the initial field is empty (the text is only prefilled for a single object); the entered value is then applied to all the ids.",
+    "A new instance deletes any existing instance that shares an object id.",
+    "The declared logTag is 'editor_scene_tree' (copied from another module, no visible effect)."
   ],
   "functions": {
     "onEditorGui": {
-      "desc": "Hook appelé à chaque frame de l'interface de l'éditeur : crée/affiche chaque fenêtre Text Editor ouverte, avec zone de saisie multiligne et boutons Cancel/Ok. Retire l'instance quand la fenêtre n'est plus visible.",
+      "desc": "Hook called every frame of the editor interface: creates/displays each open Text Editor window, with a multiline input area and Cancel/Ok buttons. Removes the instance when the window is no longer visible.",
       "internal": true
     },
     "onEditorInitialized": {
-      "desc": "Hook appelé à l'initialisation de l'éditeur : publie editor.newTextEditorInstance.",
+      "desc": "Hook called at editor initialization: publishes editor.newTextEditorInstance.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook de sérialisation (rechargement Lua) : renvoie une copie des instances ouvertes sans le tampon de texte (textInput).",
-      "returns": [{"type": "table", "desc": "Instances (objIds, fieldName) sans textInput."}],
+      "desc": "Serialization hook (Lua reload): returns a copy of the open instances without the text buffer (textInput).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Instances (objIds, fieldName) without textInput."
+        }
+      ],
       "internal": true
     },
     "onDeserialize": {
-      "desc": "Hook appelé après rechargement : recrée une instance par entrée de l'état sauvegardé.",
-      "params": {"state": {"type": "table", "desc": "Résultat de onSerialize."}},
+      "desc": "Hook called after reload: recreates one instance per entry of the saved state.",
+      "params": {
+        "state": {
+          "type": "table",
+          "desc": "Result of onSerialize."
+        }
+      },
       "internal": true
     }
   }

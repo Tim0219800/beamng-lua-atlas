@@ -2,32 +2,32 @@
 -- tim19Atlas stub generated from lua/vehicle/extensions/dragAi.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Mini-IA de dragster : gaz à fond, direction proportionnelle vers un point cible, puis freinage et frein à main à l'arrivée. L'état évolue de 'ready' (gaz enclenchés, frein à main serré) à 'go' (frein à main relâché, roule vers la cible), 'stopping', 'finished'. Elle pilote le véhicule en envoyant des événements d'entrée (input.event).
---- Accès : extension `dragAi` : `extensions.load (VM véhicule)("dragAi")`, puis la globale `dragAi`
+--- Mini drag-racing AI: full throttle, proportional steering toward a target point, then braking and handbrake on arrival. The state goes from 'ready' (throttle engaged, handbrake applied) to 'go' (handbrake released, drives to the target), 'stopping', 'finished'. It drives the vehicle by sending input events (input.event).
+--- Access: extension `dragAi`: `extensions.load (vehicle VM)("dragAi")`, then the global `dragAi`
 ---@class dragAi
 dragAi = {}
 
---- Passe en état 'ready' : applique les gaz à fond.
----Source : lua/vehicle/extensions/dragAi.lua:10
+--- Switches to the 'ready' state: applies full throttle.
+---Source: lua/vehicle/extensions/dragAi.lua:10
 function dragAi.getReady() end
 
---- Passe en état 'go' : relâche le frein à main, la boucle conduit vers la cible.
----Source : lua/vehicle/extensions/dragAi.lua:14
+--- Switches to the 'go' state: releases the handbrake, the loop drives toward the target.
+---Source: lua/vehicle/extensions/dragAi.lua:14
 function dragAi.go() end
 
---- Hook de reset du véhicule : état 'idle', gaz à zéro, frein à main serré.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/dragAi.lua:61
+--- Vehicle reset hook: 'idle' state, throttle at zero, handbrake applied.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/dragAi.lua:61
 function dragAi.reset() end
 
---- Définit le point cible à atteindre.
----Source : lua/vehicle/extensions/dragAi.lua:19
----@param targetPos vec3 Position monde de la cible (x,y utilisés).
+--- Sets the target point to reach.
+---Source: lua/vehicle/extensions/dragAi.lua:19
+---@param targetPos vec3 World position of the target (x,y used).
 function dragAi.setTarget(targetPos) end
 
---- Appelé chaque frame : exécute la machine à états de conduite.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/vehicle/extensions/dragAi.lua:23
----@param dt number Pas de temps en secondes (non utilisé).
+--- Called every frame: runs the driving state machine.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/vehicle/extensions/dragAi.lua:23
+---@param dt number Time step in seconds (unused).
 function dragAi.updateGFX(dt) end
 

@@ -2,91 +2,91 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/terraformTool.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Façade de l'outil Terraform de l'éditeur de monde. Elle stocke cinq réglages (domaine d'influence, marge, falloff, rugosité, échelle de bruit) comme préférences de l'éditeur, gère le polygone dessiné par l'utilisateur et déclenche le terraformage du terrain (editor/terraform/terraform) à partir de sources récupérées par editor/terraform/fetchSources (routes, etc.) dans un polygone ou dans la sélection. Un moddeur l'utilise pour terraformer par script ou pour lire/modifier les réglages.
---- Accès : extension `editor_terraformTool` : `extensions.load("editor_terraformTool")`, puis la globale `editor_terraformTool`
+--- Facade of the world editor's Terraform tool. It stores five settings (domain of influence, margin, falloff, roughness, noise scale) as editor preferences, manages the polygon drawn by the user and triggers terrain terraforming (editor/terraform/terraform) from sources fetched by editor/terraform/fetchSources (roads, etc.) in a polygon or in the selection. A modder uses it to terraform by script or to read/modify the settings.
+--- Access: extension `editor_terraformTool`: `extensions.load("editor_terraformTool")`, then the global `editor_terraformTool`
 ---@class editor_terraformTool
 editor_terraformTool = {}
 
---- Efface le polygone courant.
----Source : lua/ge/extensions/editor/terraformTool.lua:49
+--- Clears the current polygon.
+---Source: lua/ge/extensions/editor/terraformTool.lua:49
 function editor_terraformTool.clearPolygon() end
 
---- Renvoie le domaine d'influence (en mètres) du terraformage, lu dans la préférence terraformTool.general.domainOfInfluence (défaut 100).
----Source : lua/ge/extensions/editor/terraformTool.lua:29
----@return number  Domaine d'influence en mètres.
+--- Returns the terraforming domain of influence (in meters), read from the terraformTool.general.domainOfInfluence preference (default 100).
+---Source: lua/ge/extensions/editor/terraformTool.lua:29
+---@return number  Domain of influence in meters.
 function editor_terraformTool.getDOI() end
 
---- Renvoie la distance de décroissance (falloff, en mètres), préférence terraformTool.general.falloff (défaut 1.5).
----Source : lua/ge/extensions/editor/terraformTool.lua:31
----@return number  Falloff en mètres.
+--- Returns the decay distance (falloff, in meters), preference terraformTool.general.falloff (default 1.5).
+---Source: lua/ge/extensions/editor/terraformTool.lua:31
+---@return number  Falloff in meters.
 function editor_terraformTool.getFalloff() end
 
---- Renvoie la marge latérale (en mètres) autour des sources, préférence terraformTool.general.margin (défaut 5.0).
----Source : lua/ge/extensions/editor/terraformTool.lua:30
----@return number  Marge en mètres.
+--- Returns the lateral margin (in meters) around the sources, preference terraformTool.general.margin (default 5.0).
+---Source: lua/ge/extensions/editor/terraformTool.lua:30
+---@return number  Margin in meters.
 function editor_terraformTool.getMargin() end
 
---- Renvoie le polygone courant (délègue à editor/toolUtilities/polygon).
----Source : lua/ge/extensions/editor/terraformTool.lua:43
----@return table  Polygone courant (structure définie par le module polygon).
+--- Returns the current polygon (delegates to editor/toolUtilities/polygon).
+---Source: lua/ge/extensions/editor/terraformTool.lua:43
+---@return table  Current polygon (structure defined by the polygon module).
 function editor_terraformTool.getPolygon() end
 
---- Renvoie la rugosité du bruit, préférence terraformTool.general.roughness (défaut 0.4, plage [0, 1]).
----Source : lua/ge/extensions/editor/terraformTool.lua:32
----@return number  Rugosité.
+--- Returns the noise roughness, preference terraformTool.general.roughness (default 0.4, range [0, 1]).
+---Source: lua/ge/extensions/editor/terraformTool.lua:32
+---@return number  Roughness.
 function editor_terraformTool.getRoughness() end
 
---- Renvoie l'échelle du bruit, préférence terraformTool.general.scale (défaut 0.5, plage [0, 1]).
----Source : lua/ge/extensions/editor/terraformTool.lua:33
----@return number  Échelle du bruit.
+--- Returns the noise scale, preference terraformTool.general.scale (default 0.5, range [0, 1]).
+---Source: lua/ge/extensions/editor/terraformTool.lua:33
+---@return number  Noise scale.
 function editor_terraformTool.getScale() end
 
---- À appeler à chaque frame de l'UI : gère le dessin du polygone par l'utilisateur et lance terraformPolygon quand il valide.
----Source : lua/ge/extensions/editor/terraformTool.lua:58
+--- To be called every frame of the UI: handles the user's polygon drawing and launches terraformPolygon when they confirm.
+---Source: lua/ge/extensions/editor/terraformTool.lua:58
 function editor_terraformTool.handleTerraformingPolygon() end
 
---- Indique si un polygone valide existe (poly.isPolygonValid).
----Source : lua/ge/extensions/editor/terraformTool.lua:46
----@return boolean  true si le polygone est valide.
+--- Tells whether a valid polygon exists (poly.isPolygonValid).
+---Source: lua/ge/extensions/editor/terraformTool.lua:46
+---@return boolean  true if the polygon is valid.
 function editor_terraformTool.isPolygonExist() end
 
---- Hook de l'éditeur : enregistre la catégorie de préférences terraformTool et sa sous-catégorie general (domainOfInfluence en int, margin, falloff, roughness, scale en float) avec leurs bornes.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/terraformTool.lua:67
----@param prefs table Registre de préférences de l'éditeur.
+--- Editor hook: registers the terraformTool preference category and its general subcategory (domainOfInfluence as int, margin, falloff, roughness, scale as float) with their bounds.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/terraformTool.lua:67
+---@param prefs table Editor preferences registry.
 function editor_terraformTool.onEditorRegisterPreferences(prefs) end
 
---- Enregistre le domaine d'influence dans les préférences de l'éditeur.
----Source : lua/ge/extensions/editor/terraformTool.lua:36
----@param value number Domaine d'influence en mètres.
+--- Saves the domain of influence in the editor preferences.
+---Source: lua/ge/extensions/editor/terraformTool.lua:36
+---@param value number Domain of influence in meters.
 function editor_terraformTool.setDOI(value) end
 
---- Enregistre la distance de décroissance dans les préférences de l'éditeur.
----Source : lua/ge/extensions/editor/terraformTool.lua:38
----@param value number Falloff en mètres.
+--- Saves the decay distance in the editor preferences.
+---Source: lua/ge/extensions/editor/terraformTool.lua:38
+---@param value number Falloff in meters.
 function editor_terraformTool.setFalloff(value) end
 
---- Enregistre la marge latérale dans les préférences de l'éditeur.
----Source : lua/ge/extensions/editor/terraformTool.lua:37
----@param value number Marge en mètres.
+--- Saves the lateral margin in the editor preferences.
+---Source: lua/ge/extensions/editor/terraformTool.lua:37
+---@param value number Margin in meters.
 function editor_terraformTool.setMargin(value) end
 
---- Enregistre la rugosité du bruit dans les préférences de l'éditeur.
----Source : lua/ge/extensions/editor/terraformTool.lua:39
----@param value number Rugosité dans [0, 1].
+--- Saves the noise roughness in the editor preferences.
+---Source: lua/ge/extensions/editor/terraformTool.lua:39
+---@param value number Roughness in [0, 1].
 function editor_terraformTool.setRoughness(value) end
 
---- Enregistre l'échelle du bruit dans les préférences de l'éditeur.
----Source : lua/ge/extensions/editor/terraformTool.lua:40
----@param value number Échelle dans [0, 1].
+--- Saves the noise scale in the editor preferences.
+---Source: lua/ge/extensions/editor/terraformTool.lua:40
+---@param value number Scale in [0, 1].
 function editor_terraformTool.setScale(value) end
 
---- Récupère toutes les sources supportées dans le polygone (fetchSources.getAllSourcesInPolygon) puis appelle terraformToSources avec les réglages courants (DOI, marge, falloff, rugosité, échelle).
----Source : lua/ge/extensions/editor/terraformTool.lua:52
----@param polygon table Polygone dans lequel chercher les sources (déduit du code).
+--- Fetches all supported sources in the polygon (fetchSources.getAllSourcesInPolygon) then calls terraformToSources with the current settings (DOI, margin, falloff, roughness, scale).
+---Source: lua/ge/extensions/editor/terraformTool.lua:52
+---@param polygon table Polygon in which to search for sources (inferred from code).
 function editor_terraformTool.terraformPolygon(polygon) end
 
---- Récupère les objets supportés de la sélection de l'éditeur (fetchSources.getAllSourcesInSelection) et terraforme le terrain autour d'eux avec les réglages courants.
----Source : lua/ge/extensions/editor/terraformTool.lua:61
+--- Fetches the supported objects of the editor selection (fetchSources.getAllSourcesInSelection) and terraforms the terrain around them with the current settings.
+---Source: lua/ge/extensions/editor/terraformTool.lua:61
 function editor_terraformTool.terraformSelection() end
 

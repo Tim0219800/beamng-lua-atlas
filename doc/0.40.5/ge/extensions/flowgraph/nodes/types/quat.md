@@ -1,26 +1,26 @@
 # `flowgraph_nodes_types_quat`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/types/quat.lua` · VM : Game Engine (GE) · 45 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/types/quat.lua` · VM: Game Engine (GE) · 45 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/types/quat")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/types/quat")` (file under extensions/ but not a regular extension)
 
-Noeud « Quat » (repeat_instant). Construit un quaternion à partir des pins x, y, z, w (0 par défaut) et l'écrit en table {x,y,z,w} sur le pin value (quat).
+Node "Quat" (repeat_instant). Builds a quaternion from the pins x, y, z, w (0 by default) and writes it as a {x,y,z,w} table on the value pin (quat).
 
-## Remarques
+## Notes
 
-- Le quaternion n'est pas normalisé ; avec tous les pins à 0 on obtient (0,0,0,0), non valide.
+- The quaternion is not normalized; with all pins at 0 you get (0,0,0,0), which is invalid.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_onDeserialized(nodeData)` | Ne restaure rien. | 41 |
-| `C:_onSerialize(res)` | Ne sauvegarde rien. | 38 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 30 |
-| `C:drawProperties()` | Vide. | 35 |
-| `C:work()` | Compose le quaternion et écrit la table. | 24 |
+| `C:_onDeserialized(nodeData)` | Restores nothing. | 41 |
+| `C:_onSerialize(res)` | Saves nothing. | 38 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 30 |
+| `C:drawProperties()` | Empty. | 35 |
+| `C:work()` | Composes the quaternion and writes the table. | 24 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/types/quat.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/types/quat.lua`.*

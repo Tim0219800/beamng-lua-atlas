@@ -1,0 +1,191 @@
+{
+  "path": "lua/ge/extensions/gameplay/pursuit/pursuit.lua",
+  "module": "Gestionnaire de mode poursuite : événement de gameplay où plusieurs véhicules « chase » (police) poursuivent plusieurs véhicules « flee » (fuyards), joueurs ou IA. Une seule instance à la fois. Il insère les véhicules (rôles police/suspect), gère les objectifs (mode free, timed, score, destination), le démarrage (manuel ou à une vitesse donnée), les arrestations, la récupération des fuyards libérés et la détection de blocage. Les états du gestionnaire sont 'off', 'ready', 'active', 'inactive' et 'complete'.",
+  "usage": "local p = gameplay_pursuit_pursuit\np.setupPursuit(policeId, suspectId, {gameMode = 'timed', timeLimit = 120, recoveryMode = 'basic'})\np.start()",
+  "notes": [
+    "Options lues : gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal, startSpeed (démarrage auto quand un fuyard atteint cette vitesse, m/s), recoveryMode ('none', 'basic', 'teleportRoad', 'teleportStart', 'teleportRandom', sinon fondu seul), autoRecovery, shuffleVehGroups, shuffleSpots, zoneName.",
+    "Contraintes d'objectifs (setupGoals) : mode timed -> temps >= 30 s et arrestGoal = nombre de fuyards si <= 0 ; mode score -> score >= 100 ; mode destination -> locations >= 1.",
+    "Gagnants passés à stop(winner) et au hook onPursuitGameplayFinished : 'flee' ou 'chase' ; temps écoulé en mode timed = victoire des fuyards, sinon des poursuivants ; 'none' si tous les véhicules sont bloqués.",
+    "Une période de grâce de 10 s (defaults.graceTime) empêche les arrestations et la détection de blocage au début ; tous les véhicules à moins de 2,5 m/s pendant 10 s consécutives sont considérés bloqués.",
+    "Hooks émis : onPursuitGameplayStarted, onPursuitGameplayFinished({winningTeam}), onPursuitGameplayEvent('recoverAll'|'stuckAll'), onPursuitAction (pour les fuyards).",
+    "Bug probable dans onPursuitAction (arrest) : la boucle sur chaseVehs réutilise le nom vehId pour sa variable, donc `vehData.role.targetId == vehId` compare à l'id du poursuivant lui-même, pas à celui de l'arrêté.",
+    "Bug probable dans onPursuitAction (evade) : la cible suivante teste `targetVeh.pursuitUsable` (déjà mis à false) au lieu de vehData.pursuitUsable : nextTargetId reste nil et les poursuivants sont simplement réinitialisés.",
+    "Bug probable dans setupVehiclesFromFiles : parkingSpots est redéclarée en `local` dans le bloc if, la variable extérieure reste nil : les points de départ des fichiers de sites ne sont jamais utilisés (placement automatique 'roadAhead').",
+    "Quand un véhicule est déjà dans le trafic, ses données sont partagées (isShared) ; il a ignorePursuit = true pour que le système de police principal l'ignore.",
+    "reset() est appelé au chargement du module et réinitialise aussi les variables de poursuite de gameplay_police."
+  ],
+  "functions": {
+    "reset": {
+      "desc": "Réinitialise complètement le gestionnaire (arrête le gameplay s'il tourne, vide les véhicules, remet l'état à 'off', réinitialise les véhicules et les variables de gameplay_police).",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "restart": {
+      "desc": "Remet le gameplay à l'état 'ready' sans vider le gestionnaire : réinitialise les données, les poursuites et renvoie les véhicules à leur position d'origine (interactRecovery loadHome). Ne démarre pas.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "start": {
+      "desc": "Démarre le gameplay (états 'ready' ou 'inactive' seulement) : active les véhicules (poursuivants en action pursuitStart niveau 3, fuyards en fleePolice) et émet onPursuitGameplayStarted.",
+      "params": {},
+      "returns": [],
+      "internal": false
+    },
+    "stop": {
+      "desc": "Arrête le gameplay actif. Avec un gagnant, l'état devient 'complete', les poursuites des fuyards sont réinitialisées et onPursuitGameplayFinished est émis ; sans gagnant, l'état devient 'inactive'.",
+      "params": {"winner": {"type": "string|nil", "desc": "'flee', 'chase' ou autre valeur non nil pour terminer ; nil pour simplement mettre en pause."}},
+      "returns": [],
+      "internal": false
+    },
+    "insertVeh": {
+      "desc": "Valide et insère un véhicule dans le gestionnaire. Réutilise les données de trafic s'il y en a (isShared), sinon crée un objet véhicule de trafic. Lui donne le rôle police ou suspect, désactive respawn et pooling, et met l'IA en mode 'stop' (ou 'disabled' pour un joueur).",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Id du véhicule."},
+        "isChase": {"type": "boolean", "desc": "true = poursuivant, false = fuyard."},
+        "isAiControlled": {"type": "boolean", "desc": "true si piloté par l'IA (non utilisable par le joueur)."},
+        "options": {"type": "table|nil", "desc": "Options (non utilisées dans la fonction)."}
+      },
+      "returns": [{"type": "boolean|nil", "desc": "true si inséré, false si les données n'ont pu être créées, nil si id absent ou déjà inséré."}],
+      "internal": false
+    },
+    "removeVeh": {
+      "desc": "Retire un véhicule du gestionnaire et lui rend son rôle automatique de trafic s'il en fait partie.",
+      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
+      "returns": [],
+      "internal": false
+    },
+    "setupGoals": {
+      "desc": "Calcule les objectifs (mode, temps, score, arrestations, lieux) à partir des options ; applique des minimums selon le mode.",
+      "params": {"options": {"type": "table|nil", "desc": "gameMode, timeLimit, scoreGoal, arrestGoal, locationGoal ; défaut manager.options."}},
+      "returns": [],
+      "internal": false
+    },
+    "setupPursuit": {
+      "desc": "Crée une poursuite avec un poursuivant et un fuyard existants (réinitialise d'abord le gestionnaire s'il n'est pas 'off'). Passe en état 'ready'.",
+      "params": {
+        "chaseVehId": {"type": "integer", "desc": "Id du poursuivant."},
+        "fleeVehId": {"type": "integer", "desc": "Id du fuyard."},
+        "options": {"type": "table|nil", "desc": "Options de gameplay."},
+        "pursuitVars": {"type": "table|nil", "desc": "Variables passées à gameplay_police.setPursuitVars."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si l'un des véhicules est introuvable."}],
+      "internal": false
+    },
+    "setupPursuitMulti": {
+      "desc": "Crée une poursuite avec plusieurs poursuivants et fuyards. Échoue (reset) s'il n'y a aucun poursuivant ou aucun fuyard inséré ; avertit si certains ont échoué.",
+      "params": {
+        "chaseVehIds": {"type": "integer[]", "desc": "Ids des poursuivants."},
+        "fleeVehIds": {"type": "integer[]", "desc": "Ids des fuyards."},
+        "options": {"type": "table|nil", "desc": "Options de gameplay."},
+        "pursuitVars": {"type": "table|nil", "desc": "Variables de poursuite."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si la configuration est prête."}],
+      "internal": false
+    },
+    "setupVehicles": {
+      "desc": "Fait apparaître les groupes de véhicules (core_multiSpawn.spawnGroup, noms 'autoPursuitChase' et 'autoPursuitFlee') puis, via onVehicleGroupSpawned, appelle setupPursuitMulti. Utilise les points de parking fournis, sinon place les véhicules sur la route devant (écart 15 m).",
+      "params": {
+        "chaseAmount": {"type": "integer|nil", "desc": "Nombre de poursuivants (défaut 1)."},
+        "fleeAmount": {"type": "integer|nil", "desc": "Nombre de fuyards (défaut 1)."},
+        "chaseVehGroup": {"type": "table|nil", "desc": "Groupe de véhicules {model, config…} des poursuivants."},
+        "fleeVehGroup": {"type": "table|nil", "desc": "Groupe des fuyards."},
+        "parkingSpots": {"type": "table[]|nil", "desc": "Points {pos, rot}, les premiers pour les poursuivants."},
+        "options": {"type": "table|nil", "desc": "Options (shuffleVehGroups…)."},
+        "pursuitVars": {"type": "table|nil", "desc": "Variables de poursuite."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si une quantité est inférieure à 1."}],
+      "internal": false
+    },
+    "setupVehiclesFromFiles": {
+      "desc": "Comme setupVehicles mais lit les groupes de véhicules (champ data) dans des fichiers JSON, et éventuellement les points de parking d'un fichier de sites (zone optionnelle options.zoneName, mélange options.shuffleSpots, filtre par tags chase/flee).",
+      "params": {
+        "chaseAmount": {"type": "integer", "desc": "Nombre de poursuivants (>= 1)."},
+        "fleeAmount": {"type": "integer", "desc": "Nombre de fuyards (>= 1)."},
+        "chaseVehGroupFile": {"type": "string", "desc": "Chemin du JSON du groupe de poursuivants."},
+        "fleeVehGroupFile": {"type": "string", "desc": "Chemin du JSON du groupe de fuyards."},
+        "sitesFile": {"type": "string|nil", "desc": "Chemin du fichier de sites."},
+        "options": {"type": "table|nil", "desc": "Options (zoneName, shuffleSpots, shuffleVehGroups…)."},
+        "pursuitVars": {"type": "table|nil", "desc": "Variables de poursuite."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si les quantités sont invalides ou un fichier de groupe est illisible."}],
+      "internal": false
+    },
+    "filterParkingSpots": {
+      "desc": "Copie la liste de points de parking et, si les deux quantités sont données, la réarrange en n points tagués 'chase' puis n points tagués 'flee' (sans tag inverse). Garde la liste d'origine si les deux listes ne sont pas assez remplies.",
+      "params": {
+        "parkingSpots": {"type": "table[]", "desc": "Points de parking avec customFields.tags."},
+        "chaseAmount": {"type": "integer|nil", "desc": "Nombre de points chase voulus."},
+        "fleeAmount": {"type": "integer|nil", "desc": "Nombre de points flee voulus."}
+      },
+      "returns": [{"type": "table[]", "desc": "Liste filtrée (copie superficielle)."}],
+      "internal": false
+    },
+    "getManager": {
+      "desc": "Renvoie l'objet gestionnaire (vehData, vehIds, chaseVehs, fleeVehs, options, goals, state, running, data{duration, arrests, totalScore, tempScore, locations, roadblocks}).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "Gestionnaire (référence directe)."}],
+      "internal": false
+    },
+    "onPursuitAction": {
+      "desc": "Hook émis par gameplay_police pour une action de poursuite. Actif seulement si l'état est 'active' et pour un fuyard : 'arrest' compte l'arrestation, 'evade' retire le fuyard du ciblage, 'release' applique le recoveryMode.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Fuyard concerné."},
+        "action": {"type": "string", "desc": "'start', 'arrest', 'evade', 'release', 'roadblockAlert', 'roadblock'."},
+        "pursuit": {"type": "table", "desc": "Données de poursuite du véhicule."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque image. Met à jour les véhicules non partagés, déclenche le démarrage automatique (options.startSpeed), et en jeu actif : durée, ciblage chaque seconde, détection de blocage, récupération, fondus, score total et conditions de victoire.",
+      "params": {
+        "dt": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleGroupSpawned": {
+      "desc": "Hook de core_multiSpawn : quand les groupes 'autoPursuitChase' puis 'autoPursuitFlee' sont apparus, appelle setupPursuitMulti avec les données mémorisées ; échoue (reset) si l'un des groupes est vide.",
+      "params": {
+        "vehList": {"type": "integer[]", "desc": "Ids des véhicules apparus."},
+        "groupId": {"type": "any", "desc": "Id du groupe (inutilisé)."},
+        "groupName": {"type": "string", "desc": "Nom du groupe."}
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onTrafficStarted": {
+      "desc": "Hook au démarrage du trafic : remplace les entrées de trafic par les données du gestionnaire pour les véhicules qui en font partie.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onTrafficStopped": {
+      "desc": "Hook à l'arrêt du trafic ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onTrafficAmountChanged": {
+      "desc": "Hook de changement du nombre de véhicules de trafic ; ne fait rien.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook avant rechargement Lua : renvoie l'état du gestionnaire (options, objectifs, données, état) et les données sérialisées des véhicules.",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{manager, vehicles}"}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook après rechargement Lua : réinitialise puis restaure le gestionnaire et réinsère les véhicules.",
+      "params": {"data": {"type": "table", "desc": "Résultat de onSerialize."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

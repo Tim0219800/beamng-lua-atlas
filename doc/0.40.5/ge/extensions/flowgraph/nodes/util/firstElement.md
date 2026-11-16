@@ -1,21 +1,21 @@
 # `flowgraph_nodes_util_firstElement`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/firstElement.lua` · VM : Game Engine (GE) · 39 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/firstElement.lua` · VM: Game Engine (GE) · 39 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/firstElement")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/firstElement")` (file under extensions/ but not a regular extension)
 
-Nœud « Get First Element of Table » (repeat_instant). Renvoie le premier élément (index 1) d'une table. Entrée : table. Sortie : firstElement (any).
+Node "Get First Element of Table" (repeat_instant). Returns the first element (index 1) of a table. Input: table. Output: firstElement (any).
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Met oldPos à nil (champ inutilisé ensuite). | 23 |
-| `C:getFirstElement(table)` | Renvoie table[1] du pin d'entrée table (l'argument n'est pas utilisé). | 27 |
-| `C:init(mgr)` | Ne fait rien. | 20 |
-| `C:work()` | Écrit le premier élément dans firstElement si la table est connectée. | 33 |
+| `C:_executionStarted()` | Sets oldPos to nil (field unused afterwards). | 23 |
+| `C:getFirstElement(table)` | Returns table[1] of the input pin table (the argument is not used). | 27 |
+| `C:init(mgr)` | Does nothing. | 20 |
+| `C:work()` | Writes the first element to firstElement if the table is connected. | 33 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/firstElement.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/firstElement.lua`.*

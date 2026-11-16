@@ -1,283 +1,283 @@
 # `editor_masterSpline_splineMgr`
 
-*Fichier : `lua/ge/extensions/editor/masterSpline/splineMgr.lua` · VM : Game Engine (GE) · 1343 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/masterSpline/splineMgr.lua` · VM: Game Engine (GE) · 1343 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_masterSpline_splineMgr` : `extensions.load("editor_masterSpline_splineMgr")`, puis la globale `editor_masterSpline_splineMgr`
+**Access:** extension `editor_masterSpline_splineMgr`: `extensions.load("editor_masterSpline_splineMgr")`, then the global `editor_masterSpline_splineMgr`
 
-Gestionnaire de données de l'outil Master Spline de l'éditeur. Il stocke la liste des Master Splines (nodes, widths, nmls, layers, mode de géométrie « engineered » à clothoïdes ou « spline » Catmull-Rom, homologation), reconstruit la géométrie des splines « dirty », pilote les couches liées (via layerMgr) et fournit copies profondes, sérialisation, séparation/jonction, callbacks undo/redo et sauvegarde/chargement de session groupée (masters + enfants mesh/assembly/decal/road/tree).
+Data manager of the editor's Master Spline tool. It stores the list of Master Splines (nodes, widths, nmls, layers, geometry mode "engineered" with clothoids or "spline" Catmull-Rom, homologation), rebuilds the geometry of "dirty" splines, drives the linked layers (via layerMgr) and provides deep copies, serialization, split/join, undo/redo callbacks and grouped session save/load (masters + mesh/assembly/decal/road/tree children).
 
-## Remarques
+## Notes
 
-- Constantes : préfixe d'outil « Master Spline », clé de mode d'édition « masterSpline », 10 subdivisions minimum par segment, taille minimale d'import d'un tracé 10 m.
-- Une Master Spline contient notamment : name, id (UUID), isEnabled, isDirty, isLoop, isConformToTerrain, isAutoBanking, bankStrength, autoBankFalloff, geometryMode, engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners, nodes, widths, nmls, tableaux secondaires (ribPoints, divPoints, divWidths, tangents, binormals, normals, discMap), layers, roadLength, splineAnalysisMode, homologationPreset, isOptimising et les tableaux d'erreur eXxxNorm.
-- updateDirtyMasterSplines : avec moins de 2 nœuds, la géométrie secondaire est vidée ; en mode conform, les nœuds sont posés sur le terrain ; sinon engineeredGeom.sampleInto, avec repli Catmull-Rom (conform, auto-dévers ou libre).
-- Chargement de session : de nouveaux UUID sont générés pour tous les masters, enfants et couches ; les liens dont l'enfant n'est pas dans le lot sont supprimés.
-- addToMasterSplineArray n'actualise pas la table id vers indice (appeler recomputeIdMap ensuite).
-- Bug mineur probable : dans convertPathsToMasterSplines, une Master Spline vide est créée même pour un tracé trop petit, et le message de log calcule « trop petits » par #paths - #masterSplines, qui compte aussi les splines préexistantes.
+- Constants: tool prefix "Master Spline", edit mode key "masterSpline", minimum 10 subdivisions per segment, minimum import size of a path 10 m.
+- A Master Spline notably contains: name, id (UUID), isEnabled, isDirty, isLoop, isConformToTerrain, isAutoBanking, bankStrength, autoBankFalloff, geometryMode, engRadiusM, engTransM, engVertLenM, curveWidenMaxM, curveWidenRunoffM, corners, nodes, widths, nmls, secondary arrays (ribPoints, divPoints, divWidths, tangents, binormals, normals, discMap), layers, roadLength, splineAnalysisMode, homologationPreset, isOptimising and the eXxxNorm error arrays.
+- updateDirtyMasterSplines: with fewer than 2 nodes, the secondary geometry is cleared; in conform mode, the nodes are placed on the terrain; otherwise engineeredGeom.sampleInto, with Catmull-Rom fallback (conform, auto-banking or free).
+- Session load: new UUIDs are generated for all masters, children and layers; links whose child is not in the batch are removed.
+- addToMasterSplineArray does not update the id-to-index table (call recomputeIdMap afterwards).
+- Probable minor BUG: in convertPathsToMasterSplines, an empty Master Spline is created even for a path that is too small, and the log message computes "too small" as #paths - #masterSplines, which also counts pre-existing splines.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_masterSpline_splineMgr.addNewMasterSpline(name)` | Crée une Master Spline vide (mode engineered, nom unique, UUID) et l'ajoute à la liste, puis recalcule la table id vers indice. | 84 |
-| `editor_masterSpline_splineMgr.addToMasterSplineArray(spline)` | Ajoute une Master Spline à la liste sans recalculer la table id vers indice. | 152 |
-| `editor_masterSpline_splineMgr.captureLinkedSplinesState()` | Copie profonde de toutes les splines enfants liées par les couches de toutes les Master Splines, regroupées par outil. | 261 |
-| `editor_masterSpline_splineMgr.captureTransTierState()` | Capture l'état complet pour undo/redo multi-splines : Master Splines et splines liées. | 345 |
-| `editor_masterSpline_splineMgr.convertPathsToMasterSplines(paths)` | Convertit des tracés issus d'une bitmap en Master Splines : points grille convertis en monde via le terrain editor, normales du terrain ; importe seulement si la plus petite dimension de l'AABB dépasse 10 m. Écrit un log. | 1259 |
-| `editor_masterSpline_splineMgr.deepCopyAllMasterSplines()` | Copie profonde de toute la liste des Master Splines. | 255 |
-| `editor_masterSpline_splineMgr.deepCopyMasterSpline(spline)` | Copie profonde d'une Master Spline (string.buffer). | 252 |
-| `editor_masterSpline_splineMgr.deserializeMasterSpline(data)` | Reconstruit une Master Spline (vec3, couches, géométrie secondaire vide à régénérer) depuis des données sérialisées. | 614 |
-| `editor_masterSpline_splineMgr.getEditModeKey()` | Renvoie la clé de mode d'édition « masterSpline ». | 66 |
-| `editor_masterSpline_splineMgr.getIdToIdxMap()` | Renvoie la table id vers indice des Master Splines. | 72 |
-| `editor_masterSpline_splineMgr.getMasterSplines()` | Renvoie le tableau (vivant, non copié) des Master Splines. | 69 |
-| `editor_masterSpline_splineMgr.getToolPrefixStr()` | Renvoie le préfixe d'outil « Master Spline ». | 63 |
-| `editor_masterSpline_splineMgr.joinMasterSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joint deux Master Splines ouvertes : la première reçoit la géométrie concaténée et la seconde est supprimée. Ne fait rien si les indices sont invalides. | 539 |
-| `editor_masterSpline_splineMgr.lightSplineRedo(data)` | Redo des modifications légères : applique data.new. *(interne)* | 765 |
-| `editor_masterSpline_splineMgr.lightSplineUndo(data)` | Undo des modifications légères d'une Master Spline : applique data.old. *(interne)* | 762 |
-| `editor_masterSpline_splineMgr.loadSessionState(state, replace)` | Charge un état de session : nouveaux UUID pour masters, enfants et couches, insertion des enfants dans leurs outils, relinkage et marquage dirty. Retourne 0 si state n'est pas une table. | 1030 |
-| `editor_masterSpline_splineMgr.manageLiveOptimise(selectedSplineIdx)` | Si la spline sélectionnée a isOptimising vrai et plus de 2 divPoints, lance homologation.optimiseSpline avec le nombre d'itérations par image. | 243 |
-| `editor_masterSpline_splineMgr.recomputeIdMap()` | Recalcule la table id vers indice (appelé par l'assistant de session après un chargement). | 258 |
-| `editor_masterSpline_splineMgr.redoAddNewMasterSpline(data)` | Redo de la création : recrée une Master Spline avec l'id data.masterSplineId. *(interne)* | 1241 |
-| `editor_masterSpline_splineMgr.redoLayerAdd(data)` | Redo de l'ajout d'une couche. *(interne)* | 1117 |
-| `editor_masterSpline_splineMgr.redoLayerRemove(data)` | Redo de la suppression d'une couche. *(interne)* | 1206 |
-| `editor_masterSpline_splineMgr.removeAllMasterSplines()` | Supprime toutes les Master Splines de la session, avec leurs couches et enfants liés. | 165 |
-| `editor_masterSpline_splineMgr.removeMasterSpline(idx)` | Supprime la Master Spline d'indice idx, toutes ses couches et leurs splines liées, puis recalcule la table id vers indice. | 155 |
-| `editor_masterSpline_splineMgr.serializeMasterSpline(spline)` | Sérialise une Master Spline en table sûre pour JSON (nœuds et normales en {x,y,z}, couches, paramètres). | 570 |
-| `editor_masterSpline_splineMgr.serializeSessionState()` | État pour l'assistant de session partagé : toutes les Master Splines plus chaque enfant lié (dédupliqué par id), en tables JSON. | 1005 |
-| `editor_masterSpline_splineMgr.singleMasterSplineEditRedo(data)` | Redo d'une édition d'une seule Master Spline (data.new) ; recrée par défaut les splines enfants supprimées pendant l'action, nomme et relie les nouvelles. *(interne)* | 940 |
-| `editor_masterSpline_splineMgr.singleMasterSplineEditUndo(data)` | Undo d'une édition d'une seule Master Spline (applique data.old). *(interne)* | 831 |
-| `editor_masterSpline_splineMgr.splitMasterSpline(spline, splineIdx, selectedNodeIdx)` | Coupe la Master Spline au nœud choisi. Une boucle devient une spline ouverte re-démarrée au point de coupure ; sinon deux copies « nom (1) » et « nom (2) » sont créées avec leurs overrides de virage, et les couches sont gérées pour chaque moitié. | 353 |
-| `editor_masterSpline_splineMgr.transMasterSplineEditRedo(splinesData)` | Redo d'une édition multi-splines. *(interne)* | 966 |
-| `editor_masterSpline_splineMgr.transMasterSplineEditUndo(splinesData)` | Undo d'une édition multi-splines (état complet, masters et enfants). *(interne)* | 935 |
-| `editor_masterSpline_splineMgr.undoAddNewMasterSpline(data)` | Undo de la création d'une Master Spline : la supprime par data.masterSplineId. *(interne)* | 1232 |
-| `editor_masterSpline_splineMgr.undoLayerAdd(data)` | Undo de l'ajout d'une couche : retire la couche de la Master Spline (data.masterSplineId). *(interne)* | 1095 |
-| `editor_masterSpline_splineMgr.undoLayerRemove(data)` | Undo de la suppression d'une couche : la restaure. *(interne)* | 1162 |
-| `editor_masterSpline_splineMgr.unlinkAllSplines(masterSpline)` | Délie toutes les splines liées de la Master Spline (isLink = false, linkId = nil), sans passer par undo/redo. | 1248 |
-| `editor_masterSpline_splineMgr.updateDirtyMasterSplines(isSplineAnalysisEnabled)` | Reconstruit la géométrie des splines isDirty (terrain, engineered ou Catmull-Rom, élargissement des virages, rib points, homologation si activée), met à jour les couches liées et roadLength. Les splines non dirty ne mettent à jour que leurs couches dirty. Signale la modification à la session si quelque chose a été reconstruit. | 173 |
-| `editor_masterSpline_splineMgr.updateLinkedSplineName(splineId, linkType, newName)` | Renomme la spline liée pour qu'elle suive le nom de la couche (via setNameJumpTable). | 1229 |
+| `editor_masterSpline_splineMgr.addNewMasterSpline(name)` | Creates an empty Master Spline (engineered mode, unique name, UUID) and adds it to the list, then recomputes the id-to-index table. | 84 |
+| `editor_masterSpline_splineMgr.addToMasterSplineArray(spline)` | Adds a Master Spline to the list without recomputing the id-to-index table. | 152 |
+| `editor_masterSpline_splineMgr.captureLinkedSplinesState()` | Deep copy of all the child splines linked by the layers of all the Master Splines, grouped by tool. | 261 |
+| `editor_masterSpline_splineMgr.captureTransTierState()` | Captures the full state for multi-spline undo/redo: Master Splines and linked splines. | 345 |
+| `editor_masterSpline_splineMgr.convertPathsToMasterSplines(paths)` | Converts paths coming from a bitmap into Master Splines: grid points converted to world via the terrain editor, terrain normals; imports only if the smallest AABB dimension exceeds 10 m. Writes a log. | 1259 |
+| `editor_masterSpline_splineMgr.deepCopyAllMasterSplines()` | Deep copy of the whole list of Master Splines. | 255 |
+| `editor_masterSpline_splineMgr.deepCopyMasterSpline(spline)` | Deep copy of a Master Spline (string.buffer). | 252 |
+| `editor_masterSpline_splineMgr.deserializeMasterSpline(data)` | Rebuilds a Master Spline (vec3, layers, empty secondary geometry to be regenerated) from serialized data. | 614 |
+| `editor_masterSpline_splineMgr.getEditModeKey()` | Returns the edit mode key "masterSpline". | 66 |
+| `editor_masterSpline_splineMgr.getIdToIdxMap()` | Returns the id-to-index table of the Master Splines. | 72 |
+| `editor_masterSpline_splineMgr.getMasterSplines()` | Returns the array (live, not copied) of the Master Splines. | 69 |
+| `editor_masterSpline_splineMgr.getToolPrefixStr()` | Returns the tool prefix "Master Spline". | 63 |
+| `editor_masterSpline_splineMgr.joinMasterSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)` | Joins two open Master Splines: the first receives the concatenated geometry and the second is deleted. Does nothing if the indices are invalid. | 539 |
+| `editor_masterSpline_splineMgr.lightSplineRedo(data)` | Redo of light modifications: applies data.new. *(internal)* | 765 |
+| `editor_masterSpline_splineMgr.lightSplineUndo(data)` | Undo of light modifications to a Master Spline: applies data.old. *(internal)* | 762 |
+| `editor_masterSpline_splineMgr.loadSessionState(state, replace)` | Loads a session state: new UUIDs for masters, children and layers, insertion of the children into their tools, relinking and dirty marking. Returns 0 if state is not a table. | 1030 |
+| `editor_masterSpline_splineMgr.manageLiveOptimise(selectedSplineIdx)` | If the selected spline has isOptimising true and more than 2 divPoints, runs homologation.optimiseSpline with the number of iterations per frame. | 243 |
+| `editor_masterSpline_splineMgr.recomputeIdMap()` | Recomputes the id-to-index table (called by the session wizard after a load). | 258 |
+| `editor_masterSpline_splineMgr.redoAddNewMasterSpline(data)` | Redo of the creation: recreates a Master Spline with the id data.masterSplineId. *(internal)* | 1241 |
+| `editor_masterSpline_splineMgr.redoLayerAdd(data)` | Redo of a layer addition. *(internal)* | 1117 |
+| `editor_masterSpline_splineMgr.redoLayerRemove(data)` | Redo of a layer deletion. *(internal)* | 1206 |
+| `editor_masterSpline_splineMgr.removeAllMasterSplines()` | Deletes all the Master Splines of the session, with their layers and linked children. | 165 |
+| `editor_masterSpline_splineMgr.removeMasterSpline(idx)` | Deletes the Master Spline at index idx, all its layers and their linked splines, then recomputes the id-to-index table. | 155 |
+| `editor_masterSpline_splineMgr.serializeMasterSpline(spline)` | Serializes a Master Spline into a JSON-safe table (nodes and normals as {x,y,z}, layers, parameters). | 570 |
+| `editor_masterSpline_splineMgr.serializeSessionState()` | State for the shared session wizard: all the Master Splines plus each linked child (deduplicated by id), as JSON tables. | 1005 |
+| `editor_masterSpline_splineMgr.singleMasterSplineEditRedo(data)` | Redo of an edit of a single Master Spline (data.new); by default recreates the child splines deleted during the action, names and links the new ones. *(internal)* | 940 |
+| `editor_masterSpline_splineMgr.singleMasterSplineEditUndo(data)` | Undo of an edit of a single Master Spline (applies data.old). *(internal)* | 831 |
+| `editor_masterSpline_splineMgr.splitMasterSpline(spline, splineIdx, selectedNodeIdx)` | Cuts the Master Spline at the chosen node. A loop becomes an open spline restarted at the cut point; otherwise two copies "name (1)" and "name (2)" are created with their turn overrides, and the layers are handled for each half. | 353 |
+| `editor_masterSpline_splineMgr.transMasterSplineEditRedo(splinesData)` | Redo of a multi-spline edit. *(internal)* | 966 |
+| `editor_masterSpline_splineMgr.transMasterSplineEditUndo(splinesData)` | Undo of a multi-spline edit (full state, masters and children). *(internal)* | 935 |
+| `editor_masterSpline_splineMgr.undoAddNewMasterSpline(data)` | Undo of a Master Spline creation: deletes it by data.masterSplineId. *(internal)* | 1232 |
+| `editor_masterSpline_splineMgr.undoLayerAdd(data)` | Undo of a layer addition: removes the layer from the Master Spline (data.masterSplineId). *(internal)* | 1095 |
+| `editor_masterSpline_splineMgr.undoLayerRemove(data)` | Undo of a layer deletion: restores it. *(internal)* | 1162 |
+| `editor_masterSpline_splineMgr.unlinkAllSplines(masterSpline)` | Unlinks all the linked splines of the Master Spline (isLink = false, linkId = nil), without going through undo/redo. | 1248 |
+| `editor_masterSpline_splineMgr.updateDirtyMasterSplines(isSplineAnalysisEnabled)` | Rebuilds the geometry of isDirty splines (terrain, engineered or Catmull-Rom, turn widening, rib points, homologation if enabled), updates the linked layers and roadLength. Non-dirty splines only update their dirty layers. Signals the modification to the session if anything was rebuilt. | 173 |
+| `editor_masterSpline_splineMgr.updateLinkedSplineName(splineId, linkType, newName)` | Renames the linked spline so that it follows the layer's name (via setNameJumpTable). | 1229 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_masterSpline_splineMgr.addNewMasterSpline(name)`
 
-Crée une Master Spline vide (mode engineered, nom unique, UUID) et l'ajoute à la liste, puis recalcule la table id vers indice.
+Creates an empty Master Spline (engineered mode, unique name, UUID) and adds it to the list, then recomputes the id-to-index table.
 
-- `name` (*string|nil*) : Nom de base ; par défaut « Master Spline N ».
-- **renvoie** : table La nouvelle Master Spline.
+- `name` (*string|nil*) : Base name; "Master Spline N" by default.
+- **returns**: table The new Master Spline.
 
 #### `editor_masterSpline_splineMgr.addToMasterSplineArray(spline)`
 
-Ajoute une Master Spline à la liste sans recalculer la table id vers indice.
+Adds a Master Spline to the list without recomputing the id-to-index table.
 
-- `spline` (*table*) : Master Spline à ajouter.
+- `spline` (*table*) : Master Spline to add.
 
 #### `editor_masterSpline_splineMgr.captureLinkedSplinesState()`
 
-Copie profonde de toutes les splines enfants liées par les couches de toutes les Master Splines, regroupées par outil.
+Deep copy of all the child splines linked by the layers of all the Master Splines, grouped by tool.
 
-- **renvoie** : table Table avec les listes meshSpline, assemblySpline, decalSpline, roadSpline, treeSpline.
+- **returns**: table Table with the lists meshSpline, assemblySpline, decalSpline, roadSpline, treeSpline.
 
 #### `editor_masterSpline_splineMgr.captureTransTierState()`
 
-Capture l'état complet pour undo/redo multi-splines : Master Splines et splines liées.
+Captures the full state for multi-spline undo/redo: Master Splines and linked splines.
 
-- **renvoie** : table Table { masterSplines, linkedSplines }.
+- **returns**: table Table { masterSplines, linkedSplines }.
 
 #### `editor_masterSpline_splineMgr.convertPathsToMasterSplines(paths)`
 
-Convertit des tracés issus d'une bitmap en Master Splines : points grille convertis en monde via le terrain editor, normales du terrain ; importe seulement si la plus petite dimension de l'AABB dépasse 10 m. Écrit un log.
+Converts paths coming from a bitmap into Master Splines: grid points converted to world via the terrain editor, terrain normals; imports only if the smallest AABB dimension exceeds 10 m. Writes a log.
 
-- `paths` (*table*) : Liste de tracés { points (x, y grille), widths }.
+- `paths` (*table*) : List of paths { points (x, y grid), widths }.
 
 #### `editor_masterSpline_splineMgr.deepCopyAllMasterSplines()`
 
-Copie profonde de toute la liste des Master Splines.
+Deep copy of the whole list of Master Splines.
 
-- **renvoie** : table Copie.
+- **returns**: table Copy.
 
 #### `editor_masterSpline_splineMgr.deepCopyMasterSpline(spline)`
 
-Copie profonde d'une Master Spline (string.buffer).
+Deep copy of a Master Spline (string.buffer).
 
-- `spline` (*table*) : Spline à copier.
-- **renvoie** : table Copie.
+- `spline` (*table*) : Spline to copy.
+- **returns**: table Copy.
 
 #### `editor_masterSpline_splineMgr.deserializeMasterSpline(data)`
 
-Reconstruit une Master Spline (vec3, couches, géométrie secondaire vide à régénérer) depuis des données sérialisées.
+Rebuilds a Master Spline (vec3, layers, empty secondary geometry to be regenerated) from serialized data.
 
-- `data` (*table*) : Table produite par serializeMasterSpline.
-- **renvoie** : table Master Spline.
+- `data` (*table*) : Table produced by serializeMasterSpline.
+- **returns**: table Master Spline.
 
 #### `editor_masterSpline_splineMgr.getEditModeKey()`
 
-Renvoie la clé de mode d'édition « masterSpline ».
+Returns the edit mode key "masterSpline".
 
-- **renvoie** : string Clé.
+- **returns**: string Key.
 
 #### `editor_masterSpline_splineMgr.getIdToIdxMap()`
 
-Renvoie la table id vers indice des Master Splines.
+Returns the id-to-index table of the Master Splines.
 
-- **renvoie** : table<string, integer> Table id vers indice.
+- **returns**: table<string, integer> Id-to-index table.
 
 #### `editor_masterSpline_splineMgr.getMasterSplines()`
 
-Renvoie le tableau (vivant, non copié) des Master Splines.
+Returns the array (live, not copied) of the Master Splines.
 
-- **renvoie** : table Tableau de Master Splines.
+- **returns**: table Array of Master Splines.
 
 #### `editor_masterSpline_splineMgr.getToolPrefixStr()`
 
-Renvoie le préfixe d'outil « Master Spline ».
+Returns the tool prefix "Master Spline".
 
-- **renvoie** : string Préfixe.
+- **returns**: string Prefix.
 
 #### `editor_masterSpline_splineMgr.joinMasterSplines(splineIdx1, nodeIdx1, splineIdx2, nodeIdx2)`
 
-Joint deux Master Splines ouvertes : la première reçoit la géométrie concaténée et la seconde est supprimée. Ne fait rien si les indices sont invalides.
+Joins two open Master Splines: the first receives the concatenated geometry and the second is deleted. Does nothing if the indices are invalid.
 
-- `splineIdx1` (*integer*) : Indice de la première spline (conservée).
-- `nodeIdx1` (*integer*) : Nœud de jonction de la première.
-- `splineIdx2` (*integer*) : Indice de la seconde spline (supprimée).
-- `nodeIdx2` (*integer*) : Nœud de jonction de la seconde.
+- `splineIdx1` (*integer*) : Index of the first spline (kept).
+- `nodeIdx1` (*integer*) : Junction node of the first.
+- `splineIdx2` (*integer*) : Index of the second spline (deleted).
+- `nodeIdx2` (*integer*) : Junction node of the second.
 
 #### `editor_masterSpline_splineMgr.lightSplineRedo(data)`
 
-Redo des modifications légères : applique data.new.
+Redo of light modifications: applies data.new.
 
 - `data` (*table*) : Action { old, new }.
 
 #### `editor_masterSpline_splineMgr.lightSplineUndo(data)`
 
-Undo des modifications légères d'une Master Spline : applique data.old.
+Undo of light modifications to a Master Spline: applies data.old.
 
 - `data` (*table*) : Action { old, new }.
 
 #### `editor_masterSpline_splineMgr.loadSessionState(state, replace)`
 
-Charge un état de session : nouveaux UUID pour masters, enfants et couches, insertion des enfants dans leurs outils, relinkage et marquage dirty. Retourne 0 si state n'est pas une table.
+Loads a session state: new UUIDs for masters, children and layers, insertion of the children into their tools, relinking and dirty marking. Returns 0 if state is not a table.
 
-- `state` (*table*) : État produit par serializeSessionState.
-- `replace` (*boolean*) : Si vrai, supprime d'abord tout le graphe de masters courant (et leurs enfants).
-- **renvoie** : integer Nombre de Master Splines chargées.
+- `state` (*table*) : State produced by serializeSessionState.
+- `replace` (*boolean*) : If true, first deletes the whole current graph of masters (and their children).
+- **returns**: integer Number of Master Splines loaded.
 
 #### `editor_masterSpline_splineMgr.manageLiveOptimise(selectedSplineIdx)`
 
-Si la spline sélectionnée a isOptimising vrai et plus de 2 divPoints, lance homologation.optimiseSpline avec le nombre d'itérations par image.
+If the selected spline has isOptimising true and more than 2 divPoints, runs homologation.optimiseSpline with the number of iterations per frame.
 
-- `selectedSplineIdx` (*integer*) : Indice de la spline sélectionnée.
+- `selectedSplineIdx` (*integer*) : Index of the selected spline.
 
 #### `editor_masterSpline_splineMgr.redoAddNewMasterSpline(data)`
 
-Redo de la création : recrée une Master Spline avec l'id data.masterSplineId.
+Redo of the creation: recreates a Master Spline with the id data.masterSplineId.
 
 - `data` (*table*) : Action { masterSplineId }.
 
 #### `editor_masterSpline_splineMgr.redoLayerAdd(data)`
 
-Redo de l'ajout d'une couche.
+Redo of a layer addition.
 
-- `data` (*table*) : Données de l'action.
+- `data` (*table*) : Action data.
 
 #### `editor_masterSpline_splineMgr.redoLayerRemove(data)`
 
-Redo de la suppression d'une couche.
+Redo of a layer deletion.
 
-- `data` (*table*) : Données de l'action.
+- `data` (*table*) : Action data.
 
 #### `editor_masterSpline_splineMgr.removeMasterSpline(idx)`
 
-Supprime la Master Spline d'indice idx, toutes ses couches et leurs splines liées, puis recalcule la table id vers indice.
+Deletes the Master Spline at index idx, all its layers and their linked splines, then recomputes the id-to-index table.
 
-- `idx` (*integer*) : Indice (à partir de 1).
+- `idx` (*integer*) : Index (1-based).
 
 #### `editor_masterSpline_splineMgr.serializeMasterSpline(spline)`
 
-Sérialise une Master Spline en table sûre pour JSON (nœuds et normales en {x,y,z}, couches, paramètres).
+Serializes a Master Spline into a JSON-safe table (nodes and normals as {x,y,z}, layers, parameters).
 
 - `spline` (*table*) : Spline.
-- **renvoie** : table Données sérialisées.
+- **returns**: table Serialized data.
 
 #### `editor_masterSpline_splineMgr.serializeSessionState()`
 
-État pour l'assistant de session partagé : toutes les Master Splines plus chaque enfant lié (dédupliqué par id), en tables JSON.
+State for the shared session wizard: all the Master Splines plus each linked child (deduplicated by id), as JSON tables.
 
-- **renvoie** : table { masterSplines = {...}, children = { [linkType] = {...} } }.
+- **returns**: table { masterSplines = {...}, children = { [linkType] = {...} } }.
 
 #### `editor_masterSpline_splineMgr.singleMasterSplineEditRedo(data)`
 
-Redo d'une édition d'une seule Master Spline (data.new) ; recrée par défaut les splines enfants supprimées pendant l'action, nomme et relie les nouvelles.
+Redo of an edit of a single Master Spline (data.new); by default recreates the child splines deleted during the action, names and links the new ones.
 
 - `data` (*table*) : Action { old, new }.
 
 #### `editor_masterSpline_splineMgr.singleMasterSplineEditUndo(data)`
 
-Undo d'une édition d'une seule Master Spline (applique data.old).
+Undo of an edit of a single Master Spline (applies data.old).
 
 - `data` (*table*) : Action { old, new }.
 
 #### `editor_masterSpline_splineMgr.splitMasterSpline(spline, splineIdx, selectedNodeIdx)`
 
-Coupe la Master Spline au nœud choisi. Une boucle devient une spline ouverte re-démarrée au point de coupure ; sinon deux copies « nom (1) » et « nom (2) » sont créées avec leurs overrides de virage, et les couches sont gérées pour chaque moitié.
+Cuts the Master Spline at the chosen node. A loop becomes an open spline restarted at the cut point; otherwise two copies "name (1)" and "name (2)" are created with their turn overrides, and the layers are handled for each half.
 
-- `spline` (*table*) : Master Spline à couper.
-- `splineIdx` (*integer*) : Indice de la spline dans la liste.
-- `selectedNodeIdx` (*integer*) : Indice du nœud de coupure.
+- `spline` (*table*) : Master Spline to cut.
+- `splineIdx` (*integer*) : Index of the spline in the list.
+- `selectedNodeIdx` (*integer*) : Index of the cut node.
 
 #### `editor_masterSpline_splineMgr.transMasterSplineEditRedo(splinesData)`
 
-Redo d'une édition multi-splines.
+Redo of a multi-spline edit.
 
 - `splinesData` (*table*) : Action { old, new }.
 
 #### `editor_masterSpline_splineMgr.transMasterSplineEditUndo(splinesData)`
 
-Undo d'une édition multi-splines (état complet, masters et enfants).
+Undo of a multi-spline edit (full state, masters and children).
 
-- `splinesData` (*table*) : Action { old, new } issue de captureTransTierState.
+- `splinesData` (*table*) : Action { old, new } from captureTransTierState.
 
 #### `editor_masterSpline_splineMgr.undoAddNewMasterSpline(data)`
 
-Undo de la création d'une Master Spline : la supprime par data.masterSplineId.
+Undo of a Master Spline creation: deletes it by data.masterSplineId.
 
 - `data` (*table*) : Action { masterSplineId }.
 
 #### `editor_masterSpline_splineMgr.undoLayerAdd(data)`
 
-Undo de l'ajout d'une couche : retire la couche de la Master Spline (data.masterSplineId).
+Undo of a layer addition: removes the layer from the Master Spline (data.masterSplineId).
 
-- `data` (*table*) : Données de l'action.
+- `data` (*table*) : Action data.
 
 #### `editor_masterSpline_splineMgr.undoLayerRemove(data)`
 
-Undo de la suppression d'une couche : la restaure.
+Undo of a layer deletion: restores it.
 
-- `data` (*table*) : Données de l'action.
+- `data` (*table*) : Action data.
 
 #### `editor_masterSpline_splineMgr.unlinkAllSplines(masterSpline)`
 
-Délie toutes les splines liées de la Master Spline (isLink = false, linkId = nil), sans passer par undo/redo.
+Unlinks all the linked splines of the Master Spline (isLink = false, linkId = nil), without going through undo/redo.
 
 - `masterSpline` (*table*) : Master Spline.
 
 #### `editor_masterSpline_splineMgr.updateDirtyMasterSplines(isSplineAnalysisEnabled)`
 
-Reconstruit la géométrie des splines isDirty (terrain, engineered ou Catmull-Rom, élargissement des virages, rib points, homologation si activée), met à jour les couches liées et roadLength. Les splines non dirty ne mettent à jour que leurs couches dirty. Signale la modification à la session si quelque chose a été reconstruit.
+Rebuilds the geometry of isDirty splines (terrain, engineered or Catmull-Rom, turn widening, rib points, homologation if enabled), updates the linked layers and roadLength. Non-dirty splines only update their dirty layers. Signals the modification to the session if anything was rebuilt.
 
-- `isSplineAnalysisEnabled` (*boolean*) : Si vrai, lance homologation.analyseSpline sur les splines de plus de 2 points discrétisés.
+- `isSplineAnalysisEnabled` (*boolean*) : If true, runs homologation.analyseSpline on splines with more than 2 discretized points.
 
 #### `editor_masterSpline_splineMgr.updateLinkedSplineName(splineId, linkType, newName)`
 
-Renomme la spline liée pour qu'elle suive le nom de la couche (via setNameJumpTable).
+Renames the linked spline so that it follows the layer's name (via setNameJumpTable).
 
-- `splineId` (*string*) : Id de la spline liée.
-- `linkType` (*string*) : Type de lien (préfixe d'outil de la spline liée).
-- `newName` (*string*) : Nouveau nom.
+- `splineId` (*string*) : Id of the linked spline.
+- `linkType` (*string*) : Link type (tool prefix of the linked spline).
+- `newName` (*string*) : New name.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `generateUUID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/masterSpline/splineMgr.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/masterSpline/splineMgr.lua`.*

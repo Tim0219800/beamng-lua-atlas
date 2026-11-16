@@ -2,84 +2,84 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Utilitaire des sélecteurs en grille : gère les options d'affichage (tri, filtres d'affichage, bascules…), la liste des favoris et celle des éléments récents, avec persistance JSON dans un fichier (par défaut /settings/gridSelectorData.json). Une option peut être liée à un réglage du jeu via `settingsKey`. Émet les hooks onGridSelectorDisplayDataChanged et onGridSelectorFavouriteToggled.
---- Accès : extension `ui_gridSelectorUtils_displayDataModule` : `extensions.load("ui_gridSelectorUtils_displayDataModule")`, puis la globale `ui_gridSelectorUtils_displayDataModule`
+--- Grid selector utility: manages display options (sorting, display filters, toggles...), the favorites list and the recent items list, with JSON persistence in a file (default /settings/gridSelectorData.json). An option can be linked to a game setting via `settingsKey`. Emits the hooks onGridSelectorDisplayDataChanged and onGridSelectorFavouriteToggled.
+--- Access: extension `ui_gridSelectorUtils_displayDataModule`: `extensions.load("ui_gridSelectorUtils_displayDataModule")`, then the global `ui_gridSelectorUtils_displayDataModule`
 ---@class ui_gridSelectorUtils_displayDataModule
 ui_gridSelectorUtils_displayDataModule = {}
 
---- Crée une instance de gestion des données d'affichage, favoris et récents.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:4
----@param dataFile string|nil Fichier JSON de sauvegarde, défaut /settings/gridSelectorData.json.
----@param displayDataOptions table[]|nil Liste d'options { key, type, default, label, min, max, options, showInModes, description, hideInSimpleMenu, save, settingsKey }.
----@param updateDisplayDataFunction function|nil Migration (displayData, ancienneVersion, nouvelleVersion) -> displayData.
----@param backendName string|nil Nom transmis aux hooks, défaut "gridSelector".
----@param targetVersion integer|nil Version courante du format de données, défaut 1.
----@return table  Instance (voir classes.instance).
+--- Creates a display data, favorites and recents management instance.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:4
+---@param dataFile string|nil JSON save file, default /settings/gridSelectorData.json.
+---@param displayDataOptions table[]|nil List of options { key, type, default, label, min, max, options, showInModes, description, hideInSimpleMenu, save, settingsKey }.
+---@param updateDisplayDataFunction function|nil Migration (displayData, oldVersion, newVersion) -> displayData.
+---@param backendName string|nil Name passed to the hooks, default "gridSelector".
+---@param targetVersion integer|nil Current data format version, default 1.
+---@return table  Instance (see classes.instance).
 function ui_gridSelectorUtils_displayDataModule.create(dataFile, displayDataOptions, updateDisplayDataFunction, backendName, targetVersion) end
 
---- Objet renvoyé par create().
+--- Object returned by create().
 ---@class ui_gridSelectorUtils_displayDataModule_instance
 local ui_gridSelectorUtils_displayDataModule_instance = {}
 
---- Vide les favoris et sauvegarde.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+--- Clears the favorites and saves.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
 function ui_gridSelectorUtils_displayDataModule_instance:clearAllFavourites() end
 
---- Vide les récents et sauvegarde.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+--- Clears the recents and saves.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
 function ui_gridSelectorUtils_displayDataModule_instance:clearAllRecentItems() end
 
---- Renvoie la table clé -> valeur des options, initialisée au premier appel.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@return table<string, any>  Valeurs courantes.
+--- Returns the key -> value table of the options, initialized on first call.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@return table<string, any>  Current values.
 function ui_gridSelectorUtils_displayDataModule_instance:getDisplayData() end
 
---- Renvoie la liste des options pour l'UI : label, key, type, min, max, value, options, showInModes, description, hideInSimpleMenu. La valeur de `searchText` est toujours nil (gérée par le module appelant).
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@return table[]  Options avec leur valeur courante.
+--- Returns the options list for the UI: label, key, type, min, max, value, options, showInModes, description, hideInSimpleMenu. The value of `searchText` is always nil (handled by the calling module).
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@return table[]  Options with their current value.
 function ui_gridSelectorUtils_displayDataModule_instance:getDisplayDataOptions() end
 
---- Renvoie une copie profonde de la liste des récents.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@return string[]  Clés récentes, la plus récente d'abord.
+--- Returns a deep copy of the recents list.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@return string[]  Recent keys, most recent first.
 function ui_gridSelectorUtils_displayDataModule_instance:getRecentItems() end
 
---- Relit le fichier et reconstruit la table des options à partir des défauts, du fichier et des réglages liés.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@return table<string, any>  Nouvelle table (n'écrase pas le cache interne).
+--- Re-reads the file and rebuilds the options table from the defaults, the file and the linked settings.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@return table<string, any>  New table (does not overwrite the internal cache).
 function ui_gridSelectorUtils_displayDataModule_instance:initializeDisplayData() end
 
---- Renvoie l'horodatage du favori ou nil.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@param itemKey string Clé de l'élément.
----@return integer|nil  os.time() d'ajout.
+--- Returns the favorite's timestamp or nil.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@param itemKey string Item key.
+---@return integer|nil  os.time() of when it was added.
 function ui_gridSelectorUtils_displayDataModule_instance:isFavourite(itemKey) end
 
---- Renvoie la position dans la liste des récents, ou false.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@param itemKey string Clé de l'élément.
----@return integer|boolean  Index ou false.
+--- Returns the position in the recents list, or false.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@param itemKey string Item key.
+---@return integer|boolean  Index or false.
 function ui_gridSelectorUtils_displayDataModule_instance:isRecentItem(itemKey) end
 
---- Remet les options `save` à leur valeur par défaut, émet le hook pour chaque changement et sauvegarde.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@return table<string, any>  displayData à jour.
+--- Resets the `save` options to their default value, emits the hook for each change and saves.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@return table<string, any>  Updated displayData.
 function ui_gridSelectorUtils_displayDataModule_instance:resetDisplayDataToDefaults() end
 
---- Change une option (convertie en nombre si son type est number), émet onGridSelectorDisplayDataChanged(backendName, key, value), répercute sur le réglage lié et sauvegarde. Les valeurs nil ou "undefined" sont ignorées.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@param key string Clé de l'option.
----@param value any Nouvelle valeur.
----@return table<string, any>  displayData à jour.
+--- Changes an option (converted to a number if its type is number), emits onGridSelectorDisplayDataChanged(backendName, key, value), propagates to the linked setting and saves. nil or "undefined" values are ignored.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@param key string Option key.
+---@param value any New value.
+---@return table<string, any>  Updated displayData.
 function ui_gridSelectorUtils_displayDataModule_instance:setDisplayDataOption(key, value) end
 
---- Ajoute ou retire un favori, émet onGridSelectorFavouriteToggled(backendName, itemKey, estFavori) et sauvegarde.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@param itemKey string Clé de l'élément.
+--- Adds or removes a favorite, emits onGridSelectorFavouriteToggled(backendName, itemKey, isFavourite) and saves.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@param itemKey string Item key.
 function ui_gridSelectorUtils_displayDataModule_instance:toggleFavourite(itemKey) end
 
---- Place l'élément en tête des récents (max 100) et sauvegarde.
----Source : lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
----@param itemKey string Clé de l'élément.
+--- Puts the item at the head of the recents (max 100) and saves.
+---Source: lua/ge/extensions/ui/gridSelectorUtils/displayDataModule.lua:dyn
+---@param itemKey string Item key.
 function ui_gridSelectorUtils_displayDataModule_instance:trackRecentItem(itemKey) end
 

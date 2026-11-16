@@ -1,18 +1,18 @@
 # `flowgraph_nodes_gameplay_crash_removeTrackedVehicleCrash`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash.lua` · VM : Game Engine (GE) · 23 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash.lua` · VM: Game Engine (GE) · 23 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Remove Tracked Vehicle Crash » (catégorie repeat_instant). Retire un véhicule (pin vehId) du suivi des crashs via gameplay_util_crashDetection.removeTrackedVehicleById.
+Flowgraph node "Remove Tracked Vehicle Crash" (category repeat_instant). Removes a vehicle (vehId pin) from crash tracking via gameplay_util_crashDetection.removeTrackedVehicleById.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Appelle removeTrackedVehicleById(vehId) à chaque frame. | 18 |
+| `C:work()` | Calls removeTrackedVehicleById(vehId) every frame. | 18 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/crash/removeTrackedVehicleCrash.lua`.*

@@ -1,29 +1,29 @@
 # `flowgraph_nodes_gameplay_rally_createRallyGroundMarker`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker.lua` · VM : Game Engine (GE) · 118 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker.lua` · VM: Game Engine (GE) · 118 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Mode Create Ground Marker Route » (catégorie once_instant, tag rally). Crée la route de marqueurs au sol (core_groundMarkers.setPath) vers une position nommée d'un pathData : les pathnodes triés (si includePathnodes, true par défaut) puis la position de départ nommée, reculée de routeEndOffsetMeters (10 m par défaut) le long de son axe -Y local et projetée sur le terrain. Les waypoints à moins de 1 m du précédent sont ignorés. Déclenche ensuite le hook onCreatedRallyGroundMarkerRoute. Entrées : pathData, name, includePathnodes, routeEndOffsetMeters.
+Flowgraph node "Rally Mode Create Ground Marker Route" (category once_instant, tag rally). Creates the ground marker route (core_groundMarkers.setPath) to a named position of a pathData: the sorted pathnodes (if includePathnodes, true by default) then the named start position, moved back by routeEndOffsetMeters (10 m by default) along its local -Y axis and projected onto the terrain. Waypoints less than 1 m from the previous one are ignored. Then triggers the onCreatedRallyGroundMarkerRoute hook. Inputs: pathData, name, includePathnodes, routeEndOffsetMeters.
 
-## Remarques
+## Notes
 
-- Si pathData est absent ou si la position nommée est introuvable, un avertissement est loggé et rien n'est créé.
-- La projection au sol utilise core_terrain.getTerrainHeight, sinon un raycast statique de 150 m depuis 50 m au-dessus.
+- If pathData is absent or the named position cannot be found, a warning is logged and nothing is created.
+- The ground projection uses core_terrain.getTerrainHeight, otherwise a 150 m static raycast from 50 m above.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Construit la liste de waypoints, appelle core_groundMarkers.setPath puis extensions.hook('onCreatedRallyGroundMarkerRoute'). | 91 |
+| `C:workOnce()` | Builds the waypoint list, calls core_groundMarkers.setPath then extensions.hook('onCreatedRallyGroundMarkerRoute'). | 91 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onCreatedRallyGroundMarkerRoute` — écouté par 1 module(s)
+- `onCreatedRallyGroundMarkerRoute` — listened to by 1 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/createRallyGroundMarker.lua`.*

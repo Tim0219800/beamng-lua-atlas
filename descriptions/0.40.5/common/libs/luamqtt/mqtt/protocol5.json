@@ -1,8 +1,36 @@
 {
   "path": "lua/common/libs/luamqtt/mqtt/protocol5.lua",
-  "module": "Implémentation du protocole MQTT 5.0 de luamqtt : construction (make_packet) et analyse (parse_packet) des paquets, avec propriétés et propriétés utilisateur, codes de raison et paquet AUTH. Chargé par client.lua quand la version 5 est demandée.",
+  "module": "luamqtt implementation of the MQTT 5.0 protocol: packet construction (make_packet) and parsing (parse_packet), with properties and user properties, reason codes and the AUTH packet. Loaded by client.lua when version 5 is requested.",
   "functions": {
-    "make_packet": {"desc": "Construit un paquet MQTT 5 à partir d'une table d'arguments dont le champ type est un packet_type ; gère properties et user_properties.", "params": {"args": {"type": "table", "desc": "type et champs propres au paquet."}}, "returns": [{"type": "table|boolean", "desc": "Paquet combiné prêt à envoyer, ou false et un message d'erreur."}]},
-    "parse_packet": {"desc": "Analyse un paquet MQTT 5 reçu à l'aide de read_func.", "params": {"read_func": {"type": "function", "desc": "Fonction de lecture de n octets."}}, "returns": [{"type": "table|boolean", "desc": "Paquet analysé, ou false et un message d'erreur."}]}
+    "make_packet": {
+      "desc": "Builds an MQTT 5 packet from an arguments table whose type field is a packet_type; handles properties and user_properties.",
+      "params": {
+        "args": {
+          "type": "table",
+          "desc": "type and packet-specific fields."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|boolean",
+          "desc": "Combined packet ready to send, or false and an error message."
+        }
+      ]
+    },
+    "parse_packet": {
+      "desc": "Parses a received MQTT 5 packet using read_func.",
+      "params": {
+        "read_func": {
+          "type": "function",
+          "desc": "Function that reads n bytes."
+        }
+      },
+      "returns": [
+        {
+          "type": "table|boolean",
+          "desc": "Parsed packet, or false and an error message."
+        }
+      ]
+    }
   }
 }

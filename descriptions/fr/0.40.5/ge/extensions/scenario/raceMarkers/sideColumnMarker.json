@@ -1,0 +1,34 @@
+{
+  "path": "lua/ge/extensions/scenario/raceMarkers/sideColumnMarker.lua",
+  "module": "Marqueur de checkpoint par défaut de scenario_race_marker : deux colonnes (modèle single_faded_column.dae) de part et d'autre du passage, plus une base au sol (checkpoint_curve_base.dae). Les colonnes grandissent avec la distance pour rester visibles de loin. Prend en charge l'écran partagé : chaque marqueur peut n'être visible que pour un joueur (setRenderViewPlayer). Le module renvoie un constructeur : require('scenario/raceMarkers/sideColumnMarker')(id) donne un objet de la classe C.",
+  "notes": [
+    "Couleurs par mode : default rouge (1, 0.07, 0), next noir, start et lap vert (0.4, 1, 0.2), recovery jaune (1, 0.85, 0), final bleu (0.1, 0.3, 1), branch orange (1, 0.6, 0), hidden noir. Fondu de couleur de 0.3 s.",
+    "setToCheckpoint(wp) lit wp.pos, wp.radius (demi-écart entre les colonnes), wp.normal (direction de passage, facultative), wp.fadeNear (1 par défaut), wp.fadeFar (50), wp.minAlpha (0.25).",
+    "Les colonnes sont placées à pos +/- side*radius avec un décalage vertical de -10 m, et leur hauteur croît avec la distance (jusqu'à environ 20 unités entre 60 et 180 m, puis encore à grande distance).",
+    "La caméra de référence pour la distance est celle du contexte du joueur renderViewPlayer (core_camera.getContextIdForPlayer), sinon la caméra principale.",
+    "Les objets sont mémorisés par identifiants (baseId, leftId, rightId) et recherchés à chaque image avec scenetree.findObjectById.",
+    "La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim)."
+  ],
+  "fields": {},
+  "functions": {},
+  "classes": {
+    "C": {
+      "desc": "Marqueur à deux colonnes latérales.",
+      "functions": {
+        "init": {"desc": "Constructeur : initialise l'état et appelle clearMarkers.", "params": {"id": {"type": "integer", "desc": "Identifiant unique."}}, "internal": true},
+        "update": {"desc": "Appel par image : calcule couleur, alpha, taille de la base et des colonnes d'après la distance à la caméra.", "params": {"dt": {"type": "number", "desc": "Durée réelle (s)."}, "dtSim": {"type": "number", "desc": "Durée simulée (s)."}}, "internal": true},
+        "setToCheckpoint": {"desc": "Place base et colonnes sur un checkpoint.", "params": {"wp": {"type": "table", "desc": "{pos, radius, normal?, fadeNear?, fadeFar?, minAlpha?}."}}},
+        "setMode": {"desc": "Change de mode : affiche (sauf 'hidden') et lance le fondu de couleur.", "params": {"mode": {"type": "string", "desc": "default, next, start, lap, recovery, final, branch ou hidden."}}},
+        "setVisibility": {"desc": "Affiche ou cache base et colonnes.", "params": {"v": {"type": "boolean", "desc": "Visibilité."}}},
+        "hide": {"desc": "Appelle setVisibility(false).", "params": {}},
+        "show": {"desc": "Appelle setVisibility(true).", "params": {}},
+        "applyRenderViewMask": {"desc": "Efface les masques de rendu des objets puis les cache dans les vues d'écran partagé des autres joueurs que renderViewPlayer (render_splitScreen.getPlayers).", "params": {}},
+        "setRenderViewPlayer": {"desc": "Réserve ce marqueur à la vue d'un joueur (nil pour tous) et applique le masque.", "params": {"player": {"type": "integer|nil", "desc": "Indice du joueur."}}},
+        "createObject": {"desc": "Crée un TSStatic caché enregistré sous objectName et ajouté à ScenarioObjectsGroup.", "params": {"shapeName": {"type": "string", "desc": "Chemin du modèle."}, "objectName": {"type": "string", "desc": "Nom d'enregistrement."}}, "returns": [{"type": "table", "desc": "L'objet créé."}]},
+        "createMarkers": {"desc": "Supprime les anciens objets puis crée la base et les deux colonnes, et applique le masque de vues.", "params": {}},
+        "clearMarker": {"desc": "Supprime un objet à partir de son identifiant (masque de rendu effacé avant la suppression).", "params": {"id": {"type": "integer|nil", "desc": "Identifiant d'objet."}}},
+        "clearMarkers": {"desc": "Supprime base et colonnes.", "params": {}}
+      }
+    }
+  }
+}

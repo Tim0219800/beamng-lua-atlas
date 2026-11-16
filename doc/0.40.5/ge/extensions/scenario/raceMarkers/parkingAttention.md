@@ -1,38 +1,38 @@
 # `scenario_raceMarkers_parkingAttention`
 
-*Fichier : `lua/ge/extensions/scenario/raceMarkers/parkingAttention.lua` · VM : Game Engine (GE) · 137 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/scenario/raceMarkers/parkingAttention.lua` · VM: Game Engine (GE) · 137 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/scenario/raceMarkers/parkingAttention")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/scenario/raceMarkers/parkingAttention")` (file under extensions/ but not a regular extension)
 
-Marqueur d'attention pour une place de parking : dessine en debug (debugDrawer:drawTriSolid) les quatre parois bleues translucides (alpha 25 %) d'un parallélépipède autour de la place, hauteur 1.33 m, double face. Aucun objet de scène n'est créé. Le module renvoie un constructeur : require('scenario/raceMarkers/parkingAttention')(id) donne un objet de la classe C.
+Attention marker for a parking spot: draws in debug (debugDrawer:drawTriSolid) the four translucent blue walls (alpha 25%) of a box around the spot, height 1.33 m, double-sided. No scene object is created. The module returns a constructor: require('scenario/raceMarkers/parkingAttention')(id) gives an object of class C.
 
-## Remarques
+## Notes
 
-- setToCheckpoint(wp) accepte soit wp = {pos, rot, scl} (centre, quaternion, taille complète de la place), soit wp.parkingSpot avec ces trois champs ; sinon seul wp.pos et wp.radius sont mémorisés et rien n'est dessiné.
-- La couleur est fixe (0, 0.4, 1) quel que soit le mode.
-- La page extraite affiche update(dtSim) ; la signature réelle est update(dt, dtSim).
+- setToCheckpoint(wp) accepts either wp = {pos, rot, scl} (center, quaternion, full size of the spot), or wp.parkingSpot with these three fields; otherwise only wp.pos and wp.radius are stored and nothing is drawn.
+- The color is fixed (0, 0.4, 1) regardless of the mode.
+- The extracted page shows update(dtSim); the actual signature is update(dt, dtSim).
 
-## Classe `C`
+## Class `C`
 
-Parois de debug autour d'une place de parking.
+Debug walls around a parking spot.
 
-Le module renvoie un constructeur : `local obj = require("scenario_raceMarkers_parkingAttention")(options)`.
+The module returns a constructor: `local obj = require("scenario_raceMarkers_parkingAttention")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearMarkers()` | Efface la table d'identifiants. | 126 |
-| `C:createMarkers()` | Conservé pour la compatibilité d'API avec les autres marqueurs : ne crée aucun objet. | 122 |
-| `C:hide()` | Appelle setVisibility(false). | 118 |
-| `C:init(id)` | Constructeur : initialise l'état. | 34 |
-| `C:setMode(mode)` | 'hidden' masque, autre mode affiche. | 101 |
-| `C:setToCheckpoint(wp)` | Mémorise la place de parking à entourer. | 79 |
-| `C:setVisibility(v)` | Active ou désactive le dessin. | 114 |
-| `C:show()` | Appelle setVisibility(true). | 119 |
-| `C:update(dt, dtSim)` | Appel par image : avance le minuteur de mode, masque après le fondu en 'hidden' et dessine les quatre parois si une place est définie. | 49 |
+| `C:clearMarkers()` | Clears the identifier table. | 126 |
+| `C:createMarkers()` | Kept for API compatibility with the other markers: creates no object. | 122 |
+| `C:hide()` | Calls setVisibility(false). | 118 |
+| `C:init(id)` | Constructor: initializes the state. | 34 |
+| `C:setMode(mode)` | 'hidden' hides, other mode shows. | 101 |
+| `C:setToCheckpoint(wp)` | Stores the parking spot to surround. | 79 |
+| `C:setVisibility(v)` | Enables or disables drawing. | 114 |
+| `C:show()` | Calls setVisibility(true). | 119 |
+| `C:update(dt, dtSim)` | Per-frame call: advances the mode timer, hides after the fade in 'hidden', and draws the four walls if a spot is defined. | 49 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawTriSolid`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/scenario/raceMarkers/parkingAttention.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/scenario/raceMarkers/parkingAttention.lua`.*

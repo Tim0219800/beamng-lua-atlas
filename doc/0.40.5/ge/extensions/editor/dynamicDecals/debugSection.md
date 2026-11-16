@@ -1,49 +1,49 @@
 # `editor_dynamicDecals_debugSection`
 
-*Fichier : `lua/ge/extensions/editor/dynamicDecals/debugSection.lua` · VM : Game Engine (GE) · 193 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/dynamicDecals/debugSection.lua` · VM: Game Engine (GE) · 193 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_dynamicDecals_debugSection` : `extensions.load("editor_dynamicDecals_debugSection")`, puis la globale `editor_dynamicDecals_debugSection`
+**Access:** extension `editor_dynamicDecals_debugSection`: `extensions.load("editor_dynamicDecals_debugSection")`, then the global `editor_dynamicDecals_debugSection`
 
-Section « Debug » (ordre 1010) de l'outil Dynamic Decals : une série de boutons de test pour développeurs. Ils appellent l'API editor_api_dynamicDecals (reprojection des calques, bake de brosse, dump du layerStack, noms des matériaux, profondeur/normale de surface, mise à jour des matériaux du véhicule), les autres modules de l'outil (textures, gizmo, notification, docs, widgets, settings) et un générateur de matériaux dynamiques pour tous les véhicules.
+"Debug" section (order 1010) of the Dynamic Decals tool: a series of test buttons for developers. They call the editor_api_dynamicDecals API (layer reprojection, brush bake, layerStack dump, material names, surface depth/normal, vehicle material update), the other modules of the tool (textures, gizmo, notification, docs, widgets, settings) and a dynamic material generator for all vehicles.
 
-## Remarques
+## Notes
 
-- Le bouton « Generate Materials » parcourt /vehicles/*, lit <véhicule>/main.materials.json et, pour chaque matériau utilisé (settings.getUsedMaterialNames) dont `mapTo` correspond, crée un matériau « <nom>.skin.dynamicTextures » dont l'étape 2 utilise les textures @DynamicTextureBaseColor / ColorPalette / Metallic / Roughness. Le résultat est écrit dans <véhicule>/dynamicDecals/main.materials.json : écriture dans les fichiers du jeu, à utiliser avec précaution.
-- Ce code suppose que dynamicDecal Stages[2] existe dans chaque matériau lu ; sinon il lève une erreur.
-- La case « Reproject Layers every frame » appelle api.reprojectLayers() à chaque frame d'affichage de la section : coûteux.
+- The "Generate Materials" button walks /vehicles/*, reads <vehicle>/main.materials.json and, for each used material (settings.getUsedMaterialNames) whose `mapTo` matches, creates a "<name>.skin.dynamicTextures" material whose stage 2 uses the textures @DynamicTextureBaseColor / ColorPalette / Metallic / Roughness. The result is written to <vehicle>/dynamicDecals/main.materials.json: writes into game files, use with caution.
+- This code assumes that dynamicDecal Stages[2] exists in every material read; otherwise it raises an error.
+- The "Reproject Layers every frame" checkbox calls api.reprojectLayers() on every frame the section is displayed: expensive.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_dynamicDecals_debugSection.editorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change. Ne fait rien ici. *(interne)* | 172 |
-| `editor_dynamicDecals_debugSection.registerEditorPreferences(prefsRegistry)` | Ne déclare aucune préférence (le corps est entièrement commenté). *(interne)* | 166 |
-| `editor_dynamicDecals_debugSection.setup(tool_in)` | Appelé par l'outil : récupère l'API et les modules textures, gizmo, notification, docs, widgets, settings, puis enregistre la section « Debug » (ordre 1010). *(interne)* | 176 |
+| `editor_dynamicDecals_debugSection.editorPreferenceValueChanged(path, value)` | Hook called when a preference changes. Does nothing here. *(internal)* | 172 |
+| `editor_dynamicDecals_debugSection.registerEditorPreferences(prefsRegistry)` | Declares no preference (the body is entirely commented out). *(internal)* | 166 |
+| `editor_dynamicDecals_debugSection.setup(tool_in)` | Called by the tool: gets the API and the textures, gizmo, notification, docs, widgets, settings modules, then registers the "Debug" section (order 1010). *(internal)* | 176 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_dynamicDecals_debugSection.editorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change. Ne fait rien ici.
+Hook called when a preference changes. Does nothing here.
 
-- `path` (*string*) : Chemin de la préférence.
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path.
+- `value` (*any*) : New value.
 
 #### `editor_dynamicDecals_debugSection.registerEditorPreferences(prefsRegistry)`
 
-Ne déclare aucune préférence (le corps est entièrement commenté).
+Declares no preference (the body is entirely commented out).
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur.
+- `prefsRegistry` (*table*) : Editor preferences registry.
 
 #### `editor_dynamicDecals_debugSection.setup(tool_in)`
 
-Appelé par l'outil : récupère l'API et les modules textures, gizmo, notification, docs, widgets, settings, puis enregistre la section « Debug » (ordre 1010).
+Called by the tool: gets the API and the textures, gizmo, notification, docs, widgets, settings modules, then registers the "Debug" section (order 1010).
 
-- `tool_in` (*table*) : Référence à l'outil editor_dynamicDecalsTool.
+- `tool_in` (*table*) : Reference to the editor_dynamicDecalsTool tool.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`, `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/dynamicDecals/debugSection.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/dynamicDecals/debugSection.lua`.*

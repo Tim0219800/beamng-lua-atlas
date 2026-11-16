@@ -1,31 +1,31 @@
 # `flowgraph_nodes_states_stateNode`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/states/stateNode.lua` · VM : Game Engine (GE) · 197 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/states/stateNode.lua` · VM: Game Engine (GE) · 197 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/states/stateNode")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/states/stateNode")` (file under extensions/ but not a regular extension)
 
-Noeud d'état « State Node » du stategraph (créé par _flowgraph_createStateNode). Représente un graphe cible (targetGraph) dans le graphe d'états ; pins : flow (entrée), success et fail (sorties de type state), plus des sorties personnalisées (transitions). Peut exporter son état en fichier .state.flow.json. Double-clic : ouvre le graphe cible.
+State node "State Node" of the stategraph (created by _flowgraph_createStateNode). Represents a target graph (targetGraph) in the state graph; pins: flow (input), success and fail (outputs of type state), plus custom outputs (transitions). Can export its state to a .state.flow.json file. Double-click: opens the target graph.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:EndPin()` | Vide. | 146 |
-| `C:_onDeserialized(data)` | Mémorise targetGraphId pour _postDeserialize. | 159 |
-| `C:_onSerialize(res)` | Sauvegarde l'id du graphe cible (res.targetGraphId). | 151 |
-| `C:_onSerializeState()` | Sérialise noeud + graphe cible pour l'export d'état (res.type = 'state'). | 185 |
-| `C:_postDeserialize()` | Après chargement de tous les graphes, retrouve le graphe cible (id + décalage getGraphNodeOffset) et l'associe. | 163 |
-| `C:doubleClicked()` | Sélectionne le graphe cible dans l'éditeur. | 113 |
-| `C:drawCustomProperties()` | Liste déroulante « Target Graph » (graphes racine hors graphe d'états) et bouton « Export State » (sauvegarde JSON via editor_fileDialog). | 64 |
-| `C:drawMiddle(builder, style)` | Dessine le contenu central du noeud dans l'éditeur. | 121 |
-| `C:getTransitionNames()` | Renvoie la liste triée des noms de pins de sortie (transitions possibles). | 104 |
+| `C:EndPin()` | Empty. | 146 |
+| `C:_onDeserialized(data)` | Stores targetGraphId for _postDeserialize. | 159 |
+| `C:_onSerialize(res)` | Saves the target graph id (res.targetGraphId). | 151 |
+| `C:_onSerializeState()` | Serializes the node + target graph for the state export (res.type = 'state'). | 185 |
+| `C:_postDeserialize()` | After all graphs are loaded, finds the target graph (id + getGraphNodeOffset offset) and associates it. | 163 |
+| `C:doubleClicked()` | Selects the target graph in the editor. | 113 |
+| `C:drawCustomProperties()` | "Target Graph" dropdown (root graphs outside the state graph) and "Export State" button (JSON save via editor_fileDialog). | 64 |
+| `C:drawMiddle(builder, style)` | Draws the central content of the node in the editor. | 121 |
+| `C:getTransitionNames()` | Returns the sorted list of output pin names (possible transitions). | 104 |
 | `C:init(mgr)` | allowCustomOutPins = true, savePins = true. | 37 |
-| `C:onCustomNameChanged(name)` | Renomme le graphe cible et renvoie un message d'historique. | 176 |
-| `C:representsGraph()` | Renvoie le graphe cible représenté par ce noeud. | 31 |
-| `C:setAutoStart(val)` | Vide (non utilisé). | 57 |
-| `C:setTargetGraph(graph)` | Associe un graphe cible, reprend son nom et prend la couleur « groupstate » s'il s'agit d'un graphe d'états ; sinon nom « No Target! ». | 43 |
+| `C:onCustomNameChanged(name)` | Renames the target graph and returns a history message. | 176 |
+| `C:representsGraph()` | Returns the target graph represented by this node. | 31 |
+| `C:setAutoStart(val)` | Empty (unused). | 57 |
+| `C:setTargetGraph(graph)` | Associates a target graph, takes its name and takes the "groupstate" color if it is a state graph; otherwise name "No Target!". | 43 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/states/stateNode.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/states/stateNode.lua`.*

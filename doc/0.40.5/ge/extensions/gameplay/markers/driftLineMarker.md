@@ -1,62 +1,62 @@
 # `gameplay_markers_driftLineMarker`
 
-*Fichier : `lua/ge/extensions/gameplay/markers/driftLineMarker.lua` · VM : Game Engine (GE) · 134 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/markers/driftLineMarker.lua` · VM: Game Engine (GE) · 134 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `gameplay_markers_driftLineMarker` : `extensions.load("gameplay_markers_driftLineMarker")`, puis la globale `gameplay_markers_driftLineMarker`
+**Access:** extension `gameplay_markers_driftLineMarker`: `extensions.load("gameplay_markers_driftLineMarker")`, then the global `gameplay_markers_driftLineMarker`
 
-Marqueur de ligne de départ des défis de drift en freeroam. Il n'affiche rien lui-même : il rend visibles les objets de scène nommés (markerObjects) à l'installation, les cache au nettoyage, et, quand le véhicule du joueur entre dans le rayon de la ligne, appelle gameplay_drift_freeroam_driftSpots.detectStart(lineId). Le module renvoie {create, cluster}.
+Start line marker for freeroam drift challenges. It displays nothing itself: it makes the named scene objects (markerObjects) visible at setup, hides them at cleanup, and, when the player's vehicle enters the line's radius, calls gameplay_drift_freeroam_driftSpots.detectStart(lineId). The module returns {create, cluster}.
 
-## Remarques
+## Notes
 
-- cluster : un cluster par POI (pas de fusion), id 'driftLineMarker#<poi.id>'. Lit poi.markerInfo.driftLineMarker.{pos, radius, startDir, markerObjects} et poi.lineId ; visibilityRadius = 0.
-- setup suppose cluster.startDir non nil (calcule la gauche et la droite de la ligne) ; sans startDir, la fonction échoue, alors que drawOnMinimap prévoit ce cas.
-- interactWhileMoving est ignorée quand le joueur marche (interactData.isWalking).
-- Les méthodes update, hide, show et createObjects sont vides.
-- clearObjects suppose self.cluster défini (setup appelé avant).
+- cluster: one cluster per POI (no merging), id 'driftLineMarker#<poi.id>'. Reads poi.markerInfo.driftLineMarker.{pos, radius, startDir, markerObjects} and poi.lineId; visibilityRadius = 0.
+- setup assumes cluster.startDir is non-nil (computes the left and right of the line); without startDir, the function fails, whereas drawOnMinimap handles this case.
+- interactWhileMoving is ignored when the player is walking (interactData.isWalking).
+- The methods update, hide, show and createObjects are empty.
+- clearObjects assumes self.cluster is defined (setup called beforehand).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `gameplay_markers_driftLineMarker.cluster(pois, allClusters)` | Transforme chaque POI driftLineMarker en un cluster distinct et l'ajoute à allClusters. *(interne)* | 109 |
-| `gameplay_markers_driftLineMarker.create(...)` | Fabrique un marqueur de ligne de drift (instance de C). | 100 |
+| `gameplay_markers_driftLineMarker.cluster(pois, allClusters)` | Turns each driftLineMarker POI into a distinct cluster and adds it to allClusters. *(internal)* | 109 |
+| `gameplay_markers_driftLineMarker.create(...)` | Builds a drift line marker (instance of C). | 100 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `gameplay_markers_driftLineMarker.cluster(pois, allClusters)`
 
-Transforme chaque POI driftLineMarker en un cluster distinct et l'ajoute à allClusters.
+Turns each driftLineMarker POI into a distinct cluster and adds it to allClusters.
 
-- `pois` (*table[]*) : POI avec markerInfo.driftLineMarker.
-- `allClusters` (*table[]*) : Liste de clusters complétée en place.
+- `pois` (*table[]*) : POIs with markerInfo.driftLineMarker.
+- `allClusters` (*table[]*) : List of clusters completed in place.
 
 #### `gameplay_markers_driftLineMarker.create(...)`
 
-Fabrique un marqueur de ligne de drift (instance de C).
+Builds a drift line marker (instance of C).
 
-- `...` (*any*) : Arguments transmis à C:init (non utilisés).
-- **renvoie** : table Instance de marqueur.
+- `...` (*any*) : Arguments passed to C:init (unused).
+- **returns**: table Marker instance.
 
-## Classe `C`
+## Class `C`
 
-Marqueur de ligne de départ de drift.
+Drift start line marker.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:clearObjects()` | Cache (setHidden(true)) les objets de scène listés dans cluster.markerObjects. | 18 |
-| `C:createObjects()` | Ne fait rien. | 14 |
-| `C:drawOnMinimap(td)` | Dessine sur la minimap une ligne entre les extrémités (ou un cercle si startDir est nil) en bleu (72,125,249). | 90 |
-| `C:hide()` | Ne fait rien. | 28 |
-| `C:init()` | Attribue un id incrémental à l'instance. | 9 |
-| `C:interactWhileMoving(interactData)` | Appelée chaque frame : si le joueur est en véhicule dans le rayon, déclenche gameplay_drift_freeroam_driftSpots.detectStart(lineId). | 75 |
-| `C:setup(cluster)` | Mémorise cluster, pos, radius, lineId et startDir, calcule les extrémités gauche et droite de la ligne (à 0.7 fois le rayon) et rend visibles les objets de markerObjects. | 54 |
-| `C:show()` | Ne fait rien. | 31 |
-| `C:update()` | Ne fait rien (le dessin de debug est commenté). | 35 |
+| `C:clearObjects()` | Hides (setHidden(true)) the scene objects listed in cluster.markerObjects. | 18 |
+| `C:createObjects()` | Does nothing. | 14 |
+| `C:drawOnMinimap(td)` | Draws on the minimap a line between the ends (or a circle if startDir is nil) in blue (72,125,249). | 90 |
+| `C:hide()` | Does nothing. | 28 |
+| `C:init()` | Assigns an incremental id to the instance. | 9 |
+| `C:interactWhileMoving(interactData)` | Called every frame: if the player is in a vehicle within the radius, triggers gameplay_drift_freeroam_driftSpots.detectStart(lineId). | 75 |
+| `C:setup(cluster)` | Stores cluster, pos, radius, lineId and startDir, computes the left and right ends of the line (at 0.7 times the radius) and makes the markerObjects visible. | 54 |
+| `C:show()` | Does nothing. | 31 |
+| `C:update()` | Does nothing (the debug drawing is commented out). | 35 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `setHidden`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/markers/driftLineMarker.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/markers/driftLineMarker.lua`.*

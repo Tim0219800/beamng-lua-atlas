@@ -1,0 +1,26 @@
+{
+  "path": "lua/ge/extensions/gameplay/missions/locationsDetector.lua",
+  "module": "Détecte les missions dont le cluster de marqueurs contient la position donnée du joueur. getNearbyLocations parcourt les clusters de gameplay_missions_clustering (avec le rayon de fusion de la grande carte si elle est active) et renvoie, pour chaque mission trouvée, son type, l'objet mission, le cluster et l'id. La partie « missions d'arrière-plan » est commentée dans le fichier.",
+  "notes": [
+    "Le test de proximité est defaultLocationCheck : cluster.pos et cluster.radius doivent exister et distance(playerPosition, cluster.pos) <= cluster.radius.",
+    "Le tableau renvoyé est réutilisé à chaque appel (vidé par table.clear) : ne pas le conserver entre deux appels.",
+    "Incohérence : M.onPoiTriggered et M.isEnabled sont assignés à des variables locales jamais définies : ces champs valent nil.",
+    "missionsChanged est toujours false : getMissionsAtLocation renvoie la variable changed qui n'est jamais modifiée (le code qui la mettait à jour est commenté).",
+    "Le paramètre accessible de getNearbyLocations vient d'une variable non définie (nil) et est de toute façon forcé à true dans getMissionsAtLocation ; la variable p (profileur) y est testée comme globale, nil si non définie."
+  ],
+  "fields": {
+    "onPoiTriggered": {"type": "nil", "desc": "Toujours nil : référence à une variable locale non définie."},
+    "isEnabled": {"type": "nil", "desc": "Toujours nil : référence à une variable locale non définie."}
+  },
+  "functions": {
+    "getNearbyLocations": {
+      "desc": "Renvoie les missions dont un cluster contient la position du joueur.",
+      "params": {
+        "level": {"type": "string", "desc": "Identifiant du niveau (transmis à la fonction de test, non utilisé)."},
+        "playerPosition": {"type": "vec3", "desc": "Position du joueur."}
+      },
+      "returns": [{"type": "table", "desc": "{missions = {{type, mission, location, id}, ...}, missionsChanged = false}."}],
+      "internal": false
+    }
+  }
+}

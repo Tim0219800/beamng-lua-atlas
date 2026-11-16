@@ -1,0 +1,19 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/recording/stopAutoReplay.lua",
+  "module": "Noeud flowgraph 'Stop Auto Replay'. Arrete l'enregistrement en cours s'il y en a un (module missionReplay). Si 'attemptNotCompleted' est vrai (tentative de mission non terminee), sauvegarde d'abord les meta-informations sans tentative.",
+  "notes": [
+    "work s'execute a chaque frame, sans tester l'impulsion d'entree 'stopRec'.",
+    "Pas de C.category defini."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "work": {
+          "desc": "Si attemptNotCompleted : missionReplay:saveMetaInfoWithoutAttempt() ; puis missionReplay:stopIfRec().",
+          "internal": true
+        }
+      }
+    }
+  }
+}

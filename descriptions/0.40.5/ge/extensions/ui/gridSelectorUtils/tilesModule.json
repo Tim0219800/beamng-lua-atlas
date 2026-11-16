@@ -1,41 +1,84 @@
 {
   "path": "lua/ge/extensions/ui/gridSelectorUtils/tilesModule.lua",
-  "module": "Utilitaire des sélecteurs en grille : moteur générique de production des tuiles. À partir d'une config (convertisseur item -> tuile, gestionnaires par type de chemin, regroupement, tri, source de données), il aiguille chaque demande de tuiles vers le gestionnaire correspondant à la première clé du chemin et fournit à ce gestionnaire un « contexte » d'aides (finalisation des groupes, sélection par défaut, clustering, groupes favoris/récents).",
+  "module": "Grid selector utility: generic tile production engine. From a config (item -> tile converter, handlers per path type, grouping, sorting, data source), it routes each tile request to the handler matching the first key of the path and gives that handler a \"context\" of helpers (group finalization, default selection, clustering, favorites/recents groups).",
   "notes": [
-    "Le gestionnaire est cherché dans config.pathHandlers[path.keys[1]] ; s'il n'existe pas, getTiles renvoie une table vide.",
-    "Le hook `onGridSelectorGetTiles(backendName, pathType)` n'est émis que si `pathChanged` est vrai.",
-    "finalizeGroups : limite le groupe « récents » à 15 tuiles, retire les groupes vides et trie par `order` puis par nom (sortingModule.sortByNameButOtherAlwaysLast).",
-    "setDefaultSelection : tuile par défaut = default_pc du modèle, sinon la tuile imposée par overrideDefaultSelectedTile (forceAutoFocus = true), sinon la dernière tuile du groupe ; elle reçoit isDefaultSelected = true.",
-    "Dans matchesGroup, la variable locale groupName masque le paramètre du même nom (`local groupName, _ = ...`) ; le test final `validGroups[groupName]` utilise le paramètre d'origine, donc il reste cohérent mais le code est trompeur. Les modes Favourites/Recent renvoient toujours true (filtrage laissé à l'appelant).",
-    "Le profileur est désactivé (fonctions vides) ; une ligne commentée permet de l'activer."
+    "The handler is looked up in config.pathHandlers[path.keys[1]]; if it does not exist, getTiles returns an empty table.",
+    "The hook `onGridSelectorGetTiles(backendName, pathType)` is only emitted if `pathChanged` is true.",
+    "finalizeGroups: limits the \"recents\" group to 15 tiles, removes empty groups and sorts by `order` then by name (sortingModule.sortByNameButOtherAlwaysLast).",
+    "setDefaultSelection: default tile = the model's default_pc, otherwise the tile imposed by overrideDefaultSelectedTile (forceAutoFocus = true), otherwise the last tile of the group; it gets isDefaultSelected = true.",
+    "In matchesGroup, the local variable groupName shadows the parameter of the same name (`local groupName, _ = ...`); the final test `validGroups[groupName]` uses the original parameter, so it stays consistent but the code is misleading. The Favourites/Recent modes always return true (filtering left to the caller).",
+    "The profiler is disabled (empty functions); a commented-out line allows enabling it."
   ],
   "functions": {
     "create": {
-      "desc": "Crée une instance de production de tuiles.",
+      "desc": "Creates a tile production instance.",
       "params": {
-        "config": {"type": "table", "desc": "{ itemToTileConverter, pathHandlers (table typeChemin -> function(path, data, context)), clusteringFunction, groupingModule, sortingModule, getDataFunction, filterFunction, backendName (défaut \"gridSelector\"), profilerName }."}
+        "config": {
+          "type": "table",
+          "desc": "{ itemToTileConverter, pathHandlers (table pathType -> function(path, data, context)), clusteringFunction, groupingModule, sortingModule, getDataFunction, filterFunction, backendName (default \"gridSelector\"), profilerName }."
+        }
       },
-      "returns": [{"type": "table", "desc": "Instance avec getTiles et createContext."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Instance with getTiles and createContext."
+        }
+      ]
     }
   },
   "classes": {
     "instance": {
-      "desc": "Objet renvoyé par create().",
+      "desc": "Object returned by create().",
       "functions": {
         "getTiles": {
-          "desc": "Appelle getDataFunction(), construit le contexte et délègue au gestionnaire du premier segment du chemin. Renvoie le résultat du gestionnaire (liste de groupes) ou {}.",
+          "desc": "Calls getDataFunction(), builds the context and delegates to the handler of the first path segment. Returns the handler's result (list of groups) or {}.",
           "params": {
-            "path": {"type": "table|nil", "desc": "{ keys = {...} } (défaut { keys = {} })."},
-            "pathChanged": {"type": "boolean|nil", "desc": "Si vrai, émet onGridSelectorGetTiles."},
-            "overrideDefaultSelectedTile": {"type": "table|nil", "desc": "Tuile { key } à sélectionner par défaut."},
-            "tileFromClusteredItems": {"type": "table<string, function>|nil", "desc": "Fabriques de tuiles de cluster par mode de clustering."}
+            "path": {
+              "type": "table|nil",
+              "desc": "{ keys = {...} } (default { keys = {} })."
+            },
+            "pathChanged": {
+              "type": "boolean|nil",
+              "desc": "If true, emits onGridSelectorGetTiles."
+            },
+            "overrideDefaultSelectedTile": {
+              "type": "table|nil",
+              "desc": "Tile { key } to select by default."
+            },
+            "tileFromClusteredItems": {
+              "type": "table<string, function>|nil",
+              "desc": "Cluster tile factories per clustering mode."
+            }
           },
-          "returns": [{"type": "table", "desc": "Groupes de tuiles."}]
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Tile groups."
+            }
+          ]
         },
         "createContext": {
-          "desc": "Construit le contexte passé aux gestionnaires : itemToTileConverter, filterFunction, clusteringFunction, groupingModule, sortingModule, finalizeGroups, setDefaultSelection, matchesGroup, processClusteredItems, handleSpecialGroups, profiler, backendName, data.",
-          "params": {"data": {"type": "table", "desc": "Données de getDataFunction (contient displayData)."}, "overrideDefaultSelectedTile": {"type": "table|nil", "desc": "Voir getTiles."}, "tileFromClusteredItems": {"type": "table|nil", "desc": "Voir getTiles."}},
-          "returns": [{"type": "table", "desc": "Contexte."}]
+          "desc": "Builds the context passed to the handlers: itemToTileConverter, filterFunction, clusteringFunction, groupingModule, sortingModule, finalizeGroups, setDefaultSelection, matchesGroup, processClusteredItems, handleSpecialGroups, profiler, backendName, data.",
+          "params": {
+            "data": {
+              "type": "table",
+              "desc": "Data from getDataFunction (contains displayData)."
+            },
+            "overrideDefaultSelectedTile": {
+              "type": "table|nil",
+              "desc": "See getTiles."
+            },
+            "tileFromClusteredItems": {
+              "type": "table|nil",
+              "desc": "See getTiles."
+            }
+          },
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Context."
+            }
+          ]
         }
       }
     }

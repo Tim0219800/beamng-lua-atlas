@@ -1,22 +1,22 @@
 # `flowgraph_nodes_vehicle_onVehicleDestroyed`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleDestroyed.lua` · VM : Game Engine (GE) · 57 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleDestroyed.lua` · VM: Game Engine (GE) · 57 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/vehicle/onVehicleDestroyed")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/vehicle/onVehicleDestroyed")` (file under extensions/ but not a regular extension)
 
-Nœud événement « On Vehicle Destroyed » (catégorie `logic`, tag event). Émet une impulsion sur `flow` et le `vehId` du véhicule détruit quand le hook `onVehicleDestroyed` est reçu. Pin d'entrée : `flow`.
+Event node "On Vehicle Destroyed" (category `logic`, tag event). Emits a pulse on `flow` and the `vehId` of the destroyed vehicle when the `onVehicleDestroyed` hook is received. Input pin: `flow`.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (renvoyée par `_flowgraph_createNode(C)`). Champs de définition : name, description, category, pinSchema, tags.
+Flowgraph node class (returned by `_flowgraph_createNode(C)`). Definition fields: name, description, category, pinSchema, tags.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_afterTrigger()` | Appelé par le gestionnaire après le déclenchement du nœud ; remet le drapeau d'événement à false. | 52 |
-| `C:_executionStarted()` | Appelé par le gestionnaire quand l'exécution du projet flowgraph démarre ; remet l'état interne à zéro. | 32 |
-| `C:init(mgr, ...)` | Constructeur vide. | 28 |
-| `C:onVehicleDestroyed(id)` | Hook appelé à la destruction d'un véhicule ; mémorise `id` et lève le drapeau. | 37 |
-| `C:work(args)` | Si le drapeau est levé, met `vehId` et `flow` à true une frame, sinon `flow` à false. | 42 |
+| `C:_afterTrigger()` | Called by the manager after the node is triggered; resets the event flag to false. | 52 |
+| `C:_executionStarted()` | Called by the manager when the flowgraph project execution starts; resets the internal state to zero. | 32 |
+| `C:init(mgr, ...)` | Empty constructor. | 28 |
+| `C:onVehicleDestroyed(id)` | Hook called when a vehicle is destroyed; stores `id` and raises the flag. | 37 |
+| `C:work(args)` | If the flag is raised, sets `vehId` and `flow` to true for one frame, otherwise `flow` to false. | 42 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleDestroyed.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/vehicle/onVehicleDestroyed.lua`.*

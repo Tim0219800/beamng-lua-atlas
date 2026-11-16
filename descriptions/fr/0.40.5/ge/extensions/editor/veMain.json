@@ -1,0 +1,83 @@
+{
+  "path": "lua/ge/extensions/editor/veMain.lua",
+  "module": "Noyau du Vehicle Editor (éditeur de véhicule, modes statique et live). L'extension s'enregistre aussi comme globale `vEditor` : elle y stocke le véhicule courant (vEditor.vehicle, vEditor.vdata, vEditor.vehData, vEditor.vehiclePos), les nœuds/poutres sélectionnés et les menus. Elle charge automatiquement toutes les extensions `ve*.lua` des dossiers vehicleEditor/, staticEditor/ et liveEditor/, construit les menus à partir de leur `menuEntry`/`open`, et émet chaque frame le hook `onVehicleEditorRenderJBeams` pour que les outils de debug dessinent avec debugDrawer.",
+  "usage": "extensions.load(\"editor_veMain\")\neditor_veMain.toggleActive() -- entre/sort du Vehicle Editor\nlocal veh = vEditor.vehicle -- véhicule joueur suivi par l'éditeur",
+  "notes": [
+    "Les autres outils de l'éditeur lisent l'état via la globale vEditor (rawset(_G, 'vEditor', M)) ; vEditor.vehiclePos est mis à jour à chaque onPreRender.",
+    "Les extensions live/static sont découvertes par FS:findFiles sur le motif 've*.lua' : un nouveau fichier ve*.lua avec menuEntry (string) et open (function) apparaît automatiquement dans le menu. Les menuEntry avec '/' créent des sous-menus (ex. 'Other/Crash Tester').",
+    "vEditor.EDITOR_MODE_STATIC = 1, EDITOR_MODE_LIVE = 2 ; mode par défaut = live.",
+    "Incohérence : le module exporte `onDeserialize` (sans 'd') alors que le système d'extensions appelle `onDeserialized` ; le mode d'éditeur sauvegardé par onSerialize n'est donc probablement pas restauré.",
+    "L'écran 'Mirror Debug' est ajouté en dur dans la liste des apps live (BeamNGVehicle.mirrorDebugEnabled = true)."
+  ],
+  "fields": {
+    "dependencies": {"type": "table<integer, string>", "desc": "Extensions chargées avant : {'core_vehicle_manager'}."}
+  },
+  "functions": {
+    "onPreRender": {
+      "desc": "Appelé chaque frame avant le rendu. Si aucun véhicule n'est suivi, initialise vEditor depuis le véhicule joueur (be:getPlayerVehicleID(0)). Sinon met à jour vEditor.vehiclePos puis émet le hook `onVehicleEditorRenderJBeams(dtReal, dtSim, dtRaw)`.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Delta temps simulation (s)."},
+        "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+      },
+      "internal": true
+    },
+    "onEditorHeadlessChange": {
+      "desc": "Hook de l'éditeur appelé quand un outil headless est activé/désactivé. Si toolName correspond à l'éditeur véhicule courant (vehicleEditorStatic/vehicleEditorLive), prépare l'éditeur (setupEditor) et marque vEditor.editorActive, ou retire l'action map 'VehicleEditor'.",
+      "params": {
+        "enabled": {"type": "boolean", "desc": "true si l'outil est activé."},
+        "toolName": {"type": "string", "desc": "Nom de l'outil headless."}
+      },
+      "internal": true
+    },
+    "onEditorHeadlessMainMenuBar": {
+      "desc": "Appelé par l'éditeur en mode headless pour dessiner la barre de menu : menus File (Exit Vehicle Editor...), View (Reset Layout) et indicateurs FPS / GpuWait / Poly.",
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Appelé quand l'éditeur est initialisé : ajoute l'entrée 'Vehicle Editor' (groupe Vehicles) au menu Window.",
+      "internal": true
+    },
+    "onEditorInspectorFieldChanged": {
+      "desc": "Quand le champ color, colorPalette0 ou colorPalette1 d'un BeamNGVehicle est modifié dans l'inspecteur, convertit la couleur et applique la peinture via core_vehicle_partmgmt.setConfigPaints.",
+      "params": {
+        "selectedIds": {"type": "table<integer, integer>", "desc": "IDs des objets sélectionnés."},
+        "fieldName": {"type": "string", "desc": "Nom du champ modifié."},
+        "fieldValue": {"type": "string", "desc": "Nouvelle valeur (chaîne de couleur)."},
+        "arrayIndex": {"type": "any", "desc": "Index de tableau du champ (non utilisé)."}
+      },
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Appelé au changement de véhicule joueur : recharge les données (vEditor.vehData, vdata, nodeCIDToName, vehicle) pour newVehicle.",
+      "params": {
+        "oldVehicle": {"type": "integer", "desc": "ID de l'ancien véhicule."},
+        "newVehicle": {"type": "integer", "desc": "ID du nouveau véhicule."},
+        "player": {"type": "integer", "desc": "Index du joueur."}
+      },
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Appelé à la destruction d'un véhicule : remet à nil vEditor.vehicle, vehData, vdata, nodeCIDToName et vehiclePos (sans vérifier de quel véhicule il s'agit).",
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Sérialisation avant rechargement Lua : renvoie {editorMode = vEditor.editorMode}.",
+      "returns": [{"type": "table", "desc": "Données à restaurer."}],
+      "internal": true
+    },
+    "onDeserialize": {
+      "desc": "Restaure vEditor.editorMode depuis data.editorMode. Nom non standard (le hook d'extension est onDeserialized).",
+      "params": {"data": {"type": "table", "desc": "Table renvoyée par onSerialize."}},
+      "internal": true
+    },
+    "saveCurrentWindowLayout": {
+      "desc": "Sauvegarde la disposition de fenêtres courante du Vehicle Editor via editor_layoutManager.saveCurrentWindowLayout.",
+      "internal": false
+    },
+    "toggleActive": {
+      "desc": "Active le Vehicle Editor s'il est inactif (active l'éditeur monde, le mode headless, charge les apps), sinon le quitte (deactivateEditor(false)) en désactivant core_vehicle_manager.setDebug.",
+      "internal": false
+    }
+  }
+}

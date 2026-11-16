@@ -1,102 +1,102 @@
 # `util_screenshotCreator_thumbnailComposerRun`
 
-*Fichier : `lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua` · VM : Game Engine (GE) · 569 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua` · VM: Game Engine (GE) · 569 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_screenshotCreator_thumbnailComposerRun` : `extensions.load("util_screenshotCreator_thumbnailComposerRun")`, puis la globale `util_screenshotCreator_thumbnailComposerRun`
+**Access:** extension `util_screenshotCreator_thumbnailComposerRun`: `extensions.load("util_screenshotCreator_thumbnailComposerRun")`, then the global `util_screenshotCreator_thumbnailComposerRun`
 
-Moteur d'exécution du « Thumbnail Composer » (v2) : orchestre une série de captures de vignettes de véhicules pour une interface appelante (identifiée par ownerId) qui reçoit des évènements via une table de handlers. Il valide les cibles (thumbnailTargets), filtre éventuellement celles qui ont déjà une vignette (missingOnly), prend le contrôle de la physique, applique pour la durée du travail des réglages graphiques de référence (qualité Ultra, SMAA, pas de flou de mouvement, pas d'occupants…), puis traite chaque élément dans une coroutine (thumbnailCapturePipeline.processWorkItem). Il gère aussi un aperçu de la caméra, un flou d'arrière-plan par profondeur de champ calé sur le mur du fond du showroom, une exposition forcée, et le panneau ImGui « Showroom Tools » (drawShowroomTools) du graphe de flux showroom_thumbnails.
+Execution engine of the "Thumbnail Composer" (v2): orchestrates a series of vehicle thumbnail captures for a calling UI (identified by ownerId) that receives events via a table of handlers. It validates the targets (thumbnailTargets), optionally filters out those that already have a thumbnail (missingOnly), takes control of the physics, applies reference graphics settings for the duration of the job (Ultra quality, SMAA, no motion blur, no occupants…), then processes each item in a coroutine (thumbnailCapturePipeline.processWorkItem). It also handles a camera preview, a depth-of-field background blur tuned to the showroom's back wall, a forced exposure, and the "Showroom Tools" ImGui panel (drawShowroomTools) of the showroom_thumbnails flowgraph.
 
-## Remarques
+## Notes
 
-- Évènements émis vers handlers.emit(ownerId, nom, données) : Status, Catalog, Progress {runId, stage = "capture", completed, total, current}, ItemResult {runId, itemId, index, total, current, status...}, RunComplete {runId}, Failed {runId, error, cancelled}. Les erreurs de handler sont attrapées (pcall) et journalisées.
-- Un seul travail à la fois : start renvoie false et émet Failed si une capture est déjà en cours, si les cibles sont invalides, si missingOnly ne laisse rien à faire ou si la physique ne peut pas être prise en charge.
-- Options de message pour start : targets (liste {model, config} ; absent = config du véhicule du joueur), captureMode (« defaults » = default.jpg, sinon une vignette par config), missingOnly, outputWidth/outputHeight (16 à 8192, défaut 500x281), backgroundBlur (0 à 1), blurStartDistance (0,5 à 30 m, défaut 8), forceExposure, exposureEV (défaut 8,3).
-- Les réglages graphiques d'origine sont sauvegardés (settings.getValue) et rétablis à la fin, à l'annulation ou au déchargement ; l'environnement du showroom est restauré via util_screenshotCreator_settings.
-- Le flou d'arrière-plan lance un rayon (Engine.castRay) depuis la caméra pour trouver le mur et règle DOFPostEffect (focalDist, farSlope…) à chaque frame ; l'exposition utilise PostEffectLocalExposureObject. Ces deux effets ne sont actifs que pendant un aperçu ou un travail.
-- Le premier échec d'un élément arrête tout le travail (failRun) ; l'annulation émet Failed avec cancelled = true.
+- Events emitted to handlers.emit(ownerId, name, data): Status, Catalog, Progress {runId, stage = "capture", completed, total, current}, ItemResult {runId, itemId, index, total, current, status...}, RunComplete {runId}, Failed {runId, error, cancelled}. Handler errors are caught (pcall) and logged.
+- Only one job at a time: start returns false and emits Failed if a capture is already in progress, if the targets are invalid, if missingOnly leaves nothing to do or if the physics cannot be taken over.
+- Message options for start: targets (list {model, config}; absent = player vehicle's config), captureMode ("defaults" = default.jpg, otherwise one thumbnail per config), missingOnly, outputWidth/outputHeight (16 to 8192, default 500x281), backgroundBlur (0 to 1), blurStartDistance (0.5 to 30 m, default 8), forceExposure, exposureEV (default 8.3).
+- The original graphics settings are saved (settings.getValue) and restored at the end, on cancellation or on unload; the showroom environment is restored via util_screenshotCreator_settings.
+- The background blur casts a ray (Engine.castRay) from the camera to find the wall and sets DOFPostEffect (focalDist, farSlope…) every frame; the exposure uses PostEffectLocalExposureObject. These two effects are active only during a preview or a job.
+- The first failure of an item stops the whole job (failRun); cancellation emits Failed with cancelled = true.
 
-**Dépendances (chargées avant) :** `ui_imgui`, `util_screenshotCreator_settings`, `util_screenshotCreator_lightingSetup`, `util_screenshotCreator_thumbnailCapturePipeline`, `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_thumbnailPaths`, `util_screenshotCreator_thumbnailTargets`
+**Dependencies (loaded first):** `ui_imgui`, `util_screenshotCreator_settings`, `util_screenshotCreator_lightingSetup`, `util_screenshotCreator_thumbnailCapturePipeline`, `util_screenshotCreator_thumbnailConfig`, `util_screenshotCreator_thumbnailPaths`, `util_screenshotCreator_thumbnailTargets`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_screenshotCreator_thumbnailComposerRun.cancel(ownerId)` | Annule le travail en cours (émet Failed avec cancelled = true). Si ownerId est donné, il doit correspondre à l'appelant du travail. | 385 |
-| `util_screenshotCreator_thumbnailComposerRun.drawShowroomTools()` | Dessine dans la fenêtre ImGui du graphe de flux le panneau des outils vignettes : options de flou et d'exposition, résolution, grille de sélection des véhicules, boutons « Capture current config », « Capture all configs » et « Capture missing thumbnails », barre de progression et bouton Cancel. *(interne)* | 542 |
-| `util_screenshotCreator_thumbnailComposerRun.isActive(ownerId)` | Indique si un travail est en cours (pour cet ownerId si précisé). | 392 |
-| `util_screenshotCreator_thumbnailComposerRun.onExtensionUnloaded()` | Hook de déchargement : arrête le travail, restaure l'exposition, le flou, les réglages graphiques, l'environnement et la physique. *(interne)* *(hook)* | 415 |
-| `util_screenshotCreator_thumbnailComposerRun.onPreRender()` | Hook appelé à chaque frame avant le rendu : fait avancer la coroutine de travail (une erreur la fait échouer) et met à jour le flou DOF et l'exposition forcée pendant un aperçu ou un travail. *(interne)* *(hook)* | 397 |
-| `util_screenshotCreator_thumbnailComposerRun.sendStatus(ownerId, handlers)` | Émet l'évènement Status : {active, runId, currentModel, currentConfig, currentFlipped} (currentFlipped = rotation de vignette de 180°). | 311 |
-| `util_screenshotCreator_thumbnailComposerRun.setViewOptions(message)` | Fixe les options de vue (flou d'arrière-plan, distance de début du flou, exposition forcée) à partir d'un message. | 85 |
-| `util_screenshotCreator_thumbnailComposerRun.start(ownerId, message, handlers)` | Démarre un travail de capture pour l'appelant ownerId. Résout les cibles, applique les réglages de capture et lance la coroutine de travail. Renvoie false (et émet « Failed ») en cas de refus. | 335 |
-| `util_screenshotCreator_thumbnailComposerRun.startPreview(message)` | Aperçu : place la caméra libre du joueur sur le cadrage calculé pour le véhicule du joueur (cadrage legacy du pipeline) et ajuste l'éclairage. Ne fait rien s'il n'y a pas de véhicule ou si un travail est actif. | 159 |
-| `util_screenshotCreator_thumbnailComposerRun.stopPreview()` | Termine l'aperçu : restaure l'état de caméra mémorisé et l'éclairage. | 152 |
-| `util_screenshotCreator_thumbnailComposerRun.subscribe(ownerId, handlers)` | Enregistre un appelant : émet Status puis Catalog {models = catalogue des véhicules, resolutions = préréglages de résolution}. | 324 |
+| `util_screenshotCreator_thumbnailComposerRun.cancel(ownerId)` | Cancels the current job (emits Failed with cancelled = true). If ownerId is given, it must match the job's caller. | 385 |
+| `util_screenshotCreator_thumbnailComposerRun.drawShowroomTools()` | Draws in the flowgraph's ImGui window the thumbnail tools panel: blur and exposure options, resolution, vehicle selection grid, "Capture current config", "Capture all configs" and "Capture missing thumbnails" buttons, progress bar and Cancel button. *(internal)* | 542 |
+| `util_screenshotCreator_thumbnailComposerRun.isActive(ownerId)` | Indicates whether a job is in progress (for this ownerId if specified). | 392 |
+| `util_screenshotCreator_thumbnailComposerRun.onExtensionUnloaded()` | Unload hook: stops the job, restores the exposure, the blur, the graphics settings, the environment and the physics. *(internal)* *(hook)* | 415 |
+| `util_screenshotCreator_thumbnailComposerRun.onPreRender()` | Hook called every frame before rendering: advances the work coroutine (an error makes it fail) and updates the DOF blur and the forced exposure during a preview or a job. *(internal)* *(hook)* | 397 |
+| `util_screenshotCreator_thumbnailComposerRun.sendStatus(ownerId, handlers)` | Emits the Status event: {active, runId, currentModel, currentConfig, currentFlipped} (currentFlipped = 180° thumbnail rotation). | 311 |
+| `util_screenshotCreator_thumbnailComposerRun.setViewOptions(message)` | Sets the view options (background blur, blur start distance, forced exposure) from a message. | 85 |
+| `util_screenshotCreator_thumbnailComposerRun.start(ownerId, message, handlers)` | Starts a capture job for the caller ownerId. Resolves the targets, applies the capture settings and starts the work coroutine. Returns false (and emits "Failed") on refusal. | 335 |
+| `util_screenshotCreator_thumbnailComposerRun.startPreview(message)` | Preview: places the player's free camera on the framing computed for the player vehicle (the pipeline's legacy framing) and adjusts the lighting. Does nothing if there is no vehicle or if a job is active. | 159 |
+| `util_screenshotCreator_thumbnailComposerRun.stopPreview()` | Ends the preview: restores the stored camera state and the lighting. | 152 |
+| `util_screenshotCreator_thumbnailComposerRun.subscribe(ownerId, handlers)` | Registers a caller: emits Status then Catalog {models = vehicle catalog, resolutions = resolution presets}. | 324 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_screenshotCreator_thumbnailComposerRun.cancel(ownerId)`
 
-Annule le travail en cours (émet Failed avec cancelled = true). Si ownerId est donné, il doit correspondre à l'appelant du travail.
+Cancels the current job (emits Failed with cancelled = true). If ownerId is given, it must match the job's caller.
 
-- `ownerId` (*string|nil*) : Identifiant de l'appelant.
-- **renvoie** : boolean true si un travail a été annulé.
+- `ownerId` (*string|nil*) : Caller identifier.
+- **returns**: boolean true if a job was canceled.
 
 #### `util_screenshotCreator_thumbnailComposerRun.isActive(ownerId)`
 
-Indique si un travail est en cours (pour cet ownerId si précisé).
+Indicates whether a job is in progress (for this ownerId if specified).
 
-- `ownerId` (*string|nil*) : Identifiant de l'appelant.
-- **renvoie** : boolean true si actif.
+- `ownerId` (*string|nil*) : Caller identifier.
+- **returns**: boolean true if active.
 
 #### `util_screenshotCreator_thumbnailComposerRun.sendStatus(ownerId, handlers)`
 
-Émet l'évènement Status : {active, runId, currentModel, currentConfig, currentFlipped} (currentFlipped = rotation de vignette de 180°).
+Emits the Status event: {active, runId, currentModel, currentConfig, currentFlipped} (currentFlipped = 180° thumbnail rotation).
 
-- `ownerId` (*string*) : Identifiant de l'appelant.
-- `handlers` (*table*) : Handlers avec emit.
+- `ownerId` (*string*) : Caller identifier.
+- `handlers` (*table*) : Handlers with emit.
 
 #### `util_screenshotCreator_thumbnailComposerRun.setViewOptions(message)`
 
-Fixe les options de vue (flou d'arrière-plan, distance de début du flou, exposition forcée) à partir d'un message.
+Sets the view options (background blur, blur start distance, forced exposure) from a message.
 
 - `message` (*table*) : {backgroundBlur, blurStartDistance, forceExposure, exposureEV}.
 
 #### `util_screenshotCreator_thumbnailComposerRun.start(ownerId, message, handlers)`
 
-Démarre un travail de capture pour l'appelant ownerId. Résout les cibles, applique les réglages de capture et lance la coroutine de travail. Renvoie false (et émet « Failed ») en cas de refus.
+Starts a capture job for the caller ownerId. Resolves the targets, applies the capture settings and starts the work coroutine. Returns false (and emits "Failed") on refusal.
 
-- `ownerId` (*string*) : Identifiant de l'appelant (converti en chaîne).
-- `message` (*table*) : Options : targets, captureMode, missingOnly, outputWidth, outputHeight, backgroundBlur, blurStartDistance, forceExposure, exposureEV.
-- `handlers` (*table*) : {emit = function(ownerId, nom, données)} qui reçoit les évènements.
-- **renvoie** : boolean true si le travail a démarré.
+- `ownerId` (*string*) : Caller identifier (converted to a string).
+- `message` (*table*) : Options: targets, captureMode, missingOnly, outputWidth, outputHeight, backgroundBlur, blurStartDistance, forceExposure, exposureEV.
+- `handlers` (*table*) : {emit = function(ownerId, name, data)} that receives the events.
+- **returns**: boolean true if the job started.
 
 #### `util_screenshotCreator_thumbnailComposerRun.startPreview(message)`
 
-Aperçu : place la caméra libre du joueur sur le cadrage calculé pour le véhicule du joueur (cadrage legacy du pipeline) et ajuste l'éclairage. Ne fait rien s'il n'y a pas de véhicule ou si un travail est actif.
+Preview: places the player's free camera on the framing computed for the player vehicle (the pipeline's legacy framing) and adjusts the lighting. Does nothing if there is no vehicle or if a job is active.
 
-- `message` (*table*) : Options de vue et outputWidth/outputHeight.
+- `message` (*table*) : View options and outputWidth/outputHeight.
 
 #### `util_screenshotCreator_thumbnailComposerRun.subscribe(ownerId, handlers)`
 
-Enregistre un appelant : émet Status puis Catalog {models = catalogue des véhicules, resolutions = préréglages de résolution}.
+Registers a caller: emits Status then Catalog {models = vehicle catalog, resolutions = resolution presets}.
 
-- `ownerId` (*string*) : Identifiant de l'appelant.
-- `handlers` (*table*) : Handlers avec emit.
+- `ownerId` (*string*) : Caller identifier.
+- `handlers` (*table*) : Handlers with emit.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `dependencies` | string[] | Extensions chargées avant : ui_imgui et util_screenshotCreator_settings, lightingSetup, thumbnailCapturePipeline, thumbnailConfig, thumbnailPaths, thumbnailTargets. |
-| `onClientEndMission` | function | Alias de onExtensionUnloaded : nettoie à la fin du niveau. |
-| `onExit` | function | Alias de onExtensionUnloaded : nettoie à la fermeture du jeu. |
+| `dependencies` | string[] | Extensions loaded before: ui_imgui and util_screenshotCreator_settings, lightingSetup, thumbnailCapturePipeline, thumbnailConfig, thumbnailPaths, thumbnailTargets. |
+| `onClientEndMission` | function | Alias of onExtensionUnloaded: cleans up at the end of the level. |
+| `onExit` | function | Alias of onExtensionUnloaded: cleans up when the game closes. |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `Engine.` `castRay`
 - `be:` `getPhysicsRunning`, `getPhysicsSpeedFactor`, `setPhysicsRunning`, `setPhysicsSpeedFactor`
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/screenshotCreator/thumbnailComposerRun.lua`.*

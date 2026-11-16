@@ -1,32 +1,32 @@
 # `util_testJSONFilesSyntax`
 
-*Fichier : `lua/ge/extensions/util/testJSONFilesSyntax.lua` · VM : Game Engine (GE) · 33 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/testJSONFilesSyntax.lua` · VM: Game Engine (GE) · 33 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_testJSONFilesSyntax` : `extensions.load("util_testJSONFilesSyntax")`, puis la globale `util_testJSONFilesSyntax`
+**Access:** extension `util_testJSONFilesSyntax`: `extensions.load("util_testJSONFilesSyntax")`, then the global `util_testJSONFilesSyntax`
 
-Outil de diagnostic : au chargement, il parcourt tout le système de fichiers virtuel du jeu (racine '/') à la recherche des fichiers *.jbeam, *.pc et *.json, puis les décode un par un avec la bibliothèque jsonDebug. Les erreurs de syntaxe et les avertissements sont écrits dans le journal. Utile à un moddeur pour trouver un JSON ou un jbeam invalide.
+Diagnostic tool: on load, it walks the game's whole virtual file system (root '/') looking for *.jbeam, *.pc and *.json files, then decodes them one by one with the jsonDebug library. Syntax errors and warnings are written to the log. Useful to a modder to find an invalid JSON or jbeam.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load('util/testJSONFilesSyntax')
--- puis lire les lignes E/W 'jsonDecode' dans le journal
+-- then read the E/W 'jsonDecode' lines in the log
 ```
 
-## Remarques
+## Notes
 
-- Tout se fait dans onExtensionLoaded, de façon synchrone : le jeu peut se figer un moment, car tous les fichiers du jeu et des mods sont lus.
-- Le résultat du décodage n'est pas conservé ; seuls les logs servent.
+- Everything happens in onExtensionLoaded, synchronously: the game may freeze for a while, because all the game and mod files are read.
+- The decoding result is not kept; only the logs matter.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_testJSONFilesSyntax.onExtensionLoaded()` | Appelé au chargement de l'extension. Liste récursivement les fichiers .jbeam, .pc et .json, les lit avec readFile et les décode avec jsonDebug.decode sous xpcall ; logue les erreurs (E) et avertissements (W) sous le tag 'jsonDecode'. *(interne)* *(hook)* | 22 |
+| `util_testJSONFilesSyntax.onExtensionLoaded()` | Called on extension load. Recursively lists the .jbeam, .pc and .json files, reads them with readFile and decodes them with jsonDebug.decode under xpcall; logs errors (E) and warnings (W) under the tag 'jsonDecode'. *(internal)* *(hook)* | 22 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `findFiles`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/testJSONFilesSyntax.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/testJSONFilesSyntax.lua`.*

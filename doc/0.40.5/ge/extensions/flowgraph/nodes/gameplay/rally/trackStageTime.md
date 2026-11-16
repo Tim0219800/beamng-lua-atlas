@@ -1,29 +1,29 @@
 # `flowgraph_nodes_gameplay_rally_trackStageTime`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.lua` · VM : Game Engine (GE) · 43 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.lua` · VM: Game Engine (GE) · 43 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/trackStageTime")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/trackStageTime")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Rally Track Stage Time » (catégorie repeat, icône timer, tag rally). À chaque frame, émet le hook onRallyDataUpdated avec {activeState = stageActive} pour signaler au système rally que la spéciale est active. Recopie flow en sortie.
+Flowgraph node "Rally Track Stage Time" (category repeat, timer icon, tag rally). Every frame, emits the onRallyDataUpdated hook with {activeState = stageActive} to signal to the rally system that the stage is active. Copies flow to the output.
 
-## Remarques
+## Notes
 
-- Malgré son nom, le nœud ne mesure aucun temps : stageTime = os.clockhp() est calculé mais jamais utilisé.
+- Despite its name, the node measures no time: stageTime = os.clockhp() is computed but never used.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Vide. | 23 |
-| `C:work(args)` | Émet onRallyDataUpdated (stageActive) et recopie le flux. | 30 |
+| `C:init(mgr, ...)` | Empty. | 23 |
+| `C:work(args)` | Emits onRallyDataUpdated (stageActive) and copies the flow. | 30 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRallyDataUpdated` — écouté par 2 module(s)
+- `onRallyDataUpdated` — listened to by 2 module(s)
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackStageTime.lua`.*

@@ -1,18 +1,18 @@
 # `flowgraph_nodes_scene_resetPrefab`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/resetPrefab.lua` · VM : Game Engine (GE) · 27 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/resetPrefab.lua` · VM: Game Engine (GE) · 27 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/resetPrefab")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/resetPrefab")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph « Reset Prefab » (once_instant, auteur BeamNG). Restaure les transformations des objets/véhicules d'un prefab via self.mgr.modules.prefab:restoreVehiclePositions(id). Entrée : id (number).
+Flowgraph node "Reset Prefab" (once_instant, author BeamNG). Restores the transforms of the objects/vehicles of a prefab via self.mgr.modules.prefab:restoreVehiclePositions(id). Input: id (number).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Appelle restoreVehiclePositions(id) du module prefab. | 22 |
+| `C:workOnce()` | Calls the prefab module's restoreVehiclePositions(id). | 22 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/resetPrefab.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/resetPrefab.lua`.*

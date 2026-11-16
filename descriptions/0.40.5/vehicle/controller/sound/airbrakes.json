@@ -1,16 +1,40 @@
 {
   "path": "lua/vehicle/controller/sound/airbrakes.lua",
-  "module": "Contrôleur auxiliaire de son de purge de freins pneumatiques simple (sans simulation d'air, contrairement à pneumatics/airbrakes). Surveille electrics.values[electricsBrakeName] ; si le frein se relâche de plus de 0.2 par seconde sur une fenêtre de 0.25 s, joue un « pschitt » dont l'intensité dépend de la vitesse de relâchement, puis attend un délai de recharge.",
+  "module": "Auxiliary controller for a simple pneumatic brake release sound (no air simulation, unlike pneumatics/airbrakes). Monitors electrics.values[electricsBrakeName]; if the brake is released by more than 0.2 per second over a 0.25 s window, plays a \"pssht\" whose intensity depends on the release speed, then waits for a cooldown.",
   "notes": [
-    "Clés jbeam lues : soundNode_nodes (premier élément = nœud du son, 0 sinon), soundEvent (\"event:>Vehicle>Pneumatics>Air_Brakes\"), soundCoolDown (0.5 s), electricsBrakeName (\"brake\").",
-    "L'intensité passée au son est -dBrake x 0.25 (non plafonnée, contrairement à pneumatics/airbrakes qui plafonne à 0.99)."
+    "jbeam keys read: soundNode_nodes (first element = sound node, 0 otherwise), soundEvent (\"event:>Vehicle>Pneumatics>Air_Brakes\"), soundCoolDown (0.5 s), electricsBrakeName (\"brake\").",
+    "The intensity passed to the sound is -dBrake x 0.25 (not capped, unlike pneumatics/airbrakes which caps at 0.99)."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
-    "init": {"desc": "Lit la configuration jbeam et remet l'état à zéro.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "reset": {"desc": "Remet l'état d'échantillonnage à zéro.", "internal": true},
-    "updateGFX": {"desc": "Chaque frame : détecte un relâchement rapide du frein et joue le son.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+    "init": {
+      "desc": "Reads the jbeam configuration and resets the state to zero.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the sampling state to zero.",
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Every frame: detects a quick brake release and plays the sound.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    }
   }
 }

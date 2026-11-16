@@ -1,12 +1,12 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/setCameraMode.lua",
-  "module": "Noeud flowgraph « Set Camera Mode » (repeat_instant, dependance core_camera). Pin d'entree : mode (string), nom du mode camera. A chaque execution, si le nom n'est pas vide, appelle core_camera.setByName(0, mode).",
+  "module": "Flowgraph node \"Set Camera Mode\" (repeat_instant, depends on core_camera). Input pin: mode (string), name of the camera mode. On each execution, if the name is not empty, calls core_camera.setByName(0, mode).",
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "work": {
-          "desc": "Change le mode camera du joueur 0 via core_camera.setByName si le pin mode est non vide.",
+          "desc": "Changes the camera mode of player 0 via core_camera.setByName if the mode pin is not empty.",
           "internal": false
         }
       }

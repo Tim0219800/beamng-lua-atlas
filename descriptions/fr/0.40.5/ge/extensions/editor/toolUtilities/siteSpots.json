@@ -1,0 +1,56 @@
+{
+  "path": "lua/ge/extensions/editor/toolUtilities/siteSpots.lua",
+  "module": "Places de stationnement telles qu'un site les porte et telles que le niveau les relit dans son fichier de sites. Une place n'est ni de la géométrie ni de la peinture : c'est une boîte que le jeu cherche quand il veut garer une voiture. Elle ne va donc pas dans une coque, mais dans city.sites.json du niveau (champ parkingSpots), seule sortie d'une cuisson de site qui n'est pas un fichier à elle. Elle attend la « gravure » : cuites en local et écrites à ce moment, les copies d'un parking ont chacune leurs places à leur endroit et à leur hauteur.",
+  "notes": [
+    "Place cuite : { x, y, yaw, w (largeur d'une place), d (profondeur), n (nombre de places du run, absent pour une place seule), dir ('Left' si le run avance à gauche) }. Seule la position est recentrée ; le cap reste, place y ajoute celui du placement.",
+    "Un run de places identiques côte à côte est écrit comme UNE multi-place (isMultiSpot, spotAmount = n, spotOffset = 0 car les places sont jointes bord à bord, spotDirection 'Right' par défaut) comme le font les places de villes faites à la main.",
+    "SPOT_H = 3 : hauteur de la boîte ; la position est au sol et la boîte s'étend d'une demi-hauteur de chaque côté.",
+    "Le fichier est <dossier du niveau>/city.sites.json (getMissionFilename). Si absent ou illisible, un fichier de sites vide est créé en mémoire { name = 'sites', description, locations, zones, parkingSpots }.",
+    "write ajoute au lieu de remplacer : noms prefix + numéro (en sautant ceux déjà pris) et oldId au-delà du plus grand existant, pour que deux gravures et une place faite à la main cohabitent.",
+    "write renvoie nil sans place à écrire ou sans niveau chargé (sitesPath nil)."
+  ],
+  "fields": {
+    "SPOT_H": {"type": "number", "desc": "Hauteur de la boîte d'une place, en mètres (3)."}
+  },
+  "functions": {
+    "localise": {
+      "desc": "Les places calculées par le solveur d'un site, locales à l'origine de cuisson. Chaque place entre sous la forme { x, y, yaw, w, d, n, dir } et sort arrondie au millimètre, n et dir omis pour une place simple droite. Renvoie nil si la liste est vide.",
+      "params": {
+        "list": {"type": "table|nil", "desc": "Liste de places { x, y, yaw, w, d, n, dir }."},
+        "ox": {"type": "number|nil", "desc": "x de l'origine (défaut 0)."},
+        "oy": {"type": "number|nil", "desc": "y de l'origine (défaut 0)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Liste de places locales."}],
+      "internal": false
+    },
+    "place": {
+      "desc": "L'inverse : les places du manifeste comme enregistrements parkingSpot (pos, rot, scl = {largeur, profondeur, SPOT_H}, isMultiSpot, spotAmount, spotOffset, spotDirection, spotRotation, color, customFields), posées là où se trouve un placement et tournées sur son cap. (ox, oy) est le pivot du site (milieu de son empreinte). groundZ(x, y) donne la hauteur du sol, car une place repose sur le sol où elle est et non sur le repère du placement. Aucun nom ici : ils doivent être uniques dans tout le fichier du niveau et sont attribués par write.",
+      "params": {
+        "rec": {"type": "table|nil", "desc": "Places du manifeste."},
+        "px": {"type": "number", "desc": "x du placement."},
+        "py": {"type": "number", "desc": "y du placement."},
+        "yaw": {"type": "number|nil", "desc": "Cap en radians (défaut 0)."},
+        "ox": {"type": "number|nil", "desc": "x du pivot (défaut 0)."},
+        "oy": {"type": "number|nil", "desc": "y du pivot (défaut 0)."},
+        "groundZ": {"type": "function|nil", "desc": "groundZ(x, y) renvoie la hauteur du sol (0 si absent)."}
+      },
+      "returns": [{"type": "table|nil", "desc": "Liste d'enregistrements parkingSpot, nil si vide."}],
+      "internal": false
+    },
+    "write": {
+      "desc": "Ajoute des places au fichier de sites du niveau, sous des noms commençant par prefix, en conservant l'existant. Écrit le fichier avec jsonWriteFile.",
+      "params": {
+        "spots": {"type": "table|nil", "desc": "Enregistrements parkingSpot renvoyés par place ; leur name et oldId sont renseignés par cet appel."},
+        "prefix": {"type": "string", "desc": "Préfixe des noms de places."}
+      },
+      "returns": [{"type": "table|nil", "desc": "{ path, prev } : ce qu'il faut pour annuler (le tableau tel qu'il était), ou nil s'il n'y avait rien à ajouter."}],
+      "internal": false
+    },
+    "restore": {
+      "desc": "Annule un write : remet le tableau parkingSpots exactement comme il était.",
+      "params": {"undo": {"type": "table|nil", "desc": "Table renvoyée par write."}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

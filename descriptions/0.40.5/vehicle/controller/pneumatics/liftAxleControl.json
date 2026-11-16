@@ -1,28 +1,109 @@
 {
   "path": "lua/vehicle/controller/pneumatics/liftAxleControl.lua",
-  "module": "Contrôleur auxiliaire de relevage d'essieu pneumatique (remorques/camions). Deux modes : « lift » (essieu relevé : airbags de levage gonflés, airbags principaux vidés) et « drop » (essieu posé : l'inverse), pilotés via deux contrôleurs d'actuateurs (airbags). En mode drop, la pression d'alimentation maximale des airbags principaux peut être changée dynamiquement (charge portée par l'essieu). Publie les pressions moyennes relatives et le mode dans electrics.values.",
-  "usage": "local lac = controller.getController(\"liftAxleControl\")\nlac.toggleMode()\nlac.setMaximumSupplyPressure(500000) -- Pa absolus",
+  "module": "Auxiliary pneumatic axle lift controller (trailers/trucks). Two modes: \"lift\" (axle raised: lift airbags inflated, main airbags emptied) and \"drop\" (axle lowered: the opposite), driven via two actuator controllers (airbags). In drop mode, the maximum supply pressure of the main airbags can be changed dynamically (load carried by the axle). Publishes the relative average pressures and the mode in electrics.values.",
+  "usage": "local lac = controller.getController(\"liftAxleControl\")\nlac.toggleMode()\nlac.setMaximumSupplyPressure(500000) -- absolute Pa",
   "notes": [
-    "Clés jbeam lues : defaultMaximumSupplyPressure (0), liftAirbagsGroupName, mainAirbagsGroupName, minimumSupplyPressure (0), maximumSupplyPressure (1000000), maximumSupplyPressureChangeRate (1000 Pa/s), mainAirbagsPressureEletricsName, liftAirbagsPressureEletricsName, liftAxleControlModeEletricsName (noms par défaut dérivés de M.name : _main_airbags_pressure_avg, _lift_airbags_pressure_avg, _lift_axle_mode), actuatorsControllerNameLift et actuatorsControllerNameMain (lus dans initLastStage).",
-    "Le mode initial est « lift » (setMode appelé en initLastStage). electrics ...lift_axle_mode vaut 1 en mode drop, 0 en lift.",
-    "La pression d'alimentation maximale évolue chaque frame de maximumSupplyPressureChangeRate*dt, bornée entre max(pression ambiante, minimumSupplyPressure) et maximumSupplyPressure (jbeam).",
-    "Si un des contrôleurs d'actuateurs est introuvable, log E et updateGFX devient nop.",
-    "reset met maximumSupplyPressureChangeRate à 0 (et non à la valeur jbeam) : après un reset la pression ne bouge plus tant qu'on n'appelle pas setMaximumSupplyPressureChangeRate. Incohérence probable avec init (valeur 1000 par défaut).",
-    "Note de source : M.initSecondStage n'existe pas ici malgré un commentaire dans le code ; la fonction réellement exportée est initLastStage."
+    "jbeam keys read: defaultMaximumSupplyPressure (0), liftAirbagsGroupName, mainAirbagsGroupName, minimumSupplyPressure (0), maximumSupplyPressure (1000000), maximumSupplyPressureChangeRate (1000 Pa/s), mainAirbagsPressureEletricsName, liftAirbagsPressureEletricsName, liftAxleControlModeEletricsName (default names derived from M.name: _main_airbags_pressure_avg, _lift_airbags_pressure_avg, _lift_axle_mode), actuatorsControllerNameLift and actuatorsControllerNameMain (read in initLastStage).",
+    "The initial mode is \"lift\" (setMode called in initLastStage). electrics ...lift_axle_mode is 1 in drop mode, 0 in lift.",
+    "The maximum supply pressure changes every frame by maximumSupplyPressureChangeRate*dt, bounded between max(ambient pressure, minimumSupplyPressure) and maximumSupplyPressure (jbeam).",
+    "If one of the actuator controllers is not found, log E and updateGFX becomes nop.",
+    "reset sets maximumSupplyPressureChangeRate to 0 (and not to the jbeam value): after a reset the pressure no longer moves until setMaximumSupplyPressureChangeRate is called. Probable inconsistency with init (default value 1000).",
+    "Source note: M.initSecondStage does not exist here despite a comment in the code; the function actually exported is initLastStage."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
-    "init": {"desc": "Lit les clés jbeam, noms de groupes d'airbags et noms d'electrics.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
-    "initLastStage": {"desc": "Récupère les deux contrôleurs d'actuateurs puis passe en mode « lift ».", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "reset": {"desc": "Met le taux de variation de pression d'alimentation à 0.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "updateGFX": {"desc": "Chaque frame : applique la pression d'alimentation maximale en mode drop, la fait évoluer et met à jour les electrics de pressions et de mode.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true},
-    "setMode": {"desc": "Choisit le mode « lift » ou « drop » et ouvre/ferme les vannes des deux groupes d'airbags en conséquence.", "params": {"mode": {"type": "string", "desc": "\"lift\" ou \"drop\"."}}},
-    "toggleMode": {"desc": "Bascule entre drop et lift."},
-    "setMaximumSupplyPressure": {"desc": "Fixe la pression maximale d'alimentation des airbags principaux (Pa absolus), appliquée en mode drop.", "params": {"maxSupplyPressure": {"type": "number", "desc": "Pression en Pa."}}},
-    "setMaximumSupplyPressureChangeRate": {"desc": "Fixe la vitesse de variation de cette pression maximale (Pa/s, signée).", "params": {"maxSupplyPressureChangeRate": {"type": "number", "desc": "Variation en Pa/s."}}},
-    "getState": {"desc": "État sauvegardable : mode, pression maximale d'alimentation, taux de variation (clés préfixées par le nom du contrôleur).", "returns": [{"type": "table", "desc": "Table d'état."}]},
-    "setState": {"desc": "Restaure pression, taux et mode (valeurs NaN ignorées).", "params": {"data": {"type": "table|nil", "desc": "Table produite par getState."}}}
+    "init": {
+      "desc": "Reads the jbeam keys, airbag group names and electrics names.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Gets the two actuator controllers then switches to \"lift\" mode.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Sets the supply pressure change rate to 0.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Every frame: applies the maximum supply pressure in drop mode, makes it evolve and updates the pressure and mode electrics.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    },
+    "setMode": {
+      "desc": "Chooses the \"lift\" or \"drop\" mode and opens/closes the valves of the two airbag groups accordingly.",
+      "params": {
+        "mode": {
+          "type": "string",
+          "desc": "\"lift\" or \"drop\"."
+        }
+      }
+    },
+    "toggleMode": {
+      "desc": "Toggles between drop and lift."
+    },
+    "setMaximumSupplyPressure": {
+      "desc": "Sets the maximum supply pressure of the main airbags (absolute Pa), applied in drop mode.",
+      "params": {
+        "maxSupplyPressure": {
+          "type": "number",
+          "desc": "Pressure in Pa."
+        }
+      }
+    },
+    "setMaximumSupplyPressureChangeRate": {
+      "desc": "Sets the rate of change of this maximum pressure (Pa/s, signed).",
+      "params": {
+        "maxSupplyPressureChangeRate": {
+          "type": "number",
+          "desc": "Change in Pa/s."
+        }
+      }
+    },
+    "getState": {
+      "desc": "Saveable state: mode, maximum supply pressure, rate of change (keys prefixed by the controller name).",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "State table."
+        }
+      ]
+    },
+    "setState": {
+      "desc": "Restores pressure, rate and mode (NaN values ignored).",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Table produced by getState."
+        }
+      }
+    }
   }
 }

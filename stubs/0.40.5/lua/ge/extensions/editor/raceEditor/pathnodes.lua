@@ -2,128 +2,128 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/raceEditor/pathnodes.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Fenêtre Pathnodes (windowDescription = 'Pathnodes'). Instanciée par le constructeur du module avec init(raceEditor). raceEditor.lua appelle setPath, selected, unselect, draw et onEditModeActivate.
+--- Pathnodes window (windowDescription = 'Pathnodes'). Instantiated by the module constructor with init(raceEditor). raceEditor.lua calls setPath, selected, unselect, draw and onEditModeActivate.
 ---@class editor_raceEditor_pathnodes
 local editor_raceEditor_pathnodes = {}
 
---- Crée automatiquement une position de départ de groupe « recovery » à l'emplacement du nœud (direction inversée si reverse) et l'affecte au champ recovery ou reverseRecovery du nœud.
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:725
----@param reverse boolean true pour la récupération arrière (champ reverseRecovery, normale inversée).
+--- Automatically creates a "recovery" group start position at the node's location (direction reversed if reverse) and assigns it to the node's recovery or reverseRecovery field.
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:725
+---@param reverse boolean true for reverse recovery (reverseRecovery field, reversed normal).
 function editor_raceEditor_pathnodes:autoRecoverPos(reverse) end
 
---- Début de manipulation au gizmo : mémorise l'état sérialisé, la rotation et le rayon du nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:80
+--- Start of gizmo manipulation: stores the serialized state, rotation and radius of the node.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:80
 function editor_raceEditor_pathnodes:beginDrag() end
 
---- Affiche l'aide et l'aperçu (sphère, prismes de direction) pendant le glisser, puis au relâchement crée un nœud manuel (et un segment depuis le dernier nœud) via l'historique.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:271
+--- Displays the help and the preview (sphere, direction prisms) during the drag, then on release creates a manual node (and a segment from the last node) via history.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:271
 function editor_raceEditor_pathnodes:createManualPathnode() end
 
---- Pendant la manipulation : applique translation (mode manuel seulement), rotation de la normale (si le nœud en a une) ou échelle du rayon.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:94
+--- During manipulation: applies translation (manual mode only), normal rotation (if the node has one) or radius scaling.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:94
 function editor_raceEditor_pathnodes:dragging() end
 
---- Appelé à chaque frame : mémorise mouseInfo, gère gizmo et entrées si autorisé, puis dessine la liste et le panneau du nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:262
----@param mouseInfo table Infos souris (valid, down, hold, up, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos).
+--- Called every frame: stores mouseInfo, handles gizmo and inputs if allowed, then draws the list and the node panel.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:262
+---@param mouseInfo table Mouse info (valid, down, hold, up, camPos, rayDir, rayCast, _downPos, _holdPos, _upPos).
 function editor_raceEditor_pathnodes:draw(mouseInfo) end
 
---- Dessine l'éditeur de champs personnalisés et les boutons Copy Fields / Paste Fields (copie dans self.cfData).
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:705
----@param fields table Objet de champs personnalisés (onSerialize/onDeserialized).
+--- Draws the custom fields editor and the Copy Fields / Paste Fields buttons (copies into self.cfData).
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:705
+---@param fields table Custom fields object (onSerialize/onDeserialized).
 function editor_raceEditor_pathnodes:drawCustomFields(fields) end
 
---- Dessine la liste des nœuds (préfixe « * » si useAsSplit, parenthèses si non visible) et le panneau du nœud courant : suppression, déplacement dans la liste, nom, mode, position/rayon, normale, visibilité, split, positions de récupération.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:461
+--- Draws the node list (prefix "*" if useAsSplit, parentheses if not visible) and the current node panel: delete, move in the list, name, mode, position/radius, normal, visibility, split, recovery positions.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:461
 function editor_raceEditor_pathnodes:drawPathnodeList() end
 
---- Fin de manipulation : valide l'action d'historique avec l'état avant/après du nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:147
+--- End of manipulation: commits the history action with the node's before/after state.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:147
 function editor_raceEditor_pathnodes:endDragging() end
 
---- Mode simple drag : au clic, autorise le glissement si on clique le nœud déjà sélectionné, sinon sélectionne le nœud survolé ou désélectionne.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:173
----@param hovered table|nil Nœud sous la souris.
+--- Simple drag mode: on click, allows dragging if the already selected node is clicked, otherwise selects the hovered node or deselects.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:173
+---@param hovered table|nil Node under the mouse.
 function editor_raceEditor_pathnodes:handleMouseDown(hovered) end
 
---- Mode simple drag : pendant le maintien, calcule la position projetée au sol par lancer de rayon statique (forêt désactivée en collision) et dessine une sphère et le nom du nœud.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:224
+--- Simple drag mode: while held, computes the position projected onto the ground by static raycast (forest disabled in collision) and draws a sphere and the node name.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:224
 function editor_raceEditor_pathnodes:handleMouseHold() end
 
---- Mode simple drag : au relâchement, valide l'action « Manipulated Node via Simple Drag » avec la nouvelle position.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:234
+--- Simple drag mode: on release, commits the "Manipulated Node via Simple Drag" action with the new position.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:234
 function editor_raceEditor_pathnodes:handleMouseUp() end
 
---- Mémorise raceEditor, index de sélection nil, mouseInfo vide et crée un utilitaire de champs personnalisés (customFieldsUtil).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:18
+--- Stores raceEditor, selection index nil, empty mouseInfo and creates a custom fields utility (customFieldsUtil).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:18
 ---@param raceEditor table Module editor_raceEditor.
 function editor_raceEditor_pathnodes:init(raceEditor) end
 
---- Gère la souris : Alt = nœud navgraph, Shift = création manuelle, sinon sélection (clic simple, ou simple drag selon la préférence).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:416
+--- Handles the mouse: Alt = navgraph node, Shift = manual creation, otherwise selection (single click, or simple drag depending on the preference).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:416
 function editor_raceEditor_pathnodes:input() end
 
---- Renvoie le nœud dont la sphère (rayon radius) est traversée par le rayon souris, le plus proche de la caméra.
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:399
----@return table|nil  Pathnode survolé.
+--- Returns the node whose sphere (radius radius) is crossed by the mouse ray, the one closest to the camera.
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:399
+---@return table|nil  Hovered pathnode.
 function editor_raceEditor_pathnodes:mouseOverPathnodes() end
 
---- Appelé à l'activation du mode d'édition (voir notes : inopérant).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:256
+--- Called when the edit mode is activated (see notes: ineffective).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:256
 function editor_raceEditor_pathnodes:onEditModeActivate() end
 
---- Mode Alt : survole les waypoints manuels du navgraph (map.getManualWaypoints) et permet d'en ajouter un comme pathnode.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:331
+--- Alt mode: hovers the navgraph's manual waypoints (map.getManualWaypoints) and lets you add one as a pathnode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:331
 function editor_raceEditor_pathnodes:selectNavgraphNode() end
 
---- Sélectionne le nœud d'ID id (nil pour aucun) : met en surbrillance ce nœud, place le gizmo, charge le nom et les champs personnalisés.
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:47
----@param id integer|nil ID du pathnode.
+--- Selects the node with ID id (nil for none): highlights that node, places the gizmo, loads the name and custom fields.
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:47
+---@param id integer|nil Pathnode ID.
 function editor_raceEditor_pathnodes:selectPathnode(id) end
 
---- Appelé quand l'onglet devient actif : désélectionne, met tous les nœuds en dessin « normal », ajoute le raccourci Shift « Add New » et récupère la carte (map.getMap()).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:29
+--- Called when the tab becomes active: deselects, sets all nodes to "normal" drawing, adds the Shift shortcut "Add New" and fetches the map (map.getMap()).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:29
 function editor_raceEditor_pathnodes:selected() end
 
---- Renvoie le nœud sélectionné s'il existe et n'est pas manquant.
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:166
----@return table|nil  Pathnode sélectionné.
+--- Returns the selected node if it exists and is not missing.
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:166
+---@return table|nil  Selected pathnode.
 function editor_raceEditor_pathnodes:selectedPathnode() end
 
---- Liste déroulante pour choisir une position de départ (ou « None » = -1) dans un champ du nœud, avec aperçu du nom dans le monde et bouton « Auto-Place » si le champ est vide et le nœud a une normale.
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:747
----@param name string Libellé.
----@param fieldName string Champ du nœud (recovery ou reverseRecovery).
----@param clrI ColorI|nil Couleur de fond du texte dans le monde.
----@param tt string|nil Infobulle.
+--- Dropdown to choose a start position (or "None" = -1) in a node field, with a name preview in the world and an "Auto-Place" button if the field is empty and the node has a normal.
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:747
+---@param name string Label.
+---@param fieldName string Node field (recovery or reverseRecovery).
+---@param clrI ColorI|nil Background color of the in-world text.
+---@param tt string|nil Tooltip.
 function editor_raceEditor_pathnodes:selector(name, fieldName, clrI, tt) end
 
---- Définit le chemin de course édité.
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:25
----@param path table Objet gameplay/race/path.
+--- Sets the race path being edited.
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:25
+---@param path table gameplay/race/path object.
 function editor_raceEditor_pathnodes:setPath(path) end
 
---- Appelé quand l'onglet est quitté : les nœuds passent en dessin « faded » et le raccourci Shift est retiré.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:39
+--- Called when the tab is left: nodes switch to "faded" drawing and the Shift shortcut is removed.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:39
 function editor_raceEditor_pathnodes:unselect() end
 
---- Place le gizmo d'axes sur le nœud (orienté selon sa normale en alignement local si le nœud en a une). Sans effet si le gizmo n'est pas autorisé.
----Source : lua/ge/extensions/editor/raceEditor/pathnodes.lua:60
----@param index integer ID du pathnode.
+--- Places the axis gizmo on the node (oriented along its normal in local alignment if the node has one). No effect if the gizmo is not allowed.
+---Source: lua/ge/extensions/editor/raceEditor/pathnodes.lua:60
+---@param index integer Pathnode ID.
 function editor_raceEditor_pathnodes:updateTransform(index) end
 

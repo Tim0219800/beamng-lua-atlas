@@ -1,27 +1,27 @@
 # `flowgraph_nodes_scene_camera_getCamPath`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/scene/camera/getCamPath.lua` · VM : Game Engine (GE) · 85 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/scene/camera/getCamPath.lua` · VM: Game Engine (GE) · 85 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/scene/camera/getCamPath")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/scene/camera/getCamPath")` (file under extensions/ but not a regular extension)
 
-Noeud flowgraph 'Get Cam Path' (categorie once_f_duration). Renseigne sur l'etat d'une trajectoire de camera (par 'id', sinon celle qui est active) : sorties inactive, complete, completed (impulsion une fois), incomplete et duration. Utile avec Simple Cam Path ou les noeuds de trajectoire procedurale.
+Flowgraph node 'Get Cam Path' (once_f_duration category). Gives information on the state of a camera path (by 'id', otherwise the active one): outputs inactive, complete, completed (impulse once), incomplete and duration. Useful with Simple Cam Path or the procedural path nodes.
 
-## Remarques
+## Notes
 
-- La description du code ('Lets the camera follow the path...') est copiee de Simple Cam Path ; ce noeud ne fait que lire l'etat.
-- Si 'id' est fourni mais ne correspond pas a la trajectoire active, le noeud est considere inactif.
+- The code's description ('Lets the camera follow the path...') is copied from Simple Cam Path; this node only reads the state.
+- If 'id' is provided but does not match the active path, the node is considered inactive.
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet done et completedFlag a zero. | 35 |
-| `C:_executionStopped()` | Vide. | 40 |
-| `C:drawMiddle(builder, style)` | Dessine le milieu du noeud (vide). | 79 |
-| `C:init()` | Vide. | 32 |
-| `C:work()` | Sur reset, repart de zero. flow suit l'entree. Avec du flux, determine si la trajectoire est active, puis calcule inactive/complete/completed/incomplete/duration via camera:isPathComplete et getPathDuration. | 43 |
+| `C:_executionStarted()` | Resets done and completedFlag to zero. | 35 |
+| `C:_executionStopped()` | Empty. | 40 |
+| `C:drawMiddle(builder, style)` | Draws the middle of the node (empty). | 79 |
+| `C:init()` | Empty. | 32 |
+| `C:work()` | On reset, starts again from zero. flow follows the input. With flow, determines whether the path is active, then computes inactive/complete/completed/incomplete/duration via camera:isPathComplete and getPathDuration. | 43 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/scene/camera/getCamPath.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/scene/camera/getCamPath.lua`.*

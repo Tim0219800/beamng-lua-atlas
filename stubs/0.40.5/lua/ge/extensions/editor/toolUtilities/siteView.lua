@@ -2,72 +2,72 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/siteView.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère la caméra des outils d'éditeur à contour (open space editor, parking lot editor) : quelle étape d'édition est affichée (Footprint ou Design) et laquelle des trois caméras (pan, rotate, free) cadre la sélection. S'appuie sur editor/toolUtilities/toolCamera pour les déplacements. Un seul outil est actif à la fois, donc l'état (étape, mode, dernière sélection) est unique au niveau du module. Le massing editor garde sa propre version, mais offre les mêmes boutons.
---- Accès : extension `editor_toolUtilities_siteView` : `extensions.load("editor_toolUtilities_siteView")`, puis la globale `editor_toolUtilities_siteView`
+--- Manages the camera of the outline editor tools (open space editor, parking lot editor): which editing step is shown (Footprint or Design) and which of the three cameras (pan, rotate, free) frames the selection. Relies on editor/toolUtilities/toolCamera for movements. Only one tool is active at a time, so the state (step, mode, last selection) is unique at module level. The massing editor keeps its own version, but offers the same buttons.
+--- Access: extension `editor_toolUtilities_siteView`: `extensions.load("editor_toolUtilities_siteView")`, then the global `editor_toolUtilities_siteView`
 ---@class editor_toolUtilities_siteView
----@field modes table Liste des boutons de caméra : { mode = 'pan'|'rotate'|'free', icon, tip }.
----@field steps table Liste des étapes d'édition proposées dans l'interface : { key = 'footprint', label, icon } et { key = 'design', label, icon }.
+---@field modes table List of camera buttons: { mode = 'pan'|'rotate'|'free', icon, tip }.
+---@field steps table List of editing steps offered in the interface: { key = 'footprint', label, icon } and { key = 'design', label, icon }.
 editor_toolUtilities_siteView = {}
 
---- Prend la main sur la caméra de l'éditeur (toolCam.takeOver) puis cadre la sélection.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:65
----@param m string|nil Mode à activer ; par défaut le mode courant.
+--- Takes over the editor's camera (toolCam.takeOver) then frames the selection.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:65
+---@param m string|nil Mode to activate; defaults to the current mode.
 function editor_toolUtilities_siteView.activate(m) end
 
---- Action d'un bouton de caméra : bascule vers ce mode, ou recadre s'il est déjà actif (sauf 'free', où rien ne se passe). C'est ce deuxième appui qui sert de « aller au site ».
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:104
----@param m string Mode du bouton cliqué.
+--- Action of a camera button: switches to that mode, or reframes if it is already active (except 'free', where nothing happens). This second press serves as "go to site".
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:104
+---@param m string Mode of the clicked button.
 function editor_toolUtilities_siteView.clickMode(m) end
 
---- Pilotage par frame de la caméra (toolCam.drive), sauf en mode free.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:116
----@param blocked boolean Supprime le mouvement pendant les interactions modales de l'outil (tracé, glissement d'une poignée).
+--- Per-frame camera driving (toolCam.drive), except in free mode.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:116
+---@param blocked boolean Suppresses movement during the tool's modal interactions (drawing, dragging a handle).
 function editor_toolUtilities_siteView.drive(blocked) end
 
---- Envoie la caméra active (pan ou orbite) vers la sélection, d'après le contour fourni par ring(). Mémorise aussi la sélection courante.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:56
----@param m string|nil 'pan' ou autre (orbite) ; par défaut le mode courant.
+--- Sends the active camera (pan or orbit) to the selection, based on the outline supplied by ring(). Also remembers the current selection.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:56
+---@param m string|nil 'pan' or other (orbit); defaults to the current mode.
 function editor_toolUtilities_siteView.focus(m) end
 
---- Recadre si la sélection (ctx.selIndex()) a changé depuis le dernier cadrage. Sans effet en mode free.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:109
+--- Reframes if the selection (ctx.selIndex()) has changed since the last framing. No effect in free mode.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:109
 function editor_toolUtilities_siteView.followSelection() end
 
---- Renvoie le mode de caméra courant.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:133
----@return string  'pan', 'rotate' ou 'free'.
+--- Returns the current camera mode.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:133
+---@return string  'pan', 'rotate' or 'free'.
 function editor_toolUtilities_siteView.getMode() end
 
---- Renvoie l'étape courante.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:132
----@return string  'footprint' ou 'design'.
+--- Returns the current step.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:132
+---@return string  'footprint' or 'design'.
 function editor_toolUtilities_siteView.getStep() end
 
---- Rend la caméra de l'éditeur en quittant l'outil (toolCam.handBack(false)).
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:121
+--- Gives the editor's camera back when leaving the tool (toolCam.handBack(false)).
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:121
 function editor_toolUtilities_siteView.handBack() end
 
---- Lie le module à l'outil hôte en stockant le contexte. `ring` renvoie le contour à cadrer, `terrainZ` le sol sous un point, `selIndex` la sélection courante (pour recadrer quand elle change) et `onStep` est appelé quand l'étape change.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:32
----@param c table Contexte { ring, terrainZ, selIndex, onStep }.
+--- Binds the module to the host tool by storing the context. `ring` returns the outline to frame, `terrainZ` the ground under a point, `selIndex` the current selection (to reframe when it changes) and `onStep` is called when the step changes.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:32
+---@param c table Context { ring, terrainZ, selIndex, onStep }.
 function editor_toolUtilities_siteView.init(c) end
 
---- Vrai quand l'étape courante est 'footprint'.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:131
+--- True when the current step is 'footprint'.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:131
 ---@return boolean  step == 'footprint'.
 function editor_toolUtilities_siteView.isShaping() end
 
---- Remet l'état d'ouverture de l'outil : étape design, mode rotate, puis active et cadre la caméra en orbite.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:126
+--- Resets the tool's opening state: design step, rotate mode, then activates and frames the camera in orbit.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:126
 function editor_toolUtilities_siteView.reset() end
 
---- Change de caméra. Vers 'free' : rend la caméra à l'éditeur. Depuis 'free' vers un autre mode : reprend la main et cadre ; sinon, recadre simplement.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:71
----@param m string 'pan', 'rotate' ou 'free'.
+--- Changes camera. To 'free': gives the camera back to the editor. From 'free' to another mode: takes over and frames; otherwise, simply reframes.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:71
+---@param m string 'pan', 'rotate' or 'free'.
 function editor_toolUtilities_siteView.setMode(m) end
 
---- Change d'étape d'édition et appelle ctx.onStep(key). 'footprint' impose la caméra pan (les nœuds sont dessinés à plat) et retient si l'utilisateur était en free ; en quittant, restaure free si c'était le cas, sinon repasse en rotate.
----Source : lua/ge/extensions/editor/toolUtilities/siteView.lua:86
----@param key string 'footprint' ou 'design'.
+--- Changes editing step and calls ctx.onStep(key). 'footprint' forces the pan camera (nodes are drawn flat) and remembers whether the user was in free; on leaving, restores free if that was the case, otherwise goes back to rotate.
+---Source: lua/ge/extensions/editor/toolUtilities/siteView.lua:86
+---@param key string 'footprint' or 'design'.
 function editor_toolUtilities_siteView.setStep(key) end
 

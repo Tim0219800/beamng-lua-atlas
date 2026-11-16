@@ -1,50 +1,50 @@
 # `editor_api_assets`
 
-*Fichier : `lua/ge/extensions/editor/api/assets.lua` · VM : Game Engine (GE) · 49 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/api/assets.lua` · VM: Game Engine (GE) · 49 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_api_assets` : `extensions.load("editor_api_assets")`, puis la globale `editor_api_assets`
+**Access:** extension `editor_api_assets`: `extensions.load("editor_api_assets")`, then the global `editor_api_assets`
 
-API de l'éditeur pour le glisser-déposer d'assets (chemins de fichiers sous forme de chaînes) entre fenêtres ImGui. À l'initialisation, ajoute à l'instance de l'éditeur : editor.dragDropAsset (état interne), editor.dragDropSource et editor.dragDropTarget. Une source et une cible se correspondent si elles utilisent le même dragDropId ; la donnée est transportée dans un tampon de 2048 caractères.
+Editor API for drag-and-drop of assets (file paths as strings) between ImGui windows. On initialization, adds to the editor instance: editor.dragDropAsset (internal state), editor.dragDropSource and editor.dragDropTarget. A source and a target match if they use the same dragDropId; the data is carried in a 2048-character buffer.
 
-## Exemple
+## Example
 
 ```lua
 -- source
-editor.dragDropSource("MonAsset", "/art/shapes/x.dae", function(str) end)
--- cible
-editor.dragDropTarget("MonAsset")
+editor.dragDropSource("MyAsset", "/art/shapes/x.dae", function(str) end)
+-- target
+editor.dragDropTarget("MyAsset")
 ```
 
-## Remarques
+## Notes
 
-- dragDropTarget vérifie par assert que la taille de la charge utile vaut 2048 ; le callback enregistré par la source est appelé avec la chaîne déposée, puis l'état est réinitialisé.
-- Dans dragDropSource, le code utilise `im.ArrayChar` et `im.ArraySize` alors que la variable locale s'appelle `imgui` : `im` n'est pas défini dans ce fichier, ce qui provoquerait une erreur si une globale `im` n'existe pas (déduit du code).
-- Les deux fonctions sont installées sur l'objet editor, pas sur le module ; seule initialize est exportée par le module.
+- dragDropTarget checks by assert that the payload size equals 2048; the callback registered by the source is called with the dropped string, then the state is reset.
+- In dragDropSource, the code uses `im.ArrayChar` and `im.ArraySize` while the local variable is called `imgui`: `im` is not defined in this file, which would cause an error if a global `im` does not exist (inferred from code).
+- Both functions are installed on the editor object, not on the module; only initialize is exported by the module.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_api_assets.initialize(editorInstance)` | Initialise le module : mémorise l'éditeur et y installe dragDropAsset, dragDropSource et dragDropTarget. *(interne)* | 39 |
+| `editor_api_assets.initialize(editorInstance)` | Initializes the module: stores the editor and installs dragDropAsset, dragDropSource and dragDropTarget on it. *(internal)* | 39 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_api_assets.initialize(editorInstance)`
 
-Initialise le module : mémorise l'éditeur et y installe dragDropAsset, dragDropSource et dragDropTarget.
+Initializes the module: stores the editor and installs dragDropAsset, dragDropSource and dragDropTarget on it.
 
-- `editorInstance` (*table*) : Instance de l'éditeur.
+- `editorInstance` (*table*) : Editor instance.
 
-## Classe `editor`
+## Class `editor`
 
-Méthodes ajoutées à l'instance de l'éditeur par ce module.
+Methods added to the editor instance by this module.
 
-Objet `editor` construit dans le module (par ex. par `new`), avec ces méthodes :
+Object `editor` built inside the module (e.g. by `new`), with these methods:
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `editor.dragDropSource(dragDropId, data, callback)` | À appeler pendant le dessin de l'élément ImGui qui sert de source : si un glissement commence, crée la charge utile (data, tampon de 2048 caractères), mémorise le callback et affiche le texte pendant le glissement. | 13 |
-| `editor.dragDropTarget(dragDropId)` | À appeler après l'élément ImGui qui sert de cible : accepte une charge utile du même dragDropId, appelle le callback de la source avec la chaîne reçue puis réinitialise l'état. | 25 |
+| `editor.dragDropSource(dragDropId, data, callback)` | To be called while drawing the ImGui element that serves as the source: if a drag begins, creates the payload (data, 2048-character buffer), stores the callback and displays the text during the drag. | 13 |
+| `editor.dragDropTarget(dragDropId)` | To be called after the ImGui element that serves as the target: accepts a payload with the same dragDropId, calls the source's callback with the received string then resets the state. | 25 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/api/assets.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/api/assets.lua`.*

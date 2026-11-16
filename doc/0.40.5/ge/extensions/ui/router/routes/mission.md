@@ -1,24 +1,24 @@
 # `ui_router_routes_mission`
 
-*Fichier : `lua/ge/extensions/ui/router/routes/mission.lua` · VM : Game Engine (GE) · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/routes/mission.lua` · VM: Game Engine (GE) · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_routes_mission` : `extensions.load("ui_router_routes_mission")`, puis la globale `ui_router_routes_mission`
+**Access:** extension `ui_router_routes_mission`: `extensions.load("ui_router_routes_mission")`, then the global `ui_router_routes_mission`
 
-Routes des missions (Vue, abstrait) : détails (retour par missionDetailsExitHandler), contrôle de mission (retour pause ; sélecteur de véhicule en grille avec gridSelector backendName vehicleSelector), grille, historique et règles de drag, classement des concurrents IA.
+Mission routes (Vue, abstract): details (back via missionDetailsExitHandler), mission control (back pause; grid vehicle selector with gridSelector backendName vehicleSelector), grid, drag history and rules, AI competitors leaderboard.
 
-## Remarques
+## Notes
 
-- Module de configuration de routes : il n'exporte aucune fonction. routeManager le lit (via l'extension ui_router_routes_<nom>) quand routes.lua l'inclut par `{ include = "<nom>" }`.
-- Les clés de `Children` forment les segments du nom pointé : « <module>.<enfant> ». `children` (minuscule) dans un nœud désigne ses sous-routes ; `include` y monte un autre module.
-- `ui` est hérité par les routes enfants (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause) : un enfant ne le redéfinit que pour ce qui change.
+- Route configuration module: it exports no function. routeManager reads it (via the ui_router_routes_<name> extension) when routes.lua includes it with `{ include = "<name>" }`.
+- The keys of `Children` form the segments of the dotted name: "<module>.<child>". `children` (lowercase) in a node designates its sub-routes; `include` mounts another module there.
+- `ui` is inherited by child routes (uiTypes, uiTypesFilter, infoBar, topBar, uiApps, uiNav, triggerPause): a child redefines it only for what changes.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `Children` | table<string, table> | details, control (> vehicleSelector avec hooks ui_gridSelectorRouteLifecycleCallbacks.onRouteEnter/Mount/Leave et meta.gridSelector {backendName, routePath = "/mission-vehicle-selector", defaultPath}), grid, dragHistory, dragRules, aiCompetitorsLeaderboardTable. |
-| `ModuleName` | string | Nom du module de routes (premier segment du nom pointé). |
-| `Root` | table | {screenId = "mission", abstract = true, ui = Vue uniquement, infoBar par défaut, topBar masquée, uiApps par défaut} |
+| `Children` | table<string, table> | details, control (> vehicleSelector with hooks ui_gridSelectorRouteLifecycleCallbacks.onRouteEnter/Mount/Leave and meta.gridSelector {backendName, routePath = "/mission-vehicle-selector", defaultPath}), grid, dragHistory, dragRules, aiCompetitorsLeaderboardTable. |
+| `ModuleName` | string | Name of the routes module (first segment of the dotted name). |
+| `Root` | table | {screenId = "mission", abstract = true, ui = Vue only, default infoBar, topBar hidden, default uiApps} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/routes/mission.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/routes/mission.lua`.*

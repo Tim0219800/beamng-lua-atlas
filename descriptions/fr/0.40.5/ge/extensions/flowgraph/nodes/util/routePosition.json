@@ -1,0 +1,27 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/util/routePosition.lua",
+  "module": "Nœud « Route Position » (once_instant). Donne la position le long d'un itinéraire à une distance donnée en avant. Entrées : navgraphRoute (type navgraphPath), distance. Sorties : pos (vec3), dirVec (direction du segment), n1 et n2 (nœuds du segment). Utilise gameplay/route/route.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "init": {
+          "desc": "Appelle onNodeReset (crée la route).",
+          "internal": true
+        },
+        "_executionStopped": {
+          "desc": "Appelle onNodeReset.",
+          "internal": true
+        },
+        "onNodeReset": {
+          "desc": "Crée un nouvel objet route (variable locale du fichier, partagée entre instances).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Initialise la route avec route:setupPathMultiWaypoints, avance de distance avec route:stepAhead et écrit n1, n2, pos et dirVec (direction normalisée de n1 vers n2).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

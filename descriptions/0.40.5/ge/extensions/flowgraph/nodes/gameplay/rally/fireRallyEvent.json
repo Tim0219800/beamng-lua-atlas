@@ -1,12 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/rally/fireRallyEvent.lua",
-  "module": "Nœud flowgraph « Rally Mode Fire Rally Event » (catégorie once_instant, tag rally). Déclenche un évènement rally : appelle extensions.hook('on' .. eventType, {show = show}) et guihooks.trigger(eventType, {show = show}). Entrées : eventType (string, nom de l'évènement sans le préfixe « on ») et show (bool, défaut true, afficher l'UI correspondante).",
-  "notes": ["Si eventType est nil, la concaténation 'on'..nil provoque une erreur Lua."],
+  "module": "Flowgraph node \"Rally Mode Fire Rally Event\" (category once_instant, tag rally). Fires a rally event: calls extensions.hook('on' .. eventType, {show = show}) and guihooks.trigger(eventType, {show = show}). Inputs: eventType (string, event name without the \"on\" prefix) and show (bool, default true, show the corresponding UI).",
+  "notes": [
+    "If eventType is nil, the concatenation 'on'..nil causes a Lua error."
+  ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "workOnce": {"desc": "Appelle le hook d'extension et le guihook correspondant à eventType avec {show = …}.", "internal": true}
+        "workOnce": {
+          "desc": "Calls the extension hook and the guihook corresponding to eventType with {show = ...}.",
+          "internal": true
+        }
       }
     }
   }

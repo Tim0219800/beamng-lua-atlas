@@ -1,0 +1,185 @@
+{
+  "path": "lua/common/libs/copas/copas.lua",
+  "module": "Copas 2.0.2 : bibliothèque tierce (Kepler Project) — « Coroutine Oriented Portable Asynchronous Services », un répartiteur à base de coroutines pour serveurs et clients TCP/UDP, qui s'appuie sur LuaSocket. Les sockets sont enveloppés (copas.wrap) pour que send/receive/connect cèdent la main au lieu de bloquer ; copas.loop ou copas.step font tourner le tout. Copas sert de base aux sous-modules copas.http, copas.ftp, copas.smtp, copas.timer, copas.lock, copas.semaphore et copas.limit.",
+  "usage": "local copas = require(\"libs/copas/copas\")\ncopas.addthread(function()\n  copas.sleep(1)\n  print(\"1 s plus tard\")\nend)\ncopas.loop() -- ou copas.step(0) à chaque frame",
+  "notes": [
+    "Dans BeamNG, préférer copas.step(timeout) appelé périodiquement plutôt que copas.loop (boucle sans fin qui bloquerait le jeu) (déduit de la nature des fonctions).",
+    "copas.sleep(sleeptime) avec une valeur négative endort la coroutine jusqu'à copas.wakeup(co).",
+    "dohandshake lève une erreur (au lieu de renvoyer nil+erreur) pour éviter de continuer en clair par mégarde ; il faut remplacer toutes les références à l'ancien socket par le socket SSL renvoyé.",
+    "useSocketTimeoutErrors(true) renvoie les erreurs d'origine de LuaSocket (timeout, wantread, wantwrite, Operation already in progress) ; sinon toujours « timeout »."
+  ],
+  "fields": {
+    "_COPYRIGHT": {"type": "string", "desc": "Copyright Kepler Project 2005-2017."},
+    "_DESCRIPTION": {"type": "string", "desc": "Coroutine Oriented Portable Asynchronous Services."},
+    "_VERSION": {"type": "string", "desc": "\"Copas 2.0.2\"."},
+    "autoclose": {"type": "boolean", "desc": "Si vrai (défaut), ferme le socket de la connexion une fois le handler terminé."},
+    "running": {"type": "boolean", "desc": "Indique que la boucle copas.loop tourne (faux au départ)."}
+  },
+  "functions": {
+    "addserver": {
+      "desc": "Enregistre un socket serveur TCP et un handler appelé dans une nouvelle coroutine pour chaque connexion acceptée (fonction définie dans le code, non listée par l'extracteur automatique).",
+      "params": {
+        "server": {"type": "table", "desc": "Socket serveur LuaSocket"},
+        "handler": {"type": "function", "desc": "Fonction handler(skt) (voir copas.handler)"},
+        "timeout": {"type": "number|nil", "desc": "Timeout des opérations (déduit du code)"}
+      }
+    },
+    "removeserver": {
+      "desc": "Retire un serveur du répartiteur ; le ferme sauf si keep_open est vrai.",
+      "params": {
+        "server": {"type": "table", "desc": "Socket serveur"},
+        "keep_open": {"type": "boolean|nil", "desc": "Ne pas fermer le socket"}
+      }
+    },
+    "addthread": {
+      "desc": "Ajoute une nouvelle coroutine au répartiteur ; elle démarre au prochain pas de boucle.",
+      "params": {
+        "handler": {"type": "function", "desc": "Fonction exécutée dans la coroutine"},
+        "...": {"type": "any", "desc": "Arguments passés au handler"}
+      },
+      "returns": [{"type": "thread", "desc": "La coroutine créée"}]
+    },
+    "removethread": {
+      "desc": "Retire une coroutine du répartiteur (elle est supprimée à sa prochaine reprise).",
+      "params": {"thread": {"type": "thread", "desc": "Coroutine à retirer"}}
+    },
+    "sleep": {
+      "desc": "Suspend la coroutine courante et la réveille après sleeptime secondes. Une valeur négative la suspend jusqu'à un appel explicite à wakeup.",
+      "params": {"sleeptime": {"type": "number", "desc": "Durée en secondes (négative : jusqu'à wakeup)"}}
+    },
+    "wakeup": {
+      "desc": "Réveille une coroutine endormie par sleep.",
+      "params": {"co": {"type": "thread", "desc": "Coroutine à réveiller"}}
+    },
+    "step": {
+      "desc": "Un pas de la boucle du répartiteur : traite les sockets prêts et les tâches planifiées.",
+      "params": {"timeout": {"type": "number|nil", "desc": "Durée max d'attente des sockets, en secondes"}},
+      "returns": [{"type": "boolean|nil", "desc": "false si aucune donnée traitée, true sinon (ou nil + message d'erreur)"}]
+    },
+    "loop": {
+      "desc": "Boucle sans fin du répartiteur : écoute et traite les requêtes jusqu'à l'arrêt. Met copas.running à true.",
+      "params": {
+        "initializer": {"type": "function|nil", "desc": "Fonction exécutée dans une coroutine au démarrage"},
+        "timeout": {"type": "number|nil", "desc": "Timeout de chaque pas"}
+      }
+    },
+    "finished": {
+      "desc": "Indique s'il n'y a plus rien à faire (aucun socket en lecture/écriture ni tâche planifiée).",
+      "returns": [{"type": "boolean", "desc": "true s'il n'y a plus rien à traiter"}]
+    },
+    "wrap": {
+      "desc": "Enveloppe un socket LuaSocket en socket asynchrone Copas ; avec sslt, active SSL.",
+      "params": {
+        "skt": {"type": "table", "desc": "Socket LuaSocket"},
+        "sslt": {"type": "table|nil", "desc": "Paramètres SSL (table vide pour les valeurs par défaut)"}
+      },
+      "returns": [{"type": "table", "desc": "Socket enveloppé"}]
+    },
+    "handler": {
+      "desc": "Enveloppe un handler de façon à envelopper le socket et faire la poignée de main SSL facultative.",
+      "params": {
+        "handler": {"type": "function", "desc": "Handler(skt)"},
+        "sslparams": {"type": "table|nil", "desc": "Paramètres SSL"}
+      },
+      "returns": [{"type": "function", "desc": "Handler enveloppé"}]
+    },
+    "dohandshake": {
+      "desc": "Poignée de main SSL asynchrone sur un socket client connecté. Renvoie un nouveau socket SSL qui remplace l'ancien ; lève une erreur en cas d'échec.",
+      "params": {
+        "skt": {"type": "table", "desc": "Socket client LuaSocket"},
+        "sslt": {"type": "table", "desc": "Paramètres SSL"}
+      },
+      "returns": [{"type": "table", "desc": "Socket SSL"}]
+    },
+    "connect": {
+      "desc": "Connecte le socket et attend (en cédant la main) la fin de la connexion.",
+      "params": {
+        "skt": {"type": "table", "desc": "Socket"},
+        "host": {"type": "string", "desc": "Hôte"},
+        "port": {"type": "integer", "desc": "Port"}
+      }
+    },
+    "settimeout": {
+      "desc": "Définit le timeout d'un socket Copas.",
+      "params": {
+        "skt": {"type": "table", "desc": "Socket"},
+        "timeout": {"type": "number", "desc": "Timeout en secondes"}
+      }
+    },
+    "receive": {
+      "desc": "Lit selon un motif sur un client et cède la main aux timeouts. Pour UDP, le motif est obligatoire et doit être un nombre.",
+      "params": {
+        "client": {"type": "table", "desc": "Socket"},
+        "pattern": {"type": "string|integer|nil", "desc": "Motif de lecture LuaSocket (\"*l\", \"*a\", nombre d'octets)"},
+        "part": {"type": "string|nil", "desc": "Données déjà reçues (reprise)"}
+      }
+    },
+    "receivePartial": {
+      "desc": "Comme receive, mais se débloque dès que des données arrivent (lecture par morceaux).",
+      "params": {
+        "client": {"type": "table", "desc": "Socket"},
+        "pattern": {"type": "string|integer|nil", "desc": "Motif de lecture"},
+        "part": {"type": "string|nil", "desc": "Données déjà reçues"}
+      }
+    },
+    "receivefrom": {
+      "desc": "Reçoit des données d'un client UDP (non disponible pour TCP).",
+      "params": {
+        "client": {"type": "table", "desc": "Socket UDP"},
+        "size": {"type": "integer", "desc": "Taille maximale"}
+      }
+    },
+    "send": {
+      "desc": "Envoie des données à un client, avec tampon, en cédant la main sur timeout. from et to sont ignorés pour UDP.",
+      "params": {
+        "client": {"type": "table", "desc": "Socket"},
+        "data": {"type": "string", "desc": "Données"},
+        "from": {"type": "integer|nil", "desc": "Premier octet à envoyer"},
+        "to": {"type": "integer|nil", "desc": "Dernier octet à envoyer"}
+      }
+    },
+    "sendto": {
+      "desc": "Envoie un datagramme UDP.",
+      "params": {
+        "client": {"type": "table", "desc": "Socket UDP"},
+        "data": {"type": "string", "desc": "Données"},
+        "ip": {"type": "string", "desc": "Adresse"},
+        "port": {"type": "integer", "desc": "Port"}
+      }
+    },
+    "flush": {"desc": "Vide le tampon d'écriture d'un client (obsolète)."},
+    "setErrorHandler": {
+      "desc": "Définit la fonction appelée quand un handler lève une erreur ; avec default vrai, remplace aussi le gestionnaire par défaut (déduit du code).",
+      "params": {
+        "err": {"type": "function", "desc": "Gestionnaire d'erreurs"},
+        "default": {"type": "boolean|nil", "desc": "Changer le gestionnaire par défaut"}
+      }
+    },
+    "useSocketTimeoutErrors": {
+      "desc": "Choisit de renvoyer les erreurs de timeout d'origine de LuaSocket (vrai) ou toujours « timeout » (faux).",
+      "params": {"bool": {"type": "boolean", "desc": "Activer les erreurs d'origine"}}
+    }
+  },
+  "classes": {
+    "_sleeping": {
+      "desc": "File interne des coroutines endormies (objet interne).",
+      "functions": {
+        "insert": {"desc": "Insère une coroutine endormie (interne au répartiteur).", "internal": true},
+        "remove": {"desc": "Retire une coroutine endormie (interne au répartiteur).", "internal": true}
+      }
+    },
+    "socket": {
+      "desc": "Fonctions LuaSocket redéfinies par Copas en versions sûres vis-à-vis des coroutines (permet d'utiliser socket.http dans Copas).",
+      "functions": {
+        "protect": {
+          "desc": "Version de socket.protect compatible coroutines.",
+          "params": {"func": {"type": "function", "desc": "Fonction à protéger"}}
+        },
+        "newtry": {
+          "desc": "Version de socket.newtry compatible coroutines.",
+          "params": {"finalizer": {"type": "function", "desc": "Fonction de nettoyage"}}
+        }
+      }
+    }
+  }
+}

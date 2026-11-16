@@ -1,19 +1,67 @@
 {
   "path": "lua/vehicle/controller/pneumatics/lowAirPressureWarning.lua",
-  "module": "Contrôleur auxiliaire d'alerte de basse pression d'air (poids lourds). Surveille la pression d'un réservoir : sous airTooLowPressure et contact mis (ignitionLevel > 0), il met l'electric d'alerte à 1, joue une boucle sonore et affiche un message ; au-dessus de airOkPressure ou contact coupé il remet tout à zéro (hystérésis).",
+  "module": "Auxiliary low air pressure warning controller (heavy trucks). Monitors the pressure of a tank: below airTooLowPressure and with the ignition on (ignitionLevel > 0), it sets the warning electrics value to 1, plays a sound loop and displays a message; above airOkPressure or with the ignition off it resets everything to zero (hysteresis).",
   "notes": [
-    "Clés jbeam lues : lowAirWarningElectric (\"lowAirPressure\"), airTooLowPressure (600000 Pa relatifs) et airOkPressure (650000 Pa), tous deux additionnés à powertrain.currentEnvPressure, relevantPressureTankName (\"mainAirTank\"), lowAirWarningSoundEvent (nom d'évènement audio, facultatif), lowAirWarningSoundNode (nom de nœud, 0 si absent), lowAirWarningSoundVolume (0.5).",
-    "Si le réservoir n'existe pas, la pression est considérée à 0 et l'alerte se déclenche dès que le contact est mis.",
-    "Le son est une source en boucle « AudioDefaultLoop3D » créée dans initSounds."
+    "jbeam keys read: lowAirWarningElectric (\"lowAirPressure\"), airTooLowPressure (600000 Pa relative) and airOkPressure (650000 Pa), both added to powertrain.currentEnvPressure, relevantPressureTankName (\"mainAirTank\"), lowAirWarningSoundEvent (audio event name, optional), lowAirWarningSoundNode (node name, 0 if absent), lowAirWarningSoundVolume (0.5).",
+    "If the tank does not exist, the pressure is considered 0 and the warning triggers as soon as the ignition is on.",
+    "The sound is an \"AudioDefaultLoop3D\" loop source created in initSounds."
   ],
   "fields": {
-    "type": {"type": "string", "desc": "\"auxiliary\"."}
+    "type": {
+      "type": "string",
+      "desc": "\"auxiliary\"."
+    }
   },
   "functions": {
-    "init": {"desc": "Lit les seuils de pression et le réservoir surveillé.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}}, "internal": true},
-    "initSounds": {"desc": "Crée la source sonore d'alerte (si lowAirWarningSoundEvent est défini) et règle son volume. Appelé par le moteur à l'initialisation des sons.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "reset": {"desc": "Remet l'electric d'alerte à 0.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "resetSounds": {"desc": "Arrête le son d'alerte et réinitialise l'état de lecture.", "params": {"jbeamData": {"type": "table", "desc": "Données jbeam."}}, "internal": true},
-    "updateGFX": {"desc": "Chaque frame : compare la pression du réservoir aux seuils et met à jour l'electric d'alerte, le son et le message.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}}, "internal": true}
+    "init": {
+      "desc": "Reads the pressure thresholds and the monitored tank.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Controller jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Creates the warning sound source (if lowAirWarningSoundEvent is defined) and sets its volume. Called by the engine at sound initialization.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "reset": {
+      "desc": "Resets the warning electrics value to 0.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "resetSounds": {
+      "desc": "Stops the warning sound and resets the playback state.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "Jbeam data."
+        }
+      },
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Every frame: compares the tank pressure to the thresholds and updates the warning electrics value, the sound and the message.",
+      "params": {
+        "dt": {
+          "type": "number",
+          "desc": "Time step in seconds."
+        }
+      },
+      "internal": true
+    }
   }
 }

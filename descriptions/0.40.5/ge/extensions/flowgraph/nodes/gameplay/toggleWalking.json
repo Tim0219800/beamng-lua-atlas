@@ -1,17 +1,17 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/gameplay/toggleWalking.lua",
-  "module": "Nœud flowgraph « Toggle Walking » (catégorie repeat_instant, dépend de gameplay_walk). Impulsions d'entrée enterWalking (passe en mode marche, avec pos/rot optionnels) et exitWalking (monte dans le véhicule le plus proche). Impulsions de sortie success / fail. En entrée en marche, le véhicule quitté est ajouté au module vehicle du flowgraph (ignoreReadyUp).",
+  "module": "Flowgraph node \"Toggle Walking\" (category repeat_instant, depends on gameplay_walk). Input pulses enterWalking (switches to walking mode, with optional pos/rot) and exitWalking (enters the nearest vehicle). Output pulses success / fail. When entering walking mode, the vehicle left behind is added to the flowgraph vehicle module (ignoreReadyUp).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "work": {
-          "desc": "Appelle gameplay_walk.setWalkingMode(true, pos, rot) ou (false) selon l'impulsion reçue, puis écrit success/fail.",
+          "desc": "Calls gameplay_walk.setWalkingMode(true, pos, rot) or (false) depending on the received pulse, then writes success/fail.",
           "internal": true,
           "params": {
             "args": {
               "type": "table",
-              "desc": "arguments transmis par le moteur (non utilisés)"
+              "desc": "arguments passed by the engine (unused)"
             }
           }
         }

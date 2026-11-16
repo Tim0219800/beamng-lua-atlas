@@ -1,0 +1,35 @@
+{
+  "path": "lua/vehicle/controller/dragTimer.lua",
+  "module": "Contrôleur auxiliaire de chronométrage de drag (accélération). Machine à états ready, countdown, measuring, done : quand le transbrake est actif et l'accélérateur appuyé, un compte à rebours de 3 s démarre ; à la fin, il relâche le transbrake (contrôleur nommé \"transbrake\") et mesure les temps au 60 pieds (18,288 m), 1/8 de mile (201,168 m) et 1/4 de mile (402,336 m) ainsi que les vitesses à ces deux derniers repères, puis affiche les résultats dans la console (en mph). Ordre lié au périphérique `gearbox`.",
+  "notes": [
+    "`M.relevantDevice = \"gearbox\"`. Aucune clé jbeam n'est lue.",
+    "Utilise `electrics.values.transbrake` et `electrics.values.throttle`. Le relâchement du compte à rebours (accélérateur lâché ou transbrake coupé) revient à `ready`.",
+    "Dépend de l'existence d'un contrôleur nommé exactement \"transbrake\" : `controller.getController(\"transbrake\").setTransbrake(false)` est appelé sans test (erreur s'il n'existe pas).",
+    "La mesure s'arrête après 25 s même sans avoir atteint le quart de mile. Les résultats sont seulement imprimés (print) et un message UI « Results are in! » est affiché ; ils ne sont pas stockés dans electrics.",
+    "Pas de fonction `reset` : controller.reset rappelle init (état ready)."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "relevantDevice": {"type": "string", "desc": "\"gearbox\" : périphérique powertrain utilisé pour l'ordre d'appel."}
+  },
+  "functions": {
+    "updateGFX": {
+      "desc": "Vide (le travail est fait dans update).",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "update": {
+      "desc": "Pas physique : fait avancer la machine à états (armement, compte à rebours, mesure, affichage des résultats).",
+      "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Remet la machine à l'état ready et tous les temps à 0.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam (non utilisées)."}},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

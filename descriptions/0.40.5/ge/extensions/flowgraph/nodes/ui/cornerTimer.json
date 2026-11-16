@@ -1,22 +1,22 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/cornerTimer.lua",
-  "module": "Nœud flowgraph « Set UI Timer » (catégorie repeat_instant, auteur BeamNG, durée) : affiche un temps dans l'app UI chronomètre. Entrées : « value » (secondes ; si non connecté, efface), « color » (white/red/green/blue ; vide = blanc), « useGenericMissionDataApp » (utilise l'app Generic Mission Data au lieu du minuteur d'angle). Hooks utilisés : 'raceTime' et 'ScenarioResetTimer' ; ou ui_apps_genericMissionData.setData.",
+  "module": "Flowgraph node \"Set UI Timer\" (category repeat_instant, author BeamNG, duration): displays a time in the stopwatch UI app. Inputs: \"value\" (seconds; if not connected, clears), \"color\" (white/red/green/blue; empty = white), \"useGenericMissionDataApp\" (uses the Generic Mission Data app instead of the corner timer). Hooks used: 'raceTime' and 'ScenarioResetTimer'; or ui_apps_genericMissionData.setData.",
   "notes": [
-    "En mode Generic Mission Data, le temps est formaté MM:SS (sans millisecondes) avec catégorie 'cornerTimer_virtual' et order 100.",
-    "En mode ancien minuteur, 'time' est envoyé en secondes et la couleur en 'timeColor'."
+    "In Generic Mission Data mode, the time is formatted MM:SS (no milliseconds) with category 'cornerTimer_virtual' and order 100.",
+    "In legacy timer mode, 'time' is sent in seconds and the color as 'timeColor'."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "postInit": {
-          "desc": "Définit les modèles du pin color (white, red, green, blue).",
+          "desc": "Defines the templates of the color pin (white, red, green, blue).",
           "internal": true
         },
         "work": {
-          "desc": "Envoie le temps à l'UI (app Generic Mission Data ou hook 'raceTime'), ou efface l'affichage si 'value' est nil.",
+          "desc": "Sends the time to the UI (Generic Mission Data app or 'raceTime' hook), or clears the display if 'value' is nil.",
           "internal": true
         }
       }

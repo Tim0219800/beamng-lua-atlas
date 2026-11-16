@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/vehicle/ai/chase.lua",
+  "module": "Nœud « AI Chase » (couleur ai, once_p_duration). Met un véhicule en mode IA « chase » pour poursuivre un autre véhicule, avec contact intentionnel. Entrées : aiVehId (sans valeur = véhicule du joueur), targetId (par défaut le véhicule du joueur).",
+  "notes": [
+    "Si aiVehId n'est pas fourni, le véhicule du joueur est à la fois poursuivant et cible par défaut."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "functions": {
+        "workOnce": {
+          "desc": "Envoie au véhicule ai.setMode(\"chase\") puis ai.setTargetObjectID(targetId).",
+          "internal": true
+        }
+      }
+    }
+  }
+}

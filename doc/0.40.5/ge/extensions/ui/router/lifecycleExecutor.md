@@ -1,56 +1,56 @@
 # `ui_router_lifecycleExecutor`
 
-*Fichier : `lua/ge/extensions/ui/router/lifecycleExecutor.lua` · VM : Game Engine (GE) · 56 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/lifecycleExecutor.lua` · VM: Game Engine (GE) · 56 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_lifecycleExecutor` : `extensions.load("ui_router_lifecycleExecutor")`, puis la globale `ui_router_lifecycleExecutor`
+**Access:** extension `ui_router_lifecycleExecutor`: `extensions.load("ui_router_lifecycleExecutor")`, then the global `ui_router_lifecycleExecutor`
 
-Exécute les hooks de cycle de vie d'une route (onEnter, onMount, onLeave…) pour le routeur. Il résout la référence de fonction déclarée sur le nœud de route (via ui/router/utils), appelle le hook sous pcall avec (context, toRoute, fromRoute, data) et journalise les erreurs sans interrompre le routeur.
+Runs the lifecycle hooks of a route (onEnter, onMount, onLeave...) for the router. It resolves the function reference declared on the route node (via ui/router/utils), calls the hook under pcall with (context, toRoute, fromRoute, data) and logs errors without interrupting the router.
 
-## Remarques
+## Notes
 
-- runLifecycleHook renvoie (ok, erreur, estErreurDure). Un hook absent compte comme un succès. Une erreur de résolution de la référence peut être « dure » (isHard, définie par Utils.resolveFunctionReference) : le routeur abandonne alors la navigation (lifecycle_hook_error) ; une exception levée dans le hook n'est jamais dure.
-- Les messages d'erreur vides sont remplacés par "unknown_error".
+- runLifecycleHook returns (ok, error, isHardError). A missing hook counts as a success. A reference resolution error can be "hard" (isHard, defined by Utils.resolveFunctionReference): the router then aborts the navigation (lifecycle_hook_error); an exception thrown in the hook is never hard.
+- Empty error messages are replaced by "unknown_error".
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_lifecycleExecutor.resolveHook(route, hookName)` | Résout la fonction du hook hookName sur le nœud de route (via Utils.resolveFunctionReference, avec un libellé « Lifecycle hook X on route Y »). Renvoie nil, nil, nil si la route ou le hook est absent. | 15 |
-| `ui_router_lifecycleExecutor.runLifecycleHook(route, hookName, context, toRoute, fromRoute, data)` | Exécute le hook sous pcall avec (context, toRoute, fromRoute, data) ; journalise les erreurs au niveau E. | 30 |
-| `ui_router_lifecycleExecutor.sanitizeError(err)` | Renvoie l'erreur si c'est une chaîne non vide, sinon "unknown_error". | 8 |
+| `ui_router_lifecycleExecutor.resolveHook(route, hookName)` | Resolves the hook function hookName on the route node (via Utils.resolveFunctionReference, with a label "Lifecycle hook X on route Y"). Returns nil, nil, nil if the route or the hook is absent. | 15 |
+| `ui_router_lifecycleExecutor.runLifecycleHook(route, hookName, context, toRoute, fromRoute, data)` | Runs the hook under pcall with (context, toRoute, fromRoute, data); logs errors at level E. | 30 |
+| `ui_router_lifecycleExecutor.sanitizeError(err)` | Returns the error if it is a non-empty string, otherwise "unknown_error". | 8 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_lifecycleExecutor.resolveHook(route, hookName)`
 
-Résout la fonction du hook hookName sur le nœud de route (via Utils.resolveFunctionReference, avec un libellé « Lifecycle hook X on route Y »). Renvoie nil, nil, nil si la route ou le hook est absent.
+Resolves the hook function hookName on the route node (via Utils.resolveFunctionReference, with a label "Lifecycle hook X on route Y"). Returns nil, nil, nil if the route or the hook is absent.
 
-- `route` (*table|nil*) : Nœud de route portant les hooks.
-- `hookName` (*string*) : Nom du hook : onEnter, onMount, onLeave…
-- **renvoie** : function|nil La fonction résolue.
-- **renvoie** : string|nil Message d'erreur de résolution.
-- **renvoie** : boolean|nil true si l'erreur de résolution est dure.
+- `route` (*table|nil*) : Route node carrying the hooks.
+- `hookName` (*string*) : Hook name: onEnter, onMount, onLeave...
+- **returns**: function|nil The resolved function.
+- **returns**: string|nil Resolution error message.
+- **returns**: boolean|nil true if the resolution error is hard.
 
 #### `ui_router_lifecycleExecutor.runLifecycleHook(route, hookName, context, toRoute, fromRoute, data)`
 
-Exécute le hook sous pcall avec (context, toRoute, fromRoute, data) ; journalise les erreurs au niveau E.
+Runs the hook under pcall with (context, toRoute, fromRoute, data); logs errors at level E.
 
-- `route` (*table|nil*) : Nœud de route portant le hook.
-- `hookName` (*string*) : Nom du hook.
-- `context` (*table*) : Contexte de navigation.
-- `toRoute` (*table|nil*) : Route de destination.
-- `fromRoute` (*table|nil*) : Route d'origine.
-- `data` (*table*) : Données de route partagées entre hooks.
-- **renvoie** : boolean true si le hook est absent ou a réussi.
-- **renvoie** : string|nil Message d'erreur.
-- **renvoie** : boolean true si l'erreur est dure (résolution invalide).
+- `route` (*table|nil*) : Route node carrying the hook.
+- `hookName` (*string*) : Hook name.
+- `context` (*table*) : Navigation context.
+- `toRoute` (*table|nil*) : Destination route.
+- `fromRoute` (*table|nil*) : Origin route.
+- `data` (*table*) : Route data shared between hooks.
+- **returns**: boolean true if the hook is absent or succeeded.
+- **returns**: string|nil Error message.
+- **returns**: boolean true if the error is hard (invalid resolution).
 
 #### `ui_router_lifecycleExecutor.sanitizeError(err)`
 
-Renvoie l'erreur si c'est une chaîne non vide, sinon "unknown_error".
+Returns the error if it is a non-empty string, otherwise "unknown_error".
 
-- `err` (*any*) : Erreur brute.
-- **renvoie** : string Message d'erreur exploitable.
+- `err` (*any*) : Raw error.
+- **returns**: string Usable error message.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/lifecycleExecutor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/lifecycleExecutor.lua`.*

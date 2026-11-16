@@ -1,41 +1,41 @@
 # `ui_router_services_navigationContext`
 
-*Fichier : `lua/ge/extensions/ui/router/services/navigationContext.lua` · VM : Game Engine (GE) · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/router/services/navigationContext.lua` · VM: Game Engine (GE) · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_router_services_navigationContext` : `extensions.load("ui_router_services_navigationContext")`, puis la globale `ui_router_services_navigationContext`
+**Access:** extension `ui_router_services_navigationContext`: `extensions.load("ui_router_services_navigationContext")`, then the global `ui_router_services_navigationContext`
 
-Construit le contexte de navigation du routeur UI : un instantané de l'état du jeu (carrière, garage, mission, scénario, multijoueur, multiseat, premier trajet, tutoriel freeroam, grande carte autorisée ou non) et le mode courant. Chaque lecture est protégée par pcall, donc un module de jeu absent donne simplement false/nil. Sert aux décisions de routes (écrans, décorateurs de contexte).
+Builds the UI router navigation context: a snapshot of the game state (career, garage, mission, scenario, multiplayer, multiseat, first drive, freeroam tutorial, big map allowed or not) and the current mode. Each read is protected by pcall, so a missing game module simply gives false/nil. Used for route decisions (screens, context decorators).
 
-## Remarques
+## Notes
 
-- Priorité du champ `mode` : multiplayer, mission, scenario, garage, career, freeroamTutorial, multiseatGamemode, sinon freeroam.
-- isMultiseatActive est vrai si le multiseat, le freeroam multiseat ou plusieurs joueurs sont actifs.
-- L'action testée pour la grande carte est « toggleBigMap » (core_input_actionFilter).
+- Priority of the `mode` field: multiplayer, mission, scenario, garage, career, freeroamTutorial, multiseatGamemode, otherwise freeroam.
+- isMultiseatActive is true if multiseat, freeroam multiseat or several players are active.
+- The action tested for the big map is "toggleBigMap" (core_input_actionFilter).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_router_services_navigationContext.buildNavigationContext(toRoute, fromRoute, kind, extras)` | Complète getContext() avec le type de navigation, des extras et des résumés {name, params, meta} des routes d'arrivée et de départ. | 77 |
-| `ui_router_services_navigationContext.getContext()` | Renvoie la table de contexte : isCareerActive, isGarageActive, isMissionActive, isScenarioActive, isMultiplayerActive, foregroundMissionId, isBigMapBlocked, isBigMapAllowed, isFreeroamTutorialActive, isFirstDriveActive, isFirstDriveGuided, isMultiseatGamemodeActive, isMultiseatActive, mode. | 31 |
+| `ui_router_services_navigationContext.buildNavigationContext(toRoute, fromRoute, kind, extras)` | Extends getContext() with the navigation kind, extras and {name, params, meta} summaries of the destination and source routes. | 77 |
+| `ui_router_services_navigationContext.getContext()` | Returns the context table: isCareerActive, isGarageActive, isMissionActive, isScenarioActive, isMultiplayerActive, foregroundMissionId, isBigMapBlocked, isBigMapAllowed, isFreeroamTutorialActive, isFirstDriveActive, isFirstDriveGuided, isMultiseatGamemodeActive, isMultiseatActive, mode. | 31 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_router_services_navigationContext.buildNavigationContext(toRoute, fromRoute, kind, extras)`
 
-Complète getContext() avec le type de navigation, des extras et des résumés {name, params, meta} des routes d'arrivée et de départ.
+Extends getContext() with the navigation kind, extras and {name, params, meta} summaries of the destination and source routes.
 
-- `toRoute` (*table|nil*) : Route de destination.
-- `fromRoute` (*table|nil*) : Route d'origine.
-- `kind` (*string*) : Nature de la navigation (déduit du code : transmis tel quel dans context.kind).
-- `extras` (*table|nil*) : Données supplémentaires (défaut {}).
-- **renvoie** : table Contexte avec kind, extras, toRoute, fromRoute.
+- `toRoute` (*table|nil*) : Destination route.
+- `fromRoute` (*table|nil*) : Origin route.
+- `kind` (*string*) : Kind of navigation (inferred from code: passed through as is in context.kind).
+- `extras` (*table|nil*) : Extra data (default {}).
+- **returns**: table Context with kind, extras, toRoute, fromRoute.
 
 #### `ui_router_services_navigationContext.getContext()`
 
-Renvoie la table de contexte : isCareerActive, isGarageActive, isMissionActive, isScenarioActive, isMultiplayerActive, foregroundMissionId, isBigMapBlocked, isBigMapAllowed, isFreeroamTutorialActive, isFirstDriveActive, isFirstDriveGuided, isMultiseatGamemodeActive, isMultiseatActive, mode.
+Returns the context table: isCareerActive, isGarageActive, isMissionActive, isScenarioActive, isMultiplayerActive, foregroundMissionId, isBigMapBlocked, isBigMapAllowed, isFreeroamTutorialActive, isFirstDriveActive, isFirstDriveGuided, isMultiseatGamemodeActive, isMultiseatActive, mode.
 
-- **renvoie** : table Contexte courant.
+- **returns**: table Current context.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/router/services/navigationContext.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/router/services/navigationContext.lua`.*

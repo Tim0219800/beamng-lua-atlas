@@ -1,104 +1,160 @@
 {
   "path": "lua/vehicle/powertrain/genericTorqueProvider.lua",
-  "module": "Composant powertrain `genericTorqueProvider` : source de couple générique, de catégorie `engine`, dont le couple est simplement `desiredOutputTorque` (N·m) fixé de l'extérieur par un contrôleur ou un script (le moteur n'a ni courbe, ni papillon, ni énergie). Il retranche le frottement et expose l'interface minimale d'un moteur (scaleFriction, scaleOutputTorque, disable, enable, lockUp, getTorqueData…) pour que embrayages, boîtes et contrôleurs puissent le traiter comme un moteur. Utile pour un moteur piloté par un contrôleur personnalisé.",
-  "usage": "local gen = powertrain.getDevice(\"torqueSource\")\ngen.desiredOutputTorque = 120  -- N·m, à réécrire à chaque pas par votre contrôleur\nprint(gen.outputTorque1, gen.outputAV1)",
+  "module": "Powertrain component `genericTorqueProvider`: generic torque source, of category `engine`, whose torque is simply `desiredOutputTorque` (N·m) set from outside by a controller or a script (the motor has no curve, throttle or energy). It subtracts the friction and exposes the minimal interface of an engine (scaleFriction, scaleOutputTorque, disable, enable, lockUp, getTorqueData…) so that clutches, gearboxes and controllers can treat it as an engine. Useful for an engine driven by a custom controller.",
+  "usage": "local gen = powertrain.getDevice(\"torqueSource\")\ngen.desiredOutputTorque = 120  -- N·m, to be rewritten at each step by your controller\nprint(gen.outputTorque1, gen.outputAV1)",
   "notes": [
-    "Clés jbeam lues : name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m par rad/s), inertia (kg·m², défaut 0.1), torqueReactionNodes_nodes (3 nœuds, optionnel, pour la position visuelle), breakTriggerBeam.",
-    "Champs principaux : desiredOutputTorque (N·m, à écrire de l'extérieur), outputTorque1 (N·m = couple voulu * outputTorqueState - frottement), outputAV1 (rad/s, imposée par l'aval ou le parent), outputRPM (tr/min, mis à jour dans updateGFX), outputTorqueState (0..1 ; 0 après disable/lockUp), isDisabled, friction, dynamicFriction, inertia, torqueReactionNodes.",
-    "velocityUpdate vaut nop : un fournisseur de couple ne calcule pas de vitesse. Contrairement à electricMotor, aucune intégration de outputAV1 n'a lieu ici : celle-ci doit venir de l'aval.",
-    "Incohérences : setIgnition, cutIgnition, activateStarter, onBreak et sons valent nop (onBreak = nop : la méthode lockUp n'est jamais appelée à la casse) ; getTorqueData renvoie des courbes vides et des zéros ; calculateInertia ne divise pas par un rapport ; clutchChild vaut {torqueDiff = 0} si aucun enfant mais n'est jamais utilisé dans ce fichier ; validate ajoute {maxRPM = 0} dans powertrain.engineData ; M.requiredExternalInertiaOutputs n'est pas défini dans ce module ; new lit v.data.nodes[...] si torqueReactionNodes_nodes a 3 éléments (erreur si un id est invalide)."
+    "Jbeam keys read: name, type, inputName, inputIndex, gearRatio, cumulativeGearRatio, friction (N·m), dynamicFriction (N·m per rad/s), inertia (kg·m², default 0.1), torqueReactionNodes_nodes (3 nodes, optional, for the visual position), breakTriggerBeam.",
+    "Main fields: desiredOutputTorque (N·m, to be written from outside), outputTorque1 (N·m = desired torque * outputTorqueState - friction), outputAV1 (rad/s, imposed by downstream or the parent), outputRPM (RPM, updated in updateGFX), outputTorqueState (0..1; 0 after disable/lockUp), isDisabled, friction, dynamicFriction, inertia, torqueReactionNodes.",
+    "velocityUpdate is nop: a torque provider does not compute a speed. Unlike electricMotor, no integration of outputAV1 takes place here: it must come from downstream.",
+    "Inconsistencies: setIgnition, cutIgnition, activateStarter, onBreak and sounds are nop (onBreak = nop: the lockUp method is never called on breakage); getTorqueData returns empty curves and zeros; calculateInertia does not divide by a ratio; clutchChild is {torqueDiff = 0} if there is no child but is never used in this file; validate adds {maxRPM = 0} to powertrain.engineData; M.requiredExternalInertiaOutputs is not defined in this module; new reads v.data.nodes[...] if torqueReactionNodes_nodes has 3 elements (error if an id is invalid)."
   ],
   "fields": {
-    "outputPorts": {"type": "table<integer, boolean>", "desc": "{[1]=true}."},
-    "deviceCategories": {"type": "table<string, boolean>", "desc": "{engine=true}."}
+    "outputPorts": {
+      "type": "table<integer, boolean>",
+      "desc": "{[1]=true}."
+    },
+    "deviceCategories": {
+      "type": "table<string, boolean>",
+      "desc": "{engine=true}."
+    }
   },
   "functions": {
     "new": {
-      "desc": "Construit le fournisseur de couple avec les stubs d'interface moteur (nop pour son, allumage, démarreur) et la position visuelle déduite des nœuds de réaction de couple.",
-      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
-      "returns": [{"type": "table", "desc": "Le device (classe `device`)."}],
+      "desc": "Builds the torque provider with the engine interface stubs (nop for sound, ignition, starter) and the visual position inferred from the torque reaction nodes.",
+      "params": {
+        "jbeamData": {
+          "type": "table",
+          "desc": "jbeam data of the component."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "The device (class `device`)."
+        }
+      ],
       "internal": true
     }
   },
   "classes": {
     "device": {
-      "desc": "Objet renvoyé par new(jbeamData).",
+      "desc": "Object returned by new(jbeamData).",
       "functions": {
         "getTorqueData": {
-          "desc": "Renvoie une table de courbe de couple vide : {maxRPM=0, curves={}, maxTorque=0, maxPower=0, maxTorqueRPM=0, maxPowerRPM=0, finalCurveName=1, deviceName, vehicleID}.",
+          "desc": "Returns an empty torque curve table: {maxRPM=0, curves={}, maxTorque=0, maxPower=0, maxTorqueRPM=0, maxPowerRPM=0, finalCurveName=1, deviceName, vehicleID}.",
           "params": {},
-          "returns": [{"type": "table", "desc": "Données de courbe (toutes nulles)."}],
+          "returns": [
+            {
+              "type": "table",
+              "desc": "Curve data (all zero)."
+            }
+          ],
           "internal": false
         },
         "sendTorqueData": {
-          "desc": "Envoie l'événement GUI 'TorqueCurveChanged' avec les données de courbe (calculées si non fournies).",
-          "params": {"data": {"type": "table|nil", "desc": "Résultat de getTorqueData ; nil pour le recalculer."}},
+          "desc": "Sends the GUI event 'TorqueCurveChanged' with the curve data (computed if not provided).",
+          "params": {
+            "data": {
+              "type": "table|nil",
+              "desc": "Result of getTorqueData; nil to recompute it."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "scaleFriction": {
-          "desc": "Multiplie le frottement (friction) par le facteur donné.",
-          "params": {"friction": {"type": "number", "desc": "Facteur multiplicatif."}},
+          "desc": "Multiplies the friction (friction) by the given factor.",
+          "params": {
+            "friction": {
+              "type": "number",
+              "desc": "Multiplicative factor."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "scaleOutputTorque": {
-          "desc": "Multiplie outputTorqueState par state (cumulatif).",
-          "params": {"state": {"type": "number", "desc": "Facteur multiplicatif."}},
+          "desc": "Multiplies outputTorqueState by state (cumulative).",
+          "params": {
+            "state": {
+              "type": "number",
+              "desc": "Multiplicative factor."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "disable": {
-          "desc": "Coupe le couple : outputTorqueState = 0 et isDisabled = true.",
+          "desc": "Cuts the torque: outputTorqueState = 0 and isDisabled = true.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "enable": {
-          "desc": "Rétablit le couple : outputTorqueState = 1 et isDisabled = false.",
+          "desc": "Restores the torque: outputTorqueState = 1 and isDisabled = false.",
           "params": {},
           "returns": [],
           "internal": false
         },
         "lockUp": {
-          "desc": "Identique à disable : coupe le couple et marque isDisabled (pas de blocage de vitesse ici).",
+          "desc": "Same as disable: cuts the torque and sets isDisabled (no speed lock here).",
           "params": {},
           "returns": [],
           "internal": false
         },
         "updateGFX": {
-          "desc": "Mise à jour par image : outputRPM = outputAV1 en tr/min.",
-          "params": {"dt": {"type": "number", "desc": "Durée de l'image en secondes (inutilisé)."}},
+          "desc": "Per-frame update: outputRPM = outputAV1 in RPM.",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Frame duration in seconds (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "velocityUpdate": {
-          "desc": "Toujours nop.",
+          "desc": "Always nop.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "torqueUpdate": {
-          "desc": "Appelée à chaque pas physique : outputTorque1 = desiredOutputTorque * outputTorqueState - couple de frottement (limité par la vitesse * inertie * 2000 pour la stabilité).",
-          "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (inutilisé)."}},
+          "desc": "Called at each physics step: outputTorque1 = desiredOutputTorque * outputTorqueState - friction torque (limited by speed * inertia * 2000 for stability).",
+          "params": {
+            "dt": {
+              "type": "number",
+              "desc": "Time step in seconds (unused)."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "validate": {
-          "desc": "Si le device n'a pas d'enfant, pose clutchChild = {torqueDiff = 0} ; enregistre le moteur dans powertrain.engineData ; sélectionne les fonctions de mise à jour.",
+          "desc": "If the device has no child, sets clutchChild = {torqueDiff = 0}; registers the engine in powertrain.engineData; selects the update functions.",
           "params": {},
-          "returns": [{"type": "boolean", "desc": "Toujours true."}],
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "Always true."
+            }
+          ],
           "internal": true
         },
         "calculateInertia": {
-          "desc": "Prend l'inertie et le rapport cumulés du premier enfant comme cumulativeInertia et cumulativeGearRatio.",
+          "desc": "Takes the cumulative inertia and ratio of the first child as cumulativeInertia and cumulativeGearRatio.",
           "params": {},
           "returns": [],
           "internal": true
         },
         "reset": {
-          "desc": "Remet à zéro vitesse, couple, couple voulu, outputTorqueState et isDisabled ; relit friction, dynamicFriction et inertia du jbeam.",
-          "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du composant."}},
+          "desc": "Resets speed, torque, desired torque, outputTorqueState and isDisabled; rereads friction, dynamicFriction and inertia from the jbeam.",
+          "params": {
+            "jbeamData": {
+              "type": "table",
+              "desc": "jbeam data of the component."
+            }
+          },
           "returns": [],
           "internal": true
         }

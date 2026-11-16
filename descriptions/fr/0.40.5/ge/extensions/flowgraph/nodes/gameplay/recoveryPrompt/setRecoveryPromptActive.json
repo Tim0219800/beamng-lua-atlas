@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptActive.lua",
+  "module": "Nœud flowgraph « Set Recovery Prompt Active » (catégorie once_instant). Active ou désactive le système de récupération des missions (core_recoveryPrompt). À utiliser avec « Set Recovery Prompt Enabled » pour rendre les boutons sélectionnables. Pins d'entrée : active (défaut true), enableAll (obsolète, caché), flipMission, recoverMission (défaut true), submitMission, restartMission (défaut false). Dépend de gameplay_walk et bloque le reset gameplay (blocksOnResetGameplay).",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "workOnce": {
+          "desc": "Si active est vrai : appelle core_recoveryPrompt.setActive(true), désactive tous les boutons puis active ceux dont le pin n'est pas nil. Sinon appelle core_recoveryPrompt.setActive(false).",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

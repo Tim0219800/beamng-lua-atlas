@@ -2,53 +2,53 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/ui/endStats.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).
+--- Flowgraph node class (returned by _flowgraph_createNode(C)).
 ---@class flowgraph_nodes_ui_endStats_C
 local flowgraph_nodes_ui_endStats_C = {}
 
---- Vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:37
+--- Empty.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:37
 function flowgraph_nodes_ui_endStats_C:_executionStarted() end
 
---- Restaure count.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:105
----@param res table Table de sauvegarde du nœud à remplir.
+--- Restores count.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:105
+---@param res table Node save table to fill.
 function flowgraph_nodes_ui_endStats_C:_onDeserialized(res) end
 
---- Sauvegarde count.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:101
----@param res table Table de sauvegarde du nœud à remplir.
+--- Saves count.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:101
+---@param res table Node save table to fill.
 function flowgraph_nodes_ui_endStats_C:_onSerialize(res) end
 
---- Champ « Count » pour le nombre de statistiques.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:41
+--- "Count" field for the number of statistics.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:41
 function flowgraph_nodes_ui_endStats_C:drawCustomProperties() end
 
---- Zone centrale vide.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:32
----@param builder any Constructeur de nœud de l'éditeur (builder:Middle() ouvre la zone centrale).
----@param style any Style d'affichage du nœud fourni par l'éditeur.
+--- Empty central area.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:32
+---@param builder any Editor node builder (builder:Middle() opens the central area).
+---@param style any Node display style provided by the editor.
 function flowgraph_nodes_ui_endStats_C:drawMiddle(builder, style) end
 
 --- count = 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:28
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:28
 function flowgraph_nodes_ui_endStats_C:init() end
 
---- Ajuste le nombre de groupes de 3 pins d'entrée (label, points, maxPoints).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:58
----@param old integer Ancien nombre d'éléments.
----@param new integer Nouveau nombre d'éléments.
+--- Adjusts the number of groups of 3 input pins (label, points, maxPoints).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:58
+---@param old integer Old number of elements.
+---@param new integer New number of elements.
 function flowgraph_nodes_ui_endStats_C:updatePins(old, new) end
 
---- Reprend la liste en entrée, ajoute une entrée {label, points, maxPoints, relativePoints} par statistique et l'écrit sur « statData ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:86
+--- Takes the input list, adds an entry {label, points, maxPoints, relativePoints} per statistic and writes it to "statData".
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/ui/endStats.lua:86
 function flowgraph_nodes_ui_endStats_C:work() end
 

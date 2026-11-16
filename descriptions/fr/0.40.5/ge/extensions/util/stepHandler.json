@@ -1,0 +1,126 @@
+{
+  "path": "lua/ge/extensions/util/stepHandler.lua",
+  "module": "Exécuteur de séquences d'étapes (« steps ») asynchrones pour scénarios et scripts de test. On construit une liste d'étapes avec les fonctions makeStepXxx (fondu au noir, attente, apparition de véhicule ou de trafic, chargement de niveau, fonction personnalisée) puis on la lance avec startStepSequence. À chaque onUpdate, l'étape courante est traitée jusqu'à ce qu'elle soit terminée (step.complete) ; on passe alors à la suivante dans la même frame. Une étape qui dépasse son délai (timeout, 120 s par défaut) est journalisée comme erreur et forcée à « terminée ».",
+  "usage": "util_stepHandler.startStepSequence({\n  util_stepHandler.makeStepFadeToBlack(),\n  util_stepHandler.makeStepSpawnVehicleSimple('pickup', 'vehicles/pickup/d15_4wd_A.pc', function() print('Hello') end),\n  util_stepHandler.makeStepFadeFromBlack()\n}, function() print('Terminé') end)",
+  "notes": [
+    "Une étape est une table {name, processTask = function(step, dtTable), timeout, origin, ...} ; processTask met step.complete = true quand elle a fini. dtTable contient dtReal, dtSim et dtRaw.",
+    "startStepSequence remplace toute séquence en cours ; le callback de fin devient une dernière étape ajoutée à la liste fournie (la table steps est modifiée).",
+    "onClientStartMission marque comme terminée l'étape courante quelle qu'elle soit (pas seulement le chargement de niveau) ; taskLoadLevelStep ne se termine d'ailleurs que par ce hook, car step.levelLoaded n'est jamais renseigné. Délai de l'étape de chargement : 600 s.",
+    "Dans onUpdate, la variable logTag n'est pas définie dans ce fichier (valeur nil dans le log « Completed Step »).",
+    "makeStepReturnTrueFunction est déclarée deux fois (la seconde, locale, masque la première) ; elles sont identiques. Seule la première est exportée.",
+    "taskVehicleSpawnStep : si spawnNewVehicle échoue, step.veh est nil et l'appel step.veh:getId() qui suit provoque une erreur Lua.",
+    "Si showDebugWindow (variable locale, false) est mise à true dans le code, onUpdate affiche une fenêtre ImGui de débogage des étapes."
+  ],
+  "functions": {
+    "startStepSequence": {
+      "desc": "Démarre une séquence d'étapes (remplace l'éventuelle séquence en cours). Si un callback est donné, il est exécuté en dernière étape.",
+      "params": {
+        "steps": {"type": "table[]", "desc": "Liste d'étapes créées avec les makeStepXxx."},
+        "callbackWhenFinished": {"type": "function|nil", "desc": "Appelée sans argument une fois toutes les étapes terminées."}
+      }
+    },
+    "skipToLastStepOrCallback": {
+      "desc": "Termine l'étape courante et saute directement à la dernière étape (typiquement le callback de fin).",
+      "internal": false
+    },
+    "makeStepFadeToBlack": {
+      "desc": "Étape : lance le fondu vers le noir (ui_fadeScreen.start) et attend l'évènement d'écran noir (état 1, timeout 10 s).",
+      "params": {"duration": {"type": "number|nil", "desc": "Durée du fondu en secondes."}},
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeStepFadeFromBlack": {
+      "desc": "Étape : lance le retour de fondu (ui_fadeScreen.stop) et attend l'état 3 de onScreenFadeState (timeout 10 s).",
+      "params": {"duration": {"type": "number|nil", "desc": "Durée du fondu en secondes."}},
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeStepWait": {
+      "desc": "Étape : attend un nombre de secondes réelles (os.clockhp).",
+      "params": {"seconds": {"type": "number", "desc": "Durée d'attente en secondes."}},
+      "returns": [{"type": "table", "desc": "Étape (timeout = seconds + 1)."}]
+    },
+    "makeStepWaitFrames": {
+      "desc": "Étape : attend un nombre de frames d'onUpdate, quelle que soit leur durée.",
+      "params": {"frames": {"type": "integer", "desc": "Nombre de frames."}},
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeStepReturnTrueFunction": {
+      "desc": "Étape : appelle fun(step, dtTable) à chaque frame jusqu'à ce qu'elle renvoie une valeur vraie.",
+      "params": {"fun": {"type": "function", "desc": "Fonction (step, dtTable) -> boolean."}},
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeUiMessageStep": {
+      "desc": "Étape : affiche un message à l'écran (ui_message) et dans le journal (tag « test »), puis se termine immédiatement.",
+      "params": {"message": {"type": "string", "desc": "Texte du message."}},
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeStepSpawnVehicle": {
+      "desc": "Étape : fait apparaître un véhicule (core_vehicles.spawnNewVehicle) puis attend qu'il soit prêt (isReady) ; le callback reçoit alors (step, vehId).",
+      "params": {
+        "spawningOptions": {"type": "table", "desc": "Options d'apparition avec au moins model (et config, pos, rot…)."},
+        "callback": {"type": "function|nil", "desc": "Appelée avec (step, vehId) quand le véhicule est prêt."}
+      },
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeStepSpawnVehicleSimple": {
+      "desc": "Version simple de makeStepSpawnVehicle : options construites par sanitizeVehicleSpawnOptions(model, {config = config}).",
+      "params": {
+        "model": {"type": "string", "desc": "Nom du modèle."},
+        "config": {"type": "string", "desc": "Chemin ou nom de la configuration (.pc)."},
+        "callback": {"type": "function|nil", "desc": "Appelée avec (step, vehId)."}
+      },
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeStepSpawnTrafficSimple": {
+      "desc": "Étape : crée un groupe de véhicules de trafic (core_multiSpawn), attend son apparition, règle le nombre actif, active le trafic et le disperse (gameplay_traffic).",
+      "params": {
+        "amount": {"type": "integer", "desc": "Nombre de véhicules à faire apparaître."},
+        "active": {"type": "integer", "desc": "Nombre de véhicules actifs (activeAmount)."},
+        "generator": {"type": "any", "desc": "Générateur transmis à core_multiSpawn.createGroup (déduit du code)."}
+      },
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "makeLoadLevelStep": {
+      "desc": "Étape : charge un niveau par son nom (core_levels.startLevel) et attend onClientStartMission (timeout 600 s).",
+      "params": {"level": {"type": "string", "desc": "Nom du niveau (insensible à la casse)."}},
+      "returns": [{"type": "table", "desc": "Étape."}]
+    },
+    "taskSpawnTrafficStep": {
+      "desc": "Fonction processTask de l'étape de trafic : machine à états 0 (créer le groupe) → 1 (attente de onVehicleGroupSpawned) → 2 (activer le trafic).",
+      "params": {"step": {"type": "table", "desc": "Étape de trafic."}},
+      "internal": true
+    },
+    "taskLoadLevelStep": {
+      "desc": "Fonction processTask de l'étape de chargement de niveau : lance le chargement au premier appel, journalise une erreur si le niveau est introuvable. Renvoie step.levelLoaded (jamais renseigné).",
+      "params": {"step": {"type": "table", "desc": "Étape de chargement."}},
+      "returns": [{"type": "boolean", "desc": "Toujours false en pratique."}],
+      "internal": true
+    },
+    "onScreenFadeState": {
+      "desc": "Hook appelé par ui_fadeScreen à chaque état du fondu : mémorise fadeState<état> sur l'étape courante si elle attend un fondu.",
+      "params": {"state": {"type": "integer", "desc": "État du fondu (1 = noir atteint, 3 = fondu retiré)."}},
+      "internal": true
+    },
+    "onVehicleGroupSpawned": {
+      "desc": "Hook appelé quand un groupe de véhicules est apparu : si c'est le groupe attendu par l'étape de trafic courante, passe son état à 2 et mémorise les identifiants.",
+      "params": {
+        "vehIds": {"type": "integer[]", "desc": "Identifiants des véhicules du groupe."},
+        "groupId": {"type": "any", "desc": "Identifiant du groupe."}
+      },
+      "internal": true
+    },
+    "onClientStartMission": {
+      "desc": "Hook appelé au démarrage d'un niveau : marque l'étape courante comme terminée.",
+      "params": {"state": {"type": "any", "desc": "Argument du hook (non utilisé)."}},
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : traite l'étape courante, gère les délais d'expiration, enchaîne les étapes terminées et désactive la séquence à la fin.",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Durée réelle de la frame (s)."},
+        "dtSim": {"type": "number", "desc": "Durée simulée (s)."},
+        "dtRaw": {"type": "number", "desc": "Durée brute (s)."}
+      },
+      "internal": true
+    }
+  }
+}

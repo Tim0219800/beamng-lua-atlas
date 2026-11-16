@@ -1,14 +1,14 @@
 # `editor_roofServices`
 
-*Fichier : `lua/ge/extensions/editor/roofServices.lua` · VM : Game Engine (GE) · 1 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/roofServices.lua` · VM: Game Engine (GE) · 1 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/editor/roofServices")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/editor/roofServices")` (file under extensions/ but not a regular extension)
 
-Fichier vide dans BeamNG.drive 0.40.5 (0 ligne) : aucun code, aucune fonction exportée. Probablement un emplacement réservé pour un futur outil de toits de l'éditeur.
+Empty file in BeamNG.drive 0.40.5 (0 lines): no code, no exported function. Probably a placeholder for a future editor roof tool.
 
-## Remarques
+## Notes
 
-- Le fichier est vide ; require('extensions/editor/roofServices') renvoie true (valeur par défaut de require pour un chunk sans retour), pas une table.
+- The file is empty; require('extensions/editor/roofServices') returns true (default require value for a chunk with no return), not a table.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/roofServices.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/roofServices.lua`.*

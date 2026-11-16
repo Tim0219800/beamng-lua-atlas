@@ -1,36 +1,36 @@
 # `flowgraph_nodes_gameplay_rally_trackVehicleDistanceToPos`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.lua` · VM : Game Engine (GE) · 115 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.lua` · VM: Game Engine (GE) · 115 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Track Vehicle Distance to Position » (catégorie repeat, icône straighten, tag rally). Mesure la distance entre le centre avant d'un véhicule (RallyUtil.getVehFrontCenter) et une position cible, et la diffuse à l'UI via extensions.hook('onRallyDataUpdated', {activeState = vehicleProximity, vehicleProximity = {isNear = false, distance, isStopped = false, isFrozen = false, timer = 0, duration = 0}}). Entrées : flow, vehId (sinon véhicule joueur 0), pos (vec3 ou table). Sortie : flow (recopie).
+Flowgraph node "Track Vehicle Distance to Position" (category repeat, straighten icon, tag rally). Measures the distance between a vehicle's front center (RallyUtil.getVehFrontCenter) and a target position, and broadcasts it to the UI via extensions.hook('onRallyDataUpdated', {activeState = vehicleProximity, vehicleProximity = {isNear = false, distance, isStopped = false, isFrozen = false, timer = 0, duration = 0}}). Inputs: flow, vehId (otherwise player vehicle 0), pos (vec3 or table). Output: flow (copy).
 
-## Remarques
+## Notes
 
-- La position cible est mise en cache à la première lecture et ne change plus jusqu'au redémarrage du graphe.
+- The target position is cached on first read and no longer changes until the graph restarts.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Oublie la position cible mémorisée. | 29 |
-| `C:getDistanceSquared()` | Calcule le carré de la distance entre le centre avant du véhicule et la position cible. | 74 |
-| `C:init(mgr, ...)` | Initialise targetPos à nil. | 25 |
-| `C:updateVehicleData2()` | Met à jour (variables locales du module) position avant, rotation et vitesse du véhicule suivi à partir de map.objects. | 55 |
-| `C:work(args)` | Chaque frame : met à jour les données du véhicule, diffuse la distance à l'UI et recopie le flux. | 89 |
+| `C:_executionStarted()` | Forgets the stored target position. | 29 |
+| `C:getDistanceSquared()` | Computes the squared distance between the vehicle's front center and the target position. | 74 |
+| `C:init(mgr, ...)` | Initializes targetPos to nil. | 25 |
+| `C:updateVehicleData2()` | Updates (module local variables) the front position, rotation and speed of the tracked vehicle from map.objects. | 55 |
+| `C:work(args)` | Every frame: updates the vehicle data, broadcasts the distance to the UI and copies the flow. | 89 |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onRallyDataUpdated` — écouté par 2 module(s)
+- `onRallyDataUpdated` — listened to by 2 module(s)
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObjectById`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/rally/trackVehicleDistanceToPos.lua`.*

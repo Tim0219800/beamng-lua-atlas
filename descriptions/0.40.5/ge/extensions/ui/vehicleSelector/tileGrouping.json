@@ -1,48 +1,109 @@
 {
   "path": "lua/ge/extensions/ui/vehicleSelector/tileGrouping.lua",
-  "module": "Détermine dans quels groupes (sections de la grille) une config de véhicule apparaît selon le mode « Grouper par » du sélecteur : Type, Brand, Country, Config Type, Derby Class, Body Style, Source, ainsi que Years (par décennie) et Value (par tranche de prix). Ajoute aussi les groupes spéciaux Favoris et Récents. Utilisé par ui_vehicleSelector_tiles.",
+  "module": "Determines in which groups (grid sections) a vehicle config appears according to the selector's \"Group by\" mode: Type, Brand, Country, Config Type, Derby Class, Body Style, Source, as well as Years (by decade) and Value (by price range). Also adds the special Favorites and Recents groups. Used by ui_vehicleSelector_tiles.",
   "notes": [
-    "Un groupe est une table {groupName, groupOrder} ; groupOrder -1 = Favoris, -2 = Récents, 999 = « Autre ». Pour Type, l'ordre vient de typeOrder (Car et Truck partagent « Cars and trucks »).",
-    "Une config peut être dans plusieurs groupes : Years donne une entrée par décennie couverte, et Favoris/Récents s'ajoutent aux groupes normaux (sauf si showFavouritesMode ou showRecentMode vaut 'hidden').",
-    "Tranches de Value : <10k (Misc), <20k, <50k, <100k, <250k, <500k, <1M, puis 1M+.",
-    "getGroupsForConfig appelle groupModeFunctions[groupMode] (ou groupsForRange) sans vérification : un mode de groupe inconnu provoque une erreur."
+    "A group is a table {groupName, groupOrder}; groupOrder -1 = Favorites, -2 = Recents, 999 = \"Other\". For Type, the order comes from typeOrder (Car and Truck share \"Cars and trucks\").",
+    "A config can be in several groups: Years gives one entry per decade covered, and Favorites/Recents are added to the normal groups (unless showFavouritesMode or showRecentMode is 'hidden').",
+    "Value ranges: <10k (Misc), <20k, <50k, <100k, <250k, <500k, <1M, then 1M+.",
+    "getGroupsForConfig calls groupModeFunctions[groupMode] (or groupsForRange) without checking: an unknown group mode causes an error."
   ],
   "fields": {
-    "groupModeFunctions": {"type": "table<string, function>", "desc": "Fonctions (valeur) -> groupName, groupOrder pour les modes non basés sur une plage : Type, Brand, Country, Config Type, Derby Class, Body Style, Source."},
-    "isRange": {"type": "table<string, boolean>", "desc": "Modes de groupement par plage : Years et Value."}
+    "groupModeFunctions": {
+      "type": "table<string, function>",
+      "desc": "Functions (value) -> groupName, groupOrder for the non-range-based modes: Type, Brand, Country, Config Type, Derby Class, Body Style, Source."
+    },
+    "isRange": {
+      "type": "table<string, boolean>",
+      "desc": "Range grouping modes: Years and Value."
+    }
   },
   "functions": {
     "getConfigOrModelPropValue": {
-      "desc": "Lit une propriété sur la config, ou à défaut sur le modèle (core_vehicles.getModel).",
+      "desc": "Reads a property on the config, or failing that on the model (core_vehicles.getModel).",
       "params": {
-        "config": {"type": "table", "desc": "Config (avec model_key)."},
-        "prop": {"type": "string", "desc": "Nom de propriété."}
+        "config": {
+          "type": "table",
+          "desc": "Config (with model_key)."
+        },
+        "prop": {
+          "type": "string",
+          "desc": "Property name."
+        }
       },
-      "returns": [{"type": "any", "desc": "Valeur ou nil."}]
+      "returns": [
+        {
+          "type": "any",
+          "desc": "Value or nil."
+        }
+      ]
     },
     "getGroupsForConfig": {
-      "desc": "Renvoie la liste des groupes d'une config pour un mode de regroupement, avec les groupes Favoris et Récents si applicable. La valeur absente est classée dans « Autre ».",
+      "desc": "Returns the list of groups of a config for a grouping mode, with the Favorites and Recents groups if applicable. A missing value is classified under \"Other\".",
       "params": {
-        "config": {"type": "table", "desc": "Config du véhicule."},
-        "groupMode": {"type": "string", "desc": "Mode de groupement (Type, Brand, Years, Value, ...)."},
-        "displayData": {"type": "table", "desc": "Options d'affichage (showFavouritesMode, showRecentMode)."}
+        "config": {
+          "type": "table",
+          "desc": "Vehicle config."
+        },
+        "groupMode": {
+          "type": "string",
+          "desc": "Grouping mode (Type, Brand, Years, Value, ...)."
+        },
+        "displayData": {
+          "type": "table",
+          "desc": "Display options (showFavouritesMode, showRecentMode)."
+        }
       },
-      "returns": [{"type": "table[]", "desc": "Liste de {groupName, groupOrder, isFavouriteGroup?, isRecentGroup?}."}]
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of {groupName, groupOrder, isFavouriteGroup?, isRecentGroup?}."
+        }
+      ]
     },
     "isRangeGroupMode": {
-      "desc": "Indique si le mode groupe par plage (Years, Value).",
-      "params": {"groupMode": {"type": "string", "desc": "Mode de groupement."}},
-      "returns": [{"type": "boolean", "desc": "true pour Years et Value."}]
+      "desc": "Returns whether the mode is range grouping (Years, Value).",
+      "params": {
+        "groupMode": {
+          "type": "string",
+          "desc": "Grouping mode."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true for Years and Value."
+        }
+      ]
     },
     "getGroupModeFunction": {
-      "desc": "Renvoie la fonction de groupement d'un mode non basé sur une plage.",
-      "params": {"groupMode": {"type": "string", "desc": "Mode de groupement."}},
-      "returns": [{"type": "function|nil", "desc": "Fonction ou nil."}]
+      "desc": "Returns the grouping function of a non-range-based mode.",
+      "params": {
+        "groupMode": {
+          "type": "string",
+          "desc": "Grouping mode."
+        }
+      },
+      "returns": [
+        {
+          "type": "function|nil",
+          "desc": "Function or nil."
+        }
+      ]
     },
     "getRangeGroupingFunction": {
-      "desc": "Renvoie la fonction qui découpe une valeur en groupes pour Years ou Value.",
-      "params": {"groupMode": {"type": "string", "desc": "'Years' ou 'Value'."}},
-      "returns": [{"type": "function|nil", "desc": "Fonction ou nil."}]
+      "desc": "Returns the function that splits a value into groups for Years or Value.",
+      "params": {
+        "groupMode": {
+          "type": "string",
+          "desc": "'Years' or 'Value'."
+        }
+      },
+      "returns": [
+        {
+          "type": "function|nil",
+          "desc": "Function or nil."
+        }
+      ]
     }
   }
 }

@@ -1,0 +1,11 @@
+{
+  "path": "lua/common/extensions/ui/imgui_api.lua",
+  "module": "Module interne qui assemble l'API ImGui : crée la table M avec le champ ctx (contexte ImGui global) puis y injecte les fonctions générées de imgui_luaintf.lua et les ajouts personnalisés de imgui_custom_luaintf.lua. Le fichier précise de ne pas l'utiliser directement (utiliser ui_imgui) et qu'il doit rester synchronisé avec imgui_api.h côté C++.",
+  "notes": [
+    "Les deux require utilisent le chemin '/common/extensions/ui/...' et chaque module renvoie une fonction qui reçoit M.",
+    "ctx vaut nil jusqu'à ce que ui_imgui l'affecte (onImGuiReady / onExtensionLoaded)."
+  ],
+  "fields": {
+    "ctx": {"type": "userdata|nil", "desc": "Contexte ImGui global Lua ; nil à la création, renseigné par ui_imgui."}
+  }
+}

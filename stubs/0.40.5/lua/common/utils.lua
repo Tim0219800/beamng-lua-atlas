@@ -2,705 +2,705 @@
 -- tim19Atlas stub generated from lua/common/utils.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Table globale `path` définie dans ce fichier : utilitaires de chemins de fichiers (séparateur '/').
+--- Global table `path` defined in this file: file path utilities (separator '/').
 ---@class utils_path
 local utils_path = {}
 
---- Renvoie le dossier d'un chemin, avec le '/' final ('.' si aucun dossier).
----Source : lua/common/utils.lua:dyn
----@param filename string Chemin
----@return string  Dossier
+--- Returns the folder of a path, with the trailing '/' ('.' if no folder).
+---Source: lua/common/utils.lua:dyn
+---@param filename string Path
+---@return string  Folder
 function utils_path:dirname(filename) end
 
---- Renvoie le dossier du fichier Lua de l'appelant (debug.getinfo(2).short_src).
----Source : lua/common/utils.lua:dyn
----@return string|nil  Dossier du script appelant
+--- Returns the folder of the caller's Lua file (debug.getinfo(2).short_src).
+---Source: lua/common/utils.lua:dyn
+---@return string|nil  Folder of the calling script
 function utils_path:getCurrentPath() end
 
---- Chemin du fichier info.json d'un niveau, normalisé par sanitizePath.
----Source : lua/common/utils.lua:dyn
----@param levelName string Nom du niveau
----@return string  /levels/<nom>/info.json
+--- Path of a level's info.json file, normalized by sanitizePath.
+---Source: lua/common/utils.lua:dyn
+---@param levelName string Level name
+---@return string  /levels/<name>/info.json
 function utils_path:getPathLevelInfo(levelName) end
 
---- Chemin du fichier main.level.json d'un niveau, normalisé par sanitizePath.
----Source : lua/common/utils.lua:dyn
----@param levelName string Nom du niveau
----@return string  /levels/<nom>/main.level.json
+--- Path of a level's main.level.json file, normalized by sanitizePath.
+---Source: lua/common/utils.lua:dyn
+---@param levelName string Level name
+---@return string  /levels/<name>/main.level.json
 function utils_path:getPathLevelMain(levelName) end
 
---- Teste si le fichier peut être ouvert en lecture (io.open).
----Source : lua/common/utils.lua:dyn
----@param filename string Chemin
----@return boolean  true si ouvrable
+--- Tests whether the file can be opened for reading (io.open).
+---Source: lua/common/utils.lua:dyn
+---@param filename string Path
+---@return boolean  true if openable
 function utils_path:is_file(filename) end
 
---- Extrait d'un chemin le nom de niveau (sous 'levels/') et le reste du chemin.
----Source : lua/common/utils.lua:dyn
----@param filepath string Chemin contenant 'levels/<nom>...'
----@return string|nil  Nom du niveau
----@return string|nil  Reste du chemin
+--- Extracts from a path the level name (under 'levels/') and the rest of the path.
+---Source: lua/common/utils.lua:dyn
+---@param filepath string Path containing 'levels/<name>...'
+---@return string|nil  Level name
+---@return string|nil  Rest of the path
 function utils_path:levelFromPath(filepath) end
 
---- Sépare un chemin en dossier, nom de fichier (AVEC extension) et extension. Sans extension, ext vaut ''.
----Source : lua/common/utils.lua:dyn
----@param path string Chemin
----@param compositeExtension boolean|nil true : l'extension est tout ce qui suit le premier point du nom (ex. 'level.json')
----@return string|nil  Dossier avec '/' final (nil pour un simple nom de fichier)
----@return string  Nom avec extension
----@return string  Extension sans point
+--- Splits a path into folder, file name (WITH extension) and extension. Without an extension, ext is ''.
+---Source: lua/common/utils.lua:dyn
+---@param path string Path
+---@param compositeExtension boolean|nil true: the extension is everything after the first dot of the name (e.g. 'level.json')
+---@return string|nil  Folder with trailing '/' (nil for a simple file name)
+---@return string  Name with extension
+---@return string  Extension without the dot
 function utils_path:split(path, compositeExtension) end
 
---- Comme split mais le nom de fichier renvoyé n'a pas l'extension. Attention : retire via gsub('.'..ext) (le point est un joker de motif).
----Source : lua/common/utils.lua:dyn
----@param filepath string Chemin
----@param compositeExtension boolean|nil Voir path.split
----@return string|nil  Dossier
----@return string  Nom sans extension
+--- Like split but the returned file name has no extension. Warning: removes it via gsub('.'..ext) (the dot is a pattern wildcard).
+---Source: lua/common/utils.lua:dyn
+---@param filepath string Path
+---@param compositeExtension boolean|nil See path.split
+---@return string|nil  Folder
+---@return string  Name without extension
 ---@return string  Extension
 function utils_path:splitWithoutExt(filepath, compositeExtension) end
 
---- Convertit une couleur HSV en RGB, composantes dans [0..1].
----Source : lua/common/utils.lua:43
----@param h number Teinte [0..1]
+--- Converts an HSV color to RGB, components in [0..1].
+---Source: lua/common/utils.lua:43
+---@param h number Hue [0..1]
 ---@param s number Saturation [0..1]
----@param v number Valeur [0..1]
+---@param v number Value [0..1]
 ---@return number  r [0..1]
 ---@return number  g [0..1]
 ---@return number  b [0..1]
 function HSVtoRGB(h, s, v) end
 
---- Convertit une couleur RGB en HSV. Les entrées r,g,b sont dans [0..1] (déduit du code : pas de mise à l'échelle 255).
----Source : lua/common/utils.lua:30
----@param r number Rouge [0..1]
----@param g number Vert [0..1]
----@param b number Bleu [0..1]
----@return number  Teinte h dans [0..1]
----@return number  Saturation s dans [0..1]
----@return number  Valeur v (= max(r,g,b))
+--- Converts an RGB color to HSV. The r,g,b inputs are in [0..1] (inferred from code: no 255 scaling).
+---Source: lua/common/utils.lua:30
+---@param r number Red [0..1]
+---@param g number Green [0..1]
+---@param b number Blue [0..1]
+---@return number  Hue h in [0..1]
+---@return number  Saturation s in [0..1]
+---@return number  Value v (= max(r,g,b))
 function RGBtoHSV(r, g, b) end
 
---- Aide utilisée par le texte produit par serialize : construit une table à partir d'une liste plate {k1, v1, k2, v2…}. Un moddeur n'a normalement pas à l'appeler.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/utils.lua:1262
----@param kv table Liste plate clé, valeur, clé, valeur…
+--- Helper used by the text produced by serialize: builds a table from a flat list {k1, v1, k2, v2…}. A modder normally does not need to call it.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/utils.lua:1262
+---@param kv table Flat list key, value, key, value…
 ---@return table  Table {k1=v1, k2=v2…}
 function _kv(kv) end
 
---- Ajoute une entrée au journal de niveau du moteur (Engine.Debug.addLevelLogLua), avec le fichier et la ligne de l'appelant (debug.getinfo(2)). Sans objet, utilise addLevelLogLuaNoObject.
----Source : lua/common/utils.lua:156
----@param object any|nil Objet auquel rattacher le log, nil pour aucun
----@param logLevel any Niveau de log (transmis tel quel au moteur)
----@param origin string Origine du message
----@param uniqueErrorCode any Code d'erreur unique (transmis au moteur)
+--- Adds an entry to the engine level log (Engine.Debug.addLevelLogLua), with the caller's file and line (debug.getinfo(2)). Without an object, uses addLevelLogLuaNoObject.
+---Source: lua/common/utils.lua:156
+---@param object any|nil Object to attach the log to, nil for none
+---@param logLevel any Log level (passed as is to the engine)
+---@param origin string Message origin
+---@param uniqueErrorCode any Unique error code (passed to the engine)
 ---@param message string Message
 function addLevelLog(object, logLevel, origin, uniqueErrorCode, message) end
 
---- Ajoute à la fin de dst tous les éléments du tableau src (inclut l'indice 0 de src s'il existe). Modifie dst.
----Source : lua/common/utils.lua:645
----@param dst table Tableau modifié
----@param src table Tableau ajouté
+--- Appends to the end of dst all elements of the array src (includes index 0 of src if it exists). Modifies dst.
+---Source: lua/common/utils.lua:645
+---@param dst table Modified array
+---@param src table Array to append
 ---@return table  dst
 function arrayConcat(dst, src) end
 
---- Renvoie l'indice de la première occurrence de val dans le tableau t.
----Source : lua/common/utils.lua:773
----@param t table Tableau
----@param val any Valeur cherchée
----@return integer|boolean  Indice, ou false (et non nil) si absente
+--- Returns the index of the first occurrence of val in the array t.
+---Source: lua/common/utils.lua:773
+---@param t table Array
+---@param val any Value searched
+---@return integer|boolean  Index, or false (not nil) if absent
 function arrayFindValueIndex(t, val) end
 
---- Inverse un tableau pur en place.
----Source : lua/common/utils.lua:792
----@param array table Tableau modifié
+--- Reverses a pure array in place.
+---Source: lua/common/utils.lua:792
+---@param array table Modified array
 ---@return table  array
 function arrayReverse(array) end
 
---- Mélange un tableau pur en place (Fisher-Yates, math.random).
----Source : lua/common/utils.lua:783
----@param array table Tableau modifié
+--- Shuffles a pure array in place (Fisher-Yates, math.random).
+---Source: lua/common/utils.lua:783
+---@param array table Modified array
 ---@return table  array
 function arrayShuffle(array) end
 
---- Convertit un nombre d'octets en texte lisible avec 2 décimales. Utilise des puissances de 1000 (KB, MB, GB), pas de 1024.
----Source : lua/common/utils.lua:257
----@param bytes number Nombre d'octets
----@return string  Ex. '1.50 MB'
+--- Converts a number of bytes to readable text with 2 decimals. Uses powers of 1000 (KB, MB, GB), not 1024.
+---Source: lua/common/utils.lua:257
+---@param bytes number Number of bytes
+---@return string  E.g. '1.50 MB'
 function bytes_to_string(bytes) end
 
---- Valide les types d'un tableau de paramètres. Préfixer un type attendu par 'optional:' autorise nil. Uniquement pour des tableaux purs.
----Source : lua/common/utils.lua:867
----@param data table Tableau à vérifier
----@param expectedTypes table<integer, string> Noms de types Lua attendus, ex. {"string", "optional:number"}
----@return boolean  true si conforme
----@return string|nil  Message d'erreur si non conforme (nombre de paramètres trop grand ou mauvais type)
+--- Validates the types of a parameter array. Prefix an expected type with 'optional:' to allow nil. Pure arrays only.
+---Source: lua/common/utils.lua:867
+---@param data table Array to check
+---@param expectedTypes table<integer, string> Expected Lua type names, e.g. {"string", "optional:number"}
+---@return boolean  true if valid
+---@return string|nil  Error message if invalid (too many parameters or wrong type)
 function checkTableDataTypes(data, expectedTypes) end
 
---- Vide les logs de niveau (Engine.Debug.clearLevelLogs).
----Source : lua/common/utils.lua:169
+--- Clears the level logs (Engine.Debug.clearLevelLogs).
+---Source: lua/common/utils.lua:169
 function clearLevelLogs() end
 
---- Fabrique un entier couleur RGBA 32 bits. Chaque composante est arrondie à l'entier inférieur et bornée à 0..255.
----Source : lua/common/utils.lua:50
----@param r number Rouge 0..255
----@param g number Vert 0..255
----@param b number Bleu 0..255
----@param a number|nil Alpha 0..255, 255 par défaut
+--- Builds a 32-bit RGBA color integer. Each component is rounded down to the integer and clamped to 0..255.
+---Source: lua/common/utils.lua:50
+---@param r number Red 0..255
+---@param g number Green 0..255
+---@param b number Blue 0..255
+---@param a number|nil Alpha 0..255, 255 by default
 ---@return integer  r*16777216 + g*65536 + b*256 + a
 function color(r, g, b, a) end
 
---- Opération inverse de color() : décompose un entier RGBA.
----Source : lua/common/utils.lua:54
----@param col integer Couleur RGBA 32 bits
+--- Inverse operation of color(): decomposes an RGBA integer.
+---Source: lua/common/utils.lua:54
+---@param col integer 32-bit RGBA color
 ---@return integer  r
 ---@return integer  g
 ---@return integer  b
 ---@return integer  a
 function colorGetRGBA(col) end
 
---- Fabrique un entier couleur RGBA à partir d'un hexadécimal RGB (ex. 0xff8800) et d'un alpha.
----Source : lua/common/utils.lua:58
----@param rgbHex integer Couleur 0xRRGGBB
----@param a number|nil Alpha 0..255, 255 par défaut
----@return integer  Couleur RGBA 32 bits
+--- Builds an RGBA color integer from an RGB hexadecimal (e.g. 0xff8800) and an alpha.
+---Source: lua/common/utils.lua:58
+---@param rgbHex integer Color 0xRRGGBB
+---@param a number|nil Alpha 0..255, 255 by default
+---@return integer  32-bit RGBA color
 function colorHex(rgbHex, a) end
 
---- Concatène les arguments (nombres, textes, booléens, ou tableaux de nombres) dans un buffer partagé. S'arrête au premier argument nil. Les nombres infinis/NaN sont écrits 9e999 / -9e999.
----Source : lua/common/utils.lua:550
----@param ... any Valeurs à concaténer
----@return userdata  Buffer partagé (réécrit au prochain appel)
+--- Concatenates the arguments (numbers, strings, booleans, or arrays of numbers) into a shared buffer. Stops at the first nil argument. Infinite/NaN numbers are written as 9e999 / -9e999.
+---Source: lua/common/utils.lua:550
+---@param ... any Values to concatenate
+---@return userdata  Shared buffer (overwritten on the next call)
 function concatWorkBuffer(...) end
 
---- Copie récursive d'une table, en gérant les références circulaires/partagées et en conservant la métatable. Les structures FFI (vec3, quat) sont copiées superficiellement. Lent.
----Source : lua/common/utils.lua:854
----@param object any Valeur ou table à copier
----@return any  Copie profonde
+--- Recursive copy of a table, handling circular/shared references and keeping the metatable. FFI structures (vec3, quat) are shallow-copied. Slow.
+---Source: lua/common/utils.lua:854
+---@param object any Value or table to copy
+---@return any  Deep copy
 function deepcopy(object) end
 
---- Relit du texte produit par serialize() en exécutant loadstring('return '..s). Renvoie nil si s est nil. Plante si le texte n'est pas du Lua valide (ex. cdata non sérialisable).
----Source : lua/common/utils.lua:1271
----@param s string|nil Texte sérialisé
----@return any  Valeur reconstruite
+--- Reads back text produced by serialize() by executing loadstring('return '..s). Returns nil if s is nil. Crashes if the text is not valid Lua (e.g. non-serializable cdata).
+---Source: lua/common/utils.lua:1271
+---@param s string|nil Serialized text
+---@return any  Rebuilt value
 function deserialize(s) end
 
---- Restaure l'état produit par serializePackages : appelle extensions.deserialize, puis pour chaque package concerné appelle onDeserialize(data) ou fusionne les données (hors fonctions) dans M.state ou M, puis appelle onDeserialized(data).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/utils.lua:1025
----@param data table|nil Données de serializePackages (nil : ne fait rien)
----@param filter string|nil Si donné, ne restaure que ce package
+--- Restores the state produced by serializePackages: calls extensions.deserialize, then for each concerned package calls onDeserialize(data) or merges the data (excluding functions) into M.state or M, then calls onDeserialized(data).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/utils.lua:1025
+---@param data table|nil Data from serializePackages (nil: does nothing)
+---@param filter string|nil If given, restores only that package
 function deserializePackages(data, filter) end
 
---- Outil de debug : installe une métatable sur _G qui loggue (niveau W, avec trace) chaque création d'une nouvelle variable globale.
----Source : lua/common/utils.lua:1298
+--- Debug tool: installs a metatable on _G that logs (level W, with trace) every creation of a new global variable.
+---Source: lua/common/utils.lua:1298
 function detectGlobalWrites() end
 
---- Affiche dans le log (niveau 'A', origine 'lua.utils') le résultat de dumps(...). Fonction de debug la plus courante pour inspecter une table.
----Source : lua/common/utils.lua:135
----@param ... any Valeurs à afficher
+--- Prints to the log (level 'A', origin 'lua.utils') the result of dumps(...). The most common debug function for inspecting a table.
+---Source: lua/common/utils.lua:135
+---@param ... any Values to print
 function dump(...) end
 
---- Comme dump, mais n'affiche rien si x est nil (et ne prend qu'une valeur).
----Source : lua/common/utils.lua:150
----@param x any Valeur à afficher si non nil
+--- Like dump, but prints nothing if x is nil (and takes only one value).
+---Source: lua/common/utils.lua:150
+---@param x any Value to print if not nil
 function dumpNotNil(x) end
 
---- Écrit dans un fichier le texte inspect(...) de l'argument.
----Source : lua/common/utils.lua:889
----@param filename string Fichier de sortie (écrasé)
----@param ... any Valeur à inspecter (voir notes : le 2e argument est lu comme options d'inspect)
----@return boolean  true si le fichier a été écrit, false si ouverture impossible
+--- Writes to a file the text inspect(...) of the argument.
+---Source: lua/common/utils.lua:889
+---@param filename string Output file (overwritten)
+---@param ... any Value to inspect (see notes: the 2nd argument is read as inspect options)
+---@return boolean  true if the file was written, false if it could not be opened
 function dumpToFile(filename, ...) end
 
---- Renvoie la représentation texte (via libs/inspect) des arguments, séparés par ', '. Sans argument renvoie ''. Pour un unique userdata ayant une métatable, inspecte la métatable.
----Source : lua/common/utils.lua:114
----@param ... any Valeurs à convertir en texte
----@return string  Texte inspecté
+--- Returns the text representation (via libs/inspect) of the arguments, separated by ', '. With no arguments returns ''. For a single userdata with a metatable, inspects the metatable.
+---Source: lua/common/utils.lua:114
+---@param ... any Values to convert to text
+---@return string  Inspected text
 function dumps(...) end
 
---- Comme inspect mais avec profondeur illimitée par défaut (depth = math.huge).
----Source : lua/common/utils.lua:142
----@param o any Valeur à inspecter
----@param depth number|nil Profondeur maximale, illimitée par défaut
----@return string  Texte inspecté
+--- Like inspect but with unlimited depth by default (depth = math.huge).
+---Source: lua/common/utils.lua:142
+---@param o any Value to inspect
+---@param depth number|nil Maximum depth, unlimited by default
+---@return string  Inspected text
 function dumpsz(o, depth) end
 
---- Affiche dans le log (niveau 'A', origine 'lua.utils') le résultat de dumpsz(o, depth).
----Source : lua/common/utils.lua:146
----@param o any Valeur à inspecter
----@param depth number|nil Profondeur maximale, illimitée par défaut
+--- Prints to the log (level 'A', origin 'lua.utils') the result of dumpsz(o, depth).
+---Source: lua/common/utils.lua:146
+---@param o any Value to inspect
+---@param depth number|nil Maximum depth, unlimited by default
 function dumpz(o, depth) end
 
---- À partir d'une liste de noms d'actions, construit {action=...} puis appelle fillActionLabels.
----Source : lua/common/utils.lua:941
----@param actionSimple table<integer, string> Noms d'actions d'input
----@return table  Liste d'éléments {action, label, missing}
+--- From a list of action names, builds {action=...} and then calls fillActionLabels.
+---Source: lua/common/utils.lua:941
+---@param actionSimple table<integer, string> Input action names
+---@return table  List of items {action, label, missing}
 function fillActionLabelSimple(actionSimple) end
 
---- Pour chaque élément {action=...}, renseigne `missing` (true si l'action n'est pas active dans core_input_actions) et `label` (le titre de l'action, ou son nom si absent) si label est nil.
----Source : lua/common/utils.lua:949
----@param actionItems table Liste d'éléments avec le champ action
----@return table  actionItems (modifié)
+--- For each item {action=...}, sets `missing` (true if the action is not active in core_input_actions) and `label` (the action's title, or its name if absent) if label is nil.
+---Source: lua/common/utils.lua:949
+---@param actionItems table List of items with the action field
+---@return table  actionItems (modified)
 function fillActionLabels(actionItems) end
 
---- Remplace dans tbl, en place, les références multiples à une même sous-table par un jeton texte '>#>/chemin' (pour sérialiser des graphes). Les clés sont parcourues triées.
----Source : lua/common/utils.lua:1373
----@param tbl table Table modifiée
----@return table|nil  tbl, ou nil si ce n'est pas une table
+--- Replaces in tbl, in place, multiple references to the same sub-table with a text token '>#>/path' (to serialize graphs). Keys are walked in sorted order.
+---Source: lua/common/utils.lua:1373
+---@param tbl table Modified table
+---@return table|nil  tbl, or nil if it is not a table
 function flattenTable(tbl) end
 
---- Remplace dans res les jetons de date/heure locale courante : {YYYY} {YY} {Y} {MM} {M} {DD} {D} {HH} {H} {mm} {m} {ss} {s} (les formes doublées sont sur 2 chiffres, YYYY sur 4).
----Source : lua/common/utils.lua:269
----@param res string Modèle de texte contenant les jetons
----@return string  Texte avec la date/heure insérée
+--- Replaces in res the current local date/time tokens: {YYYY} {YY} {Y} {MM} {M} {DD} {D} {HH} {H} {mm} {m} {ss} {s} (the doubled forms use 2 digits, YYYY uses 4).
+---Source: lua/common/utils.lua:269
+---@param res string Text template containing the tokens
+---@return string  Text with the date/time inserted
 function formatTimeStringNow(res) end
 
---- Mesure les octets de garbage créés entre deux appels. Premier appel : arrête le GC et mémorise la mémoire. Second appel : relance le GC, imprime (si > 0 ou printZero) et renvoie la différence.
----Source : lua/common/utils.lua:1308
----@param printZero boolean|nil Imprimer aussi quand la différence est 0
----@param omitPrint boolean|nil Ne rien imprimer
----@return number|nil  Octets créés (second appel seulement)
+--- Measures the bytes of garbage created between two calls. First call: stops the GC and remembers the memory. Second call: restarts the GC, prints (if > 0 or printZero) and returns the difference.
+---Source: lua/common/utils.lua:1308
+---@param printZero boolean|nil Also print when the difference is 0
+---@param omitPrint boolean|nil Print nothing
+---@return number|nil  Bytes created (second call only)
 function gcprobe(printZero, omitPrint) end
 
---- Liste les dossiers sous /levels/ (FS:findFiles) et renvoie leurs noms en minuscules.
----Source : lua/common/utils.lua:1112
----@return table<integer, string>  Identifiants de niveaux
+--- Lists the folders under /levels/ (FS:findFiles) and returns their names in lowercase.
+---Source: lua/common/utils.lua:1112
+---@return table<integer, string>  Level identifiers
 function getAllLevelIdentifiers() end
 
---- Renvoie l'identifiant (dossier) du niveau courant en minuscules, déduit du chemin de getMissionFilename() sous /levels/. Renvoie nil si le chemin n'a pas de dossier.
----Source : lua/common/utils.lua:1104
----@param raw boolean|nil Sans effet réel (voir notes)
----@return string|nil  Nom de niveau en minuscules
+--- Returns the identifier (folder) of the current level in lowercase, inferred from the path of getMissionFilename() under /levels/. Returns nil if the path has no folder.
+---Source: lua/common/utils.lua:1104
+---@param raw boolean|nil No real effect (see notes)
+---@return string|nil  Level name in lowercase
 function getCurrentLevelIdentifier(raw) end
 
---- Renvoie les logs de niveau accumulés (Engine.Debug.getLevelLogsLua).
----Source : lua/common/utils.lua:165
----@return any  Résultat du moteur (déduit du code : liste des logs)
+--- Returns the accumulated level logs (Engine.Debug.getLevelLogsLua).
+---Source: lua/common/utils.lua:165
+---@return any  Engine result (inferred from code: list of logs)
 function getLevelLogs() end
 
---- Construit un petit graphique ASCII d'une valeur : '[' + len signes (+ ou - selon le signe de v) + espaces + ']'.
----Source : lua/common/utils.lua:288
----@param v number Valeur (seule la partie entière de |v| compte)
----@param len integer Largeur de la jauge en caractères
----@return string  Jauge texte
+--- Builds a small ASCII chart of a value: '[' + len signs (+ or - depending on the sign of v) + spaces + ']'.
+---Source: lua/common/utils.lua:288
+---@param v number Value (only the integer part of |v| counts)
+---@param len integer Width of the gauge in characters
+---@return string  Text gauge
 function graphs(v, len) end
 
---- Niveau de gris.
----Source : lua/common/utils.lua:105
----@param x number Luminosité [0..1]
----@param a number|nil Alpha 0..255 (255 par défaut)
----@return integer  Couleur RGBA 32 bits
+--- Gray level.
+---Source: lua/common/utils.lua:105
+---@param x number Brightness [0..1]
+---@param a number|nil Alpha 0..255 (255 by default)
+---@return integer  32-bit RGBA color
 function greyColor(x, a) end
 
---- Imprime (print) un dump hexadécimal d'une chaîne, 8 octets par ligne avec la colonne ASCII.
----Source : lua/common/utils.lua:1450
----@param str string Données à afficher
+--- Prints (print) a hexadecimal dump of a string, 8 bytes per line with the ASCII column.
+---Source: lua/common/utils.lua:1450
+---@param str string Data to display
 function hex_dump(str) end
 
---- Couleur du spectre de teinte complet (saturation et valeur maximales). Utile pour des couleurs indexées : hueColor(indexedBlueNoise(i)).
----Source : lua/common/utils.lua:78
----@param x number Teinte [0..1]
----@param a number|nil Alpha 0..255 (255 par défaut)
----@return integer  Couleur RGBA 32 bits
+--- Color from the full hue spectrum (maximum saturation and value). Useful for indexed colors: hueColor(indexedBlueNoise(i)).
+---Source: lua/common/utils.lua:78
+---@param x number Hue [0..1]
+---@param a number|nil Alpha 0..255 (255 by default)
+---@return integer  32-bit RGBA color
 function hueColor(x, a) end
 
---- Couleur de la palette thermique 'ironbow'.
----Source : lua/common/utils.lua:95
----@param x number Valeur [0..1]
----@param a number|nil Alpha 0..255 (255 par défaut)
----@return integer  Couleur RGBA 32 bits
+--- Color from the 'ironbow' thermal palette.
+---Source: lua/common/utils.lua:95
+---@param x number Value [0..1]
+---@param a number|nil Alpha 0..255 (255 by default)
+---@return integer  32-bit RGBA color
 function ironbowColor(x, a) end
 
---- Couleur de la palette 'jet' (bleu, vert, rouge). Palette par défaut recommandée pour visualiser une valeur.
----Source : lua/common/utils.lua:100
----@param x number Valeur [0..1]
----@param a number|nil Alpha 0..255 (255 par défaut)
----@return integer  Couleur RGBA 32 bits
+--- Color from the 'jet' palette (blue, green, red). Recommended default palette for visualizing a value.
+---Source: lua/common/utils.lua:100
+---@param x number Value [0..1]
+---@param a number|nil Alpha 0..255 (255 by default)
+---@return integer  32-bit RGBA color
 function jetColor(x, a) end
 
---- Bascule la trace du compilateur JIT (jit.v) : activée au premier appel, désactivée au suivant.
----Source : lua/common/utils.lua:1341
+--- Toggles the JIT compiler trace (jit.v): enabled on the first call, disabled on the next.
+---Source: lua/common/utils.lua:1341
 function jitprobe() end
 
---- Décode du JSON (module json) dans un xpcall. En cas d'erreur, loggue le contexte et l'erreur et renvoie nil.
----Source : lua/common/utils.lua:428
----@param content string|userdata Texte JSON (ou buffer)
----@param context any Texte (souvent le nom de fichier) affiché dans le message d'erreur
----@return any|nil  Valeur décodée, nil en cas d'erreur
+--- Decodes JSON (json module) inside an xpcall. On error, logs the context and the error and returns nil.
+---Source: lua/common/utils.lua:428
+---@param content string|userdata JSON text (or buffer)
+---@param context any Text (often the file name) shown in the error message
+---@return any|nil  Decoded value, nil on error
 function jsonDecode(content, context) end
 
---- Encode une valeur Lua en texte JSON compact.
----Source : lua/common/utils.lua:355
----@param v any Valeur à encoder
----@return string  Texte JSON
+--- Encodes a Lua value as compact JSON text.
+---Source: lua/common/utils.lua:355
+---@param v any Value to encode
+---@return string  JSON text
 function jsonEncode(v) end
 
---- Encode v en JSON compact, précédé de prefix et suivi (facultatif) de postfix.
----Source : lua/common/utils.lua:359
----@param prefix string Texte placé avant le JSON
----@param v any Valeur à encoder
----@param postfix string|nil Texte placé après le JSON
+--- Encodes v as compact JSON, preceded by prefix and optionally followed by postfix.
+---Source: lua/common/utils.lua:359
+---@param prefix string Text placed before the JSON
+---@param v any Value to encode
+---@param postfix string|nil Text placed after the JSON
 ---@return string  prefix .. JSON .. postfix
 function jsonEncodePrefix(prefix, v, postfix) end
 
---- Encode en JSON indenté (2 espaces par niveau), clés d'objet triées. Récursif.
----Source : lua/common/utils.lua:369
----@param v any Valeur à encoder
----@param lvl integer|nil Niveau d'indentation courant, 1 par défaut
----@param numberPrecision integer|nil Si donné, les nombres non entiers sont écrits avec ce nombre de décimales (format %N.Nf) ; nil = tostring
----@return string  Texte JSON indenté
+--- Encodes as indented JSON (2 spaces per level), object keys sorted. Recursive.
+---Source: lua/common/utils.lua:369
+---@param v any Value to encode
+---@param lvl integer|nil Current indentation level, 1 by default
+---@param numberPrecision integer|nil If given, non-integer numbers are written with this number of decimals (format %N.Nf); nil = tostring
+---@return string  Indented JSON text
 function jsonEncodePretty(v, lvl, numberPrecision) end
 
---- Encode une valeur en JSON dans un buffer string.buffer partagé (sans copie en chaîne). Les nombres infinis/NaN sont écrits 9e999 / -9e999 ; les vec3/quat (cdata) deviennent {x,y,z[,w]} ; les types non supportés deviennent null. Une table dont la clé 1 existe est écrite comme tableau.
----Source : lua/common/utils.lua:349
----@param v any Valeur à encoder
----@return userdata  Buffer partagé (réécrit au prochain appel)
+--- Encodes a value as JSON into a shared string.buffer (without copying into a string). Infinite/NaN numbers are written as 9e999 / -9e999; vec3/quat (cdata) become {x,y,z[,w]}; unsupported types become null. A table that has key 1 is written as an array.
+---Source: lua/common/utils.lua:349
+---@param v any Value to encode
+---@return userdata  Shared buffer (overwritten on the next call)
 function jsonEncodeWorkBuffer(v) end
 
---- Lit et décode un fichier JSON. Renvoie nil si le fichier est illisible (sans log : l'appelant gère l'erreur) ou si le JSON est invalide (log E par jsonDecode).
----Source : lua/common/utils.lua:484
----@param filename string Chemin du fichier
----@return any|nil  Données décodées ou nil
+--- Reads and decodes a JSON file. Returns nil if the file is unreadable (no log: the caller handles the error) or if the JSON is invalid (log E by jsonDecode).
+---Source: lua/common/utils.lua:484
+---@param filename string File path
+---@return any|nil  Decoded data or nil
 function jsonReadFile(filename) end
 
---- Écrit une table dans un fichier JSON. Refuse (log E + false) si obj n'est pas une table. Avec atomicWrite, écrit d'abord dans un fichier temporaire puis le renomme (FS:renameFile).
----Source : lua/common/utils.lua:466
----@param filename string Fichier de destination
----@param obj table Données à écrire
----@param pretty boolean|nil true : JSON indenté (jsonEncodePretty), sinon compact
----@param numberPrecision integer|nil Décimales pour le mode pretty (voir jsonEncodePretty)
----@param atomicWrite boolean|string|nil Truthy : écriture atomique via fichier temporaire ; si c'est une chaîne, elle sert de nom de fichier temporaire, sinon filename..'.tmp'
----@return boolean  true si l'écriture a réussi
+--- Writes a table to a JSON file. Refuses (log E + false) if obj is not a table. With atomicWrite, writes to a temporary file first and then renames it (FS:renameFile).
+---Source: lua/common/utils.lua:466
+---@param filename string Destination file
+---@param obj table Data to write
+---@param pretty boolean|nil true: indented JSON (jsonEncodePretty), otherwise compact
+---@param numberPrecision integer|nil Decimals for pretty mode (see jsonEncodePretty)
+---@param atomicWrite boolean|string|nil Truthy: atomic write via a temporary file; if it is a string, it is used as the temporary file name, otherwise filename..'.tmp'
+---@return boolean  true if the write succeeded
 function jsonWriteFile(filename, obj, pretty, numberPrecision, atomicWrite) end
 
---- Lit un fichier INI simple (clé = valeur, sans sections). Ignore les lignes vides et celles commençant par #, ; ou /. Convertit les valeurs en nombre ou booléen quand c'est possible ; une ligne illisible est loguée en erreur.
----Source : lua/common/utils.lua:1122
----@param filename string Chemin du fichier
----@return table<string, number|boolean|string>|nil  Paires clé/valeur, nil si le fichier ne s'ouvre pas
+--- Reads a simple INI file (key = value, no sections). Ignores empty lines and those starting with #, ; or /. Converts values to number or boolean when possible; an unreadable line is logged as an error.
+---Source: lua/common/utils.lua:1122
+---@param filename string File path
+---@return table<string, number|boolean|string>|nil  Key/value pairs, nil if the file cannot be opened
 function loadIni(filename) end
 
---- Complète s à gauche avec le caractère c jusqu'à la longueur l. s est converti par tostring.
----Source : lua/common/utils.lua:173
----@param s any Valeur à compléter
----@param l integer Longueur cible
----@param c string Caractère de remplissage
----@return string  Texte complété (inchangé s'il est déjà assez long)
+--- Pads s on the left with the character c up to length l. s is converted by tostring.
+---Source: lua/common/utils.lua:173
+---@param s any Value to pad
+---@param l integer Target length
+---@param c string Padding character
+---@return string  Padded text (unchanged if already long enough)
 function lpad(s, l, c) end
 
---- Décide si un objet s'est téléporté entre deux images, d'après sa position et sa vitesse précédentes. Pas de téléportation si le déplacement est inférieur à 1,5 m ou à 277*dt (1000 km/h), ou si la vitesse est cohérente avec la précédente. Sans données précédentes, renvoie true.
----Source : lua/common/utils.lua:1470
----@param curPos vec3 Position actuelle (m)
----@param prevPos vec3 Position à l'image précédente (m)
----@param prevVel vec3 Vitesse précédente (m/s)
----@param dt number Pas de temps (s)
----@return boolean  true si téléportation détectée
+--- Decides whether an object teleported between two frames, based on its previous position and velocity. No teleport if the displacement is less than 1.5 m or 277*dt (1000 km/h), or if the velocity is consistent with the previous one. Without previous data, returns true.
+---Source: lua/common/utils.lua:1470
+---@param curPos vec3 Current position (m)
+---@param prevPos vec3 Position at the previous frame (m)
+---@param prevVel vec3 Previous velocity (m/s)
+---@param dt number Time step (s)
+---@return boolean  true if teleport detected
 function objectTeleported(curPos, prevPos, prevVel, dt) end
 
---- Convertit en entier couleur une table {r,g,b,a}, une chaîne '#RRGGBBAA' (au moins 8 caractères avec le #) ou nil (donne transparent 0,0,0,0). Tout autre type renvoie nil.
----Source : lua/common/utils.lua:66
----@param v table|string|nil Table {r,g,b,a}, chaîne '#RRGGBBAA' ou nil
----@return integer|nil  Couleur RGBA 32 bits, nil si le format n'est pas reconnu
+--- Converts to a color integer a table {r,g,b,a}, a string '#RRGGBBAA' (at least 8 characters with the #) or nil (gives transparent 0,0,0,0). Any other type returns nil.
+---Source: lua/common/utils.lua:66
+---@param v table|string|nil Table {r,g,b,a}, string '#RRGGBBAA' or nil
+---@return integer|nil  32-bit RGBA color, nil if the format is not recognized
 function parseColor(v) end
 
---- Couleur arc-en-ciel pour l'étape step sur numOfSteps. Le code recommande plutôt jetColor sauf raison contraire.
----Source : lua/common/utils.lua:84
----@param numOfSteps number Nombre total d'étapes
----@param step number Étape courante
----@param format number|nil 255 (défaut) pour des composantes entières 0..255, toute autre valeur pour des composantes [0..1]
----@return table  {r,g,b,a} (a vaut 255 ou 1 selon le format)
+--- Rainbow color for step `step` out of numOfSteps. The code recommends jetColor instead unless there is a reason not to.
+---Source: lua/common/utils.lua:84
+---@param numOfSteps number Total number of steps
+---@param step number Current step
+---@param format number|nil 255 (default) for integer components 0..255, any other value for [0..1] components
+---@return table  {r,g,b,a} (a is 255 or 1 depending on the format)
 function rainbowColor(numOfSteps, step, format) end
 
---- Lit un JSON de tableaux 'en-têtes + lignes' : pour chaque entrée, la première ligne donne les noms de colonnes, et chaque ligne suivante est transformée en table nommée ; la ligne d'en-tête est ensuite supprimée (v[1] = nil).
----Source : lua/common/utils.lua:492
----@param filename string Chemin du fichier JSON
----@return table|nil  Données transformées, nil si lecture impossible
+--- Reads a JSON of 'headers + rows' arrays: for each entry, the first row gives the column names, and each following row is turned into a named table; the header row is then removed (v[1] = nil).
+---Source: lua/common/utils.lua:492
+---@param filename string JSON file path
+---@return table|nil  Transformed data, nil if the read is impossible
 function readDictJSONTable(filename) end
 
---- Lit tout le contenu d'un fichier texte (io.open en mode 'r', avec événement profileur 'readFile').
----Source : lua/common/utils.lua:900
----@param filename string Chemin du fichier
----@return string|nil  Contenu, nil si le fichier n'existe pas ou ne s'ouvre pas
+--- Reads the whole content of a text file (io.open in mode 'r', with profiler event 'readFile').
+---Source: lua/common/utils.lua:900
+---@param filename string File path
+---@return string|nil  Content, nil if the file does not exist or cannot be opened
 function readFile(filename) end
 
---- Complète s à droite avec le caractère c jusqu'à la longueur l. s est converti par tostring.
----Source : lua/common/utils.lua:178
----@param s any Valeur à compléter
----@param l integer Longueur cible
----@param c string Caractère de remplissage
----@return string  Texte complété
+--- Pads s on the right with the character c up to length l. s is converted by tostring.
+---Source: lua/common/utils.lua:178
+---@param s any Value to pad
+---@param l integer Target length
+---@param c string Padding character
+---@return string  Padded text
 function rpad(s, l, c) end
 
---- Écrit un INI simple : 3 lignes de commentaire d'en-tête (titre de fenêtre, version du jeu, date), puis les clés triées au format 'clé = valeur'.
----Source : lua/common/utils.lua:1151
----@param filename string Fichier de sortie
----@param d table Paires clé/valeur
+--- Writes a simple INI: 3 header comment lines (window title, game version, date), then the sorted keys in 'key = value' format.
+---Source: lua/common/utils.lua:1151
+---@param filename string Output file
+---@param d table Key/value pairs
 function saveIni(filename, d) end
 
---- Sérialise une valeur en texte Lua que deserialize() sait relire.
----Source : lua/common/utils.lua:1258
----@param v any Valeur à sérialiser
----@return string  Code Lua
+--- Serializes a value as Lua text that deserialize() can read back.
+---Source: lua/common/utils.lua:1258
+---@param v any Value to serialize
+---@return string  Lua code
 function serialize(v) end
 
---- Collecte l'état à conserver avant un rechargement Lua : pour chaque package chargé définissant onSerialize ou onDeserialized, appelle onSerialize(reason), sinon prend M.state, sinon M. Ajoute les données d'extensions (extensions.getSerializationData). Les erreurs sont loguées et ignorées. Appelé par le moteur lors des rechargements.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/common/utils.lua:994
----@param reason string|nil Motif du rechargement, 'reload' par défaut
----@return table  Données indexées par nom de package
+--- Collects the state to keep before a Lua reload: for each loaded package defining onSerialize or onDeserialized, calls onSerialize(reason), otherwise takes M.state, otherwise M. Adds the extensions data (extensions.getSerializationData). Errors are logged and ignored. Called by the engine during reloads.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/common/utils.lua:994
+---@param reason string|nil Reason for the reload, 'reload' by default
+---@return table  Data keyed by package name
 function serializePackages(reason) end
 
---- Sérialise une valeur en code Lua (rechargeable par deserialize) dans un buffer partagé. Gère _noSerialize (écrit nil), _serialize (table ou true : restreint ou non les clés, format _kv{...}), QuatF (userdata), cdata (tostring). Les fonctions deviennent nil.
----Source : lua/common/utils.lua:1252
----@param v any Valeur à sérialiser
----@return userdata  Buffer partagé (réécrit au prochain appel)
+--- Serializes a value as Lua code (reloadable by deserialize) into a shared buffer. Handles _noSerialize (writes nil), _serialize (table or true: restricts or not the keys, format _kv{...}), QuatF (userdata), cdata (tostring). Functions become nil.
+---Source: lua/common/utils.lua:1252
+---@param v any Value to serialize
+---@return userdata  Shared buffer (overwritten on the next call)
 function serializeWorkBuffer(v) end
 
---- Retire de dst toutes les valeurs présentes dans src. Modifie dst et change l'ordre de ses éléments.
----Source : lua/common/utils.lua:534
----@param dst table Tableau modifié
----@param src table Valeurs à retirer
+--- Removes from dst all values present in src. Modifies dst and changes the order of its elements.
+---Source: lua/common/utils.lua:534
+---@param dst table Modified array
+---@param src table Values to remove
 ---@return table  dst
 function setDifference(dst, src) end
 
---- Teste si deux tableaux contiennent les mêmes valeurs (comparaison de longueur puis d'appartenance ; ignore l'ordre).
----Source : lua/common/utils.lua:512
----@param set1 table Premier tableau
----@param set2 table Second tableau
----@return boolean  true si égaux en tant qu'ensembles
+--- Tests whether two arrays contain the same values (length comparison, then membership; ignores order).
+---Source: lua/common/utils.lua:512
+---@param set1 table First array
+---@param set2 table Second array
+---@return boolean  true if equal as sets
 function setEqual(set1, set2) end
 
---- Ajoute à dst toutes les valeurs de src absentes de dst (modifie dst).
----Source : lua/common/utils.lua:522
----@param dst table Tableau modifié
----@param src table Tableau source
+--- Adds to dst all values of src that are absent from dst (modifies dst).
+---Source: lua/common/utils.lua:522
+---@param dst table Modified array
+---@param src table Source array
 ---@return table  dst
 function setUnion(dst, src) end
 
---- Copie non récursive d'une table (les sous-tables restent partagées). Les valeurs non-table sont renvoyées telles quelles. La métatable n'est pas copiée.
----Source : lua/common/utils.lua:825
----@param orig any Valeur ou table à copier
----@return any  Copie
+--- Non-recursive copy of a table (sub-tables remain shared). Non-table values are returned as is. The metatable is not copied.
+---Source: lua/common/utils.lua:825
+---@param orig any Value or table to copy
+---@return any  Copy
 function shallowcopy(orig) end
 
---- Comme pairs mais dans un ordre aléatoire.
----Source : lua/common/utils.lua:1432
----@param t table Table à parcourir
----@param ctx table|nil Table de travail réutilisable
----@return function  Itérateur
----@return table  État de l'itérateur
+--- Like pairs but in random order.
+---Source: lua/common/utils.lua:1432
+---@param t table Table to walk
+---@param ctx table|nil Reusable working table
+---@return function  Iterator
+---@return table  Iterator state
 function shuffledPairs(t, ctx) end
 
---- Dessine via debugDrawer un texte 3D, une sphère et/ou trois petites sphères d'axes orientées par dir.
----Source : lua/common/utils.lua:1497
----@param text any|nil Texte (converti par tostring)
----@param pos vec3 Position monde
----@param radius number|nil Rayon de la sphère (m), rien si nil ou <= 0
----@param sphereColor ColorF|nil Couleur de la sphère (blanc translucide par défaut)
----@param dir quat|nil Orientation : dessine les axes X (rouge), Y (vert), Z (bleu) à distance radius
+--- Draws via debugDrawer a 3D text, a sphere and/or three small axis spheres oriented by dir.
+---Source: lua/common/utils.lua:1497
+---@param text any|nil Text (converted by tostring)
+---@param pos vec3 World position
+---@param radius number|nil Sphere radius (m), nothing if nil or <= 0
+---@param sphereColor ColorF|nil Sphere color (translucent white by default)
+---@param dir quat|nil Orientation: draws the X (red), Y (green), Z (blue) axes at distance radius
 function simpleDebugText3d(text, pos, radius, sphereColor, dir) end
 
---- Comme pairs mais dans l'ordre trié des clés (types mixtes acceptés, ou fonction de tri f). Les clés sont figées au départ ; une valeur mise à nil pendant la boucle est sautée.
----Source : lua/common/utils.lua:1415
----@param t table Table à parcourir
----@param ctx table|nil Table de travail réutilisable pour éviter les allocations
----@param f function|nil Comparateur de clés (défaut : tri multi-types)
----@return function  Itérateur
----@return table  État de l'itérateur
+--- Like pairs but in sorted key order (mixed types accepted, or sort function f). Keys are frozen at the start; a value set to nil during the loop is skipped.
+---Source: lua/common/utils.lua:1415
+---@param t table Table to walk
+---@param ctx table|nil Reusable working table to avoid allocations
+---@param f function|nil Key comparator (default: multi-type sort)
+---@return function  Iterator
+---@return table  Iterator state
 function sortedPairs(t, ctx, f) end
 
---- Découpe str selon le séparateur delim (recherche textuelle simple, pas une regex). Une chaîne vide renvoie un tableau vide. Les champs vides sont conservés.
----Source : lua/common/utils.lua:188
----@param str string Texte à découper
----@param delim string Séparateur littéral
----@param nMax integer|nil Nombre maximal de coupures (défaut -1 = illimité) ; le reste de la chaîne est mis dans le dernier élément
----@return table<integer, string>  Tableau des morceaux
+--- Splits str on the delimiter delim (plain text search, not a regex). An empty string returns an empty array. Empty fields are kept.
+---Source: lua/common/utils.lua:188
+---@param str string Text to split
+---@param delim string Literal separator
+---@param nMax integer|nil Maximum number of splits (default -1 = unlimited); the rest of the string goes into the last element
+---@return table<integer, string>  Array of pieces
 function split(str, delim, nMax) end
 
---- Équivalent de string.format écrit dans un buffer partagé (buffer:putf), sans allocation de chaîne.
----Source : lua/common/utils.lua:575
----@param ... any Format puis valeurs
----@return userdata  Buffer partagé
+--- Equivalent of string.format written into a shared buffer (buffer:putf), without string allocation.
+---Source: lua/common/utils.lua:575
+---@param ... any Format then values
+---@return userdata  Shared buffer
 function stringFormatWorkBuffer(...) end
 
---- Calcule un hash numérique d'une chaîne (algorithme StringHash du wiki WoW).
----Source : lua/common/utils.lua:242
----@param text string Texte à hacher
----@return number  Hash dans [0..4294967291)
+--- Computes a numeric hash of a string (StringHash algorithm from the WoW wiki).
+---Source: lua/common/utils.lua:242
+---@param text string Text to hash
+---@return number  Hash in [0..4294967291)
 function stringHash(text) end
 
---- Teste si la table contient la valeur element (non récursif).
----Source : lua/common/utils.lua:758
----@param t table Table parcourue
----@param element any Valeur cherchée
----@return boolean  true si présente
+--- Tests whether the table contains the value element (non-recursive).
+---Source: lua/common/utils.lua:758
+---@param t table Table to walk
+---@param element any Value searched
+---@return boolean  true if present
 function tableContains(t, element) end
 
---- Teste si la table contient la chaîne element, sans tenir compte de la casse. Les valeurs de la table doivent être des chaînes.
----Source : lua/common/utils.lua:763
----@param table table Table de chaînes
----@param element string Chaîne cherchée
----@return boolean  true si présente
+--- Tests whether the table contains the string element, ignoring case. The table values must be strings.
+---Source: lua/common/utils.lua:763
+---@param table table Table of strings
+---@param element string String searched
+---@return boolean  true if present
 function tableContainsCaseInsensitive(table, element) end
 
---- Calcule la profondeur d'imbrication d'une table (clés et valeurs tables). Récursif et très lent ; 0 pour un non-table.
----Source : lua/common/utils.lua:802
----@param tbl any Table à mesurer
----@param lookup table|nil Cache interne de récursion (laisser nil)
----@return integer  Profondeur
+--- Computes the nesting depth of a table (table keys and values). Recursive and very slow; 0 for a non-table.
+---Source: lua/common/utils.lua:802
+---@param tbl any Table to measure
+---@param lookup table|nil Internal recursion cache (leave nil)
+---@return integer  Depth
 function tableDepth(tbl, lookup) end
 
---- Renvoie l'indice où insérer le prochain élément dans un tableau à base 0 : 0 si la table est vide, sinon #tbl + 1.
----Source : lua/common/utils.lua:736
----@param tbl table Tableau
----@return integer  Prochain indice
+--- Returns the index at which to insert the next element in a 0-based array: 0 if the table is empty, otherwise #tbl + 1.
+---Source: lua/common/utils.lua:736
+---@param tbl table Array
+---@return integer  Next index
 function tableEndC(tbl) end
 
---- Renvoie la première clé associée à la valeur element (non récursif, ordre pairs).
----Source : lua/common/utils.lua:749
----@param t table Table parcourue
----@param element any Valeur cherchée
----@return any|nil  Clé trouvée ou nil
+--- Returns the first key associated with the value element (non-recursive, pairs order).
+---Source: lua/common/utils.lua:749
+---@param t table Table to walk
+---@param element any Value searched
+---@return any|nil  Key found or nil
 function tableFindKey(t, element) end
 
---- Insère data en fin de tableau à base 0 : en tbl[0] si l'indice 0 est libre, sinon table.insert.
----Source : lua/common/utils.lua:740
----@param tbl table Tableau modifié
----@param data any Élément à insérer
+--- Inserts data at the end of a 0-based array: at tbl[0] if index 0 is free, otherwise table.insert.
+---Source: lua/common/utils.lua:740
+---@param tbl table Modified array
+---@param data any Element to insert
 function tableInsertC(tbl, data) end
 
---- Vérifie strictement que toutes les clés sont des entiers de 1 à #tbl sans trou. Parcourt toute la table.
----Source : lua/common/utils.lua:588
----@param tbl table Table à tester
----@return boolean  true si tableau pur
+--- Strictly checks that all keys are integers from 1 to #tbl with no gaps. Walks the whole table.
+---Source: lua/common/utils.lua:588
+---@param tbl table Table to test
+---@return boolean  true if pure array
 function tableIsArraySlow(tbl) end
 
---- Renvoie true si tbl est une table dont le premier élément n'a pas la clé 1 (test rapide : next(tbl) ~= 1). Une table vide compte donc comme dictionnaire. Renvoie false si ce n'est pas une table.
----Source : lua/common/utils.lua:581
----@param tbl any Valeur à tester
----@return boolean  true si dictionnaire
+--- Returns true if tbl is a table whose first element does not have key 1 (quick test: next(tbl) ~= 1). An empty table therefore counts as a dictionary. Returns false if it is not a table.
+---Source: lua/common/utils.lua:581
+---@param tbl any Value to test
+---@return boolean  true if dictionary
 function tableIsDict(tbl) end
 
---- Renvoie true si tbl n'est pas une table ou si elle est vide.
----Source : lua/common/utils.lua:601
----@param tbl any Valeur à tester
----@return boolean  true si vide ou non-table
+--- Returns true if tbl is not a table or if it is empty.
+---Source: lua/common/utils.lua:601
+---@param tbl any Value to test
+---@return boolean  true if empty or not a table
 function tableIsEmpty(tbl) end
 
---- Renvoie un tableau de toutes les clés de tbl (ordre non défini).
----Source : lua/common/utils.lua:606
----@param tbl table Table source
----@param target table|nil Tableau réutilisé comme sortie (créé sinon)
----@return table  Tableau des clés
+--- Returns an array of all keys of tbl (order undefined).
+---Source: lua/common/utils.lua:606
+---@param tbl table Source table
+---@param target table|nil Array reused as output (created otherwise)
+---@return table  Array of keys
 function tableKeys(tbl, target) end
 
---- Comme tableKeys, mais trié. Le tri accepte des types mixtes : d'abord par nom de type, puis par valeur (nombres, chaînes), booléens true d'abord, autres par tostring.
----Source : lua/common/utils.lua:629
----@param tbl table Table source
----@param target table|nil Tableau réutilisé comme sortie
----@return table  Tableau trié des clés
+--- Like tableKeys, but sorted. The sort accepts mixed types: first by type name, then by value (numbers, strings), true booleans first, others by tostring.
+---Source: lua/common/utils.lua:629
+---@param tbl table Source table
+---@param target table|nil Array reused as output
+---@return table  Sorted array of keys
 function tableKeysSorted(tbl, target) end
 
---- Copie toutes les paires clé/valeur de src dans dst (écrase les clés existantes, non récursif).
----Source : lua/common/utils.lua:654
----@param dst table Table modifiée
----@param src table Table source
+--- Copies all key/value pairs from src into dst (overwrites existing keys, non-recursive).
+---Source: lua/common/utils.lua:654
+---@param dst table Modified table
+---@param src table Source table
 ---@return table  dst
 function tableMerge(dst, src) end
 
---- Fusion récursive des sous-tables de t2 dans t1. Attention : les tableaux ne sont pas concaténés, leurs éléments s'écrasent par indice.
----Source : lua/common/utils.lua:663
----@param t1 table Table modifiée
----@param t2 table Table source
+--- Recursive merge of the sub-tables of t2 into t1. Warning: arrays are not concatenated, their elements overwrite each other by index.
+---Source: lua/common/utils.lua:663
+---@param t1 table Modified table
+---@param t2 table Source table
 ---@return table  t1
 function tableMergeRecursive(t1, t2) end
 
---- Fusion récursive qui concatène les tableaux purs (au lieu de les écraser) et fusionne les tables associatives. Les tables absentes de t1 sont copiées.
----Source : lua/common/utils.lua:675
----@param t1 table Table modifiée
----@param t2 table Table source
+--- Recursive merge that concatenates pure arrays (instead of overwriting them) and merges associative tables. Tables absent from t1 are copied.
+---Source: lua/common/utils.lua:675
+---@param t1 table Modified table
+---@param t2 table Source table
 ---@return table  t1
 function tableMergeRecursiveArray(t1, t2) end
 
---- Renvoie une table proxy en lecture seule (metatable __index vers l'original ; toute écriture lève une erreur). Seul le premier niveau est protégé.
----Source : lua/common/utils.lua:722
----@param table table Table à protéger
----@return table  Proxy en lecture seule
+--- Returns a read-only proxy table (__index metatable pointing to the original; any write raises an error). Only the first level is protected.
+---Source: lua/common/utils.lua:722
+---@param table table Table to protect
+---@return table  Read-only proxy
 function tableReadOnly(table) end
 
---- Itère en rond sur les clés : renvoie la clé suivant lastKey, ou la première clé si on arrive à la fin ou si lastKey est nil/absente.
----Source : lua/common/utils.lua:819
----@param tbl table Table parcourue
----@param lastKey any|nil Clé renvoyée à l'appel précédent
----@return any|nil  Clé suivante (nil si la table est vide)
+--- Iterates cyclically over the keys: returns the key following lastKey, or the first key if the end is reached or lastKey is nil/absent.
+---Source: lua/common/utils.lua:819
+---@param tbl table Table to walk
+---@param lastKey any|nil Key returned by the previous call
+---@return any|nil  Next key (nil if the table is empty)
 function tableRoundRobinKey(tbl, lastKey) end
 
---- Compte les entrées d'une table (tableau ou dictionnaire) en la parcourant entièrement. Renvoie 0 pour un non-table.
----Source : lua/common/utils.lua:706
----@param tbl any Table à compter
----@return integer  Nombre d'entrées
+--- Counts the entries of a table (array or dictionary) by walking it entirely. Returns 0 for a non-table.
+---Source: lua/common/utils.lua:706
+---@param tbl any Table to count
+---@return integer  Number of entries
 function tableSize(tbl) end
 
---- Taille d'un tableau en comptant aussi l'élément d'indice 0 (convention C) s'il existe.
----Source : lua/common/utils.lua:731
----@param tbl table Tableau
----@return integer  #tbl + 1 si tbl[0] existe, sinon #tbl
+--- Size of an array, also counting the element at index 0 (C convention) if it exists.
+---Source: lua/common/utils.lua:731
+---@param tbl table Array
+---@return integer  #tbl + 1 if tbl[0] exists, otherwise #tbl
 function tableSizeC(tbl) end
 
---- Convertit une table {r,g,b,a} (0..255) en entier couleur. Renvoie 0 si la table est nil.
----Source : lua/common/utils.lua:62
----@param v table|nil Table avec les champs r, g, b, a
----@return integer  Couleur RGBA 32 bits
+--- Converts a table {r,g,b,a} (0..255) into a color integer. Returns 0 if the table is nil.
+---Source: lua/common/utils.lua:62
+---@param v table|nil Table with the fields r, g, b, a
+---@return integer  32-bit RGBA color
 function tableToColor(v) end
 
---- Construit un dictionnaire valeur -> 1 à partir des valeurs de tbl, pour tester l'appartenance en O(1).
----Source : lua/common/utils.lua:636
----@param tbl table Table dont on prend les valeurs
----@param target table|nil Table réutilisée comme sortie
----@return table<any, integer>  Dictionnaire {valeur = 1}
+--- Builds a value -> 1 dictionary from the values of tbl, to test membership in O(1).
+---Source: lua/common/utils.lua:636
+---@param tbl table Table whose values are taken
+---@param target table|nil Table reused as output
+---@return table<any, integer>  Dictionary {value = 1}
 function tableValuesAsLookupDict(tbl, target) end
 
---- Premier appel : démarre le chrono. Second appel : imprime la durée en millisecondes et la renvoie en secondes.
----Source : lua/common/utils.lua:1328
----@param omitPrint boolean|nil Ne rien imprimer
----@return number|nil  Durée en secondes (second appel seulement)
+--- First call: starts the timer. Second call: prints the duration in milliseconds and returns it in seconds.
+---Source: lua/common/utils.lua:1328
+---@param omitPrint boolean|nil Print nothing
+---@return number|nil  Duration in seconds (second call only)
 function timeprobe(omitPrint) end
 
---- Démarre toujours un chronomètre (os.clockhp), même si un timeprobe était en cours.
----Source : lua/common/utils.lua:1323
+--- Always starts a timer (os.clockhp), even if a timeprobe was already running.
+---Source: lua/common/utils.lua:1323
 function timeprobeStart() end
 
---- Supprime les espaces au début et à la fin d'une chaîne.
----Source : lua/common/utils.lua:183
----@param s string Chaîne à nettoyer
----@return string  Chaîne sans espaces aux extrémités
+--- Removes spaces at the start and end of a string.
+---Source: lua/common/utils.lua:183
+---@param s string String to clean
+---@return string  String without spaces at the ends
 function trim(s) end
 
---- Affiche un message à l'écran via guihooks.message. Raccourci utilisé par beaucoup de scripts.
----Source : lua/common/utils.lua:927
----@param msg string Texte (ou clé de traduction)
----@param ttl number|nil Durée d'affichage en secondes, 5 par défaut
----@param category string|nil Catégorie du message, '' par défaut
----@param icon string|nil Icône, 'info' par défaut
+--- Shows an on-screen message via guihooks.message. Shortcut used by many scripts.
+---Source: lua/common/utils.lua:927
+---@param msg string Text (or translation key)
+---@param ttl number|nil Display duration in seconds, 5 by default
+---@param category string|nil Message category, '' by default
+---@param icon string|nil Icon, 'info' by default
 function ui_message(msg, ttl, category, icon) end
 
---- Affiche une notification 'toast' dans l'interface (évènement UI toastrMsg).
----Source : lua/common/utils.lua:931
----@param msg string Texte
----@param title string|nil Titre
----@param type string|nil 'info' (défaut), 'success', 'warning' ou 'error'
----@param _config table|nil Options supplémentaires copiées dans config
+--- Shows a 'toast' notification in the UI (UI event toastrMsg).
+---Source: lua/common/utils.lua:931
+---@param msg string Text
+---@param title string|nil Title
+---@param type string|nil 'info' (default), 'success', 'warning' or 'error'
+---@param _config table|nil Additional options copied into config
 function ui_toast(msg, title, type, _config) end
 
---- Inverse de flattenTable : remplace les jetons '>#>/chemin' par les sous-tables d'origine. Loggue une erreur si le lien n'existe pas.
----Source : lua/common/utils.lua:1396
----@param tbl table Table modifiée
----@return table|nil  tbl, ou nil si ce n'est pas une table
+--- Inverse of flattenTable: replaces the '>#>/path' tokens with the original sub-tables. Logs an error if the link does not exist.
+---Source: lua/common/utils.lua:1396
+---@param tbl table Modified table
+---@return table|nil  tbl, or nil if it is not a table
 function unflattenTable(tbl) end
 
---- Écrit du texte dans un fichier (mode 'w', écrase). En cas d'échec d'ouverture, loggue un avertissement.
----Source : lua/common/utils.lua:914
----@param filename string Chemin du fichier
----@param data string Texte à écrire
----@return boolean|nil  true si écrit, nil si ouverture impossible
+--- Writes text to a file (mode 'w', overwrites). If opening fails, logs a warning.
+---Source: lua/common/utils.lua:914
+---@param filename string File path
+---@param data string Text to write
+---@return boolean|nil  true if written, nil if it could not be opened
 function writeFile(filename, data) end
 
 ---@type any

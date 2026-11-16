@@ -1,37 +1,37 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/missionControlHint.lua",
-  "module": "Nœud flowgraph « Mission Control Hints » (catégorie repeat_instant, auteur BeamNG, durée) : affiche des indications de commandes (passer vitesse, embrayage, klaxon, etc.) dans l'app HUD Mission Controls (ui_apps_missionControls). Entrée « reset » (impulsion qui efface tout). Pour chaque indication i (« Hint Count ») : « action_i » (action d'entrée avec modèles shiftUp, shiftDown, clutch, throttle, brake, parkingbrake, horn), « uiEvent_i » (événement de navigation UI, caché), « label_i » (texte ou clé de traduction).",
+  "module": "Flowgraph node \"Mission Control Hints\" (category repeat_instant, author BeamNG, duration): displays control hints (shift gear, clutch, horn, etc.) in the Mission Controls HUD app (ui_apps_missionControls). Input \"reset\" (pulse that clears everything). For each hint i (\"Hint Count\"): \"action_i\" (input action with templates shiftUp, shiftDown, clutch, throttle, brake, parkingbrake, horn), \"uiEvent_i\" (UI navigation event, hidden), \"label_i\" (text or translation key).",
   "notes": [
-    "Sans action ni uiEvent, l'indication est effacée (catégorie flowgraph_<id>_<i>)."
+    "Without an action or uiEvent, the hint is cleared (category flowgraph_<id>_<i>)."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (retournée par _flowgraph_createNode(C)).",
+      "desc": "Flowgraph node class (returned by _flowgraph_createNode(C)).",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure count.",
+          "desc": "Restores count.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "_onSerialize": {
-          "desc": "Sauvegarde count.",
+          "desc": "Saves count.",
           "params": {
             "res": {
               "type": "table",
-              "desc": "Table de sauvegarde du nœud à remplir."
+              "desc": "Node save table to fill."
             }
           },
           "internal": true
         },
         "drawCustomProperties": {
-          "desc": "Champ « Hint Count ».",
+          "desc": "\"Hint Count\" field.",
           "internal": true
         },
         "init": {
@@ -39,25 +39,25 @@
           "internal": true
         },
         "postInit": {
-          "desc": "Crée les pins et charge l'extension ui_apps_missionControls.",
+          "desc": "Creates the pins and loads the ui_apps_missionControls extension.",
           "internal": true
         },
         "updatePins": {
-          "desc": "Ajuste le nombre de trios de pins (action, uiEvent, label).",
+          "desc": "Adjusts the number of pin trios (action, uiEvent, label).",
           "params": {
             "old": {
               "type": "integer",
-              "desc": "Ancien nombre d'éléments."
+              "desc": "Old number of elements."
             },
             "new": {
               "type": "integer",
-              "desc": "Nouveau nombre d'éléments."
+              "desc": "New number of elements."
             }
           },
           "internal": true
         },
         "work": {
-          "desc": "Charge l'extension si besoin, efface si reset, sinon envoie ou efface chaque indication via setControl.",
+          "desc": "Loads the extension if needed, clears if reset, otherwise sends or clears each hint via setControl.",
           "internal": true
         }
       }

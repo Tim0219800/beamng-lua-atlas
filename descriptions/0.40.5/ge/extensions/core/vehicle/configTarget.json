@@ -1,73 +1,204 @@
 {
   "path": "lua/ge/extensions/core/vehicle/configTarget.lua",
-  "module": "Extension GE `core_vehicle_configTarget` : mémorise quel véhicule (et quel joueur) est la cible du menu de configuration du véhicule, pour que partmgmt, colors, mirror, thumbnail, etc. n'agissent pas toujours sur le véhicule du joueur 0. Sert aussi de résolveur : resolveVehicleId prend un id explicite, sinon la cible, sinon le véhicule du joueur 0. Émet onVehicleConfigTargetChanged à chaque changement.",
+  "module": "GE extension `core_vehicle_configTarget`: remembers which vehicle (and which player) is the target of the vehicle configuration menu, so that partmgmt, colors, mirror, thumbnail, etc. do not always act on player 0's vehicle. Also serves as a resolver: resolveVehicleId takes an explicit id, otherwise the target, otherwise player 0's vehicle. Emits onVehicleConfigTargetChanged on every change.",
   "usage": "core_vehicle_configTarget.begin(vehId, {playerId = 0, returnRoute = 'pause.vehicle'})\nlocal id = core_vehicle_configTarget.resolveVehicleId()   -- vehId\ncore_vehicle_configTarget.clear('done')",
   "notes": [
-    "returnRoute n'est accepté que parmi 'pause' et 'pause.vehicle' (sinon 'pause.vehicle').",
-    "La cible est effacée automatiquement une frame après la destruction du véhicule si celui-ci n'a pas été recréé entre-temps (spawn du même id), à la fin du niveau ou au déchargement de l'extension.",
-    "Les fonctions de lecture (get) renvoient une copie ; le hook onVehicleConfigTargetChanged reçoit (cibleActuelle, cibleAvant, raison) en copies : raison = 'begin', 'clear' ou la raison passée à clear ('vehicleDestroyed', 'missionEnded', 'extensionUnloaded')."
+    "returnRoute is only accepted among 'pause' and 'pause.vehicle' (otherwise 'pause.vehicle').",
+    "The target is cleared automatically one frame after the vehicle is destroyed if it was not recreated in the meantime (spawn of the same id), at the end of the level or on extension unload.",
+    "The read functions (get) return a copy; the onVehicleConfigTargetChanged hook receives (currentTarget, previousTarget, reason) as copies: reason = 'begin', 'clear' or the reason passed to clear ('vehicleDestroyed', 'missionEnded', 'extensionUnloaded')."
   ],
   "fields": {},
   "functions": {
     "begin": {
-      "desc": "Définit le véhicule cible. Refuse un id invalide ou un véhicule inexistant. Émet onVehicleConfigTargetChanged(courant, précédent, 'begin').",
+      "desc": "Sets the target vehicle. Refuses an invalid id or a nonexistent vehicle. Emits onVehicleConfigTargetChanged(current, previous, 'begin').",
       "params": {
-        "vehId": {"type": "integer", "desc": "id du véhicule (>= 0)"},
-        "context": {"type": "table|nil", "desc": "{playerId?, returnRoute?}"}
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle id (>= 0)"
+        },
+        "context": {
+          "type": "table|nil",
+          "desc": "{playerId?, returnRoute?}"
+        }
       },
-      "returns": [{"type": "boolean", "desc": "true si la cible a été définie"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if the target was set"
+        }
+      ]
     },
     "clear": {
-      "desc": "Efface la cible et émet onVehicleConfigTargetChanged.",
-      "params": {"reason": {"type": "string|nil", "desc": "raison transmise au hook, défaut 'clear'"}},
-      "returns": [{"type": "boolean", "desc": "false s'il n'y avait pas de cible"}]
+      "desc": "Clears the target and emits onVehicleConfigTargetChanged.",
+      "params": {
+        "reason": {
+          "type": "string|nil",
+          "desc": "reason passed to the hook, default 'clear'"
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "false if there was no target"
+        }
+      ]
     },
     "isActive": {
-      "desc": "Indique si une cible est définie.",
+      "desc": "Indicates whether a target is set.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "true si active"}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if active"
+        }
+      ]
     },
     "get": {
-      "desc": "Copie de la cible courante.",
+      "desc": "Copy of the current target.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "{vehId, playerId, returnRoute} ou nil"}]
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "{vehId, playerId, returnRoute} or nil"
+        }
+      ]
     },
     "getTargetVehicleId": {
-      "desc": "Id du véhicule cible.",
+      "desc": "Id of the target vehicle.",
       "params": {},
-      "returns": [{"type": "integer|nil", "desc": "vehId ou nil"}]
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "vehId or nil"
+        }
+      ]
     },
     "getTargetPlayerId": {
-      "desc": "Index du joueur qui configure.",
+      "desc": "Index of the configuring player.",
       "params": {},
-      "returns": [{"type": "integer|nil", "desc": "playerId ou nil"}]
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "playerId or nil"
+        }
+      ]
     },
     "getReturnRoute": {
-      "desc": "Route d'interface où revenir après la configuration.",
+      "desc": "UI route to return to after configuration.",
       "params": {},
-      "returns": [{"type": "string", "desc": "'pause' ou 'pause.vehicle' (défaut)"}]
+      "returns": [
+        {
+          "type": "string",
+          "desc": "'pause' or 'pause.vehicle' (default)"
+        }
+      ]
     },
     "resolveVehicleId": {
-      "desc": "Détermine l'id du véhicule à utiliser : l'id explicite s'il est donné et valide, sinon la cible, sinon le véhicule du joueur 0. Renvoie nil si l'objet n'existe pas.",
-      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "id imposé par l'appelant (nil = automatique ; un id invalide donne nil, sans repli)"}},
-      "returns": [{"type": "integer|nil", "desc": "id du véhicule"}]
+      "desc": "Determines the vehicle id to use: the explicit id if given and valid, otherwise the target, otherwise player 0's vehicle. Returns nil if the object does not exist.",
+      "params": {
+        "explicitVehicleId": {
+          "type": "integer|nil",
+          "desc": "id imposed by the caller (nil = automatic; an invalid id gives nil, with no fallback)"
+        }
+      },
+      "returns": [
+        {
+          "type": "integer|nil",
+          "desc": "vehicle id"
+        }
+      ]
     },
     "resolveVehicle": {
-      "desc": "Comme resolveVehicleId mais renvoie l'objet véhicule.",
-      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "id imposé"}},
-      "returns": [{"type": "userdata|nil", "desc": "objet véhicule"}]
+      "desc": "Like resolveVehicleId but returns the vehicle object.",
+      "params": {
+        "explicitVehicleId": {
+          "type": "integer|nil",
+          "desc": "imposed id"
+        }
+      },
+      "returns": [
+        {
+          "type": "userdata|nil",
+          "desc": "vehicle object"
+        }
+      ]
     },
     "resolveVehicleData": {
-      "desc": "Comme resolveVehicleId mais renvoie les données de core_vehicle_manager.getVehicleData.",
-      "params": {"explicitVehicleId": {"type": "integer|nil", "desc": "id imposé"}},
-      "returns": [{"type": "table|nil", "desc": "données du véhicule (vdata, config, vehicleDirectory, ioCtx…)"}]
+      "desc": "Like resolveVehicleId but returns the data from core_vehicle_manager.getVehicleData.",
+      "params": {
+        "explicitVehicleId": {
+          "type": "integer|nil",
+          "desc": "imposed id"
+        }
+      },
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "vehicle data (vdata, config, vehicleDirectory, ioCtx...)"
+        }
+      ]
     },
-    "onVehicleDestroyed": {"desc": "Hook : si le véhicule cible est détruit, note qu'il faudra effacer la cible à la prochaine frame.", "params": {"vehId": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
-    "onVehicleSpawned": {"desc": "Hook : annule l'effacement prévu si le même id est recréé (remplacement de véhicule).", "params": {"vehId": {"type": "integer", "desc": "véhicule"}}, "returns": [], "internal": true},
-    "onUpdate": {"desc": "Hook par frame : efface la cible si le véhicule détruit n'existe toujours pas.", "params": {}, "returns": [], "internal": true},
-    "onClientEndMission": {"desc": "Hook : fin du niveau ; efface la cible ('missionEnded').", "params": {}, "returns": [], "internal": true},
-    "onExtensionUnloaded": {"desc": "Hook : extension déchargée ; efface la cible ('extensionUnloaded').", "params": {}, "returns": [], "internal": true},
-    "onSerialize": {"desc": "Hook : sauvegarde la cible avant rechargement Lua.", "params": {}, "returns": [{"type": "table", "desc": "{target}"}], "internal": true},
-    "onDeserialized": {"desc": "Hook : restaure la cible si son véhicule existe encore.", "params": {"data": {"type": "table", "desc": "données de onSerialize"}}, "returns": [], "internal": true}
+    "onVehicleDestroyed": {
+      "desc": "Hook: if the target vehicle is destroyed, notes that the target must be cleared on the next frame.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook: cancels the planned clearing if the same id is recreated (vehicle replacement).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "vehicle"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "onUpdate": {
+      "desc": "Per-frame hook: clears the target if the destroyed vehicle still does not exist.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onClientEndMission": {
+      "desc": "Hook: end of the level; clears the target ('missionEnded').",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onExtensionUnloaded": {
+      "desc": "Hook: extension unloaded; clears the target ('extensionUnloaded').",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook: saves the target before a Lua reload.",
+      "params": {},
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{target}"
+        }
+      ],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook: restores the target if its vehicle still exists.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "data from onSerialize"
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

@@ -1,31 +1,31 @@
 # `flowgraph_nodes_gameplay_blacklistWalking`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/blacklistWalking.lua` · VM : Game Engine (GE) · 61 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/blacklistWalking.lua` · VM: Game Engine (GE) · 61 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/blacklistWalking")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/blacklistWalking")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Blacklist Walking » (dépend de gameplay_walk). Autorise ou interdit l'entrée dans un véhicule depuis le mode marche, via la liste noire de gameplay_walk. Pins d'entrée : flow, allow (retire de la liste), deny (ajoute), vehId, clear (impulsion, vide la liste), fill (tous les véhicules du projet), fillAll (tous les BeamNGVehicle de la scène). Sortie : flow.
+Flowgraph node "Blacklist Walking" (depends on gameplay_walk). Allows or forbids entering a vehicle from walking mode, via the gameplay_walk blacklist. Input pins: flow, allow (removes from the list), deny (adds), vehId, clear (pulse, empties the list), fill (all vehicles of the project), fillAll (all BeamNGVehicle objects in the scene). Output: flow.
 
-## Remarques
+## Notes
 
-- Bug : dans fill, le code appelle gameplay_walk.addVehicleToBlacklist(sortedIds) avec la variable globale (nil) au lieu de id ; la liste n'est donc pas remplie correctement.
-- fill et fillAll vident d'abord la liste noire.
+- Bug: in fill, the code calls gameplay_walk.addVehicleToBlacklist(sortedIds) with the global variable (nil) instead of id; the list is therefore not filled correctly.
+- fill and fillAll first empty the blacklist.
 
-**Dépendances (chargées avant) :** `gameplay_walk`
+**Dependencies (loaded first):** `gameplay_walk`
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud.
+Node class.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:init(mgr, ...)` | Vide. | 25 |
-| `C:work(args)` | Si flow est actif, exécute allow/deny (si vehId), clear, fill, fillAll. Recopie flow en sortie. | 28 |
+| `C:init(mgr, ...)` | Empty. | 25 |
+| `C:work(args)` | If flow is active, executes allow/deny (if vehId), clear, fill, fillAll. Copies flow to the output. | 28 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getId`
 - `scenetree.` `findClassObjects`, `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/blacklistWalking.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/blacklistWalking.lua`.*

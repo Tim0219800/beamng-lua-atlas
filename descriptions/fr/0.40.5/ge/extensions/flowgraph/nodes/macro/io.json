@@ -1,0 +1,38 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/macro/io.lua",
+  "module": "Noeud macro 'I/O' (cache, non supprimable) : sert de passerelle entre un sous-graphe (macro) et son graphe parent. ioType vaut 'in' (entrees du sous-graphe, pins de sortie personnalisables) ou 'out' (sorties, pins d'entree personnalisables). Le noeud 'out' demande au noeud Integrated de mettre a jour ses pins.",
+  "notes": [
+    "Une partie de drawMiddle est du code commente (bloc --[[ ]]) ; le fichier contient donc des restes d'une ancienne mise en surbrillance."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "savePins=true, ioType='io' (doit devenir 'in' ou 'out'), ignoreAsRoot=true.",
+          "internal": true
+        },
+        "_onSerialize": {
+          "desc": "Sauvegarde nom, couleur et ioType (erreur journalisee si ioType est resté 'io').",
+          "internal": true
+        },
+        "_onDeserialized": {
+          "desc": "Relit nom, couleur et ioType et autorise les pins personnalises dans le bon sens.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Affiche le nom du graphe cible et un apercu au survol.",
+          "internal": true
+        },
+        "doubleClicked": {
+          "desc": "Selectionne le graphe cible dans l'editeur.",
+          "internal": true
+        },
+        "work": {
+          "desc": "Pour un noeud 'out' : appelle integratedNode:updatePins().",
+          "internal": true
+        }
+      }
+    }
+  }
+}

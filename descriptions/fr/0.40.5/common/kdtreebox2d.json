@@ -1,0 +1,37 @@
+{
+  "path": "lua/common/kdtreebox2d.lua",
+  "module": "Arbre k-d pour boîtes 2D (xmin, ymin, xmax, ymax), donc 4 dimensions, permettant de retrouver rapidement tous les éléments dont la boîte intersecte une zone de requête. Typiquement utilisé pour des segments de route, des zones ou des obstacles. Flux : new -> preLoad (pour chaque élément) -> build -> query / queryNotNested. Les requêtes sont des itérateurs Lua utilisables dans une boucle for.",
+  "usage": "local kdTreeB2d = require('kdtreebox2d')\nlocal kdT = kdTreeB2d.new(itemCount) -- itemCount facultatif (préallocation)\nfor _, it in ipairs(items) do kdT:preLoad(it.id, it.xmin, it.ymin, it.xmax, it.ymax) end\nkdT:build()\nfor id in kdT:queryNotNested(xmin, ymin, xmax, ymax) do ... end   -- requêtes non imbriquées\nfor id1 in kdT:query(xmin, ymin, xmax, ymax) do                    -- requêtes imbriquées (crée du garbage)\n  for id2 in kdT:query(...) do ... end\nend",
+  "notes": [
+    "Les éléments sont stockés à plat dans self.items par groupes de 5 valeurs (xmin, ymin, xmax, ymax, id). Avant build(), self.itemCount compte des valeurs (x5) ; après build() il est divisé par 5 et devient le nombre d'éléments.",
+    "Les itérateurs renvoient l'identifiant (id) de chaque élément dont la boîte intersecte la boîte de requête (inclusif). Les bornes de requête sont ramenées à ±1.7e308 pour accepter des infinis.",
+    "queryNotNested réutilise l'état interne de l'arbre : on ne peut pas imbriquer une autre requête (ni queryNotNested ni query sur le même arbre pendant l'itération avec queryNotNested). query alloue un nouvel état par appel et supporte l'imbrication.",
+    "build() doit être appelé une seule fois après tous les preLoad (il modifie itemCount). Appeler query avant build() échoue (tree == nil).",
+    "clear() ne fait rien tant que l'arbre n'a pas été construit (self.tree == nil). Après clear on peut réutiliser l'objet (preLoad puis build)."
+  ],
+  "fields": {},
+  "functions": {
+    "new": {
+      "desc": "Crée un arbre k-d de boîtes 2D vide.",
+      "params": {"itemCount": {"type": "integer|nil", "desc": "nombre d'éléments prévus, pour préallouer (facultatif)"}},
+      "returns": [{"type": "kdTree", "desc": "arbre vide"}],
+      "internal": false
+    }
+  },
+  "classes": {
+    "kdTree": {
+      "desc": "Objet renvoyé par new(). Champs : tree, items, itemCount, nonLeafLimIdx et états de requête internes.",
+      "functions": {
+        "preLoad": {"desc": "Ajoute un élément (avant build).", "params": {"id": {"type": "any", "desc": "identifiant de l'élément renvoyé par les requêtes"}, "xmin": {"type": "number", "desc": "xmin"}, "ymin": {"type": "number", "desc": "ymin"}, "xmax": {"type": "number", "desc": "xmax"}, "ymax": {"type": "number", "desc": "ymax"}}, "returns": []},
+        "build": {"desc": "Construit l'arbre à partir des éléments chargés (sélection de médiane récursive en alternant les 4 axes).", "params": {}, "returns": []},
+        "_build": {"desc": "Interne : construction récursive d'un noeud ; renvoie la boîte englobante du sous-arbre.", "params": {"axis": {"type": "integer", "desc": "axe courant (1 à 4)"}, "left": {"type": "integer", "desc": "indice de début dans items"}, "right": {"type": "integer", "desc": "indice de fin dans items"}, "treeIdx": {"type": "integer", "desc": "indice du noeud dans tree"}}, "returns": [{"type": "number", "desc": "xmin"}, {"type": "number", "desc": "ymin"}, {"type": "number", "desc": "xmax"}, {"type": "number", "desc": "ymax"}], "internal": true},
+        "query": {"desc": "Itérateur (à utiliser dans for) sur les ids des éléments intersectant la boîte donnée ; supporte les requêtes imbriquées.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération"}]},
+        "queryNotNested": {"desc": "Comme query mais sans allocation (réutilise l'état de l'arbre) : ne pas imbriquer.", "params": {"query_xmin": {"type": "number", "desc": "xmin"}, "query_ymin": {"type": "number", "desc": "ymin"}, "query_xmax": {"type": "number", "desc": "xmax"}, "query_ymax": {"type": "number", "desc": "ymax"}}, "returns": [{"type": "function", "desc": "itérateur renvoyant les ids"}, {"type": "table", "desc": "état d'itération (l'arbre lui-même)"}]},
+        "clear": {"desc": "Vide un arbre existant pour le réutiliser (utile pour des arbres mis à jour souvent). Sans effet avant build.", "params": {}, "returns": []},
+        "export": {"desc": "Renvoie une table {tree, nonLeafLimIdx, items, itemCount} (références, pas de copie) pour la sérialiser ou la réutiliser.", "params": {}, "returns": [{"type": "table", "desc": "données exportées"}]},
+        "import": {"desc": "Remplace le contenu par des données produites par export().", "params": {"kdTreeData": {"type": "table", "desc": "table d'export"}}, "returns": []},
+        "analytics": {"desc": "Affiche (print) des statistiques de l'arbre : profondeur, nombre de noeuds, de feuilles, d'éléments.", "params": {}, "returns": []}
+      }
+    }
+  }
+}

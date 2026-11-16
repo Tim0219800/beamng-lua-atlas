@@ -1,0 +1,25 @@
+{
+  "path": "lua/vehicle/extensions/aeroDebug.lua",
+  "module": "Extension de débogage aérodynamique pour l'établi (workbench) : mesure la force et le moment aérodynamiques totaux du véhicule autour de son centre de gravité, les exprime dans le repère du véhicule (droite, avant, haut) et estime la répartition de la portance (appui) entre essieu avant et arrière à partir des noms de roues fournis.",
+  "usage": "extensions.aeroDebug.setWheelNames('wheel_FL', 'wheel_FR', 'wheel_RL', 'wheel_RR')\nextensions.aeroDebug.enable()\nlocal d = extensions.aeroDebug.getAeroData()\nprint(d.frontDownForce, d.rearDownForce, d.percentFront)",
+  "notes": [
+    "Champs de aeroData (renvoyé par getAeroData) : vehID, totalAeroForce, totalAeroTorque (moment physique, signe inversé par rapport à calcTotalAeroTorque), totalAeroForceVehicle/afX/afY/afZ (force dans le repère véhicule), totalAeroTorqueVehicle/aTX/aTY/aTZ ((tangage, roulis, lacet) : tangage positif nez vers le haut), frontDownForce, rearDownForce (appui par essieu, positif = appui, en N), percentFront, percentRear, wheelNameStrings (liste des roues après enable), wheelNameFL/FR/RL/RR, test (=100, valeur de test).",
+    "Le calcul d'appui par essieu suppose un roulement libre (pas de force horizontale des pneus) : les hauteurs disparaissent, seule la distance longitudinale au CoG compte. Les pourcentages restent à 0 si la somme des appuis est <= 1 N.",
+    "Anomalie : rearLeftWheelPos est affecté à la roue nommée wheelNameRR et rearRightWheelPos à wheelNameRL (inversion) ; sans effet car seule la moyenne des deux est utilisée.",
+    "M.directionVector, M.directionVectorUp et M.directionVectorRight sont réécrits chaque frame par updateGFX (vecteurs avant, haut et droite).",
+    "L'extension ne fait rien tant que enable() n'a pas été appelé."
+  ],
+  "fields": {
+    "directionVector": {"type": "vec3", "desc": "Vecteur avant du véhicule (obj:getDirectionVector), mis à jour par updateGFX."},
+    "directionVectorUp": {"type": "vec3", "desc": "Vecteur haut du véhicule."},
+    "directionVectorRight": {"type": "vec3", "desc": "Vecteur droite (avant x haut)."}
+  },
+  "functions": {
+    "onInit": {"desc": "Hook d'initialisation : désactive le calcul.", "params": {}, "returns": [], "internal": true},
+    "updateGFX": {"desc": "Appelé chaque frame : si activé, calcule forces et moments aérodynamiques et la répartition d'appui avant/arrière.", "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}}, "returns": [], "internal": true},
+    "getAeroData": {"desc": "Renvoie la table aeroData courante (voir notes pour ses champs).", "params": {}, "returns": [{"type": "table", "desc": "Données aérodynamiques."}], "internal": false},
+    "setWheelNames": {"desc": "Indique les noms des quatre roues pour la répartition par essieu.", "params": {"FL": {"type": "string", "desc": "Nom de la roue avant gauche."}, "FR": {"type": "string", "desc": "Roue avant droite."}, "RL": {"type": "string", "desc": "Roue arrière gauche."}, "RR": {"type": "string", "desc": "Roue arrière droite."}}, "returns": [], "internal": false},
+    "enable": {"desc": "Active le calcul et remplit wheelNameStrings avec les noms de toutes les roues si ce n'est pas déjà fait.", "params": {}, "returns": [], "internal": false},
+    "disable": {"desc": "Désactive le calcul et efface wheelNameStrings.", "params": {}, "returns": [], "internal": false}
+  }
+}

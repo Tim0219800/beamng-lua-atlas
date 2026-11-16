@@ -2,27 +2,27 @@
 -- tim19Atlas stub generated from lua/ge/extensions/telemetry/hardwareInput.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Module utilitaire de la télémétrie matérielle (chargé par require) : transforme les informations des contrôleurs de jeu en données de télémétrie. Pour tous les périphériques : type, productName, vidpid, forceFeedback. Pour les volants (type 'wheel') s'ajoutent le nom anglais officiel, GUID, axes à retour de force, périodes d'échantillonnage FFB, révisions matérielle/firmware, contrôles et leur décompte par type.
---- Accès : extension `telemetry_hardwareInput` : `extensions.load("telemetry_hardwareInput")`, puis la globale `telemetry_hardwareInput`
+--- Hardware telemetry utility module (loaded by require): turns the game controllers' information into telemetry data. For all devices: type, productName, vidpid, forceFeedback. For wheels (type 'wheel') it adds the official English name, GUID, force feedback axes, FFB sampling periods, hardware/firmware revisions, controls and their count by type.
+--- Access: extension `telemetry_hardwareInput`: `extensions.load("telemetry_hardwareInput")`, then the global `telemetry_hardwareInput`
 ---@class telemetry_hardwareInput
 telemetry_hardwareInput = {}
 
---- Applique fromControllerInfo à chaque contrôleur (en cherchant le nom anglais officiel des volants).
----Source : lua/ge/extensions/telemetry/hardwareInput.lua:77
----@param controllerInfo table[]|nil Liste des contrôleurs.
----@return table[]  Liste de tables de télémétrie.
+--- Applies fromControllerInfo to each controller (looking up the official English name of wheels).
+---Source: lua/ge/extensions/telemetry/hardwareInput.lua:77
+---@param controllerInfo table[]|nil List of controllers.
+---@return table[]  List of telemetry tables.
 function telemetry_hardwareInput.collect(controllerInfo) end
 
---- Convertit les infos d'un contrôleur en table de télémétrie. Les non-volants ne gardent que type, productName, vidpid et forceFeedback ; les volants reçoivent en plus reportedName, deviceName, guid, hidSupported, ffbAxes, périodes FFB, révisions, controls, controlCounts, productId, vendorId et maxRawFfbUpdateRateHz.
----Source : lua/ge/extensions/telemetry/hardwareInput.lua:38
----@param info table Infos du contrôleur (type, name, productName, vidpid, guid, ffbAxes, ff_sample_period, controls…).
----@param englishName string|nil Nom anglais officiel du volant, s'il est connu.
----@return table  Données de télémétrie du contrôleur.
+--- Converts a controller's info into a telemetry table. Non-wheels only keep type, productName, vidpid and forceFeedback; wheels additionally receive reportedName, deviceName, guid, hidSupported, ffbAxes, FFB periods, revisions, controls, controlCounts, productId, vendorId and maxRawFfbUpdateRateHz.
+---Source: lua/ge/extensions/telemetry/hardwareInput.lua:38
+---@param info table Controller info (type, name, productName, vidpid, guid, ffbAxes, ff_sample_period, controls...).
+---@param englishName string|nil Official English name of the wheel, if known.
+---@return table  Controller telemetry data.
 function telemetry_hardwareInput.fromControllerInfo(info, englishName) end
 
---- Lit /settings/inputmaps/<pidVid>.json et renvoie displayName ou name, uniquement si ce fichier appartient au contenu officiel du jeu.
----Source : lua/ge/extensions/telemetry/hardwareInput.lua:12
----@param pidVid string|nil Identifiant de 8 chiffres hexadécimaux.
----@return string|nil  Nom anglais officiel, ou nil.
+--- Reads /settings/inputmaps/<pidVid>.json and returns displayName or name, only if this file belongs to the game's official content.
+---Source: lua/ge/extensions/telemetry/hardwareInput.lua:12
+---@param pidVid string|nil Identifier of 8 hexadecimal digits.
+---@return string|nil  Official English name, or nil.
 function telemetry_hardwareInput.officialEnglishName(pidVid) end
 

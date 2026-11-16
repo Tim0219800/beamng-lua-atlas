@@ -1,29 +1,29 @@
 # `util_booster`
 
-*Fichier : `lua/ge/extensions/util/booster.lua` · VM : Game Engine (GE) · 20 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/util/booster.lua` · VM: Game Engine (GE) · 20 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `util_booster` : `extensions.load("util_booster")`, puis la globale `util_booster`
+**Access:** extension `util_booster`: `extensions.load("util_booster")`, then the global `util_booster`
 
-Extension minuscule de démonstration pour un déclencheur « booster » : trigger(data) affiche les données reçues, puis devrait propulser un véhicule vers le haut via core_booster côté véhicule. Dans l'état du code, la propulsion ne se déclenche jamais.
+Tiny demo extension for a "booster" trigger: trigger(data) prints the received data, then should propel a vehicle upward via core_booster on the vehicle side. In the current state of the code, the propulsion never fires.
 
-## Remarques
+## Notes
 
-- Bug : trigger teste la variable globale `event` (nil) au lieu de `data.event`, donc la condition `event == 'enter'` est toujours fausse et le véhicule n'est jamais propulsé ; seuls print et dump sont exécutés.
-- Si la condition était vraie, elle enverrait au véhicule data.subjectID la commande extensions.core_booster.boost(vec3(0,0,1), 0.01).
+- Bug: trigger tests the global variable `event` (nil) instead of `data.event`, so the condition `event == 'enter'` is always false and the vehicle is never propelled; only print and dump are executed.
+- If the condition were true, it would send the vehicle data.subjectID the command extensions.core_booster.boost(vec3(0,0,1), 0.01).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `util_booster.trigger(data)` | Affiche « Booster triggered » et le contenu de data. Prévu pour réagir à un évènement de trigger (data.subjectID est l'id du véhicule), mais ne fait rien d'autre à cause du bug signalé. | 7 |
+| `util_booster.trigger(data)` | Prints "Booster triggered" and the contents of data. Intended to react to a trigger event (data.subjectID is the vehicle id), but does nothing else because of the reported bug. | 7 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `util_booster.trigger(data)`
 
-Affiche « Booster triggered » et le contenu de data. Prévu pour réagir à un évènement de trigger (data.subjectID est l'id du véhicule), mais ne fait rien d'autre à cause du bug signalé.
+Prints "Booster triggered" and the contents of data. Intended to react to a trigger event (data.subjectID is the vehicle id), but does nothing else because of the reported bug.
 
-- `data` (*table*) : Données de l'évènement de trigger (subjectID attendu).
+- `data` (*table*) : Trigger event data (subjectID expected).
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/util/booster.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/util/booster.lua`.*

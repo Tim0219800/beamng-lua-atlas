@@ -1,0 +1,35 @@
+{
+  "path": "lua/ge/extensions/career/modules/debug/deliveryRoutes.lua",
+  "module": "Onglet de debug carrière « Delivery > Routes ». Fenêtre ImGui 'Delivery Access Points' listant les facilités de livraison et leurs points d'accès (accessPointsByName), avec sélection d'un point. Contient aussi un lancer de rayon souris (updateMouseInfo) et un helper de tracé d'arc, en grande partie inachevés.",
+  "notes": ["Outil de développement, partiellement inachevé : drawRoute est vide, drawArc n'est appelée nulle part, le bloc 'mouse clicking' est vide.", "updateMouseInfo désactive puis réactive la collision de la forêt autour du raycast souris.", "debugOrder = 10."],
+  "fields": {
+    "debugOrder": {"type": "number", "desc": "Ordre de tri dans la fenêtre de debug (10)."},
+    "debugName": {"type": "string", "desc": "'Delivery > Routes'."}
+  },
+  "functions": {
+    "onCareerActivated": {
+      "desc": "Hook de carrière : mémorise les modules delivery (parcelManager, cargoScreen, general, generator, progress, vehicleOfferManager).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugFunctions": {
+      "desc": "Sous-menu de fonctions de debug ; vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "drawDebugMenu": {
+      "desc": "Dessine la fenêtre 'Delivery Access Points' : arbre des facilités (career_modules_delivery_generator.getFacilities) avec leurs points d'accès sélectionnables.",
+      "params": {"dt": {"type": "number", "desc": "Delta de temps (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateMouseInfo": {
+      "desc": "Met à jour la table locale mouseInfo : position caméra, rayon souris, résultat de cameraMouseRayCast, états down/hold/up du bouton gauche (hors captation ImGui) et positions/normales de clic, maintien et relâchement.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

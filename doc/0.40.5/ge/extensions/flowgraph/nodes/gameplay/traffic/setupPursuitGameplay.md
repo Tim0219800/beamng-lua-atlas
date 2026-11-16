@@ -1,26 +1,26 @@
 # `flowgraph_nodes_gameplay_traffic_setupPursuitGameplay`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua` · VM : Game Engine (GE) · 41 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua` · VM: Game Engine (GE) · 41 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay")` (file under extensions/ but not a regular extension)
 
-Nœud flowgraph « Setup Pursuit Gameplay » (once_instant). Configure un gameplay de poursuite via gameplay_police.setupPursuitGameplay(suspectId, policeIds, {pursuitMode, preventAutoStart}). suspectId par défaut : véhicule joueur ; mainPoliceId (si fourni) remplace la liste policeIds. Sorties success/fail. En cas de succès, marque suspect et polices ignoreForceTeleport pour que le « scatter » du trafic ne les téléporte pas.
+Flowgraph node "Setup Pursuit Gameplay" (once_instant). Configures pursuit gameplay via gameplay_police.setupPursuitGameplay(suspectId, policeIds, {pursuitMode, preventAutoStart}). suspectId defaults to the player vehicle; mainPoliceId (if provided) replaces the policeIds list. Outputs success/fail. On success, marks the suspect and police as ignoreForceTeleport so that traffic "scatter" does not teleport them.
 
-## Remarques
+## Notes
 
-- Si policeIds est nil (pas de pin relié) et succès, `ipairs(policeIds)` provoque une erreur Lua.
+- If policeIds is nil (no pin connected) and the setup succeeds, `ipairs(policeIds)` raises a Lua error.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).
+Flowgraph node class (created via `_flowgraph_createNode(C)`).
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:workOnce()` | Lance le setup de poursuite, écrit success/fail et positionne ignoreForceTeleport sur les véhicules concernés. | 25 |
+| `C:workOnce()` | Starts the pursuit setup, writes success/fail and sets ignoreForceTeleport on the vehicles concerned. | 25 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `be:` `getPlayerVehicleID`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/gameplay/traffic/setupPursuitGameplay.lua`.*

@@ -1,13 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/environment/getGravity.lua",
-  "module": "Nœud flowgraph « Get Gravity » (catégorie provider, tag environment). Sort la gravité globale actuelle en m/s² (core_environment.getGravity) sur le pin « gravity ».",
+  "module": "Flowgraph node \"Get Gravity\" (category provider, tag environment). Outputs the current global gravity in m/s² (core_environment.getGravity) on the \"gravity\" pin.",
   "fields": {},
   "functions": {},
   "classes": {
     "C": {
-      "desc": "Classe du nœud.",
+      "desc": "Node class.",
       "functions": {
-        "work": {"desc": "Chaque frame, écrit la gravité sur le pin de sortie."}
+        "work": {
+          "desc": "Every frame, writes the gravity to the output pin."
+        }
       }
     }
   }

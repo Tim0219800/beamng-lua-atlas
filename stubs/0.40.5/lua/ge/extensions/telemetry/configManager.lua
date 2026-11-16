@@ -2,68 +2,68 @@
 -- tim19Atlas stub generated from lua/ge/extensions/telemetry/configManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Extension GE (dépend de telemetry_userIdentity) qui gère la configuration de la télémétrie : lecture du cache /telemetry/config.json, validation, récupération périodique auprès du serveur (s11/v1/telemetryConfig, avec les faits de clientFacts et l'identifiant anonyme), puis application via un callback. Elle indique quels modules/trackers sont activés (moduleConfigs). Le démarrage avec l'argument -telemetryLocal active tous les trackers avec leurs valeurs par défaut sans jamais contacter le serveur ni rien envoyer.
---- Accès : extension `telemetry_configManager` : `extensions.load("telemetry_configManager")`, puis la globale `telemetry_configManager`
+--- GE extension (depends on telemetry_userIdentity) that manages the telemetry configuration: reading the /telemetry/config.json cache, validation, periodic fetching from the server (s11/v1/telemetryConfig, with the clientFacts facts and the anonymous identifier), then application via a callback. It indicates which modules/trackers are enabled (moduleConfigs). Starting with the -telemetryLocal argument enables all trackers with their default values without ever contacting the server or sending anything.
+--- Access: extension `telemetry_configManager`: `extensions.load("telemetry_configManager")`, then the global `telemetry_configManager`
 ---@class telemetry_configManager
 ---@field dependencies string[] {'telemetry_userIdentity'}.
 telemetry_configManager = {}
 
---- Si le délai de reprise est écoulé et que le TTL de la config est dépassé, relance fetchConfigFromAPI et applique la nouvelle config. Au plus une tentative toutes les 300 s.
----Source : lua/ge/extensions/telemetry/configManager.lua:145
+--- If the retry delay has elapsed and the config's TTL is exceeded, relaunches fetchConfigFromAPI and applies the new config. At most one attempt every 300 s.
+---Source: lua/ge/extensions/telemetry/configManager.lua:145
 function telemetry_configManager.checkConfigExpiry() end
 
---- Appelle core_online.apiCall('s11/v1/telemetryConfig') en envoyant les faits client et l'identifiant anonyme. Si la réponse est valide, la sauvegarde dans /telemetry/config.json et appelle callback ; sinon, appelle callback avec une config par défaut désactivée (sauf si une config existe déjà).
----Source : lua/ge/extensions/telemetry/configManager.lua:105
----@param callback function|nil Appelée avec la configuration obtenue.
+--- Calls core_online.apiCall('s11/v1/telemetryConfig') sending the client facts and the anonymous identifier. If the response is valid, saves it to /telemetry/config.json and calls callback; otherwise, calls callback with a disabled default config (unless a config already exists).
+---Source: lua/ge/extensions/telemetry/configManager.lua:105
+---@param callback function|nil Called with the obtained configuration.
 function telemetry_configManager.fetchConfigFromAPI(callback) end
 
---- Renvoie la configuration actuellement appliquée.
----Source : lua/ge/extensions/telemetry/configManager.lua:158
----@return table|nil  Config (enabled, ttlHours, reportIntervalHours, runIds, moduleConfigs) ou nil avant initializeConfig.
+--- Returns the currently applied configuration.
+---Source: lua/ge/extensions/telemetry/configManager.lua:158
+---@return table|nil  Config (enabled, ttlHours, reportIntervalHours, runIds, moduleConfigs) or nil before initializeConfig.
 function telemetry_configManager.getConfig() end
 
---- Renvoie la configuration d'un module de télémétrie : {enabled = true} en mode local, la table moduleConfigs[moduleName] si elle existe, sinon la table partagée {enabled = false}.
----Source : lua/ge/extensions/telemetry/configManager.lua:162
----@param moduleName string Nom du module/tracker.
----@return table  Config du module (ne pas la modifier : elle peut être partagée).
+--- Returns the configuration of a telemetry module: {enabled = true} in local mode, the moduleConfigs[moduleName] table if it exists, otherwise the shared table {enabled = false}.
+---Source: lua/ge/extensions/telemetry/configManager.lua:162
+---@param moduleName string Module/tracker name.
+---@return table  Module config (do not modify it: it may be shared).
 function telemetry_configManager.getModuleConfig(moduleName) end
 
---- Intervalle d'échantillonnage d'un module en heures : surveyIntervalHours, ou surveyIntervalDays * 24 pour les anciens caches, sinon la valeur par défaut. Les anciens caches en jours restent lus jusqu'à ce que toutes les installations aient récupéré le format en heures.
----Source : lua/ge/extensions/telemetry/configManager.lua:176
----@param moduleName string Nom du module.
----@param defaultHours number Valeur renvoyée si rien n'est configuré.
----@return number  Intervalle en heures.
+--- Sampling interval of a module in hours: surveyIntervalHours, or surveyIntervalDays * 24 for old caches, otherwise the default value. Old caches in days are still read until all installations have picked up the hours format.
+---Source: lua/ge/extensions/telemetry/configManager.lua:176
+---@param moduleName string Module name.
+---@param defaultHours number Value returned if nothing is configured.
+---@return number  Interval in hours.
 function telemetry_configManager.getSurveyIntervalHours(moduleName, defaultHours) end
 
---- Renvoie la version du schéma de télémétrie.
----Source : lua/ge/extensions/telemetry/configManager.lua:187
----@return string  Actuellement '30'.
+--- Returns the telemetry schema version.
+---Source: lua/ge/extensions/telemetry/configManager.lua:187
+---@return string  Currently '30'.
 function telemetry_configManager.getTelemetryVersion() end
 
---- Charge la configuration : en mode local, applique une config par défaut activée ; sinon active le polling, applique le cache s'il est valide et récent, sinon une config par défaut désactivée (la récupération réelle a lieu après authentification en ligne).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/configManager.lua:191
----@param callback function|nil Appelée avec la config à chaque application (et mémorisée pour les mises à jour ultérieures).
+--- Loads the configuration: in local mode, applies an enabled default config; otherwise enables polling, applies the cache if it is valid and recent, otherwise a disabled default config (the actual fetch happens after online authentication).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/configManager.lua:191
+---@param callback function|nil Called with the config on each application (and stored for later updates).
 function telemetry_configManager.initializeConfig(callback) end
 
---- Indique si le jeu a été lancé avec -telemetryLocal : tous les trackers sont actifs avec leurs valeurs par défaut, le serveur n'est jamais interrogé et rien n'est envoyé.
----Source : lua/ge/extensions/telemetry/configManager.lua:31
----@return boolean  true si l'argument est présent.
+--- Indicates whether the game was launched with -telemetryLocal: all trackers are active with their default values, the server is never queried and nothing is sent.
+---Source: lua/ge/extensions/telemetry/configManager.lua:31
+---@return boolean  true if the argument is present.
 function telemetry_configManager.isLocalOnly() end
 
---- Indique si un module est activé (getModuleConfig(...).enabled == true).
----Source : lua/ge/extensions/telemetry/configManager.lua:170
----@param moduleName string Nom du module/tracker.
----@return boolean  true si activé.
+--- Indicates whether a module is enabled (getModuleConfig(...).enabled == true).
+---Source: lua/ge/extensions/telemetry/configManager.lua:170
+---@param moduleName string Module/tracker name.
+---@return boolean  true if enabled.
 function telemetry_configManager.isModuleEnabled(moduleName) end
 
---- Hook de chargement : passe l'extension en mode de déchargement manuel.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/telemetry/configManager.lua:241
+--- Load hook: sets the extension to manual unload mode.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/telemetry/configManager.lua:241
 function telemetry_configManager.onExtensionLoaded() end
 
---- Active ou coupe le polling : installe/retire les hooks onUpdate (test d'expiration toutes les 60 s si la session en ligne est authentifiée) et onOnlineStateChanged (test dès la connexion), puis appelle extensions.hookUpdate.
----Source : lua/ge/extensions/telemetry/configManager.lua:230
----@param enabled boolean true pour activer.
+--- Enables or turns off polling: installs/removes the onUpdate hooks (expiry test every 60 s if the online session is authenticated) and onOnlineStateChanged (test as soon as connected), then calls extensions.hookUpdate.
+---Source: lua/ge/extensions/telemetry/configManager.lua:230
+---@param enabled boolean true to enable.
 function telemetry_configManager.setPollingEnabled(enabled) end
 

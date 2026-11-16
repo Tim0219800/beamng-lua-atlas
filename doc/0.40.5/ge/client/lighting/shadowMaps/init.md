@@ -1,14 +1,14 @@
 # `client_lighting_shadowMaps_init`
 
-*Fichier : `lua/ge/client/lighting/shadowMaps/init.lua` · VM : Game Engine (GE) · 12 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/client/lighting/shadowMaps/init.lua` · VM: Game Engine (GE) · 12 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("client/lighting/shadowMaps/init")`
+**Access:** `require("client/lighting/shadowMaps/init")`
 
-Déclare le ShaderData « BlurDepthShader » (boxFilterV.hlsl / boxFilterP.hlsl) utilisé pour flouter les shadow maps, s'il n'existe pas déjà. Aucune fonction exportée.
+Declares the ShaderData "BlurDepthShader" (boxFilterV.hlsl / boxFilterP.hlsl) used to blur shadow maps, if it does not already exist. No exported function.
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `scenetree.` `findObject`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/client/lighting/shadowMaps/init.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/client/lighting/shadowMaps/init.lua`.*

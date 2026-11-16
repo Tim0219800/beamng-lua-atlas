@@ -2,34 +2,34 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/autoSave.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Sauvegarde automatique de l'éditeur de niveaux. Un minuteur (preference files.autoSave.interval, 120 s par défaut) appelle editor.autoSaveLevel() quand files.autoSave.active est vrai, avec un compte à rebours dans la barre d'état pendant files.autoSave.noticeInterval secondes. Une fenêtre modale « AutoSave Restore » permet de restaurer l'arbre de scène depuis /temp/level_autosaves/<niveau>/ ; elle s'ouvre seule si l'éditeur ne s'est pas fermé proprement sur ce niveau, ou via le menu des fenêtres.
---- Accès : extension `editor_autoSave` : `extensions.load("editor_autoSave")`, puis la globale `editor_autoSave`
+--- Autosave of the level editor. A timer (preference files.autoSave.interval, 120 s by default) calls editor.autoSaveLevel() when files.autoSave.active is true, with a countdown in the status bar during files.autoSave.noticeInterval seconds. An "AutoSave Restore" modal window lets you restore the scene tree from /temp/level_autosaves/<level>/; it opens by itself if the editor did not close cleanly on that level, or via the windows menu.
+--- Access: extension `editor_autoSave`: `extensions.load("editor_autoSave")`, then the global `editor_autoSave`
 ---@class editor_autoSave
 editor_autoSave = {}
 
---- Appelé chaque frame de l'éditeur : affiche la fenêtre de restauration si nécessaire, décrémente le minuteur, affiche l'avertissement et déclenche editor.autoSaveLevel() quand il atteint 0.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/autoSave.lua:110
----@param dtReal number Durée réelle de la frame (s), utilisée pour le minuteur.
----@param dtSim number Durée simulée (non utilisée).
----@param dtRaw number Durée brute (non utilisée).
+--- Called every editor frame: shows the restore window if needed, decrements the timer, displays the warning and triggers editor.autoSaveLevel() when it reaches 0.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/autoSave.lua:110
+---@param dtReal number Real frame time (s), used for the timer.
+---@param dtSim number Simulated time (unused).
+---@param dtRaw number Raw duration (unused).
 function editor_autoSave.onEditorGui(dtReal, dtSim, dtRaw) end
 
---- Initialise le minuteur avec files.autoSave.interval et ajoute l'entrée « AutoSave Restore » au menu des fenêtres.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/autoSave.lua:133
+--- Initializes the timer with files.autoSave.interval and adds the "AutoSave Restore" entry to the windows menu.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/autoSave.lua:133
 function editor_autoSave.onEditorInitialized() end
 
---- Hook appelé quand une préférence change : remet le minuteur à jour pour files.autoSave.interval et garde noticeInterval <= interval.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/autoSave.lua:138
----@param path string Chemin de la préférence, ex. "files.autoSave.interval".
----@param value any Nouvelle valeur.
+--- Hook called when a preference changes: resets the timer for files.autoSave.interval and keeps noticeInterval <= interval.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/autoSave.lua:138
+---@param path string Preference path, e.g. "files.autoSave.interval".
+---@param value any New value.
 function editor_autoSave.onEditorPreferenceValueChanged(path, value) end
 
---- Hook d'enregistrement des préférences de l'éditeur : déclare la catégorie « files » et la sous-catégorie « autoSave ».
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/editor/autoSave.lua:153
----@param prefsRegistry table Registre de préférences de l'éditeur (registerCategory / registerSubCategory).
+--- Editor preferences registration hook: declares the "files" category and the "autoSave" subcategory.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/editor/autoSave.lua:153
+---@param prefsRegistry table Editor preferences registry (registerCategory / registerSubCategory).
 function editor_autoSave.onEditorRegisterPreferences(prefsRegistry) end
 

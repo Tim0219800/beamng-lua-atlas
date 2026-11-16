@@ -1,32 +1,32 @@
 # `jbeam_sectionMerger`
 
-*Fichier : `lua/common/jbeam/sectionMerger.lua` · VM : Commun (GE + véhicule) · 87 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/common/jbeam/sectionMerger.lua` · VM: Common (GE + vehicle) · 87 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("jbeam/sectionMerger")`
+**Access:** `require("jbeam/sectionMerger")`
 
-Fusionne des sections jbeam entre elles pour la rétrocompatibilité : la section triggers2 est versée dans triggers et rails2 dans rails. Les lignes fusionnées reçoivent originSection (nom de la section d'origine), la section source est supprimée pour ne pas être traitée plus loin, et sectionRenames est mis à jour (triggers2 -> triggers, rails2 -> rails).
+Merges jbeam sections together for backward compatibility: the triggers2 section is poured into triggers and rails2 into rails. The merged rows receive originSection (name of the original section), the source section is removed so it is not processed further, and sectionRenames is updated (triggers2 -> triggers, rails2 -> rails).
 
-## Remarques
+## Notes
 
-- mergeNumberedSections existe dans le code mais est locale et jamais appelée (le commentaire du code dit « not tested, be careful »).
-- Si une clé existe déjà dans la section cible, la ligne est écrasée avec un avertissement de journal (le message nomme deux fois la section cible).
-- Pour rails, isTableCid vaut false : validTables n'est pas initialisé par la fonction avant l'accès vehicle.validTables[sectionNameSource] = nil ; ce n'est sans risque que si validTables a déjà été créé par l'étape précédente (triggers l'initialise juste avant).
+- mergeNumberedSections exists in the code but is local and never called (the code comment says "not tested, be careful").
+- If a key already exists in the target section, the row is overwritten with a log warning (the message names the target section twice).
+- For rails, isTableCid is false: validTables is not initialized by the function before the access vehicle.validTables[sectionNameSource] = nil; this is only safe if validTables was already created by the previous step (triggers initializes it just before).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `jbeam_sectionMerger.process(vehicle, sectionRenames)` | Fusionne triggers2 dans triggers et rails2 dans rails, et enregistre ces renommages dans sectionRenames. *(interne)* | 70 |
+| `jbeam_sectionMerger.process(vehicle, sectionRenames)` | Merges triggers2 into triggers and rails2 into rails, and records these renames in sectionRenames. *(internal)* | 70 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `jbeam_sectionMerger.process(vehicle, sectionRenames)`
 
-Fusionne triggers2 dans triggers et rails2 dans rails, et enregistre ces renommages dans sectionRenames.
+Merges triggers2 into triggers and rails2 into rails, and records these renames in sectionRenames.
 
-- `vehicle` (*table*) : Données jbeam du véhicule (modifiées en place).
-- `sectionRenames` (*table<string, string>*) : Table ancien nom vers nouveau nom, complétée par la fonction.
-- **renvoie** : boolean Toujours true.
+- `vehicle` (*table*) : Vehicle jbeam data (modified in place).
+- `sectionRenames` (*table<string, string>*) : Table old name to new name, completed by the function.
+- **returns**: boolean Always true.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/common/jbeam/sectionMerger.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/common/jbeam/sectionMerger.lua`.*

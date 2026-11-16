@@ -1,38 +1,69 @@
 {
   "path": "lua/ge/extensions/editor/heroRoadEditor/sidewalkMgr.lua",
-  "module": "Trottoirs/bordures procéduraux d'un groupe du Hero Road Editor. Fine couche au-dessus du balayage partagé toolUtilities/walkRibbon : lit les bords réels inclinés du maillage (meshEdgeL/R, meshEdgeDirL/R) et balaie bordure + dallage le long de chaque côté activé (group.sidewalkLeft / sidewalkRight). Pendant l'édition c'est un ProceduralMesh transitoire 'HeroWalk_<id>' ; le bake l'écrit en .dae et pose un TSStatic persistant à sa place.",
+  "module": "Procedural sidewalks/curbs of a Hero Road Editor group. Thin layer on top of the shared sweep toolUtilities/walkRibbon: reads the actual banked edges of the mesh (meshEdgeL/R, meshEdgeDirL/R) and sweeps curb + paving along each enabled side (group.sidewalkLeft / sidewalkRight). During editing it is a transient ProceduralMesh 'HeroWalk_<id>'; the bake writes it to .dae and places a persistent TSStatic in its place.",
   "notes": [
-    "Les deux côtés sont fusionnés dans UN seul maillage (deux draws au total).",
-    "La hauteur Z du trottoir est celle du bord de chaussée (p.z), pas p.z + d.z*décalage, pour qu'il reste à niveau malgré le dévers.",
-    "Le décalage depuis le bord est group.sidewalkOffsetM (>= 0, défaut 0) ; la largeur vient de walkRibbon.width(). Les passages piétons (group.crossings) abaissent la bordure à fleur via walkRibbon.crossingDips.",
-    "Le maillage est collidable (meshPart.emitObject avec collision) mais non sauvegardé (canSave=false) tant que la route est en édition.",
-    "Le trottoir cuit n'a qu'un niveau de détail (NEAR_PX = 400) ; collisionType 'Collision Mesh', decalType 'Visible Mesh Final'.",
-    "Les enregistrements runtime (maillage, parts) sont gardés dans le module, indexés par group.id, et jamais sur le groupe."
+    "Both sides are merged into ONE mesh (two draws in total).",
+    "The sidewalk's Z height is that of the roadway edge (p.z), not p.z + d.z*offset, so that it stays level despite the superelevation.",
+    "The offset from the edge is group.sidewalkOffsetM (>= 0, default 0); the width comes from walkRibbon.width(). Crosswalks (group.crossings) lower the curb flush via walkRibbon.crossingDips.",
+    "The mesh is collidable (meshPart.emitObject with collision) but not saved (canSave=false) while the road is being edited.",
+    "The baked sidewalk has only one level of detail (NEAR_PX = 400); collisionType 'Collision Mesh', decalType 'Visible Mesh Final'.",
+    "The runtime records (mesh, parts) are kept in the module, indexed by group.id, and never on the group."
   ],
   "functions": {
     "updateGroup": {
-      "desc": "(Re)construit les trottoirs du groupe d'après le bord de maillage actuel et les bascules sidewalkLeft/sidewalkRight. Appelé juste après la reconstruction du maillage. Ne fait rien sans dossier de scène (sceneTreeFolderId) ; ne crée rien si aucun triangle n'est produit.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "(Re)builds the group's sidewalks from the current mesh edge and the sidewalkLeft/sidewalkRight toggles. Called right after the mesh rebuild. Does nothing without a scene folder (sceneTreeFolderId); creates nothing if no triangle is produced.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "removeGroup": {
-      "desc": "Supprime le maillage de trottoir du groupe et l'oublie.",
-      "params": {"group": {"type": "table", "desc": "Groupe Hero Road."}},
+      "desc": "Deletes the group's sidewalk mesh and forgets it.",
+      "params": {
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        }
+      },
       "internal": false
     },
     "tris": {
-      "desc": "Nombre de triangles du trottoir du groupe, pour le décompte de l'outil.",
-      "params": {"group": {"type": "table|nil", "desc": "Groupe Hero Road."}},
-      "returns": [{"type": "integer", "desc": "Nombre de triangles, 0 si aucun trottoir."}],
+      "desc": "Number of triangles of the group's sidewalk, for the tool's count.",
+      "params": {
+        "group": {
+          "type": "table|nil",
+          "desc": "Hero Road group."
+        }
+      },
+      "returns": [
+        {
+          "type": "integer",
+          "desc": "Number of triangles, 0 if no sidewalk."
+        }
+      ],
       "internal": false
     },
     "burnGroup": {
-      "desc": "Bake : écrit le trottoir en <dir>/HeroWalk_<id>.dae (centré sur son propre centre) et pose un TSStatic persistant (canSave=true) à sa place, après avoir supprimé le maillage procédural qui porte le même nom. En cas d'échec d'écriture, logue une erreur ('heroSidewalk') et le trottoir disparaît de ce bake.",
+      "desc": "Bake: writes the sidewalk to <dir>/HeroWalk_<id>.dae (centered on its own center) and places a persistent TSStatic (canSave=true) in its place, after deleting the procedural mesh that has the same name. On write failure, logs an error ('heroSidewalk') and the sidewalk disappears from this bake.",
       "params": {
-        "group": {"type": "table", "desc": "Groupe Hero Road."},
-        "dir": {"type": "string", "desc": "Dossier de bake (créé s'il n'existe pas), avec slash final."}
+        "group": {
+          "type": "table",
+          "desc": "Hero Road group."
+        },
+        "dir": {
+          "type": "string",
+          "desc": "Bake folder (created if it does not exist), with trailing slash."
+        }
       },
-      "returns": [{"type": "string[]", "desc": "Manifeste des noms d'objets de scène créés (vide si rien à cuire) ; sert à retirer le statique au unbake."}],
+      "returns": [
+        {
+          "type": "string[]",
+          "desc": "Manifest of the created scene object names (empty if nothing to bake); used to remove the static at unbake."
+        }
+      ],
       "internal": false
     }
   }

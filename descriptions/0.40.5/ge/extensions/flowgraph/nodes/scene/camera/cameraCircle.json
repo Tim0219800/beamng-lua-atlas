@@ -1,28 +1,28 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/scene/camera/cameraCircle.lua",
-  "module": "Noeud flowgraph 'Camera Auto Circle' (categorie once_p_duration). Fait tourner la camera libre en cercle autour d'un vehicule (vehId, defaut vehicule joueur) ou d'un point (centerPos) : rayon 'radius' (5 par defaut), hauteur 'height', vitesse angulaire 'speed' en degres/s (10 par defaut, negatif pour le sens inverse), angle de depart 'startAngle' (relatif a l'orientation du vehicule si vehId est donne), 'snapHeight' pour suivre le relief. La camera regarde toujours le centre.",
+  "module": "Flowgraph node 'Camera Auto Circle' (once_p_duration category). Rotates the free camera in a circle around a vehicle (vehId, default player vehicle) or a point (centerPos): radius 'radius' (5 by default), height 'height', angular speed 'speed' in degrees/s (10 by default, negative for the opposite direction), start angle 'startAngle' (relative to the vehicle's orientation if vehId is given), 'snapHeight' to follow the terrain. The camera always looks at the center.",
   "notes": [
-    "L'angle avance avec mgr.dtReal (temps reel, pas simulation).",
-    "Le centre suit le centre de la boite englobante (OOBB) du vehicule a chaque frame."
+    "The angle advances with mgr.dtReal (real time, not simulation).",
+    "The center follows the center of the vehicle's bounding box (OOBB) every frame."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du noeud flowgraph (creee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "desc": "Flowgraph node class (created by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.",
       "functions": {
         "_executionStarted": {
-          "desc": "Appelle onNodeReset.",
+          "desc": "Calls onNodeReset.",
           "internal": true
         },
         "onNodeReset": {
-          "desc": "Remet centre, decalage, position camera et angle a zero.",
+          "desc": "Resets center, offset, camera position and angle to zero.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Passe en camera libre et fixe l'angle de depart (+180 degres, plus l'orientation du vehicule si vehId).",
+          "desc": "Switches to the free camera and sets the start angle (+180 degrees, plus the vehicle's orientation if vehId).",
           "internal": true
         },
         "work": {
-          "desc": "Calcule le centre, la position sur le cercle, la hauteur (avec lissage 5 % si snapHeight), oriente la camera vers le centre (core_camera.setPosRot) puis incremente l'angle de dtReal * speed.",
+          "desc": "Computes the center, the position on the circle, the height (with 5% smoothing if snapHeight), orients the camera toward the center (core_camera.setPosRot) then increments the angle by dtReal * speed.",
           "internal": true
         }
       }

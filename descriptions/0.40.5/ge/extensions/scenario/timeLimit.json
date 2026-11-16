@@ -1,21 +1,66 @@
 {
   "path": "lua/ge/extensions/scenario/timeLimit.lua",
-  "module": "But de scénario « timeLimit » : le scénario doit être terminé en moins de maxTime secondes. Chargé par scenario_raceGoals (init, processState, updateFinalStatus) ; déclaré dans goals.vehicles avec id 'timeLimit'. Peut afficher un compte à rebours sur les dernières secondes et échoue si le temps est dépassé.",
-  "usage": "-- JSON : {\"id\":\"timeLimit\", \"value\":{\"maxTime\":60, \"waitTime\":2, \"countdown\":10, \"msg\":\"Trop long\"}}",
+  "module": "\"timeLimit\" scenario goal: the scenario must be completed in less than maxTime seconds. Loaded by scenario_raceGoals (init, processState, updateFinalStatus); declared in goals.vehicles with id 'timeLimit'. Can display a countdown over the last seconds and fails if the time is exceeded.",
+  "usage": "-- JSON: {\"id\":\"timeLimit\", \"value\":{\"maxTime\":60, \"waitTime\":2, \"countdown\":10, \"msg\":\"Trop long\"}}",
   "notes": [
-    "Champs de instance.value : maxTime (s), waitTime (s de tolérance après maxTime pendant la course), countdown (s : seuil d'affichage du compte à rebours), msg (message d'échec).",
-    "Pendant 'onRaceTick' (uniquement si waitTime est défini et maxTime ~= 0) : si countdown est fourni, affiche un message chaque seconde sous le seuil ; si scenario.timer > maxTime + waitTime, échec (failedGoal -> scenario_scenarios.finish({failed=...})). Sur 'onRaceResult' : échec si scenario.finalStatus.finalTime > maxTime, sinon le statut devient 'passed'.",
-    "Bug/incohérence : init rejette l'instance seulement si maxTime ET waitTime ne sont PAS des nombres (opérateur and) ; une seule valeur invalide passe.",
-    "Bug/incohérence : sans waitTime, le contrôle 'onRaceTick' est ignoré (seul 'onRaceResult' vérifie la limite). L'instance.wait est initialisé à countdown (peut être nil, ce qui ferait échouer la comparaison timeleft < instance.wait si countdown est nul mais défini autrement).",
-    "Bug/incohérence : updateFinalStatus ignore son argument instance et redéclare la variable de boucle du même nom.",
-    "Le message d'échec par défaut est {txt = 'extensions.scenario.timeLimit.failedGoal', context = {maxTime}} ; valeur non traduite dans ce fichier."
+    "instance.value fields: maxTime (s), waitTime (s of tolerance after maxTime during the race), countdown (s: threshold for displaying the countdown), msg (failure message).",
+    "During 'onRaceTick' (only if waitTime is defined and maxTime ~= 0): if countdown is provided, displays a message every second below the threshold; if scenario.timer > maxTime + waitTime, failure (failedGoal -> scenario_scenarios.finish({failed=...})). On 'onRaceResult': failure if scenario.finalStatus.finalTime > maxTime, otherwise the status becomes 'passed'.",
+    "BUG/inconsistency: init rejects the instance only if maxTime AND waitTime are NOT numbers (and operator); a single invalid value passes.",
+    "BUG/inconsistency: without waitTime, the 'onRaceTick' check is skipped (only 'onRaceResult' checks the limit). instance.wait is initialized to countdown (may be nil, which would make the comparison timeleft < instance.wait fail if countdown is nil but defined otherwise).",
+    "BUG/inconsistency: updateFinalStatus ignores its instance argument and redeclares the loop variable of the same name.",
+    "The default failure message is {txt = 'extensions.scenario.timeLimit.failedGoal', context = {maxTime}}; value not translated in this file."
   ],
   "fields": {
-    "instances": {"type": "table<integer, table>", "desc": "Instances du but 'timeLimit' pour le scénario courant, remplies par init."}
+    "instances": {
+      "type": "table<integer, table>",
+      "desc": "'timeLimit' goal instances for the current scenario, filled by init."
+    }
   },
   "functions": {
-    "init": {"desc": "Reconstruit M.instances à partir de scenario.goals.vehicles (id == 'timeLimit') après validation des types de maxTime/waitTime/countdown ; instance.wait reçoit countdown.", "params": {"scenario": {"type": "table", "desc": "scénario courant"}}, "returns": [], "internal": true},
-    "processState": {"desc": "Appelée par scenario_raceGoals à chaque évènement : gère 'onRaceTick' (compte à rebours et dépassement de maxTime + waitTime) et 'onRaceResult' (comparaison du temps final à maxTime).", "params": {"scenario": {"type": "table", "desc": "scénario courant"}, "state": {"type": "string", "desc": "nom du hook"}, "stateData": {"type": "table|nil", "desc": "données du hook (non utilisées)"}}, "returns": [], "internal": true},
-    "updateFinalStatus": {"desc": "Appelée en fin de scénario : publie le statut de chaque instance dans statistics_statistics.", "params": {"scenario": {"type": "table", "desc": "scénario courant"}, "instance": {"type": "table", "desc": "non utilisé (déduit du code)"}}, "returns": [], "internal": true}
+    "init": {
+      "desc": "Rebuilds M.instances from scenario.goals.vehicles (id == 'timeLimit') after validating the types of maxTime/waitTime/countdown; instance.wait receives countdown.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "current scenario"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "processState": {
+      "desc": "Called by scenario_raceGoals on every event: handles 'onRaceTick' (countdown and exceeding maxTime + waitTime) and 'onRaceResult' (comparison of the final time to maxTime).",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "current scenario"
+        },
+        "state": {
+          "type": "string",
+          "desc": "hook name"
+        },
+        "stateData": {
+          "type": "table|nil",
+          "desc": "hook data (unused)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    },
+    "updateFinalStatus": {
+      "desc": "Called at the end of the scenario: publishes the status of each instance to statistics_statistics.",
+      "params": {
+        "scenario": {
+          "type": "table",
+          "desc": "current scenario"
+        },
+        "instance": {
+          "type": "table",
+          "desc": "unused (inferred from code)"
+        }
+      },
+      "returns": [],
+      "internal": true
+    }
   }
 }

@@ -1,44 +1,44 @@
 # `career_modules_debug_dealershipFilterDebug`
 
-*Fichier : `lua/ge/extensions/career/modules/debug/dealershipFilterDebug.lua` · VM : Game Engine (GE) · 225 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/debug/dealershipFilterDebug.lua` · VM: Game Engine (GE) · 225 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_debug_dealershipFilterDebug` : `extensions.load("career_modules_debug_dealershipFilterDebug")`, puis la globale `career_modules_debug_dealershipFilterDebug`
+**Access:** extension `career_modules_debug_dealershipFilterDebug`: `extensions.load("career_modules_debug_dealershipFilterDebug")`, then the global `career_modules_debug_dealershipFilterDebug`
 
-Outil de debug « General > Filter Debug » : fenêtre ImGui où l'on colle un JSON de filtre de concessionnaire (filter avec whiteList/blackList, subFilters avec probability…) ; le JSON est décodé à chaque modification, le filtre est appliqué (via util/configListGenerator) et le résultat est affiché en tableau. Utile pour régler les filtres de véhicules d'un concessionnaire.
+"General > Filter Debug" debug tool: ImGui window where you paste a dealership filter JSON (filter with whiteList/blackList, subFilters with probability…); the JSON is decoded on every change, the filter is applied (via util/configListGenerator) and the result is shown in a table. Useful for tuning a dealership's vehicle filters.
 
-## Exemple
+## Example
 
 ```lua
 extensions.load("career/modules/debug/dealershipFilterDebug")
 career_modules_debug_dealershipFilterDebug.show()
 ```
 
-## Remarques
+## Notes
 
-- show() permet d'ouvrir l'outil hors carrière : elle branche drawDebugMenu sur le hook onUpdate.
-- Le message d'erreur de décodage est stocké dans une variable globale nommée 'error' (masque la fonction Lua error).
+- show() lets you open the tool outside career: it hooks drawDebugMenu onto the onUpdate hook.
+- The decoding error message is stored in a global variable named 'error' (shadows the Lua function error).
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_debug_dealershipFilterDebug.drawDebugMenu()` | Dessine la fenêtre 'Filter Debug Input' (zone de texte JSON, statut 'All Good :)' ou 'Decoding Error') puis les résultats du filtre. | 101 |
-| `career_modules_debug_dealershipFilterDebug.show()` | Affiche l'outil hors carrière : M.onUpdate = drawDebugMenu puis extensions.hookUpdate('onUpdate'). | 218 |
+| `career_modules_debug_dealershipFilterDebug.drawDebugMenu()` | Draws the 'Filter Debug Input' window (JSON text area, status 'All Good :)' or 'Decoding Error') then the filter results. | 101 |
+| `career_modules_debug_dealershipFilterDebug.show()` | Shows the tool outside career: M.onUpdate = drawDebugMenu then extensions.hookUpdate('onUpdate'). | 218 |
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `debugName` | string | 'General > Filter Debug'. |
-| `debugOrder` | number | Ordre de tri dans la fenêtre de debug (11). |
+| `debugOrder` | number | Sort order in the debug window (11). |
 
-## Hooks émis
+## Emitted hooks
 
-Évènements diffusés aux extensions par `extensions.hook` :
+Events broadcast to extensions by `extensions.hook`:
 
-- `onUpdate` — écouté par 186 module(s)
+- `onUpdate` — listened to by 186 module(s)
 
-**Charge les extensions :** `util/configListGenerator`
+**Loads extensions:** `util/configListGenerator`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/debug/dealershipFilterDebug.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/debug/dealershipFilterDebug.lua`.*

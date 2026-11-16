@@ -1,16 +1,26 @@
 {
   "path": "lua/ge/client/postFx/fxaa.lua",
-  "module": "Anti-aliasing FXAA. Crée le state block FXAA_StateBlock, le shader FXAA_ShaderData (fxaa.cs.hlsl) et le PostEffect « FXAA_PostEffect » (désactivé au départ, PFXAfterDiffuse, lit et écrit $backBuffer). Activer FXAA désactive SMAA et SMAA T2x.",
+  "module": "FXAA anti-aliasing. Creates the state block FXAA_StateBlock, the shader FXAA_ShaderData (fxaa.cs.hlsl) and the PostEffect \"FXAA_PostEffect\" (disabled at the start, PFXAfterDiffuse, reads and writes $backBuffer). Enabling FXAA disables SMAA and SMAA T2x.",
   "notes": [
-    "Si FXAA_PostEffect existe déjà, rien n'est recréé ; la création des trois objets est groupée dans le même bloc if."
+    "If FXAA_PostEffect already exists, nothing is recreated; the creation of the three objects is grouped in the same if block."
   ],
   "fields": {},
   "functions": {},
   "classes": {
     "fxaa_PostEffectCallbacks": {
-      "desc": "Callbacks de FXAA_PostEffect (globale FXAA_PostEffectCallbacks).",
+      "desc": "Callbacks of FXAA_PostEffect (global FXAA_PostEffectCallbacks).",
       "functions": {
-        "onEnabled": {"desc": "Désactive SMAA_PostEffect s'il existe, appelle disableSmaaT2x() si cette globale existe, puis retourne true.", "params": {}, "returns": [{"type": "boolean", "desc": "toujours true"}], "internal": true}
+        "onEnabled": {
+          "desc": "Disables SMAA_PostEffect if it exists, calls disableSmaaT2x() if this global exists, then returns true.",
+          "params": {},
+          "returns": [
+            {
+              "type": "boolean",
+              "desc": "always true"
+            }
+          ],
+          "internal": true
+        }
       }
     }
   }

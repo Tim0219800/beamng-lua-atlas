@@ -1,26 +1,26 @@
 # `flowgraph_nodes_timetrials_onRaceCheckpoint`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.lua` · VM : Game Engine (GE) · 59 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.lua` · VM: Game Engine (GE) · 59 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/timetrials/onRaceCheckpoint")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/timetrials/onRaceCheckpoint")` (file under extensions/ but not a regular extension)
 
-Noeud « Race CP Reached » (repeat_instant). Laisse passer une impulsion quand le joueur franchit un checkpoint de course. Sorties : checked (impulsion), vehId (caché), index (checkpoint), lap (tour courant, compté avec data.lapDiff). Reçoit le hook onRaceWaypointReached.
+Node "Race CP Reached" (repeat_instant). Lets an impulse through when the player crosses a race checkpoint. Outputs: checked (impulse), vehId (hidden), index (checkpoint), lap (current lap, counted with data.lapDiff). Receives the hook onRaceWaypointReached.
 
-## Remarques
+## Notes
 
-- Ancien nom de pin : vehicleID -> vehId (legacyPins).
+- Old pin name: vehicleID -> vehId (legacyPins).
 
-## Classe `C`
+## Class `C`
 
-Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.
+Flowgraph node class (returned by _flowgraph_createNode(C)). The methods are called by the flowgraph manager or the editor.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_executionStarted()` | Remet lap = 1 et enterFlag = false. | 35 |
-| `C:init(mgr, ...)` | Initialise enterFlag, lap = 1 et clearOutPinsOnStart = false. | 29 |
-| `C:onRaceWaypointReached(data)` | Hook : mémorise vehId, index (data.cur) et met à jour le tour (data.lapDiff). | 40 |
-| `C:onScenarioRestarted()` | Hook de redémarrage du scénario : réinitialise le noeud. | 53 |
-| `C:work(args)` | Écrit checked = enterFlag puis le remet à false. | 48 |
+| `C:_executionStarted()` | Resets lap = 1 and enterFlag = false. | 35 |
+| `C:init(mgr, ...)` | Initializes enterFlag, lap = 1 and clearOutPinsOnStart = false. | 29 |
+| `C:onRaceWaypointReached(data)` | Hook: stores vehId, index (data.cur) and updates the lap (data.lapDiff). | 40 |
+| `C:onScenarioRestarted()` | Scenario restart hook: resets the node. | 53 |
+| `C:work(args)` | Writes checked = enterFlag then resets it to false. | 48 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/timetrials/onRaceCheckpoint.lua`.*

@@ -1,68 +1,131 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/toolCamera.lua",
-  "module": "Caméra d'outil réutilisable : prend la main sur la caméra de l'éditeur avec la caméra pilotée par script 'scriptedFree' de BeamNG, la pilote chaque frame avec le glisser du bouton droit et la molette dans le viewport (via cameraRig), et lance des transitions lissées (smoothstep) vers un cadrage « pan » (vue de dessus) ou « orbite ». Pendant qu'elle conduit, elle bloque dans le groupe de filtre 'toolCameraZoom' les actions editorCameraZoom et changeCameraSpeed.",
-  "usage": "local cam = require('editor/toolUtilities/toolCamera')\ncam.takeOver()\ncam.flyOrbit(x, y, z, 20)\n-- chaque frame : cam.drive(false)\n-- en sortant : cam.handBack(true)",
+  "module": "Reusable tool camera: takes over the editor camera with BeamNG's script-driven 'scriptedFree' camera, drives it every frame with right-button drag and the wheel in the viewport (via cameraRig), and starts smoothed (smoothstep) transitions to a \"pan\" (top-down view) or \"orbit\" framing. While it drives, it blocks the editorCameraZoom and changeCameraSpeed actions in the 'toolCameraZoom' filter group.",
+  "usage": "local cam = require('editor/toolUtilities/toolCamera')\ncam.takeOver()\ncam.flyOrbit(x, y, z, 20)\n-- every frame: cam.drive(false)\n-- on exit: cam.handBack(true)",
   "notes": [
-    "flyPan, flyOrbit et recenterOrbit ne font rien tant que takeOver n'a pas été appelé (active == false).",
-    "Durée d'un vol : de 1 s à 2 s selon la distance (2 s à partir de 400 m) quand `time` est nil.",
-    "recenterOrbit glisse en 0.5 s par défaut.",
-    "Le bouton droit pilote la caméra ; le bouton gauche reste libre pour l'outil.",
-    "En mode pan la caméra reste dans l'emprise du terrain (marge d'une case) et flotte à hauteur constante au-dessus du terrain moyen en vue.",
-    "drive ne fait rien pendant qu'une animation de caméra est en cours."
+    "flyPan, flyOrbit and recenterOrbit do nothing until takeOver has been called (active == false).",
+    "Flight duration: from 1 s to 2 s depending on distance (2 s from 400 m) when `time` is nil.",
+    "recenterOrbit glides in 0.5 s by default.",
+    "The right button drives the camera; the left button stays free for the tool.",
+    "In pan mode the camera stays within the terrain footprint (one-cell margin) and floats at a constant height above the average terrain in view.",
+    "drive does nothing while a camera animation is in progress."
   ],
   "functions": {
     "takeOver": {
-      "desc": "Prend la main sur la caméra de l'éditeur : mémorise la caméra globale et sa pose, passe à 'scriptedFree' (locked, driveRot) à la même pose et bloque la molette de zoom standard. Sans effet si déjà actif ou sans core_camera.",
+      "desc": "Takes over the editor camera: remembers the global camera and its pose, switches to 'scriptedFree' (locked, driveRot) at the same pose and blocks the standard zoom wheel. No effect if already active or without core_camera.",
       "params": {},
       "returns": []
     },
     "handBack": {
-      "desc": "Rend la caméra de l'éditeur : débloque la molette et revient à la caméra globale mémorisée. Sans effet si on ne conduit pas.",
-      "params": {"animate": {"type": "boolean", "desc": "Vrai : revient d'abord à la pose mémorisée par un vol lissé avant de rendre la main."}},
+      "desc": "Gives the editor camera back: unblocks the wheel and returns to the remembered global camera. No effect if not driving.",
+      "params": {
+        "animate": {
+          "type": "boolean",
+          "desc": "True: first returns to the pose remembered by a smoothed flight before handing back."
+        }
+      },
       "returns": []
     },
     "isActive": {
-      "desc": "Vrai si le module conduit scriptedFree.",
+      "desc": "True if the module is driving scriptedFree.",
       "params": {},
-      "returns": [{"type": "boolean", "desc": "État actif."}]
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "Active state."
+        }
+      ]
     },
     "flyPan": {
-      "desc": "Vol vers un cadrage PAN vu de dessus. Le point est tenu dans l'emprise du terrain. Si groundZ est absent, la hauteur du sol est échantillonnée sur le terrain.",
+      "desc": "Flight to a top-down PAN framing. The point is held within the terrain footprint. If groundZ is absent, the ground height is sampled from the terrain.",
       "params": {
-        "x": {"type": "number", "desc": "X monde."},
-        "y": {"type": "number", "desc": "Y monde."},
-        "groundZ": {"type": "number|nil", "desc": "Altitude du sol sous le point."},
-        "height": {"type": "number|nil", "desc": "Altitude absolue visée pour la caméra."},
-        "time": {"type": "number|nil", "desc": "Durée en secondes (0 = saut immédiat, nil = selon la distance)."}
+        "x": {
+          "type": "number",
+          "desc": "World X."
+        },
+        "y": {
+          "type": "number",
+          "desc": "World Y."
+        },
+        "groundZ": {
+          "type": "number|nil",
+          "desc": "Ground altitude under the point."
+        },
+        "height": {
+          "type": "number|nil",
+          "desc": "Absolute target altitude for the camera."
+        },
+        "time": {
+          "type": "number|nil",
+          "desc": "Duration in seconds (0 = immediate jump, nil = depending on distance)."
+        }
       },
       "returns": []
     },
     "flyOrbit": {
-      "desc": "Vol vers un cadrage ORBITE sur (x, y, z). `radius` dimensionne le recul pour bien cadrer le sujet ; yaw et pitch remplacent l'angle 3/4 par défaut (pour aborder un détail depuis une direction extérieure connue).",
+      "desc": "Flight to an ORBIT framing on (x, y, z). `radius` sizes the pull-back to frame the subject properly; yaw and pitch replace the default 3/4 angle (to approach a detail from a known outside direction).",
       "params": {
-        "x": {"type": "number", "desc": "X monde."},
-        "y": {"type": "number", "desc": "Y monde."},
-        "z": {"type": "number", "desc": "Z monde."},
-        "radius": {"type": "number|nil", "desc": "Rayon du sujet."},
-        "yaw": {"type": "number|nil", "desc": "Lacet imposé."},
-        "pitch": {"type": "number|nil", "desc": "Tangage imposé."},
-        "time": {"type": "number|nil", "desc": "Durée en secondes (nil = selon la distance)."}
+        "x": {
+          "type": "number",
+          "desc": "World X."
+        },
+        "y": {
+          "type": "number",
+          "desc": "World Y."
+        },
+        "z": {
+          "type": "number",
+          "desc": "World Z."
+        },
+        "radius": {
+          "type": "number|nil",
+          "desc": "Radius of the subject."
+        },
+        "yaw": {
+          "type": "number|nil",
+          "desc": "Imposed yaw."
+        },
+        "pitch": {
+          "type": "number|nil",
+          "desc": "Imposed pitch."
+        },
+        "time": {
+          "type": "number|nil",
+          "desc": "Duration in seconds (nil = depending on distance)."
+        }
       },
       "returns": []
     },
     "recenterOrbit": {
-      "desc": "Glisse le PIVOT d'orbite sur (x, y, z) en GARDANT lacet, tangage et distance : le geste doux « recentrer sur ce que je viens de sélectionner », contrairement à flyOrbit qui recadre en 3/4.",
+      "desc": "Glides the orbit PIVOT to (x, y, z) while KEEPING yaw, pitch and distance: the gentle \"recenter on what I just selected\" gesture, unlike flyOrbit which reframes at 3/4.",
       "params": {
-        "x": {"type": "number", "desc": "X monde."},
-        "y": {"type": "number", "desc": "Y monde."},
-        "z": {"type": "number", "desc": "Z monde."},
-        "time": {"type": "number|nil", "desc": "Durée en secondes (0.5 par défaut)."}
+        "x": {
+          "type": "number",
+          "desc": "World X."
+        },
+        "y": {
+          "type": "number",
+          "desc": "World Y."
+        },
+        "z": {
+          "type": "number",
+          "desc": "World Z."
+        },
+        "time": {
+          "type": "number|nil",
+          "desc": "Duration in seconds (0.5 by default)."
+        }
       },
       "returns": []
     },
     "drive": {
-      "desc": "Pilotage interactif par frame : collecte le glisser bouton droit et la molette dans le viewport (ignorés si l'UI ou un état occupé déclaré par l'hôte capte la souris) et applique la pose de cameraRig à scriptedFree. Force l'affichage du curseur pendant le glisser pour que MouseDelta continue à être renseigné.",
-      "params": {"blocked": {"type": "boolean|nil", "desc": "Vrai : ne pas déplacer la caméra (interaction modale de l'outil)."}},
+      "desc": "Interactive per-frame driving: collects the right-button drag and the wheel in the viewport (ignored if the UI or a busy state declared by the host captures the mouse) and applies the cameraRig pose to scriptedFree. Forces the cursor to be shown during the drag so that MouseDelta keeps being populated.",
+      "params": {
+        "blocked": {
+          "type": "boolean|nil",
+          "desc": "True: do not move the camera (modal interaction of the tool)."
+        }
+      },
       "returns": []
     }
   }

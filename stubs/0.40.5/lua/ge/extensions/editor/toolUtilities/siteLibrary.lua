@@ -2,14 +2,14 @@
 -- tim19Atlas stub generated from lua/ge/extensions/editor/toolUtilities/siteLibrary.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Save, Save As et Open pour les outils de site à document unique. Un bâtiment massing, un espace ouvert et un parking sont chacun UN document dont la maison est un dossier d'étagère de bibliothèque (voir siteAssets) : Save réécrit par-dessus sans demander, Save As nomme un nouveau dossier et le suit, Open remplace tout le document. Le placeur de sites dresse les copies, l'éditeur découpe l'original. new(cfg) fabrique, pour chaque outil, une liaison avec les mêmes trois boutons, icônes et libellés.
---- Accès : extension `editor_toolUtilities_siteLibrary` : `extensions.load("editor_toolUtilities_siteLibrary")`, puis la globale `editor_toolUtilities_siteLibrary`
+--- Save, Save As and Open for single-document site tools. A massing building, an open space and a parking lot are each ONE document whose home is a library shelf folder (see siteAssets): Save rewrites over it without asking, Save As names a new folder and follows it, Open replaces the whole document. The site placer stands up the copies, the editor carves the original. new(cfg) builds, for each tool, a binding with the same three buttons, icons and labels.
+--- Access: extension `editor_toolUtilities_siteLibrary`: `extensions.load("editor_toolUtilities_siteLibrary")`, then the global `editor_toolUtilities_siteLibrary`
 ---@class editor_toolUtilities_siteLibrary
 editor_toolUtilities_siteLibrary = {}
 
---- Fabrique la liaison d'un outil à son étagère. Renvoie une table avec les fonctions : save(doc, name) (écrit le document dans la bibliothèque sous un nom, qui est aussi son dossier ; un seul chemin pour Save, Save As et Rename ; renvoie ok), open(dir) (rouvre un site cuit depuis son model.json et s'y lie ; renvoie ok, erreur), buttons(doc) (dessine Save, Save As, Open), settle() (ouvre le dossier choisi avant tout dessin), unbind() (détache du site ouvert et marque modifié), saveOnLeave(doc) (à la sortie de l'éditeur : réécrit le site s'il a changé, ou lui donne un nom libre, avec suffixe numérique), boundName() (nom du dossier lié ou nil), boundPath() (dossier lié), attachment() (liaison et état modifié), reattach(at) et setOnOpened(fn) (à lancer une fois un document chargé).
----Source : lua/ge/extensions/editor/toolUtilities/siteLibrary.lua:35
+--- Builds a tool's binding to its shelf. Returns a table with the functions: save(doc, name) (writes the document into the library under a name, which is also its folder; a single path for Save, Save As and Rename; returns ok), open(dir) (reopens a baked site from its model.json and binds to it; returns ok, error), buttons(doc) (draws Save, Save As, Open), settle() (opens the chosen folder before any drawing), unbind() (detaches from the open site and marks modified), saveOnLeave(doc) (on leaving the editor: rewrites the site if it changed, or gives it a free name, with numeric suffix), boundName() (name of the bound folder or nil), boundPath() (bound folder), attachment() (binding and modified state), reattach(at) and setOnOpened(fn) (to run once a document is loaded).
+---Source: lua/ge/extensions/editor/toolUtilities/siteLibrary.lua:35
 ---@param cfg table { toolId, kind, noun, stateKey, editMode, hasContent, bakeRun, applyState, rename }.
----@return table  Liaison avec save, open, buttons, settle, unbind, saveOnLeave, boundName, boundPath, attachment, reattach, setOnOpened.
+---@return table  Binding with save, open, buttons, settle, unbind, saveOnLeave, boundName, boundPath, attachment, reattach, setOnOpened.
 function editor_toolUtilities_siteLibrary.new(cfg) end
 

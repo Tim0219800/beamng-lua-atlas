@@ -1,56 +1,105 @@
 {
   "path": "lua/common/jbeam/partpacks.lua",
-  "module": "Gestion des « part packs » : ensembles de pièces prédéfinis décrits dans des fichiers *.partpacks.json des dossiers du véhicule (tableau d'objets {path, filters, ...}). Le module les collecte (avec cache par liste de dossiers), relève ce qui est installé dans l'arbre de pièces (slots, slots vides, noms de pièces, chemins) et ne garde que les packs dont les filtres correspondent au véhicule courant. Sert à l'interface de personnalisation pour proposer uniquement les packs pertinents.",
-  "usage": "local pp = require('jbeam/partpacks')\nlocal visible = pp.process({'/vehicles/wl40/', '/vehicles/common/'}, config.partsTree, 'wl40')\n-- visible[path] = définition du pack (sans le champ path)",
+  "module": "Management of \"part packs\": predefined sets of parts described in *.partpacks.json files in the vehicle folders (array of objects {path, filters, ...}). The module collects them (cached by folder list), gathers what is installed in the parts tree (slots, empty slots, part names, paths) and keeps only the packs whose filters match the current vehicle. Used by the customization UI to offer only the relevant packs.",
+  "usage": "local pp = require('jbeam/partpacks')\nlocal visible = pp.process({'/vehicles/wl40/', '/vehicles/common/'}, config.partsTree, 'wl40')\n-- visible[path] = pack definition (without the path field)",
   "notes": [
-    "Format d'un fichier .partpacks.json : tableau d'objets, chacun avec path (chaîne obligatoire, clé du catalogue) et éventuellement filters. Le champ path est retiré de l'objet une fois utilisé comme clé ; un path en double produit un avertissement et écrase l'entrée précédente.",
-    "Filtres (tous facultatifs, tables) : slotWhitelist/slotBlacklist (table nomDeSlot -> true|'present'|'empty'|'nonempty'), vehicleWhitelist/vehicleBlacklist (liste de noms de véhicule), partNameWhitelist/partNameBlacklist (noms de pièces choisies), pathWhitelist/pathBlacklist (valeurs de part.path). Le joker '*' est permis dans les clés/entrées (converti en motif Lua).",
-    "Règles : whitelist = toutes les entrées doivent correspondre ; blacklist = une seule correspondance cache le pack. Un format de filtre invalide masque le pack (compté comme invalid) et est consigné.",
-    "États de slot : 'present' (ou true) = le slot existe dans l'arbre ; 'empty' = existe sans pièce choisie ; 'nonempty' = existe avec une pièce.",
-    "Le catalogue est mis en cache par concaténation des dossiers ; invalidateCollectCache() est nécessaire si les fichiers changent.",
-    "process journalise les temps (collect, collectInstalled, filter) et les compteurs en niveau 'I'.",
-    "Utilise FS:findFiles et jsonReadFile : disponible côté GE."
+    "Format of a .partpacks.json file: array of objects, each with path (mandatory string, catalog key) and optionally filters. The path field is removed from the object once used as a key; a duplicate path produces a warning and overwrites the previous entry.",
+    "Filters (all optional, tables): slotWhitelist/slotBlacklist (table slotName -> true|'present'|'empty'|'nonempty'), vehicleWhitelist/vehicleBlacklist (list of vehicle names), partNameWhitelist/partNameBlacklist (chosen part names), pathWhitelist/pathBlacklist (part.path values). The wildcard '*' is allowed in keys/entries (converted to a Lua pattern).",
+    "Rules: whitelist = all entries must match; blacklist = a single match hides the pack. An invalid filter format hides the pack (counted as invalid) and is logged.",
+    "Slot states: 'present' (or true) = the slot exists in the tree; 'empty' = exists with no part chosen; 'nonempty' = exists with a part.",
+    "The catalog is cached by concatenation of the folders; invalidateCollectCache() is necessary if the files change.",
+    "process logs the timings (collect, collectInstalled, filter) and the counters at level 'I'.",
+    "Uses FS:findFiles and jsonReadFile: available on the GE side."
   ],
   "fields": {},
   "functions": {
     "collectAllPartPacks": {
-      "desc": "Lit tous les *.partpacks.json (recherche récursive) des dossiers donnés et renvoie le catalogue path -> définition. Résultat mis en cache par liste de dossiers.",
-      "params": {"vehicleDirectories": {"type": "string[]|nil", "desc": "Dossiers du véhicule (ex. {'/vehicles/pickup/', '/vehicles/common/'})."}},
-      "returns": [{"type": "table<string, table>", "desc": "Catalogue des packs par path."}],
+      "desc": "Reads all the *.partpacks.json files (recursive search) of the given folders and returns the catalog path -> definition. Result cached by folder list.",
+      "params": {
+        "vehicleDirectories": {
+          "type": "string[]|nil",
+          "desc": "Vehicle folders (e.g. {'/vehicles/pickup/', '/vehicles/common/'})."
+        }
+      },
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Catalog of packs by path."
+        }
+      ],
       "internal": false
     },
     "invalidateCollectCache": {
-      "desc": "Vide le cache du catalogue de packs.",
+      "desc": "Empties the pack catalog cache.",
       "params": {},
       "internal": false
     },
     "collectInstalled": {
-      "desc": "Parcourt récursivement l'arbre de pièces (id, chosenPartName, path, children) et relève ce qui est installé.",
-      "params": {"partsTree": {"type": "table", "desc": "Arbre de pièces du config du véhicule (config.partsTree)."}},
-      "returns": [{"type": "table", "desc": "{slots, emptySlots, partNames, partNamesList, paths, pathsList} : ensembles (nom=true) et listes ordonnées."}],
+      "desc": "Recursively walks the parts tree (id, chosenPartName, path, children) and gathers what is installed.",
+      "params": {
+        "partsTree": {
+          "type": "table",
+          "desc": "Parts tree of the vehicle config (config.partsTree)."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{slots, emptySlots, partNames, partNamesList, paths, pathsList}: sets (name=true) and ordered lists."
+        }
+      ],
       "internal": false
     },
     "filter": {
-      "desc": "Applique les filtres de chaque pack du catalogue aux données installées et au modèle de véhicule.",
+      "desc": "Applies the filters of each pack of the catalog to the installed data and to the vehicle model.",
       "params": {
-        "partPacksCatalog": {"type": "table<string, table>", "desc": "Catalogue renvoyé par collectAllPartPacks."},
-        "installedData": {"type": "table", "desc": "Données renvoyées par collectInstalled."},
-        "vehicleModel": {"type": "string|nil", "desc": "Nom du modèle de véhicule (pour vehicleWhitelist/Blacklist)."}
+        "partPacksCatalog": {
+          "type": "table<string, table>",
+          "desc": "Catalog returned by collectAllPartPacks."
+        },
+        "installedData": {
+          "type": "table",
+          "desc": "Data returned by collectInstalled."
+        },
+        "vehicleModel": {
+          "type": "string|nil",
+          "desc": "Vehicle model name (for vehicleWhitelist/Blacklist)."
+        }
       },
       "returns": [
-        {"type": "table<string, table>", "desc": "Packs visibles."},
-        {"type": "table", "desc": "Statistiques {total, shown, hidden, invalid}."}
+        {
+          "type": "table<string, table>",
+          "desc": "Visible packs."
+        },
+        {
+          "type": "table",
+          "desc": "Statistics {total, shown, hidden, invalid}."
+        }
       ],
       "internal": false
     },
     "process": {
-      "desc": "Enchaîne collectAllPartPacks, collectInstalled et filter, avec journalisation des temps.",
+      "desc": "Chains collectAllPartPacks, collectInstalled and filter, with timing logs.",
       "params": {
-        "vehicleDirectories": {"type": "string[]", "desc": "Dossiers du véhicule."},
-        "partsTree": {"type": "table", "desc": "Arbre de pièces installé."},
-        "vehicleModel": {"type": "string|nil", "desc": "Nom du modèle."}
+        "vehicleDirectories": {
+          "type": "string[]",
+          "desc": "Vehicle folders."
+        },
+        "partsTree": {
+          "type": "table",
+          "desc": "Installed parts tree."
+        },
+        "vehicleModel": {
+          "type": "string|nil",
+          "desc": "Model name."
+        }
       },
-      "returns": [{"type": "table<string, table>", "desc": "Packs visibles."}],
+      "returns": [
+        {
+          "type": "table<string, table>",
+          "desc": "Visible packs."
+        }
+      ],
       "internal": false
     }
   }

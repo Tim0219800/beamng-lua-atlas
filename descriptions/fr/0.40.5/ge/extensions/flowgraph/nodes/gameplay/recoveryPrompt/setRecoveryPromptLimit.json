@@ -1,0 +1,39 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/gameplay/recoveryPrompt/setRecoveryPromptLimit.lua",
+  "module": "Nœud flowgraph « Set Recovery Prompt Limits » (catégorie once_instant). Limite le nombre d'utilisations de chaque bouton du recovery prompt (-1 = illimité) ; sans utilisation restante le bouton n'est plus sélectionnable. Pins d'entrée number : flipMission (5), recoverMission (5), submitMission (-1), restartMission (-1) ; des pins number personnalisés sont autorisés et sauvegardés. Dépend de gameplay_walk.",
+  "classes": {
+    "C": {
+      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "functions": {
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du nœud dans l'éditeur flowgraph (ImGui).",
+          "internal": true,
+          "params": {
+            "builder": {
+              "type": "table",
+              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+            },
+            "style": {
+              "type": "table",
+              "desc": "style de dessin du nœud"
+            }
+          }
+        },
+        "init": {
+          "desc": "Initialise l'état interne du nœud à sa création (appelé par le moteur flowgraph).",
+          "internal": true
+        },
+        "workOnce": {
+          "desc": "Construit la table des limites à partir des pins number non nil, appelle core_recoveryPrompt.setButtonLimits(limits) puis resetButtonLimitCounters(counts) pour remettre les compteurs à zéro.",
+          "internal": true,
+          "params": {
+            "args": {
+              "type": "table",
+              "desc": "arguments transmis par le moteur (non utilisés)"
+            }
+          }
+        }
+      }
+    }
+  }
+}

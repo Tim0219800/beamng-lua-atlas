@@ -1,9 +1,9 @@
 {
   "path": "lua/vehicle/controller/dummy.lua",
-  "module": "Contrôleur principal (type \"main\") minimal pour les véhicules sans moteur (remorques, objets). Il fournit l'API obligatoire d'un contrôleur principal (changements de rapport, démarreur, etc., tous en nop) et écrit chaque image des valeurs electrics neutres : throttle, brake, clutch issus des entrées, gear \"N\", gearIndex 0, rpm/fuel/températures à 0, ignition false, gearboxMode \"none\".",
+  "module": "Minimal main controller (type \"main\") for vehicles without an engine (trailers, objects). It provides the mandatory main controller API (gear changes, starter, etc., all nop) and writes neutral electrics values every frame: throttle, brake, clutch from the inputs, gear \"N\", gearIndex 0, rpm/fuel/temperatures at 0, ignition false, gearboxMode \"none\".",
   "notes": [
-    "Aucune clé jbeam n'est lue. M.engineInfo est un tableau de 21 valeurs (index 3 et 4 = 1000, index 14 = \"manual\", index 15 = id de l'objet) dont l'index 11 est mis à jour avec la vitesse sol (obj:getGroundSpeed()) uniquement si le flux engineInfo est écouté.",
-    "Champs throttle, brake, clutchRatio, fireEngineTemperature, drivingAggression, shiftingAggression : constantes à 0 pour l'API de contrôleur principal. nop = fonction globale du moteur qui ne fait rien."
+    "No jbeam key is read. M.engineInfo is an array of 21 values (index 3 and 4 = 1000, index 14 = \"manual\", index 15 = object id) whose index 11 is updated with the ground speed (obj:getGroundSpeed()) only if the engineInfo stream is listened to.",
+    "Fields throttle, brake, clutchRatio, fireEngineTemperature, drivingAggression, shiftingAggression: constants at 0 for the main controller API. nop = global engine function that does nothing."
   ],
   "fields": {
     "type": {
@@ -12,7 +12,7 @@
     },
     "engineInfo": {
       "type": "table",
-      "desc": "Tableau d'info moteur de 21 valeurs statiques (voir notes)."
+      "desc": "Engine info array of 21 static values (see notes)."
     },
     "fireEngineTemperature": {
       "type": "number",
@@ -85,11 +85,11 @@
   },
   "functions": {
     "updateGFX": {
-      "desc": "Chaque image : copie les entrées throttle/brake/clutch (bornées 0..1) dans electrics.values et force les autres valeurs à leur état neutre.",
+      "desc": "Every frame: copies the throttle/brake/clutch inputs (bounded 0..1) into electrics.values and forces the other values to their neutral state.",
       "params": {
         "dt": {
           "type": "number",
-          "desc": "Pas de temps (s)."
+          "desc": "Time step (s)."
         }
       },
       "returns": [],

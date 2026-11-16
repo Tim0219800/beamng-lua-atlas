@@ -1,60 +1,60 @@
 # `flowgraph_modules_trafficModule`
 
-*Fichier : `lua/ge/extensions/flowgraph/modules/trafficModule.lua` · VM : Game Engine (GE) · 73 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/modules/trafficModule.lua` · VM: Game Engine (GE) · 73 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/modules/trafficModule")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/modules/trafficModule")` (file under extensions/ but not a regular extension)
 
-Module flowgraph (moduleOrder 0) qui enveloppe gameplay_traffic et gameplay_parking pour les nœuds de trafic. Il retient si le flowgraph a lui-même activé le trafic (trafficActive) ou les voitures garées (parkedCarsActive) afin de ne les désactiver à l'arrêt que si c'est lui qui les a activés, sauf si keepTrafficState est vrai.
+Flowgraph module (moduleOrder 0) that wraps gameplay_traffic and gameplay_parking for traffic nodes. It remembers whether the flowgraph itself enabled traffic (trafficActive) or parked cars (parkedCarsActive) so as to disable them on stop only if it enabled them, unless keepTrafficState is true.
 
-## Remarques
+## Notes
 
-- À l'arrêt (sans keepTrafficState), si le trafic était actif, il réinitialise les variables de trafic et de poursuite (setTrafficVars, setPursuitVars) et celles de stationnement, puis désactive trafic et voitures garées.
-- keepTrafficState est remis à false à chaque arrêt.
+- On stop (without keepTrafficState), if traffic was active, it resets the traffic and pursuit variables (setTrafficVars, setPursuitVars) and the parking ones, then disables traffic and parked cars.
+- keepTrafficState is set back to false on every stop.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `flowgraph_modules_trafficModule.activateParkedCars(vehList)` | Active les voitures garées (gameplay_parking.processVehicles(vehList)). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_trafficModule.activateTraffic(vehList)` | Active le trafic (gameplay_traffic.activate) avec une liste de véhicules. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_trafficModule.deactivateParkedCars()` | Désactive les voitures garées (processVehicles sans argument), seulement si activées par le flowgraph. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_trafficModule.deactivateTraffic()` | Désactive le trafic (gameplay_traffic.deactivate), seulement s'il a été activé par le flowgraph. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_trafficModule.executionStopped()` | Appelé à l'arrêt du projet : remet à zéro les variables de trafic, poursuite et stationnement puis désactive trafic et voitures garées, sauf si keepTrafficState est vrai. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_trafficModule.init()` | Appelé à la création du module : trafficActive, parkedCarsActive et keepTrafficState valent false. (assignée dynamiquement) *(interne)* | dyn |
-| `flowgraph_modules_trafficModule.insertTraffic(id)` | Ajoute un véhicule au trafic (gameplay_traffic.insertTraffic) et met à jour l'état. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_trafficModule.removeTraffic(id)` | Retire un véhicule du trafic (gameplay_traffic.removeTraffic) et met à jour l'état. (assignée dynamiquement) | dyn |
-| `flowgraph_modules_trafficModule.updateParkedCarsState()` | Met à jour parkedCarsActive d'après gameplay_parking.getParkedCarsData(). (assignée dynamiquement) | dyn |
-| `flowgraph_modules_trafficModule.updateTrafficState()` | Met à jour trafficActive d'après gameplay_traffic.getTrafficData(). À n'utiliser que si le flowgraph a modifié l'état du trafic. (assignée dynamiquement) | dyn |
+| `flowgraph_modules_trafficModule.activateParkedCars(vehList)` | Enables parked cars (gameplay_parking.processVehicles(vehList)). (dynamically assigned) | dyn |
+| `flowgraph_modules_trafficModule.activateTraffic(vehList)` | Enables traffic (gameplay_traffic.activate) with a list of vehicles. (dynamically assigned) | dyn |
+| `flowgraph_modules_trafficModule.deactivateParkedCars()` | Disables parked cars (processVehicles without arguments), only if enabled by the flowgraph. (dynamically assigned) | dyn |
+| `flowgraph_modules_trafficModule.deactivateTraffic()` | Disables traffic (gameplay_traffic.deactivate), only if it was enabled by the flowgraph. (dynamically assigned) | dyn |
+| `flowgraph_modules_trafficModule.executionStopped()` | Called when the project stops: resets the traffic, pursuit and parking variables then disables traffic and parked cars, unless keepTrafficState is true. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_trafficModule.init()` | Called when the module is created: trafficActive, parkedCarsActive and keepTrafficState are false. (dynamically assigned) *(internal)* | dyn |
+| `flowgraph_modules_trafficModule.insertTraffic(id)` | Adds a vehicle to the traffic (gameplay_traffic.insertTraffic) and updates the state. (dynamically assigned) | dyn |
+| `flowgraph_modules_trafficModule.removeTraffic(id)` | Removes a vehicle from the traffic (gameplay_traffic.removeTraffic) and updates the state. (dynamically assigned) | dyn |
+| `flowgraph_modules_trafficModule.updateParkedCarsState()` | Updates parkedCarsActive from gameplay_parking.getParkedCarsData(). (dynamically assigned) | dyn |
+| `flowgraph_modules_trafficModule.updateTrafficState()` | Updates trafficActive from gameplay_traffic.getTrafficData(). Use only if the flowgraph changed the traffic state. (dynamically assigned) | dyn |
 
-### Détail des paramètres
+### Parameter details
 
 #### `flowgraph_modules_trafficModule.activateParkedCars(vehList)`
 
-Active les voitures garées (gameplay_parking.processVehicles(vehList)). (assignée dynamiquement)
+Enables parked cars (gameplay_parking.processVehicles(vehList)). (dynamically assigned)
 
-- `vehList` (*integer[]|nil*) : ids des véhicules (déduit du code)
+- `vehList` (*integer[]|nil*) : vehicle ids (inferred from code)
 
 #### `flowgraph_modules_trafficModule.activateTraffic(vehList)`
 
-Active le trafic (gameplay_traffic.activate) avec une liste de véhicules. (assignée dynamiquement)
+Enables traffic (gameplay_traffic.activate) with a list of vehicles. (dynamically assigned)
 
-- `vehList` (*integer[]|nil*) : ids des véhicules (déduit du code)
+- `vehList` (*integer[]|nil*) : vehicle ids (inferred from code)
 
 #### `flowgraph_modules_trafficModule.insertTraffic(id)`
 
-Ajoute un véhicule au trafic (gameplay_traffic.insertTraffic) et met à jour l'état. (assignée dynamiquement)
+Adds a vehicle to the traffic (gameplay_traffic.insertTraffic) and updates the state. (dynamically assigned)
 
-- `id` (*integer*) : id du véhicule
+- `id` (*integer*) : vehicle id
 
 #### `flowgraph_modules_trafficModule.removeTraffic(id)`
 
-Retire un véhicule du trafic (gameplay_traffic.removeTraffic) et met à jour l'état. (assignée dynamiquement)
+Removes a vehicle from the traffic (gameplay_traffic.removeTraffic) and updates the state. (dynamically assigned)
 
-- `id` (*integer*) : id du véhicule
+- `id` (*integer*) : vehicle id
 
-## Classe `C`
+## Class `C`
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
 | `C:activateParkedCars(vehList)` |  | 45 |
 | `C:activateTraffic(vehList)` |  | 33 |
@@ -68,4 +68,4 @@ Retire un véhicule du trafic (gameplay_traffic.removeTraffic) et met à jour l'
 | `C:updateTrafficState()` | trafficActive and parkedCarsActive should only get updated if the flowgraph itself alters the traffic state | 15 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/modules/trafficModule.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/modules/trafficModule.lua`.*

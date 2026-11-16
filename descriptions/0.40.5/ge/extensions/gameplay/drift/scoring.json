@@ -1,191 +1,412 @@
 {
   "path": "lua/ge/extensions/gameplay/drift/scoring.lua",
-  "module": "Calcule le score de drift de chaque véhicule suivi (un état de score par vehId). Pendant un drift, ajoute à un score en cache des points continus (distance parcourue x multiplicateurs d'angle, de vitesse et de proximité des murs, plus un bonus de palier), fait monter un combo (creep-up) via drift d'un seul côté, transitions de drift, zones de cascade et murs frôlés, et détermine le palier courant et le facteur de performance (1 à 4, lissé). À la fin d'un drift ou d'une chaîne, le score en cache multiplié par le combo est ajouté au score permanent (wrapUp) puis onDriftCompletedScored est émis.",
-  "usage": "local s = gameplay_drift_scoring.getScore()\nprint(s.score, s.cachedScore, s.combo, s.potentialScore)\n-- valider le score en cours (ex. fin d'épreuve) :\ngameplay_drift_scoring.wrapUp()",
+  "module": "Computes the drift score of each tracked vehicle (one score state per vehId). During a drift, adds continuous points to a cached score (distance traveled x angle, speed and wall proximity multipliers, plus a tier bonus), raises a combo (creep-up) through one-sided drifting, drift transitions, cascade zones and close wall passes, and determines the current tier and the performance factor (1 to 4, smoothed). At the end of a drift or chain, the cached score multiplied by the combo is added to the permanent score (wrapUp) then onDriftCompletedScored is emitted.",
+  "usage": "local s = gameplay_drift_scoring.getScore()\nprint(s.score, s.cachedScore, s.combo, s.potentialScore)\n-- validate the current score (e.g. end of event):\ngameplay_drift_scoring.wrapUp()",
   "notes": [
-    "Modèle : score potentiel = floor(cachedScore * combo). Les points continus valent angleMulti * speedMulti * wallMulti * distanceParcourue * continuousDriftPoints (0.6), plus continuousScore du palier * dtSim ; ils sont multipliés par le facteur du stallingSystem s'il est chargé (mode Gymkhana).",
-    "Multiplicateurs : angle de 1 (minAngle) à 10 (maxAngle) ; vitesse de 1 à 4 (22 à 200 de airSpeed) ; mur 1 + jusqu'à 3 pour chaque distance avant/arrière.",
-    "Combo : démarre à 1, +0.1 par tranche de 100 de creep-up ; creep-up lent (valeur « low ») au-delà du soft cap 10 ; plafond dur 25. Sources : drift d'un seul côté (angle >= 25°, 10 par 0.1 s, 100 incréments max), zone de cascade (140), transition de drift (de 100 à 500 selon la vitesse 30/60/90/120/150, moitié au-delà du soft cap, minimum 25 de vitesse et recharge 2 s).",
-    "Paliers (minScore du score en cache -> id, bonus continu/s) : 0 drift 10, 250 greatDrift 20, 750 awesomeDrift 30, 2000 superiorDrift 40, 5000 epicDrift 50, 9000 apexDrift 60, 15000 legendaryDrift 75. Noms traduits via missions.drift.tiers.<id>.",
-    "Facteur de performance : rapport du score continu de la frame (sans palier) au score d'un drift de référence (angle 80°, vitesse 70, mur arrière 1.8 m) ; sa version « stepped » (1 à 4) a 0.3 s d'hystérésis sur le palier 4, puis est lissée.",
-    "Points de base des zones de cascade : driftThrough 300, donut 100, hitPole 300, nearPole 300 (basePoints) ; points par défaut driftThrough 1500, donut 500, hitPole 1000, nearPole 1000.",
-    "Les ajouts de score sont ignorés si le drift général est gelé, ou si le véhicule est gelé individuellement (setVehicleFrozen). Les mises à jour de score sont sautées en pause ou si dtSim <= 0.",
-    "Les fonctions sans vehId utilisent le véhicule du joueur 0 puis, à défaut, n'importe quel état de score ; seul getScore(vehId) ne retombe jamais sur un autre véhicule (renvoie un score vide).",
-    "Évènements émis : onDriftNewCombo({newCombo, comboChange}, vehId), onNewDriftTierReached(tier, vehId), onDriftScoreChanged(driftScore, vehId), onDriftCachedScoreReset(vehId), onDriftScoreWrappedUp(score, vehId), onDriftCompletedScored({addedScore, combo, careerRewards, tier, vehId}), onTightDriftScored / onHitPoleScored / onNearPoleScored / onDonutDriftScored(score, vehId).",
-    "getCareerRewardsForDriftScore calcule beamXP mais renvoie toujours une table vide : careerRewards vaut {} (ou nil si score < 300). careerRewards.minScore et scoreMulForXp sont donc inutilisés en pratique.",
-    "calculatePerformanceFactor peut sortir sans lisser (return) pendant l'hystérésis du palier 4."
+    "Model: potential score = floor(cachedScore * combo). Continuous points are angleMulti * speedMulti * wallMulti * distanceTraveled * continuousDriftPoints (0.6), plus the tier's continuousScore * dtSim; they are multiplied by the stallingSystem factor if it is loaded (Gymkhana mode).",
+    "Multipliers: angle from 1 (minAngle) to 10 (maxAngle); speed from 1 to 4 (22 to 200 airSpeed); wall 1 + up to 3 for each front/rear distance.",
+    "Combo: starts at 1, +0.1 per 100 of creep-up; slow creep-up (\"low\" value) beyond the soft cap of 10; hard cap 25. Sources: one-sided drift (angle >= 25°, 10 per 0.1 s, 100 increments max), stunt zone (140), drift transition (100 to 500 depending on speed 30/60/90/120/150, halved beyond the soft cap, minimum speed 25 and 2 s cooldown).",
+    "Tiers (minScore of the cached score -> id, continuous bonus/s): 0 drift 10, 250 greatDrift 20, 750 awesomeDrift 30, 2000 superiorDrift 40, 5000 epicDrift 50, 9000 apexDrift 60, 15000 legendaryDrift 75. Names translated via missions.drift.tiers.<id>.",
+    "Performance factor: ratio of the frame's continuous score (without tier) to the score of a reference drift (angle 80°, speed 70, rear wall 1.8 m); its \"stepped\" version (1 to 4) has 0.3 s of hysteresis on tier 4, then is smoothed.",
+    "Base points of stunt zones: driftThrough 300, donut 100, hitPole 300, nearPole 300 (basePoints); default points driftThrough 1500, donut 500, hitPole 1000, nearPole 1000.",
+    "Score additions are ignored if general drift is frozen, or if the vehicle is individually frozen (setVehicleFrozen). Score updates are skipped when paused or if dtSim <= 0.",
+    "Functions without vehId use player 0's vehicle and otherwise any score state; only getScore(vehId) never falls back to another vehicle (it returns an empty score).",
+    "Emitted events: onDriftNewCombo({newCombo, comboChange}, vehId), onNewDriftTierReached(tier, vehId), onDriftScoreChanged(driftScore, vehId), onDriftCachedScoreReset(vehId), onDriftScoreWrappedUp(score, vehId), onDriftCompletedScored({addedScore, combo, careerRewards, tier, vehId}), onTightDriftScored / onHitPoleScored / onNearPoleScored / onDonutDriftScored(score, vehId).",
+    "getCareerRewardsForDriftScore computes beamXP but always returns an empty table: careerRewards is {} (or nil if score < 300). careerRewards.minScore and scoreMulForXp are therefore unused in practice.",
+    "calculatePerformanceFactor can exit without smoothing (return) during the tier 4 hysteresis."
   ],
   "functions": {
     "reset": {
-      "desc": "Remet à zéro l'état de score d'un véhicule (ou de tous si vehId est nil) et vide l'historique de debug. Appelé par gameplay_drift_general.reset.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Véhicule à réinitialiser ; nil pour tous."}}
+      "desc": "Resets a vehicle's score state (or all vehicles' if vehId is nil) and clears the debug history. Called by gameplay_drift_general.reset.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle to reset; nil for all."
+        }
+      }
     },
     "getScore": {
-      "desc": "Renvoie la table de score du véhicule demandé, ou celle du joueur 0 si vehId est nil. Si le véhicule n'a pas d'état, renvoie un score vide.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "table", "desc": "{score, combo, cachedScore, potentialScore, comboCreepup}. Attention : c'est la table vivante, pas une copie."}]
+      "desc": "Returns the score table of the requested vehicle, or player 0's if vehId is nil. If the vehicle has no state, returns an empty score.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{score, combo, cachedScore, potentialScore, comboCreepup}. Warning: this is the live table, not a copy."
+        }
+      ]
     },
     "getPotentialScore": {
-      "desc": "Renvoie le score potentiel (floor(cachedScore * combo)).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Score potentiel, 0 si aucun état."}]
+      "desc": "Returns the potential score (floor(cachedScore * combo)).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Potential score, 0 if no state."
+        }
+      ]
     },
     "getDriftPerformanceFactor": {
-      "desc": "Renvoie le facteur de performance continu de la dernière frame (1 = drift de référence très bon).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Facteur, 0 hors drift."}]
+      "desc": "Returns the continuous performance factor of the last frame (1 = very good reference drift).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Factor, 0 outside a drift."
+        }
+      ]
     },
     "getSteppedDriftPerformanceFactor": {
-      "desc": "Renvoie le facteur de performance par paliers (1 à 4), lissé dans le temps.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Facteur lissé, 0 hors drift."}]
+      "desc": "Returns the stepped performance factor (1 to 4), smoothed over time.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Smoothed factor, 0 outside a drift."
+        }
+      ]
     },
     "getScoreAddedThisFrame": {
-      "desc": "Renvoie les points continus ajoutés à la dernière frame (bonus de palier inclus).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number", "desc": "Points de la frame."}]
+      "desc": "Returns the continuous points added during the last frame (tier bonus included).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Frame points."
+        }
+      ]
     },
     "getCurrentDriftTier": {
-      "desc": "Renvoie la table du palier de drift courant du véhicule (le premier si aucun état).",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "table", "desc": "{minScore, continuousScore, id, order, name}"}]
+      "desc": "Returns the table of the vehicle's current drift tier (the first one if there is no state).",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{minScore, continuousScore, id, order, name}"
+        }
+      ]
     },
     "getDriftTiers": {
-      "desc": "Renvoie la liste des paliers de drift (noms traduits au premier onUpdate).",
-      "returns": [{"type": "table[]", "desc": "Liste de {minScore, continuousScore, id, order, name}."}]
+      "desc": "Returns the list of drift tiers (names translated at the first onUpdate).",
+      "returns": [
+        {
+          "type": "table[]",
+          "desc": "List of {minScore, continuousScore, id, order, name}."
+        }
+      ]
     },
     "getScoreOptions": {
-      "desc": "Renvoie la table des réglages de score (points des zones, multiplicateurs, options de combo, récompenses carrière). Modifiable à chaud.",
-      "returns": [{"type": "table", "desc": "scoreOptions (table vivante)."}]
+      "desc": "Returns the score settings table (zone points, multipliers, combo options, career rewards). Modifiable at runtime.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "scoreOptions (live table)."
+        }
+      ]
     },
     "getStuntZoneBasePoints": {
-      "desc": "Renvoie les points de base d'un type de zone de cascade.",
-      "params": {"stuntZoneType": {"type": "string", "desc": "\"driftThrough\", \"donut\", \"hitPole\" ou \"nearPole\"."}},
-      "returns": [{"type": "number", "desc": "basePoints de ce type."}]
+      "desc": "Returns the base points of a stunt zone type.",
+      "params": {
+        "stuntZoneType": {
+          "type": "string",
+          "desc": "\"driftThrough\", \"donut\", \"hitPole\" or \"nearPole\"."
+        }
+      },
+      "returns": [
+        {
+          "type": "number",
+          "desc": "basePoints of this type."
+        }
+      ]
     },
     "addCachedScore": {
-      "desc": "Ajoute des points au score en cache (avant combo). Ignoré si le drift est gelé ou si le véhicule est gelé. Avec useStallingSystem, applique le facteur de gameplay_drift_stallingSystem et arrondit à l'entier inférieur.",
+      "desc": "Adds points to the cached score (before combo). Ignored if drift is frozen or if the vehicle is frozen. With useStallingSystem, applies the gameplay_drift_stallingSystem factor and rounds down to the integer.",
       "params": {
-        "valueToAdd": {"type": "number", "desc": "Points à ajouter."},
-        "useStallingSystem": {"type": "boolean|nil", "desc": "true pour appliquer le facteur de stalling (défaut false)."},
-        "vehId": {"type": "integer|nil", "desc": "Id du véhicule (joueur 0 par défaut)."}
+        "valueToAdd": {
+          "type": "number",
+          "desc": "Points to add."
+        },
+        "useStallingSystem": {
+          "type": "boolean|nil",
+          "desc": "true to apply the stalling factor (default false)."
+        },
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id (player 0 by default)."
+        }
       },
-      "returns": [{"type": "number", "desc": "Points réellement ajoutés (0 si ignoré)."}]
+      "returns": [
+        {
+          "type": "number",
+          "desc": "Points actually added (0 if ignored)."
+        }
+      ]
     },
     "wrapUp": {
-      "desc": "Valide le score en cache : ajoute floor(cachedScore * combo) au score permanent puis remet le cache et le combo à zéro (hook onDriftCachedScoreReset). Ne fait rien si le résultat est < 1.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number|boolean", "desc": "Points ajoutés, ou false si rien à valider."}]
+      "desc": "Validates the cached score: adds floor(cachedScore * combo) to the permanent score, then resets the cache and the combo to zero (hook onDriftCachedScoreReset). Does nothing if the result is < 1.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|boolean",
+          "desc": "Points added, or false if there is nothing to validate."
+        }
+      ]
     },
     "wrapUpWithText": {
-      "desc": "Comme wrapUp, mais émet aussi onDriftScoreWrappedUp(addedScore, vehId) pour que l'UI présente le score validé.",
-      "params": {"vehId": {"type": "integer|nil", "desc": "Id du véhicule."}},
-      "returns": [{"type": "number|boolean", "desc": "Points ajoutés, ou false."}]
+      "desc": "Like wrapUp, but also emits onDriftScoreWrappedUp(addedScore, vehId) so that the UI displays the validated score.",
+      "params": {
+        "vehId": {
+          "type": "integer|nil",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "number|boolean",
+          "desc": "Points added, or false."
+        }
+      ]
     },
     "setVehicleFrozen": {
-      "desc": "Gèle ou dégèle le scoring d'un véhicule individuel (ses ajouts de score sont alors ignorés).",
+      "desc": "Freezes or unfreezes scoring for an individual vehicle (its score additions are then ignored).",
       "params": {
-        "vehId": {"type": "integer", "desc": "Id du véhicule."},
-        "isFrozen": {"type": "boolean", "desc": "true pour geler."}
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        },
+        "isFrozen": {
+          "type": "boolean",
+          "desc": "true to freeze."
+        }
       }
     },
     "isVehicleFrozen": {
-      "desc": "Indique si le scoring de ce véhicule est gelé individuellement.",
-      "params": {"vehId": {"type": "integer", "desc": "Id du véhicule."}},
-      "returns": [{"type": "boolean", "desc": "true si gelé."}]
+      "desc": "Returns whether this vehicle's scoring is individually frozen.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle id."
+        }
+      },
+      "returns": [
+        {
+          "type": "boolean",
+          "desc": "true if frozen."
+        }
+      ]
     },
     "getDriftDebugInfo": {
-      "desc": "Renvoie {default=true, canBeChanged=true} pour la fenêtre de debug drift.",
-      "returns": [{"type": "table", "desc": "{default = true, canBeChanged = true}"}]
+      "desc": "Returns {default=true, canBeChanged=true} for the drift debug window.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{default = true, canBeChanged = true}"
+        }
+      ]
     },
     "getGC": {
-      "desc": "Renvoie la quantité de garbage mesurée par le profileur.",
-      "returns": [{"type": "number|nil", "desc": "nil tant que le debug général n'a jamais été actif."}]
+      "desc": "Returns the amount of garbage measured by the profiler.",
+      "returns": [
+        {
+          "type": "number|nil",
+          "desc": "nil as long as general debug has never been active."
+        }
+      ]
     },
     "onUpdate": {
-      "desc": "Appelé à chaque frame : crée les états de score des véhicules suivis, met à jour tier, facteur de performance, creep-up et score continu pour chacun. Au premier appel, traduit les paliers et calcule le score de référence.",
+      "desc": "Called every frame: creates the score states of tracked vehicles, updates tier, performance factor, creep-up and continuous score for each. On the first call, translates the tiers and computes the reference score.",
       "params": {
-        "dtReal": {"type": "number", "desc": "Delta temps réel (debug)."},
-        "_dtSim": {"type": "number", "desc": "Delta temps simulé, utilisé pour les calculs."}
+        "dtReal": {
+          "type": "number",
+          "desc": "Real delta time (debug)."
+        },
+        "_dtSim": {
+          "type": "number",
+          "desc": "Simulated delta time, used for calculations."
+        }
       },
       "internal": true
     },
     "onVehicleDestroyed": {
-      "desc": "Hook : supprime l'état de score et le gel du véhicule détruit.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule détruit."}},
+      "desc": "Hook: removes the score state and freeze of the destroyed vehicle.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Destroyed vehicle."
+        }
+      },
       "internal": true
     },
     "onClientEndMission": {
-      "desc": "Hook : vide tous les états de score et les gels.",
+      "desc": "Hook: clears all score states and freezes.",
       "internal": true
     },
     "onAnyStuntZoneAccomplished": {
-      "desc": "Hook : zone de cascade réussie ; fait monter le combo (creep-up 140, ou 20 au-delà du soft cap).",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "desc": "Hook: stunt zone accomplished; raises the combo (creep-up 140, or 20 beyond the soft cap).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle."
+        }
+      },
       "internal": true
     },
     "onDriftThroughAccomplished": {
-      "desc": "Hook : drift à travers une zone ; score = linearScale(angle, 0..90, 0..points de la zone) ajouté au cache avec stalling, puis hook onTightDriftScored.",
-      "params": {"data": {"type": "table", "desc": "{vehId, currDegAngle, zoneData = {points}}."}},
+      "desc": "Hook: drift through a zone; score = linearScale(angle, 0..90, 0..zone points) added to the cache with stalling, then hook onTightDriftScored.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{vehId, currDegAngle, zoneData = {points}}."
+        }
+      },
       "internal": true
     },
     "onHitPoleAccomplished": {
-      "desc": "Hook : poteau touché ; score = linearScale(angle + vitesse, 0..250, 0..points) ajouté au cache, puis hook onHitPoleScored.",
-      "params": {"data": {"type": "table", "desc": "{vehId, currDegAngle, currAirSpeed, zoneData = {points}}."}},
+      "desc": "Hook: pole hit; score = linearScale(angle + speed, 0..250, 0..points) added to the cache, then hook onHitPoleScored.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{vehId, currDegAngle, currAirSpeed, zoneData = {points}}."
+        }
+      },
       "internal": true
     },
     "onNearPoleAccomplished": {
-      "desc": "Hook : poteau frôlé ; score = angle * closeness / 90 * points ajouté au cache, puis hook onNearPoleScored.",
-      "params": {"data": {"type": "table", "desc": "{vehId, currDegAngle, closeness, zoneData = {points}}."}},
+      "desc": "Hook: pole nearly hit; score = angle * closeness / 90 * points added to the cache, then hook onNearPoleScored.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{vehId, currDegAngle, closeness, zoneData = {points}}."
+        }
+      },
       "internal": true
     },
     "onDonutDriftAccomplished": {
-      "desc": "Hook : donut réussi ; ajoute les points de la zone au cache, puis hook onDonutDriftScored.",
-      "params": {"data": {"type": "table", "desc": "{vehId, zoneData = {points}}."}},
+      "desc": "Hook: donut completed; adds the zone's points to the cache, then hook onDonutDriftScored.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "{vehId, zoneData = {points}}."
+        }
+      },
       "internal": true
     },
     "onDriftCompleted": {
-      "desc": "Hook : fin d'une chaîne de drifts ; valide le score (wrapUp) puis émet onDriftCompletedScored avec le score ajouté, le combo, le palier et le véhicule.",
-      "params": {"data": {"type": "table|nil", "desc": "Contient vehId."}},
+      "desc": "Hook: end of a drift chain; validates the score (wrapUp) then emits onDriftCompletedScored with the added score, the combo, the tier and the vehicle.",
+      "params": {
+        "data": {
+          "type": "table|nil",
+          "desc": "Contains vehId."
+        }
+      },
       "internal": true
     },
     "onDriftTransition": {
-      "desc": "Hook : transition de drift (changement de côté) ; fait monter le combo selon la vitesse si elle dépasse 25 et que 2 s se sont écoulées depuis le dernier démarrage de drift.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "desc": "Hook: drift transition (side change); raises the combo according to speed if it exceeds 25 and 2 s have elapsed since the last drift start.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle."
+        }
+      },
       "internal": true
     },
     "onDriftCrash": {
-      "desc": "Hook : crash ; perd le score en cache et le combo (reset du cache, hook onDriftCachedScoreReset).",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "desc": "Hook: crash; loses the cached score and the combo (cache reset, hook onDriftCachedScoreReset).",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle."
+        }
+      },
       "internal": true
     },
     "onDriftSpinout": {
-      "desc": "Hook : spinout ; perd le score en cache et le combo.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "desc": "Hook: spinout; loses the cached score and the combo.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle."
+        }
+      },
       "internal": true
     },
     "onDriftPlVehReset": {
-      "desc": "Hook : véhicule remis en place ; reset de l'état de score de ce véhicule.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "desc": "Hook: vehicle put back in place; resets this vehicle's score state.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle."
+        }
+      },
       "internal": true
     },
     "onDriftChainStarted": {
-      "desc": "Hook : début d'une chaîne de drifts ; émet onNewDriftTierReached avec le premier palier.",
-      "params": {"vehId": {"type": "integer", "desc": "Véhicule."}},
+      "desc": "Hook: start of a drift chain; emits onNewDriftTierReached with the first tier.",
+      "params": {
+        "vehId": {
+          "type": "integer",
+          "desc": "Vehicle."
+        }
+      },
       "internal": true
     },
     "onDriftFreeroamCruisingStarted": {
-      "desc": "Hook : début du cruising en roaming libre ; remet à zéro le score permanent de tous les véhicules.",
+      "desc": "Hook: start of cruising in free roam; resets the permanent score of all vehicles to zero.",
       "internal": true
     },
     "onSerialize": {
-      "desc": "Hook : sauvegarde les cases de debug avant rechargement Lua.",
-      "returns": [{"type": "table", "desc": "{scoreExperiment, debugToggleSmothnessGraph}"}],
+      "desc": "Hook: saves the debug checkboxes before a Lua reload.",
+      "returns": [
+        {
+          "type": "table",
+          "desc": "{scoreExperiment, debugToggleSmothnessGraph}"
+        }
+      ],
       "internal": true
     },
     "onDeserialized": {
-      "desc": "Hook : restaure les cases de debug.",
-      "params": {"data": {"type": "table", "desc": "Table de onSerialize."}},
+      "desc": "Hook: restores the debug checkboxes.",
+      "params": {
+        "data": {
+          "type": "table",
+          "desc": "onSerialize table."
+        }
+      },
       "internal": true
     }
   }

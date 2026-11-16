@@ -2,24 +2,24 @@
 -- tim19Atlas stub generated from lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Classe du nœud.
+--- Node class.
 ---@class flowgraph_nodes_gameplay_rally_loop_rallyClock_C
 local flowgraph_nodes_gameplay_rally_loop_rallyClock_C = {}
 
---- Vide le cache au démarrage du graphe.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua:30
+--- Clears the cache when the graph starts.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua:30
 function flowgraph_nodes_gameplay_rally_loop_rallyClock_C:_executionStarted() end
 
---- Initialise le cache (nom d'évènement, id de mission, heure planifiée) à nil.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua:23
----@param mgr table Gestionnaire flowgraph.
+--- Initializes the cache (event name, mission id, scheduled time) to nil.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua:23
+---@param mgr table Flowgraph manager.
 ---@param ... any
 function flowgraph_nodes_gameplay_rally_loop_rallyClock_C:init(mgr, ...) end
 
---- Chaque frame : met à jour currentEpochTime et scheduledEventTime (avec cache).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua:45
+--- Every frame: updates currentEpochTime and scheduledEventTime (with cache).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/flowgraph/nodes/gameplay/rally/loop/rallyClock.lua:45
 function flowgraph_nodes_gameplay_rally_loop_rallyClock_C:work() end
 

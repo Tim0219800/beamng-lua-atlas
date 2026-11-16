@@ -1,0 +1,36 @@
+{
+  "path": "lua/ge/extensions/flowgraph/nodes/string/subString.lua",
+  "module": "Noeud « SubString » (simple). Extrait une sous-chaîne avec string.sub(value, data.from, data.to). Valeurs par défaut from = 0 et to = -1. Pins : value (in), value (out).",
+  "notes": [
+    "Les indices Lua commencent à 1 ; from = 0 est traité comme 1 par string.sub."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Classe du noeud flowgraph (retournee par _flowgraph_createNode(C)). Les methodes sont appelees par le gestionnaire flowgraph ou l'editeur.",
+      "functions": {
+        "init": {
+          "desc": "data.from = 0, data.to = -1.",
+          "internal": true
+        },
+        "drawMiddle": {
+          "desc": "Dessine le contenu central du noeud dans l'éditeur.",
+          "params": {
+            "builder": {
+              "type": "any",
+              "desc": "constructeur de noeud imgui"
+            },
+            "style": {
+              "type": "any",
+              "desc": "style du noeud"
+            }
+          },
+          "internal": true
+        },
+        "work": {
+          "desc": "Écrit string.sub(value, from, to).",
+          "internal": false
+        }
+      }
+    }
+  }
+}

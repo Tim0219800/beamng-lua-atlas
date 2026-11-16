@@ -1,18 +1,18 @@
 # `flowgraph_nodes_util_randomColor`
 
-*Fichier : `lua/ge/extensions/flowgraph/nodes/util/randomColor.lua` · VM : Game Engine (GE) · 32 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/flowgraph/nodes/util/randomColor.lua` · VM: Game Engine (GE) · 32 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/flowgraph/nodes/util/randomColor")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/flowgraph/nodes/util/randomColor")` (file under extensions/ but not a regular extension)
 
-Nœud « Random Color » (repeat_instant, icône casino). Fournit une couleur aléatoire {r, g, b, a} à chaque frame. Entrées : cuteColor (couleurs très saturées seulement), randomAlpha (alpha aléatoire, sinon 1). Sortie : color.
+Node "Random Color" (repeat_instant, casino icon). Provides a random color {r, g, b, a} every frame. Inputs: cuteColor (only highly saturated colors), randomAlpha (random alpha, otherwise 1). Output: color.
 
-## Classe `C`
+## Class `C`
 
-Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.
+Flowgraph node class; each instance represents a node in a graph.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:work()` | Génère une couleur : en mode cuteColor via HSVtoRGB avec teinte aléatoire et saturation/valeur entre 0,7 et 1 ; sinon trois composantes aléatoires. | 21 |
+| `C:work()` | Generates a color: in cuteColor mode via HSVtoRGB with a random hue and saturation/value between 0.7 and 1; otherwise three random components. | 21 |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/flowgraph/nodes/util/randomColor.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/flowgraph/nodes/util/randomColor.lua`.*

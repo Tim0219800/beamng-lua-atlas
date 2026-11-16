@@ -1,34 +1,34 @@
 # `editor_rallyEditor_aiCompetitorsEditorTexts`
 
-*Fichier : `lua/ge/extensions/editor/rallyEditor/aiCompetitorsEditorTexts.lua` · VM : Game Engine (GE) · 166 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/rallyEditor/aiCompetitorsEditorTexts.lua` · VM: Game Engine (GE) · 166 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_rallyEditor_aiCompetitorsEditorTexts` : `extensions.load("editor_rallyEditor_aiCompetitorsEditorTexts")`, puis la globale `editor_rallyEditor_aiCompetitorsEditorTexts`
+**Access:** extension `editor_rallyEditor_aiCompetitorsEditorTexts`: `extensions.load("editor_rallyEditor_aiCompetitorsEditorTexts")`, then the global `editor_rallyEditor_aiCompetitorsEditorTexts`
 
-Table de textes (libellés, titres de sections, infobulles) en anglais de l'onglet « AI Competitors » de l'éditeur de rallye. Aucun code : le module ne contient que des chaînes lues par aiCompetitorsTab et aiCompetitorsEditorPlot. Utile pour retrouver le sens de chacun des 26 paramètres généraux du modèle et des traits d'un concurrent.
+Table of texts (labels, section titles, tooltips) in English for the rally editor's "AI Competitors" tab. No code: the module only contains strings read by aiCompetitorsTab and aiCompetitorsEditorPlot. Useful to find the meaning of each of the 26 general parameters of the model and of a competitor's traits.
 
-## Remarques
+## Notes
 
-- Dans l'interface, le trait « skill » du modèle est présenté sous le nom « Pace » (driverTraitTooltips.Pace).
-- Le temps de référence est, selon le texte d'aide, remplacé en jeu par le temps de la barre « silver ».
+- In the UI, the model's "skill" trait is presented under the name "Pace" (driverTraitTooltips.Pace).
+- The reference time is, according to the help text, replaced in game by the "silver" bar time.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `chart` | table<string, string> | Textes du graphique : title, subtitle, legendHint, axisLabel, plotTooSmall. |
-| `competitorNavigationTooltip` | string | Infobulle du sélecteur de concurrent (la sauvegarde écrit toute la liste). |
-| `driverPreviewSection` | table<string, string> | Textes de la section Driver preview (title, subtitle, emptyCompetitors). |
-| `driverTraitTooltips` | table<string, string> | Infobulles des traits Pace, Consistency, Risk. |
-| `generalGroupPresentation` | table<integer, {title: string, blurb: string}> | Titre et description des 6 groupes de paramètres généraux (même ordre que generalParamGroups du modèle). |
-| `generalParamLabels` | table<string, string> | Libellé affiché de chaque paramètre général (clé = nom snake_case). |
-| `generalParamTooltips` | table<string, string> | Infobulle de chaque paramètre général. |
-| `globalSection` | table<string, string> | Titre et sous-titre de la section Global parameters. |
-| `outcomeLabels` | table<integer, string> | Libellés courts des 5 résultats : Clean, Push, Minor incident, Major incident, DNF. |
-| `playerReferenceHelp` | string | Aide du temps de référence de la spéciale (secondes), base du modèle et de l'aperçu. |
-| `previewSection` | table<string, string> | Titre et sous-titre de la section Preview. |
-| `referenceSection` | table<string, string> | Textes de la section temps de référence et pilotes (title, subtitle, referenceTimeLabel). |
-| `toolbar` | table<string, string> | Textes de la barre d'outils : header, configPathPrefix, reload, save. |
-| `windowDescription` | string | Titre de l'onglet : « AI Competitors Configuration ». |
+| `chart` | table<string, string> | Chart texts: title, subtitle, legendHint, axisLabel, plotTooSmall. |
+| `competitorNavigationTooltip` | string | Tooltip of the competitor selector (saving writes the whole list). |
+| `driverPreviewSection` | table<string, string> | Texts of the Driver preview section (title, subtitle, emptyCompetitors). |
+| `driverTraitTooltips` | table<string, string> | Tooltips for the Pace, Consistency, Risk traits. |
+| `generalGroupPresentation` | table<integer, {title: string, blurb: string}> | Title and description of the 6 general parameter groups (same order as the model's generalParamGroups). |
+| `generalParamLabels` | table<string, string> | Displayed label of each general parameter (key = snake_case name). |
+| `generalParamTooltips` | table<string, string> | Tooltip of each general parameter. |
+| `globalSection` | table<string, string> | Title and subtitle of the Global parameters section. |
+| `outcomeLabels` | table<integer, string> | Short labels of the 5 outcomes: Clean, Push, Minor incident, Major incident, DNF. |
+| `playerReferenceHelp` | string | Help for the stage reference time (seconds), the basis of the model and the preview. |
+| `previewSection` | table<string, string> | Title and subtitle of the Preview section. |
+| `referenceSection` | table<string, string> | Texts of the reference time and drivers section (title, subtitle, referenceTimeLabel). |
+| `toolbar` | table<string, string> | Toolbar texts: header, configPathPrefix, reload, save. |
+| `windowDescription` | string | Tab title: "AI Competitors Configuration". |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/rallyEditor/aiCompetitorsEditorTexts.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/rallyEditor/aiCompetitorsEditorTexts.lua`.*

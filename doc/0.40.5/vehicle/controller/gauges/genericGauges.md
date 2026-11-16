@@ -1,15 +1,15 @@
 # `controller_gauges_genericGauges`
 
-*Fichier : `lua/vehicle/controller/gauges/genericGauges.lua` · VM : Véhicule · 260 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/vehicle/controller/gauges/genericGauges.lua` · VM: Vehicle · 260 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** contrôleur `gauges/genericGauges` déclaré dans le jbeam (`controller`), accessible par `controller.getController("nom")`
+**Access:** controller `gauges/genericGauges` declared in the jbeam (`controller`), reachable with `controller.getController("name")`
 
-Contrôleur auxiliaire qui affiche un tableau de bord HTML sur un matériau 3D (htmlTexture) et lui envoie en continu des données : valeurs electrics, propriétés de dispositifs de powertrain et données de modules personnalisés (contrôleurs dans gauges/customModules/). Un moddeur l'utilise pour créer un combiné d'instruments HTML en déclarant le contrôleur dans le jbeam avec materialName, htmlPath, displayWidth/displayHeight et displayData. Les données ne sont envoyées que si un joueur est assis dans le véhicule et que le drapeau de mise à jour UI du moteur est levé.
+Auxiliary controller that displays an HTML dashboard on a 3D material (htmlTexture) and continuously sends it data: electrics values, powertrain device properties and custom module data (controllers in gauges/customModules/). A modder uses it to create an HTML instrument cluster by declaring the controller in the jbeam with materialName, htmlPath, displayWidth/displayHeight and displayData. Data is only sent if a player is seated in the vehicle and the engine's UI update flag is raised.
 
-## Exemple
+## Example
 
 ```lua
--- jbeam (extrait) :
+-- jbeam (excerpt):
 -- "controller": [["fileName"], ["gauges/genericGauges", {
 --   "configuration": {"materialName": "@dash_screen", "htmlPath": "local://local/vehicles/xyz/dash.html", "displayWidth": 1024, "displayHeight": 512, "hasPopupMessageSupport": true},
 --   "displayData": {
@@ -21,74 +21,74 @@ local g = controller.getControllerSafe('gauges/genericGauges')
 if g then g.displayPopupMessage('Hello', 'info', 3, '#ff0000') end
 ```
 
-## Remarques
+## Notes
 
-- Clés jbeam lues : configuration (table) fusionnée avec toute clé nommée "configuration_xxx" (permet d'ajouter des morceaux depuis des sous-parts) ; configuration.materialName (obligatoire), htmlPath (obligatoire), displayWidth, displayHeight, hasPopupMessageSupport (défaut false) ; displayData.electrics (liste de noms de valeurs electrics), displayData.powertrain (table d'en-tête : deviceName, property), displayData.customModules (table d'en-tête : moduleName, property facultatif).
-- Les unités de l'interface (uiUnitLength, uiUnitTemperature, uiUnitWeight, uiUnitTorque, uiUnitPower, uiUnitEnergy, uiUnitConsumptionRate, uiUnitVolume, uiUnitPressure, uiUnitDate) viennent des réglages du joueur et sont envoyées à la page HTML par l'appel JS "setup" avec le reste de configuration ; la page doit définir setup, updateData, updateMode et éventuellement messageQueue, messageClearById, messageClearAll.
-- Un module personnalisé doit exposer setupGaugeData(propriétés, htmlTexture) et updateGaugeData(tableDeDonnées, dt) ; sinon une erreur est journalisée ("Can't find controller").
-- Les valeurs electrics ou propriétés absentes sont envoyées à 0. Les données sont envoyées avec streamJS("updateData") ; le dt passé aux mises à jour est le temps accumulé depuis le dernier envoi.
-- M.init = nop utilise la fonction globale nop fournie par l'environnement Lua du jeu (non définie dans ce fichier). Fragilité : initSecondStage lit displayData.electrics sans garde, donc une erreur Lua survient si displayData manque dans le jbeam.
-- setPartCondition et getPartCondition sont définies localement mais non exportées ; setPartCondition écrit une globale odometerOffset (reste d'un code d'odomètre).
-- initSecondStage ne vérifie pas que gaugeHTMLTexture existe pour setParameters/displayPopupMessage : ne les appeler qu'après initialisation réussie.
+- jbeam keys read: configuration (table) merged with any key named "configuration_xxx" (allows adding pieces from sub-parts); configuration.materialName (required), htmlPath (required), displayWidth, displayHeight, hasPopupMessageSupport (default false); displayData.electrics (list of electrics value names), displayData.powertrain (header table: deviceName, property), displayData.customModules (header table: moduleName, property optional).
+- The interface units (uiUnitLength, uiUnitTemperature, uiUnitWeight, uiUnitTorque, uiUnitPower, uiUnitEnergy, uiUnitConsumptionRate, uiUnitVolume, uiUnitPressure, uiUnitDate) come from the player's settings and are sent to the HTML page by the "setup" JS call with the rest of the configuration; the page must define setup, updateData, updateMode and optionally messageQueue, messageClearById, messageClearAll.
+- A custom module must expose setupGaugeData(properties, htmlTexture) and updateGaugeData(dataTable, dt); otherwise an error is logged ("Can't find controller").
+- Missing electrics values or properties are sent as 0. Data is sent with streamJS("updateData"); the dt passed to the updates is the time accumulated since the last send.
+- M.init = nop uses the global nop function provided by the game's Lua environment (not defined in this file). Fragility: initSecondStage reads displayData.electrics without a guard, so a Lua error occurs if displayData is missing from the jbeam.
+- setPartCondition and getPartCondition are defined locally but not exported; setPartCondition writes a global odometerOffset (leftover from odometer code).
+- initSecondStage does not check that gaugeHTMLTexture exists for setParameters/displayPopupMessage: only call them after a successful initialization.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `controller_gauges_genericGauges.clearAllPopupMessages()` | Supprime tous les messages popup (appel JS messageClearAll). | 54 |
-| `controller_gauges_genericGauges.clearPopupMessage(msgId)` | Supprime un message popup par identifiant (appel JS messageClearById). | 47 |
-| `controller_gauges_genericGauges.displayPopupMessage(message, iconId, timeout, highlightColor)` | Met en file un message popup dans la page HTML (appel JS messageQueue). Sans effet si hasPopupMessageSupport est faux. | 30 |
-| `controller_gauges_genericGauges.initSecondStage(jbeamData)` | Lit la configuration, crée la texture HTML (htmlTexture.new à 60 FPS), prépare les listes electrics/powertrain/customModules et envoie la configuration (unités de l'UI + configuration jbeam) à la page via callJS("setup"). *(interne)* | 164 |
-| `controller_gauges_genericGauges.reset()` | Ne fait rien. *(interne)* | 161 |
-| `controller_gauges_genericGauges.setParameters(parameters)` | Si parameters contient modeName et modeColor, transmet les paramètres à la page HTML (appel JS updateMode). | 229 |
-| `controller_gauges_genericGauges.updateGFX(dt)` | À chaque image graphique : si un joueur est assis et que l'UI doit être mise à jour, rafraîchit les données electrics, powertrain et modules puis les envoie à la page HTML. *(interne)* | 81 |
+| `controller_gauges_genericGauges.clearAllPopupMessages()` | Removes all popup messages (JS call messageClearAll). | 54 |
+| `controller_gauges_genericGauges.clearPopupMessage(msgId)` | Removes a popup message by identifier (JS call messageClearById). | 47 |
+| `controller_gauges_genericGauges.displayPopupMessage(message, iconId, timeout, highlightColor)` | Queues a popup message in the HTML page (JS call messageQueue). No effect if hasPopupMessageSupport is false. | 30 |
+| `controller_gauges_genericGauges.initSecondStage(jbeamData)` | Reads the configuration, creates the HTML texture (htmlTexture.new at 60 FPS), prepares the electrics/powertrain/customModules lists and sends the configuration (UI units + jbeam configuration) to the page via callJS("setup"). *(internal)* | 164 |
+| `controller_gauges_genericGauges.reset()` | Does nothing. *(internal)* | 161 |
+| `controller_gauges_genericGauges.setParameters(parameters)` | If parameters contains modeName and modeColor, passes the parameters to the HTML page (JS call updateMode). | 229 |
+| `controller_gauges_genericGauges.updateGFX(dt)` | Every graphics frame: if a player is seated and the UI needs updating, refreshes the electrics, powertrain and module data then sends them to the HTML page. *(internal)* | 81 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `controller_gauges_genericGauges.clearPopupMessage(msgId)`
 
-Supprime un message popup par identifiant (appel JS messageClearById).
+Removes a popup message by identifier (JS call messageClearById).
 
-- `msgId` (*string*) : Identifiant renvoyé par displayPopupMessage.
+- `msgId` (*string*) : Identifier returned by displayPopupMessage.
 
 #### `controller_gauges_genericGauges.displayPopupMessage(message, iconId, timeout, highlightColor)`
 
-Met en file un message popup dans la page HTML (appel JS messageQueue). Sans effet si hasPopupMessageSupport est faux.
+Queues a popup message in the HTML page (JS call messageQueue). No effect if hasPopupMessageSupport is false.
 
-- `message` (*string*) : Texte du message.
-- `iconId` (*string*) : Identifiant de l'icône (déduit du code).
-- `timeout` (*number*) : Durée d'affichage en secondes (durationSec).
-- `highlightColor` (*string*) : Couleur de mise en avant (déduit du code).
-- **renvoie** : string|nil Identifiant du message ("test" + nombre aléatoire), nil si les popups ne sont pas supportés.
+- `message` (*string*) : Message text.
+- `iconId` (*string*) : Icon identifier (inferred from code).
+- `timeout` (*number*) : Display duration in seconds (durationSec).
+- `highlightColor` (*string*) : Highlight color (inferred from code).
+- **returns**: string|nil Message identifier ("test" + random number), nil if popups are not supported.
 
 #### `controller_gauges_genericGauges.initSecondStage(jbeamData)`
 
-Lit la configuration, crée la texture HTML (htmlTexture.new à 60 FPS), prépare les listes electrics/powertrain/customModules et envoie la configuration (unités de l'UI + configuration jbeam) à la page via callJS("setup").
+Reads the configuration, creates the HTML texture (htmlTexture.new at 60 FPS), prepares the electrics/powertrain/customModules lists and sends the configuration (UI units + jbeam configuration) to the page via callJS("setup").
 
-- `jbeamData` (*table*) : Données jbeam (voir notes).
+- `jbeamData` (*table*) : jbeam data (see notes).
 
 #### `controller_gauges_genericGauges.setParameters(parameters)`
 
-Si parameters contient modeName et modeColor, transmet les paramètres à la page HTML (appel JS updateMode).
+If parameters contains modeName and modeColor, passes the parameters to the HTML page (JS call updateMode).
 
-- `parameters` (*table*) : Table avec au moins modeName et modeColor.
+- `parameters` (*table*) : Table with at least modeName and modeColor.
 
 #### `controller_gauges_genericGauges.updateGFX(dt)`
 
-À chaque image graphique : si un joueur est assis et que l'UI doit être mise à jour, rafraîchit les données electrics, powertrain et modules puis les envoie à la page HTML.
+Every graphics frame: if a player is seated and the UI needs updating, refreshes the electrics, powertrain and module data then sends them to the HTML page.
 
-- `dt` (*number*) : Pas de temps graphique (s).
+- `dt` (*number*) : Graphics time step (s).
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
-| `init` | function | Alias de nop (rien à faire à l'init). |
+| `init` | function | Alias of nop (nothing to do at init). |
 | `type` | string | "auxiliary". |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `obj:` `getUpdateUIflag`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/vehicle/controller/gauges/genericGauges.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/vehicle/controller/gauges/genericGauges.lua`.*

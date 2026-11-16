@@ -1,72 +1,72 @@
 # `career_modules_uiUtils`
 
-*Fichier : `lua/ge/extensions/career/modules/uiUtils.lua` · VM : Game Engine (GE) · 140 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/career/modules/uiUtils.lua` · VM: Game Engine (GE) · 140 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `career_modules_uiUtils` : `extensions.load("career_modules_uiUtils")`, puis la globale `career_modules_uiUtils`
+**Access:** extension `career_modules_uiUtils`: `extensions.load("career_modules_uiUtils")`, then the global `career_modules_uiUtils`
 
-Fonctions utilitaires pour l'interface de la carrière : données du bandeau de statut (argent, beamXP, bons, score d'assurance), statistiques simples par branche, boutons contextuels du menu pause de carrière, et niveau (map) courant. Appelé par les composants Vue (CareerStatus, CareerSimpleStats, menu pause).
+Utility functions for the career interface: status bar data (money, beamXP, vouchers, insurance score), simple per-branch statistics, contextual buttons of the career pause menu, and current level (map). Called by the Vue components (CareerStatus, CareerSimpleStats, pause menu).
 
-## Remarques
+## Notes
 
-- Les boutons de pause sont stockés par indice (functionId) dans une table locale ; callCareerPauseContextButtons(functionId) appelle ensuite la fonction correspondante. Chaque appel à getCareerPauseContextButtons reconstruit et remplace cette table.
-- Boutons possibles : carte (ou « mon chargement » en mode livraison), journal de bord, page de progression et jalons (seulement hors tutoriel et après achat du véhicule de départ), annulation de certification, annulation d'essai routier.
+- The pause buttons are stored by index (functionId) in a local table; callCareerPauseContextButtons(functionId) then calls the corresponding function. Each call to getCareerPauseContextButtons rebuilds and replaces this table.
+- Possible buttons: map (or "my cargo" in delivery mode), logbook, progress and milestones page (only outside the tutorial and after buying the starter vehicle), certification cancellation, test drive cancellation.
 
-**Dépendances (chargées avant) :** `career_career`
+**Dependencies (loaded first):** `career_career`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `career_modules_uiUtils.callCareerPauseContextButtons(functionId)` | Exécute la fonction du bouton de pause d'indice functionId, si elle existe. | 58 |
-| `career_modules_uiUtils.getCareerCurrentLevelName()` | Retourne l'entrée de core_levels.getList() correspondant au niveau chargé (comparaison en minuscules avec getCurrentLevelIdentifier()). | 130 |
-| `career_modules_uiUtils.getCareerPauseContextButtons()` | Construit la liste des boutons contextuels du menu pause de carrière (selon livraison, tutoriel, certification, essai routier) et les mémorise. | 62 |
-| `career_modules_uiUtils.getCareerSimpleStats()` | Données du composant Vue CareerSimpleStats : nom de la sauvegarde et, pour chaque branche non-compétence, nom, libellé de niveau, valeur et bornes min/max du niveau. | 21 |
-| `career_modules_uiUtils.getCareerStatusData()` | Données du composant Vue CareerStatus : argent, beamXP, bons (vouchers) et score de conduite d'assurance. | 10 |
-| `career_modules_uiUtils.storeCareerPauseContextButtons(data)` | Mémorise les fonctions des boutons de pause et leur affecte un functionId (indice) ; vide l'ancienne table. | 51 |
+| `career_modules_uiUtils.callCareerPauseContextButtons(functionId)` | Runs the pause button function with index functionId, if it exists. | 58 |
+| `career_modules_uiUtils.getCareerCurrentLevelName()` | Returns the core_levels.getList() entry matching the loaded level (lowercase comparison with getCurrentLevelIdentifier()). | 130 |
+| `career_modules_uiUtils.getCareerPauseContextButtons()` | Builds the list of contextual buttons of the career pause menu (depending on delivery, tutorial, certification, test drive) and stores them. | 62 |
+| `career_modules_uiUtils.getCareerSimpleStats()` | Data for the CareerSimpleStats Vue component: save name and, for each non-skill branch, name, level label, value and min/max bounds of the level. | 21 |
+| `career_modules_uiUtils.getCareerStatusData()` | Data for the CareerStatus Vue component: money, beamXP, vouchers and insurance driving score. | 10 |
+| `career_modules_uiUtils.storeCareerPauseContextButtons(data)` | Stores the pause button functions and assigns each a functionId (index); clears the old table. | 51 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `career_modules_uiUtils.callCareerPauseContextButtons(functionId)`
 
-Exécute la fonction du bouton de pause d'indice functionId, si elle existe.
+Runs the pause button function with index functionId, if it exists.
 
-- `functionId` (*integer*) : Indice fourni par getCareerPauseContextButtons.
+- `functionId` (*integer*) : Index provided by getCareerPauseContextButtons.
 
 #### `career_modules_uiUtils.getCareerCurrentLevelName()`
 
-Retourne l'entrée de core_levels.getList() correspondant au niveau chargé (comparaison en minuscules avec getCurrentLevelIdentifier()).
+Returns the core_levels.getList() entry matching the loaded level (lowercase comparison with getCurrentLevelIdentifier()).
 
-- **renvoie** : table|nil Informations du niveau, nil si introuvable.
+- **returns**: table|nil Level info, nil if not found.
 
 #### `career_modules_uiUtils.getCareerPauseContextButtons()`
 
-Construit la liste des boutons contextuels du menu pause de carrière (selon livraison, tutoriel, certification, essai routier) et les mémorise.
+Builds the list of contextual buttons of the career pause menu (depending on delivery, tutorial, certification, test drive) and stores them.
 
-- **renvoie** : table {buttons = {...}}.
+- **returns**: table {buttons = {...}}.
 
 #### `career_modules_uiUtils.getCareerSimpleStats()`
 
-Données du composant Vue CareerSimpleStats : nom de la sauvegarde et, pour chaque branche non-compétence, nom, libellé de niveau, valeur et bornes min/max du niveau.
+Data for the CareerSimpleStats Vue component: save name and, for each non-skill branch, name, level label, value and min/max bounds of the level.
 
-- **renvoie** : table {saveSlotName, branches = {{name, levelLabel, min, value, max}, ...}}.
+- **returns**: table {saveSlotName, branches = {{name, levelLabel, min, value, max}, ...}}.
 
 #### `career_modules_uiUtils.getCareerStatusData()`
 
-Données du composant Vue CareerStatus : argent, beamXP, bons (vouchers) et score de conduite d'assurance.
+Data for the CareerStatus Vue component: money, beamXP, vouchers and insurance driving score.
 
-- **renvoie** : table {money, beamXP, vouchers, insuranceScore}.
+- **returns**: table {money, beamXP, vouchers, insuranceScore}.
 
 #### `career_modules_uiUtils.storeCareerPauseContextButtons(data)`
 
-Mémorise les fonctions des boutons de pause et leur affecte un functionId (indice) ; vide l'ancienne table.
+Stores the pause button functions and assigns each a functionId (index); clears the old table.
 
-- `data` (*table*) : Table avec buttons (liste de {label, icon, fun, showIndicator}) ; chaque bouton reçoit functionId.
+- `data` (*table*) : Table with buttons (list of {label, icon, fun, showIndicator}); each button receives functionId.
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"career_career"}. |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/career/modules/uiUtils.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/career/modules/uiUtils.lua`.*

@@ -2,38 +2,38 @@
 -- tim19Atlas stub generated from lua/ge/extensions/ui/router/managers/guardManager.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Registre des gardes de navigation du routeur. reloadGuards parcourt le dossier lua/ge/extensions/ui/router/guards/, charge chaque fichier et enregistre les fonctions de sa table M.guards sous leur clé. Les routes référencent ces clés dans leurs listes de gardes (enterGuards, exitGuards) ; executeGuards les exécute dans l'ordre. Un moddeur peut ajouter ses propres gardes avec addGuard.
---- Accès : extension `ui_router_managers_guardManager` : `extensions.load("ui_router_managers_guardManager")`, puis la globale `ui_router_managers_guardManager`
+--- Registry of the router's navigation guards. reloadGuards scans the lua/ge/extensions/ui/router/guards/ folder, loads each file and registers the functions of its M.guards table under their key. Routes reference these keys in their guard lists (enterGuards, exitGuards); executeGuards runs them in order. A modder can add their own guards with addGuard.
+--- Access: extension `ui_router_managers_guardManager`: `extensions.load("ui_router_managers_guardManager")`, then the global `ui_router_managers_guardManager`
 ---@class ui_router_managers_guardManager
 ui_router_managers_guardManager = {}
 
---- Ajoute une garde sous la clé donnée ; ne fait rien (avertissement) si la clé existe déjà.
----Source : lua/ge/extensions/ui/router/managers/guardManager.lua:26
----@param key string Clé de la garde.
----@param fn function Fonction (route, params, context) -> boolean.
+--- Adds a guard under the given key; does nothing (warning) if the key already exists.
+---Source: lua/ge/extensions/ui/router/managers/guardManager.lua:26
+---@param key string Guard key.
+---@param fn function Function (route, params, context) -> boolean.
 function ui_router_managers_guardManager.addGuard(key, fn) end
 
---- Exécute dans l'ordre les gardes listées ; s'arrête à la première qui renvoie false.
----Source : lua/ge/extensions/ui/router/managers/guardManager.lua:46
----@param specifiedGuards string[] Clés de gardes à exécuter.
----@param route table Route visée (ou de la route courante pour les gardes de sortie).
----@param params table|nil Paramètres de route.
----@param context table|nil Contexte (par exemple {routeName, options} pour les gardes de sortie).
----@return table  {result = valeur de la dernière garde exécutée (true par défaut), failedGuard = clé de la garde bloquante}.
+--- Runs the listed guards in order; stops at the first one that returns false.
+---Source: lua/ge/extensions/ui/router/managers/guardManager.lua:46
+---@param specifiedGuards string[] Keys of the guards to run.
+---@param route table Target route (or the current route for exit guards).
+---@param params table|nil Route parameters.
+---@param context table|nil Context (for example {routeName, options} for exit guards).
+---@return table  {result = value of the last guard run (true by default), failedGuard = key of the blocking guard}.
 function ui_router_managers_guardManager.executeGuards(specifiedGuards, route, params, context) end
 
---- Vide le registre puis recharge toutes les gardes des fichiers du dossier guards/. Appelée au chargement de ui_router.
----Source : lua/ge/extensions/ui/router/managers/guardManager.lua:9
+--- Empties the registry then reloads all guards from the files of the guards/ folder. Called when ui_router loads.
+---Source: lua/ge/extensions/ui/router/managers/guardManager.lua:9
 function ui_router_managers_guardManager.reloadGuards() end
 
---- Supprime la garde de clé donnée.
----Source : lua/ge/extensions/ui/router/managers/guardManager.lua:42
----@param key string Clé de la garde.
+--- Removes the guard with the given key.
+---Source: lua/ge/extensions/ui/router/managers/guardManager.lua:42
+---@param key string Guard key.
 function ui_router_managers_guardManager.removeGuard(key) end
 
---- Remplace une garde existante ; ne fait rien (avertissement) si la clé est inconnue.
----Source : lua/ge/extensions/ui/router/managers/guardManager.lua:34
----@param key string Clé de la garde.
----@param fn function Nouvelle fonction.
+--- Replaces an existing guard; does nothing (warning) if the key is unknown.
+---Source: lua/ge/extensions/ui/router/managers/guardManager.lua:34
+---@param key string Guard key.
+---@param fn function New function.
 function ui_router_managers_guardManager.updateGuard(key, fn) end
 

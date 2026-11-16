@@ -1,23 +1,38 @@
 {
   "path": "lua/ge/extensions/ui/router/routeHandlers/missionExitHandlers.lua",
-  "module": "Gestionnaires de sortie/retour des écrans de mission et de pause. Quand un écran de début/fin de mission est actif, ils renvoient vers la route « mission.control » avec le mode correspondant ; sinon vers la route de gameplay (ui_menuManager.getGameplayRoute(), « play » par défaut).",
+  "module": "Exit/back handlers of the mission and pause screens. When a mission start/end screen is active, they send back to the \"mission.control\" route with the matching mode; otherwise to the gameplay route (ui_menuManager.getGameplayRoute(), \"play\" by default).",
   "functions": {
     "missionDetailsExitHandler": {
-      "desc": "Quitte les détails de mission : si une mission est active et qu'un écran de début/fin est affiché, navigue vers mission.control avec {mode = mode de l'écran} ; sinon vers la route de gameplay.",
+      "desc": "Leaves the mission details: if a mission is active and a start/end screen is displayed, navigates to mission.control with {mode = screen mode}; otherwise to the gameplay route.",
       "params": {},
-      "returns": [{"type": "table|nil", "desc": "Résultat de navigate dans le cas mission.control ; nil sinon (la navigation est lancée sans retourner son résultat)."}],
+      "returns": [
+        {
+          "type": "table|nil",
+          "desc": "Result of navigate in the mission.control case; nil otherwise (navigation is started without returning its result)."
+        }
+      ],
       "internal": false
     },
     "pauseExitHandler": {
-      "desc": "Quitte la pause : navigue vers mission.control {mode} si un écran de début/fin de mission est actif, sinon vers la route de gameplay.",
+      "desc": "Leaves the pause: navigates to mission.control {mode} if a mission start/end screen is active, otherwise to the gameplay route.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Résultat de ui_router.navigate."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Result of ui_router.navigate."
+        }
+      ],
       "internal": false
     },
     "missionVehicleSelectorBackHandler": {
-      "desc": "Retour du sélecteur de véhicule de mission : même logique que pauseExitHandler.",
+      "desc": "Back from the mission vehicle selector: same logic as pauseExitHandler.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Résultat de ui_router.navigate."}],
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Result of ui_router.navigate."
+        }
+      ],
       "internal": false
     }
   }

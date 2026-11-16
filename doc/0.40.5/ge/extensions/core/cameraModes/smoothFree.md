@@ -1,10 +1,10 @@
 # `core_cameraModes_smoothFree`
 
-*Fichier : `lua/ge/extensions/core/cameraModes/smoothFree.lua` · VM : Game Engine (GE) · 15 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/core/cameraModes/smoothFree.lua` · VM: Game Engine (GE) · 15 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/core/cameraModes/smoothFree")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/core/cameraModes/smoothFree")` (file under extensions/ but not a regular extension)
 
-Caméra libre cinématique : construit une caméra du mode free, fixe groupOrder = 20 (après la caméra libre simple) et active le lissage via setSmoothedCam(true). Sert de second membre du groupe de caméras non liées : la touche caméra alterne free <-> smoothFree. Pas de classe propre : le constructeur renvoie un objet « free ».
+Cinematic free camera: builds a camera of the free mode, sets groupOrder = 20 (after the simple free camera) and enables smoothing via setSmoothedCam(true). Serves as the second member of the unattached cameras group: the camera key alternates free <-> smoothFree. No class of its own: the constructor returns a "free" object.
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/core/cameraModes/smoothFree.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/core/cameraModes/smoothFree.lua`.*

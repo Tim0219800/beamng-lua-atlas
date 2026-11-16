@@ -1,0 +1,18 @@
+{
+  "path": "lua/ge/extensions/editor/api/easeCurveUI.lua",
+  "module": "Widget ImGui de l'éditeur pour éditer une courbe d'easing (type EaseF du moteur). La valeur est une chaîne \"dir type param0 param1\". Le widget affiche deux combos (direction InOut/In/Out, type Linear..Bounce), un aperçu de la courbe cliquable ouvrant un sélecteur de miniatures, et des sliders de paramètres pour Elastic (Amplitude, Period) et Back (Overshoot).",
+  "notes": [
+    "Les noms de direction et de type doivent rester synchronisés avec engine::Ease::enumDirection et enumType (l'indice vaut l'ordre dans l'enum).",
+    "Un paramètre à -1 signifie « valeur par défaut de la courbe ».",
+    "Les courbes sont échantillonnées par worldEditorCppApi.getEaseCurveSamples (64 points pour l'aperçu, 32 pour les miniatures)."
+  ],
+  "functions": {
+    "draw": {
+      "desc": "Dessine le widget d'édition de courbe. Appelle opts.setValue(valueString, editEnded) à chaque modification ; editEnded est true pour les choix de combo/sélecteur et à la fin du glissement d'un slider.",
+      "params": {
+        "opts": {"type": "table", "desc": "id (string unique), value (string \"dir type param0 param1\"), setValue(valueString, editEnded)"}
+      },
+      "returns": []
+    }
+  }
+}

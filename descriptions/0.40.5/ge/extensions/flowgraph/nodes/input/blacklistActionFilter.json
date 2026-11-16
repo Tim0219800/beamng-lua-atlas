@@ -1,54 +1,54 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/input/blacklistActionFilter.lua",
-  "module": "Nœud flowgraph « Set Input Actions by Filters » (once_instant, dépend de core_input_actionFilter ; recommandé pour les missions). Comme « Set Input Actions » mais la liste est construite à partir de modèles d'actions (core_input_actionFilter.getActionTemplates) cochés dans les propriétés ; par défaut : vehicleTeleporting, vehicleMenues, physicsControls, aiControls, vehicleSwitching, freeCam, funStuff, walkingMode. Pins : block, ignoreUnrestriced, id (entrée et sortie).",
+  "module": "Flowgraph node \"Set Input Actions by Filters\" (once_instant, depends on core_input_actionFilter; recommended for missions). Like \"Set Input Actions\" but the list is built from action templates (core_input_actionFilter.getActionTemplates) ticked in the properties; default: vehicleTeleporting, vehicleMenues, physicsControls, aiControls, vehicleSwitching, freeCam, funStuff, walkingMode. Pins: block, ignoreUnrestriced, id (input and output).",
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph (créée via `_flowgraph_createNode(C)`).",
+      "desc": "Flowgraph node class (created via `_flowgraph_createNode(C)`).",
       "functions": {
         "_onDeserialized": {
-          "desc": "Restaure les réglages propres au nœud à partir des données sauvegardées.",
+          "desc": "Restores the node's own settings from the saved data.",
           "internal": true,
           "params": {
             "data": {
               "type": "table",
-              "desc": "données sauvegardées du nœud"
+              "desc": "saved node data"
             }
           }
         },
         "_onSerialize": {
-          "desc": "Ajoute les réglages propres au nœud à la table `res` lors de la sauvegarde du graphe.",
+          "desc": "Adds the node's own settings to the `res` table when saving the graph.",
           "internal": true,
           "params": {
             "res": {
               "type": "table",
-              "desc": "table de sérialisation à remplir"
+              "desc": "serialization table to fill"
             }
           }
         },
         "drawCustomProperties": {
-          "desc": "Dessine une case à cocher par modèle d'actions, avec le nombre d'actions en infobulle.",
+          "desc": "Draws one checkbox per action template, with the number of actions in a tooltip.",
           "internal": true
         },
         "drawMiddle": {
-          "desc": "Renomme le nœud en Block/Allow Input Actions by Filters si block est codé en dur.",
+          "desc": "Renames the node to Block/Allow Input Actions by Filters if block is hard-coded.",
           "internal": true,
           "params": {
             "builder": {
               "type": "table",
-              "desc": "constructeur de nœud de l'éditeur (builder:Middle())"
+              "desc": "editor node constructor (builder:Middle())"
             },
             "style": {
               "type": "table",
-              "desc": "style de dessin du nœud"
+              "desc": "node drawing style"
             }
           }
         },
         "init": {
-          "desc": "Active les modèles par défaut.",
+          "desc": "Enables the default templates.",
           "internal": true
         },
         "workOnce": {
-          "desc": "Crée la liste via core_input_actionFilter.createActionTemplate(modèles actifs), l'enregistre puis bloque ou autorise les actions.",
+          "desc": "Creates the list via core_input_actionFilter.createActionTemplate(active templates), registers it then blocks or allows the actions.",
           "internal": true
         }
       }

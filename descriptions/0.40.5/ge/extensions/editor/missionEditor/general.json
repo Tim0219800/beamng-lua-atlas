@@ -1,35 +1,55 @@
 {
   "path": "lua/ge/extensions/editor/missionEditor/general.lua",
-  "module": "Section « General » du Mission Editor : édite le nom et la description de la mission (champs texte ImGui) et affiche une icône de traduction (verte si _tr trouve une traduction, rouge sinon, avec la traduction en infobulle). Le module renvoie un constructeur : require('/lua/ge/extensions/editor/missionEditor/general')(missionEditor). Toute modification met mission._dirty = true.",
+  "module": "\"General\" section of the Mission Editor: edits the mission's name and description (ImGui text fields) and displays a translation icon (green if _tr finds a translation, red otherwise, with the translation in the tooltip). The module returns a constructor: require('/lua/ge/extensions/editor/missionEditor/general')(missionEditor). Any modification sets mission._dirty = true.",
   "notes": [
-    "La description peut être une chaîne ou une table ; une table n'est pas modifiable (elle est affichée avec dumps).",
-    "Tampons ImGui : nom 1024 caractères, description 2048.",
-    "Bug mineur : getMissionIssues compare la traduction avec le nom sans tester le type du nom ; seul le cas de description gère explicitement une table."
+    "The description can be a string or a table; a table is not editable (it is displayed with dumps).",
+    "ImGui buffers: name 1024 characters, description 2048.",
+    "Minor bug: getMissionIssues compares the translation with the name without testing the name's type; only the description case explicitly handles a table."
   ],
   "classes": {
     "C": {
-      "desc": "Sous-fenêtre de la section General, créée par le constructeur renvoyé par le module.",
+      "desc": "General section sub-window, created by the constructor returned by the module.",
       "functions": {
         "init": {
-          "desc": "Constructeur : mémorise la référence au missionEditor et prépare les champs recommandés (attributs recommandés de gameplay_missions_missions).",
-          "params": {"missionEditor": {"type": "table", "desc": "Module editor_missionEditor."}},
+          "desc": "Constructor: remembers the reference to the missionEditor and prepares the recommended fields (recommended attributes of gameplay_missions_missions).",
+          "params": {
+            "missionEditor": {
+              "type": "table",
+              "desc": "editor_missionEditor module."
+            }
+          },
           "returns": [],
           "internal": true
         },
         "setMission": {
-          "desc": "Sélectionne la mission à éditer : crée les tampons du nom et de la description et efface les traductions en cache.",
-          "params": {"mission": {"type": "table", "desc": "Données de mission."}},
+          "desc": "Selects the mission to edit: creates the name and description buffers and clears the cached translations.",
+          "params": {
+            "mission": {
+              "type": "table",
+              "desc": "Mission data."
+            }
+          },
           "returns": [],
           "internal": false
         },
         "getMissionIssues": {
-          "desc": "Appelle setMission puis renvoie les problèmes : nom manquant (error), description manquante (error), nom sans traduction (warning), description sans traduction (warning).",
-          "params": {"m": {"type": "table", "desc": "Données de mission."}},
-          "returns": [{"type": "table[]", "desc": "Éléments {label, severity}."}],
+          "desc": "Calls setMission then returns the issues: missing name (error), missing description (error), name without translation (warning), description without translation (warning).",
+          "params": {
+            "m": {
+              "type": "table",
+              "desc": "Mission data."
+            }
+          },
+          "returns": [
+            {
+              "type": "table[]",
+              "desc": "Elements {label, severity}."
+            }
+          ],
           "internal": false
         },
         "draw": {
-          "desc": "Dessine les champs Name et Description et leurs icônes de traduction ; enregistre les modifications dans la mission à la fin de l'édition.",
+          "desc": "Draws the Name and Description fields and their translation icons; saves the modifications into the mission at the end of the edit.",
           "params": {},
           "returns": [],
           "internal": false

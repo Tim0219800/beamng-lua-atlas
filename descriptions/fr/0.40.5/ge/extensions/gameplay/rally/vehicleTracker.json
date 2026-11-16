@@ -1,0 +1,74 @@
+{
+  "path": "lua/ge/extensions/gameplay/rally/vehicleTracker.lua",
+  "module": "Suivi du véhicule joueur (slot 0) pour le rallye : position, vitesse et détection de dégâts. À chaque onUpdate, il relit map.objects[vehicleId] et déclenche un indicateur « vient de prendre des dégâts » quand la valeur `damage` augmente d'au moins un seuil. Un dessin de debug optionnel affiche position, vecteur vitesse et texte. Le module renvoie un constructeur : `require(...)(damageThreshold)`.",
+  "notes": [
+    "Le véhicule suivi est toujours getPlayerVehicle(0), pas un véhicule passé en paramètre.",
+    "Un commentaire du code indique que retourner vehicle:getPosition() directement « fait fonctionner » alors que la copie via getPositionXYZ dans un vec3 partagé est conservée : pos() et velocity() renvoient un vec3 réutilisé (même objet à chaque appel), il faut le copier si on le conserve.",
+    "pos() et velocity() journalisent une erreur 'E' à chaque appel quand il n'y a pas de véhicule joueur.",
+    "Le dégât est une valeur cumulée (map.objects[id].damage) ; seul un accroissement >= damageThreshold depuis la dernière valeur retenue lève justHadDamage, et seulement pour le tick concerné.",
+    "Les champs wheelOffsets/currentCorners/previousCorners sont remplis dans init mais plus mis à jour (updateVehicleCorners est commenté)."
+  ],
+  "classes": {
+    "C": {
+      "desc": "Traqueur de véhicule. Champs : damageThreshold (1 par défaut), vehicleData, lastDamage, lastDamageDiff, justHadDamage, debugDraw, wheelOffsets, currentCorners, previousCorners.",
+      "functions": {
+        "init": {
+          "desc": "Constructeur. Récupère les données du véhicule joueur, mémorise le dégât courant et calcule les décalages des roues dans le repère du véhicule.",
+          "params": {"damageThreshold": {"type": "number|nil", "desc": "Augmentation minimale de `damage` pour compter comme un choc ; défaut 1."}},
+          "internal": true
+        },
+        "getVehicleId": {
+          "desc": "Id du véhicule joueur 0.",
+          "returns": [{"type": "integer|nil", "desc": "Id, ou nil sans véhicule."}]
+        },
+        "getVehicle": {
+          "desc": "Renvoie getPlayerVehicle(0).",
+          "returns": [{"type": "table|nil", "desc": "Objet véhicule."}]
+        },
+        "onUpdate": {
+          "desc": "À appeler chaque image : met à jour vehicleData et l'état de dégâts, puis dessine le debug si activé. Sans véhicule, réinitialise vehicleData, lastDamage et justHadDamage.",
+          "params": {
+            "dtReal": {"type": "number", "desc": "Delta temps réel (s)."},
+            "dtSim": {"type": "number", "desc": "Delta temps simulé (s)."},
+            "dtRaw": {"type": "number", "desc": "Delta temps brut (s)."}
+          }
+        },
+        "updateVehicleDamage": {
+          "desc": "Compare le dégât courant au dernier retenu et met à jour lastDamage, lastDamageDiff et justHadDamage."
+        },
+        "updateVehicleData": {
+          "desc": "Met vehicleData à map.objects[vehicleId] (ou nil).",
+          "params": {"vehicleId": {"type": "integer|nil", "desc": "Id du véhicule."}}
+        },
+        "pos": {
+          "desc": "Position du véhicule joueur (vec3 partagé, réutilisé entre appels).",
+          "returns": [{"type": "vec3|nil", "desc": "Position monde en mètres."}]
+        },
+        "velocity": {
+          "desc": "Vitesse du véhicule joueur (vec3 partagé, réutilisé).",
+          "returns": [{"type": "vec3|nil", "desc": "Vitesse en m/s."}]
+        },
+        "speedMs": {
+          "desc": "Norme de la vitesse.",
+          "returns": [{"type": "number|nil", "desc": "Vitesse en m/s."}]
+        },
+        "damage": {
+          "desc": "Dégât cumulé du véhicule d'après map.objects.",
+          "returns": [{"type": "number|nil", "desc": "Valeur de damage (0 si absent), nil si aucune donnée véhicule."}]
+        },
+        "didJustHaveDamage": {
+          "desc": "Indique si un choc d'au moins damageThreshold a eu lieu au dernier tick.",
+          "returns": [{"type": "boolean", "desc": "justHadDamage."}]
+        },
+        "setDebugDraw": {
+          "desc": "Active ou coupe le dessin de debug.",
+          "params": {"enabled": {"type": "boolean", "desc": "true pour dessiner."}}
+        },
+        "drawDebugInfo": {
+          "desc": "Si activé : sphère magenta (rayon 1,5) 2 m au-dessus du véhicule, ligne cyan pour la vitesse (x2, au-delà de 0,1 m/s) et texte « VehicleTracker | Pos | Speed » en km/h et m/s.",
+          "internal": true
+        }
+      }
+    }
+  }
+}

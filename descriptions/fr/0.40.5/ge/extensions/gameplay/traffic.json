@@ -1,0 +1,360 @@
+{
+  "path": "lua/ge/extensions/gameplay/traffic.lua",
+  "module": "Système principal de trafic IA en freeroam. Il fait apparaître un groupe de véhicules (via core_multiSpawn), les insère dans la table du trafic (objets gameplay/traffic/vehicle avec rôles), gère un pool de véhicules actifs/inactifs (core_vehicleActivePooling), et les réapparaît devant le point de focus (joueur ou caméra) sur le réseau routier. Gère aussi les variables globales du trafic (agressivité, limite de vitesse, mode IA…), un système de véhicules « réservés » pour des fournisseurs spéciaux (police, taxi…), la sauvegarde/restauration de l'état et le debug visuel. États : 'off', 'spawning', 'loading', 'on'.",
+  "usage": "gameplay_traffic.setupTraffic(10, {activeAmount = 8})\n-- ...\ngameplay_traffic.setTrafficVars({baseAggression = 0.6, speedLimit = 20})\nfor id, veh in pairs(gameplay_traffic.getTraffic()) do print(id, veh.roleName) end",
+  "notes": [
+    "Variables par défaut (getTrafficVars) : spawnValue 1, spawnDirBias 0,2, activeAmount infini, baseAggression 0,35, speedLimit -1 (désactivé, en m/s), aiMode 'traffic', aiAware 'auto', aiDebug 'off', enableRespawn true, enableDynamicValues true, enableRandomEvents false.",
+    "Alias exportés : forceTeleportAll = scatterTraffic ; getNumOfTraffic = getTrafficAmount ; getTrafficAiVehIds = getTrafficList ; getTraffic = getTrafficData.",
+    "Modèle « réservé » : un véhicule reserved = providerName appartient à la réserve d'un fournisseur et reste dormant (inactif, sans respawn) tant qu'il n'est pas « claimed » (utilisé) via useReservedVehicle. Un véhicule claimed est protégé du pooling automatique.",
+    "Un seul véhicule du trafic est traité par frame pour le respawn (index auxiliaryData.queuedVehicle). L'échantillonnage des conditions de trafic (densité du réseau, direction) se fait toutes les 5 s de temps simulé.",
+    "Le focus (setFocus) a trois modes : 'camera' (défaut), 'vehicle' et 'custom' ; avec auto = true il bascule selon le véhicule joueur ou la caméra libre.",
+    "Les hooks onTrafficStarted et onTrafficStopped sont à la fois émis par onUpdate (quand le premier véhicule IA apparaît ou que le dernier disparaît) et gérés par ce même module (M.onTrafficStarted passe l'état à 'on', M.onTrafficStopped vide les tables).",
+    "Un watchdog de 8 s (spawnWatchdogTimeout) termine le chargement du trafic si aucun véhicule ne rapporte de progression, pour ne pas bloquer l'écran d'attente.",
+    "Modules chargés par dépendance : gameplay_parking, gameplay_police, gameplay_taxi, gameplay_traffic_trafficUtils, core_vehicleActivePooling."
+  ],
+  "fields": {
+    "debugMode": {"type": "boolean", "desc": "Mode debug visuel et journal (dessine ligne et texte par véhicule dans onPreRender). Modifié par setDebugMode / setTrafficVars({aiDebug='traffic'})."},
+    "showMessages": {"type": "boolean", "desc": "Autorise l'affichage automatique de messages UI (true par défaut)."},
+    "dependencies": {"type": "string[]", "desc": "Extensions chargées avant ce module."}
+  },
+  "functions": {
+    "spawnTraffic": {
+      "desc": "Fait apparaître un groupe de véhicules via core_multiSpawn.spawnGroup (nom 'autoTraffic'). Met l'état à 'spawning'. Interface publique de bas niveau ; on préfère setupTraffic.",
+      "params": {
+        "amount": {"type": "integer|nil", "desc": "Nombre de véhicules ; défaut : valeur des réglages moins les véhicules existants (au moins 1)."},
+        "groupData": {"type": "table|nil", "desc": "Groupe de véhicules ; défaut core_multiSpawn.createGroup(amount)."},
+        "options": {"type": "table|nil", "desc": "mode ('traffic' par défaut), gap (20 m), pos, dir."}
+      },
+      "returns": [{"type": "any", "desc": "Résultat de core_multiSpawn.spawnGroup."}]
+    },
+    "setupTraffic": {
+      "desc": "Prépare le trafic : supprime le trafic courant (sauf keepCurrent), détermine le nombre de véhicules (réglage ou CPU si -1), construit ou charge le groupe (fichier de niveau, groupe personnalisé ou généré), insère les véhicules des fournisseurs spéciaux (jusqu'à 40 % du total) et les réserves, puis passe en état 'loading' ; le spawn réel se fait ensuite dans onUpdate.",
+      "params": {
+        "amount": {"type": "integer|nil", "desc": "Nombre de véhicules ; -1 ou nil = automatique selon les réglages (trafficAmount, trafficExtraVehicles/trafficExtraAmount)."},
+        "options": {"type": "table|nil", "desc": "activeAmount, keepCurrent, vehGroup, autoAdjustAmount, autoLoadFromFile, simpleVehs, allMods, allConfigs, pos, rot."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si un spawn a été lancé, false si rien à créer."}]
+    },
+    "setupTrafficHelper": {
+      "desc": "Prépare trafic et véhicules garés en même temps (parking d'abord). Le hook onTrafficOrParkingReady signale la fin.",
+      "params": {
+        "trafficAmount": {"type": "integer|nil", "desc": "Quantité de trafic."},
+        "trafficOptions": {"type": "table|nil", "desc": "Options de setupTraffic."},
+        "parkingAmount": {"type": "integer|nil", "desc": "Quantité de véhicules garés."},
+        "parkingOptions": {"type": "table|nil", "desc": "Options de gameplay_parking.setupVehicles."},
+        "extraOptions": {"type": "table|nil", "desc": "Non utilisé."}
+      },
+      "returns": [
+        {"type": "boolean", "desc": "Trafic préparé."},
+        {"type": "boolean", "desc": "Parking préparé."}
+      ]
+    },
+    "setupTrafficWaitForUi": {
+      "desc": "Utilisé par le menu pause : affiche l'icône d'attente (app:waiting) et prépare le trafic ; le spawn démarre dans onUiWaitingState.",
+      "params": {
+        "useTraffic": {"type": "boolean", "desc": "Activer le trafic."},
+        "useParked": {"type": "boolean", "desc": "Activer les véhicules garés (ignoré si le trafic est activé mais que le réglage trafficParkedVehicles est faux)."},
+        "options": {"type": "table|nil", "desc": "Options de setupTraffic."}
+      }
+    },
+    "setupCustomTraffic": {
+      "desc": "Fait apparaître un groupe créé avec des paramètres personnalisés.",
+      "params": {
+        "amount": {"type": "integer|nil", "desc": "Quantité (réglages si nil ou négatif)."},
+        "params": {"type": "table|nil", "desc": "Paramètres de core_multiSpawn.createGroup."}
+      }
+    },
+    "toggle": {
+      "desc": "Active ou désactive le trafic en freeroam (ignoré hors freeroam ou si l'action toggleTraffic est bloquée). Si éteint, lance setupTraffic ; si allumé, soit supprime les véhicules, soit avec keepInMemory les désactive (activeAmount = 0) pour une réactivation instantanée.",
+      "params": {"keepInMemory": {"type": "boolean|nil", "desc": "Garder les véhicules en mémoire (consomme de la RAM)."}}
+    },
+    "insertTraffic": {
+      "desc": "Insère un véhicule existant dans la table du trafic (crée l'objet traffic vehicle, l'ajoute au pool, règle le mode IA, gère le marquage 'reserved:' via spawnMeta). Émet onTrafficVehicleAdded.",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "ignoreAi": {"type": "boolean|nil", "desc": "N'applique ni IA ni respawn (utilisé pour le véhicule joueur)."},
+        "ignoreVehPool": {"type": "boolean|nil", "desc": "Ne pas l'ajouter au pool de désactivation."}
+      }
+    },
+    "removeTraffic": {
+      "desc": "Retire un véhicule du trafic : remet l'action du rôle à zéro, réaffiche le véhicule, le rend jouable et le sort du pool. Émet onTrafficVehicleRemoved.",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "stopAi": {"type": "boolean|nil", "desc": "Mettre l'IA du véhicule en mode 'stop'."}
+      }
+    },
+    "deleteVehicles": {"desc": "Supprime tous les véhicules du trafic (IA ou marqués isTraffic) de la scène et de la table."},
+    "activate": {
+      "desc": "Active le mode trafic et ajoute des véhicules à la table. Si vehList n'est pas une table, prend tous les véhicules non garés (compatibilité).",
+      "params": {"vehList": {"type": "integer[]|nil", "desc": "Identifiants à ajouter."}}
+    },
+    "deactivate": {
+      "desc": "Retire tous les véhicules de la table du trafic.",
+      "params": {"stopAi": {"type": "boolean|nil", "desc": "Arrêter l'IA des véhicules."}}
+    },
+    "refreshVehicles": {"desc": "Appelle onRefresh sur chaque véhicule du trafic (réinitialise ses données)."},
+    "getFocus": {
+      "desc": "Renvoie la table de focus {mode, pos, dirVec, speed, vehId, auto}.",
+      "returns": [{"type": "table", "desc": "Focus courant."}]
+    },
+    "setFocus": {
+      "desc": "Définit le point de focus utilisé pour décider quels véhicules rester actifs ou à téléporter (trafic et parking).",
+      "params": {
+        "mode": {"type": "string|nil", "desc": "'camera', 'vehicle' ou 'custom' ; nil = caméra avec changement automatique."},
+        "data": {"type": "table|nil", "desc": "vehId (mode vehicle) ; pos, dir, speed (mode custom) ; auto (booléen)."}
+      }
+    },
+    "respawnVehicle": {
+      "desc": "Déplace un véhicule vers une nouvelle position et rotation (pour le trafic) et appelle onRespawn sur son objet trafic. Mode non strict : spawn.safeTeleport (plus lent, évite la géométrie statique).",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "pos": {"type": "vec3", "desc": "Position."},
+        "rot": {"type": "quat", "desc": "Rotation."},
+        "strict": {"type": "boolean|nil", "desc": "Placement direct (setPositionRotation + autoplace) avec rotation de 180° ajoutée."}
+      }
+    },
+    "forceTeleport": {
+      "desc": "Téléporte de force un véhicule du trafic vers un point de spawn sûr trouvé autour de pos. Ignoré si enableRespawn est faux ou si ignoreForceTeleport est vrai ; une réserve non utilisée est simplement rendue dormante.",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "pos": {"type": "vec3|nil", "desc": "Centre de recherche ; défaut position de la caméra."},
+        "dir": {"type": "vec3|nil", "desc": "Direction ; défaut direction avant de la caméra."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale (défaut 100 m)."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale (défaut 500 m)."},
+        "targetDist": {"type": "number|nil", "desc": "Distance visible cible."}
+      }
+    },
+    "scatterTraffic": {
+      "desc": "Téléporte un groupe de véhicules loin de l'endroit actuel (alias forceTeleportAll).",
+      "params": {
+        "vehIds": {"type": "integer[]|nil", "desc": "Véhicules ; défaut tous les véhicules IA du trafic."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale."}
+      }
+    },
+    "forceTeleportAll": {
+      "desc": "Alias de scatterTraffic.",
+      "params": {
+        "vehIds": {"type": "integer[]|nil", "desc": "Véhicules."},
+        "minDist": {"type": "number|nil", "desc": "Distance minimale."},
+        "maxDist": {"type": "number|nil", "desc": "Distance maximale."}
+      }
+    },
+    "setDebugMode": {
+      "desc": "Active ou coupe le mode debug du trafic (via setTrafficVars aiDebug).",
+      "params": {"value": {"type": "boolean", "desc": "true pour activer."}}
+    },
+    "getTrafficVars": {
+      "desc": "Renvoie la table des variables du trafic (référence directe).",
+      "returns": [{"type": "table", "desc": "Variables (voir notes)."}]
+    },
+    "setTrafficVars": {
+      "desc": "Modifie les variables du trafic et les propage aux véhicules (mode IA, paramètres IA, spawnValue, spawnDirBias, debug, activeAmount). Passer à un aiMode autre que 'traffic' met les rôles à 'empty' (restaurés au retour en 'traffic').",
+      "params": {
+        "data": {"type": "table", "desc": "Variables à fusionner."},
+        "reset": {"type": "boolean|nil", "desc": "Réinitialiser aux valeurs par défaut avant."}
+      }
+    },
+    "setActiveAmount": {
+      "desc": "Fixe le nombre maximal de véhicules actifs (visibles).",
+      "params": {"amount": {"type": "integer|nil", "desc": "Nombre ; nil = illimité."}}
+    },
+    "getIdealSpawnAmount": {
+      "desc": "Calcule le nombre idéal de véhicules à créer.",
+      "params": {
+        "amount": {"type": "integer|nil", "desc": "Quantité demandée ; nil ou négatif = réglages (CPU si 0)."},
+        "enforceLimit": {"type": "boolean|nil", "desc": "Soustrait les véhicules actifs non garés déjà présents (plus un pour le joueur)."}
+      },
+      "returns": [{"type": "integer", "desc": "Quantité."}]
+    },
+    "getState": {
+      "desc": "État du système : 'off', 'spawning', 'loading' ou 'on'.",
+      "returns": [{"type": "string", "desc": "État."}]
+    },
+    "getTrafficAmount": {
+      "desc": "Nombre de véhicules IA du trafic (alias getNumOfTraffic).",
+      "params": {"activeOnly": {"type": "boolean|nil", "desc": "Ne compter que les actifs (borné par activeAmount)."}},
+      "returns": [{"type": "integer", "desc": "Quantité."}]
+    },
+    "getNumOfTraffic": {
+      "desc": "Alias de getTrafficAmount.",
+      "params": {"activeOnly": {"type": "boolean|nil", "desc": "Ne compter que les actifs."}},
+      "returns": [{"type": "integer", "desc": "Quantité."}]
+    },
+    "getTrafficList": {
+      "desc": "Liste des identifiants des véhicules IA du trafic (alias getTrafficAiVehIds).",
+      "returns": [{"type": "integer[]", "desc": "Identifiants (table interne, ne pas modifier)."}]
+    },
+    "getTrafficAiVehIds": {
+      "desc": "Alias de getTrafficList.",
+      "returns": [{"type": "integer[]", "desc": "Identifiants."}]
+    },
+    "getTrafficData": {
+      "desc": "Table complète du trafic : identifiant -> objet traffic vehicle (alias getTraffic). Contient aussi le véhicule joueur.",
+      "returns": [{"type": "table<integer, table>", "desc": "Véhicules du trafic."}]
+    },
+    "getTraffic": {
+      "desc": "Alias de getTrafficData.",
+      "returns": [{"type": "table<integer, table>", "desc": "Véhicules du trafic."}]
+    },
+    "freezeState": {
+      "desc": "Arrête les systèmes de trafic, police et parking et renvoie leurs données sérialisées (utilisé par exemple au début d'une mission).",
+      "params": {"options": {"type": "table|nil", "desc": "Options de onSerialize (despawnVehicles, exceptVehicleId, debugVehicleStashing)."}},
+      "returns": [
+        {"type": "table", "desc": "Données du trafic."},
+        {"type": "table", "desc": "Données de la police."},
+        {"type": "table", "desc": "Données du parking."}
+      ]
+    },
+    "unfreezeState": {
+      "desc": "Restaure les systèmes depuis les données de freezeState puis disperse le trafic (scatterTraffic).",
+      "params": {
+        "trafficData": {"type": "table|nil", "desc": "Données du trafic."},
+        "policeData": {"type": "table|nil", "desc": "Données de la police."},
+        "parkingData": {"type": "table|nil", "desc": "Données du parking."},
+        "options": {"type": "table|nil", "desc": "Options (respawnVehicles, debugVehicleStashing)."}
+      }
+    },
+    "trackAIAllVeh": {
+      "desc": "Appelé quand le joueur définit un mode IA pour tous les véhicules : applique ce mode comme aiMode du trafic.",
+      "params": {"mode": {"type": "string|nil", "desc": "Mode IA ; défaut 'traffic'."}}
+    },
+    "registerSpecialVehicleProvider": {
+      "desc": "Enregistre (ou remplace) un fournisseur de véhicules spéciaux (police, taxi…). Champs lus : name (obligatoire), priority, minTotalAmount, guaranteed, getDesiredCount(amount, options), buildGroup(count, options), buildReservedGroup, reserved.",
+      "params": {"provider": {"type": "table", "desc": "Description du fournisseur."}}
+    },
+    "unregisterSpecialVehicleProvider": {
+      "desc": "Retire un fournisseur par son nom.",
+      "params": {"name": {"type": "string", "desc": "Nom du fournisseur."}}
+    },
+    "ensureReservedVehicles": {
+      "desc": "S'assure qu'un fournisseur dispose de count véhicules réservés (en fait apparaît au plus 4 à la fois). Émet onTrafficReservedVehiclesReady quand déjà suffisant.",
+      "params": {
+        "providerName": {"type": "string", "desc": "Nom du fournisseur."},
+        "count": {"type": "integer", "desc": "Nombre souhaité."}
+      },
+      "returns": [{"type": "boolean", "desc": "false si rien à faire ou échec, true si déjà prêt ou spawn lancé."}]
+    },
+    "removeReservedVehicles": {
+      "desc": "Supprime tous les véhicules réservés d'un fournisseur et annule un spawn en cours.",
+      "params": {"providerName": {"type": "string", "desc": "Nom du fournisseur."}},
+      "returns": [{"type": "integer", "desc": "Nombre de véhicules supprimés."}]
+    },
+    "useReservedVehicle": {
+      "desc": "Met en service jusqu'à count réserves dormantes d'un fournisseur et les active (forcé dans le pool). Les véhicules deviennent « claimed ».",
+      "params": {
+        "providerName": {"type": "string", "desc": "Nom du fournisseur."},
+        "count": {"type": "integer|nil", "desc": "Nombre (défaut 1)."},
+        "onClaim": {"type": "function|nil", "desc": "Callback (id, veh) pour chaque véhicule pris."},
+        "filter": {"type": "function|nil", "desc": "Filtre (id, veh) -> boolean."}
+      },
+      "returns": [{"type": "integer[]", "desc": "Identifiants pris."}]
+    },
+    "returnReservedVehicle": {
+      "desc": "Rend des réserves en service au pool dormant. Elles continuent de rouler jusqu'à leur prochaine téléportation hors de vue, où elles se désactivent ; avec immediate, elles deviennent dormantes tout de suite.",
+      "params": {
+        "ids": {"type": "integer|integer[]", "desc": "Identifiant(s)."},
+        "immediate": {"type": "boolean|nil", "desc": "Désactiver immédiatement."}
+      }
+    },
+    "recycleReservedVehicle": {
+      "desc": "Remplace en place le modèle/config d'une réserve non utilisée (spawn.setVehicleObject), la met au rôle 'empty' et dormante.",
+      "params": {
+        "providerName": {"type": "string", "desc": "Nom du fournisseur."},
+        "id": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "spawnData": {"type": "table", "desc": "{model, config} ; config peut être un nom ou un chemin .pc."}
+      },
+      "returns": [{"type": "boolean", "desc": "true si recyclé."}]
+    },
+    "protectNonReservedVehicle": {
+      "desc": "Protège un véhicule non réservé du pooling automatique pendant qu'un fournisseur l'utilise (mêmes protections qu'une réserve prise).",
+      "params": {
+        "id": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "providerName": {"type": "string", "desc": "Nom du fournisseur."}
+      }
+    },
+    "unprotectNonReservedVehicle": {
+      "desc": "Retire cette protection : le véhicule redevient du trafic normal.",
+      "params": {"id": {"type": "integer", "desc": "Identifiant du véhicule."}}
+    },
+    "onUpdate": {
+      "desc": "Hook appelé à chaque frame : lance le spawn en état 'loading', surveille le watchdog, déclenche onTrafficStarted/onTrafficStopped, met à jour le focus, le pool et la logique de trafic (un véhicule traité par frame).",
+      "params": {
+        "dtReal": {"type": "number", "desc": "Temps réel (s)."},
+        "dtSim": {"type": "number", "desc": "Temps simulé (s)."}
+      },
+      "internal": true
+    },
+    "onPreRender": {
+      "desc": "Hook de rendu : en mode debug, dessine pour chaque véhicule actif une ligne vers le focus et un texte (id, distance, vitesse en km/h).",
+      "params": {"dt": {"type": "number", "desc": "Temps de frame."}},
+      "internal": true
+    },
+    "onVehicleMapmgrUpdate": {
+      "desc": "Hook appelé quand le mapmgr d'un véhicule est prêt ; termine le chargement quand tous les véhicules attendus ont rapporté.",
+      "params": {"id": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onVehicleSpawned": {
+      "desc": "Hook : à l'apparition ou au remplacement d'un véhicule du trafic, réapplique ses données de modèle et son rôle automatique.",
+      "params": {"id": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onVehicleSwitched": {
+      "desc": "Hook : vérifie que le nouveau véhicule joueur est dans la table du trafic.",
+      "params": {
+        "oldId": {"type": "integer", "desc": "Ancien véhicule."},
+        "newId": {"type": "integer", "desc": "Nouveau véhicule."}
+      },
+      "internal": true
+    },
+    "onVehicleResetted": {
+      "desc": "Hook : traite le reset d'un véhicule du trafic.",
+      "params": {"id": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onVehicleDestroyed": {
+      "desc": "Hook : retire le véhicule détruit du trafic et du spawn en cours.",
+      "params": {"id": {"type": "integer", "desc": "Identifiant du véhicule."}},
+      "internal": true
+    },
+    "onVehicleActiveChanged": {
+      "desc": "Hook appelé quand un véhicule est activé/désactivé : masque un véhicule désactivé et téléporte un véhicule réactivé si sa position n'est pas sûre.",
+      "params": {
+        "vehId": {"type": "integer", "desc": "Identifiant du véhicule."},
+        "active": {"type": "boolean", "desc": "Nouvel état."}
+      },
+      "internal": true
+    },
+    "onVehicleGroupSpawned": {
+      "desc": "Hook appelé quand un groupe multiSpawn est créé : active les véhicules du groupe 'autoTraffic', applique des plaques fantaisie, traite les réserves et émet onTrafficOrParkingReady quand tout est prêt.",
+      "params": {
+        "vehList": {"type": "integer[]", "desc": "Véhicules du groupe."},
+        "groupId": {"type": "any", "desc": "Identifiant du groupe."},
+        "groupName": {"type": "string", "desc": "Nom du groupe."}
+      },
+      "internal": true
+    },
+    "onTrafficStarted": {"desc": "Hook : passe l'état à 'on', prépare le pool et insère les véhicules joueurs. Émis par onUpdate après l'insertion du premier véhicule IA.", "internal": true},
+    "onTrafficStopped": {"desc": "Hook : supprime le pool et vide les tables du trafic (état 'off').", "internal": true},
+    "onClientStartMission": {"desc": "Hook : met à jour la visibilité des passagers des véhicules simple_traffic.", "internal": true},
+    "onClientEndMission": {"desc": "Hook : arrête le trafic, vide les spawns réservés, réinitialise variables et focus.", "internal": true},
+    "onExtensionLoaded": {"desc": "Hook : met à jour la visibilité des passagers des véhicules simple_traffic.", "internal": true},
+    "onSettingsChanged": {"desc": "Hook : met à jour la visibilité des passagers (réglage enableSeatOccupants).", "internal": true},
+    "onUiWaitingState": {"desc": "Hook appelé quand l'écran d'attente est affiché : lance setupTrafficHelper avec les paramètres préparés par setupTrafficWaitForUi.", "internal": true},
+    "onSerialize": {
+      "desc": "Sérialise l'état du trafic (état, véhicules, variables), puis arrête le trafic. Avec despawnVehicles, mémorise aussi les données d'apparition des véhicules et les supprime.",
+      "params": {"options": {"type": "table|nil", "desc": "despawnVehicles, exceptVehicleId, debugVehicleStashing."}},
+      "returns": [{"type": "table", "desc": "Données {state, traffic, vars, vehicleSpawnData, vehicleSpawnOrder}."}],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Restaure l'état du trafic ; avec respawnVehicles, recrée les véhicules mémorisés et remappe leurs identifiants (rôle, poursuite, collisions).",
+      "params": {
+        "data": {"type": "table", "desc": "Données de onSerialize."},
+        "options": {"type": "table|nil", "desc": "respawnVehicles, debugVehicleStashing."}
+      },
+      "internal": true
+    }
+  }
+}

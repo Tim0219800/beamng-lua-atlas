@@ -1,12 +1,12 @@
 # `gameplay_rally_recceSettings`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/recceSettings.lua` · VM : Game Engine (GE) · 145 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/recceSettings.lua` · VM: Game Engine (GE) · 145 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/recceSettings")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/recceSettings")` (file under extensions/ but not a regular extension)
 
-Préférences persistantes de la reconnaissance (recce) de rallye, enregistrées dans rallySettingsRoot/recce.json : dernier id de mission et dernier état de chargement par niveau, et nom du style d'annonce des virages. Charge aussi le fichier des angles de virage (corner angles) pour proposer les styles disponibles. Le module renvoie un constructeur.
+Persistent preferences of the rally recce, saved in rallySettingsRoot/recce.json: last mission id and last load state per level, and the name of the corner call style. Also loads the corner angles file to offer the available styles. The module returns a constructor.
 
-## Exemple
+## Example
 
 ```lua
 local RecceSettings = require('/lua/ge/extensions/gameplay/rally/recceSettings')
@@ -15,40 +15,40 @@ s:load()
 s:setLastMissionId('west_coast_usa', 'rally/stage1')
 ```
 
-## Remarques
+## Notes
 
-- setLastMissionId, setLastLoadState et setCornerCallStyleName sauvegardent immédiatement le fichier.
-- Bug potentiel : cornerCallStyleNames et getCornerCallStyle indexent self.corner_angles_data.pacenoteStyles sans vérifier que corner_angles_data n'est pas nil (erreur si loadCornerAngles a échoué ou si load n'a pas été appelé).
-- Les valeurs par défaut sont partagées par référence (default_settings.last_mission_ids) : _reset réutilise les mêmes tables, donc une modification avant un rechargement peut polluer les défauts.
+- setLastMissionId, setLastLoadState and setCornerCallStyleName save the file immediately.
+- Potential bug: cornerCallStyleNames and getCornerCallStyle index self.corner_angles_data.pacenoteStyles without checking that corner_angles_data is non-nil (error if loadCornerAngles failed or if load was not called).
+- The default values are shared by reference (default_settings.last_mission_ids): _reset reuses the same tables, so a modification before a reload can pollute the defaults.
 
-## Classe `C`
+## Class `C`
 
-Objet de réglages renvoyé par le constructeur.
+Settings object returned by the constructor.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_recceSettings")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_recceSettings")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:_reset()` | Remet last_mission_ids, last_load_states et corner_call_style_name aux valeurs par défaut. | 23 |
-| `C:cornerCallStyleNames()` | Liste des noms de styles d'annonce de virage disponibles. | 90 |
-| `C:defaultCornerCallStyleName()` | Nom du premier style de pacenoteStyles des angles de virage, ou la valeur par défaut (nil) si aucune donnée. | 79 |
-| `C:getCornerCallStyle()` | Renvoie la table du style correspondant au nom actuel dans pacenoteStyles. | 128 |
-| `C:getCornerCallStyleName()` | Nom du style d'annonce des virages actuel. | 125 |
-| `C:getLastLoadState(level)` | Dernier état de chargement pour un niveau. | 117 |
-| `C:getLastMissionId(level)` | Dernier id de mission pour un niveau. | 109 |
-| `C:init()` | Définit le chemin du fichier (recce.json) et remet les valeurs par défaut. | 17 |
-| `C:load()` | Remet à zéro, charge les angles de virage puis lit recce.json et le désérialise. | 38 |
-| `C:loadCornerAngles()` | Charge les données d'angles de virage via rallyUtil.loadCornerAnglesFile ; corner_angles_data reste nil en cas d'échec. | 29 |
-| `C:onDeserialized(data)` | Applique les données lues du fichier ; les champs absents prennent leur valeur par défaut (style : premier style disponible). | 98 |
-| `C:onSerialize()` | Renvoie la table à sauvegarder (last_mission_ids, last_load_states, corner_call_style_name). | 69 |
-| `C:save()` | Écrit les réglages sérialisés dans recce.json (jsonWriteFile, joli format). | 64 |
-| `C:setCornerCallStyleName(style_name)` | Définit le style d'annonce des virages et sauvegarde. | 121 |
-| `C:setLastLoadState(level, state)` | Mémorise le dernier état de chargement pour un niveau et sauvegarde. | 113 |
-| `C:setLastMissionId(level, id)` | Mémorise l'id de la dernière mission pour un niveau et sauvegarde. | 105 |
+| `C:_reset()` | Resets last_mission_ids, last_load_states and corner_call_style_name to the default values. | 23 |
+| `C:cornerCallStyleNames()` | List of the available corner call style names. | 90 |
+| `C:defaultCornerCallStyleName()` | Name of the first style in the corner angles' pacenoteStyles, or the default value (nil) if there is no data. | 79 |
+| `C:getCornerCallStyle()` | Returns the style table matching the current name in pacenoteStyles. | 128 |
+| `C:getCornerCallStyleName()` | Name of the current corner call style. | 125 |
+| `C:getLastLoadState(level)` | Last load state for a level. | 117 |
+| `C:getLastMissionId(level)` | Last mission id for a level. | 109 |
+| `C:init()` | Sets the file path (recce.json) and resets to the default values. | 17 |
+| `C:load()` | Resets, loads the corner angles then reads recce.json and deserializes it. | 38 |
+| `C:loadCornerAngles()` | Loads the corner angle data via rallyUtil.loadCornerAnglesFile; corner_angles_data stays nil on failure. | 29 |
+| `C:onDeserialized(data)` | Applies the data read from the file; missing fields take their default value (style: first available style). | 98 |
+| `C:onSerialize()` | Returns the table to save (last_mission_ids, last_load_states, corner_call_style_name). | 69 |
+| `C:save()` | Writes the serialized settings to recce.json (jsonWriteFile, pretty format). | 64 |
+| `C:setCornerCallStyleName(style_name)` | Sets the corner call style and saves. | 121 |
+| `C:setLastLoadState(level, state)` | Stores the last load state for a level and saves. | 113 |
+| `C:setLastMissionId(level, id)` | Stores the last mission id for a level and saves. | 105 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `fileExists`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/recceSettings.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/recceSettings.lua`.*

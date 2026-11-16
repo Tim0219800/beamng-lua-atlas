@@ -1,15 +1,15 @@
 {
   "path": "lua/ge/extensions/flowgraph/nodes/ui/updatedUI/endScreenLapTimesPanel.lua",
-  "module": "Nœud « EndScreen Lap Times » (repeat_instant, couleur ui). Affiche dans l'écran de fin les temps au tour d'un véhicule. Entrées : flow, race (table de données de course contenant states[vehId]), vehId (number, véhicule ; par défaut le véhicule du joueur 0). Sortie : flow (chainFlow).",
+  "module": "Node \"EndScreen Lap Times\" (repeat_instant, color ui). Displays a vehicle's lap times on the end screen. Inputs: flow, race (race data table containing states[vehId]), vehId (number, vehicle; defaults to the player vehicle 0). Output: flow (chainFlow).",
   "notes": [
-    "Si vehId est donné mais ne correspond à aucun objet, ou si race.states n'a pas d'entrée pour ce véhicule, addLaptimesForVehicle reçoit nil."
+    "If vehId is given but matches no object, or if race.states has no entry for this vehicle, addLaptimesForVehicle receives nil."
   ],
   "classes": {
     "C": {
-      "desc": "Classe du nœud flowgraph ; chaque instance représente un nœud dans un graphe.",
+      "desc": "Flowgraph node class; each instance represents a node in a graph.",
       "functions": {
         "work": {
-          "desc": "Retrouve le véhicule (scenetree.findObjectById(vehId) ou getPlayerVehicle(0)) puis, si race est fourni, ajoute les tours de race.states[veh:getID()] via modules.ui:addLaptimesForVehicle.",
+          "desc": "Finds the vehicle (scenetree.findObjectById(vehId) or getPlayerVehicle(0)) then, if race is provided, adds the laps of race.states[veh:getID()] via modules.ui:addLaptimesForVehicle.",
           "internal": true
         }
       }

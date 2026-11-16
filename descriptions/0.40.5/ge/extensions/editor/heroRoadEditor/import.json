@@ -1,23 +1,33 @@
 {
   "path": "lua/ge/extensions/editor/heroRoadEditor/import.lua",
-  "module": "Import de DecalRoads existants dans un nouveau groupe Hero Road. À partir d'une sélection de DecalRoad (ou d'un polygone de sélection), le module estime une ligne centrale de référence (milieu des bords gauche/droit trouvés par recherche exponentielle puis dichotomie à partir de la plus longue route), crée un groupe 'Import N' avec ces nœuds simplifiés (RDP) et transforme chaque DecalRoad en calque (matériau, priorité de rendu, largeur, position latérale normalisée, inversion, fondus). Les DecalRoad utilisés sont supprimés, avec commit d'annulation/rétablissement.",
+  "module": "Import of existing DecalRoads into a new Hero Road group. From a selection of DecalRoads (or a selection polygon), the module estimates a reference centerline (middle of the left/right edges found by exponential search then bisection starting from the longest road), creates an 'Import N' group with these simplified (RDP) nodes and turns each DecalRoad into a layer (material, render priority, width, normalized lateral position, flip, fades). The used DecalRoads are deleted, with an undo/redo commit.",
   "notes": [
-    "Constantes : pas de recherche initial 0.1 m, 8 itérations de raffinement, distance de recherche max 50 m, tolérance de largeur 0.1 m (isTrackWidth), tolérance RDP 0.5.",
-    "Position latérale d'un calque = moyenne de (signe * distance * 2 / largeur de référence) sur ses nœuds ; isFlip est décidé par vote majoritaire sur le produit scalaire des tangentes.",
-    "Les boucles ne sont pas gérées (tmpSpline.isLoop = false, TODO dans le code).",
-    "Le groupe créé désactive toutes les couches automatiques (traces de pneus, asphalte endommagé, fissures, réparations, patchs, lignes centrales/de rive/de voie, fondus de bord).",
-    "L'annulation recrée les DecalRoad supprimés (nom, champs, nœuds, groupe parent) ; le rétablissement les supprime à nouveau par nom.",
-    "Un DecalRoad dans le polygone suffit à importer toute la route dès qu'un seul de ses nœuds est dedans (pos:inPolygon)."
+    "Constants: initial search step 0.1 m, 8 refinement iterations, max search distance 50 m, width tolerance 0.1 m (isTrackWidth), RDP tolerance 0.5.",
+    "A layer's lateral position = average of (sign * distance * 2 / reference width) over its nodes; isFlip is decided by majority vote on the dot product of the tangents.",
+    "Loops are not handled (tmpSpline.isLoop = false, TODO in the code).",
+    "The created group disables all automatic layers (tire tracks, damaged asphalt, cracks, repairs, patches, center/edge/lane lines, edge fades).",
+    "Undo recreates the deleted DecalRoads (name, fields, nodes, parent group); redo deletes them again by name.",
+    "A DecalRoad in the polygon is enough to import the whole road as soon as one of its nodes is inside (pos:inPolygon)."
   ],
   "functions": {
     "importSelectedIntoNewGroup": {
-      "desc": "Importe les DecalRoad donnés dans un nouveau groupe Hero Road : calcule la spline de référence, crée le groupe, génère les calques, supprime les DecalRoad (et leurs groupes parents devenus vides) et enregistre l'action 'Import DecalRoads into Hero Road' dans l'historique. Ne fait rien si la liste est vide.",
-      "params": {"decalRoads": {"type": "table", "desc": "Tableau d'objets DecalRoad de la scène."}},
+      "desc": "Imports the given DecalRoads into a new Hero Road group: computes the reference spline, creates the group, generates the layers, deletes the DecalRoads (and their parent groups that became empty) and records the 'Import DecalRoads into Hero Road' action in the history. Does nothing if the list is empty.",
+      "params": {
+        "decalRoads": {
+          "type": "table",
+          "desc": "Array of scene DecalRoad objects."
+        }
+      },
       "internal": false
     },
     "importFromPolygon": {
-      "desc": "Cherche tous les DecalRoad dont au moins un nœud est dans le polygone, puis appelle importSelectedIntoNewGroup avec eux.",
-      "params": {"polygon": {"type": "table", "desc": "Polygone de sélection (liste de points) accepté par vec3:inPolygon."}},
+      "desc": "Finds all DecalRoads with at least one node inside the polygon, then calls importSelectedIntoNewGroup with them.",
+      "params": {
+        "polygon": {
+          "type": "table",
+          "desc": "Selection polygon (list of points) accepted by vec3:inPolygon."
+        }
+      },
       "internal": false
     }
   }

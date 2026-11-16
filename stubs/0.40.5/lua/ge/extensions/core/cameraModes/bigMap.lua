@@ -2,75 +2,75 @@
 -- tim19Atlas stub generated from lua/ge/extensions/core/cameraModes/bigMap.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Instance de la caméra bigMap. Champs : fovMin (25), fovMax (42), angle (53), rotAngle (25), posTransitionTime (2.4), transitionActive, movementSpeed (20), nearClipValue (100), drawIcons, initialCamData, mapBoundaries (Box3F), manualzoom, bigMapCamPosition, bigMapCamRotation.
+--- Instance of the bigMap camera. Fields: fovMin (25), fovMax (42), angle (53), rotAngle (25), posTransitionTime (2.4), transitionActive, movementSpeed (20), nearClipValue (100), drawIcons, initialCamData, mapBoundaries (Box3F), manualzoom, bigMapCamPosition, bigMapCamRotation.
 ---@class core_cameraModes_bigMap
 local core_cameraModes_bigMap = {}
 
---- Niveau de zoom relatif en trois étages d'après le FOV : 0 (proche, <= 33 %), 0.5, 1 (large).
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:102
----@param fov number FOV courant (degrés)
----@return number  0, 0.5 ou 1
+--- Relative zoom level in three stages from the FOV: 0 (close, <= 33%), 0.5, 1 (wide).
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:102
+---@param fov number Current FOV (degrees)
+---@return number  0, 0.5 or 1
 function core_cameraModes_bigMap:getZoomStage(fov) end
 
---- Initialise les paramètres par défaut, marque la caméra globale et cachée, crée le zoom manuel (de fovMax vers fovMin).
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:18
+--- Initializes the default parameters, marks the camera as global and hidden, creates the manual zoom (from fovMax to fovMin).
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:18
 function core_cameraModes_bigMap:init() end
 
---- Appelée par camera.lua quand la caméra gagne ou perd le focus : à l'activation, mémorise et porte la distance de rendu du véhicule à 5000 ; à la désactivation, restaure la distance et abandonne un éventuel glisser de souris.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:46
----@param focused boolean true si la caméra devient active
+--- Called by camera.lua when the camera gains or loses focus: on activation, stores and raises the vehicle's render distance to 5000; on deactivation, restores the distance and abandons any mouse drag.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:46
+---@param focused boolean true if the camera becomes active
 function core_cameraModes_bigMap:onCameraChanged(focused) end
 
---- Après rechargement Lua : réinitialise (init) et reconstruit mapBoundaries en Box3F.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:218
+--- After Lua reload: reinitializes (init) and rebuilds mapBoundaries as a Box3F.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:218
 function core_cameraModes_bigMap:onDeserialized() end
 
---- Appelée à l'appui/relâchement du bouton de souris : démarre ou arrête le glisser de la carte.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:203
----@param buttonDown boolean true à l'appui
----@param mouseDragging boolean Indicateur de glisser (non utilisé)
+--- Called on mouse button press/release: starts or stops the map drag.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:203
+---@param buttonDown boolean true on press
+---@param mouseDragging boolean Drag indicator (unused)
 function core_cameraModes_bigMap:onMouseButton(buttonDown, mouseDragging) end
 
---- Prépare la sérialisation avant rechargement Lua : convertit mapBoundaries (Box3F) en table.
----*(interne : appelée par le moteur ou la boucle principale)*
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:212
+--- Prepares serialization before Lua reload: converts mapBoundaries (Box3F) to a table.
+---*(internal: called by the engine or the main loop)*
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:212
 function core_cameraModes_bigMap:onSerialize() end
 
---- Recentre en douceur la caméra pour que la position monde (au sol) soit au centre de l'écran (bigMapPan.setTarget).
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:110
----@param worldPos vec3 Position monde
+--- Smoothly recenters the camera so that the world position (on the ground) is at the center of the screen (bigMapPan.setTarget).
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:110
+---@param worldPos vec3 World position
 function core_cameraModes_bigMap:panToWorldPos(worldPos) end
 
---- Remet le zoom manuel à zéro.
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:38
+--- Resets the manual zoom to zero.
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:38
 function core_cameraModes_bigMap:reset() end
 
---- Reçoit les données d'activation {initialCamData = {pos, rot}} de setByName, calcule le vecteur caméra vers le point regardé et prépare le zoom.
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:88
+--- Receives the activation data {initialCamData = {pos, rot}} from setByName, computes the camera vector toward the point looked at and prepares the zoom.
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:88
 ---@param data table|nil {initialCamData = {pos = vec3, rot = quat}}
 function core_cameraModes_bigMap:setCustomData(data) end
 
---- Réinitialise (appelle init) pour appliquer les propriétés du niveau (taille de carte).
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:42
+--- Reinitializes (calls init) to apply the level properties (map size).
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:42
 function core_cameraModes_bigMap:setLevelProperties() end
 
---- Calcul par frame : applique zoom, glisser de souris, déplacement clavier (MoveManager.forward/backward/left/right), recentrage animé, limites de carte, puis écrit data.res.pos, rot, fov et nearClip (100).
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:118
----@param data table Données de frame : dtReal, res {pos, rot, fov, nearClip}
----@return boolean  Toujours true
+--- Per-frame computation: applies zoom, mouse drag, keyboard movement (MoveManager.forward/backward/left/right), animated recentering, map limits, then writes data.res.pos, rot, fov and nearClip (100).
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:118
+---@param data table Frame data: dtReal, res {pos, rot, fov, nearClip}
+---@return boolean  Always true
 function core_cameraModes_bigMap:update(data) end
 
---- Applique un cran de zoom (molette) : accélère progressivement et mémorise le point de sol sous la souris pour garder le curseur en place.
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:74
----@param value number Cran de molette signé (0 = rien)
+--- Applies one zoom notch (wheel): accelerates progressively and stores the ground point under the mouse to keep the cursor in place.
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:74
+---@param value number Signed wheel notch (0 = nothing)
 function core_cameraModes_bigMap:zoom(value) end
 
---- Zoome en douceur vers un facteur donné (bigMapPan.zoomToFactor).
----Source : lua/ge/extensions/core/cameraModes/bigMap.lua:114
----@param factor number Facteur de zoom
+--- Smoothly zooms toward a given factor (bigMapPan.zoomToFactor).
+---Source: lua/ge/extensions/core/cameraModes/bigMap.lua:114
+---@param factor number Zoom factor
 function core_cameraModes_bigMap:zoomToFactor(factor) end
 

@@ -1,0 +1,55 @@
+{
+  "path": "lua/vehicle/controller/bypassDampers.lua",
+  "module": "Contrôleur auxiliaire pour amortisseurs à canaux de dérivation (bypass shocks, type tout-terrain/Trophy truck) : l'amortissement d'une poutre change selon son déplacement le long de zones successives. À chaque pas physique il mesure le déplacement de la poutre d'amortisseur par rapport à sa longueur au repos et applique via `obj:setBoundedBeamDamp` les coefficients de la zone correspondante. Il joue aussi un son de soupape quand le sens de déplacement s'inverse. Ordre d'appel : `defaultOrder = 80`.",
+  "notes": [
+    "Clés jbeam lues par init : `dampers` (table d'en-tête avec `name`, `beamName` : nom jbeam de la poutre) et `zones` (table d'en-tête avec `zoneDistance`, `beamDamp`, `beamDampFast`, `beamDampRebound`, `beamDampReboundFast`, `beamDampVelocitySplit`, `beamDampVelocitySplitRebound` ; tous à 1 par défaut, le dernier reprend `beamDampVelocitySplit`). Les zones sont triées par `zoneDistance` croissante ; chaque zone va jusqu'au début de la suivante (la dernière jusqu'à l'infini). `zoneDistance` est le déplacement en m par rapport à la longueur au repos (positif = compression).",
+    "Clés lues par initSounds : `emitValveSounds` (true), `valveSoundEventCompression` (\"event:>Vehicle>Suspension>bypassShock_01>bypassShock_in\"), `valveSoundEventRebound` (\"...bypassShock_out\"), `valveSoundMaxVolume` (0.5), `valveSoundMinVelocity` (0.05 m/s), `valveSoundMaxVelocity` (0.2 m/s).",
+    "Le son est émis au noeud id1 de la poutre, dans updateGFX, depuis les mesures de update.",
+    "Le champ interne des réglages de son s'appelle `maxValocity` dans le code (faute de frappe sans conséquence).",
+    "Si une poutre nommée est introuvable, init plante sur `v.data.beams[nil]` : le nom de poutre doit exister.",
+    "`damperZones` n'est jamais vidé dans init : un second init (sans rechargement du module) dupliquerait les zones.",
+    "initLastStage et reset sont vides."
+  ],
+  "fields": {
+    "type": {"type": "string", "desc": "\"auxiliary\"."},
+    "defaultOrder": {"type": "number", "desc": "80 : rang d'appel par défaut."}
+  },
+  "functions": {
+    "update": {
+      "desc": "Pas physique : pour chaque amortisseur, calcule déplacement et vitesse, détecte l'inversion de sens (son de soupape), trouve la zone courante et applique ses coefficients d'amortissement si elle a changé.",
+      "params": {"dt": {"type": "number", "desc": "Pas physique en secondes."}},
+      "returns": [],
+      "internal": true
+    },
+    "updateGFX": {
+      "desc": "Chaque frame : joue les sons de soupape mis en attente par update.",
+      "params": {"dt": {"type": "number", "desc": "Pas de temps en secondes (non utilisé)."}},
+      "returns": [],
+      "internal": true
+    },
+    "reset": {
+      "desc": "Vide (rien à remettre à zéro).",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "initSounds": {
+      "desc": "Lit les réglages des sons de soupape depuis le jbeam.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "init": {
+      "desc": "Retrouve les poutres des amortisseurs par nom et construit la liste triée des zones d'amortissement.",
+      "params": {"jbeamData": {"type": "table", "desc": "Données jbeam du contrôleur."}},
+      "returns": [],
+      "internal": true
+    },
+    "initLastStage": {
+      "desc": "Vide.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    }
+  }
+}

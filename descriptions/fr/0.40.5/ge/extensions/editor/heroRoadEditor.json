@@ -1,0 +1,53 @@
+{
+  "path": "lua/ge/extensions/editor/heroRoadEditor.lua",
+  "module": "Éditeur « Hero Road » : création et édition de routes par splines (groupes de routes avec nœuds, profils, couches, mesh, trottoirs, barrières, éclairages et objets placés, terraformage, peinture, export). Les modules associés sont dans editor/heroRoadEditor/ (groupMgr, layerMgr, profile, mesh, exportMgr, sidewalkMgr, barrierMgr, placeablesUI, import) et editor/toolUtilities/. Il enregistre le mode d'édition « Hero Road » et un menu contextuel du scene tree « Convert to Hero Road » pour importer des DecalRoad sélectionnés. L'état des routes survit à un rechargement Lua via onSerialize/onDeserialized.",
+  "notes": [
+    "Le displayName du mode d'édition (« Hero Road ») doit être égal à groupMgr.getToolPrefixStr() : splineInput reconnaît le propriétaire d'un nœud en comparant bestHit.toolName à editor.editMode.displayName ; sinon l'outil se réactive à chaque clic.",
+    "Constantes en dur : largeur de spline par défaut 10 m, tolérance de simplification RDP 9.0, décalage d'arête de couche de -5 à 5 m.",
+    "Les setters setSelectedSplineIdx/setSelectedNodeIdx n'ont pas de vérification de borne : ils écrivent directement l'indice."
+  ],
+  "functions": {
+    "onClientEndMission": {
+      "desc": "Hook appelé quand on quitte la carte : supprime tous les groupes de routes et recalcule la table id vers indice.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onDeserialized": {
+      "desc": "Hook de désérialisation après rechargement Lua : recrée les groupes de routes à partir des données et recalcule la table id vers indice. Accepte l'ancien format (tableau de groupes nu).",
+      "params": {"data": {"type": "table", "desc": "Table {groups = {...}} renvoyée par onSerialize, ou ancien tableau de groupes"}},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorGui": {
+      "desc": "Hook appelé chaque frame par l'éditeur : callback principal de l'outil. Gère le masquage pendant les glissements (nœud, passage piéton, poignée de coin, curseur « live »), la reconstruction des groupes modifiés, le rendu des splines et la fenêtre d'outil.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onEditorInitialized": {
+      "desc": "Hook appelé à l'initialisation de l'éditeur : enregistre le mode d'édition « Hero Road », la fenêtre de l'outil, la fenêtre de sélection de matériau et l'entrée de menu « Convert to Hero Road » du scene tree.",
+      "params": {},
+      "returns": [],
+      "internal": true
+    },
+    "onSerialize": {
+      "desc": "Hook appelé avant un rechargement Lua : sérialise tous les groupes de routes, puis les supprime (removeAllGroups).",
+      "params": {},
+      "returns": [{"type": "table", "desc": "{groups = <groupes sérialisés>}"}],
+      "internal": true
+    },
+    "setSelectedNodeIdx": {
+      "desc": "Définit l'indice du nœud sélectionné (sélection entre outils).",
+      "params": {"idx": {"type": "integer|nil", "desc": "Indice du nœud dans la spline sélectionnée"}},
+      "returns": [],
+      "internal": false
+    },
+    "setSelectedSplineIdx": {
+      "desc": "Définit l'indice de la spline (groupe de route) sélectionnée (sélection entre outils).",
+      "params": {"idx": {"type": "integer|nil", "desc": "Indice du groupe dans la liste des groupes"}},
+      "returns": [],
+      "internal": false
+    }
+  }
+}

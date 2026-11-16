@@ -1,0 +1,44 @@
+{
+  "path": "lua/ge/extensions/gameplay/drift/multiplayer.lua",
+  "module": "Pont entre le gameplay de drift et le tableau de scores multijoueur (multiplayer_multiplayerScoreboard). Quand un spot de drift démarre, crée un scoreboard avec les colonnes potentialScore, driftLevel et score ; ensuite pousse le score du joueur, son niveau de drift, son statut (finishLine / disqualified) et pulse en rouge lors d'un crash. Ne fait rien si multiplayer_multiplayerScoreboard n'existe pas.",
+  "notes": [
+    "Les mises à jour de score ne sont envoyées que si le contexte drift est \"inFreeroamChallenge\".",
+    "Le niveau de drift (driftLevel) est renvoyé à chaque frame seulement quand la valeur de gameplay_drift_scoring.getDriftPerformanceFactor() change.",
+    "functionDriftSpotEnded (nom local mal formé) remet driftLevel à 0 et hasDriftSpotStarted à false ; scoreboardHandle n'est jamais remis à nil."
+  ],
+  "functions": {
+    "onDriftScoreChanged": {
+      "desc": "Hook : pousse au scoreboard le score potentiel, le score et le niveau de drift courants, en contexte inFreeroamChallenge.",
+      "params": {"data": {"type": "table", "desc": "Données du changement de score (inutilisées ici : le score est relu via gameplay_drift_scoring.getScore())."}},
+      "internal": true
+    },
+    "onDriftSpotStarted": {
+      "desc": "Hook : à l'entrée dans un spot de drift, crée un nouveau scoreboard multijoueur trié par score décroissant.",
+      "params": {"data": {"type": "table", "desc": "Contient lineId, passé à startNewScoreboard."}},
+      "internal": true
+    },
+    "onDriftSpotFinishLineCrossed": {
+      "desc": "Hook : ligne d'arrivée franchie, pousse le statut \"finishLine\" au scoreboard.",
+      "internal": true
+    },
+    "onDriftSpotFailed": {
+      "desc": "Hook : spot échoué, pousse le statut \"disqualified\" au scoreboard.",
+      "internal": true
+    },
+    "onDriftCrash": {
+      "desc": "Hook : crash pendant un défi, fait pulser la couleur du joueur en rouge dans le scoreboard.",
+      "internal": true
+    },
+    "getDriftDebugInfo": {
+      "desc": "Renvoie la table {default=false, canBeChanged=false} décrivant le réglage de debug de ce module (utilisée par la fenêtre de debug drift).",
+      "returns": [{"type": "table", "desc": "{default = false, canBeChanged = false}"}]
+    },
+    "onUpdate": {
+      "desc": "Appelé à chaque frame : envoie le niveau de drift au scoreboard s'il a changé depuis la dernière frame.",
+      "internal": true
+    }
+  },
+  "fields": {
+    "dependencies": {"type": "string[]", "desc": "gameplay_drift_general, chargé avant."}
+  }
+}

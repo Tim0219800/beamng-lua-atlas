@@ -1,144 +1,144 @@
 # `ui_photomode_advancedRender`
 
-*Fichier : `lua/ge/extensions/ui/photomode/advancedRender.lua` · VM : Game Engine (GE) · 619 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/ui/photomode/advancedRender.lua` · VM: Game Engine (GE) · 619 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `ui_photomode_advancedRender` : `extensions.load("ui_photomode_advancedRender")`, puis la globale `ui_photomode_advancedRender`
+**Access:** extension `ui_photomode_advancedRender`: `extensions.load("ui_photomode_advancedRender")`, then the global `ui_photomode_advancedRender`
 
-Réglages de rendu avancé du mode photo : finesse des détails (detailAdjust), échelle LOD du terrain, densité d'herbe, qualité des ombres, ombres des véhicules, « last split casters » et qualité des nuages. Le module lit et écrit ces valeurs dans les réglages graphiques et les variables du moteur (via ui_photomode_shared), mémorise l'état initial de la session pour pouvoir le restaurer, et gère un signet (bookmark) de réglages. Il sert de backend au panneau « rendu avancé » du mode photo et aux presets.
+Advanced photo mode render settings: detail fineness (detailAdjust), terrain LOD scale, grass density, shadow quality, vehicle shadows, "last split casters" and cloud quality. The module reads and writes these values in the graphics settings and engine variables (via ui_photomode_shared), stores the session's initial state so it can be restored, and manages a settings bookmark. It serves as the backend of the photo mode "advanced render" panel and of presets.
 
-## Exemple
+## Example
 
 ```lua
 local res = ui_photomode_advancedRender.setAdvancedRenderState({grassDensity = 0.5, shadowsQualityMode = "High", cloudQualityMode = "Ultra"})
 if not res.ok then log('W', 'x', res.reason) end
 ```
 
-## Remarques
+## Notes
 
-- Les fonctions d'écriture renvoient {ok, reason, state}. Raisons : advanced_render_disabled, session_inactive, advanced_render_state_invalid, advanced_render_patch_empty, shadow_quality_invalid, cloud_quality_invalid, advanced_render_set_failed, advanced_render_defaults_unavailable, bookmark_unavailable, advanced_render_state_unavailable.
-- Bornes appliquées par clamp : detailAdjust 0.5 à 5 (défaut 2), terrainLodScale 0.001 à 2 (défaut 0.75), grassDensity 0 à 1 (défaut 1).
-- shadowsQualityMode accepte Lowest, Low, Normal, High, Ultra. cloudQualityMode accepte Low, Normal, High, Ultra (vrtDownsampleFactor 8/6/4/2 et shadowLutUpdateGroupSize 8/4/2/2) ; une valeur numérique est ramenée au mode le plus proche (<=2 Ultra, <=4 High, <=6 Normal, sinon Low).
-- Le réglage est actif par défaut dans les builds non « shipping » (shipping_build ~= true) ; dans une version commerciale il faut le débloquer avec setAdvancedRenderTuningEnabled (l'UI affiche alors le déverrouillage, isUnlockVisible).
-- Toutes les modifications exigent une session de mode photo active (ui_photomode_shared.S.sessionActive) ; l'état de départ est capturé par captureRestoreState et remis par restoreState.
-- Le module appelle ui_photomode_session.buildCapabilities() sans le déclarer dans M.dependencies.
+- The write functions return {ok, reason, state}. Reasons: advanced_render_disabled, session_inactive, advanced_render_state_invalid, advanced_render_patch_empty, shadow_quality_invalid, cloud_quality_invalid, advanced_render_set_failed, advanced_render_defaults_unavailable, bookmark_unavailable, advanced_render_state_unavailable.
+- Bounds applied by clamping: detailAdjust 0.5 to 5 (default 2), terrainLodScale 0.001 to 2 (default 0.75), grassDensity 0 to 1 (default 1).
+- shadowsQualityMode accepts Lowest, Low, Normal, High, Ultra. cloudQualityMode accepts Low, Normal, High, Ultra (vrtDownsampleFactor 8/6/4/2 and shadowLutUpdateGroupSize 8/4/2/2); a numeric value is mapped to the nearest mode (<=2 Ultra, <=4 High, <=6 Normal, otherwise Low).
+- The setting is enabled by default in non-"shipping" builds (shipping_build ~= true); in a retail version it must be unlocked with setAdvancedRenderTuningEnabled (the UI then shows the unlock, isUnlockVisible).
+- All changes require an active photo mode session (ui_photomode_shared.S.sessionActive); the starting state is captured by captureRestoreState and restored by restoreState.
+- The module calls ui_photomode_session.buildCapabilities() without declaring it in M.dependencies.
 
-**Dépendances (chargées avant) :** `ui_photomode_shared`, `core_settings_graphic`
+**Dependencies (loaded first):** `ui_photomode_shared`, `core_settings_graphic`
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `ui_photomode_advancedRender.applyPresetState(state)` | Applique un preset (patch partiel). Un état non table est traité comme un patch vide, ce qui renvoie une erreur advanced_render_patch_empty. | 589 |
-| `ui_photomode_advancedRender.buildMetadataState()` | Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : les sept réglages sans les champs d'interface. | 602 |
-| `ui_photomode_advancedRender.buildState()` | Construit l'état d'affichage du rendu avancé (même fonction que le local buildAdvancedRenderState). | 254 |
-| `ui_photomode_advancedRender.captureDefaultPresetState()` | État par défaut pour un preset : l'état de départ de la session, ou nil s'il n'a pas été capturé. | 581 |
-| `ui_photomode_advancedRender.capturePresetState()` | État à enregistrer dans un preset (identique à buildMetadataState). | 577 |
-| `ui_photomode_advancedRender.captureRestoreState()` | Capture l'état de départ de la session pour une restauration ultérieure. Appelée au début d'une session du mode photo. *(interne)* | 267 |
-| `ui_photomode_advancedRender.getAdvancedRenderState()` | Renvoie l'état courant (valeurs, availability, defaults, sessionActive, bookmarkAvailable) avec ok (session active et réglage activé) et reason (advanced_render_disabled ou session_inactive). | 548 |
-| `ui_photomode_advancedRender.getDefaultEnabled()` | Indique si le rendu avancé est activé par défaut : true quand le jeu n'est pas un build shipping. | 60 |
-| `ui_photomode_advancedRender.isTuningEnabled()` | Renvoie l'activation effective : la surcharge posée par setAdvancedRenderTuningEnabled si elle existe, sinon getDefaultEnabled(). | 68 |
-| `ui_photomode_advancedRender.isUnlockVisible()` | Indique si l'UI doit proposer le déverrouillage du rendu avancé : true seulement en build shipping. | 64 |
-| `ui_photomode_advancedRender.loadAdvancedRenderBookmark()` | Réapplique le signet enregistré. | 513 |
-| `ui_photomode_advancedRender.resetAdvancedRenderToDefaults()` | Remet les réglages à l'état capturé au début de la session. | 450 |
-| `ui_photomode_advancedRender.restoreState()` | Restaure l'état capturé au début de la session, puis l'oublie. Appelée à la fin de la session. *(interne)* | 401 |
-| `ui_photomode_advancedRender.saveAdvancedRenderBookmark()` | Mémorise l'état actuel comme signet de session. | 486 |
-| `ui_photomode_advancedRender.setAdvancedRenderState(partialState)` | Applique un patch partiel des réglages (detailAdjust, terrainLodScale, grassDensity, shadowsQualityMode, lastSplitCastersEnabled, vehicleShadowEnabled, cloudQualityMode). Les nombres sont bornés, les modes validés. | 415 |
-| `ui_photomode_advancedRender.setAdvancedRenderTuningEnabled(value)` | Active ou désactive le réglage avancé (surcharge de session). Renvoie aussi les capacités du mode photo et, si activé pendant une session, l'état courant. | 559 |
+| `ui_photomode_advancedRender.applyPresetState(state)` | Applies a preset (partial patch). A non-table state is treated as an empty patch, which returns an advanced_render_patch_empty error. | 589 |
+| `ui_photomode_advancedRender.buildMetadataState()` | Subset of the state to write into a photo's metadata: the seven settings without the UI fields. | 602 |
+| `ui_photomode_advancedRender.buildState()` | Builds the advanced render display state (same function as the local buildAdvancedRenderState). | 254 |
+| `ui_photomode_advancedRender.captureDefaultPresetState()` | Default state for a preset: the session's starting state, or nil if it was not captured. | 581 |
+| `ui_photomode_advancedRender.capturePresetState()` | State to save in a preset (same as buildMetadataState). | 577 |
+| `ui_photomode_advancedRender.captureRestoreState()` | Captures the session's starting state for later restoration. Called at the start of a photo mode session. *(internal)* | 267 |
+| `ui_photomode_advancedRender.getAdvancedRenderState()` | Returns the current state (values, availability, defaults, sessionActive, bookmarkAvailable) with ok (session active and setting enabled) and reason (advanced_render_disabled or session_inactive). | 548 |
+| `ui_photomode_advancedRender.getDefaultEnabled()` | Indicates whether advanced render is enabled by default: true when the game is not a shipping build. | 60 |
+| `ui_photomode_advancedRender.isTuningEnabled()` | Returns the effective enablement: the override set by setAdvancedRenderTuningEnabled if it exists, otherwise getDefaultEnabled(). | 68 |
+| `ui_photomode_advancedRender.isUnlockVisible()` | Indicates whether the UI should offer to unlock advanced render: true only in a shipping build. | 64 |
+| `ui_photomode_advancedRender.loadAdvancedRenderBookmark()` | Reapplies the saved bookmark. | 513 |
+| `ui_photomode_advancedRender.resetAdvancedRenderToDefaults()` | Resets the settings to the state captured at the start of the session. | 450 |
+| `ui_photomode_advancedRender.restoreState()` | Restores the state captured at the start of the session, then forgets it. Called at the end of the session. *(internal)* | 401 |
+| `ui_photomode_advancedRender.saveAdvancedRenderBookmark()` | Stores the current state as the session bookmark. | 486 |
+| `ui_photomode_advancedRender.setAdvancedRenderState(partialState)` | Applies a partial patch of the settings (detailAdjust, terrainLodScale, grassDensity, shadowsQualityMode, lastSplitCastersEnabled, vehicleShadowEnabled, cloudQualityMode). Numbers are clamped, modes validated. | 415 |
+| `ui_photomode_advancedRender.setAdvancedRenderTuningEnabled(value)` | Enables or disables advanced tuning (session override). Also returns the photo mode capabilities and, if enabled during a session, the current state. | 559 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `ui_photomode_advancedRender.applyPresetState(state)`
 
-Applique un preset (patch partiel). Un état non table est traité comme un patch vide, ce qui renvoie une erreur advanced_render_patch_empty.
+Applies a preset (partial patch). A non-table state is treated as an empty patch, which returns an advanced_render_patch_empty error.
 
-- `state` (*table*) : État de preset
-- **renvoie** : table {state} en cas de succès, sinon {ok = false, reason}
+- `state` (*table*) : Preset state
+- **returns**: table {state} on success, otherwise {ok = false, reason}
 
 #### `ui_photomode_advancedRender.buildMetadataState()`
 
-Sous-ensemble de l'état à écrire dans les métadonnées d'une photo : les sept réglages sans les champs d'interface.
+Subset of the state to write into a photo's metadata: the seven settings without the UI fields.
 
-- **renvoie** : table Réglages seuls
+- **returns**: table Settings only
 
 #### `ui_photomode_advancedRender.buildState()`
 
-Construit l'état d'affichage du rendu avancé (même fonction que le local buildAdvancedRenderState).
+Builds the advanced render display state (same function as the local buildAdvancedRenderState).
 
-- **renvoie** : table État avec valeurs, availability, defaults, sessionActive, bookmarkAvailable
+- **returns**: table State with values, availability, defaults, sessionActive, bookmarkAvailable
 
 #### `ui_photomode_advancedRender.captureDefaultPresetState()`
 
-État par défaut pour un preset : l'état de départ de la session, ou nil s'il n'a pas été capturé.
+Default state for a preset: the session's starting state, or nil if it was not captured.
 
-- **renvoie** : table|nil Réglages initiaux
+- **returns**: table|nil Initial settings
 
 #### `ui_photomode_advancedRender.capturePresetState()`
 
-État à enregistrer dans un preset (identique à buildMetadataState).
+State to save in a preset (same as buildMetadataState).
 
-- **renvoie** : table Réglages
+- **returns**: table Settings
 
 #### `ui_photomode_advancedRender.getAdvancedRenderState()`
 
-Renvoie l'état courant (valeurs, availability, defaults, sessionActive, bookmarkAvailable) avec ok (session active et réglage activé) et reason (advanced_render_disabled ou session_inactive).
+Returns the current state (values, availability, defaults, sessionActive, bookmarkAvailable) with ok (session active and setting enabled) and reason (advanced_render_disabled or session_inactive).
 
-- **renvoie** : table État d'affichage
+- **returns**: table Display state
 
 #### `ui_photomode_advancedRender.getDefaultEnabled()`
 
-Indique si le rendu avancé est activé par défaut : true quand le jeu n'est pas un build shipping.
+Indicates whether advanced render is enabled by default: true when the game is not a shipping build.
 
-- **renvoie** : boolean activé par défaut
+- **returns**: boolean enabled by default
 
 #### `ui_photomode_advancedRender.isTuningEnabled()`
 
-Renvoie l'activation effective : la surcharge posée par setAdvancedRenderTuningEnabled si elle existe, sinon getDefaultEnabled().
+Returns the effective enablement: the override set by setAdvancedRenderTuningEnabled if it exists, otherwise getDefaultEnabled().
 
-- **renvoie** : boolean réglage actif
+- **returns**: boolean setting active
 
 #### `ui_photomode_advancedRender.isUnlockVisible()`
 
-Indique si l'UI doit proposer le déverrouillage du rendu avancé : true seulement en build shipping.
+Indicates whether the UI should offer to unlock advanced render: true only in a shipping build.
 
-- **renvoie** : boolean déverrouillage visible
+- **returns**: boolean unlock visible
 
 #### `ui_photomode_advancedRender.loadAdvancedRenderBookmark()`
 
-Réapplique le signet enregistré.
+Reapplies the saved bookmark.
 
-- **renvoie** : table {ok, reason?, state?}
+- **returns**: table {ok, reason?, state?}
 
 #### `ui_photomode_advancedRender.resetAdvancedRenderToDefaults()`
 
-Remet les réglages à l'état capturé au début de la session.
+Resets the settings to the state captured at the start of the session.
 
-- **renvoie** : table {ok, reason?, state?}
+- **returns**: table {ok, reason?, state?}
 
 #### `ui_photomode_advancedRender.saveAdvancedRenderBookmark()`
 
-Mémorise l'état actuel comme signet de session.
+Stores the current state as the session bookmark.
 
-- **renvoie** : table {ok, reason?, state?}
+- **returns**: table {ok, reason?, state?}
 
 #### `ui_photomode_advancedRender.setAdvancedRenderState(partialState)`
 
-Applique un patch partiel des réglages (detailAdjust, terrainLodScale, grassDensity, shadowsQualityMode, lastSplitCastersEnabled, vehicleShadowEnabled, cloudQualityMode). Les nombres sont bornés, les modes validés.
+Applies a partial patch of the settings (detailAdjust, terrainLodScale, grassDensity, shadowsQualityMode, lastSplitCastersEnabled, vehicleShadowEnabled, cloudQualityMode). Numbers are clamped, modes validated.
 
-- `partialState` (*table*) : Champs à modifier
-- **renvoie** : table {ok, reason?, state?}
+- `partialState` (*table*) : Fields to change
+- **returns**: table {ok, reason?, state?}
 
 #### `ui_photomode_advancedRender.setAdvancedRenderTuningEnabled(value)`
 
-Active ou désactive le réglage avancé (surcharge de session). Renvoie aussi les capacités du mode photo et, si activé pendant une session, l'état courant.
+Enables or disables advanced tuning (session override). Also returns the photo mode capabilities and, if enabled during a session, the current state.
 
-- `value` (*boolean*) : true par défaut si la valeur n'est pas un booléen reconnu (déduit du code)
-- **renvoie** : table {ok = true, enabled, capabilities, state?}
+- `value` (*boolean*) : true by default if the value is not a recognized boolean (inferred from code)
+- **returns**: table {ok = true, enabled, capabilities, state?}
 
-## Champs
+## Fields
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |---|---|---|
 | `dependencies` | string[] | {"ui_photomode_shared", "core_settings_graphic"} |
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/ui/photomode/advancedRender.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/ui/photomode/advancedRender.lua`.*

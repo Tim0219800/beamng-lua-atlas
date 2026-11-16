@@ -1,53 +1,53 @@
 # `editor_autoSave`
 
-*Fichier : `lua/ge/extensions/editor/autoSave.lua` · VM : Game Engine (GE) · 174 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/editor/autoSave.lua` · VM: Game Engine (GE) · 174 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** extension `editor_autoSave` : `extensions.load("editor_autoSave")`, puis la globale `editor_autoSave`
+**Access:** extension `editor_autoSave`: `extensions.load("editor_autoSave")`, then the global `editor_autoSave`
 
-Sauvegarde automatique de l'éditeur de niveaux. Un minuteur (preference files.autoSave.interval, 120 s par défaut) appelle editor.autoSaveLevel() quand files.autoSave.active est vrai, avec un compte à rebours dans la barre d'état pendant files.autoSave.noticeInterval secondes. Une fenêtre modale « AutoSave Restore » permet de restaurer l'arbre de scène depuis /temp/level_autosaves/<niveau>/ ; elle s'ouvre seule si l'éditeur ne s'est pas fermé proprement sur ce niveau, ou via le menu des fenêtres.
+Autosave of the level editor. A timer (preference files.autoSave.interval, 120 s by default) calls editor.autoSaveLevel() when files.autoSave.active is true, with a countdown in the status bar during files.autoSave.noticeInterval seconds. An "AutoSave Restore" modal window lets you restore the scene tree from /temp/level_autosaves/<level>/; it opens by itself if the editor did not close cleanly on that level, or via the windows menu.
 
-## Remarques
+## Notes
 
-- La restauration copie le dossier d'autosave sur le niveau (editor.copyDirectory) puis rouvre le niveau : irréversible (le dialogue de confirmation le précise).
-- Les descriptions des préférences parlent de /settings/editor/autosaves alors que le code lit /temp/level_autosaves/ : incohérence apparente entre texte d'aide et chemin utilisé.
-- Préférences enregistrées (catégorie files > autoSave) : active (bool, false), saveBackupCopy (bool, false), interval (int, 120), noticeInterval (int, 10), maxAutoSaveCountPerSession (int, 3), counter (int, 1, masquée).
-- Si interval est abaissé sous noticeInterval, noticeInterval est ramené à interval ; l'inverse est corrigé aussi.
+- The restore copies the autosave folder over the level (editor.copyDirectory) then reopens the level: irreversible (the confirmation dialog says so).
+- The preference descriptions mention /settings/editor/autosaves while the code reads /temp/level_autosaves/: apparent inconsistency between help text and the path used.
+- Registered preferences (category files > autoSave): active (bool, false), saveBackupCopy (bool, false), interval (int, 120), noticeInterval (int, 10), maxAutoSaveCountPerSession (int, 3), counter (int, 1, hidden).
+- If interval is lowered below noticeInterval, noticeInterval is brought down to interval; the reverse is also corrected.
 
-## Fonctions
+## Functions
 
-| Fonction | Description | Ligne |
+| Function | Description | Line |
 |---|---|---|
-| `editor_autoSave.onEditorGui(dtReal, dtSim, dtRaw)` | Appelé chaque frame de l'éditeur : affiche la fenêtre de restauration si nécessaire, décrémente le minuteur, affiche l'avertissement et déclenche editor.autoSaveLevel() quand il atteint 0. *(interne)* *(hook)* | 110 |
-| `editor_autoSave.onEditorInitialized()` | Initialise le minuteur avec files.autoSave.interval et ajoute l'entrée « AutoSave Restore » au menu des fenêtres. *(interne)* *(hook)* | 133 |
-| `editor_autoSave.onEditorPreferenceValueChanged(path, value)` | Hook appelé quand une préférence change : remet le minuteur à jour pour files.autoSave.interval et garde noticeInterval <= interval. *(interne)* *(hook)* | 138 |
-| `editor_autoSave.onEditorRegisterPreferences(prefsRegistry)` | Hook d'enregistrement des préférences de l'éditeur : déclare la catégorie « files » et la sous-catégorie « autoSave ». *(interne)* *(hook)* | 153 |
+| `editor_autoSave.onEditorGui(dtReal, dtSim, dtRaw)` | Called every editor frame: shows the restore window if needed, decrements the timer, displays the warning and triggers editor.autoSaveLevel() when it reaches 0. *(internal)* *(hook)* | 110 |
+| `editor_autoSave.onEditorInitialized()` | Initializes the timer with files.autoSave.interval and adds the "AutoSave Restore" entry to the windows menu. *(internal)* *(hook)* | 133 |
+| `editor_autoSave.onEditorPreferenceValueChanged(path, value)` | Hook called when a preference changes: resets the timer for files.autoSave.interval and keeps noticeInterval <= interval. *(internal)* *(hook)* | 138 |
+| `editor_autoSave.onEditorRegisterPreferences(prefsRegistry)` | Editor preferences registration hook: declares the "files" category and the "autoSave" subcategory. *(internal)* *(hook)* | 153 |
 
-### Détail des paramètres
+### Parameter details
 
 #### `editor_autoSave.onEditorGui(dtReal, dtSim, dtRaw)`
 
-Appelé chaque frame de l'éditeur : affiche la fenêtre de restauration si nécessaire, décrémente le minuteur, affiche l'avertissement et déclenche editor.autoSaveLevel() quand il atteint 0.
+Called every editor frame: shows the restore window if needed, decrements the timer, displays the warning and triggers editor.autoSaveLevel() when it reaches 0.
 
-- `dtReal` (*number*) : Durée réelle de la frame (s), utilisée pour le minuteur.
-- `dtSim` (*number*) : Durée simulée (non utilisée).
-- `dtRaw` (*number*) : Durée brute (non utilisée).
+- `dtReal` (*number*) : Real frame time (s), used for the timer.
+- `dtSim` (*number*) : Simulated time (unused).
+- `dtRaw` (*number*) : Raw duration (unused).
 
 #### `editor_autoSave.onEditorPreferenceValueChanged(path, value)`
 
-Hook appelé quand une préférence change : remet le minuteur à jour pour files.autoSave.interval et garde noticeInterval <= interval.
+Hook called when a preference changes: resets the timer for files.autoSave.interval and keeps noticeInterval <= interval.
 
-- `path` (*string*) : Chemin de la préférence, ex. "files.autoSave.interval".
-- `value` (*any*) : Nouvelle valeur.
+- `path` (*string*) : Preference path, e.g. "files.autoSave.interval".
+- `value` (*any*) : New value.
 
 #### `editor_autoSave.onEditorRegisterPreferences(prefsRegistry)`
 
-Hook d'enregistrement des préférences de l'éditeur : déclare la catégorie « files » et la sous-catégorie « autoSave ».
+Editor preferences registration hook: declares the "files" category and the "autoSave" subcategory.
 
-- `prefsRegistry` (*table*) : Registre de préférences de l'éditeur (registerCategory / registerSubCategory).
+- `prefsRegistry` (*table*) : Editor preferences registry (registerCategory / registerSubCategory).
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `FS:` `directoryList`, `stat`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/editor/autoSave.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/editor/autoSave.lua`.*

@@ -1,47 +1,47 @@
 # `gameplay_rally_transcripts_entry`
 
-*Fichier : `lua/ge/extensions/gameplay/rally/transcripts/entry.lua` · VM : Game Engine (GE) · 534 lignes · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
+*File: `lua/ge/extensions/gameplay/rally/transcripts/entry.lua` · VM: Game Engine (GE) · 534 lines · BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)*
 
-**Accès :** `require("extensions/gameplay/rally/transcripts/entry")` (fichier sous extensions/ mais pas une extension classique)
+**Access:** `require("extensions/gameplay/rally/transcripts/entry")` (file under extensions/ but not a regular extension)
 
-Une transcription individuelle de la reconnaissance de rallye : le texte reconnu de la voix du copilote, sa source, son horodatage et les données du véhicule au moment de la phrase (position, orientation, et captures de braquage). Sert surtout à l'éditeur de rallye pour afficher en debug une voiture 3D, colorer la trajectoire selon l'angle de braquage (appel de virage) et lancer un parcours caméra. Le module renvoie un constructeur : `require(...)(path, name, forceId)` ; l'objet est un élément de `sortedList` (id, name, sortOrder).
+An individual rally recce transcription: the recognized text of the co-driver's voice, its source, its timestamp and the vehicle data at the time of the phrase (position, orientation, and steering captures). Mainly used by the rally editor to display a 3D car in debug, color the trajectory according to the steering angle (corner call) and start a camera path. The module returns a constructor: `require(...)(path, name, forceId)`; the object is an element of `sortedList` (id, name, sortOrder).
 
-## Remarques
+## Notes
 
-- Le champ vehicle_data est un conteneur : vehicle_data.vehicle_data contient {pos, quat} du véhicule et vehicle_data.capture_data contient {captures, cornerAnglesStyle} ; plusieurs méthodes (vehiclePos, vehicleQuat, capture_data) plantent si vehicle_data vaut nil (avant onDeserialized).
-- get_grouped_captures met le résultat en cache dans grouped_captures et exige editor_rallyEditor (fenêtre de transcriptions) pour obtenir les angles de virage ; sans l'éditeur, sortedAngles reste nil et rallyUtil.determineCornerCall n'a pas de liste à parcourir.
-- rallyUtil.determineCornerCall renvoie nil si le braquage ne tombe dans aucune plage ; le code accède ensuite à cap.calc.angle_data.color sans test.
-- debugDrawText concatène sans test : si text vaut nil et is_hovered, erreur.
-- Dimensions de la voiture de debug : hauteur 1,6 m, largeur 1,8 m, longueur 4,4 m ; pos est supposée au centre de la voiture. Couleur teal, blanche au survol, teal clair à la sélection.
+- The vehicle_data field is a container: vehicle_data.vehicle_data contains {pos, quat} of the vehicle and vehicle_data.capture_data contains {captures, cornerAnglesStyle}; several methods (vehiclePos, vehicleQuat, capture_data) crash if vehicle_data is nil (before onDeserialized).
+- get_grouped_captures caches the result in grouped_captures and requires editor_rallyEditor (transcriptions window) to get the corner angles; without the editor, sortedAngles stays nil and rallyUtil.determineCornerCall has no list to iterate over.
+- rallyUtil.determineCornerCall returns nil if the steering falls in no range; the code then accesses cap.calc.angle_data.color without a test.
+- debugDrawText concatenates without a test: if text is nil and is_hovered, error.
+- Dimensions of the debug car: height 1.6 m, width 1.8 m, length 4.4 m; pos is assumed to be at the center of the car. Teal color, white on hover, light teal when selected.
 
-## Classe `C`
+## Class `C`
 
-Transcription. Champs : path, id, name, sortOrder (999999), show (true), text, success, src, file, beamng_file, timestamp, vehicle_data, grouped_captures.
+Transcription. Fields: path, id, name, sortOrder (999999), show (true), text, success, src, file, beamng_file, timestamp, vehicle_data, grouped_captures.
 
-Le module renvoie un constructeur : `local obj = require("gameplay_rally_transcripts_entry")(options)`.
+The module returns a constructor: `local obj = require("gameplay_rally_transcripts_entry")(options)`.
 
-| Méthode | Description | Ligne |
+| Method | Description | Line |
 |---|---|---|
-| `C:capture_data()` | Données de captures de braquage associées (vehicle_data.capture_data). | 61 |
-| `C:debugDrawText(hovered)` | Texte affiché au-dessus de la voiture de debug : text, suivi de « (click to copy) » au survol. | 43 |
-| `C:drawDebug(is_hovered, is_selected)` | Dessine la voiture de debug puis, si survolée ou sélectionnée, les captures de braquage. | 249 |
-| `C:drawDebugCaptureData(is_hovered, is_selected)` | Pour une entrée survolée ou sélectionnée : sphère de rayon 0,5 colorée par angle pour chaque capture et étiquette de l'appel de virage par groupe. | 331 |
-| `C:drawDebugVehicleData(is_hovered, is_selected)` | Dessine une voiture stylisée (prisme carré + 4 sphères de roues) à la position/orientation enregistrées, avec le texte de la transcription. | 254 |
-| `C:get_grouped_captures()` | Regroupe les captures consécutives qui ont le même appel de virage (ex. « 3L », « C »). Trie les angles du style choisi, leur attribue un dégradé rouge-jaune-vert (blanc pour le centre), calcule pour chaque capture un champ calc {angle_pct, angle_data, cornerCallStr}, et fixe un point d'étiquette au milieu de chaque groupe. Résultat mis en cache. | 95 |
-| `C:init(path, name, forceId)` | Constructeur : id imposé ou fourni par path:getNextUniqueIdentifier(), nom par défaut `t_<id>`, affichage actif. | 11 |
-| `C:isUsable()` | Vrai si la transcription a des données véhicule et est affichée. | 39 |
-| `C:lookAtMe()` | Centre la caméra de l'éditeur sur la position du véhicule (rallyUtil.setCameraTarget). | 523 |
-| `C:onDeserialized(data, oldIdMap)` | Restaure les champs avec des valeurs par défaut (chaînes vides, 0.0, table vide). show est forcé à false si la position du véhicule est absente. | 233 |
-| `C:onSerialize()` | Renvoie {oldId, name, show, text, success, src, file, beamng_file, timestamp, vehicle_data}. | 215 |
-| `C:playCameraPath()` | Construit un parcours caméra (1 m au-dessus de chaque capture, FOV 60, temps relatif au premier ts, corrige le signe des quaternions) et le joue via core_paths.playPath. | 517 |
-| `C:setShow(val)` | Fixe l'indicateur d'affichage. | 35 |
-| `C:toggleShow()` | Inverse l'indicateur d'affichage show. | 31 |
-| `C:vehiclePos()` | Position du véhicule lors de la transcription. | 51 |
-| `C:vehicleQuat()` | Orientation du véhicule lors de la transcription. | 56 |
+| `C:capture_data()` | Associated steering capture data (vehicle_data.capture_data). | 61 |
+| `C:debugDrawText(hovered)` | Text displayed above the debug car: text, followed by "(click to copy)" on hover. | 43 |
+| `C:drawDebug(is_hovered, is_selected)` | Draws the debug car then, if hovered or selected, the steering captures. | 249 |
+| `C:drawDebugCaptureData(is_hovered, is_selected)` | For a hovered or selected entry: sphere of radius 0.5 colored by angle for each capture and corner call label per group. | 331 |
+| `C:drawDebugVehicleData(is_hovered, is_selected)` | Draws a stylized car (square prism + 4 wheel spheres) at the recorded position/orientation, with the transcription text. | 254 |
+| `C:get_grouped_captures()` | Groups consecutive captures that have the same corner call (e.g. "3L", "C"). Sorts the angles of the chosen style, assigns them a red-yellow-green gradient (white for the center), computes for each capture a calc field {angle_pct, angle_data, cornerCallStr}, and sets a label point at the middle of each group. Result cached. | 95 |
+| `C:init(path, name, forceId)` | Constructor: forced id or one provided by path:getNextUniqueIdentifier(), default name `t_<id>`, display enabled. | 11 |
+| `C:isUsable()` | True if the transcription has vehicle data and is displayed. | 39 |
+| `C:lookAtMe()` | Centers the editor camera on the vehicle position (rallyUtil.setCameraTarget). | 523 |
+| `C:onDeserialized(data, oldIdMap)` | Restores the fields with default values (empty strings, 0.0, empty table). show is forced to false if the vehicle position is absent. | 233 |
+| `C:onSerialize()` | Returns {oldId, name, show, text, success, src, file, beamng_file, timestamp, vehicle_data}. | 215 |
+| `C:playCameraPath()` | Builds a camera path (1 m above each capture, FOV 60, time relative to the first ts, fixes the sign of the quaternions) and plays it via core_paths.playPath. | 517 |
+| `C:setShow(val)` | Sets the display flag. | 35 |
+| `C:toggleShow()` | Toggles the show display flag. | 31 |
+| `C:vehiclePos()` | Vehicle position at the time of the transcription. | 51 |
+| `C:vehicleQuat()` | Vehicle orientation at the time of the transcription. | 56 |
 
-## Appels vers le moteur (C++)
+## Calls into the engine (C++)
 
 - `debugDrawer:` `drawSphere`, `drawSquarePrism`, `drawTextAdvanced`
 
 ---
-*tim19Atlas (Tim0219800) — dérivé du code Lua de BeamNG GmbH (bCDDL 1.1, voir LICENSE). Source : `lua/ge/extensions/gameplay/rally/transcripts/entry.lua`.*
+*tim19Atlas (Tim0219800) — derived from BeamNG GmbH Lua code (bCDDL 1.1, see LICENSE). Source: `lua/ge/extensions/gameplay/rally/transcripts/entry.lua`.*

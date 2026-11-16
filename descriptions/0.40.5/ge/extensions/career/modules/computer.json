@@ -1,54 +1,85 @@
 {
   "path": "lua/ge/extensions/career/modules/computer.lua",
-  "module": "Menu « ordinateur » du garage en mode carrière. openMenu construit la liste des véhicules du garage le plus proche, laisse les autres modules ajouter leurs boutons via le hook onComputerAddFunctions, démarre un tether (le menu se ferme si le joueur s'éloigne) puis navigue vers l'écran UI 'career.computer'. Un moddeur ajoute un bouton en implémentant onComputerAddFunctions(menuData, computerFunctions) dans son extension.",
-  "usage": "-- ajouter un bouton général dans le menu de l'ordinateur\nM.onComputerAddFunctions = function(menuData, computerFunctions)\n  computerFunctions.general.monBouton = {\n    id = 'monBouton', label = 'Mon bouton', callback = function(computerId) print(computerId) end,\n    disabled = false\n  }\nend",
+  "module": "Garage \"computer\" menu in career mode. openMenu builds the list of vehicles in the nearest garage, lets other modules add their buttons via the onComputerAddFunctions hook, starts a tether (the menu closes if the player moves away), then navigates to the 'career.computer' UI screen. A modder adds a button by implementing onComputerAddFunctions(menuData, computerFunctions) in their extension.",
+  "usage": "-- add a general button to the computer menu\nM.onComputerAddFunctions = function(menuData, computerFunctions)\n  computerFunctions.general.monBouton = {\n    id = 'monBouton', label = 'Mon bouton', callback = function(computerId) print(computerId) end,\n    disabled = false\n  }\nend",
   "notes": [
-    "Dépend de career_career (M.dependencies).",
-    "computerFunctions a deux sous-tables : general[buttonId] et vehicleSpecific[inventoryId][buttonId] ; chaque entrée a un callback(computerId).",
-    "M.reasons contient des raisons prêtes à l'emploi (tutorialActive, hasBoughtStarterVehicle, needsRepair) ; getComputerUIData traduit leur label via core_locales.",
-    "Bug probable : dans openMenu, le repli startSphereTether(computerPos, ...) utilise la variable computerPos qui n'est pas définie (la ligne qui la calcule est commentée) ; elle vaut nil si la facilité n'a aucune porte.",
-    "Distances de tether : 1 m (boîte, porte) et 4 m (sphère)."
+    "Depends on career_career (M.dependencies).",
+    "computerFunctions has two sub-tables: general[buttonId] and vehicleSpecific[inventoryId][buttonId]; each entry has a callback(computerId).",
+    "M.reasons contains ready-made reasons (tutorialActive, hasBoughtStarterVehicle, needsRepair); getComputerUIData translates their label via core_locales.",
+    "Probable bug: in openMenu, the startSphereTether(computerPos, ...) fallback uses the variable computerPos, which is not defined (the line that computes it is commented out); it is nil if the facility has no door.",
+    "Tether distances: 1 m (box, door) and 4 m (sphere)."
   ],
   "fields": {
-    "dependencies": {"type": "string[]", "desc": "{\"career_career\"} : extensions chargées avant ce module."},
-    "reasons": {"type": "table<string, table>", "desc": "Raisons standard de désactivation d'un bouton : tutorialActive, hasBoughtStarterVehicle (type 'text') et needsRepair (type 'needsRepair'), chacune avec un label de traduction."}
+    "dependencies": {
+      "type": "string[]",
+      "desc": "{\"career_career\"}: extensions loaded before this module."
+    },
+    "reasons": {
+      "type": "table<string, table>",
+      "desc": "Standard reasons for disabling a button: tutorialActive, hasBoughtStarterVehicle (type 'text') and needsRepair (type 'needsRepair'), each with a translation label."
+    }
   },
   "functions": {
     "openMenu": {
-      "desc": "Ouvre le menu ordinateur pour une facilité : liste les véhicules du garage le plus proche (nom, besoin de réparation, date de saleté), déclenche onComputerAddFunctions, démarre le tether, navigue vers 'career.computer' puis déclenche onComputerMenuOpened.",
+      "desc": "Opens the computer menu for a facility: lists the vehicles in the nearest garage (name, repair need, dirt date), fires onComputerAddFunctions, starts the tether, navigates to 'career.computer', then fires onComputerMenuOpened.",
       "params": {
-        "computerFacility": {"type": "table", "desc": "Facilité 'computer' (champs id, name, doors)."},
-        "resetActiveVehicleIndex": {"type": "boolean|nil", "desc": "Transmis à l'UI dans menuData.resetActiveVehicleIndex."},
-        "activityElement": {"type": "any", "desc": "Non utilisé dans la fonction."}
+        "computerFacility": {
+          "type": "table",
+          "desc": "'computer' facility (fields id, name, doors)."
+        },
+        "resetActiveVehicleIndex": {
+          "type": "boolean|nil",
+          "desc": "Passed to the UI in menuData.resetActiveVehicleIndex."
+        },
+        "activityElement": {
+          "type": "any",
+          "desc": "Not used in the function."
+        }
       },
       "returns": []
     },
     "openComputerMenuById": {
-      "desc": "Récupère la facilité 'computer' par son id via freeroam_facilities.getFacility puis appelle openMenu.",
-      "params": {"computerId": {"type": "string", "desc": "Identifiant de la facilité ordinateur."}},
+      "desc": "Gets the 'computer' facility by its id via freeroam_facilities.getFacility, then calls openMenu.",
+      "params": {
+        "computerId": {
+          "type": "string",
+          "desc": "Computer facility identifier."
+        }
+      },
       "returns": []
     },
     "computerButtonCallback": {
-      "desc": "Appelée par l'UI lors d'un clic : retrouve le bouton (vehicleSpecific[inventoryId] si inventoryId est donné, sinon general) et exécute son callback(computerId).",
+      "desc": "Called by the UI on a click: finds the button (vehicleSpecific[inventoryId] if inventoryId is given, otherwise general) and runs its callback(computerId).",
       "params": {
-        "buttonId": {"type": "string", "desc": "Clé du bouton dans computerFunctions."},
-        "inventoryId": {"type": "integer|nil", "desc": "Id d'inventaire du véhicule pour un bouton spécifique à un véhicule."}
+        "buttonId": {
+          "type": "string",
+          "desc": "Button key in computerFunctions."
+        },
+        "inventoryId": {
+          "type": "integer|nil",
+          "desc": "Inventory id of the vehicle for a vehicle-specific button."
+        }
       },
       "returns": []
     },
     "getComputerUIData": {
-      "desc": "Renvoie à l'UI une copie des données du menu : computerFunctions (labels de raisons traduits, clés inventoryId converties en chaînes), vehicles (avec thumbnail et inventoryId en chaîne), facilityName, resetActiveVehicleIndex, computerId. Table vide si le menu n'a pas été ouvert.",
+      "desc": "Returns to the UI a copy of the menu data: computerFunctions (reason labels translated, inventoryId keys converted to strings), vehicles (with thumbnail and inventoryId as a string), facilityName, resetActiveVehicleIndex, computerId. Empty table if the menu has not been opened.",
       "params": {},
-      "returns": [{"type": "table", "desc": "Données pour l'écran career.computer."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Data for the career.computer screen."
+        }
+      ]
     },
     "onMenuClosed": {
-      "desc": "Hook appelé à la fermeture du menu ; supprime le tether (tether.remove = true).",
+      "desc": "Hook called when the menu closes; removes the tether (tether.remove = true).",
       "params": {},
       "returns": [],
       "internal": true
     },
     "closeMenu": {
-      "desc": "Ferme tous les menus carrière (career_career.closeAllMenus). Sert aussi de callback de tether quand le joueur s'éloigne.",
+      "desc": "Closes all career menus (career_career.closeAllMenus). Also serves as the tether callback when the player moves away.",
       "params": {},
       "returns": []
     }

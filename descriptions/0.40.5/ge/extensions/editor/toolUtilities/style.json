@@ -1,21 +1,36 @@
 {
   "path": "lua/ge/extensions/editor/toolUtilities/style.lua",
-  "module": "Réglages de style des outils de splines de l'éditeur : couleurs 3D (curseur, nœuds, jonctions, splines, poignées, fils de prévisualisation) pour le dessin de debug, et palettes de couleurs ImGui par thème. Les thèmes disponibles sont blueRose, vapourStatic, canyonClay, terminalAurora, summerOfLove, deerPark, dreamMachine, headlights, crystal (défaut) et neoIndustrial.",
+  "module": "Style settings of the editor's spline tools: 3D colors (cursor, nodes, junctions, splines, handles, preview wires) for debug drawing, and ImGui color palettes per theme. The available themes are blueRose, vapourStatic, canyonClay, terminalAurora, summerOfLove, deerPark, dreamMachine, headlights, crystal (default) and neoIndustrial.",
   "usage": "local cols = require('editor/toolUtilities/style').getImguiCols('crystal')\nim.TextColored(cols.dullWhite, 'texte')",
   "notes": [
-    "getStyle() construit une nouvelle table à chaque appel (color(r,g,b,a) 0-255 pour le rendu, ImVec4 0-1 pour ImGui).",
-    "getImguiCols renvoie la palette 'crystal' pour un thème inconnu ou nil."
+    "getStyle() builds a new table on each call (color(r,g,b,a) 0-255 for rendering, ImVec4 0-1 for ImGui).",
+    "getImguiCols returns the 'crystal' palette for an unknown or nil theme."
   ],
   "functions": {
     "getStyle": {
-      "desc": "Renvoie les propriétés de style de l'interface : couleurs de curseur, nœuds, jonctions, splines (sélectionnée, estompée, liée), poignées, fils de prévisualisation, et quelques ImVec4 (greenD, blueB, blueD, redB, yellowB).",
+      "desc": "Returns the interface style properties: colors of cursor, nodes, junctions, splines (selected, faded, linked), handles, preview wires, and a few ImVec4 (greenD, blueB, blueD, redB, yellowB).",
       "params": {},
-      "returns": [{"type": "table", "desc": "Table de couleurs nommées."}]
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Table of named colors."
+        }
+      ]
     },
     "getImguiCols": {
-      "desc": "Renvoie la palette de couleurs ImGui du thème demandé.",
-      "params": {"theme": {"type": "string|nil", "desc": "Nom du thème (voir module) ; 'crystal' par défaut."}},
-      "returns": [{"type": "table", "desc": "Palette de couleurs nommées (ImVec4)."}]
+      "desc": "Returns the ImGui color palette of the requested theme.",
+      "params": {
+        "theme": {
+          "type": "string|nil",
+          "desc": "Theme name (see module); 'crystal' by default."
+        }
+      },
+      "returns": [
+        {
+          "type": "table",
+          "desc": "Palette of named colors (ImVec4)."
+        }
+      ]
     }
   }
 }

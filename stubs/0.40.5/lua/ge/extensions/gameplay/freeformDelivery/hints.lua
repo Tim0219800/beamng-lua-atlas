@@ -2,25 +2,25 @@
 -- tim19Atlas stub generated from lua/ge/extensions/gameplay/freeformDelivery/hints.lua (BeamNG.drive 0.40.5 (buildbot 302427 on GitLab)). Do not edit.
 -- Derived from BeamNG GmbH Lua code, distributed under the bCDDL 1.1 (see LICENSE). Contributor: Tim0219800 (tim19Atlas).
 
---- Gère les indices (hints) du mode de livraison libre : chaque hint de la livraison (id, targetAreaIds, message, subtext) s'affiche comme message dans la liste de tâches (SetTasklistTask) tant que le joueur se trouve dans l'une de ses zones cibles (zone, location ou parkingSpot), puis disparaît (DiscardTasklistItem) quand il en sort. Appelé par gameplay_freeformDelivery_freeformDelivery, pas par le moteur.
---- Accès : extension `gameplay_freeformDelivery_hints` : `extensions.load("gameplay_freeformDelivery_hints")`, puis la globale `gameplay_freeformDelivery_hints`
+--- Manages the hints of the freeform delivery mode: each delivery hint (id, targetAreaIds, message, subtext) is displayed as a message in the task list (SetTasklistTask) as long as the player is inside one of its target areas (zone, location or parkingSpot), then disappears (DiscardTasklistItem) when they leave. Called by gameplay_freeformDelivery_freeformDelivery, not by the engine.
+--- Access: extension `gameplay_freeformDelivery_hints`: `extensions.load("gameplay_freeformDelivery_hints")`, then the global `gameplay_freeformDelivery_hints`
 ---@class gameplay_freeformDelivery_hints
 gameplay_freeformDelivery_hints = {}
 
---- Retire tous les hints affichés de la tasklist et oublie la livraison active.
----Source : lua/ge/extensions/gameplay/freeformDelivery/hints.lua:179
+--- Removes all displayed hints from the tasklist and forgets the active delivery.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/hints.lua:179
 function gameplay_freeformDelivery_hints.cleanup() end
 
---- Initialise les hints à partir de delivery.hints et mémorise la livraison active. Logge le nombre de hints chargés.
----Source : lua/ge/extensions/gameplay/freeformDelivery/hints.lua:92
----@param delivery table Livraison chargée (hints, targetAreas, sites).
+--- Initializes the hints from delivery.hints and stores the active delivery. Logs the number of hints loaded.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/hints.lua:92
+---@param delivery table Loaded delivery (hints, targetAreas, sites).
 function gameplay_freeformDelivery_hints.setup(delivery) end
 
---- À appeler à chaque frame : affiche les hints dont une zone cible contient le joueur et masque les autres. Sans effet si aucune livraison n'est active ou si la position du joueur est inconnue.
----Source : lua/ge/extensions/gameplay/freeformDelivery/hints.lua:128
----@param dtReal number Delta temps réel (inutilisé).
----@param dtSim number Delta temps simulé (inutilisé).
----@param dtRaw number Delta temps brut (inutilisé).
----@param profiler table|nil LuaProfiler facultatif pour mesurer les sections.
+--- To be called every frame: displays the hints whose target area contains the player and hides the others. No effect if no delivery is active or if the player's position is unknown.
+---Source: lua/ge/extensions/gameplay/freeformDelivery/hints.lua:128
+---@param dtReal number Real time delta (unused).
+---@param dtSim number Simulated time delta (unused).
+---@param dtRaw number Raw time delta (unused).
+---@param profiler table|nil Optional LuaProfiler for measuring sections.
 function gameplay_freeformDelivery_hints.update(dtReal, dtSim, dtRaw, profiler) end
 
